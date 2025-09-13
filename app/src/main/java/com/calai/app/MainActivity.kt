@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +51,15 @@ fun DualApiScreen(vm: MainViewModel = hiltViewModel()) {     // ★ 改用 hiltV
                 Button(onClick = vm::callHello, enabled = state !is UiState.Loading) { Text("呼叫 hello()") }
                 Button(onClick = vm::callInfo,  enabled = state !is UiState.Loading) { Text("呼叫 info()") }
             }
+
+            Spacer(Modifier.height(12.dp))
+
+            // 2) Debug：快速設定/清除 Token，用來驗證 Authorization header
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(onClick = vm::setFakeToken) { Text("Set Fake Token") }
+                OutlinedButton(onClick = vm::clearToken) { Text("Clear Token") }
+            }
+
             Spacer(Modifier.height(20.dp))
             /**
              * 把 畫面要顯示的字串用 when 依 UiState 決定：

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.app.data.MainRepository
 import com.calai.app.core.net.NetworkResult
+import com.calai.app.data.prefs.TokenManager
 import com.calai.app.net.InfoDTO
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -21,8 +22,10 @@ sealed class UiState {
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repo: MainRepository
+    private val repo: MainRepository,
+    private val tokenManager: TokenManager   // ← 新增
 ) : ViewModel() {
+
 
     private val _state = MutableStateFlow<UiState>(UiState.Idle)
     val state: StateFlow<UiState> = _state
@@ -49,5 +52,13 @@ class MainViewModel @Inject constructor(
                 is NetworkResult.Unexpected -> _state.value = UiState.Error(r.message)
             }
         }
+    }
+
+    fun setFakeToken() {
+        tokenManager.setTokenAsync("FAKE-TOKEN-123")
+    }
+
+    fun clearToken() {
+        tokenManager.clearTokenAsync()
     }
 }
