@@ -90,6 +90,18 @@ android {
             // 模擬器打本機
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
         }
+        create("devWifi") { // 真機走 Wi-Fi
+            dimension = "env"
+            applicationIdSuffix = ".devwifi"
+            versionNameSuffix = "-devwifi"
+            buildConfigField("String","BASE_URL","\"http://172.20.10.9:8080/\"") // 換成你的PC IP
+        }
+        create("devUsb") {
+            dimension = "env"
+            applicationIdSuffix = ".devusb"
+            versionNameSuffix = "-devusb"
+            buildConfigField("String","BASE_URL","\"http://127.0.0.1:8080/\"")
+        }
         create("prod") {
             dimension = "env"
             // TODO: 換成正式 https 網域
