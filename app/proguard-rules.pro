@@ -28,3 +28,26 @@
 -dontwarn okhttp3.**
 -dontwarn okio.**
 -dontwarn javax.annotation.**
+
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+
+# Hilt / Dagger
+-dontwarn dagger.hilt.internal.**
+-dontwarn dagger.hilt.android.internal.**
+-keep class dagger.hilt.** { *; }
+-keep class dagger.** { *; }
+-keep class javax.inject.** { *; }
+
+# Retrofit / OkHttp / Okio
+-dontwarn okio.**
+-dontwarn javax.annotation.**
+-keep class retrofit2.** { *; }
+-keep class okhttp3.** { *; }
+
+# DTO 若未以 @SerializedName 標註，保留欄位（依你的 package 調整）
+-keepclassmembers class com.calai.app.net.** { <fields>; }
+-keepclassmembers class com.calai.app.data.** { <fields>; }
+
+# @Keep
+-keep @androidx.annotation.Keep class * { *; }
+-keepclasseswithmembers class * { @androidx.annotation.Keep *; }
