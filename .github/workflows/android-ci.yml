@@ -1,0 +1,138 @@
+name: Android CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    env:
+      ORG_GRADLE_JAVA_HOME: /usr/lib/jvm/temurin-21-jdk
+      JAVA_HOME: /usr/lib/jvm/temurin-21-jdk
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Restore keystore & keystore.properties
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          mkdir -p keystore
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > keystore/calai-release.jks
+            cat > keystore/keystore.properties <<EOF
+          storeFile=keystore/calai-release.jks
+          storePassword=${ANDROID_KEYSTORE_PASSWORD}
+          keyAlias=${ANDROID_KEY_ALIAS}
+          keyPassword=${ANDROID_KEY_PASSWORD}
+          EOF
+          else
+            echo "No keystore secret available. Release signing will be skipped."
+          fi
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Verify Java & Gradle
+        run: |
+          ./gradlew -v
+          java -version
+
+      # --- PR: test + lint + assembleDevDebug ---
+      - name: Unit tests & Lint (PR)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: ./gradlew --stacktrace test lint :app:assembleDevDebug
+
+      - name: Upload devDebug APK (PR)
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: devDebug-apk
+          path: app/build/outputs/apk/dev/debug/*.apk
+
+      # --- Push to main: optional devDebug build artifact ---
+      - name: Assemble devDebug (push to main)
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') }}
+        run: ./gradlew --stacktrace :app:assembleDevDebug
+
+      - name: Upload devDebug APK (push to main)
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: devDebug-apk
+          path: app/build/outputs/apk/dev/debug/*.apk
+
+      # --- Tag build: prodRelease APK + AAB ---
+      - name: Build prodRelease (tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: ./gradlew --stacktrace :app:assembleProdRelease :app:bundleProdRelease
+
+      - name: Upload prodRelease artifacts (tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: prodRelease
+          path: |
+            app/build/outputs/apk/prod/release/*.apk
+            app/build/outputs/bundle/prodRelease/*.aab
+
+      # --- Slack notification (always) ---
+      - name: Notify Slack
+        if: always() && env.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        run: |
+          STATUS="${{ job.status }}"
+          EVENT="${{ github.event_name }}"
+          REF="${{ github.ref_name }}"
+          REPO="${{ github.repository }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          ACTOR="${{ github.actor }}"
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            COLOR="#2eb886"
+            TITLE="Build succeeded"
+          else
+            EMOJI="❌"
+            COLOR="#e01e5a"
+            TITLE="Build failed"
+          fi
+
+          # 簡單文字訊息
+          # curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${EMOJI} *${TITLE}*  \nRepo: ${REPO}\nEvent: ${EVENT} (${REF})\nActor: ${ACTOR}\nRun: ${RUN_URL}\"}" "$SLACK_WEBHOOK_URL"
+
+          # Rich 附件訊息（Block Kit）
+          PAYLOAD=$(cat << EOF
+          {
+            "attachments": [{
+              "color": "${COLOR}",
+              "blocks": [
+                { "type": "section",
+                  "text": { "type": "mrkdwn",
+                    "text": "${EMOJI} *${TITLE}*\n*Repo*: ${REPO}\n*Event*: ${EVENT} (\`${REF}\`)\n*By*: ${ACTOR}\n*Run*: <${RUN_URL}|Open workflow>" }
+                }
+              ]
+            }]
+          }
+          EOF
+          )
+          curl -s -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK_URL"
