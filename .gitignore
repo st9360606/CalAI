@@ -13,3 +13,11 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android keystore
+/android/keystore/**
+!android/keystore/*.md    # 如果想保留說明文件
+/android/keystore.properties
+/keystore/*.jks
+/keystore/keystore.properties
+/keystore/*.p12
