@@ -1,0 +1,58 @@
+name: Android Release
+
+on:
+  # 打 tag 就自動出正式包
+  push:
+    tags:
+      - "v*"         # 例：v1.0.0
+  # 也允許手動觸發
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # 從 Secrets 還原簽章檔（你若已設好可以保留；名稱依你現有 Secrets 調整）
+      - name: Restore keystore & props
+        run: |
+          mkdir -p android/keystore
+          echo "${{ secrets.KEYSTORE_PROPERTIES }}" > android/keystore/keystore.properties
+          echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 -d > android/keystore/calai-release.jks
+
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+
+      # 出 APK + AAB（prodRelease）
+      - name: Build prodRelease (APK & AAB)
+        run: |
+          ./gradlew :app:clean :app:assembleProdRelease :app:bundleProdRelease --stacktrace
+
+      # 驗簽（把證書指紋印到 log）
+      - name: Verify APK signature & print cert
+        run: |
+          APKSIGNER=$(ls "${ANDROID_HOME}/build-tools/"*/apksigner | tail -n 1)
+          APK=$(ls app/build/outputs/apk/prod/release/*.apk | head -n 1)
+          $APKSIGNER verify --print-certs "$APK"
+
+      # 上傳產物（一次把 APK/AAB/mapping 打包成 prodRelease）
+      - name: Upload prodRelease artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prodRelease
+          path: |
+            app/build/outputs/apk/prod/release/*.apk
+            app/build/outputs/bundle/prodRelease/*.aab
+            app/build/outputs/mapping/prodRelease/mapping.txt
+          if-no-files-found: error
+          retention-days: 14
