@@ -1,11 +1,9 @@
 name: Android Release
 
 on:
-  # 打 tag 就自動出正式包
   push:
     tags:
-      - "v*"         # 例：v1.0.0
-  # 也允許手動觸發
+      - "v*"           # 例：v1.0.0
   workflow_dispatch:
 
 jobs:
@@ -17,35 +15,90 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 21 (Temurin)
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: "21"
+          distribution: 'temurin'
+          java-version: '21'
 
-      # 從 Secrets 還原簽章檔（你若已設好可以保留；名稱依你現有 Secrets 調整）
-      - name: Restore keystore & props
-        run: |
-          mkdir -p android/keystore
-          echo "${{ secrets.KEYSTORE_PROPERTIES }}" > android/keystore/keystore.properties
-          echo "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 -d > android/keystore/calai-release.jks
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3
+
+      # 從 Secrets 還原簽章檔
+      - name: Restore keystore & props
+        shell: bash
+        run: |
+          mkdir -p android/keystore
+          # 用 printf 保留精確內容（避免 echo 亂換行）
+          printf "%s" "${{ secrets.KEYSTORE_PROPERTIES }}" > android/keystore/keystore.properties
+          printf "%s" "${{ secrets.KEYSTORE_JKS_BASE64 }}" | base64 -d > android/keystore/calai-release.jks
 
       # 出 APK + AAB（prodRelease）
       - name: Build prodRelease (APK & AAB)
         run: |
           ./gradlew :app:clean :app:assembleProdRelease :app:bundleProdRelease --stacktrace
 
-      # 驗簽（把證書指紋印到 log）
-      - name: Verify APK signature & print cert
+      # （除錯）列出 mapping 的實際位置
+      - name: Debug mapping location
         run: |
-          APKSIGNER=$(ls "${ANDROID_HOME}/build-tools/"*/apksigner | tail -n 1)
-          APK=$(ls app/build/outputs/apk/prod/release/*.apk | head -n 1)
-          $APKSIGNER verify --print-certs "$APK"
+          ls -la app/build/outputs/mapping || true
+          find app/build/outputs -maxdepth 5 -type f -name mapping.txt -print || true
 
-      # 上傳產物（一次把 APK/AAB/mapping 打包成 prodRelease）
+      # 保證 mapping.txt 一定存在，否則失敗（避免漏傳）
+      - name: Ensure mapping exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAP=$(ls app/build/outputs/mapping/**/mapping.txt 2>/dev/null | head -n 1 || true)
+          if [ -z "$MAP" ]; then
+            echo "ERROR: mapping.txt not found. Check isMinifyEnabled=true and variant path."
+            find app/build/outputs -maxdepth 6 -type f -name mapping.txt -print || true
+            exit 1
+          fi
+          echo "Found mapping: $MAP"
+
+      # 驗簽（印出 APK 與 AAB 憑證）
+      - name: Verify signatures & print certs
+        shell: bash
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+        run: |
+          set -euo pipefail
+          APK=$(ls app/build/outputs/apk/prod/release/*.apk | head -n 1)
+          AAB=$(ls app/build/outputs/bundle/prodRelease/*.aab | head -n 1)
+
+          # 優先找系統路徑 apksigner；否則掃 ANDROID_SDK_ROOT 與 ~/Android/Sdk
+          if command -v apksigner >/dev/null 2>&1; then
+            APKSIGNER=$(command -v apksigner)
+          else
+            SDK_CANDIDATES=()
+            [ -n "${ANDROID_SDK_ROOT:-}" ] && SDK_CANDIDATES+=("$ANDROID_SDK_ROOT")
+            [ -d "$HOME/Android/Sdk" ] && SDK_CANDIDATES+=("$HOME/Android/Sdk")
+
+            for SDK in "${SDK_CANDIDATES[@]}"; do
+              CANDIDATE=$(find "$SDK/build-tools" -type f -name apksigner 2>/dev/null | sort | tail -n 1 || true)
+              if [ -n "$CANDIDATE" ]; then
+                APKSIGNER="$CANDIDATE"
+                break
+              fi
+            done
+          fi
+
+          if [ -z "${APKSIGNER:-}" ]; then
+            echo "ERROR: apksigner not found."
+            exit 1
+          fi
+
+          echo "== APK sign info =="
+          "$APKSIGNER" verify --print-certs "$APK"
+
+          echo "== AAB sign info =="
+          keytool -printcert -jarfile "$AAB"
+
+      # 上傳產物（同一個 artifact 內包含 APK / AAB / mapping）
       - name: Upload prodRelease artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -53,6 +106,6 @@ jobs:
           path: |
             app/build/outputs/apk/prod/release/*.apk
             app/build/outputs/bundle/prodRelease/*.aab
-            app/build/outputs/mapping/prodRelease/mapping.txt
+            app/build/outputs/mapping/**/mapping.txt
           if-no-files-found: error
           retention-days: 14
