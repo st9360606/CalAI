@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 背景改純白 -->
+    <background android:drawable="@android:color/white"/>
+    <!-- 前景指向你新的 Vector（沒有文字） -->
+    <foreground android:drawable="@drawable/ic_focus_spoon_foreground"/>
+</adaptive-icon>
