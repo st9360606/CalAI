@@ -3,6 +3,6 @@
     <string name="landing_title">Snap a photo, know the calories.</string>
     <string name="cta_get_started">Get Started</string>
     <string name="cta_login_prefix">Already have an account?</string>
-    <string name="cta_login">Login</string>
+    <string name="cta_login">Sign In</string>
     <string name="choose_language">Choose language</string>
 </resources>

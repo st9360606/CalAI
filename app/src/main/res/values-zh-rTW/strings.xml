@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">卡路里AI相機</string>
-    <string name="landing_title">拍張照片,知道卡路里</string>
+    <string name="landing_title">拍一下，卡路里馬上知道</string>
     <string name="cta_get_started">開始使用</string>
     <string name="cta_login_prefix">已有帳號？</string>
     <string name="cta_login">登入</string>

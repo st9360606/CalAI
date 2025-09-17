@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 0ms 動畫 -->
+    <style name="NoActivityAnim">
+        <item name="android:activityOpenEnterAnimation">@anim/none</item>
+        <item name="android:activityOpenExitAnimation">@anim/none</item>
+        <item name="android:activityCloseEnterAnimation">@anim/none</item>
+        <item name="android:activityCloseExitAnimation">@anim/none</item>
+    </style>
 
     <!-- App 主題：Material 3、固定淺色、全白背景 -->
     <style name="Theme.BiteCal" parent="Theme.Material3.Light.NoActionBar">
