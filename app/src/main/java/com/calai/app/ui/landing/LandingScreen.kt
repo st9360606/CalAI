@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.withFrameNanos // ★ 新增：為了等待第一幀
 import com.calai.app.R
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
@@ -44,20 +45,20 @@ fun LandingScreen(
     var switching by remember { mutableStateOf(false) }
 
     // ===== 可調參數（依需求微調） =====
-    val phoneTopPadding = 40.dp         // 影片區塊頂部留白（原 56.dp）
-    val phoneWidthFraction = 0.78f      // 影片寬比例（原 0.74f）
-    val phoneAspect = 10f / 19.8f        // 影片寬高比
+    val phoneTopPadding = 40.dp         // 影片區塊頂部留白
+    val phoneWidthFraction = 0.78f      // 影片寬比例
+    val phoneAspect = 10f / 19.8f       // 影片寬高比
     val phoneCorner = 28.dp             // 影片外框圓角
 
-    val spaceVideoToTitle = 0.dp       // ★ 影片 → 標題 距離（拉遠）
-    val titleWidthFraction = 0.96f      // ★ 標題寬度（加寬）
-    val titleSize = 32.sp               // ★ 標題字級（加大）
-    val titleLineHeight = 30.sp         // 行高與字級一致
+    val spaceVideoToTitle = 0.dp
+    val titleWidthFraction = 0.96f
+    val titleSize = 32.sp
+    val titleLineHeight = 30.sp
 
     val ctaWidthFraction = 0.92f
     val ctaHeight = 56.dp
     val ctaCorner = 28.dp
-    val spaceTitleToCTA = 14.dp         // 標題 → CTA 距離
+    val spaceTitleToCTA = 14.dp
 
     // 統一字型（與標題相同）
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
@@ -67,9 +68,10 @@ fun LandingScreen(
     val currentLang = LANGS.find { it.tag.equals(currentTag, true) }
         ?: LANGS.firstOrNull { it.tag.startsWith("en", true) } ?: LANGS.first()
 
-    Box(Modifier
-        .fillMaxSize()
-        .background(Color.White)
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
         // 右上：旗幟膠囊
         FlagChip(
@@ -83,26 +85,21 @@ fun LandingScreen(
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(phoneTopPadding))
 
-            // ===== 影片區塊（獨立 Box，不再疊標題） =====
+            // ===== 影片區塊（第一幀後才載入播放器） =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Box(
+                LandingVideo(
                     modifier = Modifier
                         .fillMaxWidth(phoneWidthFraction)
                         .aspectRatio(phoneAspect)
                         .clip(RoundedCornerShape(phoneCorner)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    VideoPlayerRaw(
-                        resId = R.raw.intro,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
+                    resId = R.raw.intro
+                )
             }
 
-            // 影片 → 標題：拉遠距離
+            // 影片 → 標題
             Spacer(Modifier.height(spaceVideoToTitle))
 
             // ===== 標題（更寬、更大） =====
@@ -134,7 +131,7 @@ fun LandingScreen(
             // 標題 → CTA：固定距離
             Spacer(Modifier.height(spaceTitleToCTA))
 
-            // ===== CTA 與登入（字型與標題一致、放大） =====
+            // ===== CTA 與登入 =====
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,7 +149,6 @@ fun LandingScreen(
                         contentColor = Color.White
                     )
                 ) {
-                    // 與標題同字型、加大字級
                     Text(
                         text = stringResource(R.string.cta_get_started),
                         fontSize = 18.sp,
@@ -167,7 +163,7 @@ fun LandingScreen(
                     Text(
                         text = stringResource(R.string.cta_login_prefix),
                         fontSize = 17.sp,
-                        fontFamily = titleFont,               // 同字型
+                        fontFamily = titleFont,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF111114).copy(alpha = 0.72f),
                         style = LocalTextStyle.current.copy(
@@ -178,7 +174,7 @@ fun LandingScreen(
                     Text(
                         text = stringResource(R.string.cta_login),
                         fontSize = 17.sp,
-                        fontFamily = titleFont,               // 同字型
+                        fontFamily = titleFont,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable(onClick = onLogin),
@@ -210,6 +206,28 @@ fun LandingScreen(
         }
     }
 }
+
+/* ---------- 影片：第一幀後再載入，先畫佔位 ---------- */
+@Composable
+private fun LandingVideo(
+    modifier: Modifier,
+    resId: Int
+) {
+    var showVideo by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        withFrameNanos { }    // 第一幀
+//        kotlinx.coroutines.delay(50) // ★ 多等 120ms 再載入播放器
+        showVideo = true
+    }
+
+    if (showVideo) {
+        VideoPlayerRaw(resId = resId, modifier = modifier)
+    } else {
+        Box(modifier = modifier.background(Color(0xFFF2F2F2)))
+    }
+}
+
 
 /* ---------- 旗幟膠囊與語言縮寫 ---------- */
 
