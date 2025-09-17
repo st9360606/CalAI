@@ -20,6 +20,9 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // ✅ 預設 app 顯示名稱（多語字串不再被覆蓋）
+        manifestPlaceholders["appLabel"] = "BiteCal"
     }
 
     // ── 讀取 keystore.properties（支援兩個常見路徑；找不到時略過簽章） ──
@@ -43,12 +46,12 @@ android {
     signingConfigs {
         val storeFilePath = keystoreProps.getProperty("storeFile")?.trim().orEmpty()
         if (storeFilePath.isNotEmpty()) {
-            val sf = rootProject.file(storeFilePath) // 支援相對於專案根或絕對路徑
+            val sf = rootProject.file(storeFilePath)
             if (sf.exists()) {
                 create("release") {
                     storeFile = sf
                     storePassword = keystoreProps.getProperty("storePassword")
-                    keyAlias = keystoreProps.getProperty("keyAlias")      // ← 你的是 calai
+                    keyAlias = keystoreProps.getProperty("keyAlias")
                     keyPassword = keystoreProps.getProperty("keyPassword")
                     enableV1Signing = true
                     enableV2Signing = true
@@ -66,17 +69,22 @@ android {
             // 有簽章才綁定，避免缺檔時報錯
             signingConfigs.findByName("release")?.let { signingConfig = it }
 
-            // Release 最小化與資源壓縮
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 file("proguard-rules.pro")
             )
+
+            // ✅ release 顯示名稱
+            manifestPlaceholders["appLabel"] = "BiteCal"
         }
         getByName("debug") {
             isMinifyEnabled = false
             isShrinkResources = false
+
+            // ✅ debug 顯示名稱（僅影響圖示下方名稱，不覆蓋多語字串）
+            manifestPlaceholders["appLabel"] = "BiteCal (debug)"
         }
     }
 
@@ -87,25 +95,30 @@ android {
             dimension = "env"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            // 模擬器打本機
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            // ✅ 改用 placeholder（不要用 resValue 覆蓋 strings.xml）
+            manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
-        create("devWifi") { // 真機走 Wi-Fi
+        create("devWifi") {
             dimension = "env"
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
-            buildConfigField("String","BASE_URL","\"http://172.20.10.9:8080/\"") // 換成你的PC IP
+            buildConfigField("String","BASE_URL","\"http://172.20.10.9:8080/\"")
+            // ✅ 只改顯示名稱
+            manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
         create("devUsb") {
             dimension = "env"
             applicationIdSuffix = ".devusb"
             versionNameSuffix = "-devusb"
             buildConfigField("String","BASE_URL","\"http://127.0.0.1:8080/\"")
+            // ✅ 只改顯示名稱
+            manifestPlaceholders["appLabel"] = "BiteCal (devUsb)"
         }
         create("prod") {
             dimension = "env"
-            // TODO: 換成正式 https 網域
             buildConfigField("String", "BASE_URL", "\"https://api.yourdomain.com/\"")
+            manifestPlaceholders["appLabel"] = "BiteCal"
         }
     }
 
@@ -155,9 +168,7 @@ dependencies {
     // Hilt
     implementation("com.google.dagger:hilt-android:2.52")
     kapt("com.google.dagger:hilt-android-compiler:2.52")
-
-    // 保障：把 JavaPoet 固定到 1.13.0（避免 canonicalName() 例外）
-    kapt("com.squareup:javapoet:1.13.0")
+    kapt("com.squareup:javapoet:1.13.0") // 保障
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
@@ -166,13 +177,30 @@ dependencies {
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation(kotlin("test"))
+
+    // Splash
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Material3 / Material / AppCompat
+    implementation("androidx.compose.material3:material3:1.3.0")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+
+    // Media3 / ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-ui:1.4.1")
+
+    // Core KTX
+    implementation("androidx.core:core-ktx:1.13.1")
 }
 
 kapt {
     correctErrorTypes = true
 }
 
-// 統一強制 JavaPoet 1.13.0（防被舊版覆蓋）
 configurations.configureEach {
     resolutionStrategy.force("com.squareup:javapoet:1.13.0")
     resolutionStrategy.eachDependency {

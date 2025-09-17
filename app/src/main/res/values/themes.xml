@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.CalAI" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- App 主題：Material 3、固定淺色、全白背景 -->
+    <style name="Theme.BiteCal" parent="Theme.Material3.Light.NoActionBar">
+        <!-- 停用自動深色 -->
+        <item name="android:forceDarkAllowed">false</item>
+
+        <!-- App 尚未繪製前的底色 -->
+        <item name="android:windowBackground">@color/app_background</item>
+
+        <!-- 系統列顏色 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/app_background</item>
+    </style>
+
+    <!-- Android 12+ 系統 Splash（只放無文字圖） -->
+    <style name="Theme.BiteCal.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_focus_spoon_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.BiteCal</item>
+    </style>
+
 </resources>
