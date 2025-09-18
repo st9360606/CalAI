@@ -1,4 +1,5 @@
 @file:OptIn(androidx.media3.common.util.UnstableApi::class)
+@file:Suppress("UnsafeOptInUsageError")
 
 package com.calai.app.ui.landing
 
@@ -9,14 +10,7 @@ import androidx.annotation.RawRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -34,7 +28,7 @@ import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.ui.PlayerView
 
-/** 不建立任何音訊 renderer 的 RenderersFactory（解 emulator 音訊 I/O 錯誤） */
+/** 不建立任何音訊 renderer（避免 emulator audio I/O 噪訊） */
 @UnstableApi
 private class NoAudioRenderersFactory(context: Context) : DefaultRenderersFactory(context) {
     override fun buildAudioRenderers(
@@ -47,7 +41,7 @@ private class NoAudioRenderersFactory(context: Context) : DefaultRenderersFactor
         eventListener: AudioRendererEventListener,
         out: ArrayList<Renderer>
     ) {
-        // 不加入音訊 renderer → 完全不觸發音訊初始化
+        // 不加音訊 renderer
     }
 }
 
@@ -60,11 +54,10 @@ fun LoopVideo(
     val context = LocalContext.current
     val shape = RoundedCornerShape(cornerRadiusDp.dp)
 
-    // 先讓首屏畫出來，再初始化播放器
+    // 先讓首幀完成，再載入播放器
     var showVideo by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        withFrameNanos { _: Long -> }   // 明確標型別，避免 "Cannot infer type"
-        // 如果想更穩可以再加：kotlinx.coroutines.delay(120)
+        withFrameNanos { /* no-op: wait first frame */ }
         showVideo = true
     }
 
@@ -77,9 +70,7 @@ fun LoopVideo(
         return
     }
 
-    // 使用不含音訊的 RenderersFactory（相容所有 Media3 版本）
     val renderersFactory = remember(context) { NoAudioRenderersFactory(context) }
-
     val mediaUri = remember(resId) {
         Uri.parse("android.resource://${context.packageName}/$resId")
     }

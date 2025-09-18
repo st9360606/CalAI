@@ -96,7 +96,6 @@ android {
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
-            // ✅ 改用 placeholder（不要用 resValue 覆蓋 strings.xml）
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
         create("devWifi") {
@@ -104,7 +103,6 @@ android {
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
             buildConfigField("String","BASE_URL","\"http://172.20.10.9:8080/\"")
-            // ✅ 只改顯示名稱
             manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
         create("devUsb") {
@@ -112,7 +110,6 @@ android {
             applicationIdSuffix = ".devusb"
             versionNameSuffix = "-devusb"
             buildConfigField("String","BASE_URL","\"http://127.0.0.1:8080/\"")
-            // ✅ 只改顯示名稱
             manifestPlaceholders["appLabel"] = "BiteCal (devUsb)"
         }
         create("prod") {
@@ -136,8 +133,8 @@ android {
 }
 
 dependencies {
-    // Compose / AndroidX
-    implementation(libs.androidx.core.ktx)
+    // Compose / AndroidX（以 BOM 對齊）
+    implementation(libs.androidx.core.ktx)                // ← versions.toml 設為 1.13.1
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -145,9 +142,11 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.junit.ktx)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // 測試
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -181,8 +180,7 @@ dependencies {
     // Splash
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    // Material3 / Material / AppCompat
-    implementation("androidx.compose.material3:material3:1.3.0")
+    // Material / AppCompat
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
 
@@ -193,11 +191,9 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")
 
-    // Core KTX
-    implementation("androidx.core:core-ktx:1.13.1")
+    // Material Icons（用 BOM，不指定版本號，避免雙版本）
+    implementation("androidx.compose.material:material-icons-extended")
 
-    //Material Icons 的信封圖示
-    implementation("androidx.compose.material:material-icons-extended:1.7.2") // 用你專案的 Compose 版號
 }
 
 kapt {
@@ -205,6 +201,7 @@ kapt {
 }
 
 configurations.configureEach {
+    // 你之前已做的 javapoet 固定版位，保留
     resolutionStrategy.force("com.squareup:javapoet:1.13.0")
     resolutionStrategy.eachDependency {
         if (requested.group == "com.squareup" && requested.name == "javapoet") {

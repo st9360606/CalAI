@@ -19,6 +19,7 @@
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
 
 
-
+    <!-- common -->
+    <string name="close">Close</string>
 
 </resources>

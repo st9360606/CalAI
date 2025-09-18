@@ -1,15 +1,41 @@
+// app/src/main/java/com/calai/app/ui/landing/LandingScreen.kt
 package com.calai.app.ui.landing
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
@@ -21,11 +47,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.withFrameNanos // ★ 新增：為了等待第一幀
 import com.calai.app.R
+import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
-import com.calai.app.ui.VideoPlayerRaw
+import com.calai.app.i18n.LocaleUtils.setAppLocales
+import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.ui.auth.SignInSheet
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -41,15 +68,16 @@ fun LandingScreen(
     val store = remember(context) { LanguageStore(context) }
     val composeLocale = LocalLocaleController.current
 
-    var showLang by remember { mutableStateOf(false) }
-    var switching by remember { mutableStateOf(false) }
-    var showSignInSheet by remember { mutableStateOf(false) }
+    // ✅ 改用 rememberSaveable，抵抗組態變更
+    var showLang by rememberSaveable { mutableStateOf(false) }
+    var switching by rememberSaveable { mutableStateOf(false) }
+    var showSignInSheet by rememberSaveable { mutableStateOf(false) }
 
     // ===== 可調參數（依需求微調） =====
-    val phoneTopPadding = 40.dp         // 影片區塊頂部留白
-    val phoneWidthFraction = 0.78f      // 影片寬比例
-    val phoneAspect = 10f / 19.8f       // 影片寬高比
-    val phoneCorner = 28.dp             // 影片外框圓角
+    val phoneTopPadding = 40.dp
+    val phoneWidthFraction = 0.78f
+    val phoneAspect = 10f / 19.8f
+    val phoneCorner = 28.dp
 
     val spaceVideoToTitle = 0.dp
     val titleWidthFraction = 0.96f
@@ -86,7 +114,7 @@ fun LandingScreen(
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(phoneTopPadding))
 
-            // ===== 影片區塊（第一幀後才載入播放器） =====
+            // ===== 影片區塊 =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -100,10 +128,9 @@ fun LandingScreen(
                 )
             }
 
-            // 影片 → 標題
             Spacer(Modifier.height(spaceVideoToTitle))
 
-            // ===== 標題（更寬、更大） =====
+            // ===== 標題 =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -129,7 +156,6 @@ fun LandingScreen(
                 )
             }
 
-            // 標題 → CTA：固定距離
             Spacer(Modifier.height(spaceTitleToCTA))
 
             // ===== CTA 與登入 =====
@@ -172,16 +198,13 @@ fun LandingScreen(
                         )
                     )
                     Spacer(Modifier.width(9.dp))
-                    // 👉 替換你原本的 Text(...) 區塊
                     Text(
                         text = stringResource(R.string.cta_login),
                         fontSize = 17.sp,
                         fontFamily = titleFont,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable {
-                            showSignInSheet = true
-                        }, // 改成打開 BottomSheet
+                        modifier = Modifier.clickable { showSignInSheet = true },
                         style = LocalTextStyle.current.copy(
                             platformStyle = PlatformTextStyle(includeFontPadding = false)
                         )
@@ -190,64 +213,59 @@ fun LandingScreen(
             }
         }
 
-        if (showSignInSheet) {
-            SignInSheet(
-                onApple = { /* TODO: 開 Apple OAuth */ },
-                onGoogle = { /* TODO: 走 Credential Manager */ },
-                onEmail = { onLogin() },           // 走 Email 登入頁
-                onTerms = { /* TODO: 開條款頁 */ },
-                onPrivacy = { /* TODO: 開隱私頁 */ },
-                onDismiss = { showSignInSheet = false }
-            )
-        }
-
+        // ===== 語言對話框 =====
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
-                currentTag = composeLocale.tag.ifBlank {
-                    java.util.Locale.getDefault().toLanguageTag()
-                },
+                currentTag = composeLocale.tag.ifBlank { java.util.Locale.getDefault().toLanguageTag() },
                 onPick = { picked ->
                     if (switching) return@LanguageDialog
                     switching = true
                     showLang = false
                     scope.launch {
+                        // 1) Compose 層立即套
                         composeLocale.set(picked.tag)
+
+                        // 2) 全域（非 Compose）也切（正規化後再設）
+                        LanguageManager.applyLanguage(picked.tag)
+
+                        // 3) 你原本的外部回呼（若還有其它處理）
                         onSetLocale(picked.tag)
+
+                        // 4) 保存
                         store.save(picked.tag)
+
                         switching = false
                     }
                 },
-                onDismiss = { showLang = false },
-                maxWidth = 320.dp // 小卡片寬度（可改 300–340.dp）
+
+                        onDismiss = { showLang = false },
+                maxWidth = 320.dp
             )
+        }
+
+        // ===== 登入底部面板：用語言標籤作 key，語言一變就重建子樹 =====
+        if (showSignInSheet) {
+            val cfg = LocalConfiguration.current
+            val localeKey = cfg.locales.toLanguageTags() // 讓語系變更時強制重建
+            val localeTagForSheet = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
+
+            key(localeKey) {
+                SignInSheet(
+                    localeTag = localeTagForSheet,   // ✅ 新增：把當前語系傳給 Sheet
+                    onApple = { /* ... */ },
+                    onGoogle = { /* ... */ },
+                    onEmail = { onLogin() },
+                    onTerms = { /* ... */ },
+                    onPrivacy = { /* ... */ },
+                    onDismiss = { showSignInSheet = false }
+                )
+            }
         }
     }
 }
 
-/* ---------- 影片：第一幀後再載入，先畫佔位 ---------- */
-@Composable
-private fun LandingVideo(
-    modifier: Modifier,
-    resId: Int
-) {
-    var showVideo by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        withFrameNanos { }    // 第一幀
-//        kotlinx.coroutines.delay(50) // ★ 多等 120ms 再載入播放器
-        showVideo = true
-    }
-
-    if (showVideo) {
-        VideoPlayerRaw(resId = resId, modifier = modifier)
-    } else {
-        Box(modifier = modifier.background(Color(0xFFF2F2F2)))
-    }
-}
-
-
-/* ---------- 旗幟膠囊與語言縮寫 ---------- */
+/* ---------- 旗幟膠囊與語言縮寫（原樣保留） ---------- */
 
 @Composable
 private fun FlagChip(

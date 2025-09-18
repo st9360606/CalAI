@@ -1,11 +1,17 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+@file:Suppress("UnsafeOptInUsageError")
+
 package com.calai.app.ui
 
 import android.net.Uri
 import androidx.annotation.RawRes
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -14,9 +20,6 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 @Composable
 private fun VideoPlayerCore(
@@ -24,8 +27,8 @@ private fun VideoPlayerCore(
     mute: Boolean = true,
     repeat: Boolean = true,
     autoPlay: Boolean = true,
-    rounded: Dp = 24.dp,              // ← 用 Dp
-    buildMediaItem: () -> MediaItem,  // ← 放最後，尾隨 lambda
+    rounded: Dp = 24.dp,
+    buildMediaItem: () -> MediaItem,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
