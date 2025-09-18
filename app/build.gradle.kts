@@ -195,6 +195,9 @@ dependencies {
 
     // Core KTX
     implementation("androidx.core:core-ktx:1.13.1")
+
+    //Material Icons 的信封圖示
+    implementation("androidx.compose.material:material-icons-extended:1.7.2") // 用你專案的 Compose 版號
 }
 
 kapt {

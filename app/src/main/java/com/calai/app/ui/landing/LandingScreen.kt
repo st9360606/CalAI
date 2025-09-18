@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/ui/landing/LandingScreen.kt
 package com.calai.app.ui.landing
 
 import androidx.compose.foundation.background
@@ -27,6 +26,7 @@ import com.calai.app.R
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.ui.VideoPlayerRaw
+import com.calai.app.ui.auth.SignInSheet
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -43,6 +43,7 @@ fun LandingScreen(
 
     var showLang by remember { mutableStateOf(false) }
     var switching by remember { mutableStateOf(false) }
+    var showSignInSheet by remember { mutableStateOf(false) }
 
     // ===== 可調參數（依需求微調） =====
     val phoneTopPadding = 40.dp         // 影片區塊頂部留白
@@ -52,7 +53,7 @@ fun LandingScreen(
 
     val spaceVideoToTitle = 0.dp
     val titleWidthFraction = 0.96f
-    val titleSize = 32.sp
+    val titleSize = 30.sp
     val titleLineHeight = 30.sp
 
     val ctaWidthFraction = 0.92f
@@ -171,13 +172,16 @@ fun LandingScreen(
                         )
                     )
                     Spacer(Modifier.width(9.dp))
+                    // 👉 替換你原本的 Text(...) 區塊
                     Text(
                         text = stringResource(R.string.cta_login),
                         fontSize = 17.sp,
                         fontFamily = titleFont,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onLogin),
+                        modifier = Modifier.clickable {
+                            showSignInSheet = true
+                        }, // 改成打開 BottomSheet
                         style = LocalTextStyle.current.copy(
                             platformStyle = PlatformTextStyle(includeFontPadding = false)
                         )
@@ -186,10 +190,23 @@ fun LandingScreen(
             }
         }
 
+        if (showSignInSheet) {
+            SignInSheet(
+                onApple = { /* TODO: 開 Apple OAuth */ },
+                onGoogle = { /* TODO: 走 Credential Manager */ },
+                onEmail = { onLogin() },           // 走 Email 登入頁
+                onTerms = { /* TODO: 開條款頁 */ },
+                onPrivacy = { /* TODO: 開隱私頁 */ },
+                onDismiss = { showSignInSheet = false }
+            )
+        }
+
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
-                currentTag = composeLocale.tag,
+                currentTag = composeLocale.tag.ifBlank {
+                    java.util.Locale.getDefault().toLanguageTag()
+                },
                 onPick = { picked ->
                     if (switching) return@LanguageDialog
                     switching = true
@@ -201,7 +218,8 @@ fun LandingScreen(
                         switching = false
                     }
                 },
-                onDismiss = { showLang = false }
+                onDismiss = { showLang = false },
+                maxWidth = 320.dp // 小卡片寬度（可改 300–340.dp）
             )
         }
     }
