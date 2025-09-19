@@ -1,0 +1,49 @@
+# 1) 定位 Temp 產物（取最新一個）
+$src = Get-ChildItem "$env:LOCALAPPDATA\Temp\BaselineProfileGenerator_generateStartupProfile-startup-prof-*.txt" `
+       | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+
+if (-not $src) { Write-Host "❌ 找不到 Temp 產物。" -ForegroundColor Red; return }
+
+# 2) 複製到專案既定位置
+$dstDir = ".\app\src\main"
+mkdir $dstDir 2>$null | Out-Null
+Copy-Item $src.FullName (Join-Path $dstDir "baseline-prof.txt") -Force
+
+# 3) 檢查前幾行
+Get-Content (Join-Path $dstDir "baseline-prof.txt") -First 10
+
+
+TL;DR（接下來 5 步）
+
+確認檔案路徑：app/src/main/baseline-prof.txt（或放到特定變體路徑 app/src/prodRelease/baseline-prof.txt）。
+
+加依賴（你已加好）：implementation("androidx.profileinstaller:profileinstaller:1.3.1")。
+
+重新安裝接近 release 的變體（prodRelease / prodNonMinifiedRelease / benchmark）。
+
+跑兩次 App：第一次會安裝 profile；第二次啟動時間應更快。
+
+看 Logcat 驗證：搜尋 ProfileInstaller / ProfileVerifier；同時對照你 BootTrace 的 first-frame 時間。
+
+
+
+A) 如果要重新錄製 / 更新 baseline
+
+保持上面兩個變體一致。
+
+執行：Run ▸ Run 'generateStartupProfile()'（或在終端）
+
+./gradlew :baselineprofile:connectedProdNonMinifiedReleaseAndroidTest
+
+
+用前面指令 adb pull …startup-prof.txt → 存成 app/src/main/baseline-prof.txt（你已完成）。
+
+B) 驗證啟動提速（裝 APP）
+
+仍用 :app = prodNonMinifiedRelease 安裝/啟動一次。
+
+再啟動第二次（第一次會安裝 profile，第二次才明顯）。
+
+Logcat 搜 ProfileInstaller / ProfileVerifier 應看到已安裝訊息；冷啟更快。
+
+要上架前：把兩個變體都切到 prodRelease，再跑一次錄製（connectedProdReleaseAndroidTest）並覆蓋 baseline-prof.txt，以確保與正式包完全一致。

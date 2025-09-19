@@ -3,24 +3,26 @@ package com.calai.app
 
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.calai.app.ui.BiteCalApp
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
+import com.calai.app.ui.BiteCalApp
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @Volatile private var splashUnlocked = false
-    private val fallbackMs = 350L  // ← 統一數值
+    private val fallbackMs = 350L
+    private var fuseJob: Job? = null
 
     private fun logPoint(tag: String) {
         Log.d("BootTrace", "${SystemClock.uptimeMillis()} : $tag")
@@ -35,20 +37,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         logPoint("after super.onCreate")
 
-        // ★ 最遲 350ms 放行（保險絲）
-        lifecycleScope.launch {
+        // 350ms 保險絲：無論如何放行，避免極端卡住
+        fuseJob = lifecycleScope.launch {
             delay(fallbackMs)
-            splashUnlocked = true
-            logPoint("fallback-${fallbackMs}ms")
+            unlockSplash("fallback-${fallbackMs}ms")
         }
 
         setContent {
-            // ★ 第一幀繪製完成即放行（最快路徑）
+            // 第一幀一出現就放行（最快路徑）
             FirstFrameUnlock {
-                splashUnlocked = true
-                logPoint("first-frame")
-                // 告訴系統：我們的首屏已可互動（統計用途）
-                // 注意：這不會「讓它更快」，是正確回報。
+                unlockSplash("first-frame")
+                // 正確回報 TTFD：等到首屏可互動即回報
+                // 注意：這是統計訊號，不會神奇加速
                 window?.decorView?.post { reportFullyDrawn() }
             }
             logPoint("setContent-enter")
@@ -57,12 +57,30 @@ class MainActivity : ComponentActivity() {
 
         logPoint("onCreate:end")
     }
+
+    override fun onResume() {
+        super.onResume()
+        // 後備：若因任何原因未解鎖（理論上不會），此處保險
+        if (!splashUnlocked) unlockSplash("onResume-fallback")
+    }
+
+    override fun onDestroy() {
+        fuseJob?.cancel()
+        super.onDestroy()
+    }
+
+    private fun unlockSplash(reason: String) {
+        if (!splashUnlocked) {
+            splashUnlocked = true
+            logPoint("unlock:$reason")
+        }
+    }
 }
 
 @Composable
 private fun FirstFrameUnlock(onUnlock: () -> Unit) {
     LaunchedEffect(Unit) {
-        withFrameNanos { /* 等待第一幀 */ }
+        withFrameNanos { /* wait next choreographer frame */ }
         onUnlock()
     }
 }

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
+    alias(libs.plugins.baselineprofile)
 }
 
 @Suppress("UnstableApiUsage")
@@ -114,7 +115,8 @@ android {
         }
         create("prod") {
             dimension = "env"
-            buildConfigField("String", "BASE_URL", "\"https://api.yourdomain.com/\"")
+//            buildConfigField("String", "BASE_URL", "\"https://api.yourdomain.com/\"")  等買域名
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
     }
@@ -143,6 +145,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.junit.ktx)
+    implementation(libs.androidx.startup.runtime)
+    "baselineProfile"(project(":baselineprofile"))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
@@ -193,6 +197,8 @@ dependencies {
 
     // Material Icons（用 BOM，不指定版本號，避免雙版本）
     implementation("androidx.compose.material:material-icons-extended")
+
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
 
 }
 

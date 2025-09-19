@@ -1,5 +1,3 @@
-package com.calai.app.ui.landing
-
 import androidx.annotation.RawRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -12,31 +10,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.calai.app.ui.VideoPlayerRaw
+import com.calai.app.ui.VideoPlayerRaw   // 確保路徑正確
 
-/**
- * 首幀後再載入影片：
- * - 先讓畫面完成第一幀，避免與啟動期爭資源造成卡頓
- * - 之後再顯示實際播放器；在此檔不直接觸碰 Media3，可避開 UnstableApi Lint
- */
 @Composable
 fun LandingVideo(
     modifier: Modifier,
-    @RawRes resId: Int
+    @RawRes resId: Int,
+    placeholderColor: Color = Color(0xFFF2F2F2)
 ) {
     var showVideo by remember { mutableStateOf(false) }
 
+    // 等第一幀繪製完成再載入播放器，避免卡在啟動畫面
     LaunchedEffect(Unit) {
-        // 等第一幀繪製完成，再顯示播放器
-        withFrameNanos { /* no-op */ }
+        withFrameNanos { _: Long -> }   // 明確標型別避免 "Cannot infer type"
         showVideo = true
     }
 
     if (showVideo) {
-        // 你的現有播放器（內部才會使用 Media3）
+        // 真正的播放器（內部才會用到 Media3）
         VideoPlayerRaw(resId = resId, modifier = modifier)
     } else {
-        // 先畫與影片相同尺寸/圓角的佔位，避免版面跳動
-        Box(modifier = modifier.background(Color(0xFFF2F2F2)))
+        // 與影片容器同尺寸的佔位，避免版面跳動
+        Box(modifier = modifier.background(placeholderColor))
     }
 }
