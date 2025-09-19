@@ -1,23 +1,19 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()            // ★ 必須：AGP 外掛從這裡抓
         mavenCentral()
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
+        google()            // ★ 這裡也要
         mavenCentral()
     }
 }
 
 rootProject.name = "CalAI"
 include(":app")
+include(":baselineprofile")

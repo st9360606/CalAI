@@ -39,3 +39,7 @@ fun ProvideComposeLocale(
         content()
     }
 }
+// 取得「實際資源」目前的語言 key（用來當 key 觸發重建最準）
+@Composable
+fun currentLocaleKey(): String =
+    LocalContext.current.resources.configuration.locales.toLanguageTags()

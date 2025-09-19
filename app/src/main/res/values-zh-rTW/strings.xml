@@ -5,4 +5,19 @@
     <string name="cta_login_prefix">已有帳號？</string>
     <string name="cta_login">登入</string>
     <string name="choose_language">選擇語言</string>
+
+    <string name="signin_title">登入</string>
+    <string name="signin_with_apple">使用 Apple 登入</string>
+    <string name="signin_with_google">使用 Google 登入</string>
+    <string name="signin_with_email">通過電子郵件繼續</string>
+    <string name="signin_legal_hint">繼續即表示你同意 BiteCal 的</string>
+    <string name="signin_terms">條款與條件</string>
+    <string name="signin_and">和</string>
+    <string name="signin_privacy">隱私政策</string>
+
+    <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
+    <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
+
+    <!-- common -->
+    <string name="close">關閉</string>
 </resources>

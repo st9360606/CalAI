@@ -1,40 +1,45 @@
-// app/src/main/java/com/calai/app/ui/BiteCal.kt  (你的 BiteCalApp 定義處)
 package com.calai.app.ui
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
-import com.calai.app.i18n.ProvideComposeLocale
 import com.calai.app.i18n.LanguageStore
+import com.calai.app.i18n.ProvideComposeLocale
 import com.calai.app.ui.nav.BiteCalNavHost
-import kotlinx.coroutines.flow.firstOrNull
 import java.util.Locale
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.map
 
+// 以前（地雷）：runBlocking { store.langFlow.first() }  <-- 會卡主執行緒
+// 改成：非阻塞、先用系統語言，資料來了再切
 @Composable
 fun BiteCalApp() {
-    // 啟動時決定 Compose 的初始語系：已保存 > AppCompat > 系統
     val context = LocalContext.current
     val store = remember(context) { LanguageStore(context) }
 
-    val initialTag = remember {
-        // 讀 DataStore（同步一次即可；也可改用 collectAsState）
-        val saved = runBlocking { store.langFlow.firstOrNull() }.orEmpty()
+    // 非阻塞讀取預設語言
+    val savedTag by store.langFlow.collectAsState(initial = "")
+    val initialTag = remember(savedTag) {
         when {
-            saved.isNotBlank() -> saved
+            savedTag.isNotBlank() -> savedTag
             AppCompatDelegate.getApplicationLocales().toLanguageTags().isNotBlank() ->
                 AppCompatDelegate.getApplicationLocales().toLanguageTags()
             else -> Locale.getDefault().toLanguageTag()
         }
     }
 
-    var composeLocale by remember { mutableStateOf(initialTag) }
+    var composeLocale by remember(initialTag) { mutableStateOf(initialTag) }
+
+    // ✅ Side-effect 放這裡：每次語言狀態變更就儲存（不阻塞 UI）
+    LaunchedEffect(composeLocale) {
+        if (composeLocale.isNotBlank()) store.save(composeLocale)
+    }
 
     ProvideComposeLocale(composeLocale) {
-        // 你的 NavHost / 整個 UI
         BiteCalNavHost(
-            // 把 setter 暴露出去，好讓 Landing 直接切 Compose 語系
-            onSetLocale = { newTag -> composeLocale = newTag }
+            onSetLocale = { tag -> composeLocale = tag } // 只改狀態
         )
     }
 }
+
+

@@ -1,8 +1,25 @@
 <resources>
-    <string name="app_name">BiteCal</string>
+    <string name="app_name">BiteCal Calorie-Camera</string>
     <string name="landing_title">Snap a photo, know the calories.</string>
     <string name="cta_get_started">Get Started</string>
     <string name="cta_login_prefix">Already have an account?</string>
     <string name="cta_login">Sign In</string>
     <string name="choose_language">Choose language</string>
+
+    <string name="signin_title">Sign In</string>
+    <string name="signin_with_apple">Sign in with Apple</string>
+    <string name="signin_with_google">Sign in with Google</string>
+    <string name="signin_with_email">Continue with email</string>
+    <string name="signin_legal_hint">By continuing you agree to BiteCal\'s</string>
+    <string name="signin_terms">Terms</string>
+    <string name="signin_and">and</string>
+    <string name="signin_privacy">Privacy Policy</string>
+
+    <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
+    <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
+
+
+    <!-- common -->
+    <string name="close">Close</string>
+
 </resources>

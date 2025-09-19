@@ -1,16 +1,40 @@
 // app/src/main/java/com/calai/app/ui/landing/LandingScreen.kt
 package com.calai.app.ui.landing
 
+import LandingVideo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
@@ -23,9 +47,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
+import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
-import com.calai.app.ui.VideoPlayerRaw
+import com.calai.app.ui.auth.SignInSheet
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -40,24 +65,26 @@ fun LandingScreen(
     val store = remember(context) { LanguageStore(context) }
     val composeLocale = LocalLocaleController.current
 
-    var showLang by remember { mutableStateOf(false) }
-    var switching by remember { mutableStateOf(false) }
+    // ✅ 改用 rememberSaveable，抵抗組態變更
+    var showLang by rememberSaveable { mutableStateOf(false) }
+    var switching by rememberSaveable { mutableStateOf(false) }
+    var showSignInSheet by rememberSaveable { mutableStateOf(false) }
 
     // ===== 可調參數（依需求微調） =====
-    val phoneTopPadding = 40.dp         // 影片區塊頂部留白（原 56.dp）
-    val phoneWidthFraction = 0.78f      // 影片寬比例（原 0.74f）
-    val phoneAspect = 10f / 19.8f        // 影片寬高比
-    val phoneCorner = 28.dp             // 影片外框圓角
+    val phoneTopPadding = 40.dp
+    val phoneWidthFraction = 0.78f
+    val phoneAspect = 10f / 19.8f
+    val phoneCorner = 28.dp
 
-    val spaceVideoToTitle = 0.dp       // ★ 影片 → 標題 距離（拉遠）
-    val titleWidthFraction = 0.96f      // ★ 標題寬度（加寬）
-    val titleSize = 32.sp               // ★ 標題字級（加大）
-    val titleLineHeight = 30.sp         // 行高與字級一致
+    val spaceVideoToTitle = 0.dp
+    val titleWidthFraction = 0.96f
+    val titleSize = 30.sp
+    val titleLineHeight = 30.sp
 
     val ctaWidthFraction = 0.92f
     val ctaHeight = 56.dp
     val ctaCorner = 28.dp
-    val spaceTitleToCTA = 14.dp         // 標題 → CTA 距離
+    val spaceTitleToCTA = 14.dp
 
     // 統一字型（與標題相同）
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
@@ -67,9 +94,10 @@ fun LandingScreen(
     val currentLang = LANGS.find { it.tag.equals(currentTag, true) }
         ?: LANGS.firstOrNull { it.tag.startsWith("en", true) } ?: LANGS.first()
 
-    Box(Modifier
-        .fillMaxSize()
-        .background(Color.White)
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
         // 右上：旗幟膠囊
         FlagChip(
@@ -83,29 +111,23 @@ fun LandingScreen(
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(phoneTopPadding))
 
-            // ===== 影片區塊（獨立 Box，不再疊標題） =====
+            // ===== 影片區塊 =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Box(
+                LandingVideo(
                     modifier = Modifier
                         .fillMaxWidth(phoneWidthFraction)
                         .aspectRatio(phoneAspect)
                         .clip(RoundedCornerShape(phoneCorner)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    VideoPlayerRaw(
-                        resId = R.raw.intro,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                }
+                    resId = R.raw.intro
+                )
             }
 
-            // 影片 → 標題：拉遠距離
             Spacer(Modifier.height(spaceVideoToTitle))
 
-            // ===== 標題（更寬、更大） =====
+            // ===== 標題 =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -131,10 +153,9 @@ fun LandingScreen(
                 )
             }
 
-            // 標題 → CTA：固定距離
             Spacer(Modifier.height(spaceTitleToCTA))
 
-            // ===== CTA 與登入（字型與標題一致、放大） =====
+            // ===== CTA 與登入 =====
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,7 +173,6 @@ fun LandingScreen(
                         contentColor = Color.White
                     )
                 ) {
-                    // 與標題同字型、加大字級
                     Text(
                         text = stringResource(R.string.cta_get_started),
                         fontSize = 18.sp,
@@ -167,7 +187,7 @@ fun LandingScreen(
                     Text(
                         text = stringResource(R.string.cta_login_prefix),
                         fontSize = 17.sp,
-                        fontFamily = titleFont,               // 同字型
+                        fontFamily = titleFont,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF111114).copy(alpha = 0.72f),
                         style = LocalTextStyle.current.copy(
@@ -178,10 +198,10 @@ fun LandingScreen(
                     Text(
                         text = stringResource(R.string.cta_login),
                         fontSize = 17.sp,
-                        fontFamily = titleFont,               // 同字型
+                        fontFamily = titleFont,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(onClick = onLogin),
+                        modifier = Modifier.clickable { showSignInSheet = true },
                         style = LocalTextStyle.current.copy(
                             platformStyle = PlatformTextStyle(includeFontPadding = false)
                         )
@@ -190,28 +210,59 @@ fun LandingScreen(
             }
         }
 
+        // ===== 語言對話框 =====
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
-                currentTag = composeLocale.tag,
+                currentTag = composeLocale.tag.ifBlank { java.util.Locale.getDefault().toLanguageTag() },
                 onPick = { picked ->
                     if (switching) return@LanguageDialog
                     switching = true
                     showLang = false
                     scope.launch {
+                        // 1) Compose 層立即套
                         composeLocale.set(picked.tag)
+
+                        // 2) 全域（非 Compose）也切（正規化後再設）
+                        LanguageManager.applyLanguage(picked.tag)
+
+                        // 3) 你原本的外部回呼（若還有其它處理）
                         onSetLocale(picked.tag)
+
+                        // 4) 保存
                         store.save(picked.tag)
+
                         switching = false
                     }
                 },
-                onDismiss = { showLang = false }
+
+                        onDismiss = { showLang = false },
+                maxWidth = 320.dp
             )
+        }
+
+        // ===== 登入底部面板：用語言標籤作 key，語言一變就重建子樹 =====
+        if (showSignInSheet) {
+            val cfg = LocalConfiguration.current
+            val localeKey = cfg.locales.toLanguageTags() // 讓語系變更時強制重建
+            val localeTagForSheet = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
+
+            key(localeKey) {
+                SignInSheet(
+                    localeTag = localeTagForSheet,   // ✅ 新增：把當前語系傳給 Sheet
+                    onApple = { /* ... */ },
+                    onGoogle = { /* ... */ },
+                    onEmail = { onLogin() },
+                    onTerms = { /* ... */ },
+                    onPrivacy = { /* ... */ },
+                    onDismiss = { showSignInSheet = false }
+                )
+            }
         }
     }
 }
 
-/* ---------- 旗幟膠囊與語言縮寫 ---------- */
+/* ---------- 旗幟膠囊與語言縮寫（原樣保留） ---------- */
 
 @Composable
 private fun FlagChip(
