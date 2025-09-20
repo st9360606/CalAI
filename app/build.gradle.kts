@@ -2,11 +2,13 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.android)        // ✅ 留這個就好
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
     alias(libs.plugins.baselineprofile)
+    // ✅ 明確指定 Kotlin Serialization 插件版本（請與你的 Kotlin 版本一致）
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
 }
 
 @Suppress("UnstableApiUsage")
@@ -22,11 +24,11 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // ✅ 預設 app 顯示名稱（多語字串不再被覆蓋）
+        // 預設 app 顯示名稱（不覆蓋多語字串）
         manifestPlaceholders["appLabel"] = "BiteCal"
     }
 
-    // ── 讀取 keystore.properties（支援兩個常見路徑；找不到時略過簽章） ──
+    // ── 讀取 keystore.properties（兩個常見路徑；找不到就跳過簽章） ──
     val keystoreProps: Properties = Properties().apply {
         val candidates = listOf(
             rootProject.file("keystore/keystore.properties"),
@@ -36,7 +38,7 @@ android {
         if (f != null) {
             f.inputStream().use { load(it) }
         } else {
-            // CI / 無檔案時改用環境變數（可選）
+            // 可選：用環境變數跑 CI
             setProperty("storeFile", System.getenv("KEYSTORE_FILE") ?: "")
             setProperty("storePassword", System.getenv("KEYSTORE_STORE_PASSWORD") ?: "")
             setProperty("keyAlias", System.getenv("KEYSTORE_ALIAS") ?: "")
@@ -67,24 +69,18 @@ android {
 
     buildTypes {
         getByName("release") {
-            // 有簽章才綁定，避免缺檔時報錯
             signingConfigs.findByName("release")?.let { signingConfig = it }
-
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 file("proguard-rules.pro")
             )
-
-            // ✅ release 顯示名稱
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
         getByName("debug") {
             isMinifyEnabled = false
             isShrinkResources = false
-
-            // ✅ debug 顯示名稱（僅影響圖示下方名稱，不覆蓋多語字串）
             manifestPlaceholders["appLabel"] = "BiteCal (debug)"
         }
     }
@@ -115,13 +111,12 @@ android {
         }
         create("prod") {
             dimension = "env"
-//            buildConfigField("String", "BASE_URL", "\"https://api.yourdomain.com/\"")  等買域名
+            // TODO: 之後換正式域名
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
     }
 
-    // ── 語言等級 ─────────────────────────────────────────────
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -136,7 +131,7 @@ android {
 
 dependencies {
     // Compose / AndroidX（以 BOM 對齊）
-    implementation(libs.androidx.core.ktx)                // ← versions.toml 設為 1.13.1
+    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -162,7 +157,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0") // ✅ 移除重複
 
     // ViewModel（Compose）
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
@@ -171,7 +166,7 @@ dependencies {
     // Hilt
     implementation("com.google.dagger:hilt-android:2.52")
     kapt("com.google.dagger:hilt-android-compiler:2.52")
-    kapt("com.squareup:javapoet:1.13.0") // 保障
+    kapt("com.squareup:javapoet:1.13.0")
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
@@ -195,11 +190,26 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")
 
-    // Material Icons（用 BOM，不指定版本號，避免雙版本）
+    // Material Icons（用 BOM）
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("androidx.profileinstaller:profileinstaller:1.3.1")
 
+    // 既有網路層（如需保留 Moshi）
+    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+    implementation("androidx.activity:activity-ktx:1.9.2")
+
+    // Credential Manager + Google ID
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // Kotlinx Serialization（Retrofit 轉換器）
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+
+    implementation("com.google.code.gson:gson:2.11.0")
 }
 
 kapt {
@@ -207,7 +217,7 @@ kapt {
 }
 
 configurations.configureEach {
-    // 你之前已做的 javapoet 固定版位，保留
+    // 固定 javapoet 版本（避免相依拉錯）
     resolutionStrategy.force("com.squareup:javapoet:1.13.0")
     resolutionStrategy.eachDependency {
         if (requested.group == "com.squareup" && requested.name == "javapoet") {

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">卡路里AI相機</string>
+    <string name="app_name">BiteCal｜卡路里相機（AI）：拍照計算卡路里與減脂記錄</string>
     <string name="landing_title">拍一下，卡路里馬上知道</string>
     <string name="cta_get_started">開始使用</string>
     <string name="cta_login_prefix">已有帳號？</string>

@@ -1,5 +1,6 @@
 package com.calai.app.ui
 
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -8,12 +9,11 @@ import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.ProvideComposeLocale
 import com.calai.app.ui.nav.BiteCalNavHost
 import java.util.Locale
-import kotlinx.coroutines.flow.map
 
 // 以前（地雷）：runBlocking { store.langFlow.first() }  <-- 會卡主執行緒
 // 改成：非阻塞、先用系統語言，資料來了再切
 @Composable
-fun BiteCalApp() {
+fun BiteCalApp(hostActivity: ComponentActivity) { // ★ 新增參數
     val context = LocalContext.current
     val store = remember(context) { LanguageStore(context) }
 
@@ -37,9 +37,8 @@ fun BiteCalApp() {
 
     ProvideComposeLocale(composeLocale) {
         BiteCalNavHost(
+            hostActivity = hostActivity,     // ★ 往下傳到 NavHost／LandingScreen
             onSetLocale = { tag -> composeLocale = tag } // 只改狀態
         )
     }
 }
-
-

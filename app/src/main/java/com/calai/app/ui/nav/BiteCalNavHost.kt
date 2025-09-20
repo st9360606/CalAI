@@ -1,5 +1,6 @@
 package com.calai.app.ui.nav
 
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -17,10 +18,12 @@ object Routes {
 
 /**
  * App 的導航樹入口。
- * - onSetLocale：從 BiteCalApp 傳入，用來做「無重啟的語言切換」
+ * - hostActivity：從 MainActivity 傳進來，往下交給需要啟動 Activity Result 的畫面（例如 Google Sign-In）。
+ * - onSetLocale：從 BiteCalApp 傳入，用來做「無重啟的語言切換」。
  */
 @Composable
 fun BiteCalNavHost(
+    hostActivity: ComponentActivity,          // ★ 新增參數
     modifier: Modifier = Modifier,
     onSetLocale: (String) -> Unit,
 ) {
@@ -33,9 +36,10 @@ fun BiteCalNavHost(
     ) {
         composable(Routes.LANDING) {
             LandingScreen(
+                hostActivity = hostActivity,     // ★ 傳給 Landing（再往下傳到 SignInSheetHost）
                 onStart = { nav.navigate(Routes.SIGN_UP) },
                 onLogin = { nav.navigate(Routes.SIGN_IN) },
-                onSetLocale = onSetLocale,        // ★ 把 setter 傳給 Landing
+                onSetLocale = onSetLocale,
             )
         }
 

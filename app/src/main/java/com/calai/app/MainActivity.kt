@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/MainActivity.kt
 package com.calai.app
 
 import android.os.Bundle
@@ -48,11 +47,11 @@ class MainActivity : ComponentActivity() {
             FirstFrameUnlock {
                 unlockSplash("first-frame")
                 // 正確回報 TTFD：等到首屏可互動即回報
-                // 注意：這是統計訊號，不會神奇加速
                 window?.decorView?.post { reportFullyDrawn() }
             }
             logPoint("setContent-enter")
-            BiteCalApp()
+            // ★ 把 Activity 傳進 App 根組件
+            BiteCalApp(hostActivity = this)
         }
 
         logPoint("onCreate:end")

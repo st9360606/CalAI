@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BiteCal Calorie-Camera</string>
+    <string name="app_name">BiteCal: Calorie Camera</string>
     <string name="landing_title">Snap a photo, know the calories.</string>
     <string name="cta_get_started">Get Started</string>
     <string name="cta_login_prefix">Already have an account?</string>

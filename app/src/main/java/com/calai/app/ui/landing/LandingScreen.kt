@@ -2,34 +2,18 @@
 package com.calai.app.ui.landing
 
 import LandingVideo
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,12 +34,21 @@ import com.calai.app.R
 import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
-import com.calai.app.ui.auth.SignInSheet
+import com.calai.app.ui.auth.SignInSheetHost   // ← 改成 Host
 import kotlinx.coroutines.launch
 import java.util.Locale
 
+// --- 安全往上溯源找 Activity（避免 Context 不是 Activity 的情況） ---
+private tailrec fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+
 @Composable
 fun LandingScreen(
+    hostActivity: ComponentActivity,       // ★ 新增
     onStart: () -> Unit,
     onLogin: () -> Unit,
     onSetLocale: (String) -> Unit
@@ -214,7 +207,9 @@ fun LandingScreen(
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
-                currentTag = composeLocale.tag.ifBlank { java.util.Locale.getDefault().toLanguageTag() },
+                currentTag = composeLocale.tag.ifBlank {
+                    java.util.Locale.getDefault().toLanguageTag()
+                },
                 onPick = { picked ->
                     if (switching) return@LanguageDialog
                     switching = true
@@ -235,33 +230,40 @@ fun LandingScreen(
                         switching = false
                     }
                 },
-
-                        onDismiss = { showLang = false },
+                onDismiss = { showLang = false },
                 maxWidth = 320.dp
             )
         }
 
-        // ===== 登入底部面板：用語言標籤作 key，語言一變就重建子樹 =====
+        // ===== 登入底部面板：使用 SignInSheetHost（onGoogle 交給 VM） =====
         if (showSignInSheet) {
             val cfg = LocalConfiguration.current
-            val localeKey = cfg.locales.toLanguageTags() // 讓語系變更時強制重建
-            val localeTagForSheet = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
+            val localeKey = cfg.locales.toLanguageTags()
+            val composeLocale = LocalLocaleController.current
+            val localeTagForSheet =
+                composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
 
             key(localeKey) {
-                SignInSheet(
-                    localeTag = localeTagForSheet,   // ✅ 新增：把當前語系傳給 Sheet
-                    onApple = { /* ... */ },
-                    onGoogle = { /* ... */ },
+                // ★ 直接把 hostActivity 傳給 Host，不再在這裡找 Activity
+                SignInSheetHost(
+                    activity = hostActivity,
+                    localeTag = localeTagForSheet,
+                    visible = true,
+                    onDismiss = { showSignInSheet = false },
+                    onSignedIn = {
+                        Toast.makeText(context, "登入成功", Toast.LENGTH_SHORT).show()
+                        // TODO: 導頁
+                    },
+                    onApple = { /* TODO */ },
                     onEmail = { onLogin() },
-                    onTerms = { /* ... */ },
-                    onPrivacy = { /* ... */ },
-                    onDismiss = { showSignInSheet = false }
+                    onShowError = { msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    }
                 )
             }
         }
     }
 }
-
 /* ---------- 旗幟膠囊與語言縮寫（原樣保留） ---------- */
 
 @Composable
