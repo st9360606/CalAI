@@ -2,6 +2,7 @@ package com.calai.app.ui.nav
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.auth.SignInScreen
 import com.calai.app.ui.auth.SignUpScreen
+import com.calai.app.data.auth.net.SessionBus // ← 監聽會話過期事件
 
 object Routes {
     const val LANDING = "landing"
@@ -23,11 +25,20 @@ object Routes {
  */
 @Composable
 fun BiteCalNavHost(
-    hostActivity: ComponentActivity,          // ★ 新增參數
+    hostActivity: ComponentActivity,
     modifier: Modifier = Modifier,
     onSetLocale: (String) -> Unit,
 ) {
     val nav = rememberNavController()
+
+    // 收到「會話過期」事件 → 導回登入，並清掉返回棧
+    LaunchedEffect(Unit) {
+        SessionBus.expired.collect {
+            nav.navigate(Routes.SIGN_IN) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
 
     NavHost(
         navController = nav,
@@ -36,7 +47,7 @@ fun BiteCalNavHost(
     ) {
         composable(Routes.LANDING) {
             LandingScreen(
-                hostActivity = hostActivity,     // ★ 傳給 Landing（再往下傳到 SignInSheetHost）
+                hostActivity = hostActivity,
                 onStart = { nav.navigate(Routes.SIGN_UP) },
                 onLogin = { nav.navigate(Routes.SIGN_IN) },
                 onSetLocale = onSetLocale,
@@ -44,22 +55,20 @@ fun BiteCalNavHost(
         }
 
         composable(Routes.SIGN_IN) {
-            // 你已有的登入畫面；這裡放你的實作
             SignInScreen(
                 onBack = { nav.popBackStack() },
                 onSignedIn = {
-                    // TODO: 導到真正的首頁（之後你接相機/首頁）
+                    // TODO: 成功後導到真正首頁
                     // nav.navigate("home") { popUpTo(Routes.LANDING) { inclusive = true } }
                 }
             )
         }
 
         composable(Routes.SIGN_UP) {
-            // 你已有的註冊畫面；這裡放你的實作
             SignUpScreen(
                 onBack = { nav.popBackStack() },
                 onSignedUp = {
-                    // TODO: 導到真正的首頁
+                    // TODO: 成功後導到真正首頁
                 }
             )
         }

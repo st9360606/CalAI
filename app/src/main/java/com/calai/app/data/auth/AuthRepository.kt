@@ -1,24 +1,37 @@
 package com.calai.app.data.auth
 
 import com.calai.app.data.auth.api.AuthApi
-import com.calai.app.data.auth.api.model.AuthResponse
 import com.calai.app.data.auth.api.model.GoogleSignInExchangeRequest
+import com.calai.app.data.auth.api.model.AuthResponse
+import com.calai.app.data.auth.api.model.RefreshRequest
+import com.calai.app.data.auth.store.TokenStore
+import kotlinx.coroutines.flow.firstOrNull // ← 關鍵 import
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
-    private val api: AuthApi
+    @Named("authApi") private val api: AuthApi,   // ← 指向 auth 專用 Retrofit
+    private val tokenStore: TokenStore
 ) {
-    suspend fun loginWithGoogle(
-        idToken: String,
-        clientId: String? = null // 若需要可從 BuildConfig 或 strings.xml 帶入
-    ): AuthResponse {
-        return api.googleLogin(
-            GoogleSignInExchangeRequest(
-                idToken = idToken,
-                clientId = clientId
-            )
+    suspend fun loginWithGoogle(idToken: String, clientId: String? = null): AuthResponse {
+        val resp = api.googleLogin(
+            GoogleSignInExchangeRequest(idToken = idToken, clientId = clientId)
         )
+        tokenStore.save(resp.accessToken, resp.refreshToken)
+        return resp
+    }
+
+    suspend fun logout() {
+        val access = tokenStore.accessTokenFlow.firstOrNull()
+        val refresh = tokenStore.refreshTokenFlow.firstOrNull()
+        runCatching {
+            api.logout(
+                authorization = access?.let { "Bearer $it" },
+                body = refresh?.let { RefreshRequest(it) }
+            )
+        }
+        tokenStore.clear()
     }
 }
