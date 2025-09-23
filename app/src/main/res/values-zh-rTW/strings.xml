@@ -43,6 +43,7 @@
     <string name="err_google_launch_failed">無法啟動 Google 登入%1$s</string>
     <string name="err_google_no_account_hint">建議到「設定 → 帳號」先新增 Google 帳號，再重試</string>
     <string name="err_google_signin_failed">Google 登入失敗</string>
+    <string name="err_google_not_completed_with_code">登入未完成，請再試一次（錯誤碼：%1$d）。你也可以改用 Email 登入。</string>
 
 
 </resources>

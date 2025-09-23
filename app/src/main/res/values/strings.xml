@@ -43,6 +43,6 @@
     <string name="err_google_launch_failed">Couldn\'t start Google Sign-In%1$s</string>
     <string name="err_google_no_account_hint">Tip: add a Google account in Settings → Accounts and try again</string>
     <string name="err_google_signin_failed">Google sign-in failed</string>
-
+    <string name="err_google_not_completed_with_code">Sign-in wasn’t completed (code=%1$d). Please try again.</string>
 
 </resources>

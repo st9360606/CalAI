@@ -34,6 +34,10 @@ private fun hasGoogleAccount(context: Context): Boolean =
     try { AccountManager.get(context).getAccountsByType("com.google").isNotEmpty() }
     catch (_: Exception) { false }
 
+/** 使用你提供的字串：Sign-in wasn’t completed (code=%1$d). Please try again. */
+private fun fmtNotCompleted(ctx: Context, resultCode: Int): CharSequence =
+    ctx.getString(R.string.err_google_not_completed_with_code, resultCode)
+
 @Composable
 fun SignInSheetHost(
     activity: ComponentActivity,   // 呼叫端保證提供
@@ -102,12 +106,10 @@ fun SignInSheetHost(
                     onShowError(msgParseFailed)
                 }
             } else {
-                // 使用者在 Google 畫面按返回 / 取消
+                // 非 OK（例如使用者返回 / 流程被中止）
                 loading = false
                 onDismiss()           // ← 關面板（重點）
-                // 如需提示可保留下一行：
-                // onShowError(fmtNotCompleted(res.resultCode))
-                onShowError(msgCancelled)
+                onShowError(fmtNotCompleted(ctx, res.resultCode))
             }
         }
 
@@ -115,16 +117,16 @@ fun SignInSheetHost(
             val serverClientId = ctx.getString(R.string.google_web_client_id)
             val req = GetSignInIntentRequest.Builder()
                 .setServerClientId(serverClientId)
+                // 這裡不要呼叫 setFilterByAuthorizedAccounts，該方法不屬於此類別
                 .build()
 
             Identity.getSignInClient(activity).getSignInIntent(req)
                 .addOnSuccessListener { pendingIntent ->
                     signInLauncher.launch(IntentSenderRequest.Builder(pendingIntent).build())
                 }
-                .addOnFailureListener { e ->
+                .addOnFailureListener { _ ->
                     loading = false
                     val extra = if (hasGoogleAccount(ctx)) "" else "\n$tipNoAccount"
-                    // 啟動失敗不強制關面板，讓使用者可改用 Email
                     onShowError(fmtLaunchFailed(extra))
                 }
         }
