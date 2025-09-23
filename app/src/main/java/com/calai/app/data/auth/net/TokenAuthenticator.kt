@@ -2,7 +2,7 @@ package com.calai.app.data.auth.net
 
 import com.calai.app.data.auth.api.AuthApi
 import com.calai.app.data.auth.api.model.RefreshRequest
-import com.calai.app.data.auth.store.TokenStore
+import com.calai.app.data.auth.repo.TokenStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.Authenticator

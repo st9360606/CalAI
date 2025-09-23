@@ -141,6 +141,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.startup.runtime)
+    implementation(libs.androidx.foundation)
     "baselineProfile"(project(":baselineprofile"))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
@@ -211,6 +212,12 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // ✅ Jetpack Compose BOM（集中管理所有 Compose 套件版本）
+    implementation(platform("androidx.compose:compose-bom:2025.09.00"))
+
+    // ✅ Material3（含 SmallTopAppBar）
+    implementation("androidx.compose.material3:material3")
 
 }
 

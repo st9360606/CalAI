@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/ui/auth/SignInSheetHost.kt
 package com.calai.app.ui.auth
 
 import android.app.Activity
@@ -13,7 +12,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.res.stringResource
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.calai.app.R
 import com.calai.app.data.auth.GoogleAuthService
@@ -41,7 +40,7 @@ fun SignInSheetHost(
     localeTag: String,
     visible: Boolean,
     onDismiss: () -> Unit,
-    onSignedIn: () -> Unit,
+    onGoogle: () -> Unit,
     onApple: () -> Unit = {},
     onEmail: () -> Unit = {},
     onShowError: (CharSequence) -> Unit = {}
@@ -51,6 +50,14 @@ fun SignInSheetHost(
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
 
+    // ==== 所有訊息改成可本地化字串 ====
+    val msgIdTokenEmpty   = stringResource(R.string.err_google_id_token_empty)
+    val msgParseFailed    = stringResource(R.string.err_google_result_parse)
+    val msgCancelled      = stringResource(R.string.err_google_cancelled)
+    val tipNoAccount      = stringResource(R.string.err_google_no_account_hint)
+    val fmtLaunchFailed   = { extra: String -> ctx.getString(R.string.err_google_launch_failed, extra) }
+    val fallbackSignInErr = stringResource(R.string.err_google_signin_failed)
+
     val repo = remember(appCtx) {
         val ep = EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
         ep.authRepository()
@@ -59,10 +66,9 @@ fun SignInSheetHost(
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // ★ 關鍵：把 activity 明確提供給組成樹作為 ActivityResultRegistryOwner
+    // 把 activity 提供給組成樹作為 ActivityResultRegistryOwner
     CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
 
-        // Compose 版本 launcher（在有 owner 的樹內註冊）
         val signInLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartIntentSenderForResult()
         ) { res: ActivityResult ->
@@ -74,38 +80,34 @@ fun SignInSheetHost(
                     val idToken = credential.googleIdToken
                     if (idToken.isNullOrEmpty()) {
                         loading = false
-                        onShowError("Google 回傳為空的 ID Token")
+                        onDismiss() // 空 token 也關面板
+                        onShowError(msgIdTokenEmpty)
                     } else {
                         scope.launch {
                             try {
                                 repo.loginWithGoogle(idToken)
                                 loading = false
-                                onDismiss()
-                                onSignedIn()
+                                onDismiss()   // 成功 → 關面板
+                                onGoogle()
                             } catch (e: Exception) {
                                 loading = false
-                                onShowError(e.message?.toString() ?: "後端驗證失敗")
+                                onDismiss()   // 失敗 → 關面板
+                                onShowError(e.message?.toString() ?: fallbackSignInErr)
                             }
                         }
                     }
                 } catch (e: Exception) {
                     loading = false
-                    onShowError(e.message?.toString() ?: "解析登入結果失敗")
+                    onDismiss()       // 解析例外 → 關面板
+                    onShowError(msgParseFailed)
                 }
             } else {
-                // 這裡多給一些訊息，方便你判斷
+                // 使用者在 Google 畫面按返回 / 取消
                 loading = false
-                val code = res.resultCode
-                // 在許多「設定不匹配」情形下，Google 會回 RESULT_CANCELED（=0）
-                val hint = buildString {
-                    append("登入未完成（code=$code）")
-                    append("\n請檢查：")
-                    append("\n1) ids.xml 是否使用正確『Web client ID』（dev 用 dev）")
-                    append("\n2) GCP 憑證是否有 Android client（package/SHA-1 與此包一致）")
-                    append("\n3) Web client 與 Android client 是否在同一 GCP 專案")
-                    append("\n4) 已將此 Gmail 加到 OAuth 測試使用者")
-                }
-                onShowError(hint)
+                onDismiss()           // ← 關面板（重點）
+                // 如需提示可保留下一行：
+                // onShowError(fmtNotCompleted(res.resultCode))
+                onShowError(msgCancelled)
             }
         }
 
@@ -121,8 +123,9 @@ fun SignInSheetHost(
                 }
                 .addOnFailureListener { e ->
                     loading = false
-                    val hint = if (hasGoogleAccount(ctx)) "" else "（裝置內可能仍未登入 Google 帳號）"
-                    onShowError("啟動 Google 登入失敗：${e.message?.toString() ?: "Unknown error"}$hint")
+                    val extra = if (hasGoogleAccount(ctx)) "" else "\n$tipNoAccount"
+                    // 啟動失敗不強制關面板，讓使用者可改用 Email
+                    onShowError(fmtLaunchFailed(extra))
                 }
         }
 
@@ -135,29 +138,30 @@ fun SignInSheetHost(
                     val idToken = GoogleAuthService(ctx).getIdToken()
                     repo.loginWithGoogle(idToken)
                     loading = false
-                    onDismiss()
-                    onSignedIn()
+                    onDismiss()   // 成功 → 關面板
+                    onGoogle()
                 } catch (e: NoGoogleCredentialAvailableException) {
-                    // ② 無憑證 → 後備 Intent（會彈 Google 的登入/選帳號 UI）
+                    // ② 無憑證 → 後備 Intent（會彈 Google 登入/選帳號 UI）
                     launchGoogleSignInIntent()
                 } catch (e: GetCredentialCancellationException) {
                     loading = false
-                    onShowError("你已取消登入")
+                    onDismiss()   // 使用者在帳號選擇畫面按返回 → 關面板
+                    onShowError(msgCancelled)
                 } catch (e: Exception) {
                     loading = false
-                    val tip = if (!hasGoogleAccount(ctx))
-                        "\n建議到「設定 → 帳號」先新增 Google 帳號，再重試" else ""
-                    onShowError(e.message?.toString() ?: "Google 登入失敗$tip")
+                    // 失敗保留面板讓使用者可改用 Email
+                    val tip = if (!hasGoogleAccount(ctx)) "\n$tipNoAccount" else ""
+                    onShowError((e.message ?: fallbackSignInErr) + tip)
                 }
             }
         }
 
-        // UI：把 onGoogle 接到流程
+        // UI：把 Google 按鈕事件串到流程；Email 先收面板再導頁
         SignInSheet(
             localeTag = localeTag,
             onApple = onApple,
             onGoogle = { signInWithGoogle() },
-            onEmail = onEmail,
+            onEmail = { onDismiss(); onEmail() },
             onDismiss = onDismiss
         )
     }

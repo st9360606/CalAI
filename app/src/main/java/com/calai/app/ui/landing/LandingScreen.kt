@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
@@ -34,7 +34,8 @@ import com.calai.app.R
 import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
-import com.calai.app.ui.auth.SignInSheetHost   // ← 改成 Host
+import com.calai.app.i18n.currentLocaleKey
+import com.calai.app.ui.auth.SignInSheetHost
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -48,7 +49,7 @@ private tailrec fun Context.findActivity(): Activity? =
 
 @Composable
 fun LandingScreen(
-    hostActivity: ComponentActivity,       // ★ 新增
+    hostActivity: ComponentActivity,
     onStart: () -> Unit,
     onLogin: () -> Unit,
     onSetLocale: (String) -> Unit
@@ -58,12 +59,12 @@ fun LandingScreen(
     val store = remember(context) { LanguageStore(context) }
     val composeLocale = LocalLocaleController.current
 
-    // ✅ 改用 rememberSaveable，抵抗組態變更
+    // ✅ 用 rememberSaveable 保存 UI 狀態
     var showLang by rememberSaveable { mutableStateOf(false) }
     var switching by rememberSaveable { mutableStateOf(false) }
     var showSignInSheet by rememberSaveable { mutableStateOf(false) }
 
-    // ===== 可調參數（依需求微調） =====
+    // ===== 可調參數 =====
     val phoneTopPadding = 40.dp
     val phoneWidthFraction = 0.78f
     val phoneAspect = 10f / 19.8f
@@ -79,7 +80,7 @@ fun LandingScreen(
     val ctaCorner = 28.dp
     val spaceTitleToCTA = 14.dp
 
-    // 統一字型（與標題相同）
+    // 統一字型
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
 
     // 語系（Compose 畫面語系）
@@ -104,7 +105,7 @@ fun LandingScreen(
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(phoneTopPadding))
 
-            // ===== 影片區塊 =====
+            // ===== 影片 =====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -217,16 +218,12 @@ fun LandingScreen(
                     scope.launch {
                         // 1) Compose 層立即套
                         composeLocale.set(picked.tag)
-
-                        // 2) 全域（非 Compose）也切（正規化後再設）
+                        // 2) 全域（非 Compose）也切
                         LanguageManager.applyLanguage(picked.tag)
-
-                        // 3) 你原本的外部回呼（若還有其它處理）
+                        // 3) 外部回呼
                         onSetLocale(picked.tag)
-
                         // 4) 保存
                         store.save(picked.tag)
-
                         switching = false
                     }
                 },
@@ -235,27 +232,36 @@ fun LandingScreen(
             )
         }
 
-        // ===== 登入底部面板：使用 SignInSheetHost（onGoogle 交給 VM） =====
+        /* === 返回鍵：面板開啟時先關面板 === */
+        BackHandler(enabled = showSignInSheet) {
+            showSignInSheet = false
+        }
+
+        // ===== 登入底部面板 =====
         if (showSignInSheet) {
-            val cfg = LocalConfiguration.current
-            val localeKey = cfg.locales.toLanguageTags()
-            val composeLocale = LocalLocaleController.current
-            val localeTagForSheet =
-                composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
+            val localeKey = currentLocaleKey() // 由資源實際語系產生 key
 
             key(localeKey) {
-                // ★ 直接把 hostActivity 傳給 Host，不再在這裡找 Activity
                 SignInSheetHost(
                     activity = hostActivity,
-                    localeTag = localeTagForSheet,
+                    localeTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() },
                     visible = true,
                     onDismiss = { showSignInSheet = false },
-                    onSignedIn = {
+                    // 成功登入（Google）時：先關面板，再提示/導頁
+                    onGoogle = {
+                        showSignInSheet = false
                         Toast.makeText(context, "登入成功", Toast.LENGTH_SHORT).show()
                         // TODO: 導頁
                     },
-                    onApple = { /* TODO */ },
-                    onEmail = { onLogin() },
+                    onApple = {
+                        showSignInSheet = false
+                        // TODO: 之後支援 Apple
+                    },
+                    // ★ 這裡是 Email 入口：先關面板，再導航到 Email 輸入頁
+                    onEmail = {
+                        showSignInSheet = false
+                        onLogin()
+                    },
                     onShowError = { msg ->
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     }
@@ -264,8 +270,8 @@ fun LandingScreen(
         }
     }
 }
-/* ---------- 旗幟膠囊與語言縮寫（原樣保留） ---------- */
 
+/* ---------- 旗幟膠囊與語言縮寫（原樣保留） ---------- */
 @Composable
 private fun FlagChip(
     flag: String,

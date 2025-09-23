@@ -4,7 +4,7 @@ package com.calai.app.ui.auth
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.calai.app.data.auth.AuthRepository
+import com.calai.app.data.auth.repo.AuthRepository
 import com.calai.app.data.auth.GoogleAuthService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel

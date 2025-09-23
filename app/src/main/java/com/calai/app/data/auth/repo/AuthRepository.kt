@@ -1,11 +1,10 @@
-package com.calai.app.data.auth
+package com.calai.app.data.auth.repo
 
 import com.calai.app.data.auth.api.AuthApi
-import com.calai.app.data.auth.api.model.GoogleSignInExchangeRequest
 import com.calai.app.data.auth.api.model.AuthResponse
+import com.calai.app.data.auth.api.model.GoogleSignInExchangeRequest
 import com.calai.app.data.auth.api.model.RefreshRequest
-import com.calai.app.data.auth.store.TokenStore
-import kotlinx.coroutines.flow.firstOrNull // ← 關鍵 import
+import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton

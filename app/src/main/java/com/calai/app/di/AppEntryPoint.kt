@@ -1,6 +1,6 @@
 package com.calai.app.di
 
-import com.calai.app.data.auth.AuthRepository
+import com.calai.app.data.auth.repo.AuthRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent

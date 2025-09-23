@@ -4,25 +4,39 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.HiltViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.calai.app.ui.landing.LandingScreen
-import com.calai.app.ui.auth.SignInScreen
+import androidx.navigation.navArgument
+import com.calai.app.data.auth.net.SessionBus
 import com.calai.app.ui.auth.SignUpScreen
-import com.calai.app.data.auth.net.SessionBus // ← 監聽會話過期事件
+import com.calai.app.ui.auth.email.EmailCodeScreen
+import com.calai.app.ui.auth.email.EmailEnterScreen
+import com.calai.app.ui.auth.email.EmailSignInViewModel
+import com.calai.app.ui.landing.LandingScreen
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 
 object Routes {
     const val LANDING = "landing"
-    const val SIGN_IN = "signin"
     const val SIGN_UP = "signup"
+    const val SIGNIN_EMAIL_ENTER = "signin_email_enter"
+    const val SIGNIN_EMAIL_CODE  = "signin_email_code"
 }
 
-/**
- * App 的導航樹入口。
- * - hostActivity：從 MainActivity 傳進來，往下交給需要啟動 Activity Result 的畫面（例如 Google Sign-In）。
- * - onSetLocale：從 BiteCalApp 傳入，用來做「無重啟的語言切換」。
- */
+// 安全往上找 Activity
+private tailrec fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+
 @Composable
 fun BiteCalNavHost(
     hostActivity: ComponentActivity,
@@ -31,10 +45,10 @@ fun BiteCalNavHost(
 ) {
     val nav = rememberNavController()
 
-    // 收到「會話過期」事件 → 導回登入，並清掉返回棧
+    // 會話過期 → 直接帶到 Email 輸入頁（或改回 LANDING 視需求）
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            nav.navigate(Routes.SIGN_IN) {
+            nav.navigate(Routes.SIGNIN_EMAIL_ENTER) {
                 popUpTo(0) { inclusive = true }
             }
         }
@@ -49,26 +63,57 @@ fun BiteCalNavHost(
             LandingScreen(
                 hostActivity = hostActivity,
                 onStart = { nav.navigate(Routes.SIGN_UP) },
-                onLogin = { nav.navigate(Routes.SIGN_IN) },
+                onLogin = { nav.navigate(Routes.SIGNIN_EMAIL_ENTER) }, // 底部面板「以 Email 繼續」
                 onSetLocale = onSetLocale,
-            )
-        }
-
-        composable(Routes.SIGN_IN) {
-            SignInScreen(
-                onBack = { nav.popBackStack() },
-                onSignedIn = {
-                    // TODO: 成功後導到真正首頁
-                    // nav.navigate("home") { popUpTo(Routes.LANDING) { inclusive = true } }
-                }
             )
         }
 
         composable(Routes.SIGN_UP) {
             SignUpScreen(
                 onBack = { nav.popBackStack() },
-                onSignedUp = {
-                    // TODO: 成功後導到真正首頁
+                onSignedUp = { /* TODO */ }
+            )
+        }
+
+        // ===== Email：輸入 Email 畫面（改成用 Activity + backStackEntry 建 Hilt VM） =====
+        composable(Routes.SIGNIN_EMAIL_ENTER) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity()
+                ?: hostActivity) // 保底用 hostActivity
+            val vm: EmailSignInViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            EmailEnterScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onSent = { email ->
+                    nav.navigate("${Routes.SIGNIN_EMAIL_CODE}?email=$email")
+                }
+            )
+        }
+
+        // ===== Email：輸入驗證碼畫面（同樣用手動 factory） =====
+        composable(
+            route = "${Routes.SIGNIN_EMAIL_CODE}?email={email}",
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType; defaultValue = "" }
+            )
+        ) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity()
+                ?: hostActivity)
+            val vm: EmailSignInViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            EmailCodeScreen(
+                vm = vm,
+                email = email,
+                onBack = { nav.popBackStack() },
+                onSuccess = {
+                    // 登入完成後導回 Landing（或改成你的首頁）
+                    nav.popBackStack(Routes.LANDING, inclusive = false)
                 }
             )
         }

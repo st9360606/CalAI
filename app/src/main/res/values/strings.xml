@@ -22,4 +22,27 @@
     <!-- common -->
     <string name="close">Close</string>
 
+    <!-- 其它既有字串保留，以下是跟 Email 登入相關的 -->
+    <string name="sign_in_title">Sign In</string>
+    <string name="email_label">Email</string>
+    <string name="continue_btn">Continue</string>
+    <string name="sending">Sending…</string>
+    <string name="verifying">Verifying…</string>
+
+    <string name="email_confirm_title">Confirm your email</string>
+    <string name="email_confirm_desc">Please enter the 4-digit code we\'ve just sent to\n%1$s</string>
+
+
+    <string name="didnt_receive_code">Didn’t receive the code?</string>
+    <string name="resend">Resend</string>
+    <string name="resend_with_seconds">Resend (%1$d s)</string>
+
+    <string name="err_google_id_token_empty">Google returned an empty ID token</string>
+    <string name="err_google_result_parse">Failed to parse sign-in result</string>
+    <string name="err_google_cancelled">You cancelled sign-in</string>
+    <string name="err_google_launch_failed">Couldn\'t start Google Sign-In%1$s</string>
+    <string name="err_google_no_account_hint">Tip: add a Google account in Settings → Accounts and try again</string>
+    <string name="err_google_signin_failed">Google sign-in failed</string>
+
+
 </resources>

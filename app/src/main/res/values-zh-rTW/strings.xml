@@ -20,4 +20,29 @@
 
     <!-- common -->
     <string name="close">關閉</string>
+    <string name="sign_in_title">登入</string>
+    <string name="email_label">Email</string>
+    <string name="continue_btn">繼續</string>
+    <string name="sending">傳送中…</string>
+    <string name="verifying">驗證中…</string>
+
+    <string name="email_confirm_title">確認你的 Email</string>
+    <string name="email_confirm_desc">請輸入我們剛剛寄到\n%1$s 的 4 位數驗證碼</string>
+
+
+
+
+    <string name="didnt_receive_code">沒有收到驗證碼？</string>
+    <string name="resend">重新寄送</string>
+    <string name="resend_with_seconds">%1$d 秒後可重新寄送</string>
+
+
+    <string name="err_google_id_token_empty">Google 回傳為空的 ID Token</string>
+    <string name="err_google_result_parse">解析登入結果失敗</string>
+    <string name="err_google_cancelled">你已取消登入</string>
+    <string name="err_google_launch_failed">無法啟動 Google 登入%1$s</string>
+    <string name="err_google_no_account_hint">建議到「設定 → 帳號」先新增 Google 帳號，再重試</string>
+    <string name="err_google_signin_failed">Google 登入失敗</string>
+
+
 </resources>

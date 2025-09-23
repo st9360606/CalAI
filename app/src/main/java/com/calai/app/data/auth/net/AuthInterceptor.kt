@@ -1,6 +1,6 @@
 package com.calai.app.data.auth.net
 
-import com.calai.app.data.auth.store.TokenStore
+import com.calai.app.data.auth.repo.TokenStore
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
