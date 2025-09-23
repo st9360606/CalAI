@@ -118,4 +118,12 @@ class EmailSignInViewModel @Inject constructor(
             }
         }
     }
+
+    // 在 EmailSignInViewModel 內新增
+    fun prepareCode(email: String) {
+        if (_code.value == null && email.isNotBlank()) {
+            _code.value = EmailCodeUiState(email = email.trim())
+        }
+    }
+
 }

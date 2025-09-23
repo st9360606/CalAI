@@ -21,6 +21,7 @@ import com.calai.app.ui.landing.LandingScreen
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.widget.Toast
 
 object Routes {
     const val LANDING = "landing"
@@ -112,8 +113,11 @@ fun BiteCalNavHost(
                 email = email,
                 onBack = { nav.popBackStack() },
                 onSuccess = {
-                    // 登入完成後導回 Landing（或改成你的首頁）
-                    nav.popBackStack(Routes.LANDING, inclusive = false)
+                    Toast.makeText(hostActivity, "登入成功", Toast.LENGTH_SHORT).show()
+                    nav.navigate(Routes.LANDING) {
+                        popUpTo(Routes.LANDING) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             )
         }

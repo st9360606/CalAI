@@ -24,25 +24,13 @@ interface AuthApi {
         @Body body: RefreshRequest?
     )
 
-    @POST("/auth/email/start")
+    @POST("auth/email/start")
     suspend fun startEmail(@Body body: StartEmailReq): StartEmailRes
 
     /** 夾帶 X-Device-Id（可為 null）；後端會記錄在 token 審計 */
-    @POST("/auth/email/verify")
+    @POST("auth/email/verify")
     suspend fun verifyEmail(
         @Body body: VerifyEmailReq,
         @Header("X-Device-Id") deviceId: String? = null
     ): AuthResponse
 }
-data class GoogleLoginRequest(val idToken: String)
-
-data class SessionResponse(
-    val token: String,
-    val user: UserDto
-)
-
-data class UserDto(
-    val id: String,
-    val name: String?,
-    val email: String
-)

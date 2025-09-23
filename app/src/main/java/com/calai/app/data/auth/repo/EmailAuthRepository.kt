@@ -16,13 +16,13 @@ class EmailAuthRepository @Inject constructor(
     private val deviceId: DeviceIdProvider
 ) {
     suspend fun start(email: String): Boolean {
-        val res = api.startEmail(StartEmailReq(email.trim()))
+        val res = api.startEmail(StartEmailReq(email.trim().lowercase()))
         return res.sent
     }
 
     suspend fun verify(email: String, code: String) {
         val dto = api.verifyEmail(
-            VerifyEmailReq(email.trim(), code.trim()),
+            VerifyEmailReq(email.trim().lowercase(), code.trim()),
             deviceId = deviceId.get()
         )
         tokenStore.save(
@@ -32,4 +32,5 @@ class EmailAuthRepository @Inject constructor(
             serverTimeEpochSec = dto.serverTimeEpochSec
         )
     }
+
 }
