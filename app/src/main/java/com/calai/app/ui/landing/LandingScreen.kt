@@ -30,11 +30,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.calai.app.R
 import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.currentLocaleKey
+import com.calai.app.i18n.flagAndLabelFromTag   // ★ 新增：共用旗幟/縮寫對應
 import com.calai.app.ui.auth.SignInSheetHost
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -50,6 +52,7 @@ private tailrec fun Context.findActivity(): Activity? =
 @Composable
 fun LandingScreen(
     hostActivity: ComponentActivity,
+    navController: NavController,           // 由呼叫端傳入
     onStart: () -> Unit,
     onLogin: () -> Unit,
     onSetLocale: (String) -> Unit
@@ -83,20 +86,19 @@ fun LandingScreen(
     // 統一字型
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
 
-    // 語系（Compose 畫面語系）
+    // 語系（Compose 畫面語系）→ 旗幟＋短標籤（繁中會顯示 🇭🇰）
     val currentTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
-    val currentLang = LANGS.find { it.tag.equals(currentTag, true) }
-        ?: LANGS.firstOrNull { it.tag.startsWith("en", true) } ?: LANGS.first()
+    val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 右上：旗幟膠囊
+        // 右上：旗幟膠囊（依語系顯示，例如 繁中 → 🇭🇰 CH）
         FlagChip(
-            flag = currentLang.flag,
-            label = langShortLabelFromTag(currentTag),
+            flag = flagEmoji,
+            label = langLabel,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
@@ -244,20 +246,20 @@ fun LandingScreen(
             key(localeKey) {
                 SignInSheetHost(
                     activity = hostActivity,
+                    navController = navController,
                     localeTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() },
                     visible = true,
                     onDismiss = { showSignInSheet = false },
-                    // 成功登入（Google）時：先關面板，再提示/導頁
+                    // 成功登入（Google）：提示一下；實際導頁由 SignInSheetHost 內處理
                     onGoogle = {
                         showSignInSheet = false
                         Toast.makeText(context, "登入成功", Toast.LENGTH_SHORT).show()
-                        // TODO: 導頁
                     },
                     onApple = {
                         showSignInSheet = false
-                        // TODO: 之後支援 Apple
+                        // 之後支援 Apple
                     },
-                    // ★ 這裡是 Email 入口：先關面板，再導航到 Email 輸入頁
+                    // ★ Email 入口：先關面板，再導航到 Email 輸入頁（由呼叫端 onLogin 處理）
                     onEmail = {
                         showSignInSheet = false
                         onLogin()
@@ -271,7 +273,7 @@ fun LandingScreen(
     }
 }
 
-/* ---------- 旗幟膠囊與語言縮寫（原樣保留） ---------- */
+/* ---------- 旗幟膠囊 ---------- */
 @Composable
 private fun FlagChip(
     flag: String,
@@ -300,25 +302,4 @@ private fun FlagChip(
             )
         }
     }
-}
-
-private fun langShortLabelFromTag(tag: String): String = when {
-    tag.startsWith("zh", true) -> "CH"
-    tag.startsWith("en", true) -> "EN"
-    tag.startsWith("es", true) -> "ES"
-    tag.startsWith("ar", true) -> "AR"
-    tag.startsWith("bn", true) -> "BN"
-    tag.startsWith("pt", true) -> "PT"
-    tag.startsWith("ru", true) -> "RU"
-    tag.startsWith("ja", true) -> "JP"
-    tag.startsWith("de", true) -> "DE"
-    tag.startsWith("pa", true) -> "PA"
-    tag.startsWith("jv", true) -> "JV"
-    tag.startsWith("fr", true) -> "FR"
-    tag.startsWith("vi", true) -> "VI"
-    tag.startsWith("th", true) -> "TH"
-    tag.startsWith("ms", true) -> "MS"
-    tag.startsWith("ko", true) -> "KR"
-    tag.startsWith("id", true) -> "ID"
-    else -> tag.take(2).uppercase()
 }

@@ -46,4 +46,14 @@
     <string name="err_google_not_completed_with_code">登入未完成，請再試一次（錯誤碼：%1$d）。你也可以改用 Email 登入。</string>
 
 
+
+    <!-- Onboarding: Gender -->
+    <string name="onb_gender_title">選擇你的性別</string>
+    <string name="onb_gender_subtitle">這將用於校準你的自訂計畫。</string>
+    <string name="male_simple">男</string>
+    <string name="female">女性</string>
+    <string name="other">其他</string>
+    <string name="continue_text">繼續</string>
+
+
 </resources>

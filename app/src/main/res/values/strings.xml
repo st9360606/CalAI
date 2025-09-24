@@ -45,4 +45,12 @@
     <string name="err_google_signin_failed">Google sign-in failed</string>
     <string name="err_google_not_completed_with_code">Sign-in wasn’t completed (code=%1$d). Please try again.</string>
 
+
+    <!-- Onboarding: Gender -->
+    <string name="onb_gender_title">Choose your Gender</string>
+    <string name="onb_gender_subtitle">This will be used to calibrate your custom plan.</string>
+    <string name="male_simple">Male</string>
+    <string name="female">Female</string>
+    <string name="other">Other</string>
+    <string name="continue_text">Continue</string>
 </resources>

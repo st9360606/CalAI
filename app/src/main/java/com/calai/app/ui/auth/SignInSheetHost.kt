@@ -14,10 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.navigation.NavController
 import com.calai.app.R
 import com.calai.app.data.auth.GoogleAuthService
 import com.calai.app.data.auth.NoGoogleCredentialAvailableException
 import com.calai.app.di.AppEntryPoint
+import com.calai.app.ui.nav.navigateToOnboardAfterLogin
 import com.google.android.gms.auth.api.identity.GetSignInIntentRequest
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.EntryPointAccessors
@@ -41,10 +43,11 @@ private fun fmtNotCompleted(ctx: Context, resultCode: Int): CharSequence =
 @Composable
 fun SignInSheetHost(
     activity: ComponentActivity,   // 呼叫端保證提供
+    navController: NavController,  // ★ 新增：用來直接導頁
     localeTag: String,
     visible: Boolean,
     onDismiss: () -> Unit,
-    onGoogle: () -> Unit,
+    onGoogle: () -> Unit,          // 若你原本用它導頁，現在可改成 {} 或做分析事件
     onApple: () -> Unit = {},
     onEmail: () -> Unit = {},
     onShowError: (CharSequence) -> Unit = {}
@@ -91,11 +94,12 @@ fun SignInSheetHost(
                             try {
                                 repo.loginWithGoogle(idToken)
                                 loading = false
-                                onDismiss()   // 成功 → 關面板
-                                onGoogle()
+                                onDismiss()                 // 成功 → 關面板
+                                navController.navigateToOnboardAfterLogin() // ★ 直接導到性別頁
+                                onGoogle()                  // 可留作分析事件
                             } catch (e: Exception) {
                                 loading = false
-                                onDismiss()   // 失敗 → 關面板
+                                onDismiss()                 // 失敗 → 關面板
                                 onShowError(e.message?.toString() ?: fallbackSignInErr)
                             }
                         }
@@ -140,8 +144,9 @@ fun SignInSheetHost(
                     val idToken = GoogleAuthService(ctx).getIdToken()
                     repo.loginWithGoogle(idToken)
                     loading = false
-                    onDismiss()   // 成功 → 關面板
-                    onGoogle()
+                    onDismiss()                       // 成功 → 關面板
+                    navController.navigateToOnboardAfterLogin() // ★ 直接導到性別頁
+                    onGoogle()                        // 可留作分析事件
                 } catch (e: NoGoogleCredentialAvailableException) {
                     // ② 無憑證 → 後備 Intent（會彈 Google 登入/選帳號 UI）
                     launchGoogleSignInIntent()
