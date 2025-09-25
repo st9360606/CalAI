@@ -140,23 +140,20 @@ fun SignInSheetHost(
             loading = true
             scope.launch {
                 try {
-                    // ① Credential Manager：若已有授權帳號會直接回 token
                     val idToken = GoogleAuthService(ctx).getIdToken()
                     repo.loginWithGoogle(idToken)
                     loading = false
-                    onDismiss()                       // 成功 → 關面板
-                    navController.navigateToOnboardAfterLogin() // ★ 直接導到性別頁
-                    onGoogle()                        // 可留作分析事件
+                    onDismiss()
+                    navController.navigateToOnboardAfterLogin()  // ★ 保留 Landing
+                    onGoogle()
                 } catch (e: NoGoogleCredentialAvailableException) {
-                    // ② 無憑證 → 後備 Intent（會彈 Google 登入/選帳號 UI）
                     launchGoogleSignInIntent()
                 } catch (e: GetCredentialCancellationException) {
                     loading = false
-                    onDismiss()   // 使用者在帳號選擇畫面按返回 → 關面板
+                    onDismiss()
                     onShowError(msgCancelled)
                 } catch (e: Exception) {
                     loading = false
-                    // 失敗保留面板讓使用者可改用 Email
                     val tip = if (!hasGoogleAccount(ctx)) "\n$tipNoAccount" else ""
                     onShowError((e.message ?: fallbackSignInErr) + tip)
                 }

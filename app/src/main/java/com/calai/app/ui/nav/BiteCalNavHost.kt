@@ -67,13 +67,8 @@ fun BiteCalNavHost(
                 hostActivity = hostActivity,
                 navController = nav,                 // 傳入 NavController
                 onStart = {
-                    // ★ 需求：不用登入，點「開始使用」直達性別頁
+                    // 不用登入，點「開始使用」直達性別頁；保留 Landing 以便返回
                     nav.navigate(Routes.ONBOARD_GENDER)
-                    // 若不想讓使用者按返回回到 Landing，可改為：
-                    // nav.navigate(Routes.ONBOARD_GENDER) {
-                    //     popUpTo(Routes.LANDING) { inclusive = true }
-                    //     launchSingleTop = true
-                    // }
                 },
                 onLogin = { nav.navigate(Routes.SIGNIN_EMAIL_ENTER) }, // 底部面板「以 Email 繼續」
                 onSetLocale = onSetLocale,
@@ -123,10 +118,14 @@ fun BiteCalNavHost(
                 onBack = { nav.popBackStack() },
                 onSuccess = {
                     Toast.makeText(hostActivity, "登入成功", Toast.LENGTH_SHORT).show()
-                    // 驗證成功 → 導到性別頁，並清掉返回到登入的歷史
+                    // ✅ 驗證成功 → 導到性別頁；清掉登入流程，但保留 Landing（可返回）
                     nav.navigate(Routes.ONBOARD_GENDER) {
-                        popUpTo(Routes.LANDING) { inclusive = true }
+                        popUpTo(Routes.LANDING) {
+                            inclusive = false    // ★ 不刪掉 Landing
+                            saveState = true
+                        }
                         launchSingleTop = true
+                        restoreState = true
                     }
                 }
             )
@@ -134,7 +133,7 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_GENDER) {
             com.calai.app.ui.onboarding.GenderSelectionScreen(
-                onBack = { nav.popBackStack() },
+                onBack = { nav.popBackStack() },   // 返回可回到 Landing
                 onNext = { gender ->
                     // TODO: 之後可存到 DataStore/後端；目前先留白或導到下一頁
                 }

@@ -1,7 +1,6 @@
 // app/src/main/java/com/calai/app/ui/landing/LandingScreen.kt
 package com.calai.app.ui.landing
 
-import LandingVideo
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -36,10 +35,10 @@ import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.currentLocaleKey
-import com.calai.app.i18n.flagAndLabelFromTag   // ★ 新增：共用旗幟/縮寫對應
+import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.auth.SignInSheetHost
-import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 // --- 安全往上溯源找 Activity（避免 Context 不是 Activity 的情況） ---
 private tailrec fun Context.findActivity(): Activity? =
@@ -52,7 +51,7 @@ private tailrec fun Context.findActivity(): Activity? =
 @Composable
 fun LandingScreen(
     hostActivity: ComponentActivity,
-    navController: NavController,           // 由呼叫端傳入
+    navController: NavController,
     onStart: () -> Unit,
     onLogin: () -> Unit,
     onSetLocale: (String) -> Unit
@@ -67,16 +66,16 @@ fun LandingScreen(
     var switching by rememberSaveable { mutableStateOf(false) }
     var showSignInSheet by rememberSaveable { mutableStateOf(false) }
 
-    // ===== 可調參數 =====
-    val phoneTopPadding = 40.dp
-    val phoneWidthFraction = 0.78f
-    val phoneAspect = 10f / 19.8f
+    // ===== 可調參數（已縮小影片框，放大語言膠囊）=====
+    val phoneTopPadding = 75.dp
+    val phoneWidthFraction = 0.83f      // ← 0.78 ➜ 0.72：影片框更小一點
+    val phoneAspect = 10f / 16.8f
     val phoneCorner = 28.dp
 
-    val spaceVideoToTitle = 0.dp
+    val spaceVideoToTitle = 21.dp
     val titleWidthFraction = 0.96f
-    val titleSize = 30.sp
-    val titleLineHeight = 30.sp
+    val titleSize = 31.sp
+    val titleLineHeight = 31.sp
 
     val ctaWidthFraction = 0.92f
     val ctaHeight = 56.dp
@@ -86,7 +85,7 @@ fun LandingScreen(
     // 統一字型
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
 
-    // 語系（Compose 畫面語系）→ 旗幟＋短標籤（繁中會顯示 🇭🇰）
+    // 語系（Compose 畫面語系）→ 旗幟＋短標籤（繁中會顯示 🇭🇰 / 你設定的旗）
     val currentTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
@@ -95,29 +94,31 @@ fun LandingScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 右上：旗幟膠囊（依語系顯示，例如 繁中 → 🇭🇰 CH）
+        // 右上：旗幟膠囊（放大）
         FlagChip(
             flag = flagEmoji,
             label = langLabel,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(16.dp)
+                .padding(20.dp) // 稍微外推一點
         ) { if (!switching) showLang = true }
 
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(phoneTopPadding))
 
-            // ===== 影片 =====
+            // ===== 影片（縮小寬度）=====
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 LandingVideo(
                     modifier = Modifier
-                        .fillMaxWidth(phoneWidthFraction)
+                        .fillMaxWidth(phoneWidthFraction) // ← 0.72f
                         .aspectRatio(phoneAspect)
                         .clip(RoundedCornerShape(phoneCorner)),
-                    resId = R.raw.intro
+                    resId = R.raw.intro,
+                    posterResId = null,
+                    placeholderColor = Color.White
                 )
             }
 
@@ -250,16 +251,13 @@ fun LandingScreen(
                     localeTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() },
                     visible = true,
                     onDismiss = { showSignInSheet = false },
-                    // 成功登入（Google）：提示一下；實際導頁由 SignInSheetHost 內處理
                     onGoogle = {
                         showSignInSheet = false
                         Toast.makeText(context, "登入成功", Toast.LENGTH_SHORT).show()
                     },
                     onApple = {
                         showSignInSheet = false
-                        // 之後支援 Apple
                     },
-                    // ★ Email 入口：先關面板，再導航到 Email 輸入頁（由呼叫端 onLogin 處理）
                     onEmail = {
                         showSignInSheet = false
                         onLogin()
@@ -273,7 +271,7 @@ fun LandingScreen(
     }
 }
 
-/* ---------- 旗幟膠囊 ---------- */
+/* ---------- 旗幟膠囊（放大版） ---------- */
 @Composable
 private fun FlagChip(
     flag: String,
@@ -289,14 +287,14 @@ private fun FlagChip(
         shadowElevation = 0.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), // 內距加大
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = flag, fontSize = 20.sp)
+            Text(text = flag, fontSize = 18.sp)   // 旗幟放大
             Spacer(Modifier.width(8.dp))
             Text(
                 text = label,
-                fontSize = 14.sp,
+                fontSize = 16.sp,                 // 文字放大
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF111114)
             )

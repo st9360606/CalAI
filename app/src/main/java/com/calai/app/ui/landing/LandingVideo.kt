@@ -1,36 +1,57 @@
+// app/src/main/java/com/calai/app/ui/landing/LandingVideo.kt
+package com.calai.app.ui.landing
+
 import androidx.annotation.RawRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.calai.app.ui.VideoPlayerRaw   // 確保路徑正確
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.zIndex
 
 @Composable
 fun LandingVideo(
     modifier: Modifier,
     @RawRes resId: Int,
-    placeholderColor: Color = Color(0xFFF2F2F2)
+    posterResId: Int? = null,               // 有海報就顯示，否則用純白
+    placeholderColor: Color = Color.White
 ) {
-    var showVideo by remember { mutableStateOf(false) }
+    // 先顯示佔位層；等第一幀渲染好了再移除
+    var placeholderVisible by remember { mutableStateOf(true) }
 
-    // 等第一幀繪製完成再載入播放器，避免卡在啟動畫面
-    LaunchedEffect(Unit) {
-        withFrameNanos { _: Long -> }   // 明確標型別避免 "Cannot infer type"
-        showVideo = true
-    }
+    Box(modifier = modifier) {
+        // 1) 影片（在下層）
+        VideoPlayerRaw(
+            resId = resId,
+            modifier = Modifier.fillMaxSize().zIndex(0f),
+            onFirstFrame = { placeholderVisible = false } // 收到首幀才拿掉佔位，避免黑閃
+        )
 
-    if (showVideo) {
-        // 真正的播放器（內部才會用到 Media3）
-        VideoPlayerRaw(resId = resId, modifier = modifier)
-    } else {
-        // 與影片容器同尺寸的佔位，避免版面跳動
-        Box(modifier = modifier.background(placeholderColor))
+        // 2) 佔位層（在上層）
+        if (placeholderVisible) {
+            if (posterResId != null) {
+                Image(
+                    painter = painterResource(posterResId),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().zIndex(1f)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(placeholderColor)
+                        .zIndex(1f)
+                )
+            }
+        }
     }
 }
