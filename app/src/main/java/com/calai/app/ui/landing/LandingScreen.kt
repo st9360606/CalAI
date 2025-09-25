@@ -37,6 +37,7 @@ import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.auth.SignInSheetHost
+import com.calai.app.ui.common.FlagChip
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -267,37 +268,6 @@ fun LandingScreen(
                     }
                 )
             }
-        }
-    }
-}
-
-/* ---------- 旗幟膠囊（放大版） ---------- */
-@Composable
-private fun FlagChip(
-    flag: String,
-    label: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .clip(RoundedCornerShape(22.dp))
-            .clickable(onClick = onClick),
-        color = Color(0xFFF2F2F2),
-        shadowElevation = 0.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), // 內距加大
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = flag, fontSize = 18.sp)   // 旗幟放大
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = label,
-                fontSize = 16.sp,                 // 文字放大
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF111114)
-            )
         }
     }
 }

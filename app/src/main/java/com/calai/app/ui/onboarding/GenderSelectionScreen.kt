@@ -1,7 +1,6 @@
 // app/src/main/java/com/calai/app/ui/onboarding/GenderSelectionScreen.kt
 package com.calai.app.ui.onboarding
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,20 +14,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import com.calai.app.R
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.flagAndLabelFromTag
-import com.calai.app.ui.landing.LanguageDialog   // ← 直接沿用 Landing 的語言選單
+import com.calai.app.ui.common.FlagChip
+import com.calai.app.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -40,7 +40,8 @@ fun GenderSelectionScreen(
     onBack: () -> Unit,
     onNext: (Gender) -> Unit
 ) {
-    var selected by remember { mutableStateOf<Gender?>(null) }
+    // ✅ 預設選 Male
+    var selected by remember { mutableStateOf<Gender?>(Gender.MALE) }
 
     // 語言切換所需
     val ctx = LocalContext.current
@@ -48,9 +49,7 @@ fun GenderSelectionScreen(
     val scope = rememberCoroutineScope()
     val composeLocale = LocalLocaleController.current
     val currentTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
-    val (flagEmoji, langLabel) = remember<Pair<String, String>>(currentTag) {
-        flagAndLabelFromTag(currentTag)
-    }
+    val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
     var showLang by remember { mutableStateOf(false) }
     var switching by remember { mutableStateOf(false) }
@@ -66,15 +65,24 @@ fun GenderSelectionScreen(
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color(0xFFF1F3F7)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color(0xFF111114)
+                            )
+                        }
                     }
                 },
                 actions = {
-                    // ✅ 可點擊語言膠囊：打開 LanguageDialog 切換
-                    LanguageBadge(
+                    // ★ 與登入頁一致的語言膠囊
+                    FlagChip(
                         flag = flagEmoji,
                         label = langLabel,
                         modifier = Modifier.padding(end = 16.dp),
@@ -104,22 +112,24 @@ fun GenderSelectionScreen(
                         .padding(top = 6.dp, bottom = 12.dp)
                 )
 
-                // 標題與副標
+                // 標題（更大）
                 Text(
                     text = stringResource(R.string.onb_gender_title),
-                    fontSize = 28.sp,
-                    lineHeight = 34.sp,
+                    fontSize = 30.sp,
+                    lineHeight = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFF111114)
                 )
                 Spacer(Modifier.height(6.dp))
+                // 副標（更大）
                 Text(
                     text = stringResource(R.string.onb_gender_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280)
+                    fontSize = 17.sp,
+                    color = Color(0xFF6B7280),
+                    lineHeight = 22.sp
                 )
 
-                Spacer(Modifier.height(72.dp)) // 三個選項再往下
+                Spacer(Modifier.height(120.dp)) // 讓三個選項更靠下
 
                 // 選項群組（置中）
                 Column(
@@ -162,33 +172,32 @@ fun GenderSelectionScreen(
                 Spacer(Modifier.height(12.dp))
             }
 
-            // 底部「Continue」
+            // 底部「Continue」— 永遠黑色可按
             Button(
-                onClick = { selected?.let(onNext) },
-                enabled = selected != null,
+                onClick = { onNext(selected ?: Gender.MALE) },
+                enabled = true,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(horizontal = 20.dp, vertical = 20.dp)
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(64.dp)
                     .clip(RoundedCornerShape(28.dp)),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFE5E7EB),
-                    disabledContentColor = Color(0xFF9CA3AF)
-                )
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(28.dp)
             ) {
                 Text(
                     text = stringResource(R.string.continue_text),
-                    fontSize = 16.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
         }
     }
 
-    // 語言對話框（與 Landing 一致）
+    // 語言對話框
     if (showLang) {
         LanguageDialog(
             title = stringResource(R.string.choose_language),
@@ -198,12 +207,9 @@ fun GenderSelectionScreen(
                 switching = true
                 showLang = false
                 scope.launch {
-                    // 1) Compose 層立即切
-                    composeLocale.set(picked.tag)
-                    // 2) AppCompat 層同步
-                    LanguageManager.applyLanguage(picked.tag)
-                    // 3) 持久化
-                    store.save(picked.tag)
+                    composeLocale.set(picked.tag)              // Compose 層立即切
+                    LanguageManager.applyLanguage(picked.tag)  // AppCompat 層同步
+                    store.save(picked.tag)                     // 持久化
                     switching = false
                 }
             },
@@ -214,38 +220,6 @@ fun GenderSelectionScreen(
 }
 
 /* ---------- 小組件 ---------- */
-
-@Composable
-private fun LanguageBadge(
-    flag: String,
-    label: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick, role = Role.Button),
-        color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
-        shape = RoundedCornerShape(10.dp),
-        shadowElevation = 0.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = flag, fontSize = 12.sp)
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF111114)
-            )
-        }
-    }
-}
 
 @Composable
 private fun StepProgress(
@@ -286,7 +260,7 @@ private fun GenderOption(
     corner: Dp
 ) {
     val shape = RoundedCornerShape(corner)
-    val container = if (selected) Color(0xFF111114) else Color(0xFFF7F8FC)
+    val container = if (selected) Color(0xFF111114) else Color(0xFFF1F3F7) // 未選中更淺
     val content = if (selected) Color.White else Color(0xFF111114)
 
     // 移除 ripple/拖移感
@@ -308,7 +282,7 @@ private fun GenderOption(
         Text(
             text = text,
             color = content,
-            fontSize = 17.sp,
+            fontSize = 19.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
