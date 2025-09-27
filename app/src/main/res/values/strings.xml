@@ -53,4 +53,19 @@
     <string name="female">Female</string>
     <string name="other">Other</string>
     <string name="continue_text">Continue</string>
+
+
+
+    <string name="onboard_referral_title">Where did you hear about us?</string>
+    <string name="common_continue">Continue</string>
+
+    <!-- 供未來 i18n 或測試 -->
+    <string name="referral_app_store">App Store</string>
+    <string name="referral_youtube">YouTube</string>
+    <string name="referral_instagram">Instagram</string>
+    <string name="referral_google">Google</string>
+    <string name="referral_facebook">Facebook</string>
+    <string name="referral_tiktok">TikTok</string>
+    <string name="referral_x">X</string>
+    <string name="referral_other">Other</string>
 </resources>

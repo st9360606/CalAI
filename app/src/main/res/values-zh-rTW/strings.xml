@@ -56,4 +56,18 @@
     <string name="continue_text">繼續</string>
 
 
+
+    <string name="onboard_referral_title">你是從哪裡知道我們的？</string>
+    <string name="common_continue">繼續</string>
+
+    <string name="referral_app_store">App Store</string>
+    <string name="referral_youtube">YouTube</string>
+    <string name="referral_instagram">Instagram</string>
+    <string name="referral_google">Google</string>
+    <string name="referral_facebook">Facebook</string>
+    <string name="referral_tiktok">TikTok</string>
+    <string name="referral_x">X</string>
+    <string name="referral_other">其他</string>
+
+
 </resources>

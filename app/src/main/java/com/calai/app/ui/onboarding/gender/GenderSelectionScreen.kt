@@ -1,15 +1,36 @@
-// app/src/main/java/com/calai/app/ui/onboarding/GenderSelectionScreen.kt
-package com.calai.app.ui.onboarding
+// app/src/main/java/com/calai/app/ui/onboarding/gender/GenderSelectionScreen.kt
+package com.calai.app.ui.onboarding.gender
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,31 +43,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.calai.app.R
-import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LanguageStore
+import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.common.FlagChip
+import com.calai.app.ui.common.OnboardingProgress
 import com.calai.app.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
-
-enum class Gender { MALE, FEMALE, OTHER }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GenderSelectionScreen(
     onBack: () -> Unit,
-    onNext: (Gender) -> Unit
+    onNext: (GenderKey) -> Unit,
+    vm: GenderSelectionViewModel = hiltViewModel()
 ) {
-    // ✅ 預設選 Male
-    var selected by remember { mutableStateOf<Gender?>(Gender.MALE) }
+    val state by vm.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
 
     // 語言切換所需
     val ctx = LocalContext.current
     val store = remember(ctx) { LanguageStore(ctx) }
-    val scope = rememberCoroutineScope()
     val composeLocale = LocalLocaleController.current
     val currentTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
@@ -67,8 +88,8 @@ fun GenderSelectionScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(18.dp))
+                                .size(39.dp)
+                                .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -85,7 +106,7 @@ fun GenderSelectionScreen(
                     FlagChip(
                         flag = flagEmoji,
                         label = langLabel,
-                        modifier = Modifier.padding(end = 16.dp),
+                        modifier = Modifier.padding(end = 20.dp),
                         onClick = { if (!switching) showLang = true }
                     )
                 }
@@ -103,10 +124,10 @@ fun GenderSelectionScreen(
                     .fillMaxSize()
                     .padding(horizontal = 20.dp)
             ) {
-                // 進度條
-                StepProgress(
-                    totalSteps = 6,
-                    currentStep = 1,
+                // 進度條（統一 1/6；依你實際流程調整）
+                OnboardingProgress(
+                    stepIndex = 1,
+                    totalSteps = 11,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 6.dp, bottom = 12.dp)
@@ -142,8 +163,8 @@ fun GenderSelectionScreen(
 
                     GenderOption(
                         text = stringResource(R.string.male_simple),
-                        selected = selected == Gender.MALE,
-                        onClick = { selected = Gender.MALE },
+                        selected = state.selected == GenderKey.MALE,
+                        onClick = { vm.select(GenderKey.MALE) },
                         widthFraction = widthFraction,
                         height = optionHeight,
                         corner = corner
@@ -151,8 +172,8 @@ fun GenderSelectionScreen(
                     Spacer(Modifier.height(16.dp))
                     GenderOption(
                         text = stringResource(R.string.female),
-                        selected = selected == Gender.FEMALE,
-                        onClick = { selected = Gender.FEMALE },
+                        selected = state.selected == GenderKey.FEMALE,
+                        onClick = { vm.select(GenderKey.FEMALE) },
                         widthFraction = widthFraction,
                         height = optionHeight,
                         corner = corner
@@ -160,8 +181,8 @@ fun GenderSelectionScreen(
                     Spacer(Modifier.height(16.dp))
                     GenderOption(
                         text = stringResource(R.string.other),
-                        selected = selected == Gender.OTHER,
-                        onClick = { selected = Gender.OTHER },
+                        selected = state.selected == GenderKey.OTHER,
+                        onClick = { vm.select(GenderKey.OTHER) },
                         widthFraction = widthFraction,
                         height = optionHeight,
                         corner = corner
@@ -172,9 +193,14 @@ fun GenderSelectionScreen(
                 Spacer(Modifier.height(12.dp))
             }
 
-            // 底部「Continue」— 永遠黑色可按
+            // 底部「Continue」— 先存，再導頁
             Button(
-                onClick = { onNext(selected ?: Gender.MALE) },
+                onClick = {
+                    scope.launch {
+                        vm.saveSelectedGender()      // 寫入 DataStore（gender）
+                        onNext(state.selected)       // 回傳選到的 GenderKey
+                    }
+                },
                 enabled = true,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -219,37 +245,6 @@ fun GenderSelectionScreen(
     }
 }
 
-/* ---------- 小組件 ---------- */
-
-@Composable
-private fun StepProgress(
-    totalSteps: Int,
-    currentStep: Int,
-    modifier: Modifier = Modifier
-) {
-    val track = Color(0xFFEDEEF0)
-    val bar = Color(0xFF111114)
-    val fraction = (currentStep.coerceIn(0, totalSteps)).toFloat()
-        .div(totalSteps.coerceAtLeast(1))
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(4.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(track),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(fraction)
-                .height(4.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(bar)
-        )
-    }
-}
-
 @Composable
 private fun GenderOption(
     text: String,
@@ -260,7 +255,7 @@ private fun GenderOption(
     corner: Dp
 ) {
     val shape = RoundedCornerShape(corner)
-    val container = if (selected) Color(0xFF111114) else Color(0xFFF1F3F7) // 未選中更淺
+    val container = if (selected) Color(0xFF111114) else Color(0xFFF1F3F7)
     val content = if (selected) Color.White else Color(0xFF111114)
 
     // 移除 ripple/拖移感
