@@ -142,6 +142,7 @@ dependencies {
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.startup.runtime)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.foundation.layout)
     "baselineProfile"(project(":baselineprofile"))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

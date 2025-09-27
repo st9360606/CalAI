@@ -7,9 +7,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.HiltViewModelFactory
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -22,6 +24,15 @@ import com.calai.app.ui.auth.email.EmailCodeScreen
 import com.calai.app.ui.auth.email.EmailEnterScreen
 import com.calai.app.ui.auth.email.EmailSignInViewModel
 import com.calai.app.ui.landing.LandingScreen
+import com.calai.app.ui.nav.Routes.LANDING
+import com.calai.app.ui.nav.Routes.ONBOARD_AGE
+import com.calai.app.ui.nav.Routes.ONBOARD_GENDER
+import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
+import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
+import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
+import com.calai.app.ui.nav.Routes.SIGN_UP
+import com.calai.app.ui.onboarding.age.AgeSelectionScreen
+import com.calai.app.ui.onboarding.age.AgeSelectionViewModel
 import com.calai.app.ui.onboarding.gender.GenderKey
 import com.calai.app.ui.onboarding.gender.GenderSelectionScreen
 import com.calai.app.ui.onboarding.gender.GenderSelectionViewModel
@@ -32,10 +43,12 @@ object Routes {
     const val LANDING = "landing"
     const val SIGN_UP = "signup"
     const val SIGNIN_EMAIL_ENTER = "signin_email_enter"
-    const val SIGNIN_EMAIL_CODE  = "signin_email_code"
+    const val SIGNIN_EMAIL_CODE = "signin_email_code"
+
     // Onboarding
     const val ONBOARD_GENDER = "onboard_gender"
     const val ONBOARD_REFERRAL = "onboard_referral"
+    const val ONBOARD_AGE = "onboard_age"
 }
 
 // 安全往上找 Activity
@@ -57,7 +70,7 @@ fun BiteCalNavHost(
     // 會話過期 → 直接帶到 Email 輸入頁（或改回 LANDING 視需求）
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            nav.navigate(Routes.SIGNIN_EMAIL_ENTER) {
+            nav.navigate(SIGNIN_EMAIL_ENTER) {
                 popUpTo(0) { inclusive = true }
             }
         }
@@ -65,20 +78,20 @@ fun BiteCalNavHost(
 
     NavHost(
         navController = nav,
-        startDestination = Routes.LANDING,
+        startDestination = LANDING,
         modifier = modifier
     ) {
-        composable(Routes.LANDING) {
+        composable(LANDING) {
             LandingScreen(
                 hostActivity = hostActivity,
                 navController = nav,
-                onStart = { nav.navigate(Routes.ONBOARD_GENDER) },         // 免登入→性別頁
-                onLogin = { nav.navigate(Routes.SIGNIN_EMAIL_ENTER) },
+                onStart = { nav.navigate(ONBOARD_GENDER) },         // 免登入→性別頁
+                onLogin = { nav.navigate(SIGNIN_EMAIL_ENTER) },
                 onSetLocale = onSetLocale,
             )
         }
 
-        composable(Routes.SIGN_UP) {
+        composable(SIGN_UP) {
             SignUpScreen(
                 onBack = { nav.popBackStack() },
                 onSignedUp = { /* TODO */ }
@@ -86,7 +99,7 @@ fun BiteCalNavHost(
         }
 
         // ===== Email：輸入 Email 畫面（用 Activity + backStackEntry 建 Hilt VM） =====
-        composable(Routes.SIGNIN_EMAIL_ENTER) { backStackEntry ->
+        composable(SIGNIN_EMAIL_ENTER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: EmailSignInViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -95,14 +108,16 @@ fun BiteCalNavHost(
             EmailEnterScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
-                onSent = { email -> nav.navigate("${Routes.SIGNIN_EMAIL_CODE}?email=$email") }
+                onSent = { email -> nav.navigate("${SIGNIN_EMAIL_CODE}?email=$email") }
             )
         }
 
         // ===== Email：輸入驗證碼畫面 =====
         composable(
-            route = "${Routes.SIGNIN_EMAIL_CODE}?email={email}",
-            arguments = listOf(navArgument("email") { type = NavType.StringType; defaultValue = "" })
+            route = "${SIGNIN_EMAIL_CODE}?email={email}",
+            arguments = listOf(navArgument("email") {
+                type = NavType.StringType; defaultValue = ""
+            })
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: EmailSignInViewModel = viewModel(
@@ -116,8 +131,8 @@ fun BiteCalNavHost(
                 onBack = { nav.popBackStack() },
                 onSuccess = {
                     Toast.makeText(hostActivity, "登入成功", Toast.LENGTH_SHORT).show()
-                    nav.navigate(Routes.ONBOARD_GENDER) {
-                        popUpTo(Routes.LANDING) { inclusive = false; saveState = true }
+                    nav.navigate(ONBOARD_GENDER) {
+                        popUpTo(LANDING) { inclusive = false; saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -126,8 +141,7 @@ fun BiteCalNavHost(
         }
 
         // ===== Onboarding：性別 =====
-        composable(Routes.ONBOARD_GENDER) { backStackEntry ->
-            // ⚠️ 關鍵：在 NavHost 用 HiltViewModelFactory 建 VM，再傳入畫面（避免 hiltViewModel + LocalContext 被語系包裝）
+        composable(ONBOARD_GENDER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: GenderSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -137,15 +151,13 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onNext = { _: GenderKey ->
-                    // 畫面已保存到 DataStore，這裡只負責導頁
-                    nav.navigate(Routes.ONBOARD_REFERRAL) { launchSingleTop = true }
+                    nav.navigate(ONBOARD_REFERRAL) { launchSingleTop = true }
                 }
             )
         }
 
-        // ===== Onboarding：你從哪裡知道我們 =====
-        composable(Routes.ONBOARD_REFERRAL) { backStackEntry ->
-            // 同理，顯式建 VM 並傳入
+        // ===== Onboarding：你從哪裡知道我們 → 下一步到年齡 =====
+        composable(ONBOARD_REFERRAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: ReferralSourceViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -155,8 +167,25 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onNext = {
-                    // TODO: 這裡改成你的下一頁 Route（例如年齡/目標）
-                    nav.popBackStack()
+                    nav.navigate(ONBOARD_AGE) { launchSingleTop = true }
+                }
+            )
+        }
+
+        // ===== Onboarding：年齡（保存搬到畫面內） =====
+        composable(ONBOARD_AGE) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: AgeSelectionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            AgeSelectionScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onNext = {
+                    // 這裡只負責導頁（畫面已經存好了）
+                    // nav.navigate(Routes.ONBOARD_HEIGHT)
                 }
             )
         }

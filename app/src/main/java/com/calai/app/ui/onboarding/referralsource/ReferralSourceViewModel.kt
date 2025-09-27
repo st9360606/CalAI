@@ -22,7 +22,7 @@ data class ReferralUiOption(
 )
 
 data class ReferralUiState(
-    val selected: ReferralKey = ReferralKey.APP_STORE,
+    val selected: ReferralKey = ReferralKey.GOOGLE_PLAY,
     val options: List<ReferralUiOption> = emptyList()
 )
 

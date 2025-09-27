@@ -136,7 +136,7 @@ fun GenderSelectionScreen(
                 // 標題（更大）
                 Text(
                     text = stringResource(R.string.onb_gender_title),
-                    fontSize = 30.sp,
+                    fontSize = 34.sp,
                     lineHeight = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color(0xFF111114)
@@ -211,8 +211,7 @@ fun GenderSelectionScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black,
                     contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(28.dp)
+                )
             ) {
                 Text(
                     text = stringResource(R.string.continue_text),

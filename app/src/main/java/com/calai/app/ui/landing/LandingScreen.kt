@@ -79,8 +79,6 @@ fun LandingScreen(
     val titleLineHeight = 31.sp
 
     val ctaWidthFraction = 0.92f
-    val ctaHeight = 56.dp
-    val ctaCorner = 28.dp
     val spaceTitleToCTA = 14.dp
 
     // 統一字型
@@ -164,8 +162,8 @@ fun LandingScreen(
                     onClick = onStart,
                     modifier = Modifier
                         .fillMaxWidth(ctaWidthFraction)
-                        .height(ctaHeight),
-                    shape = RoundedCornerShape(ctaCorner),
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(28.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
@@ -173,7 +171,7 @@ fun LandingScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.cta_get_started),
-                        fontSize = 18.sp,
+                        fontSize = 19.sp,
                         fontFamily = titleFont,
                         fontWeight = FontWeight.Bold
                     )

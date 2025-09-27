@@ -20,23 +20,20 @@
 
     <!-- common -->
     <string name="close">關閉</string>
+
+    <!-- Email -->
     <string name="sign_in_title">登入</string>
     <string name="email_label">Email</string>
     <string name="continue_btn">繼續</string>
     <string name="sending">傳送中…</string>
     <string name="verifying">驗證中…</string>
-
     <string name="email_confirm_title">確認你的 Email</string>
     <string name="email_confirm_desc">請輸入我們剛剛寄到\n%1$s 的 4 位數驗證碼</string>
-
-
-
-
     <string name="didnt_receive_code">沒有收到驗證碼？</string>
     <string name="resend">重新寄送</string>
     <string name="resend_with_seconds">%1$d 秒後可重新寄送</string>
 
-
+    <!-- Google -->
     <string name="err_google_id_token_empty">Google 回傳為空的 ID Token</string>
     <string name="err_google_result_parse">解析登入結果失敗</string>
     <string name="err_google_cancelled">你已取消登入</string>
@@ -45,21 +42,16 @@
     <string name="err_google_signin_failed">Google 登入失敗</string>
     <string name="err_google_not_completed_with_code">登入未完成，請再試一次（錯誤碼：%1$d）。你也可以改用 Email 登入。</string>
 
-
-
     <!-- Onboarding: Gender -->
     <string name="onb_gender_title">選擇你的性別</string>
     <string name="onb_gender_subtitle">這將用於校準你的自訂計畫。</string>
     <string name="male_simple">男</string>
     <string name="female">女性</string>
     <string name="other">其他</string>
-    <string name="continue_text">繼續</string>
+    <string name="continue_text">下一步</string>
 
-
-
+    <!-- referral_source -->
     <string name="onboard_referral_title">你是從哪裡知道我們的？</string>
-    <string name="common_continue">繼續</string>
-
     <string name="referral_app_store">App Store</string>
     <string name="referral_youtube">YouTube</string>
     <string name="referral_instagram">Instagram</string>
@@ -68,6 +60,12 @@
     <string name="referral_tiktok">TikTok</string>
     <string name="referral_x">X</string>
     <string name="referral_other">其他</string>
+
+    <!-- age -->
+    <string name="onboard_age_title">您多大年紀？</string>
+    <string name="onboard_age_subtitle">我們僅使用您的歲數來改善體驗並提高卡路里估算準確度。</string>
+
+
 
 
 </resources>

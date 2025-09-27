@@ -82,8 +82,6 @@ fun ReferralSourceScreen(
         bottomBar = {
             Box(
                 Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
                     .padding(16.dp)
             ) {
                 Button(
@@ -93,16 +91,20 @@ fun ReferralSourceScreen(
                             onNext()
                         }
                     },
+                    enabled = true,
                     modifier = Modifier
+                        .padding(horizontal = 3.dp, vertical = 26.dp)
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(28.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                        contentColor = Color.White
+                    )
                 ) {
                     Text(
-                        text = stringResource(id = R.string.common_continue),
-                        color = Color.White,
-                        fontSize = 18.sp,
+                        text = stringResource(R.string.continue_text),
+                        fontSize = 19.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
