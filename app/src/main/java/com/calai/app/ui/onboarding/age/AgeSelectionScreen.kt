@@ -2,20 +2,44 @@ package com.calai.app.ui.onboarding.age
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,10 +53,11 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import com.calai.app.ui.common.FlagChip
 import com.calai.app.ui.common.OnboardingProgress
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import kotlin.math.abs
+import kotlin.math.roundToInt
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -145,7 +170,7 @@ fun AgeSelectionScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(86.dp))
 
             AgeWheel(
                 minAge = minAge,
@@ -171,44 +196,51 @@ private fun AgeWheel(
     centerTextSize: TextUnit,
     sideAlpha: Float
 ) {
+    val VISIBLE_COUNT = 5
+    val MID = VISIBLE_COUNT / 2 // 2
+
     val items = remember(minAge, maxAge) { (minAge..maxAge).toList() }
-    val initialIndex = remember(value) { (value - minAge).coerceIn(0, items.lastIndex) }
+    val selectedIdx = remember(value) { (value - minAge).coerceIn(0, items.lastIndex) }
 
-    val state = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    // 讓 selected 一開始出現在正中（僅影響初始）
+    val firstForCenter = remember(selectedIdx, items) {
+        (selectedIdx - MID).coerceIn(0, (items.lastIndex - (VISIBLE_COUNT - 1)).coerceAtLeast(0))
+    }
+
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = firstForCenter)
     val fling = rememberSnapFlingBehavior(lazyListState = state)
-    val scope = rememberCoroutineScope()
 
-    // 先在可組合環境取得 density，並把 row 高度換成 px 給 effect 使用
-    val density = LocalDensity.current
-    val rowPx = remember(density, rowHeight) { with(density) { rowHeight.toPx() } }
-
-    // 停止滾動後 snap 到最近列並回寫值
-    LaunchedEffect(state.isScrollInProgress) {
-        if (!state.isScrollInProgress) {
-            val index = state.firstVisibleItemIndex +
-                    if (state.firstVisibleItemScrollOffset > rowPx / 2f) 1 else 0
-            val clamped = index.coerceIn(0, items.lastIndex)
-            onValueChange(items[clamped])
-            scope.launch { state.animateScrollToItem(clamped) }
+    // 以「視窗中心點」找出最接近的那一列（黑色＝框內）
+    val centerIndex by remember {
+        derivedStateOf {
+            val li = state.layoutInfo
+            if (li.visibleItemsInfo.isEmpty()) return@derivedStateOf selectedIdx
+            val viewportCenter = (li.viewportStartOffset + li.viewportEndOffset) / 2
+            li.visibleItemsInfo.minByOrNull { info ->
+                kotlin.math.abs((info.offset + info.size / 2) - viewportCenter)
+            }?.index ?: selectedIdx
         }
+    }
+
+    // 即時把中心列回傳 → 「下一步」一定存黑色那個
+    LaunchedEffect(centerIndex) {
+        onValueChange(items[centerIndex])
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(rowHeight * 5)
+            .height(rowHeight * VISIBLE_COUNT)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * 2),
+            contentPadding = PaddingValues(vertical = rowHeight * MID),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
             itemsIndexed(items) { index, age ->
-                val centerIndex = state.firstVisibleItemIndex + 2
-                val distance = abs(index - centerIndex)
-                val isCenter = distance == 0
+                val isCenter = index == centerIndex
                 val alpha = if (isCenter) 1f else sideAlpha
                 val size = if (isCenter) centerTextSize else 28.sp
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
@@ -230,21 +262,28 @@ private fun AgeWheel(
             }
         }
 
+        // 中心框線：中心 ± 半格
         val lineColor = Color(0x11000000)
+        val half = rowHeight / 2
+        val lineThickness = 1.dp
         Box(
             Modifier
                 .align(Alignment.Center)
+                .offset(y = -half)
                 .fillMaxWidth()
-                .height(1.dp)
+                .height(lineThickness)
                 .background(lineColor)
         )
         Box(
             Modifier
                 .align(Alignment.Center)
+                .offset(y = half - lineThickness)
                 .fillMaxWidth()
-                .offset(y = rowHeight - 1.dp)
-                .height(1.dp)
+                .height(lineThickness)
                 .background(lineColor)
         )
     }
 }
+
+
+
