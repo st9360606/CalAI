@@ -67,6 +67,9 @@
     <string name="onboard_age_title">How old are you?</string>
     <string name="onboard_age_subtitle">We only use your age to improve your experience and calorie estimation accuracy.</string>
 
+    <!-- height -->
+    <string name="onboard_height_title">How tall are you?</string>
+    <string name="onboard_height_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
 
 
 </resources>

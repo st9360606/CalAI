@@ -7,11 +7,9 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.HiltViewModelFactory
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -27,6 +25,7 @@ import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.nav.Routes.LANDING
 import com.calai.app.ui.nav.Routes.ONBOARD_AGE
 import com.calai.app.ui.nav.Routes.ONBOARD_GENDER
+import com.calai.app.ui.nav.Routes.ONBOARD_HEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
@@ -36,6 +35,8 @@ import com.calai.app.ui.onboarding.age.AgeSelectionViewModel
 import com.calai.app.ui.onboarding.gender.GenderKey
 import com.calai.app.ui.onboarding.gender.GenderSelectionScreen
 import com.calai.app.ui.onboarding.gender.GenderSelectionViewModel
+import com.calai.app.ui.onboarding.height.HeightSelectionScreen
+import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
 
@@ -49,6 +50,9 @@ object Routes {
     const val ONBOARD_GENDER = "onboard_gender"
     const val ONBOARD_REFERRAL = "onboard_referral"
     const val ONBOARD_AGE = "onboard_age"
+    const val ONBOARD_HEIGHT = "onboard_height"
+    const val ONBOARD_WEIGHT = "onboard_weight"
+
 }
 
 // 安全往上找 Activity
@@ -185,8 +189,21 @@ fun BiteCalNavHost(
                 onBack = { nav.popBackStack() },
                 onNext = {
                     // 這裡只負責導頁（畫面已經存好了）
-                    // nav.navigate(Routes.ONBOARD_HEIGHT)
+                    nav.navigate(ONBOARD_HEIGHT) { launchSingleTop = true }
                 }
+            )
+        }
+
+        composable(ONBOARD_HEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: HeightSelectionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            HeightSelectionScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onNext = { nav.navigate("onboard_weight") } // 下一步先指到你想去的頁
             )
         }
     }

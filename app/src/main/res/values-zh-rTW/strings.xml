@@ -65,7 +65,9 @@
     <string name="onboard_age_title">您多大年紀？</string>
     <string name="onboard_age_subtitle">我們僅使用您的歲數來改善體驗並提高卡路里估算準確度。</string>
 
-
+    <!-- height -->
+    <string name="onboard_height_title">您的身高是多少？</string>
+    <string name="onboard_height_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
 
 
 </resources>

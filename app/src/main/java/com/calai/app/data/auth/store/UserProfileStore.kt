@@ -1,6 +1,7 @@
 package com.calai.app.data.store
 
 import android.content.Context
+import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -24,6 +25,7 @@ class UserProfileStore @Inject constructor(
         val GENDER = stringPreferencesKey("gender")
         val REFERRAL_SOURCE = stringPreferencesKey("referral_source")
         val AGE_YEARS = intPreferencesKey("age_years")
+        val HEIGHT = intPreferencesKey("height")
     }
 
     //=======性別=========
@@ -51,5 +53,9 @@ class UserProfileStore @Inject constructor(
     suspend fun setAge(years: Int) {
         context.userProfileDataStore.edit { it[AGE_YEARS] = years }
     }
+
+    //=======身高=========
+    val heightCmFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.HEIGHT] }
+    suspend fun setHeightCm(cm: Int) { context.userProfileDataStore.edit { it[Keys.HEIGHT] = cm } }
 
 }
