@@ -31,24 +31,24 @@ import androidx.compose.ui.window.DialogProperties
 data class LangItem(val label: String, val tag: String, val flag: String)
 
 val LANGS = listOf(
-    LangItem("繁體中文", "zh-TW", "🇹🇼"),
     LangItem("English", "en", "🇺🇸"),
     LangItem("Español", "es", "🇪🇸"),
-    LangItem("العربية", "ar", "🇸🇦"),
     LangItem("বাংলা", "bn", "🇧🇩"),
     LangItem("Português", "pt", "🇵🇹"),
+    LangItem("العربية", "ar", "🇸🇦"),
     LangItem("Русский", "ru", "🇷🇺"),
-    LangItem("日本語", "ja", "🇯🇵"),
-    LangItem("Deutsch", "de", "🇩🇪"),
-    LangItem("ਪੰਜਾਬੀ", "pa", "🇮🇳"),
-    LangItem("Basa Jawa", "jv", "🇮🇩"),
     LangItem("Français", "fr", "🇫🇷"),
+    LangItem("日本語", "ja", "🇯🇵"),
+    LangItem("한국어", "ko", "🇰🇷"),
     LangItem("Tiếng Việt", "vi", "🇻🇳"),
     LangItem("ไทย", "th", "🇹🇭"),
-    LangItem("Bahasa Melayu", "ms", "🇲🇾"),
-    LangItem("한국어", "ko", "🇰🇷"),
+    LangItem("繁體中文", "zh-TW", "🇹🇼"),
     LangItem("Bahasa Indonesia", "id", "🇮🇩"),
-    LangItem("简体中文", "zh-CN", "🇨🇳")
+    LangItem("Bahasa Melayu", "ms", "🇲🇾"),
+    LangItem("Deutsch", "de", "🇩🇪"),
+    LangItem("简体中文", "zh-CN", "🇨🇳"),
+    LangItem("ਪੰਜਾਬੀ", "pa", "🇮🇳"),
+    LangItem("Basa Jawa", "jv", "🇮🇩")
 )
 
 /** iOS 風：小卡片 + pill 列表 */

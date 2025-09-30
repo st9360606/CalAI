@@ -39,8 +39,13 @@ fun HeightSelectionScreen(
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()
 
-    // ✅ 依「已儲存的單位」初始化；返回頁面會保持上次選擇
-    var useMetric by rememberSaveable(savedUnit) { mutableStateOf(savedUnit == UserProfileStore.HeightUnit.CM) }
+    // ✅ 先預設 false（= FT/in），載入到 savedUnit 後再覆寫
+    var useMetric by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(savedUnit) {
+        // 若資料有存過，就依存檔覆寫；沒存過時，savedUnit 預設是 FT_IN，就維持 false
+        useMetric = (savedUnit == UserProfileStore.HeightUnit.CM)
+    }
 
     // 以 cm 為 SSOT；切換單位只改本地顯示
     var cmVal   by rememberSaveable(heightCm) { mutableIntStateOf(heightCm) }

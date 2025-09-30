@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.HiltViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -51,7 +52,6 @@ object Routes {
     const val SIGN_UP = "signup"
     const val SIGNIN_EMAIL_ENTER = "signin_email_enter"
     const val SIGNIN_EMAIL_CODE = "signin_email_code"
-
     // Onboarding
     const val ONBOARD_GENDER = "onboard_gender"
     const val ONBOARD_REFERRAL = "onboard_referral"
@@ -59,16 +59,20 @@ object Routes {
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
-
 }
 
-// 安全往上找 Activity
+// ── 安全往上找 Activity ───────────────────────────────────────────────
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
         is ContextWrapper -> baseContext.findActivity()
         else -> null
     }
+
+// ── 只在有上一頁時才 pop（根頁時不做事） ─────────────────────────────
+private fun NavController.safePopBackStack(): Boolean {
+    return if (previousBackStackEntry != null) popBackStack() else false
+}
 
 @Composable
 fun BiteCalNavHost(
@@ -104,12 +108,12 @@ fun BiteCalNavHost(
 
         composable(SIGN_UP) {
             SignUpScreen(
-                onBack = { nav.popBackStack() },
+                onBack = { nav.safePopBackStack() },
                 onSignedUp = { /* TODO */ }
             )
         }
 
-        // ===== Email：輸入 Email 畫面（用 Activity + backStackEntry 建 Hilt VM） =====
+        // ===== Email：輸入 Email 畫面 =====
         composable(SIGNIN_EMAIL_ENTER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: EmailSignInViewModel = viewModel(
@@ -118,7 +122,7 @@ fun BiteCalNavHost(
             )
             EmailEnterScreen(
                 vm = vm,
-                onBack = { nav.popBackStack() },
+                onBack = { nav.safePopBackStack() },
                 onSent = { email -> nav.navigate("${SIGNIN_EMAIL_CODE}?email=$email") }
             )
         }
@@ -139,7 +143,7 @@ fun BiteCalNavHost(
             EmailCodeScreen(
                 vm = vm,
                 email = email,
-                onBack = { nav.popBackStack() },
+                onBack = { nav.safePopBackStack() },
                 onSuccess = {
                     Toast.makeText(hostActivity, "登入成功", Toast.LENGTH_SHORT).show()
                     nav.navigate(ONBOARD_GENDER) {
@@ -160,14 +164,14 @@ fun BiteCalNavHost(
             )
             GenderSelectionScreen(
                 vm = vm,
-                onBack = { nav.popBackStack() },
+                onBack = { nav.safePopBackStack() },
                 onNext = { _: GenderKey ->
                     nav.navigate(ONBOARD_REFERRAL) { launchSingleTop = true }
                 }
             )
         }
 
-        // ===== Onboarding：你從哪裡知道我們 → 下一步到年齡 =====
+        // ===== Onboarding：你從哪裡知道我們 → 年齡 =====
         composable(ONBOARD_REFERRAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: ReferralSourceViewModel = viewModel(
@@ -176,31 +180,26 @@ fun BiteCalNavHost(
             )
             ReferralSourceScreen(
                 vm = vm,
-                onBack = { nav.popBackStack() },
-                onNext = {
-                    nav.navigate(ONBOARD_AGE) { launchSingleTop = true }
-                }
+                onBack = { nav.safePopBackStack() },
+                onNext = { nav.navigate(ONBOARD_AGE) { launchSingleTop = true } }
             )
         }
 
-        // ===== Onboarding：年齡（保存搬到畫面內） =====
+        // ===== Onboarding：年齡 =====
         composable(ONBOARD_AGE) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: AgeSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-
             AgeSelectionScreen(
                 vm = vm,
-                onBack = { nav.popBackStack() },
-                onNext = {
-                    // 這裡只負責導頁（畫面已經存好了）
-                    nav.navigate(ONBOARD_HEIGHT) { launchSingleTop = true }
-                }
+                onBack = { nav.safePopBackStack() },
+                onNext = { nav.navigate(ONBOARD_HEIGHT) { launchSingleTop = true } }
             )
         }
 
+        // ===== Onboarding：身高 =====
         composable(ONBOARD_HEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: HeightSelectionViewModel = viewModel(
@@ -209,11 +208,12 @@ fun BiteCalNavHost(
             )
             HeightSelectionScreen(
                 vm = vm,
-                onBack = { nav.popBackStack() },
+                onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(ONBOARD_WEIGHT) }
             )
         }
 
+        // ===== Onboarding：體重 =====
         composable(ONBOARD_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: WeightSelectionViewModel = viewModel(
@@ -222,10 +222,12 @@ fun BiteCalNavHost(
             )
             WeightSelectionScreen(
                 vm = vm,
-                onBack = { nav.popBackStack() },
+                onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(ONBOARD_EXERCISE_FREQ) }
             )
         }
+
+        // ===== Onboarding：鍛鍊頻率 =====
         composable(route = ONBOARD_EXERCISE_FREQ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: ExerciseFrequencyViewModel = viewModel(
@@ -234,7 +236,7 @@ fun BiteCalNavHost(
             )
             ExerciseFrequencyScreen(
                 vm = vm,
-                onBack = { nav.popBackStack() },
+                onBack = { nav.safePopBackStack() },
                 onNext = { /* TODO: 下一步頁面 */ }
             )
         }

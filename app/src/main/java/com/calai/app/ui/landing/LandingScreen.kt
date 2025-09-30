@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/ui/landing/LandingScreen.kt
 package com.calai.app.ui.landing
 
 import android.app.Activity
@@ -38,7 +37,6 @@ import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.auth.SignInSheetHost
 import com.calai.app.ui.common.FlagChip
-import java.util.Locale
 import kotlinx.coroutines.launch
 
 // --- 安全往上溯源找 Activity（避免 Context 不是 Activity 的情況） ---
@@ -62,6 +60,17 @@ fun LandingScreen(
     val store = remember(context) { LanguageStore(context) }
     val composeLocale = LocalLocaleController.current
 
+    // ✅ 首次啟動或尚未選過語言時，預設成 EN
+    LaunchedEffect(Unit) {
+        if (composeLocale.tag.isBlank()) {
+            val def = "en"
+            composeLocale.set(def)               // Compose 層
+            LanguageManager.applyLanguage(def)   // 非 Compose 層
+            onSetLocale(def)                     // 外部回呼（若有需要）
+            store.save(def)                      // 記住下次打開仍為 EN
+        }
+    }
+
     // ✅ 用 rememberSaveable 保存 UI 狀態
     var showLang by rememberSaveable { mutableStateOf(false) }
     var switching by rememberSaveable { mutableStateOf(false) }
@@ -69,7 +78,7 @@ fun LandingScreen(
 
     // ===== 可調參數（已縮小影片框，放大語言膠囊）=====
     val phoneTopPadding = 118.dp
-    val phoneWidthFraction = 0.81f      // ← 0.78 ➜ 0.72：影片框更小一點
+    val phoneWidthFraction = 0.81f
     val phoneAspect = 11f / 16.5f
     val phoneCorner = 28.dp
 
@@ -84,41 +93,46 @@ fun LandingScreen(
     // 統一字型
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
 
-    // 語系（Compose 畫面語系）→ 旗幟＋短標籤（繁中會顯示 🇭🇰 / 你設定的旗）
-    val currentTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
+    // 語系（Compose 畫面語系）→ 旗幟＋短標籤（預設 EN）
+    val currentTag = composeLocale.tag.ifBlank { "en" }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
+
+    // 根頁 Back 保護：在 Landing（沒有上一頁）時，按返回「不做事」
+    val isRoot = navController.previousBackStackEntry == null
+    BackHandler(enabled = !showSignInSheet && isRoot) { /* stay */ }
+    // 面板開啟時按返回關面板
+    BackHandler(enabled = showSignInSheet) { showSignInSheet = false }
 
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 右上：旗幟膠囊（放大）
+        // 右上：旗幟膠囊
         FlagChip(
             flag = flagEmoji,
             label = langLabel,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                // 1) 先吃安全區：狀態列 + 瀏海（有瀏海的機種更穩）
+
                 .windowInsetsPadding(
                     WindowInsets.displayCutout.union(WindowInsets.statusBars)
                 )
-                // 2) 再做視覺微調：往內與往下各一些
                 .padding(top = 0.dp, end = 20.dp)
-                .offset(y = (2).dp), // 或 (-4).dp 視覺微調；請確認不會被狀態列遮住
+                .offset(y = (2).dp),
         ) { if (!switching) showLang = true }
 
         Column(Modifier.fillMaxSize()) {
             Spacer(Modifier.height(phoneTopPadding))
 
-            // ===== 影片（縮小寬度）=====
+            // 影片
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 LandingVideo(
                     modifier = Modifier
-                        .fillMaxWidth(phoneWidthFraction) // ← 0.72f
+                        .fillMaxWidth(phoneWidthFraction)
                         .aspectRatio(phoneAspect)
                         .clip(RoundedCornerShape(phoneCorner)),
                     resId = R.raw.intro,
@@ -129,7 +143,7 @@ fun LandingScreen(
 
             Spacer(Modifier.height(spaceVideoToTitle))
 
-            // ===== 標題 =====
+            // 標題
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -157,7 +171,7 @@ fun LandingScreen(
 
             Spacer(Modifier.height(spaceTitleToCTA))
 
-            // ===== CTA 與登入 =====
+            // CTA 與登入
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -212,25 +226,19 @@ fun LandingScreen(
             }
         }
 
-        // ===== 語言對話框 =====
+        // ===== 語言對話框（預設 EN）=====
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
-                currentTag = composeLocale.tag.ifBlank {
-                    java.util.Locale.getDefault().toLanguageTag()
-                },
+                currentTag = composeLocale.tag.ifBlank { "en" },
                 onPick = { picked ->
                     if (switching) return@LanguageDialog
                     switching = true
                     showLang = false
                     scope.launch {
-                        // 1) Compose 層立即套
                         composeLocale.set(picked.tag)
-                        // 2) 全域（非 Compose）也切
                         LanguageManager.applyLanguage(picked.tag)
-                        // 3) 外部回呼
                         onSetLocale(picked.tag)
-                        // 4) 保存
                         store.save(picked.tag)
                         switching = false
                     }
@@ -240,29 +248,22 @@ fun LandingScreen(
             )
         }
 
-        /* === 返回鍵：面板開啟時先關面板 === */
-        BackHandler(enabled = showSignInSheet) {
-            showSignInSheet = false
-        }
-
-        // ===== 登入底部面板 =====
+        // 登入底部面板
         if (showSignInSheet) {
-            val localeKey = currentLocaleKey() // 由資源實際語系產生 key
-
+            val localeKey = currentLocaleKey()
             key(localeKey) {
                 SignInSheetHost(
                     activity = hostActivity,
                     navController = navController,
-                    localeTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() },
+                    // ✅ 預設 EN
+                    localeTag = composeLocale.tag.ifBlank { "en" },
                     visible = true,
                     onDismiss = { showSignInSheet = false },
                     onGoogle = {
                         showSignInSheet = false
                         Toast.makeText(context, "登入成功", Toast.LENGTH_SHORT).show()
                     },
-                    onApple = {
-                        showSignInSheet = false
-                    },
+                    onApple = { showSignInSheet = false },
                     onEmail = {
                         showSignInSheet = false
                         onLogin()

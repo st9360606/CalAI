@@ -2,17 +2,23 @@ package com.calai.app.ui.onboarding.weight
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -20,6 +26,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -41,12 +51,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +71,10 @@ import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.store.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.ui.composed
+import androidx.compose.ui.input.pointer.pointerInput
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -66,22 +84,23 @@ fun WeightSelectionScreen(
     onNext: () -> Unit
 ) {
     val weightKg by vm.weightKgState.collectAsState()
-    val savedUnit by vm.weightUnitState.collectAsState() // ← 取出已保存的單位
+    val savedUnit by vm.weightUnitState.collectAsState()
 
-    // 以保存的單位來初始化（true=kg, false=lbs）
     var useMetric by rememberSaveable(savedUnit) {
         mutableStateOf(savedUnit == UserProfileStore.WeightUnit.KG)
     }
-
     var valueKg by remember(weightKg) { mutableStateOf(weightKg.toDouble()) }
 
-    // A) 初始化 / 切單位時：空字串維持 ""，否則依單位格式化
     var text by remember(weightKg, useMetric) {
         mutableStateOf(
             if (weightKg == 0f) "" else
                 formatOneDecimal(if (useMetric) valueKg else kgToLbs(valueKg))
         )
     }
+
+    val listState = rememberLazyListState()
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         containerColor = Color.White,
@@ -112,33 +131,28 @@ fun WeightSelectionScreen(
             )
         },
         bottomBar = {
-            Box {
+            // 只在 bottomBar 做 imePadding（內容區不吃 IME，避免被推兩次）
+            Box(Modifier.imePadding()) {
                 Button(
                     onClick = {
-                        // C) 送出：空字串視為 0；同時保存單位
                         val clean = text.replace(',', '.').trim()
                         val typed = clean.toDoubleOrNull()
-
                         val kgToSave = when {
-                            clean.isEmpty() -> 0.0                // ← 空字串就存 0
-                            typed == null -> valueKg              // 非法輸入就回退到目前的 kg
-                            useMetric -> typed                    // 目前是 kg
-                            else -> lbsToKg(typed)                // 目前是 lbs
+                            clean.isEmpty() -> 0.0
+                            typed == null -> valueKg
+                            useMetric -> typed
+                            else -> lbsToKg(typed)
                         }
-
-                        vm.saveWeightKg(roundKg2(kgToSave))       // kg 存兩位小數，避免來回誤差
+                        vm.saveWeightKg(roundKg2(kgToSave))
                         vm.saveWeightUnit(
                             if (useMetric) UserProfileStore.WeightUnit.KG
                             else UserProfileStore.WeightUnit.LBS
                         )
                         onNext()
                     },
-                    enabled = true,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
-                        .navigationBarsPadding() // 先避開手勢列
-                        // 2) 額外再往上推一點（你要的「再往上一點」）
+                        .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
                         .fillMaxWidth()
                         .height(64.dp),
@@ -149,7 +163,7 @@ fun WeightSelectionScreen(
                     )
                 ) {
                     Text(
-                        text = stringResource(R.string.continue_text),
+                        stringResource(R.string.continue_text),
                         fontSize = 19.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -157,139 +171,178 @@ fun WeightSelectionScreen(
             }
         }
     ) { inner ->
-        Column(
-            modifier = Modifier
+
+        // 讓內容可捲動，並在底部多預留 CTA 高度 + CTA 的 bottom padding + 12dp 緩衝
+        val layoutDir = LocalLayoutDirection.current
+        val navBars = WindowInsets.navigationBars.asPaddingValues()
+        val extraBottom = 64.dp + 59.dp + 12.dp
+        val listContentPadding = PaddingValues(
+            start = navBars.calculateStartPadding(layoutDir),
+            top = navBars.calculateTopPadding(),
+            end = navBars.calculateEndPadding(layoutDir),
+            bottom = navBars.calculateBottomPadding() + extraBottom
+        )
+
+        // ⬇️ 外層 Box 套「點空白區關閉鍵盤」
+        Box(
+            Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .imePadding(),
+                .clearFocusOnTapOutside()
         ) {
-            OnboardingProgress(
-                stepIndex = 5,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-            Text(
-                text = stringResource(R.string.onboard_weight_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
-                fontWeight = FontWeight.ExtraBold,
-                lineHeight = 40.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 20.dp)
-            )
-
-            Spacer(Modifier.height(6.dp))
-
-            Text(
-                text = stringResource(R.string.onboard_weight_subtitle),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
-                ),
-                color = Color(0xFFB6BDC6),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 6.dp)
-            )
-
-            WeightUnitSegmented(
-                useMetric = useMetric,
-                onChange = { isMetric ->
-                    // 切換單位：空字串保持空；否則依新單位格式化
-                    useMetric = isMetric
-                    text = if (text.isEmpty()) "" else
-                        formatOneDecimal(if (useMetric) valueKg else kgToLbs(valueKg))
-                },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = 12.dp)
-            )
-
-            Spacer(Modifier.height(39.dp))
-
-            // 大卡片輸入：最多 1 位小數（保持你的樣式）
-            Surface(
-                color = Color(0xFFF1F3F7),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth(0.88f)
-                    .heightIn(min = 68.dp)
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = listContentPadding
             ) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    BasicTextField(
-                        value = text,
-                        onValueChange = { new ->
-                            val sanitized = sanitizeToOneDecimal(new)
-                            text = sanitized
-                            sanitized.toDoubleOrNull()?.let { v ->
-                                valueKg = if (useMetric) v else lbsToKg(v)
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        textStyle = TextStyle(
-                            fontSize = 42.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF111114),
-                            textAlign = TextAlign.Center
-                        ),
-                        // 🔽 空字串時顯示「0」的浮水印
-                        decorationBox = { inner ->
-                            Box(
-                                modifier = Modifier
-                                    .widthIn(min = 84.dp, max = 148.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (text.isEmpty()) {
-                                    Text(
-                                        "0",
-                                        fontSize = 42.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color(0xFFB6BDC6), // 淡灰
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1
-                                    )
-                                }
-                                inner()
-                            }
-                        },
-                        modifier = Modifier.wrapContentWidth()
-                    )
-
-                    Text(
-                        text = if (useMetric) "kg" else "lbs",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF111114),
-                        maxLines = 1,
-                        softWrap = false,  // 避免出現「k↵g」
-                        modifier = Modifier.offset(x = (-10).dp)
+                item {
+                    OnboardingProgress(
+                        stepIndex = 5,
+                        totalSteps = 11,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
                     )
                 }
+                item {
+                    Text(
+                        text = stringResource(R.string.onboard_weight_title),
+                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                        fontWeight = FontWeight.ExtraBold,
+                        lineHeight = 40.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 20.dp)
+                    )
+                }
+                item { Spacer(Modifier.height(6.dp)) }
+                item {
+                    Text(
+                        text = stringResource(R.string.onboard_weight_subtitle),
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 16.sp,
+                            lineHeight = 22.sp
+                        ),
+                        color = Color(0xFFB6BDC6),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 6.dp)
+                    )
+                }
+                item {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        WeightUnitSegmented(
+                            useMetric = useMetric,
+                            onChange = { isMetric ->
+                                useMetric = isMetric
+                                text = if (text.isEmpty()) "" else
+                                    formatOneDecimal(if (useMetric) valueKg else kgToLbs(valueKg))
+                            },
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                    }
+                }
+                item { Spacer(Modifier.height(39.dp)) }
+
+                // —— 輸入卡片 —— //
+                item {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Surface(
+                            color = Color(0xFFF1F3F7),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.88f)
+                                .heightIn(min = 68.dp)
+                        ) {
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                BasicTextField(
+                                    value = text,
+                                    onValueChange = { new ->
+                                        val sanitized = sanitizeToOneDecimal(new)
+                                        text = sanitized
+                                        sanitized.toDoubleOrNull()?.let { v ->
+                                            valueKg = if (useMetric) v else lbsToKg(v)
+                                        }
+                                    },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    textStyle = TextStyle(
+                                        fontSize = 42.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color(0xFF111114),
+                                        textAlign = TextAlign.Center
+                                    ),
+                                    decorationBox = { innerField ->
+                                        Box(
+                                            modifier = Modifier.widthIn(min = 84.dp, max = 148.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (text.isEmpty()) {
+                                                Text(
+                                                    "0",
+                                                    fontSize = 42.sp,
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Color(0xFFB6BDC6),
+                                                    textAlign = TextAlign.Center,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                            innerField()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .wrapContentWidth()
+                                        .bringIntoViewRequester(bringIntoViewRequester)
+                                        .onFocusEvent { f ->
+                                            if (f.isFocused) {
+                                                scope.launch {
+                                                    // 等鍵盤動畫一下再滾動
+                                                    delay(200)
+                                                    bringIntoViewRequester.bringIntoView()
+                                                }
+                                            }
+                                        }
+                                )
+
+                                Text(
+                                    text = if (useMetric) "kg" else "lbs",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF111114),
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    modifier = Modifier.offset(x = (-10).dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = stringResource(R.string.onboard_weight_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF9AA3AE),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth(0.62f)
+                                .padding(top = 16.dp)
+                        )
+                    }
+                }
+
+                item { Spacer(Modifier.height(16.dp)) }
             }
-            // 小提示（變窄＋置中＋自動換行）
-            Text(
-                text = stringResource(R.string.onboard_weight_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF9AA3AE),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally) // 先把自身置中
-                    .fillMaxWidth(0.62f)
-                    .padding(top = 16.dp)
-            )
         }
     }
 }
@@ -403,4 +456,12 @@ private fun formatOneDecimal(v: Double): String {
 /** 存檔用：公斤保留 2 位小數，避免 lbs↔kg 來回換算誤差 */
 private fun roundKg2(v: Double): Float {
     return (kotlin.math.round(v * 100.0) / 100.0).toFloat()
+}
+
+/** 點擊空白處時清焦（鍵盤收起）；子元件有消費點擊時不會觸發 */
+private fun Modifier.clearFocusOnTapOutside(): Modifier = composed {
+    val focusManager = LocalFocusManager.current
+    pointerInput(Unit) {
+        detectTapGestures(onTap = { focusManager.clearFocus() })
+    }
 }
