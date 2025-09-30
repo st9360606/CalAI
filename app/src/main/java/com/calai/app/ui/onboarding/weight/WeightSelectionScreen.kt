@@ -41,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,8 +55,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
+import com.calai.app.data.store.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
-import com.calai.app.ui.onboarding.height.feetInchesToCm
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -65,11 +66,16 @@ fun WeightSelectionScreen(
     onNext: () -> Unit
 ) {
     val weightKg by vm.weightKgState.collectAsState()
+    val savedUnit by vm.weightUnitState.collectAsState() // ← 取出已保存的單位
 
-    var useMetric by remember { mutableStateOf(true) }   // true=kg, false=lbs
+    // 以保存的單位來初始化（true=kg, false=lbs）
+    var useMetric by rememberSaveable(savedUnit) {
+        mutableStateOf(savedUnit == UserProfileStore.WeightUnit.KG)
+    }
+
     var valueKg by remember(weightKg) { mutableStateOf(weightKg.toDouble()) }
 
-    // A) 初始化：若儲存值為 0，或之後被清空 → 維持 ""（讓你自己已有的 placeholder 能顯示）
+    // A) 初始化 / 切單位時：空字串維持 ""，否則依單位格式化
     var text by remember(weightKg, useMetric) {
         mutableStateOf(
             if (weightKg == 0f) "" else
@@ -106,13 +112,25 @@ fun WeightSelectionScreen(
             )
         },
         bottomBar = {
-            Box(
-            ) {
+            Box {
                 Button(
                     onClick = {
-                        // C) 送出：空字串視為 0
-                        val kgToSave = if (text.isEmpty()) 0.0 else valueKg
-                        vm.saveWeightKg(round1(kgToSave).toFloat())
+                        // C) 送出：空字串視為 0；同時保存單位
+                        val clean = text.replace(',', '.').trim()
+                        val typed = clean.toDoubleOrNull()
+
+                        val kgToSave = when {
+                            clean.isEmpty() -> 0.0                // ← 空字串就存 0
+                            typed == null -> valueKg              // 非法輸入就回退到目前的 kg
+                            useMetric -> typed                    // 目前是 kg
+                            else -> lbsToKg(typed)                // 目前是 lbs
+                        }
+
+                        vm.saveWeightKg(roundKg2(kgToSave))       // kg 存兩位小數，避免來回誤差
+                        vm.saveWeightUnit(
+                            if (useMetric) UserProfileStore.WeightUnit.KG
+                            else UserProfileStore.WeightUnit.LBS
+                        )
                         onNext()
                     },
                     enabled = true,
@@ -168,7 +186,10 @@ fun WeightSelectionScreen(
 
             Text(
                 text = stringResource(R.string.onboard_weight_subtitle),
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp, lineHeight = 22.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp,
+                    lineHeight = 22.sp
+                ),
                 color = Color(0xFFB6BDC6),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -179,7 +200,7 @@ fun WeightSelectionScreen(
             WeightUnitSegmented(
                 useMetric = useMetric,
                 onChange = { isMetric ->
-                    // A) 切換單位：若目前為空字串，就保持空；否則依新單位格式化
+                    // 切換單位：空字串保持空；否則依新單位格式化
                     useMetric = isMetric
                     text = if (text.isEmpty()) "" else
                         formatOneDecimal(if (useMetric) valueKg else kgToLbs(valueKg))
@@ -191,26 +212,26 @@ fun WeightSelectionScreen(
 
             Spacer(Modifier.height(39.dp))
 
-            // 大卡片輸入：最多 1 位小數
+            // 大卡片輸入：最多 1 位小數（保持你的樣式）
             Surface(
                 color = Color(0xFFF1F3F7),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth(0.88f)     // ← 原本是 fillMaxWidth()，縮窄整個輸入框
-                    .heightIn(min = 68.dp)   // ← 原 82.dp，高度更小
+                    .fillMaxWidth(0.88f)
+                    .heightIn(min = 68.dp)
             ) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),    // ← 內距縮小（原 20.dp）
+                        .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     BasicTextField(
                         value = text,
                         onValueChange = { new ->
-                            val sanitized = sanitizeToOneDecimal(new)   // ← 用第2段的新函式
+                            val sanitized = sanitizeToOneDecimal(new)
                             text = sanitized
                             sanitized.toDoubleOrNull()?.let { v ->
                                 valueKg = if (useMetric) v else lbsToKg(v)
@@ -228,7 +249,7 @@ fun WeightSelectionScreen(
                         decorationBox = { inner ->
                             Box(
                                 modifier = Modifier
-                                    .widthIn(min = 84.dp, max = 148.dp), // ← 比之前更小、也設上限
+                                    .widthIn(min = 84.dp, max = 148.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (text.isEmpty()) {
@@ -253,7 +274,7 @@ fun WeightSelectionScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF111114),
                         maxLines = 1,
-                        softWrap = false,                  // 避免出現「k↵g」
+                        softWrap = false,  // 避免出現「k↵g」
                         modifier = Modifier.offset(x = (-10).dp)
                     )
                 }
@@ -266,14 +287,14 @@ fun WeightSelectionScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally) // 先把自身置中
-                    .fillMaxWidth(0.62f)                  // 只佔 72% 寬（可調 0.6f~0.8f）
+                    .fillMaxWidth(0.62f)
                     .padding(top = 16.dp)
             )
         }
     }
 }
 
-/** 黑底白字、等寬的 lbs / kg 分段 */
+/** 黑底白字、等寬的 lbs / kg 分段（保持你的樣式） */
 @Composable
 private fun WeightUnitSegmented(
     useMetric: Boolean,
@@ -349,38 +370,37 @@ private fun SegItem(
 }
 
 private const val MAX_INT_DIGITS = 3
+
 /** 僅允許數字與一個小數點；整數最多 3 位、小數最多 1 位；允許空字串 */
 private fun sanitizeToOneDecimal(s: String): String {
     if (s.isEmpty()) return ""
-
-    // 留下數字與第一個小數點
     var out = buildString {
         var dotSeen = false
         for (c in s) {
             if (c.isDigit()) append(c)
-            else if (c == '.' && !dotSeen) { append('.'); dotSeen = true }
+            else if (c == '.' && !dotSeen) {
+                append('.'); dotSeen = true
+            }
         }
     }
-
-    // 以免以 "." 開頭
     if (out.startsWith(".")) out = "0$out"
-
     val dotIdx = out.indexOf('.')
     return if (dotIdx >= 0) {
         val intPart = out.substring(0, dotIdx).take(MAX_INT_DIGITS)
-        val fracPart = out.substring(dotIdx + 1).take(1) // 只留 1 位小數
+        val fracPart = out.substring(dotIdx + 1).take(1)
         if (fracPart.isEmpty()) "$intPart." else "$intPart.$fracPart"
     } else {
-        // 沒小數點 → 限制整數長度
         out.take(MAX_INT_DIGITS)
     }
 }
 
-/** 顯示時固定到 1 位小數（去尾 0 也 OK） */
+/** 顯示時固定到 1 位小數（你也可去掉 .0） */
 private fun formatOneDecimal(v: Double): String {
-    val rounded = round1(v)
-    val s = String.format(java.util.Locale.US, "%.1f", rounded)
-    // 可選：去掉尾端 .0 想保留就註解下一行
-    // return if (s.endsWith(".0")) s.dropLast(2) else s
+    val s = String.format(java.util.Locale.US, "%.1f", round1(v))
     return s
+}
+
+/** 存檔用：公斤保留 2 位小數，避免 lbs↔kg 來回換算誤差 */
+private fun roundKg2(v: Double): Float {
+    return (kotlin.math.round(v * 100.0) / 100.0).toFloat()
 }

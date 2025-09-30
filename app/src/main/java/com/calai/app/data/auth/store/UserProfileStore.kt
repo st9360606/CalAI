@@ -1,7 +1,6 @@
 package com.calai.app.data.store
 
 import android.content.Context
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -22,6 +21,7 @@ class UserProfileStore @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     enum class HeightUnit { CM, FT_IN }
+    enum class WeightUnit { KG, LBS } // ← 新增：體重單位
     private object Keys {
         val GENDER = stringPreferencesKey("gender")
         val REFERRAL_SOURCE = stringPreferencesKey("referral_source")
@@ -29,7 +29,7 @@ class UserProfileStore @Inject constructor(
         val HEIGHT = intPreferencesKey("height_cm")
         val HEIGHT_UNIT = stringPreferencesKey("height_unit")   // ← 新增
         val WEIGHT = floatPreferencesKey("weight_kg")
-
+        val WEIGHT_UNIT = stringPreferencesKey("weight_unit") // ← 新增：體重單位 key
         val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
     }
 
@@ -69,10 +69,19 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.edit { it[Keys.HEIGHT_UNIT] = unit.name }
     }
 
-    //=======體重=========
+    //=======體重（數值）=========
     val weightKgFlow: Flow<Float?> = context.userProfileDataStore.data.map { it[Keys.WEIGHT] }
     suspend fun setWeightKg(kg: Float) {
         context.userProfileDataStore.edit { it[Keys.WEIGHT] = kg }
+    }
+
+    //=======體重（單位）=========  ← 新增：讓返回頁時能還原 lbs / kg
+    val weightUnitFlow: Flow<WeightUnit?> =
+        context.userProfileDataStore.data.map { prefs ->
+            prefs[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+        }
+    suspend fun setWeightUnit(unit: WeightUnit) {
+        context.userProfileDataStore.edit { it[Keys.WEIGHT_UNIT] = unit.name }
     }
 
     //=======鍛鍊頻率=========
