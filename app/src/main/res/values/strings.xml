@@ -76,4 +76,18 @@
     <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_weight_hint">Please enter a whole number or a number with one decimal place.</string>
 
+    <!-- exercise -->
+    <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
+    <string name="onboard_ex_freq_subtitle">This will help calibrate your personalized plan.</string>
+
+    <string name="ex_freq_0_2_title">0–2</string>
+    <string name="ex_freq_0_2_sub">Light exercise</string>
+
+    <string name="ex_freq_3_5_title">3–5</string>
+    <string name="ex_freq_3_5_sub">Moderate exercise</string>
+
+    <string name="ex_freq_6_plus_title">6+</string>
+    <string name="ex_freq_6_plus_sub">High-intensity exercise</string>
+
+
 </resources>

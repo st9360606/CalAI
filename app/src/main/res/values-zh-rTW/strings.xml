@@ -74,4 +74,17 @@
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_weight_hint">請輸入整數或小數點後一位的數字。</string>
 
+    <!-- exercise -->
+    <string name="onboard_ex_freq_title">你每週鍛鍊多少次？</string>
+    <string name="onboard_ex_freq_subtitle">這將用於校準你的自訂計畫。</string>
+
+    <string name="ex_freq_0_2_title">0–2</string>
+    <string name="ex_freq_0_2_sub">輕度運動量</string>
+
+    <string name="ex_freq_3_5_title">3–5</string>
+    <string name="ex_freq_3_5_sub">中度運動量</string>
+
+    <string name="ex_freq_6_plus_title">6+</string>
+    <string name="ex_freq_6_plus_sub">高強度運動量</string>
+
 </resources>

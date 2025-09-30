@@ -189,8 +189,7 @@ fun WeightSelectionScreen(
                     .padding(top = 12.dp)
             )
 
-
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(39.dp))
 
             // 大卡片輸入：最多 1 位小數
             Surface(

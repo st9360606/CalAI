@@ -29,6 +29,8 @@ class UserProfileStore @Inject constructor(
         val HEIGHT = intPreferencesKey("height_cm")
         val HEIGHT_UNIT = stringPreferencesKey("height_unit")   // ← 新增
         val WEIGHT = floatPreferencesKey("weight_kg")
+
+        val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
     }
 
     //=======性別=========
@@ -71,5 +73,13 @@ class UserProfileStore @Inject constructor(
     val weightKgFlow: Flow<Float?> = context.userProfileDataStore.data.map { it[Keys.WEIGHT] }
     suspend fun setWeightKg(kg: Float) {
         context.userProfileDataStore.edit { it[Keys.WEIGHT] = kg }
+    }
+
+    //=======鍛鍊頻率=========
+    val exerciseFreqPerWeekFlow: Flow<Int?> =
+        context.userProfileDataStore.data.map { it[Keys.EXERCISE_FREQ_PER_WEEK] }
+
+    suspend fun setExerciseFreqPerWeek(v: Int) {
+        context.userProfileDataStore.edit { it[Keys.EXERCISE_FREQ_PER_WEEK] = v.coerceIn(0, 7) }
     }
 }

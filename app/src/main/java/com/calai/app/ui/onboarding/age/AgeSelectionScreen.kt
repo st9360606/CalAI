@@ -167,7 +167,7 @@ fun AgeSelectionScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(86.dp))
+            Spacer(Modifier.height(40.dp))
 
             AgeWheel(
                 minAge = minAge,

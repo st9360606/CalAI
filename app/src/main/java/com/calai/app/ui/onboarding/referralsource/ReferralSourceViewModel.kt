@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class ReferralKey {
-    GOOGLE_PLAY,APP_STORE, YOUTUBE, INSTAGRAM, GOOGLE, FACEBOOK, TIKTOK, X, FRIEND, OTHER
+    APP_STORE,GOOGLE_PLAY,YOUTUBE, INSTAGRAM, GOOGLE, FACEBOOK, TIKTOK, X, FRIEND, OTHER
 }
 
 data class ReferralUiOption(
@@ -22,7 +22,7 @@ data class ReferralUiOption(
 )
 
 data class ReferralUiState(
-    val selected: ReferralKey = ReferralKey.GOOGLE_PLAY,
+    val selected: ReferralKey = ReferralKey.APP_STORE,
     val options: List<ReferralUiOption> = emptyList()
 )
 
@@ -60,8 +60,8 @@ class ReferralSourceViewModel @Inject constructor(
     }
 
     private fun defaultOptions(): List<ReferralUiOption> = listOf(
+        ReferralUiOption(ReferralKey.APP_STORE,  "App Store",   /*R.drawable.ic_brand_appstore*/ R.drawable.app_store),//For ios app
         ReferralUiOption(ReferralKey.GOOGLE_PLAY,  "Google Play",   /*R.drawable.ic_brand_appstore*/ R.drawable.googleplay),
-//        ReferralUiOption(ReferralKey.APP_STORE,  "App Store",   /*R.drawable.ic_brand_appstore*/ R.drawable.app_store),//For ios app
         ReferralUiOption(ReferralKey.YOUTUBE,    "YouTube",     /*R.drawable.ic_brand_youtube*/ R.drawable.youtube),
         ReferralUiOption(ReferralKey.INSTAGRAM,  "Instagram",   /*R.drawable.ic_brand_instagram*/ R.drawable.instagram),
         ReferralUiOption(ReferralKey.GOOGLE,     "Google",      /*R.drawable.ic_brand_google*/ R.drawable.google),

@@ -132,6 +132,9 @@ fun HeightSelectionScreen(
                     .padding(horizontal = 24.dp)
                     .padding(top = 20.dp)
             )
+
+            Spacer(Modifier.height(6.dp))
+
             Text(
                 text = stringResource(R.string.onboard_height_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(

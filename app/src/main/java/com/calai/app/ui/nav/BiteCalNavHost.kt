@@ -24,6 +24,7 @@ import com.calai.app.ui.auth.email.EmailSignInViewModel
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.nav.Routes.LANDING
 import com.calai.app.ui.nav.Routes.ONBOARD_AGE
+import com.calai.app.ui.nav.Routes.ONBOARD_EXERCISE_FREQ
 import com.calai.app.ui.nav.Routes.ONBOARD_GENDER
 import com.calai.app.ui.nav.Routes.ONBOARD_HEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
@@ -33,6 +34,8 @@ import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
 import com.calai.app.ui.nav.Routes.SIGN_UP
 import com.calai.app.ui.onboarding.age.AgeSelectionScreen
 import com.calai.app.ui.onboarding.age.AgeSelectionViewModel
+import com.calai.app.ui.onboarding.exercise.ExerciseFrequencyScreen
+import com.calai.app.ui.onboarding.exercise.ExerciseFrequencyViewModel
 import com.calai.app.ui.onboarding.gender.GenderKey
 import com.calai.app.ui.onboarding.gender.GenderSelectionScreen
 import com.calai.app.ui.onboarding.gender.GenderSelectionViewModel
@@ -55,6 +58,7 @@ object Routes {
     const val ONBOARD_AGE = "onboard_age"
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
+    const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
 
 }
 
@@ -217,6 +221,18 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             WeightSelectionScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onNext = { nav.navigate(ONBOARD_EXERCISE_FREQ) }
+            )
+        }
+        composable(route = ONBOARD_EXERCISE_FREQ) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: ExerciseFrequencyViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            ExerciseFrequencyScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onNext = { /* TODO: 下一步頁面 */ }

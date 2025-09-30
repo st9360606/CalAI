@@ -70,7 +70,7 @@ fun LandingScreen(
     // ===== 可調參數（已縮小影片框，放大語言膠囊）=====
     val phoneTopPadding = 118.dp
     val phoneWidthFraction = 0.81f      // ← 0.78 ➜ 0.72：影片框更小一點
-    val phoneAspect = 10.5f / 16.5f
+    val phoneAspect = 11f / 16.5f
     val phoneCorner = 28.dp
 
     val spaceVideoToTitle = 21.dp
@@ -188,7 +188,7 @@ fun LandingScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = stringResource(R.string.cta_login_prefix),
-                        fontSize = 17.sp,
+                        fontSize = 16.sp,
                         fontFamily = titleFont,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF111114).copy(alpha = 0.72f),

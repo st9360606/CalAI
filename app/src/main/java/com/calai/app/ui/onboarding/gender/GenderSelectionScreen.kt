@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -61,6 +62,7 @@ import com.calai.app.ui.common.OnboardingProgress
 import com.calai.app.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlin.text.set
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,7 +85,6 @@ fun GenderSelectionScreen(
     var switching by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = Color.White,
         topBar = {
             TopAppBar(
                 title = {},
@@ -161,85 +162,84 @@ fun GenderSelectionScreen(
             }
         }
     ) { inner ->
-        Box(
-            modifier = Modifier
+        Column(
+            Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .background(Color.White)
+                .imePadding()
         ) {
-            Column(
+            // ✅ 與性別頁相同位置與邊距的進度條
+            OnboardingProgress(
+                stepIndex = 1,       // 推薦來源 = 第 2 步
+                totalSteps = 11,     // 與性別頁一致
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp)
+            )
+
+            Spacer(Modifier.height(6.dp))
+            // 標題（更大）
+            Text(
+                text = stringResource(R.string.onb_gender_title),
+                fontSize = 34.sp,
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 40.sp,
+                color = Color(0xFF111114),
+                modifier = Modifier
+                    .fillMaxWidth()       // 讓 textAlign 生效需要有寬度
+                    .padding(horizontal = 20.dp, vertical = 15.dp),
+                textAlign = TextAlign.Center              // ✅ 文字置中
+            )
+            // 副標（更大）
+            Text(
+                text = stringResource(R.string.onb_gender_subtitle),
+                fontSize = 17.sp,
+                color = Color(0xFF6B7280),
+                lineHeight = 22.sp,
+                modifier = Modifier.fillMaxWidth(),       // 同上
+                textAlign = TextAlign.Center              // ✅ 文字置中
+            )
+
+            Spacer(Modifier.height(80.dp)) // 讓三個選項更靠下
+
+            // 選項群組（置中）
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 進度條（統一 1/6；依你實際流程調整）
-                OnboardingProgress(
-                    stepIndex = 1,
-                    totalSteps = 11,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 6.dp, bottom = 12.dp)
+                val widthFraction = 0.88f
+                val optionHeight = 72.dp
+                val corner = 26.dp
+
+                GenderOption(
+                    text = stringResource(R.string.male_simple),
+                    selected = state.selected == GenderKey.MALE,
+                    onClick = { vm.select(GenderKey.MALE) },
+                    widthFraction = widthFraction,
+                    height = optionHeight,
+                    corner = corner
                 )
-
-                // 標題（更大）
-                Text(
-                    text = stringResource(R.string.onb_gender_title),
-                    fontSize = 34.sp,
-                    lineHeight = 36.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF111114)
+                Spacer(Modifier.height(21.dp))
+                GenderOption(
+                    text = stringResource(R.string.female),
+                    selected = state.selected == GenderKey.FEMALE,
+                    onClick = { vm.select(GenderKey.FEMALE) },
+                    widthFraction = widthFraction,
+                    height = optionHeight,
+                    corner = corner
                 )
-                Spacer(Modifier.height(6.dp))
-                // 副標（更大）
-                Text(
-                    text = stringResource(R.string.onb_gender_subtitle),
-                    fontSize = 17.sp,
-                    color = Color(0xFF6B7280),
-                    lineHeight = 22.sp
+                Spacer(Modifier.height(21.dp))
+                GenderOption(
+                    text = stringResource(R.string.other),
+                    selected = state.selected == GenderKey.OTHER,
+                    onClick = { vm.select(GenderKey.OTHER) },
+                    widthFraction = widthFraction,
+                    height = optionHeight,
+                    corner = corner
                 )
-
-                Spacer(Modifier.height(120.dp)) // 讓三個選項更靠下
-
-                // 選項群組（置中）
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    val widthFraction = 0.94f
-                    val optionHeight = 72.dp
-                    val corner = 26.dp
-
-                    GenderOption(
-                        text = stringResource(R.string.male_simple),
-                        selected = state.selected == GenderKey.MALE,
-                        onClick = { vm.select(GenderKey.MALE) },
-                        widthFraction = widthFraction,
-                        height = optionHeight,
-                        corner = corner
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    GenderOption(
-                        text = stringResource(R.string.female),
-                        selected = state.selected == GenderKey.FEMALE,
-                        onClick = { vm.select(GenderKey.FEMALE) },
-                        widthFraction = widthFraction,
-                        height = optionHeight,
-                        corner = corner
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    GenderOption(
-                        text = stringResource(R.string.other),
-                        selected = state.selected == GenderKey.OTHER,
-                        onClick = { vm.select(GenderKey.OTHER) },
-                        widthFraction = widthFraction,
-                        height = optionHeight,
-                        corner = corner
-                    )
-                }
             }
         }
     }
-
     // 語言對話框
     if (showLang) {
         LanguageDialog(
