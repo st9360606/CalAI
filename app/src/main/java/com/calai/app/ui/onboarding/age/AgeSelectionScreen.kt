@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -51,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -97,8 +99,6 @@ fun AgeSelectionScreen(
         },
         bottomBar = {
             Box(
-                Modifier
-                    .padding(16.dp)
             ) {
                 Button(
                     onClick = {
@@ -107,10 +107,14 @@ fun AgeSelectionScreen(
                     },
                     enabled = true,
                     modifier = Modifier
-                        .padding(horizontal = 3.dp, vertical = 26.dp)
+                        .align(Alignment.BottomCenter)
+                        // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
+                        .navigationBarsPadding() // 先避開手勢列
+                        // 2) 額外再往上推一點（你要的「再往上一點」）
+                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
                         .fillMaxWidth()
-                        .height(64.dp)
-                        .clip(RoundedCornerShape(28.dp)),
+                        .height(64.dp),
+                    shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
@@ -124,11 +128,11 @@ fun AgeSelectionScreen(
                 }
             }
         }
-    ) { innerPadding ->
+    ) { inner ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(inner)
                 .imePadding(),
         ) {
             // ✅ 與性別頁相同位置與邊距的進度條

@@ -68,9 +68,9 @@ fun LandingScreen(
     var showSignInSheet by rememberSaveable { mutableStateOf(false) }
 
     // ===== 可調參數（已縮小影片框，放大語言膠囊）=====
-    val phoneTopPadding = 75.dp
-    val phoneWidthFraction = 0.83f      // ← 0.78 ➜ 0.72：影片框更小一點
-    val phoneAspect = 10f / 16.8f
+    val phoneTopPadding = 118.dp
+    val phoneWidthFraction = 0.81f      // ← 0.78 ➜ 0.72：影片框更小一點
+    val phoneAspect = 10.5f / 16.5f
     val phoneCorner = 28.dp
 
     val spaceVideoToTitle = 21.dp
@@ -79,7 +79,7 @@ fun LandingScreen(
     val titleLineHeight = 31.sp
 
     val ctaWidthFraction = 0.92f
-    val spaceTitleToCTA = 14.dp
+    val spaceTitleToCTA = 18.dp
 
     // 統一字型
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
@@ -99,7 +99,13 @@ fun LandingScreen(
             label = langLabel,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(20.dp) // 稍微外推一點
+                // 1) 先吃安全區：狀態列 + 瀏海（有瀏海的機種更穩）
+                .windowInsetsPadding(
+                    WindowInsets.displayCutout.union(WindowInsets.statusBars)
+                )
+                // 2) 再做視覺微調：往內與往下各一些
+                .padding(top = 0.dp, end = 20.dp)
+                .offset(y = (2).dp), // 或 (-4).dp 視覺微調；請確認不會被狀態列遮住
         ) { if (!switching) showLang = true }
 
         Column(Modifier.fillMaxSize()) {
@@ -177,7 +183,7 @@ fun LandingScreen(
                     )
                 }
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(18.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(

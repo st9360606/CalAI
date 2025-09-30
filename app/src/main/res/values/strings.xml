@@ -71,5 +71,9 @@
     <string name="onboard_height_title">How tall are you?</string>
     <string name="onboard_height_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
 
+    <!-- weight -->
+    <string name="onboard_weight_title">How much do you weigh?</string>
+    <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
+    <string name="onboard_weight_hint">Please enter a whole number or a number with one decimal place.</string>
 
 </resources>

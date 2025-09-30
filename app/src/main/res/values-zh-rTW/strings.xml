@@ -69,5 +69,9 @@
     <string name="onboard_height_title">您的身高是多少？</string>
     <string name="onboard_height_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
 
+    <!-- weight -->
+    <string name="onboard_weight_title">您多重？</string>
+    <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
+    <string name="onboard_weight_hint">請輸入整數或小數點後一位的數字。</string>
 
 </resources>

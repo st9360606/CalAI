@@ -99,7 +99,7 @@ android {
             dimension = "env"
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
-            buildConfigField("String","BASE_URL","\"http://172.20.10.3:8080/\"")
+            buildConfigField("String","BASE_URL","\"http://172.20.10.9:8080/\"")
             manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
         create("devUsb") {

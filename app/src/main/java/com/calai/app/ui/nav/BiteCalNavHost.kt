@@ -27,6 +27,7 @@ import com.calai.app.ui.nav.Routes.ONBOARD_AGE
 import com.calai.app.ui.nav.Routes.ONBOARD_GENDER
 import com.calai.app.ui.nav.Routes.ONBOARD_HEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
+import com.calai.app.ui.nav.Routes.ONBOARD_WEIGHT
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
 import com.calai.app.ui.nav.Routes.SIGN_UP
@@ -39,6 +40,8 @@ import com.calai.app.ui.onboarding.height.HeightSelectionScreen
 import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
+import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
+import com.calai.app.ui.onboarding.weight.WeightSelectionViewModel
 
 object Routes {
     const val LANDING = "landing"
@@ -203,7 +206,20 @@ fun BiteCalNavHost(
             HeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
-                onNext = { nav.navigate("onboard_weight") } // 下一步先指到你想去的頁
+                onNext = { nav.navigate(ONBOARD_WEIGHT) }
+            )
+        }
+
+        composable(ONBOARD_WEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: WeightSelectionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            WeightSelectionScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onNext = { /* TODO: 下一步頁面 */ }
             )
         }
     }

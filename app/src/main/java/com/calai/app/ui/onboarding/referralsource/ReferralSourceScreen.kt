@@ -43,15 +43,6 @@ fun ReferralSourceScreen(
     val state by vm.uiState.collectAsState()
     val scope = rememberCoroutineScope()
 
-    // 與性別頁相同的語言切換狀態
-    val ctx = LocalContext.current
-    val store = remember(ctx) { LanguageStore(ctx) }
-    val composeLocale = LocalLocaleController.current
-    val currentTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
-    val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
-    var showLang by remember { mutableStateOf(false) }
-    var switching by remember { mutableStateOf(false) }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -81,8 +72,6 @@ fun ReferralSourceScreen(
         },
         bottomBar = {
             Box(
-                Modifier
-                    .padding(16.dp)
             ) {
                 Button(
                     onClick = {
@@ -93,10 +82,14 @@ fun ReferralSourceScreen(
                     },
                     enabled = true,
                     modifier = Modifier
-                        .padding(horizontal = 3.dp, vertical = 26.dp)
+                        .align(Alignment.BottomCenter)
+                        // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
+                        .navigationBarsPadding() // 先避開手勢列
+                        // 2) 額外再往上推一點（你要的「再往上一點」）
+                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
                         .fillMaxWidth()
-                        .height(64.dp)
-                        .clip(RoundedCornerShape(28.dp)),
+                        .height(64.dp),
+                    shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
@@ -166,7 +159,7 @@ private fun ReferralOptionItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(76.dp)
+            .height(72.dp)
             .clip(RoundedCornerShape(26.dp))
             .background(bg)
             .clickable(onClick = onClick)

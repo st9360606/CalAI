@@ -7,11 +7,18 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -106,11 +113,52 @@ fun GenderSelectionScreen(
                     FlagChip(
                         flag = flagEmoji,
                         label = langLabel,
-                        modifier = Modifier.padding(end = 20.dp),
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically) // ✅ 正確用法
+                            // 1) 先吃安全區：狀態列 + 瀏海（有瀏海的機種更穩）
+                            .windowInsetsPadding(
+                                WindowInsets.displayCutout.union(WindowInsets.statusBars)
+                            )
+                            // 2) 再做視覺微調：往內與往下各一些
+                            .padding(top = 0.dp, end = 16.dp)
+                            .offset(y = (-11).dp), // 或 (-4).dp 視覺微調；請確認不會被狀態列遮住
                         onClick = { if (!switching) showLang = true }
                     )
                 }
             )
+        },
+        bottomBar = {
+            Box(
+            ) {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            vm.saveSelectedGender()      // 寫入 DataStore（gender）
+                            onNext(state.selected)       // 回傳選到的 GenderKey
+                        }
+                    },
+                    enabled = true,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
+                        .navigationBarsPadding() // 先避開手勢列
+                        // 2) 額外再往上推一點（你要的「再往上一點」）
+                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .fillMaxWidth()
+                        .height(64.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.continue_text),
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
         }
     ) { inner ->
         Box(
@@ -158,8 +206,8 @@ fun GenderSelectionScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val widthFraction = 0.94f
-                    val optionHeight = 64.dp
-                    val corner = 22.dp
+                    val optionHeight = 72.dp
+                    val corner = 26.dp
 
                     GenderOption(
                         text = stringResource(R.string.male_simple),
@@ -188,36 +236,6 @@ fun GenderSelectionScreen(
                         corner = corner
                     )
                 }
-
-                Spacer(Modifier.weight(1f))
-                Spacer(Modifier.height(12.dp))
-            }
-
-            // 底部「Continue」— 先存，再導頁
-            Button(
-                onClick = {
-                    scope.launch {
-                        vm.saveSelectedGender()      // 寫入 DataStore（gender）
-                        onNext(state.selected)       // 回傳選到的 GenderKey
-                    }
-                },
-                enabled = true,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 20.dp, vertical = 20.dp)
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(28.dp)),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.continue_text),
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
             }
         }
     }
