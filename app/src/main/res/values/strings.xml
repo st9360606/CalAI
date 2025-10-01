@@ -79,15 +79,18 @@
     <!-- exercise -->
     <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
     <string name="onboard_ex_freq_subtitle">This will help calibrate your personalized plan.</string>
-
     <string name="ex_freq_0_2_title">0–2</string>
     <string name="ex_freq_0_2_sub">Light exercise</string>
-
     <string name="ex_freq_3_5_title">3–5</string>
     <string name="ex_freq_3_5_sub">Moderate exercise</string>
-
     <string name="ex_freq_6_plus_title">6+</string>
     <string name="ex_freq_6_plus_sub">High-intensity exercise</string>
 
-
+    <!-- exercise -->
+    <string name="onboard_goal_title">What’s your goal?</string>
+    <string name="onboard_goal_subtitle">This helps us tailor your calorie plan.</string>
+    <string name="goal_lose">Lose weight</string>
+    <string name="goal_maintain">Maintain</string>
+    <string name="goal_gain">Gain weight</string>
+    <string name="goal_healthy_eating">Healthy eating</string>
 </resources>

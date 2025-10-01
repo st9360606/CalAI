@@ -31,6 +31,7 @@ class UserProfileStore @Inject constructor(
         val WEIGHT = floatPreferencesKey("weight_kg")
         val WEIGHT_UNIT = stringPreferencesKey("weight_unit")
         val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
+        val GOAL = stringPreferencesKey("goal")
     }
 
     // ======= 性別 =======
@@ -90,6 +91,13 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.edit { it[Keys.EXERCISE_FREQ_PER_WEEK] = v.coerceIn(0, 7) }
     }
 
+    // ======= 目標 =======
+    suspend fun setGoal(value: String) {
+        context.userProfileDataStore.edit { it[Keys.GOAL] = value }
+    }
+    suspend fun goal(): String? =
+        context.userProfileDataStore.data.map { it[Keys.GOAL] }.first()
+
     // ======= 清空 Onboarding 所有欄位（冷啟時呼叫） =======
     suspend fun clearOnboarding() {
         context.userProfileDataStore.edit { p ->
@@ -101,6 +109,7 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.WEIGHT)
             p.remove(Keys.WEIGHT_UNIT)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
+            p.remove(Keys.GOAL)
         }
     }
 }

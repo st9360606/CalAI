@@ -27,6 +27,7 @@ import com.calai.app.ui.nav.Routes.LANDING
 import com.calai.app.ui.nav.Routes.ONBOARD_AGE
 import com.calai.app.ui.nav.Routes.ONBOARD_EXERCISE_FREQ
 import com.calai.app.ui.nav.Routes.ONBOARD_GENDER
+import com.calai.app.ui.nav.Routes.ONBOARD_GOAL
 import com.calai.app.ui.nav.Routes.ONBOARD_HEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
 import com.calai.app.ui.nav.Routes.ONBOARD_WEIGHT
@@ -40,6 +41,8 @@ import com.calai.app.ui.onboarding.exercise.ExerciseFrequencyViewModel
 import com.calai.app.ui.onboarding.gender.GenderKey
 import com.calai.app.ui.onboarding.gender.GenderSelectionScreen
 import com.calai.app.ui.onboarding.gender.GenderSelectionViewModel
+import com.calai.app.ui.onboarding.goal.GoalSelectionScreen
+import com.calai.app.ui.onboarding.goal.GoalSelectionViewModel
 import com.calai.app.ui.onboarding.height.HeightSelectionScreen
 import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
@@ -59,6 +62,7 @@ object Routes {
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
+    const val ONBOARD_GOAL = "onboard_goal"
 }
 
 // ── 安全往上找 Activity ───────────────────────────────────────────────
@@ -209,7 +213,7 @@ fun BiteCalNavHost(
             HeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_WEIGHT) }
+                onNext = { nav.navigate(ONBOARD_WEIGHT)  { launchSingleTop = true } }
             )
         }
 
@@ -223,7 +227,7 @@ fun BiteCalNavHost(
             WeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_EXERCISE_FREQ) }
+                onNext = { nav.navigate(ONBOARD_EXERCISE_FREQ) { launchSingleTop = true } }
             )
         }
 
@@ -237,7 +241,24 @@ fun BiteCalNavHost(
             ExerciseFrequencyScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { /* TODO: 下一步頁面 */ }
+                onNext = { nav.navigate(ONBOARD_GOAL) { launchSingleTop = true } }
+            )
+        }
+
+        // ===== Onboarding：目標 =====
+        composable(route = ONBOARD_GOAL) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: GoalSelectionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            GoalSelectionScreen(
+                vm = vm,
+                onBack = { nav.safePopBackStack() },
+                onNext = {
+                    // TODO: 這裡接下一步頁（例如：飲食偏好 / Diet）
+                    // nav.navigate(ONBOARD_DIET) { launchSingleTop = true; restoreState = true }
+                }
             )
         }
     }
