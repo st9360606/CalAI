@@ -3,7 +3,7 @@ package com.calai.app.ui.onboarding.age
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.calai.app.data.store.UserProfileStore
+import com.calai.app.data.auth.store.UserProfileStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map

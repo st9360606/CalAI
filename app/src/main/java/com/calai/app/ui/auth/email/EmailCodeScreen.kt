@@ -1,10 +1,8 @@
 package com.calai.app.ui.auth.email
 
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -20,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -31,37 +28,48 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCodeScreen(
     vm: EmailSignInViewModel,
-    email: String,                  // 由 Nav 傳入（記得用 Uri.encode 帶參數）
+    email: String,
     onBack: () -> Unit,
     onSuccess: () -> Unit
 ) {
     val state = vm.code.collectAsState().value
-    // 首次進來，VM 可能還沒初始化 code 狀態；這裡幫你初始化
     LaunchedEffect(email) {
-        if (state == null && email.isNotBlank()) {
-            // 新增到 VM：prepareCode(email)（見下方 VM 補強）
-            vm.prepareCode(email)
-        }
+        if (state == null && email.isNotBlank()) vm.prepareCode(email)
     }
 
     val ui = vm.code.collectAsState().value
     val scope = rememberCoroutineScope()
     val focus = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
     val kb = LocalSoftwareKeyboardController.current
 
-    // 畫面出現後自動聚焦
+    // 進畫面稍等一下自動聚焦
     LaunchedEffect(ui?.email) {
         delay(120)
         focus.requestFocus()
     }
 
+    // ===== 本地倒數 fallback（與 VM 的 canResendInSec 取最大值）=====
+    var localLeft by remember { mutableStateOf(0) }
+    // 每秒遞減（僅當 localLeft > 0）
+    LaunchedEffect(localLeft) {
+        if (localLeft > 0) {
+            delay(1000)
+            localLeft -= 1
+        }
+    }
+    val vmLeft = ui?.canResendInSec ?: 0
+    val left = max(vmLeft, localLeft)
+    val canResend = left == 0
+    val resendLabel = if (canResend) "Resend" else "Resend (${left}s)"
+
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             TopAppBar(
                 title = {},
@@ -72,7 +80,12 @@ fun EmailCodeScreen(
                             contentDescription = "Back"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    navigationIconContentColor = Color(0xFF111114),
+                    titleContentColor = Color(0xFF111114)
+                )
             )
         }
     ) { padding ->
@@ -89,7 +102,8 @@ fun EmailCodeScreen(
                 "Confirm your email",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
-                lineHeight = 36.sp
+                lineHeight = 36.sp,
+                color = Color(0xFF111114)
             )
 
             Spacer(Modifier.height(8.dp))
@@ -150,7 +164,8 @@ fun EmailCodeScreen(
                                     text = char,
                                     style = TextStyle(
                                         fontSize = 28.sp,
-                                        textAlign = TextAlign.Center
+                                        textAlign = TextAlign.Center,
+                                        color = Color(0xFF111114)
                                     )
                                 )
                             }
@@ -164,9 +179,7 @@ fun EmailCodeScreen(
             LaunchedEffect(ui?.code) {
                 if ((ui?.code?.length ?: 0) == 4) {
                     kb?.hide()
-                    vm.verify {
-                        onSuccess()
-                    }
+                    vm.verify { onSuccess() }
                 }
             }
 
@@ -181,30 +194,31 @@ fun EmailCodeScreen(
                 )
                 Spacer(Modifier.width(6.dp))
 
-                val left = ui?.canResendInSec ?: 0
-                val canResend = left == 0
-                val label = if (canResend) "Resend" else "Resend (${left}s)"
-
                 TextButton(
                     enabled = canResend,
                     onClick = {
+                        // 1) 立刻啟動本地 30 秒倒數（讓使用者有反饋）
+                        localLeft = 30
+                        // 2) 呼叫 VM 發送（VM 裡可再啟動自己的 cooldown／打 API）
                         vm.resend()
+                        // 3) 稍微延遲再回焦到輸入（鍵盤保持開啟）
                         scope.launch {
                             delay(80)
                             focus.requestFocus()
                         }
                     },
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color.Black,
+                        disabledContentColor = Color(0x61000000)
+                    )
                 ) {
                     Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = if (canResend) MaterialTheme.colorScheme.onSurface
-                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        text = resendLabel,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                 }
             }
-
 
             AnimatedVisibility(visible = ui?.loading == true) {
                 Row(
@@ -212,7 +226,12 @@ fun EmailCodeScreen(
                         .fillMaxWidth()
                         .padding(top = 20.dp),
                     horizontalArrangement = Arrangement.Center
-                ) { CircularProgressIndicator(strokeWidth = 3.dp) }
+                ) {
+                    CircularProgressIndicator(
+                        strokeWidth = 3.dp,
+                        color = Color.Black
+                    )
+                }
             }
 
             AnimatedVisibility(visible = ui?.error != null) {

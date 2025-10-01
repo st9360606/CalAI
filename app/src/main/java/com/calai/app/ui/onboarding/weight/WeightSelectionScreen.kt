@@ -69,13 +69,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import com.calai.app.data.store.UserProfileStore
+import com.calai.app.data.auth.store.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.composed
 import androidx.compose.ui.input.pointer.pointerInput
-
+import androidx.compose.foundation.layout.ime
+import androidx.compose.ui.platform.LocalDensity
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun WeightSelectionScreen(
@@ -101,6 +102,11 @@ fun WeightSelectionScreen(
     val listState = rememberLazyListState()
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
+
+    // 依 IME（鍵盤）是否可見，動態調整 CTA 間距
+    val density = LocalDensity.current
+    val imeVisible = WindowInsets.ime.getBottom(density) > 0
+    val ctaBottomGap = if (imeVisible) 10.dp else 59.dp   // 鍵盤出現時更貼近（10.dp 可再調）
 
     Scaffold(
         containerColor = Color.White,
@@ -131,8 +137,9 @@ fun WeightSelectionScreen(
             )
         },
         bottomBar = {
-            // 只在 bottomBar 做 imePadding（內容區不吃 IME，避免被推兩次）
+            // 只讓整個 bottom 區跟著 IME 往上；額外間距改用動態值
             Box(Modifier.imePadding()) {
+                val navBarsMod = if (imeVisible) Modifier else Modifier.navigationBarsPadding()
                 Button(
                     onClick = {
                         val clean = text.replace(',', '.').trim()
@@ -152,8 +159,8 @@ fun WeightSelectionScreen(
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .then(navBarsMod)                            // 鍵盤出現時不再吃 nav bar padding
+                        .padding(start = 20.dp, end = 20.dp, bottom = ctaBottomGap)
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(28.dp),
@@ -170,12 +177,12 @@ fun WeightSelectionScreen(
                 }
             }
         }
-    ) { inner ->
 
+    ) { inner ->
         // 讓內容可捲動，並在底部多預留 CTA 高度 + CTA 的 bottom padding + 12dp 緩衝
         val layoutDir = LocalLayoutDirection.current
         val navBars = WindowInsets.navigationBars.asPaddingValues()
-        val extraBottom = 64.dp + 59.dp + 12.dp
+        val extraBottom = 64.dp + ctaBottomGap + 12.dp
         val listContentPadding = PaddingValues(
             start = navBars.calculateStartPadding(layoutDir),
             top = navBars.calculateTopPadding(),

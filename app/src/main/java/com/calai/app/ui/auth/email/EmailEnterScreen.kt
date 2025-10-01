@@ -10,18 +10,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,6 +43,7 @@ fun EmailEnterScreen(
     val ui by vm.enter.collectAsState()
 
     Scaffold(
+        containerColor = Color.White,   // ← 加這行，避免用到主題的粉白背景
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("") },
@@ -46,7 +51,13 @@ fun EmailEnterScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
-                }
+                },
+                // ← 改成白底、圖標黑色，避免預設主色（紫）
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.White,
+                    navigationIconContentColor = Color(0xFF111114),
+                    titleContentColor = Color(0xFF111114)
+                )
             )
         }
     ) { pad ->
@@ -59,7 +70,8 @@ fun EmailEnterScreen(
             Spacer(Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.sign_in_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp)
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                color = Color(0xFF111114)
             )
             Spacer(Modifier.height(24.dp))
 
@@ -72,7 +84,22 @@ fun EmailEnterScreen(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                // ← 輸入框聚焦框線／游標／標籤改黑色
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Black,
+                    unfocusedBorderColor = Color(0xFFDDDDDD),
+                    errorBorderColor = Color(0xFFD32F2F),
+                    cursorColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color(0xFF666666),
+                    focusedTextColor = Color(0xFF111114),
+                    unfocusedTextColor = Color(0xFF111114),
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    errorContainerColor = Color.White,
+                    disabledContainerColor = Color.White
+                )
             )
 
             Spacer(Modifier.height(28.dp))
@@ -83,7 +110,12 @@ fun EmailEnterScreen(
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(52.dp),
+                // ← 按鈕改黑底白字
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black,
+                    contentColor = Color.White
+                )
             ) {
                 Text(
                     if (ui.loading) stringResource(R.string.sending)

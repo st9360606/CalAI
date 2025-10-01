@@ -1,7 +1,7 @@
 package com.calai.app.ui.onboarding.exercise
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,26 +18,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseFrequencyScreen(
     vm: ExerciseFrequencyViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit
-
 ) {
-    val saved by vm.freqState.collectAsState()
-    var current by remember(saved) { mutableStateOf(saved) }
+    val state by vm.uiState.collectAsState()
 
     Scaffold(
         containerColor = Color.White,
@@ -70,8 +65,11 @@ fun ExerciseFrequencyScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = { vm.save(current); onNext() },
-                    enabled = true,
+                    onClick = {
+                        vm.saveSelected()              // 寫入 DataStore（僅在非空時）
+                        onNext()
+                    },
+                    enabled = state.selected != null,  // ← 未選擇前不能按
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
@@ -98,7 +96,6 @@ fun ExerciseFrequencyScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            // 與 AgeSelectionScreen 一致的進度條位置與樣式
             OnboardingProgress(
                 stepIndex = 6,
                 totalSteps = 11,
@@ -143,30 +140,30 @@ fun ExerciseFrequencyScreen(
             ) {
                 FreqOptionCard(
                     iconRes = R.drawable.running,   // 0–2
-                    selected = current == 2,
+                    selected = state.selected == 2,
                     title = stringResource(R.string.ex_freq_0_2_title),
                     subtitle = stringResource(R.string.ex_freq_0_2_sub),
-                    onClick = { current = 2 }
+                    onClick = { vm.select(2) }
                 )
 
                 Spacer(Modifier.height(25.dp))
 
                 FreqOptionCard(
                     iconRes = R.drawable.cycling,   // 3–5
-                    selected = current == 5,
+                    selected = state.selected == 5,
                     title = stringResource(R.string.ex_freq_3_5_title),
                     subtitle = stringResource(R.string.ex_freq_3_5_sub),
-                    onClick = { current = 5 }
+                    onClick = { vm.select(5) }
                 )
 
                 Spacer(Modifier.height(25.dp))
 
                 FreqOptionCard(
-                    iconRes = R.drawable.muscle,  // 6+
-                    selected = current == 7,
+                    iconRes = R.drawable.muscle,    // 6+
+                    selected = state.selected == 7,
                     title = stringResource(R.string.ex_freq_6_plus_title),
                     subtitle = stringResource(R.string.ex_freq_6_plus_sub),
-                    onClick = { current = 7 }
+                    onClick = { vm.select(7) }
                 )
             }
         }
@@ -180,9 +177,9 @@ private fun FreqOptionCard(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    cornerRadius: Dp = 32.dp,         // 圓角可調
-    titleSize: TextUnit = 18.sp,      // 標題字級
-    subtitleSize: TextUnit = 16.sp    // ← 副標字級（原本 13sp，這裡放大）
+    cornerRadius: Dp = 32.dp,
+    titleSize: androidx.compose.ui.unit.TextUnit = 18.sp,
+    subtitleSize: androidx.compose.ui.unit.TextUnit = 16.sp
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     val bg = if (selected) Color.Black else Color(0xFFF1F3F7)
@@ -203,7 +200,6 @@ private fun FreqOptionCard(
                 .padding(horizontal = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 左側圖片：保留原色
             Box(
                 modifier = Modifier.size(44.dp),
                 contentAlignment = Alignment.Center
@@ -229,7 +225,7 @@ private fun FreqOptionCard(
                     text = subtitle,
                     color = fg.copy(alpha = 0.72f),
                     fontSize = subtitleSize,
-                    lineHeight = (subtitleSize.value + 4).sp, // 行高略放大，讀性更好
+                    lineHeight = (subtitleSize.value + 4).sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -237,6 +233,3 @@ private fun FreqOptionCard(
         }
     }
 }
-
-
-

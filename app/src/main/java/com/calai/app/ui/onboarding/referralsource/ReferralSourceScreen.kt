@@ -2,34 +2,14 @@ package com.calai.app.ui.onboarding.referralsource
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,6 +40,7 @@ fun ReferralSourceScreen(
     val scope = rememberCoroutineScope()
 
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             TopAppBar(
                 title = {},
@@ -87,21 +68,18 @@ fun ReferralSourceScreen(
             )
         },
         bottomBar = {
-            Box(
-            ) {
+            Box {
                 Button(
                     onClick = {
                         scope.launch {
-                            vm.saveAndContinue()
+                            vm.saveAndContinue()   // 內部已做 null 防護
                             onNext()
                         }
                     },
-                    enabled = true,
+                    enabled = state.selected != null,        // ← 未選擇前不可按
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
-                        .navigationBarsPadding() // 先避開手勢列
-                        // 2) 額外再往上推一點（你要的「再往上一點」）
+                        .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
                         .fillMaxWidth()
                         .height(64.dp),
@@ -126,10 +104,9 @@ fun ReferralSourceScreen(
                 .padding(inner)
                 .imePadding()
         ) {
-            // ✅ 與性別頁相同位置與邊距的進度條
             OnboardingProgress(
-                stepIndex = 2,       // 推薦來源 = 第 2 步
-                totalSteps = 11,     // 與性別頁一致
+                stepIndex = 2,
+                totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -142,11 +119,11 @@ fun ReferralSourceScreen(
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
-                color = Color(0xFF111114),              // 可留可不留，與其他頁一致即可
+                color = Color(0xFF111114),
                 modifier = Modifier
-                    .fillMaxWidth()                     // ✅ 給足寬度
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 15.dp),
-                textAlign = TextAlign.Center            // ✅ 置中
+                textAlign = TextAlign.Center
             )
 
             LazyColumn(
@@ -157,7 +134,7 @@ fun ReferralSourceScreen(
                 items(state.options) { opt ->
                     ReferralOptionItem(
                         option = opt,
-                        selected = state.selected == opt.key,
+                        selected = state.selected == opt.key,  // ← 可為 null
                         onClick = { vm.select(opt.key) }
                     )
                     Spacer(Modifier.height(14.dp))
@@ -165,7 +142,6 @@ fun ReferralSourceScreen(
             }
         }
     }
-
 }
 
 @Composable

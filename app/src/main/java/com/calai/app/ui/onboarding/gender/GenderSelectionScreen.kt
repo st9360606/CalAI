@@ -4,41 +4,12 @@ package com.calai.app.ui.onboarding.gender
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,7 +33,6 @@ import com.calai.app.ui.common.OnboardingProgress
 import com.calai.app.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
-import kotlin.text.set
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,6 +55,7 @@ fun GenderSelectionScreen(
     var switching by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = Color.White,
         topBar = {
             TopAppBar(
                 title = {},
@@ -110,40 +81,35 @@ fun GenderSelectionScreen(
                     }
                 },
                 actions = {
-                    // ★ 與登入頁一致的語言膠囊
+                    // 與登入頁一致的語言膠囊
                     FlagChip(
                         flag = flagEmoji,
                         label = langLabel,
                         modifier = Modifier
-                            .align(Alignment.CenterVertically) // ✅ 正確用法
-                            // 1) 先吃安全區：狀態列 + 瀏海（有瀏海的機種更穩）
+                            .align(Alignment.CenterVertically)
                             .windowInsetsPadding(
                                 WindowInsets.displayCutout.union(WindowInsets.statusBars)
                             )
-                            // 2) 再做視覺微調：往內與往下各一些
                             .padding(top = 0.dp, end = 16.dp)
-                            .offset(y = (-11).dp), // 或 (-4).dp 視覺微調；請確認不會被狀態列遮住
+                            .offset(y = (-11).dp),
                         onClick = { if (!switching) showLang = true }
                     )
                 }
             )
         },
         bottomBar = {
-            Box(
-            ) {
+            Box {
                 Button(
                     onClick = {
                         scope.launch {
-                            vm.saveSelectedGender()      // 寫入 DataStore（gender）
-                            onNext(state.selected)       // 回傳選到的 GenderKey
+                            vm.saveSelectedGender()                            // 寫入 DataStore
+                            onNext(requireNotNull(state.selected))             // 保證非空再前進
                         }
                     },
-                    enabled = true,
+                    enabled = state.selected != null,                          // ← 沒選就不能按
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
-                        .navigationBarsPadding() // 先避開手勢列
-                        // 2) 額外再往上推一點（你要的「再往上一點」）
+                        .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
                         .fillMaxWidth()
                         .height(64.dp),
@@ -168,17 +134,16 @@ fun GenderSelectionScreen(
                 .padding(inner)
                 .imePadding()
         ) {
-            // ✅ 與性別頁相同位置與邊距的進度條
             OnboardingProgress(
-                stepIndex = 1,       // 推薦來源 = 第 2 步
-                totalSteps = 11,     // 與性別頁一致
+                stepIndex = 1,
+                totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             )
 
             Spacer(Modifier.height(6.dp))
-            // 標題（更大）
+
             Text(
                 text = stringResource(R.string.onb_gender_title),
                 fontSize = 34.sp,
@@ -186,23 +151,22 @@ fun GenderSelectionScreen(
                 lineHeight = 40.sp,
                 color = Color(0xFF111114),
                 modifier = Modifier
-                    .fillMaxWidth()       // 讓 textAlign 生效需要有寬度
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 15.dp),
-                textAlign = TextAlign.Center              // ✅ 文字置中
+                textAlign = TextAlign.Center
             )
-            // 副標（更大）
+
             Text(
                 text = stringResource(R.string.onb_gender_subtitle),
                 fontSize = 17.sp,
                 color = Color(0xFF6B7280),
                 lineHeight = 22.sp,
-                modifier = Modifier.fillMaxWidth(),       // 同上
-                textAlign = TextAlign.Center              // ✅ 文字置中
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(80.dp)) // 讓三個選項更靠下
+            Spacer(Modifier.height(80.dp))
 
-            // 選項群組（置中）
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -240,7 +204,7 @@ fun GenderSelectionScreen(
             }
         }
     }
-    // 語言對話框
+
     if (showLang) {
         LanguageDialog(
             title = stringResource(R.string.choose_language),
@@ -250,9 +214,9 @@ fun GenderSelectionScreen(
                 switching = true
                 showLang = false
                 scope.launch {
-                    composeLocale.set(picked.tag)              // Compose 層立即切
-                    LanguageManager.applyLanguage(picked.tag)  // AppCompat 層同步
-                    store.save(picked.tag)                     // 持久化
+                    composeLocale.set(picked.tag)
+                    LanguageManager.applyLanguage(picked.tag)
+                    store.save(picked.tag)
                     switching = false
                 }
             },
@@ -275,7 +239,6 @@ private fun GenderOption(
     val container = if (selected) Color(0xFF111114) else Color(0xFFF1F3F7)
     val content = if (selected) Color.White else Color(0xFF111114)
 
-    // 移除 ripple/拖移感
     val interaction = remember { MutableInteractionSource() }
 
     Box(

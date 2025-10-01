@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import com.calai.app.ui.BiteCalApp
+import com.calai.app.data.auth.store.UserProfileStore   // ← 新增
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -36,6 +37,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         logPoint("after super.onCreate")
 
+        // ★ 冷啟才清除 Onboarding（旋轉/重建不清）
+        if (savedInstanceState == null) {
+            lifecycleScope.launch {
+                try {
+                    UserProfileStore(applicationContext).clearOnboarding()
+                    logPoint("onboarding:cleared")
+                } catch (t: Throwable) {
+                    Log.w("BootTrace", "clearOnboarding failed", t)
+                }
+            }
+        }
+
         // 350ms 保險絲：無論如何放行，避免極端卡住
         fuseJob = lifecycleScope.launch {
             delay(fallbackMs)
@@ -50,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 window?.decorView?.post { reportFullyDrawn() }
             }
             logPoint("setContent-enter")
-            // ★ 把 Activity 傳進 App 根組件
+            // 把 Activity 傳進 App 根組件
             BiteCalApp(hostActivity = this)
         }
 

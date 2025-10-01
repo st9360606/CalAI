@@ -92,7 +92,8 @@ android {
             dimension = "env"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+//            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")   //模擬器
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"") //同WIFI
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
         create("devWifi") {

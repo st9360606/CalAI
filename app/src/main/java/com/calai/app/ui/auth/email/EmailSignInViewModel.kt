@@ -37,15 +37,17 @@ class EmailSignInViewModel @Inject constructor(
     private val _enter = MutableStateFlow(EmailEnterUiState())
     val enter: StateFlow<EmailEnterUiState> = _enter
 
-    private var timerJob: Job? = null
     private val _code = MutableStateFlow<EmailCodeUiState?>(null)
     val code: StateFlow<EmailCodeUiState?> = _code
+
+    private var timerJob: Job? = null
+
+    /* ---------------- Email 輸入畫面 ---------------- */
 
     fun onEmailChange(text: String) {
         _enter.value = _enter.value.copy(
             email = text,
-            isValid = text.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(text)
-                .matches()
+            isValid = text.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(text).matches()
         )
     }
 
@@ -56,8 +58,9 @@ class EmailSignInViewModel @Inject constructor(
                 _enter.value = _enter.value.copy(loading = true, error = null)
                 if (repo.start(email)) {
                     _enter.value = _enter.value.copy(loading = false)
-                    _code.value = EmailCodeUiState(email = email)
-                    startResendTimer()
+                    // 這個 VM 實例若也用於 Code 畫面（同 backstack owner），就先初始化
+                    _code.value = EmailCodeUiState(email = email, canResendInSec = RESEND_SEC)
+                    startResendTimer(forceRestart = true)
                     onSent(email)
                 } else {
                     _enter.value = _enter.value.copy(loading = false, error = "Send failed")
@@ -67,6 +70,8 @@ class EmailSignInViewModel @Inject constructor(
             }
         }
     }
+
+    /* ---------------- 驗證碼畫面 ---------------- */
 
     fun onCodeChange(text: String) {
         val clean = text.filter { it.isDigit() }.take(OTP_LEN)
@@ -93,10 +98,11 @@ class EmailSignInViewModel @Inject constructor(
         if (s.canResendInSec > 0) return
         viewModelScope.launch {
             try {
-                _code.value = s.copy(loading = true, error = null)
+                _code.value = s.copy(loading = true, error = null, code = "")
                 if (repo.start(s.email)) {
-                    _code.value = s.copy(loading = false, canResendInSec = RESEND_SEC)
-                    startResendTimer()
+                    // 重寄成功 → 重設 30s 並重啟倒數
+                    _code.value = s.copy(loading = false, canResendInSec = RESEND_SEC, code = "")
+                    startResendTimer(forceRestart = true)
                 } else {
                     _code.value = s.copy(loading = false, error = "Resend failed")
                 }
@@ -106,24 +112,46 @@ class EmailSignInViewModel @Inject constructor(
         }
     }
 
-    private fun startResendTimer() {
-        timerJob?.cancel()
+    /**
+     * 從 EmailCodeScreen 進來時會呼叫。
+     * 注意：EmailEnterScreen 與 EmailCodeScreen 用 **不同 backStackEntry** 取得的 VM，
+     * 所以這裡一定要 **同時初始化 state** 並 **啟動倒數**。
+     */
+    fun prepareCode(email: String) {
+        val trimmed = email.trim()
+        // 僅在尚未初始化時建立，避免重組一直重設
+        if (_code.value == null && trimmed.isNotBlank()) {
+            _code.value = EmailCodeUiState(email = trimmed, canResendInSec = RESEND_SEC)
+            startResendTimer(forceRestart = true) // ★ 關鍵：進畫面就開始倒數
+        }
+    }
+
+    /**
+     * 啟動/維持倒數計時：
+     * - 預設會沿用目前 `_code` 的 canResendInSec 值往下數；
+     * - forceRestart=true 會先取消舊 job 再重啟。
+     */
+    private fun startResendTimer(forceRestart: Boolean = false) {
+        if (forceRestart) timerJob?.cancel()
+        if (timerJob != null) return // 已在跑就不重複啟動
+
         timerJob = viewModelScope.launch {
             while (true) {
                 delay(1000)
-                val s = _code.value ?: break
-                val next = (s.canResendInSec - 1).coerceAtLeast(0)
-                _code.value = s.copy(canResendInSec = next)
-                if (next == 0) break
+                val cur = _code.value ?: break
+                val next = (cur.canResendInSec - 1).coerceAtLeast(0)
+                _code.value = cur.copy(canResendInSec = next)
+                if (next == 0) {
+                    // 數到 0 後就停
+                    break
+                }
             }
+            timerJob = null
         }
     }
 
-    // 在 EmailSignInViewModel 內新增
-    fun prepareCode(email: String) {
-        if (_code.value == null && email.isNotBlank()) {
-            _code.value = EmailCodeUiState(email = email.trim())
-        }
+    override fun onCleared() {
+        timerJob?.cancel()
+        super.onCleared()
     }
-
 }

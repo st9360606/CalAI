@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import com.calai.app.data.store.UserProfileStore
+import com.calai.app.data.auth.store.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)

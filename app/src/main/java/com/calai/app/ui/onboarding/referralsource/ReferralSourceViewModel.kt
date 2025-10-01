@@ -3,7 +3,7 @@ package com.calai.app.ui.onboarding.referralsource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.app.R
-import com.calai.app.data.store.UserProfileStore
+import com.calai.app.data.auth.store.UserProfileStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,17 +12,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 enum class ReferralKey {
-    APP_STORE,GOOGLE_PLAY,YOUTUBE, INSTAGRAM, GOOGLE, FACEBOOK, TIKTOK, X, FRIEND, OTHER
+    APP_STORE, GOOGLE_PLAY, YOUTUBE, INSTAGRAM, GOOGLE, FACEBOOK, TIKTOK, X, FRIEND, OTHER
 }
 
 data class ReferralUiOption(
     val key: ReferralKey,
     val label: String,
-    val iconRes: Int? = null // 允許沒有品牌圖時採用預設
+    val iconRes: Int? = null
 )
 
+// ★ 預設不選（null）→ 首次進入反白、Continue disabled
 data class ReferralUiState(
-    val selected: ReferralKey = ReferralKey.APP_STORE,
+    val selected: ReferralKey? = null,
     val options: List<ReferralUiOption> = emptyList()
 )
 
@@ -39,7 +40,7 @@ class ReferralSourceViewModel @Inject constructor(
     val uiState: StateFlow<ReferralUiState> = _uiState
 
     init {
-        // 若先前已存過，啟動時帶回填
+        // 若先前已存過，啟動時帶回填；若沒有則維持 null（不預選）
         viewModelScope.launch {
             val saved = store.referralSource()
             saved?.let { str ->
@@ -55,19 +56,19 @@ class ReferralSourceViewModel @Inject constructor(
     }
 
     suspend fun saveAndContinue() {
-        val key = _uiState.value.selected
+        val key = _uiState.value.selected ?: return   // 沒選就不寫（UI 也不會讓它發生）
         store.setReferralSource(key.name)
     }
 
     private fun defaultOptions(): List<ReferralUiOption> = listOf(
-        ReferralUiOption(ReferralKey.APP_STORE,  "App Store",   /*R.drawable.ic_brand_appstore*/ R.drawable.app_store),//For ios app
-        ReferralUiOption(ReferralKey.GOOGLE_PLAY,  "Google Play",   /*R.drawable.ic_brand_appstore*/ R.drawable.googleplay),
-        ReferralUiOption(ReferralKey.YOUTUBE,    "YouTube",     /*R.drawable.ic_brand_youtube*/ R.drawable.youtube),
-        ReferralUiOption(ReferralKey.INSTAGRAM,  "Instagram",   /*R.drawable.ic_brand_instagram*/ R.drawable.instagram),
-        ReferralUiOption(ReferralKey.GOOGLE,     "Google",      /*R.drawable.ic_brand_google*/ R.drawable.google),
-        ReferralUiOption(ReferralKey.FACEBOOK,   "Facebook",    /*R.drawable.ic_brand_facebook*/ R.drawable.facebook),
-        ReferralUiOption(ReferralKey.TIKTOK,     "TikTok",      /*R.drawable.ic_brand_tiktok*/ R.drawable.tiktok),
-        ReferralUiOption(ReferralKey.X,          "X",           /*R.drawable.ic_brand_x*/ R.drawable.twitter),
-        ReferralUiOption(ReferralKey.OTHER,      "Other",       /*R.drawable.ic_brand_other*/ R.drawable.other),
+        // ReferralUiOption(ReferralKey.APP_STORE,  "App Store",   R.drawable.app_store), // iOS 用
+        ReferralUiOption(ReferralKey.GOOGLE_PLAY, "Google Play", R.drawable.googleplay),
+        ReferralUiOption(ReferralKey.YOUTUBE,     "YouTube",     R.drawable.youtube),
+        ReferralUiOption(ReferralKey.INSTAGRAM,   "Instagram",   R.drawable.instagram),
+        ReferralUiOption(ReferralKey.GOOGLE,      "Google",      R.drawable.google),
+        ReferralUiOption(ReferralKey.FACEBOOK,    "Facebook",    R.drawable.facebook),
+        ReferralUiOption(ReferralKey.TIKTOK,      "TikTok",      R.drawable.tiktok),
+        ReferralUiOption(ReferralKey.X,           "X",           R.drawable.twitter),
+        ReferralUiOption(ReferralKey.OTHER,       "Other",       R.drawable.other),
     )
 }
