@@ -134,11 +134,11 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.androidx.compose.bom))   // ✅ 只保留這個 BOM
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+    implementation(libs.androidx.material3)              // ✅ 保留這個
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.startup.runtime)
     implementation(libs.androidx.foundation)
@@ -160,8 +160,10 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0") // ✅ 移除重複
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // ViewModel（Compose）
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
@@ -194,13 +196,10 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")
 
-    // Material Icons（用 BOM）
+    // Material Icons
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("androidx.profileinstaller:profileinstaller:1.3.1")
-
-    // 既有網路層（如需保留 Moshi）
-    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
     implementation("androidx.activity:activity-ktx:1.9.2")
 
     // Credential Manager + Google ID
@@ -209,18 +208,11 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
-    // Kotlinx Serialization（Retrofit 轉換器）
+    // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
 
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-
-    // ✅ Jetpack Compose BOM（集中管理所有 Compose 套件版本）
-    implementation(platform("androidx.compose:compose-bom:2025.09.00"))
-
-    // ✅ Material3（含 SmallTopAppBar）
-    implementation("androidx.compose.material3:material3")
 
 }
 
