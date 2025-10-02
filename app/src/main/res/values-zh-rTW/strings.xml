@@ -92,4 +92,9 @@
     <string name="goal_gain">增重</string>
     <string name="goal_healthy_eating">健康飲食</string>
 
+    <!-- notifications -->
+    <string name="allow_notifications_cta">允許通知</string>
+    <string name="notif_title">讓每一餐都算數</string>
+    <string name="notif_subtitle">開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
+
 </resources>

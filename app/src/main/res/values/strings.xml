@@ -93,4 +93,11 @@
     <string name="goal_maintain">Maintain</string>
     <string name="goal_gain">Gain weight</string>
     <string name="goal_healthy_eating">Healthy eating</string>
+
+    <!-- notifications -->
+    <string name="allow_notifications_cta">Allow Notifications</string>
+    <string name="notif_title">Make every meal count</string>
+    <string name="notif_subtitle">Enable notifications—we’ll nudge you at the right moments so the occasional slip doesn’t set you back !</string>
+
+
 </resources>

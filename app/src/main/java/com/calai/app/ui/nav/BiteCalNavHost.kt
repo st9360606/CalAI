@@ -29,6 +29,7 @@ import com.calai.app.ui.nav.Routes.ONBOARD_EXERCISE_FREQ
 import com.calai.app.ui.nav.Routes.ONBOARD_GENDER
 import com.calai.app.ui.nav.Routes.ONBOARD_GOAL
 import com.calai.app.ui.nav.Routes.ONBOARD_HEIGHT
+import com.calai.app.ui.nav.Routes.ONBOARD_NOTIF
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
 import com.calai.app.ui.nav.Routes.ONBOARD_WEIGHT
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
@@ -45,6 +46,7 @@ import com.calai.app.ui.onboarding.goal.GoalSelectionScreen
 import com.calai.app.ui.onboarding.goal.GoalSelectionViewModel
 import com.calai.app.ui.onboarding.height.HeightSelectionScreen
 import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
+import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
@@ -63,6 +65,7 @@ object Routes {
     const val ONBOARD_WEIGHT = "onboard_weight"
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
+    const val ONBOARD_NOTIF = "onboard_notif"
 }
 
 // ── 安全往上找 Activity ───────────────────────────────────────────────
@@ -255,9 +258,19 @@ fun BiteCalNavHost(
             GoalSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = {
+                onNext = { nav.navigate(ONBOARD_NOTIF) { launchSingleTop = true } }
                     // TODO: 這裡接下一步頁（例如：飲食偏好 / Diet）
                     // nav.navigate(ONBOARD_DIET) { launchSingleTop = true; restoreState = true }
+
+            )
+        }
+        composable(route = ONBOARD_NOTIF) {
+
+            NotificationPermissionScreen(
+                onBack = { nav.safePopBackStack() },
+                onNext  = {
+                    // TODO: 走完 Onboarding → 導到首頁
+                    // nav.navigate(HOME) { popUpTo(LANDING) { inclusive = true } }
                 }
             )
         }
