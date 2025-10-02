@@ -11,6 +11,7 @@ import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,9 +30,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BatteryFull
+import androidx.compose.material.icons.filled.SignalCellular4Bar
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,10 +63,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
@@ -68,9 +81,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
-import androidx.compose.material.icons.filled.BatteryFull
-import androidx.compose.material.icons.filled.SignalCellular4Bar
-import androidx.compose.material.icons.filled.Wifi
 
 private const val POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
 
@@ -88,12 +98,7 @@ fun NotificationPermissionScreen(
 
     var granted by remember { mutableStateOf(isNotificationsEnabled(ctx)) }
     val hasManifestDecl by remember {
-        mutableStateOf(
-            isPermissionInManifest(
-                ctx,
-                POST_NOTIFICATIONS
-            )
-        )
+        mutableStateOf(isPermissionInManifest(ctx, POST_NOTIFICATIONS))
     }
 
     val canUseLauncher = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -171,17 +176,15 @@ fun NotificationPermissionScreen(
                 val panelWidth = maxWidth * 0.88f
                 val panelHeight = (panelWidth * 1.27f).coerceIn(360.dp, 620.dp)
 
-                // 用 Column 置中，所有區塊寬度統一使用 panelWidth
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // 手機外框
                     LockscreenPanel(
                         modifier = Modifier
                             .width(panelWidth)
                             .height(panelHeight),
-                        bigClock = "9:41",
+                        bigClock = "8:30",
                         clockAlpha = 1f,
                         clockSizeSp = 124,
                         clockOffsetTop = 18.dp,
@@ -199,19 +202,28 @@ fun NotificationPermissionScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // ★ notif_title：寬度與手機外框一致、置中
-                    Text(
-                        text = s(R.string.notif_title, "Make every meal count"),
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 42.sp),
+                    val titleStyle = MaterialTheme.typography.headlineLarge.copy(
+                        fontSize = 42.sp,          // 你的標題字級
                         fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 45.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.width(panelWidth)       // 與外框同寬
+                        lineHeight = 45.sp
                     )
+
+                    // 用 Inline 版本，讓圖示跟著文字排版
+                    NotifTitleWithEndImageInline(
+                        text = s(R.string.notif_title, "Make every meal count"),
+                        tailRes = R.drawable.notifications,         // 你的彩色鈴鐺
+                        modifier = Modifier.width(panelWidth),
+                        tailSizeSp = titleStyle.fontSize,       // ★ 圖示大小=標題字級 → 幾乎一樣大
+                        tailSpaceEm = 1.1f,                    // 與文字距離，想更緊可改 0.15f
+                        textAlign = TextAlign.Start,
+                        style = titleStyle
+                    )
+
+
 
                     Spacer(Modifier.height(9.dp))
 
-                    // ★ notif_subtitle：寬度與手機外框一致（對齊方式維持預設）
+                    // 副標：與手機外框同寬（保持原樣）
                     Text(
                         text = s(
                             R.string.notif_subtitle,
@@ -222,11 +234,10 @@ fun NotificationPermissionScreen(
                             lineHeight = 22.sp
                         ),
                         color = Color(0xFF8F98A3),
-                        modifier = Modifier.width(panelWidth)      // 與外框同寬
+                        modifier = Modifier.width(panelWidth)
                     )
                 }
             }
-            // ======================================
 
             Spacer(Modifier.height(16.dp))
         }
@@ -268,20 +279,18 @@ private fun NotifBottomBar(
 @Composable
 private fun LockscreenPanel(
     modifier: Modifier = Modifier,
-    bigClock: String = "9:41",
+    bigClock: String = "8:30",
     clockAlpha: Float = 1f,
     clockSizeSp: Int = 124,
-    clockColor: Color = Color(0xFFDFE3E8),
+    clockColor: Color = Color(0xFFD0D6DD),
     clockOffsetTop: Dp = 0.dp,
     clockContentGap: Dp = 16.dp,
     corner: Dp = 28.dp,
-    // 外框：超淺灰（可再淡：0xFFF1F3F7 或 0x1A000000）
-    frameBorderColor: Color = Color(0xFFDFE3E8),
+    frameBorderColor: Color = Color(0xFFD0D6DD),
     frameBorderWidth: Dp = 6.dp,
-    // ▼ 狀態列參數
     showStatusIcons: Boolean = true,
-    statusTint: Color = Color(0xFFDFE3E8),  // 圖示顏色（灰）
-    batteryPercent: Int = 87,               // 顯示的電量（僅做圖示/文字，不讀系統）
+    statusTint: Color = Color(0xFFD0D6DD),
+    batteryPercent: Int = 87,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box(
@@ -294,7 +303,6 @@ private fun LockscreenPanel(
                 )
             )
     ) {
-        // 右上角：訊號 / Wi-Fi / 電量
         if (showStatusIcons) {
             StatusBarIcons(
                 modifier = Modifier
@@ -305,7 +313,6 @@ private fun LockscreenPanel(
             )
         }
 
-        // 主要內容（大時間 + 訊息卡）
         Column(
             modifier = Modifier
                 .matchParentSize()
@@ -317,7 +324,7 @@ private fun LockscreenPanel(
                 text = bigClock,
                 fontSize = clockSizeSp.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = clockColor.copy(alpha = clockAlpha)   // ★ 套用你指定的顏色
+                color = clockColor.copy(alpha = clockAlpha)
             )
             Spacer(Modifier.height(clockContentGap))
             Column(
@@ -339,7 +346,6 @@ private fun StatusBarIcons(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 行動網路訊號
         Icon(
             imageVector = Icons.Filled.SignalCellular4Bar,
             contentDescription = "Cellular Signal",
@@ -347,7 +353,6 @@ private fun StatusBarIcons(
             modifier = Modifier.size(18.dp)
         )
         Spacer(Modifier.width(6.dp))
-        // Wi-Fi
         Icon(
             imageVector = Icons.Filled.Wifi,
             contentDescription = "Wi-Fi",
@@ -355,7 +360,6 @@ private fun StatusBarIcons(
             modifier = Modifier.size(18.dp)
         )
         Spacer(Modifier.width(8.dp))
-        // 電量（圖示 + 百分比）
         Icon(
             imageVector = Icons.Filled.BatteryFull,
             contentDescription = "Battery",
@@ -372,17 +376,19 @@ private fun StatusBarIcons(
     }
 }
 
-
 /* -------------------- 單一卡片：iOS 通知樣式 -------------------- */
 @Composable
 private fun NotificationCardIOS(
     @DrawableRes appIconRes: Int
 ) {
+    val shape = RoundedCornerShape(22.dp)
+    val strokeColor = Color(0xFFB8C0CC) // 想再深可調 0xFFA5ADBA / 0xFF94A3B8
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = shape,
         color = Color.White,
         tonalElevation = 0.dp,
         shadowElevation = 14.dp,
+        border = BorderStroke(0.dp, strokeColor),   // ← 用 Surface 的 border，圓角跟 shape 一致
         modifier = Modifier
             .fillMaxWidth(0.96f)
             .height(104.dp)
@@ -397,28 +403,28 @@ private fun NotificationCardIOS(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = "AI CALORIE COUNTER",
+                    text = "CALORIE  COUNTER",
                     fontSize = 12.sp,
-                    color = Color(0xFF6B7280),
+                    color = Color(0xFF9CA3AF),
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "Got a sec to log your meal?",
+                    text = stringResource(id = R.string.onb_notif_title_got_a_sec),
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF111114)
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "Take a moment to log what you had — every meal you track brings you closer to your goal.",
-                    fontSize = 13.sp,
-                    color = Color(0xFF6B7280),
+                    text = stringResource(id = R.string.onb_notif_subtitle_log_meal_goal),
+                    fontSize = 12.sp,
+                    color = Color(0xFF9CA3AF),
                     maxLines = 2
                 )
             }
             Spacer(Modifier.width(6.dp))
-            Text("9:41", fontSize = 12.sp, color = Color(0xFF9CA3AF))
+            Text("8:30", fontSize = 12.sp, color = Color(0xFF9CA3AF))
         }
     }
 }
@@ -429,7 +435,7 @@ private fun AppIconRounded(
     @DrawableRes resId: Int,
     size: Dp,
     corner: Dp = 10.dp,
-    borderColor: Color = Color(0x1A000000),
+    borderColor: Color = Color(0x4D000000),
     borderWidth: Dp = 0.5.dp,
     bg: Color = Color.White
 ) {
@@ -470,6 +476,70 @@ private fun AppIconRounded(
             )
         }
     }
+}
+
+/* -------------------- Title + 尾端圖片（相容版，不用 InlineTextContent） -------------------- */
+@Composable
+private fun NotifTitleWithEndImageInline(
+    text: String,
+    @DrawableRes tailRes: Int,
+    modifier: Modifier = Modifier,
+    // ★ 新增：用 dp 指定圖示大小（會換算成與 45dp 視覺一致的 sp）
+    tailSizeDp: Dp? = null,
+    // 備用：用 sp 指定（若 tailSizeDp 提供，會優先用 dp）
+    tailSizeSp: TextUnit = 24.sp,
+    tailSpaceEm: Float = 0.25f,           // 與文字間距（字寬倍數）
+    textAlign: TextAlign = TextAlign.Center,
+    style: TextStyle = MaterialTheme.typography.headlineLarge.copy(
+        fontSize = 42.sp,
+        fontWeight = FontWeight.ExtraBold,
+        lineHeight = 45.sp
+    )
+) {
+    val inlineId = "title_tail_icon"
+
+    // 把 dp 轉成與 dp 視覺等效的 sp：sp_px = sp * density * fontScale
+    // 希望 sp_px == dp_px = dp * density -> sp = dp / fontScale
+    val sizeSp: TextUnit = if (tailSizeDp != null) {
+        (tailSizeDp.value / LocalDensity.current.fontScale).sp
+    } else {
+        tailSizeSp
+    }
+
+    val rich = remember(text, tailSpaceEm) {
+        buildAnnotatedString {
+            append(text)
+            // 加些空白，避免文字緊貼圖示
+            append(" ")
+            appendInlineContent(inlineId, "[icon]")
+        }
+    }
+
+    val inlineContent = remember(tailRes, sizeSp) {
+        mapOf(
+            inlineId to InlineTextContent(
+                Placeholder(
+                    width = sizeSp,
+                    height = sizeSp,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+                )
+            ) {
+                // 不加 tint -> 保留原本色彩
+                Image(painter = painterResource(id = tailRes), contentDescription = null)
+            }
+        )
+    }
+
+    Text(
+        text = rich,
+        inlineContent = inlineContent,
+        modifier = modifier,
+        style = style,
+        textAlign = textAlign,
+        softWrap = true,
+        maxLines = Int.MAX_VALUE,
+        overflow = TextOverflow.Clip
+    )
 }
 
 /* -------------------- Utilities -------------------- */

@@ -96,5 +96,8 @@
     <string name="allow_notifications_cta">允許通知</string>
     <string name="notif_title">讓每一餐都算數</string>
     <string name="notif_subtitle">開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
+    <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
+    <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>
+
 
 </resources>

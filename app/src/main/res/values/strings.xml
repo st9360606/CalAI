@@ -99,5 +99,8 @@
     <string name="notif_title">Make every meal count</string>
     <string name="notif_subtitle">Enable notifications—we’ll nudge you at the right moments so the occasional slip doesn’t set you back !</string>
 
+    <string name="onb_notif_title_got_a_sec">Got 10 seconds ?</string>
+    <string name="onb_notif_subtitle_log_meal_goal">Log what you just had—make every meal count.</string>
+
 
 </resources>

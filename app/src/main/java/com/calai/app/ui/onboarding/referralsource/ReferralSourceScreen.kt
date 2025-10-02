@@ -1,7 +1,9 @@
 package com.calai.app.ui.onboarding.referralsource
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -131,10 +134,14 @@ fun ReferralSourceScreen(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
             ) {
-                items(state.options) { opt ->
+                // ★ 用穩定 key，避免 LazyColumn 重用導致顯示殘留
+                items(
+                    items = state.options,
+                    key = { it.key }
+                ) { opt ->
                     ReferralOptionItem(
                         option = opt,
-                        selected = state.selected == opt.key,  // ← 可為 null
+                        selected = state.selected == opt.key,  // 可為 null
                         onClick = { vm.select(opt.key) }
                     )
                     Spacer(Modifier.height(14.dp))
@@ -150,8 +157,15 @@ private fun ReferralOptionItem(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    val bg = if (selected) Color.Black else Color(0xFFF1F3F7)
+    // 背景顏色動畫切換，避免閃爍或殘影
+    val bg by animateColorAsState(
+        targetValue = if (selected) Color.Black else Color(0xFFF1F3F7),
+        label = "referral-bg"
+    )
     val fg = if (selected) Color.White else Color.Black
+
+    // 關閉 Ripple，避免「按壓灰膜」殘留
+    val interaction = remember { MutableInteractionSource() }
 
     Row(
         modifier = Modifier
@@ -159,16 +173,21 @@ private fun ReferralOptionItem(
             .height(72.dp)
             .clip(RoundedCornerShape(26.dp))
             .background(bg)
-            .clickable(onClick = onClick)
+            .clickable(
+                interactionSource = interaction,
+                indication = null,          // ★ 不要 Ripple/灰色按壓層
+                onClick = onClick
+            )
             .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
-            color = if (selected) Color.White.copy(alpha = 0.1f) else Color.White,
+            color = if (selected) Color.White.copy(alpha = 0.10f) else Color.White,
             shape = CircleShape,
             modifier = Modifier.size(44.dp)
         ) {
             if (option.iconRes != null) {
+                // 保留原生彩色圖，不上 tint
                 Icon(
                     painter = painterResource(option.iconRes),
                     contentDescription = option.label,
