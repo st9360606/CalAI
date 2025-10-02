@@ -219,8 +219,6 @@ fun NotificationPermissionScreen(
                         style = titleStyle
                     )
 
-
-
                     Spacer(Modifier.height(9.dp))
 
                     // 副標：與手機外框同寬（保持原樣）
@@ -238,7 +236,6 @@ fun NotificationPermissionScreen(
                     )
                 }
             }
-
             Spacer(Modifier.height(16.dp))
         }
     }
