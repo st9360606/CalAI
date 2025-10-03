@@ -3,16 +3,48 @@ package com.calai.app.ui.onboarding.weight
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -176,7 +208,9 @@ fun WeightSelectionScreen(
             if (useMetric) {
                 // KG：整數位 + 小數位（0~9）
                 Row(
-                    Modifier.fillMaxWidth(),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 14.dp),   // ← 整組往右一點
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -213,7 +247,9 @@ fun WeightSelectionScreen(
             } else {
                 // LBS：整數（無小數輪）
                 Row(
-                    Modifier.fillMaxWidth(),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 38.dp),   // ← 整組往右一點
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -272,7 +308,9 @@ private fun WeightUnitSegmented(
                 selected = !useMetric,
                 onClick = { onChange(false) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(45.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(45.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItem(
@@ -280,7 +318,9 @@ private fun WeightUnitSegmented(
                 selected = useMetric,
                 onClick = { onChange(true) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(45.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(45.dp)
             )
         }
     }
@@ -321,7 +361,7 @@ private fun SegItem(
     }
 }
 
-/** 通用數字滾輪（初始化置中 + 抑制首次回呼；不使用負 offset） */
+/** 通用數字滾輪（初始化置中 + 抑制首次回呼） */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
@@ -342,11 +382,10 @@ private fun NumberWheel(
     val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(lazyListState = state)
 
-    // 首次進場把所選值置中；並避免首次 onValueChange
     var initialized by remember(range) { mutableStateOf(false) }
     LaunchedEffect(range, value) {
         if (!initialized) {
-            state.scrollToItem(selectedIdx) // 有上下 contentPadding，這裡自動顯示在中心
+            state.scrollToItem(selectedIdx) // contentPadding 會把它放到正中
             initialized = true
         }
     }
@@ -441,7 +480,7 @@ fun kgToLbsInt(v: Double): Int = round(v * 2.2).toInt()
 
 // 從整數 lbs 取得顯示用 kg：選擇「能 round 回同一個 lbs」的區間內最小 0.1kg
 fun lbsIntToKgPreferred(lbsInt: Int): Double {
-    val lowerBoundKg = (lbsInt - 0.5) / 2.2     // 區間下界（含）
+    val lowerBoundKg = (lbsInt - 0.5) / 2.2
     return kotlin.math.ceil(lowerBoundKg * 10.0) / 10.0
 }
 
