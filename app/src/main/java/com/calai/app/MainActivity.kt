@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import com.calai.app.ui.BiteCalApp
-import com.calai.app.data.auth.store.UserProfileStore   // ← 新增
+import com.calai.app.data.auth.store.UserProfileStore
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -37,7 +37,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         logPoint("after super.onCreate")
 
-        // ★ 冷啟才清除 Onboarding（旋轉/重建不清）
         if (savedInstanceState == null) {
             lifecycleScope.launch {
                 try {
@@ -49,21 +48,17 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 350ms 保險絲：無論如何放行，避免極端卡住
         fuseJob = lifecycleScope.launch {
             delay(fallbackMs)
             unlockSplash("fallback-${fallbackMs}ms")
         }
 
         setContent {
-            // 第一幀一出現就放行（最快路徑）
             FirstFrameUnlock {
                 unlockSplash("first-frame")
-                // 正確回報 TTFD：等到首屏可互動即回報
                 window?.decorView?.post { reportFullyDrawn() }
             }
             logPoint("setContent-enter")
-            // 把 Activity 傳進 App 根組件
             BiteCalApp(hostActivity = this)
         }
 
@@ -72,7 +67,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // 後備：若因任何原因未解鎖（理論上不會），此處保險
         if (!splashUnlocked) unlockSplash("onResume-fallback")
     }
 

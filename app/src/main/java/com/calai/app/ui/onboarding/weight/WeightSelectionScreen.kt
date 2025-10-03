@@ -2,111 +2,65 @@ package com.calai.app.ui.onboarding.weight
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.auth.store.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.ui.composed
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.layout.ime
-import androidx.compose.ui.platform.LocalDensity
+import kotlin.math.round
+import kotlin.math.roundToInt
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun WeightSelectionScreen(
     vm: WeightSelectionViewModel,
     onBack: () -> Unit,
-    onNext: () -> Unit
+    onNext: () -> Unit,
+    rowHeight: Dp = 56.dp,
 ) {
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()
 
-    var useMetric by rememberSaveable(savedUnit) {
-        mutableStateOf(savedUnit == UserProfileStore.WeightUnit.KG)
-    }
-    var valueKg by remember(weightKg) { mutableStateOf(weightKg.toDouble()) }
+    // 單位：預設依使用者設定（KG / LBS）
+    var useMetric by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.WeightUnit.KG) }
 
-    var text by remember(weightKg, useMetric) {
-        mutableStateOf(
-            if (weightKg == 0f) "" else
-                formatOneDecimal(if (useMetric) valueKg else kgToLbs(valueKg))
-        )
+    // 以 kg 為 SSOT；若資料層給 0，預設 65.0kg（= 143lbs）
+    var valueKg by remember(weightKg) {
+        mutableStateOf(if (weightKg > 0f) weightKg.toDouble() else 65.0)
     }
 
-    val listState = rememberLazyListState()
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    val scope = rememberCoroutineScope()
+    // 可選範圍
+    val KG_INT_MIN = 20
+    val KG_INT_MAX = 300
+    val LBS_INT_MIN = kgToLbsInt(KG_INT_MIN.toDouble())   // 44
+    val LBS_INT_MAX = kgToLbsInt(KG_INT_MAX.toDouble())   // 660
 
-    // 依 IME（鍵盤）是否可見，動態調整 CTA 間距
-    val density = LocalDensity.current
-    val imeVisible = WindowInsets.ime.getBottom(density) > 0
-    val ctaBottomGap = if (imeVisible) 10.dp else 59.dp   // 鍵盤出現時更貼近（10.dp 可再調）
+    // —— 目前選中項 —— //
+    val kgTenths = (valueKg * 10.0).roundToInt().coerceIn(KG_INT_MIN * 10, KG_INT_MAX * 10)
+    val kgIntSel = kgTenths / 10
+    val kgDecSel = kgTenths % 10
+    val lbsIntSel = kgToLbsInt(valueKg).coerceIn(LBS_INT_MIN, LBS_INT_MAX)
 
     Scaffold(
         containerColor = Color.White,
@@ -137,30 +91,21 @@ fun WeightSelectionScreen(
             )
         },
         bottomBar = {
-            // 只讓整個 bottom 區跟著 IME 往上；額外間距改用動態值
-            Box(Modifier.imePadding()) {
-                val navBarsMod = if (imeVisible) Modifier else Modifier.navigationBarsPadding()
+            Box {
                 Button(
                     onClick = {
-                        val clean = text.replace(',', '.').trim()
-                        val typed = clean.toDoubleOrNull()
-                        val kgToSave = when {
-                            clean.isEmpty() -> 0.0
-                            typed == null -> valueKg
-                            useMetric -> typed
-                            else -> lbsToKg(typed)
-                        }
-                        vm.saveWeightKg(roundKg2(kgToSave))
+                        vm.saveWeightKg(roundKg2(valueKg))
                         vm.saveWeightUnit(
                             if (useMetric) UserProfileStore.WeightUnit.KG
                             else UserProfileStore.WeightUnit.LBS
                         )
                         onNext()
                     },
+                    enabled = valueKg > 0.0,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .then(navBarsMod)                            // 鍵盤出現時不再吃 nav bar padding
-                        .padding(start = 20.dp, end = 20.dp, bottom = ctaBottomGap)
+                        .navigationBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(28.dp),
@@ -170,191 +115,144 @@ fun WeightSelectionScreen(
                     )
                 ) {
                     Text(
-                        stringResource(R.string.continue_text),
+                        text = stringResource(R.string.continue_text),
                         fontSize = 19.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
             }
         }
-
     ) { inner ->
-        // 讓內容可捲動，並在底部多預留 CTA 高度 + CTA 的 bottom padding + 12dp 緩衝
-        val layoutDir = LocalLayoutDirection.current
-        val navBars = WindowInsets.navigationBars.asPaddingValues()
-        val extraBottom = 64.dp + ctaBottomGap + 12.dp
-        val listContentPadding = PaddingValues(
-            start = navBars.calculateStartPadding(layoutDir),
-            top = navBars.calculateTopPadding(),
-            end = navBars.calculateEndPadding(layoutDir),
-            bottom = navBars.calculateBottomPadding() + extraBottom
-        )
-
-        // ⬇️ 外層 Box 套「點空白區關閉鍵盤」
-        Box(
-            Modifier
+        Column(
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .clearFocusOnTapOutside()
         ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = listContentPadding
-            ) {
-                item {
-                    OnboardingProgress(
-                        stepIndex = 5,
-                        totalSteps = 11,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
+            OnboardingProgress(
+                stepIndex = 5,
+                totalSteps = 11,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.onboard_weight_title),
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = 40.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 20.dp)
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = stringResource(R.string.onboard_weight_subtitle),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp,
+                    lineHeight = 22.sp
+                ),
+                color = Color(0xFFB6BDC6),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 6.dp)
+            )
+
+            WeightUnitSegmented(
+                useMetric = useMetric,
+                onChange = { useMetric = it },
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            if (useMetric) {
+                // KG：整數位 + 小數位（0~9）
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NumberWheel(
+                        range = KG_INT_MIN..KG_INT_MAX,
+                        value = kgIntSel,
+                        onValueChange = { newInt ->
+                            val newKg = (newInt * 10 + kgDecSel) / 10.0
+                            valueKg = newKg.coerceIn(KG_INT_MIN.toDouble(), KG_INT_MAX.toDouble())
+                        },
+                        rowHeight = rowHeight,
+                        centerTextSize = 42.sp,
+                        sideAlpha = 0.35f,
+                        unitLabel = null,
+                        modifier = Modifier.width(120.dp)
                     )
-                }
-                item {
-                    Text(
-                        text = stringResource(R.string.onboard_weight_title),
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
-                        fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 40.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                            .padding(top = 20.dp)
+                    Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
+                    NumberWheel(
+                        range = 0..9,
+                        value = kgDecSel,
+                        onValueChange = { newDec ->
+                            val newKg = (kgIntSel * 10 + newDec) / 10.0
+                            valueKg = newKg.coerceIn(KG_INT_MIN.toDouble(), KG_INT_MAX.toDouble())
+                        },
+                        rowHeight = rowHeight,
+                        centerTextSize = 42.sp,
+                        sideAlpha = 0.35f,
+                        unitLabel = null,
+                        modifier = Modifier.width(80.dp)
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
-                item { Spacer(Modifier.height(6.dp)) }
-                item {
-                    Text(
-                        text = stringResource(R.string.onboard_weight_subtitle),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 16.sp,
-                            lineHeight = 22.sp
-                        ),
-                        color = Color(0xFFB6BDC6),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 6.dp)
+            } else {
+                // LBS：整數（無小數輪）
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NumberWheel(
+                        range = LBS_INT_MIN..LBS_INT_MAX,
+                        value = lbsIntSel,
+                        onValueChange = { newLbsInt ->
+                            val kgPref = lbsIntToKgPreferred(newLbsInt)
+                            valueKg = kgPref.coerceIn(KG_INT_MIN.toDouble(), KG_INT_MAX.toDouble())
+                        },
+                        rowHeight = rowHeight,
+                        centerTextSize = 42.sp,
+                        sideAlpha = 0.35f,
+                        unitLabel = null,
+                        modifier = Modifier.width(160.dp)
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Text("lbs", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
-                item {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        WeightUnitSegmented(
-                            useMetric = useMetric,
-                            onChange = { isMetric ->
-                                useMetric = isMetric
-                                text = if (text.isEmpty()) "" else
-                                    formatOneDecimal(if (useMetric) valueKg else kgToLbs(valueKg))
-                            },
-                            modifier = Modifier.padding(top = 12.dp)
-                        )
-                    }
-                }
-                item { Spacer(Modifier.height(39.dp)) }
-
-                // —— 輸入卡片 —— //
-                item {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Surface(
-                            color = Color(0xFFF1F3F7),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier
-                                .fillMaxWidth(0.88f)
-                                .heightIn(min = 68.dp)
-                        ) {
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                BasicTextField(
-                                    value = text,
-                                    onValueChange = { new ->
-                                        val sanitized = sanitizeToOneDecimal(new)
-                                        text = sanitized
-                                        sanitized.toDoubleOrNull()?.let { v ->
-                                            valueKg = if (useMetric) v else lbsToKg(v)
-                                        }
-                                    },
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                    textStyle = TextStyle(
-                                        fontSize = 42.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color(0xFF111114),
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    decorationBox = { innerField ->
-                                        Box(
-                                            modifier = Modifier.widthIn(min = 84.dp, max = 148.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            if (text.isEmpty()) {
-                                                Text(
-                                                    "0",
-                                                    fontSize = 42.sp,
-                                                    fontWeight = FontWeight.ExtraBold,
-                                                    color = Color(0xFFB6BDC6),
-                                                    textAlign = TextAlign.Center,
-                                                    maxLines = 1
-                                                )
-                                            }
-                                            innerField()
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .wrapContentWidth()
-                                        .bringIntoViewRequester(bringIntoViewRequester)
-                                        .onFocusEvent { f ->
-                                            if (f.isFocused) {
-                                                scope.launch {
-                                                    // 等鍵盤動畫一下再滾動
-                                                    delay(200)
-                                                    bringIntoViewRequester.bringIntoView()
-                                                }
-                                            }
-                                        }
-                                )
-
-                                Text(
-                                    text = if (useMetric) "kg" else "lbs",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF111114),
-                                    maxLines = 1,
-                                    softWrap = false,
-                                    modifier = Modifier.offset(x = (-10).dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = stringResource(R.string.onboard_weight_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF9AA3AE),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .fillMaxWidth(0.62f)
-                                .padding(top = 16.dp)
-                        )
-                    }
-                }
-
-                item { Spacer(Modifier.height(16.dp)) }
             }
+
+            Spacer(Modifier.height(16.dp))
+
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.onboard_weight_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF9AA3AE),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(0.62f)
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
 
-/** 黑底白字、等寬的 lbs / kg 分段（保持你的樣式） */
+/** 分段切換（lbs / kg） */
 @Composable
 private fun WeightUnitSegmented(
     useMetric: Boolean,
@@ -374,9 +272,7 @@ private fun WeightUnitSegmented(
                 selected = !useMetric,
                 onClick = { onChange(false) },
                 selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(45.dp)
+                modifier = Modifier.weight(1f).height(45.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItem(
@@ -384,9 +280,7 @@ private fun WeightUnitSegmented(
                 selected = useMetric,
                 onClick = { onChange(true) },
                 selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(45.dp)
+                modifier = Modifier.weight(1f).height(45.dp)
             )
         }
     }
@@ -401,9 +295,7 @@ private fun SegItem(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val minH = 48.dp
     val fSize = 22.sp
-
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(corner),
@@ -412,7 +304,7 @@ private fun SegItem(
     ) {
         Box(
             modifier = Modifier
-                .defaultMinSize(minHeight = minH)
+                .defaultMinSize(minHeight = 48.dp)
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center
@@ -429,46 +321,130 @@ private fun SegItem(
     }
 }
 
-private const val MAX_INT_DIGITS = 3
+/** 通用數字滾輪（初始化置中 + 抑制首次回呼；不使用負 offset） */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun NumberWheel(
+    range: IntRange,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    rowHeight: Dp,
+    centerTextSize: TextUnit,
+    sideAlpha: Float,
+    unitLabel: String? = null,
+    modifier: Modifier = Modifier
+) {
+    val VISIBLE_COUNT = 5
+    val MID = VISIBLE_COUNT / 2
+    val items = remember(range) { range.toList() }
+    val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
-/** 僅允許數字與一個小數點；整數最多 3 位、小數最多 1 位；允許空字串 */
-private fun sanitizeToOneDecimal(s: String): String {
-    if (s.isEmpty()) return ""
-    var out = buildString {
-        var dotSeen = false
-        for (c in s) {
-            if (c.isDigit()) append(c)
-            else if (c == '.' && !dotSeen) {
-                append('.'); dotSeen = true
-            }
+    val state = rememberLazyListState()
+    val fling = rememberSnapFlingBehavior(lazyListState = state)
+
+    // 首次進場把所選值置中；並避免首次 onValueChange
+    var initialized by remember(range) { mutableStateOf(false) }
+    LaunchedEffect(range, value) {
+        if (!initialized) {
+            state.scrollToItem(selectedIdx) // 有上下 contentPadding，這裡自動顯示在中心
+            initialized = true
         }
     }
-    if (out.startsWith(".")) out = "0$out"
-    val dotIdx = out.indexOf('.')
-    return if (dotIdx >= 0) {
-        val intPart = out.substring(0, dotIdx).take(MAX_INT_DIGITS)
-        val fracPart = out.substring(dotIdx + 1).take(1)
-        if (fracPart.isEmpty()) "$intPart." else "$intPart.$fracPart"
-    } else {
-        out.take(MAX_INT_DIGITS)
+
+    val centerIndex by remember {
+        derivedStateOf {
+            val li = state.layoutInfo
+            if (li.visibleItemsInfo.isEmpty()) return@derivedStateOf selectedIdx
+            val viewportCenter = (li.viewportStartOffset + li.viewportEndOffset) / 2
+            li.visibleItemsInfo.minByOrNull { info ->
+                kotlin.math.abs((info.offset + info.size / 2) - viewportCenter)
+            }?.index ?: selectedIdx
+        }
+    }
+    LaunchedEffect(centerIndex, initialized) {
+        if (initialized) onValueChange(items[centerIndex])
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(rowHeight * VISIBLE_COUNT)
+    ) {
+        LazyColumn(
+            state = state,
+            flingBehavior = fling,
+            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            itemsIndexed(items) { index, num ->
+                val isCenter = index == centerIndex
+                val alpha = if (isCenter) 1f else sideAlpha
+                val size = if (isCenter) centerTextSize else 28.sp
+                val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
+                val unitSize = if (isCenter) 20.sp else 18.sp
+
+                Row(
+                    modifier = Modifier
+                        .height(rowHeight)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = num.toString(),
+                        fontSize = size,
+                        fontWeight = weight,
+                        color = Color.Black.copy(alpha = alpha),
+                        textAlign = TextAlign.Center
+                    )
+                    if (unitLabel != null) {
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = unitLabel,
+                            fontSize = unitSize,
+                            color = Color(0xFF333333).copy(alpha = alpha),
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
+
+        // 中心框線
+        val lineColor = Color(0x11000000)
+        val half = rowHeight / 2
+        val lineThickness = 1.dp
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .offset(y = -half)
+                .fillMaxWidth()
+                .height(lineThickness)
+                .background(lineColor)
+        )
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .offset(y = half - lineThickness)
+                .fillMaxWidth()
+                .height(lineThickness)
+                .background(lineColor)
+        )
     }
 }
 
-/** 顯示時固定到 1 位小數（你也可去掉 .0） */
-private fun formatOneDecimal(v: Double): String {
-    val s = String.format(java.util.Locale.US, "%.1f", round1(v))
-    return s
+/* ---------------------------- 換算 & 取整邏輯 ---------------------------- */
+
+// 以整數 lbs 為主：1 kg = 2.2 lbs，lbs 一律四捨五入為整數
+fun kgToLbsInt(v: Double): Int = round(v * 2.2).toInt()
+
+// 從整數 lbs 取得顯示用 kg：選擇「能 round 回同一個 lbs」的區間內最小 0.1kg
+fun lbsIntToKgPreferred(lbsInt: Int): Double {
+    val lowerBoundKg = (lbsInt - 0.5) / 2.2     // 區間下界（含）
+    return kotlin.math.ceil(lowerBoundKg * 10.0) / 10.0
 }
 
-/** 存檔用：公斤保留 2 位小數，避免 lbs↔kg 來回換算誤差 */
-private fun roundKg2(v: Double): Float {
-    return (kotlin.math.round(v * 100.0) / 100.0).toFloat()
-}
-
-/** 點擊空白處時清焦（鍵盤收起）；子元件有消費點擊時不會觸發 */
-private fun Modifier.clearFocusOnTapOutside(): Modifier = composed {
-    val focusManager = LocalFocusManager.current
-    pointerInput(Unit) {
-        detectTapGestures(onTap = { focusManager.clearFocus() })
-    }
-}
+// 存檔：公斤保留 2 位小數
+private fun roundKg2(v: Double): Float =
+    (kotlin.math.round(v * 100.0) / 100.0).toFloat()

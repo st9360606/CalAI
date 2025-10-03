@@ -75,6 +75,7 @@
     <string name="onboard_weight_title">How much do you weigh?</string>
     <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_weight_hint">Please enter a whole number or a number with one decimal place.</string>
+    <string name="onboard_weight_zero_error">Please enter a weight greater than 0</string>
 
     <!-- exercise -->
     <string name="onboard_ex_freq_title">How often do you exercise each week?</string>

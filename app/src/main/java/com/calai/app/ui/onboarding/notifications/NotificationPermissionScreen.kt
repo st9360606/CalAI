@@ -387,8 +387,8 @@ private fun NotificationCardIOS(
         shadowElevation = 14.dp,
         border = BorderStroke(0.dp, strokeColor),   // ← 用 Surface 的 border，圓角跟 shape 一致
         modifier = Modifier
-            .fillMaxWidth(0.96f)
-            .height(104.dp)
+            .fillMaxWidth(0.98f)
+            .height(90.dp)
     ) {
         Row(
             Modifier
@@ -421,7 +421,7 @@ private fun NotificationCardIOS(
                 )
             }
             Spacer(Modifier.width(6.dp))
-            Text("8:30", fontSize = 12.sp, color = Color(0xFF9CA3AF))
+            Text("8:30 AM", fontSize = 12.sp, color = Color(0xFF9CA3AF))
         }
     }
 }
