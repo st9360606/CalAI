@@ -27,10 +27,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
+
+// 控制每個 item 佔用的寬度比例（置中）
+private const val OPTION_WIDTH_FRACTION = 0.90f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,11 +79,11 @@ fun ReferralSourceScreen(
                 Button(
                     onClick = {
                         scope.launch {
-                            vm.saveAndContinue()   // 內部已做 null 防護
+                            vm.saveAndContinue()
                             onNext()
                         }
                     },
-                    enabled = state.selected != null,        // ← 未選擇前不可按
+                    enabled = state.selected != null,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
@@ -105,7 +109,6 @@ fun ReferralSourceScreen(
             Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .imePadding()
         ) {
             OnboardingProgress(
                 stepIndex = 2,
@@ -134,16 +137,23 @@ fun ReferralSourceScreen(
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
             ) {
-                // ★ 用穩定 key，避免 LazyColumn 重用導致顯示殘留
                 items(
                     items = state.options,
                     key = { it.key }
                 ) { opt ->
-                    ReferralOptionItem(
-                        option = opt,
-                        selected = state.selected == opt.key,  // 可為 null
-                        onClick = { vm.select(opt.key) }
-                    )
+                    // 置中 + 縮窄寬度
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ReferralOptionItem(
+                            option = opt,
+                            selected = state.selected == opt.key,
+                            onClick = { vm.select(opt.key) },
+                            modifier = Modifier
+                                .fillMaxWidth(OPTION_WIDTH_FRACTION)
+                        )
+                    }
                     Spacer(Modifier.height(14.dp))
                 }
             }
@@ -155,48 +165,50 @@ fun ReferralSourceScreen(
 private fun ReferralOptionItem(
     option: ReferralUiOption,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    // 背景顏色動畫切換，避免閃爍或殘影
     val bg by animateColorAsState(
         targetValue = if (selected) Color.Black else Color(0xFFF1F3F7),
         label = "referral-bg"
     )
     val fg = if (selected) Color.White else Color.Black
-
-    // 關閉 Ripple，避免「按壓灰膜」殘留
     val interaction = remember { MutableInteractionSource() }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
             .height(72.dp)
             .clip(RoundedCornerShape(26.dp))
             .background(bg)
             .clickable(
                 interactionSource = interaction,
-                indication = null,          // ★ 不要 Ripple/灰色按壓層
+                indication = null,
                 onClick = onClick
             )
             .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            color = if (selected) Color.White.copy(alpha = 0.10f) else Color.White,
-            shape = CircleShape,
-            modifier = Modifier.size(44.dp)
+        // 固定純白圓底
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(Color.White)
+                .zIndex(1f),
+            contentAlignment = Alignment.Center
         ) {
             if (option.iconRes != null) {
-                // 保留原生彩色圖，不上 tint
                 Icon(
                     painter = painterResource(option.iconRes),
                     contentDescription = option.label,
                     tint = Color.Unspecified,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
+
         Spacer(Modifier.width(16.dp))
+
         Text(
             text = option.label,
             color = fg,

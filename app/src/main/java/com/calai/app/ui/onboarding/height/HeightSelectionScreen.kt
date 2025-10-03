@@ -28,6 +28,9 @@ import com.calai.app.R
 import com.calai.app.data.auth.store.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
 
+// ← 調整這個數值即可讓「CM 單一滾輪」往右/往左偏移
+private val CM_WHEEL_X_SHIFT = 24.dp
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HeightSelectionScreen(
@@ -39,18 +42,14 @@ fun HeightSelectionScreen(
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()
 
-    // ✅ 先預設 false（= FT/in），載入到 savedUnit 後再覆寫
+    // 單位：從存檔載入；預設英制（FT/IN）
     var useMetric by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.HeightUnit.CM) }
 
-    LaunchedEffect(savedUnit) {
-        // 若資料有存過，就依存檔覆寫；沒存過時，savedUnit 預設是 FT_IN，就維持 false
-        useMetric = (savedUnit == UserProfileStore.HeightUnit.CM)
-    }
-
-    // 以 cm 為 SSOT；切換單位只改本地顯示
-    var cmVal   by rememberSaveable(heightCm) { mutableIntStateOf(heightCm) }
-    var feet    by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches(heightCm).first) }
-    var inches  by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches(heightCm).second) }
+    // cm 為 SSOT；切換單位只改顯示，不改 cm
+    var cmVal by rememberSaveable(heightCm) { mutableIntStateOf(heightCm) }
+    var feet by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches(cmVal).first) }
+    var inches by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches(cmVal).second) }
 
     Scaffold(
         containerColor = Color.White,
@@ -84,13 +83,13 @@ fun HeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        // 用目前顯示的單位換算成 cm 保存，並保存單位
-                        val cmToSave = if (useMetric) cmVal else feetInchesToCm(feet, inches)
-                        vm.saveHeightCm(cmToSave)
-                        vm.saveHeightUnit(if (useMetric) UserProfileStore.HeightUnit.CM else UserProfileStore.HeightUnit.FT_IN)
+                        vm.saveHeightCm(cmVal) // 只存 cm
+                        vm.saveHeightUnit(
+                            if (useMetric) UserProfileStore.HeightUnit.CM
+                            else UserProfileStore.HeightUnit.FT_IN
+                        )
                         onNext()
                     },
-                    enabled = true,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
@@ -116,7 +115,6 @@ fun HeightSelectionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .imePadding(),
         ) {
             OnboardingProgress(
                 stepIndex = 4,
@@ -153,18 +151,13 @@ fun HeightSelectionScreen(
                     .padding(horizontal = 24.dp, vertical = 6.dp)
             )
 
-            // 分段：切換時僅轉換本地值，不落盤
+            // 切換單位：只更新顯示值；不改 cmVal
             UnitSegmented(
                 useMetric = useMetric,
                 onChange = { isMetric ->
-                    if (isMetric) {
-                        // ft/in -> cm
-                        cmVal = feetInchesToCm(feet, inches)
-                    } else {
-                        // cm -> ft/in
-                        val (ft, inch) = cmToFeetInches(cmVal)
-                        feet = ft
-                        inches = inch
+                    if (!isMetric) {
+                        val (ft, inch) = cmToFeetInches(cmVal) // 165cm -> 5ft4in（floor）
+                        feet = ft; inches = inch
                     }
                     useMetric = isMetric
                 },
@@ -174,6 +167,7 @@ fun HeightSelectionScreen(
             )
 
             if (useMetric) {
+                // ✅ CM 單一滾輪：整組往右偏一點
                 NumberWheel(
                     range = 100..250,
                     value = cmVal,
@@ -181,7 +175,10 @@ fun HeightSelectionScreen(
                     rowHeight = rowHeight,
                     centerTextSize = 42.sp,
                     sideAlpha = 0.35f,
-                    unitLabel = "cm"
+                    unitLabel = "cm",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = CM_WHEEL_X_SHIFT) // ← 這行就是右移關鍵
                 )
             } else {
                 Row(
@@ -193,7 +190,10 @@ fun HeightSelectionScreen(
                     NumberWheel(
                         range = 4..7,
                         value = feet,
-                        onValueChange = { feet = it },
+                        onValueChange = { newFeet ->
+                            feet = newFeet
+                            cmVal = feetInchesToCm(feet = newFeet, inches = inches)
+                        },
                         rowHeight = rowHeight,
                         centerTextSize = 42.sp,
                         sideAlpha = 0.35f,
@@ -204,7 +204,10 @@ fun HeightSelectionScreen(
                     NumberWheel(
                         range = 0..11,
                         value = inches,
-                        onValueChange = { inches = it },
+                        onValueChange = { newIn ->
+                            inches = newIn
+                            cmVal = feetInchesToCm(feet = feet, inches = newIn)
+                        },
                         rowHeight = rowHeight,
                         centerTextSize = 42.sp,
                         sideAlpha = 0.35f,
@@ -290,7 +293,7 @@ private fun SegItem(
     }
 }
 
-/** 通用數字滾輪（與 AgeWheel 手感一致） */
+/** 通用數字滾輪（首次精準置中 + 抑制首次回呼） */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
@@ -306,12 +309,18 @@ private fun NumberWheel(
     val VISIBLE_COUNT = 5
     val MID = VISIBLE_COUNT / 2
     val items = remember(range) { range.toList() }
-    val selectedIdx = remember(value) { (value - range.first).coerceIn(0, items.lastIndex) }
-    val firstForCenter = remember(selectedIdx, items) {
-        (selectedIdx - MID).coerceIn(0, (items.lastIndex - (VISIBLE_COUNT - 1)).coerceAtLeast(0))
-    }
-    val state = rememberLazyListState(initialFirstVisibleItemIndex = firstForCenter)
+    val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
+
+    val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(lazyListState = state)
+
+    var initialized by remember(range) { mutableStateOf(false) }
+    LaunchedEffect(range, value) {
+        if (!initialized) {
+            state.scrollToItem(selectedIdx) // contentPadding 讓它位於中心
+            initialized = true
+        }
+    }
 
     val centerIndex by remember {
         derivedStateOf {
@@ -323,7 +332,9 @@ private fun NumberWheel(
             }?.index ?: selectedIdx
         }
     }
-    LaunchedEffect(centerIndex) { onValueChange(items[centerIndex]) }
+    LaunchedEffect(centerIndex, initialized) {
+        if (initialized) onValueChange(items[centerIndex])
+    }
 
     Box(
         modifier = modifier
