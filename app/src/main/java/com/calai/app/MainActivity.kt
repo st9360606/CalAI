@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/MainActivity.kt
 package com.calai.app
 
 import android.os.Bundle
@@ -16,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import com.calai.app.ui.BiteCalApp
+import com.calai.app.data.auth.store.UserProfileStore
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -37,22 +37,29 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         logPoint("after super.onCreate")
 
-        // 350ms 保險絲：無論如何放行，避免極端卡住
+        if (savedInstanceState == null) {
+            lifecycleScope.launch {
+                try {
+                    UserProfileStore(applicationContext).clearOnboarding()
+                    logPoint("onboarding:cleared")
+                } catch (t: Throwable) {
+                    Log.w("BootTrace", "clearOnboarding failed", t)
+                }
+            }
+        }
+
         fuseJob = lifecycleScope.launch {
             delay(fallbackMs)
             unlockSplash("fallback-${fallbackMs}ms")
         }
 
         setContent {
-            // 第一幀一出現就放行（最快路徑）
             FirstFrameUnlock {
                 unlockSplash("first-frame")
-                // 正確回報 TTFD：等到首屏可互動即回報
-                // 注意：這是統計訊號，不會神奇加速
                 window?.decorView?.post { reportFullyDrawn() }
             }
             logPoint("setContent-enter")
-            BiteCalApp()
+            BiteCalApp(hostActivity = this)
         }
 
         logPoint("onCreate:end")
@@ -60,7 +67,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // 後備：若因任何原因未解鎖（理論上不會），此處保險
         if (!splashUnlocked) unlockSplash("onResume-fallback")
     }
 

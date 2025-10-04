@@ -85,36 +85,36 @@ fun SignInSheet(
 
                 Spacer(Modifier.height(8.dp))
 
-                // Apple（黑底白字）
-                Button(
-                    onClick = onApple,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_apple),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .offset(x = (-6).dp), // 圖示更靠左一點
-                        tint = Color.Unspecified
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        text = stringResource(R.string.signin_with_apple),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Spacer(Modifier.height(12.dp))
+//                // Apple（黑底白字）
+//                Button(
+//                    onClick = onApple,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(56.dp),
+//                    shape = RoundedCornerShape(28.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color.Black,
+//                        contentColor = Color.White
+//                    ),
+//                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+//                ) {
+//                    Icon(
+//                        painter = painterResource(R.drawable.ic_apple),
+//                        contentDescription = null,
+//                        modifier = Modifier
+//                            .size(20.dp)
+//                            .offset(x = (-6).dp), // 圖示更靠左一點
+//                        tint = Color.Unspecified
+//                    )
+//                    Spacer(Modifier.width(10.dp))
+//                    Text(
+//                        text = stringResource(R.string.signin_with_apple),
+//                        fontSize = 18.sp,
+//                        fontWeight = FontWeight.SemiBold
+//                    )
+//                }
+//
+//                Spacer(Modifier.height(12.dp))
 
                 // Google（白底描邊）
                 OutlinedButton(

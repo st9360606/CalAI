@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">卡路里AI相機</string>
+    <string name="app_name">BiteCal｜卡路里相機（AI）：拍照計算卡路里與減脂記錄</string>
     <string name="landing_title">拍一下，卡路里馬上知道</string>
     <string name="cta_get_started">開始使用</string>
     <string name="cta_login_prefix">已有帳號？</string>
@@ -20,4 +20,86 @@
 
     <!-- common -->
     <string name="close">關閉</string>
+
+    <!-- Email -->
+    <string name="sign_in_title">登入</string>
+    <string name="email_label">Email</string>
+    <string name="continue_btn">繼續</string>
+    <string name="sending">傳送中…</string>
+    <string name="verifying">驗證中…</string>
+    <string name="email_confirm_title">確認你的 Email</string>
+    <string name="email_confirm_desc">請輸入我們剛剛寄到\n%1$s 的 4 位數驗證碼</string>
+    <string name="didnt_receive_code">沒有收到驗證碼？</string>
+    <string name="resend">重新寄送</string>
+    <string name="resend_with_seconds">%1$d 秒後可重新寄送</string>
+
+    <!-- Google -->
+    <string name="err_google_id_token_empty">Google 回傳為空的 ID Token</string>
+    <string name="err_google_result_parse">解析登入結果失敗</string>
+    <string name="err_google_cancelled">你已取消登入</string>
+    <string name="err_google_launch_failed">無法啟動 Google 登入%1$s</string>
+    <string name="err_google_no_account_hint">建議到「設定 → 帳號」先新增 Google 帳號，再重試</string>
+    <string name="err_google_signin_failed">Google 登入失敗</string>
+    <string name="err_google_not_completed_with_code">登入未完成，請再試一次（錯誤碼：%1$d）。你也可以改用 Email 登入。</string>
+
+    <!-- Onboarding: Gender -->
+    <string name="onb_gender_title">選擇你的性別</string>
+    <string name="onb_gender_subtitle">這將用於校準你的自訂計畫。</string>
+    <string name="male_simple">男</string>
+    <string name="female">女性</string>
+    <string name="other">其他</string>
+    <string name="continue_text">下一步</string>
+
+    <!-- referral_source -->
+    <string name="onboard_referral_title">你是怎麼發現我們的？</string>
+    <string name="referral_app_store">App Store</string>
+    <string name="referral_youtube">YouTube</string>
+    <string name="referral_instagram">Instagram</string>
+    <string name="referral_google">Google</string>
+    <string name="referral_facebook">Facebook</string>
+    <string name="referral_tiktok">TikTok</string>
+    <string name="referral_x">X</string>
+    <string name="referral_other">其他</string>
+
+    <!-- age -->
+    <string name="onboard_age_title">請問你的年齡？</string>
+    <string name="onboard_age_subtitle">我們僅使用您的歲數來改善體驗並提高卡路里估算準確度。</string>
+
+    <!-- height -->
+    <string name="onboard_height_title">你的身高是多少呢？</string>
+    <string name="onboard_height_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
+
+    <!-- weight -->
+    <string name="onboard_weight_title">你的體重大約是多少？</string>
+    <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
+    <string name="onboard_weight_hint">這將用於校準你的自訂計畫。</string>
+    <string name="onboard_weight_zero_error">請輸入大於 0 的體重</string>
+    <string name="onboard_target_weight_title">你的目標體重是多少？</string>
+
+    <!-- exercise -->
+    <string name="onboard_ex_freq_title">你平均每週運動幾次？</string>
+    <string name="onboard_ex_freq_subtitle">這將用於校準你的自訂計畫。</string>
+    <string name="ex_freq_0_2_title">0–2</string>
+    <string name="ex_freq_0_2_sub">輕度運動量</string>
+    <string name="ex_freq_3_5_title">3–5</string>
+    <string name="ex_freq_3_5_sub">中度運動量</string>
+    <string name="ex_freq_6_plus_title">6+</string>
+    <string name="ex_freq_6_plus_sub">高強度運動量</string>
+
+    <!-- exercise -->
+    <string name="onboard_goal_title">你的目標是什麼呢？</string>
+    <string name="onboard_goal_subtitle">這有助于為您的熱量攝入制定計畫。</string>
+    <string name="goal_lose">減重</string>
+    <string name="goal_maintain">維持</string>
+    <string name="goal_gain">增重</string>
+    <string name="goal_healthy_eating">健康飲食</string>
+
+    <!-- notifications -->
+    <string name="allow_notifications_cta">允許通知</string>
+    <string name="notif_title">讓你每一餐都算數</string>
+    <string name="notif_subtitle">開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
+    <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
+    <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>
+
+
 </resources>

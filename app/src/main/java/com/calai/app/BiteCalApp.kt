@@ -1,45 +1,44 @@
 package com.calai.app.ui
 
+import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.ProvideComposeLocale
 import com.calai.app.ui.nav.BiteCalNavHost
 import java.util.Locale
-import kotlinx.coroutines.flow.map
 
-// 以前（地雷）：runBlocking { store.langFlow.first() }  <-- 會卡主執行緒
-// 改成：非阻塞、先用系統語言，資料來了再切
 @Composable
-fun BiteCalApp() {
+fun BiteCalApp(hostActivity: ComponentActivity) {
     val context = LocalContext.current
     val store = remember(context) { LanguageStore(context) }
 
-    // 非阻塞讀取預設語言
+    // 非阻塞取得預設語系
     val savedTag by store.langFlow.collectAsState(initial = "")
     val initialTag = remember(savedTag) {
         when {
-            savedTag.isNotBlank() -> savedTag
+            savedTag.isNotBlank() ->
+                savedTag
             AppCompatDelegate.getApplicationLocales().toLanguageTags().isNotBlank() ->
                 AppCompatDelegate.getApplicationLocales().toLanguageTags()
-            else -> Locale.getDefault().toLanguageTag()
+            else ->
+                Locale.getDefault().toLanguageTag()
         }
     }
 
     var composeLocale by remember(initialTag) { mutableStateOf(initialTag) }
 
-    // ✅ Side-effect 放這裡：每次語言狀態變更就儲存（不阻塞 UI）
+    // 語系變更時持久化
     LaunchedEffect(composeLocale) {
         if (composeLocale.isNotBlank()) store.save(composeLocale)
     }
 
+    // ✨ 關鍵：不要再覆寫 LocalContext！
     ProvideComposeLocale(composeLocale) {
         BiteCalNavHost(
-            onSetLocale = { tag -> composeLocale = tag } // 只改狀態
+            hostActivity = hostActivity,                 // 直接用參數傳下去
+            onSetLocale = { tag -> composeLocale = tag } // 切語言只改這個 state
         )
     }
 }
-
-

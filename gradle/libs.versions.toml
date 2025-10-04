@@ -17,6 +17,10 @@ startupRuntime = "1.2.0"
 uiautomator = "2.3.0"
 baselineprofile = "1.2.4"
 profileinstaller = "1.4.1"
+foundation = "1.9.1"
+foundationLayout = "1.9.2"
+foundationVersion = "1.9.2"
+uiUnit = "1.9.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +45,10 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startupRuntime" }
 androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
+androidx-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.ref = "uiUnit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
