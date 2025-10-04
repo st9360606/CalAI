@@ -33,6 +33,7 @@ import com.calai.app.ui.nav.Routes.ONBOARD_NOTIF
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
 import com.calai.app.ui.nav.Routes.ONBOARD_TARGET_WEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_WEIGHT
+import com.calai.app.ui.nav.Routes.ROUTE_PLAN
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
 import com.calai.app.ui.nav.Routes.SIGN_UP
@@ -48,6 +49,8 @@ import com.calai.app.ui.onboarding.goal.GoalSelectionViewModel
 import com.calai.app.ui.onboarding.height.HeightSelectionScreen
 import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
+import com.calai.app.ui.onboarding.plan.HealthPlanScreen
+import com.calai.app.ui.onboarding.plan.HealthPlanViewModel
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
@@ -70,6 +73,8 @@ object Routes {
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
     const val ONBOARD_NOTIF = "onboard_notif"
+
+    const val ROUTE_PLAN = "plan"
 }
 
 // ── 安全往上找 Activity ───────────────────────────────────────────────
@@ -283,14 +288,21 @@ fun BiteCalNavHost(
             )
         }
         composable(route = ONBOARD_NOTIF) {
-
             NotificationPermissionScreen(
                 onBack = { nav.safePopBackStack() },
-                onNext  = {
+                onNext = { nav.navigate(ROUTE_PLAN) { launchSingleTop = true } }
                     // TODO: 走完 Onboarding → 導到首頁
                     // nav.navigate(HOME) { popUpTo(LANDING) { inclusive = true } }
-                }
             )
+        }
+
+        composable(ROUTE_PLAN) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: HealthPlanViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            HealthPlanScreen(vm = vm, onStart = { /* TODO: go to Home */ })
         }
     }
 }

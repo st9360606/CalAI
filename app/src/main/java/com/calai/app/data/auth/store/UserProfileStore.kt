@@ -45,13 +45,18 @@ class UserProfileStore @Inject constructor(
     suspend fun setGender(value: String) {
         context.userProfileDataStore.edit { it[Keys.GENDER] = value }
     }
+
     suspend fun gender(): String? =
         context.userProfileDataStore.data.map { it[Keys.GENDER] }.first()
+
+    val genderFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.GENDER] }
 
     // ======= 推薦來源 =======
     suspend fun setReferralSource(value: String) {
         context.userProfileDataStore.edit { it[Keys.REFERRAL_SOURCE] = value }
     }
+
     suspend fun referralSource(): String? =
         context.userProfileDataStore.data.map { it[Keys.REFERRAL_SOURCE] }.first()
 
@@ -72,6 +77,7 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.data.map { prefs ->
             prefs[Keys.HEIGHT_UNIT]?.let { runCatching { HeightUnit.valueOf(it) }.getOrNull() }
         }
+
     suspend fun setHeightUnit(unit: HeightUnit) {
         context.userProfileDataStore.edit { it[Keys.HEIGHT_UNIT] = unit.name }
     }
@@ -87,6 +93,7 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.data.map { prefs ->
             prefs[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
         }
+
     suspend fun setWeightUnit(unit: WeightUnit) {
         context.userProfileDataStore.edit { it[Keys.WEIGHT_UNIT] = unit.name }
     }
@@ -94,6 +101,7 @@ class UserProfileStore @Inject constructor(
     // ======= 目標體重（數值） ✅ 新增 =======
     val targetWeightKgFlow: Flow<Float?> =
         context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT] }
+
     suspend fun setTargetWeightKg(kg: Float) {
         context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT] = kg }
     }
@@ -103,6 +111,7 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.data.map { prefs ->
             prefs[Keys.TARGET_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
         }
+
     suspend fun setTargetWeightUnit(unit: WeightUnit) {
         context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT_UNIT] = unit.name }
     }
@@ -110,6 +119,7 @@ class UserProfileStore @Inject constructor(
     // ======= 鍛鍊頻率 =======
     val exerciseFreqPerWeekFlow: Flow<Int?> =
         context.userProfileDataStore.data.map { it[Keys.EXERCISE_FREQ_PER_WEEK] }
+
     suspend fun setExerciseFreqPerWeek(v: Int) {
         context.userProfileDataStore.edit { it[Keys.EXERCISE_FREQ_PER_WEEK] = v.coerceIn(0, 7) }
     }
@@ -120,6 +130,10 @@ class UserProfileStore @Inject constructor(
     }
     suspend fun goal(): String? =
         context.userProfileDataStore.data.map { it[Keys.GOAL] }.first()
+    // ★ 新增：Flow 版本（建議在 VM 直接 combine）
+    val goalFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.GOAL] }
+
 
     // ======= 清空 Onboarding 所有欄位（冷啟時呼叫） =======
     suspend fun clearOnboarding() {
