@@ -1,4 +1,4 @@
-package com.calai.app.ui.onboarding.weight
+package com.calai.app.ui.onboarding.targetweight
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -64,8 +64,8 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun WeightSelectionScreen(
-    vm: WeightSelectionViewModel,
+fun WeightTargetScreen(
+    vm: WeightTargetViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit,
     rowHeight: Dp = 56.dp,
@@ -73,9 +73,9 @@ fun WeightSelectionScreen(
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()
 
-    // ✅ 改成預設 LBS（false），一進畫面就顯示 143 lbs（= 65.0 kg）
+    // ✅ 預設顯示 LBS（= false），這樣一進來會顯示 143 lbs（來自 65.0 kg）
     var useMetric by rememberSaveable { mutableStateOf(false) }
-    // ⛔ 移除：不要再用 savedUnit 覆寫，否則會被切回 KG
+    // ⛔ 不要用 savedUnit 覆寫，否則可能被切回 KG
     // LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.WeightUnit.KG) }
 
     // 以 kg 為 SSOT；若資料層給 0，預設 65.0kg（= 143lbs）
@@ -127,6 +127,7 @@ fun WeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
+                        // 以 kg 存（保留兩位小數），並記住單位
                         vm.saveWeightKg(roundKg2(valueKg))
                         vm.saveWeightUnit(
                             if (useMetric) UserProfileStore.WeightUnit.KG
@@ -161,8 +162,9 @@ fun WeightSelectionScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
+            // 目標體重步驟（依你的流程調整）
             OnboardingProgress(
-                stepIndex = 5,
+                stepIndex = 6,
                 totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -170,7 +172,7 @@ fun WeightSelectionScreen(
             )
 
             Text(
-                text = stringResource(R.string.onboard_weight_title),
+                text = stringResource(R.string.onboard_target_weight_title),
                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
@@ -211,7 +213,7 @@ fun WeightSelectionScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 14.dp),
+                        .padding(start = 14.dp),   // 微調整體置中
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -246,11 +248,11 @@ fun WeightSelectionScreen(
                     Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
-                // LBS：整數（無小數輪）— 進到畫面會顯示 143（來自 65kg）
+                // LBS：整數（無小數輪）— 預設 143（來自 65kg）
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 38.dp),
+                        .padding(start = 38.dp),   // 微調整體置中
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -283,7 +285,6 @@ fun WeightSelectionScreen(
                     modifier = Modifier.fillMaxWidth(0.62f)
                 )
             }
-
             Spacer(Modifier.height(16.dp))
         }
     }

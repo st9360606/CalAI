@@ -28,8 +28,15 @@ class UserProfileStore @Inject constructor(
         val AGE_YEARS = intPreferencesKey("age_years")
         val HEIGHT = intPreferencesKey("height_cm")
         val HEIGHT_UNIT = stringPreferencesKey("height_unit")
+
+        // 目前體重
         val WEIGHT = floatPreferencesKey("weight_kg")
         val WEIGHT_UNIT = stringPreferencesKey("weight_unit")
+
+        // ✅ 目標體重（新增）
+        val TARGET_WEIGHT = floatPreferencesKey("target_weight_kg")
+        val TARGET_WEIGHT_UNIT = stringPreferencesKey("target_weight_unit")
+
         val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
         val GOAL = stringPreferencesKey("goal")
     }
@@ -69,19 +76,35 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.edit { it[Keys.HEIGHT_UNIT] = unit.name }
     }
 
-    // ======= 體重（數值） =======
+    // ======= 目前體重（數值） =======
     val weightKgFlow: Flow<Float?> = context.userProfileDataStore.data.map { it[Keys.WEIGHT] }
     suspend fun setWeightKg(kg: Float) {
         context.userProfileDataStore.edit { it[Keys.WEIGHT] = kg }
     }
 
-    // ======= 體重（單位） =======
+    // ======= 目前體重（單位） =======
     val weightUnitFlow: Flow<WeightUnit?> =
         context.userProfileDataStore.data.map { prefs ->
             prefs[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
         }
     suspend fun setWeightUnit(unit: WeightUnit) {
         context.userProfileDataStore.edit { it[Keys.WEIGHT_UNIT] = unit.name }
+    }
+
+    // ======= 目標體重（數值） ✅ 新增 =======
+    val targetWeightKgFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT] }
+    suspend fun setTargetWeightKg(kg: Float) {
+        context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT] = kg }
+    }
+
+    // ======= 目標體重（單位） ✅ 新增 =======
+    val targetWeightUnitFlow: Flow<WeightUnit?> =
+        context.userProfileDataStore.data.map { prefs ->
+            prefs[Keys.TARGET_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+        }
+    suspend fun setTargetWeightUnit(unit: WeightUnit) {
+        context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT_UNIT] = unit.name }
     }
 
     // ======= 鍛鍊頻率 =======
@@ -108,6 +131,8 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.HEIGHT_UNIT)
             p.remove(Keys.WEIGHT)
             p.remove(Keys.WEIGHT_UNIT)
+            p.remove(Keys.TARGET_WEIGHT)         // ✅ 目標體重
+            p.remove(Keys.TARGET_WEIGHT_UNIT)    // ✅ 目標體重單位
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)
         }

@@ -3,11 +3,28 @@ package com.calai.app.ui.onboarding.goal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -96,7 +113,7 @@ fun GoalSelectionScreen(
                 .padding(inner)
         ) {
             OnboardingProgress(
-                stepIndex = 7,      // 在鍛鍊頻率(6) 之後
+                stepIndex = 8,
                 totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,7 +134,10 @@ fun GoalSelectionScreen(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = stringResource(R.string.onboard_goal_subtitle),
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp, lineHeight = 22.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp,
+                    lineHeight = 22.sp
+                ),
                 color = Color(0xFF8F98A3),
                 modifier = Modifier
                     .fillMaxWidth()

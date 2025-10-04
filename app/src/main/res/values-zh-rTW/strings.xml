@@ -51,7 +51,7 @@
     <string name="continue_text">下一步</string>
 
     <!-- referral_source -->
-    <string name="onboard_referral_title">你是從哪裡知道我們的？</string>
+    <string name="onboard_referral_title">你是怎麼發現我們的？</string>
     <string name="referral_app_store">App Store</string>
     <string name="referral_youtube">YouTube</string>
     <string name="referral_instagram">Instagram</string>
@@ -62,21 +62,22 @@
     <string name="referral_other">其他</string>
 
     <!-- age -->
-    <string name="onboard_age_title">您多大年紀？</string>
+    <string name="onboard_age_title">請問你的年齡？</string>
     <string name="onboard_age_subtitle">我們僅使用您的歲數來改善體驗並提高卡路里估算準確度。</string>
 
     <!-- height -->
-    <string name="onboard_height_title">您的身高是多少？</string>
+    <string name="onboard_height_title">你的身高是多少呢？</string>
     <string name="onboard_height_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
 
     <!-- weight -->
-    <string name="onboard_weight_title">您多重？</string>
+    <string name="onboard_weight_title">你的體重大約是多少？</string>
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
-    <string name="onboard_weight_hint">請輸入整數或小數點後一位的數字。</string>
+    <string name="onboard_weight_hint">這將用於校準你的自訂計畫。</string>
     <string name="onboard_weight_zero_error">請輸入大於 0 的體重</string>
+    <string name="onboard_target_weight_title">你的目標體重是多少？</string>
 
     <!-- exercise -->
-    <string name="onboard_ex_freq_title">你每週鍛鍊多少次？</string>
+    <string name="onboard_ex_freq_title">你平均每週運動幾次？</string>
     <string name="onboard_ex_freq_subtitle">這將用於校準你的自訂計畫。</string>
     <string name="ex_freq_0_2_title">0–2</string>
     <string name="ex_freq_0_2_sub">輕度運動量</string>
@@ -86,8 +87,8 @@
     <string name="ex_freq_6_plus_sub">高強度運動量</string>
 
     <!-- exercise -->
-    <string name="onboard_goal_title">你的目標是什麼？</string>
-    <string name="onboard_goal_subtitle">這有助于為你的熱量攝入制定計畫。</string>
+    <string name="onboard_goal_title">你的目標是什麼呢？</string>
+    <string name="onboard_goal_subtitle">這有助于為您的熱量攝入制定計畫。</string>
     <string name="goal_lose">減重</string>
     <string name="goal_maintain">維持</string>
     <string name="goal_gain">增重</string>
@@ -95,7 +96,7 @@
 
     <!-- notifications -->
     <string name="allow_notifications_cta">允許通知</string>
-    <string name="notif_title">讓每一餐都算數</string>
+    <string name="notif_title">讓你每一餐都算數</string>
     <string name="notif_subtitle">開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>

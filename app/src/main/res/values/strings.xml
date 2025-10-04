@@ -53,7 +53,7 @@
     <string name="continue_text">Continue</string>
 
     <!-- referral_source -->
-    <string name="onboard_referral_title">Where did you hear about us?</string>
+    <string name="onboard_referral_title">How did you discover us?</string>
     <string name="referral_app_store">App Store</string>
     <string name="referral_youtube">YouTube</string>
     <string name="referral_instagram">Instagram</string>
@@ -74,8 +74,9 @@
     <!-- weight -->
     <string name="onboard_weight_title">How much do you weigh?</string>
     <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
-    <string name="onboard_weight_hint">Please enter a whole number or a number with one decimal place.</string>
+    <string name="onboard_weight_hint">This will be used to calibrate your custom plan.</string>
     <string name="onboard_weight_zero_error">Please enter a weight greater than 0</string>
+    <string name="onboard_target_weight_title">What is your goal weight?</string>
 
     <!-- exercise -->
     <string name="onboard_ex_freq_title">How often do you exercise each week?</string>

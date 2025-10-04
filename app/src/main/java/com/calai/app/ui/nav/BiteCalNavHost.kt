@@ -31,6 +31,7 @@ import com.calai.app.ui.nav.Routes.ONBOARD_GOAL
 import com.calai.app.ui.nav.Routes.ONBOARD_HEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_NOTIF
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
+import com.calai.app.ui.nav.Routes.ONBOARD_TARGET_WEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_WEIGHT
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
@@ -49,6 +50,8 @@ import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
+import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
+import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
 import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.app.ui.onboarding.weight.WeightSelectionViewModel
 
@@ -63,6 +66,7 @@ object Routes {
     const val ONBOARD_AGE = "onboard_age"
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
+    const val ONBOARD_TARGET_WEIGHT = "onboard_target_weight"
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
     const val ONBOARD_NOTIF = "onboard_notif"
@@ -228,6 +232,20 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             WeightSelectionScreen(
+                vm = vm,
+                onBack = { nav.safePopBackStack() },
+                onNext = { nav.navigate(ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
+            )
+        }
+
+        // ===== Onboarding：目標體重 =====
+        composable(ONBOARD_TARGET_WEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: WeightTargetViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            WeightTargetScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(ONBOARD_EXERCISE_FREQ) { launchSingleTop = true } }

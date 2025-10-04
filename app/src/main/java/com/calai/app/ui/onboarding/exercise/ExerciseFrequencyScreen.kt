@@ -97,7 +97,7 @@ fun ExerciseFrequencyScreen(
                 .padding(inner)
         ) {
             OnboardingProgress(
-                stepIndex = 6,
+                stepIndex = 7,
                 totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()

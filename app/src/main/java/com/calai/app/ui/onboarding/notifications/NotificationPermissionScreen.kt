@@ -89,8 +89,6 @@ private const val POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
 fun NotificationPermissionScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
-    stepIndex: Int = 8,
-    totalSteps: Int = 11,
     @DrawableRes appIconRes: Int = R.drawable.ic_focus_spoon_foreground
 ) {
     val ctx = LocalContext.current
@@ -158,8 +156,8 @@ fun NotificationPermissionScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             OnboardingProgress(
-                stepIndex = stepIndex,
-                totalSteps = totalSteps,
+                stepIndex = 9,
+                totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
