@@ -19,7 +19,11 @@ import kotlinx.coroutines.launch
 data class HealthPlanUiState(
     val loading: Boolean = true,
     val inputs: HealthInputs? = null,
-    val plan: MacroPlan? = null
+    val plan: MacroPlan? = null,
+    // 額外提供給 UI 顯示單位/目標差
+    val weightUnit: UserProfileStore.WeightUnit? = null,
+    val targetWeightKg: Float? = null,
+    val targetWeightUnit: UserProfileStore.WeightUnit? = null
 )
 
 @HiltViewModel
@@ -32,7 +36,7 @@ class HealthPlanViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // 先把五個欄位組成 HealthInputs（這個 combine 有型別化的 5 參數版本）
+            // 先把五個欄位組成 HealthInputs（有型別化的 5 參數版本）
             val inputsFlow = combine(
                 store.genderFlow,
                 store.ageFlow,
@@ -53,18 +57,47 @@ class HealthPlanViewModel @Inject constructor(
                 }
             }.filterNotNull()
 
-            // 再與 goalFlow 做第二次 combine → 任何一邊變更都即時重算
+            // 依序把其他 Flow 串上（避免 6+ 參數的 combine vararg 型別不推斷）
             inputsFlow
                 .combine(store.goalFlow) { inputs, goalKey ->
-                    val split = HealthCalc.splitForGoalKey(goalKey)
-                    val plan = HealthCalc.macroPlanBySplit(inputs, split)
-                    HealthPlanUiState(
-                        loading = false,
-                        inputs = inputs,
-                        plan = plan
+                    Pair(inputs, goalKey)
+                }
+                .combine(store.weightUnitFlow) { pair, weightUnit ->
+                    Triple(pair.first, pair.second, weightUnit)
+                }
+                .combine(store.targetWeightKgFlow) { triple, targetKg ->
+                    Combined(
+                        inputs = triple.first,
+                        goalKey = triple.second,
+                        weightUnit = triple.third,
+                        targetWeightKg = targetKg,
+                        targetWeightUnit = null
                     )
                 }
-                .collect { state -> _ui.value = state }
+                .combine(store.targetWeightUnitFlow) { combined, targetUnit ->
+                    combined.copy(targetWeightUnit = targetUnit)
+                }
+                .collect { combined ->
+                    val split = HealthCalc.splitForGoalKey(combined.goalKey)
+                    val plan = HealthCalc.macroPlanBySplit(combined.inputs, split)
+
+                    _ui.value = HealthPlanUiState(
+                        loading = false,
+                        inputs = combined.inputs,
+                        plan = plan,
+                        weightUnit = combined.weightUnit,
+                        targetWeightKg = combined.targetWeightKg,
+                        targetWeightUnit = combined.targetWeightUnit
+                    )
+                }
         }
     }
 }
+
+private data class Combined(
+    val inputs: HealthInputs,
+    val goalKey: String?,
+    val weightUnit: UserProfileStore.WeightUnit?,
+    val targetWeightKg: Float?,
+    val targetWeightUnit: UserProfileStore.WeightUnit?
+)

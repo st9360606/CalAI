@@ -113,7 +113,7 @@ fun GoalSelectionScreen(
                 .padding(inner)
         ) {
             OnboardingProgress(
-                stepIndex = 8,
+                stepIndex = 7,
                 totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()

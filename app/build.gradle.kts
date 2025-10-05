@@ -146,6 +146,7 @@ dependencies {
     implementation(libs.androidx.foundation.layout)
     implementation(libs.foundation)
     implementation(libs.androidx.ui.unit)
+    implementation(libs.androidx.ui.geometry)
     "baselineProfile"(project(":baselineprofile"))
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

@@ -111,12 +111,12 @@
 
     <!-- plan -->
     <string name="plan_title_congrats">Congratulations!</string>
-    <string name="plan_subtitle_ready">Your personal health plan is ready!</string>
-    <string name="plan_edit_anytime">You can edit this anytime</string>
+    <string name="plan_subtitle_ready">Your personal health plan is ready.</string>
+    <string name="plan_edit_anytime">Daily intake has been customized according to your target.</string>
 
     <string name="plan_macros_carbs">Carbs</string>
-    <string name="plan_macros_proteins">Proteins</string>
-    <string name="plan_macros_fat">Fat</string>
+    <string name="plan_macros_proteins">Protein</string>
+    <string name="plan_macros_fat">Fats</string>
 
     <string name="plan_unit_kcal_day">kcal / day</string>
     <string name="plan_unit_g">g</string>
@@ -135,6 +135,20 @@
     <string name="plan_bmi_tick_35">35</string>
 
     <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
-    <string name="plan_cta_start">Let\'s Get Started!</string>
+    <string name="plan_cta_start">Let\'s Get Started !</string>
+
+    <string name="plan_water_daily">Daily Water</string>
+    <string name="plan_weight_current">Current Weight</string>
+    <string name="plan_weight_delta">To goal weight</string>
+
+    <string name="plan_goals_title">How to reach\nyour goals</string>
+
+    <string name="plan_goal_card_health_scores">Improve your routine\nwith health scores</string>
+    <string name="plan_goal_card_track_meals">Track your meals\neasily</string>
+    <string name="plan_goal_card_daily_calories">Stay on track with\ndaily calories</string>
+    <string name="plan_goal_card_balance_macros">Balance carbs,\nprotein &amp; fat</string>
+
+    <string name="plan_sources_based_on">Based on trusted medical research</string>
+    <string name="plan_sources_more">See more sources ›</string>
 
 </resources>

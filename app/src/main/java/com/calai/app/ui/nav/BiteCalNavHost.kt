@@ -239,20 +239,6 @@ fun BiteCalNavHost(
             WeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
-            )
-        }
-
-        // ===== Onboarding：目標體重 =====
-        composable(ONBOARD_TARGET_WEIGHT) { backStackEntry ->
-            val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: WeightTargetViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
-            )
-            WeightTargetScreen(
-                vm = vm,
-                onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(ONBOARD_EXERCISE_FREQ) { launchSingleTop = true } }
             )
         }
@@ -281,18 +267,31 @@ fun BiteCalNavHost(
             GoalSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_NOTIF) { launchSingleTop = true } }
+                onNext = { nav.navigate(ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
                     // TODO: 這裡接下一步頁（例如：飲食偏好 / Diet）
                     // nav.navigate(ONBOARD_DIET) { launchSingleTop = true; restoreState = true }
 
             )
         }
+
+        // ===== Onboarding：目標體重 =====
+        composable(ONBOARD_TARGET_WEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: WeightTargetViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            WeightTargetScreen(
+                vm = vm,
+                onBack = { nav.safePopBackStack() },
+                onNext = { nav.navigate(ONBOARD_NOTIF) { launchSingleTop = true } }
+            )
+        }
+
         composable(route = ONBOARD_NOTIF) {
             NotificationPermissionScreen(
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(ROUTE_PLAN) { launchSingleTop = true } }
-                    // TODO: 走完 Onboarding → 導到首頁
-                    // nav.navigate(HOME) { popUpTo(LANDING) { inclusive = true } }
             )
         }
 

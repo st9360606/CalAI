@@ -85,7 +85,7 @@ fun WeightTargetScreen(
 
     // 可選範圍
     val KG_INT_MIN = 20
-    val KG_INT_MAX = 300
+    val KG_INT_MAX = 800
     val LBS_INT_MIN = kgToLbsInt(KG_INT_MIN.toDouble())   // 44
     val LBS_INT_MAX = kgToLbsInt(KG_INT_MAX.toDouble())   // 660
 
@@ -164,7 +164,7 @@ fun WeightTargetScreen(
         ) {
             // 目標體重步驟（依你的流程調整）
             OnboardingProgress(
-                stepIndex = 6,
+                stepIndex = 8,
                 totalSteps = 11,
                 modifier = Modifier
                     .fillMaxWidth()

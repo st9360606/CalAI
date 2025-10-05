@@ -113,9 +113,9 @@
     <!-- plan -->
     <string name="plan_title_congrats">恭喜！</string>
     <string name="plan_subtitle_ready">你的個人健康計畫已完成！</string>
-    <string name="plan_edit_anytime">之後可隨時調整</string>
+    <string name="plan_edit_anytime">每日攝取量已根據你的目標進行客製化</string>
 
-    <string name="plan_macros_carbs">碳水</string>
+    <string name="plan_macros_carbs">碳水化合物</string>
     <string name="plan_macros_proteins">蛋白質</string>
     <string name="plan_macros_fat">脂肪</string>
 
@@ -137,5 +137,20 @@
 
     <string name="plan_disclaimer">計算以可信學術研究為基礎。可至「個人檔案 &gt; 健康資訊來源」查看來源。</string>
     <string name="plan_cta_start">開始使用</string>
+
+    <string name="plan_water_daily">每日飲水量</string>
+    <string name="plan_weight_current">目前體重</string>
+    <string name="plan_weight_delta">離目標體重</string>
+
+    <string name="plan_goals_title">如何達成\n你的目標</string>
+
+    <string name="plan_goal_card_health_scores">透過健康評分\n改善你的日常</string>
+    <string name="plan_goal_card_track_meals">輕鬆記錄\n你的餐點</string>
+    <string name="plan_goal_card_daily_calories">每日熱量追蹤\n幫助你維持進度</string>
+    <string name="plan_goal_card_balance_macros">平衡攝取\n碳水、蛋白質與脂肪</string>
+
+    <string name="plan_sources_based_on">根據可信的醫學研究</string>
+    <string name="plan_sources_more">查看更多來源 ›</string>
+
 
 </resources>

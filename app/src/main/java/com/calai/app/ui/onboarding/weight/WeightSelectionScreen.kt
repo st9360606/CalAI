@@ -85,7 +85,7 @@ fun WeightSelectionScreen(
 
     // 可選範圍
     val KG_INT_MIN = 20
-    val KG_INT_MAX = 300
+    val KG_INT_MAX = 800
     val LBS_INT_MIN = kgToLbsInt(KG_INT_MIN.toDouble())   // 44
     val LBS_INT_MAX = kgToLbsInt(KG_INT_MAX.toDouble())   // 660
 
