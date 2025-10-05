@@ -62,17 +62,17 @@ import kotlin.math.roundToInt
 val PrimaryGreen = Color(0xFF59B34C)
 val NeutralText = Color(0xFF6B7280)
 val RingTrack = Color(0xFFF0F2F6)
-val CarbColor = Color(0xFFF59E0B) // Amber 600
-val ProteinColor = Color(0xFFEF5350) // Salmon/Red 400-500
-val FatColor = Color(0xFF22C55E) // Emerald 500
-val BmiGood = Color(0xFF2E7D32)
-val BmiBorder = Color(0xFFDCEFE0)
+val CarbColor = Color(0xFFFBBC05) // Amber 600
+val ProteinColor = Color(0xFFEA4335) // Salmon/Red 400-500
+val FatColor = Color(0xFF34A853) // Emerald 500
 val WaterColor = Color(0xFF3B82F6) // 水量藍
 val WeightColor = Color(0xFF6366F1) // 體重紫
+val BmiGood = Color(0xFF2E7D32)
+val BmiBorder = Color(0xFFDCEFE0)
 
 // === 圓環粗細 ===
 private const val DONUT_STROKE_PX = 80f     // 大圓
-private const val MINI_RING_STROKE_PX = 14f // 小圓
+private const val MINI_RING_STROKE_PX = 20f // 小圓
 
 @Composable
 fun HealthPlanScreen(
@@ -253,8 +253,8 @@ private fun DonutMacros(
                 start += sweep
             }
             seg(CarbColor, carbsPct)
-            seg(ProteinColor, proteinPct)
             seg(FatColor, fatPct)
+            seg(ProteinColor, proteinPct)
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -279,16 +279,16 @@ private fun MacrosRings(plan: MacroPlan) {
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         MacroRingItem(
-            title = stringResource(R.string.plan_macros_carbs),
-            centerText = "${plan.carbsGrams}${stringResource(R.string.plan_unit_g)}",
-            color = CarbColor,
-            progress = carbsK / total
-        )
-        MacroRingItem(
             title = stringResource(R.string.plan_macros_proteins),
             centerText = "${plan.proteinGrams}${stringResource(R.string.plan_unit_g)}",
             color = ProteinColor,
             progress = proteinK / total
+        )
+        MacroRingItem(
+            title = stringResource(R.string.plan_macros_carbs),
+            centerText = "${plan.carbsGrams}${stringResource(R.string.plan_unit_g)}",
+            color = CarbColor,
+            progress = carbsK / total
         )
         MacroRingItem(
             title = stringResource(R.string.plan_macros_fat),
@@ -489,9 +489,9 @@ private fun BmiCard(
                     Brush.horizontalGradient(
                         listOf(
                             Color(0xFF60A5FA), // under
-                            Color(0xFF22C55E), // normal
-                            Color(0xFFF59E0B), // over
-                            Color(0xFFEF4444)  // obese
+                            Color(0xFF69BC8E), // normal
+                            Color(0xFFF9AE30), // over
+                            Color(0xFFE83E56)  // obese
                         )
                     )
                 )
