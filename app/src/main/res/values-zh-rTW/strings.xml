@@ -144,15 +144,15 @@
 
 
     <!-- Pack B: 動感激勵 -->
-    <string name="plan_goals_title">如何達成\n你的目標</string>
+    <string name="plan_goals_title">如何達成你的目標</string>
     <string name="plan_goal_card_health_scores">健康評分指引，讓習慣自動養成</string>
     <string name="plan_goal_card_track_meals">一鍵紀錄餐點，持之以恆更簡單</string>
     <string name="plan_goal_card_daily_calories">每日熱量清晰可見，進度永不偏航</string>
     <string name="plan_goal_card_balance_macros">碳水×蛋白×脂肪，吃對才能更有效</string>
 
 
-    <string name="plan_sources_based_on">根據可信的醫學研究</string>
-    <string name="plan_sources_more">查看更多來源 ›</string>
+    <string name="plan_sources_based_on">根據官方飲食指引，僅供參考非醫療建議。</string>
+    <string name="plan_sources_more">查看參考來源 ›</string>
 
 
 </resources>

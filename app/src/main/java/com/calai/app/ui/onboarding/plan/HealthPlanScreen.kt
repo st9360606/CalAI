@@ -1,9 +1,13 @@
 package com.calai.app.ui.onboarding.plan
 
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,7 +37,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,10 +51,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -707,9 +722,10 @@ private fun FeatureCard(
 fun ResearchSourcesBlock(
     @DrawableRes bookIconRes: Int,
     modifier: Modifier = Modifier,
-    onSeeMore: () -> Unit = {}
+    onSeeMore: () -> Unit = {}   // ✅ 維持原有參數：展開時會觸發一次
 ) {
     val uriHandler = LocalUriHandler.current
+    var expanded by rememberSaveable { mutableStateOf(false) } // ✅ 旋轉不丟狀態
 
     val links: List<Pair<String, String>> = listOf(
         "US DRI – Water (National Academies)" to
@@ -724,6 +740,7 @@ fun ResearchSourcesBlock(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // 標題列（書本圖示 + 文案）
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -737,41 +754,61 @@ fun ResearchSourcesBlock(
             Text(
                 text = stringResource(R.string.plan_sources_based_on),
                 color = NeutralText,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 textAlign = TextAlign.Center
             )
         }
 
         Spacer(Modifier.height(6.dp))
 
-        // 「See more sources ›」→ 改黑色
+        // 「See more sources ›」做為切換按鈕
         Text(
             text = stringResource(R.string.plan_sources_more),
-            color = Color.Black,
-            fontSize = 14.sp,
+            color = NeutralText,
+            fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
-            modifier = Modifier.clickable { onSeeMore() }
+            modifier = Modifier
+                .testTag("sources_toggle") // ✅ for UI test
+                .semantics {
+                    role = Role.Button
+                    stateDescription = if (expanded) "expanded" else "collapsed"
+                }
+                .clickable {
+                    val next = !expanded
+                    expanded = next
+                    // 僅在「展開」那次觸發 onSeeMore（可做 analytics）
+                    if (next) onSeeMore()
+                }
         )
 
         Spacer(Modifier.height(8.dp))
 
-        // 下面的超連結清單 → 改黑色（保留底線以維持可點擊感）
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // 折疊內容：三個超連結清單
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(animationSpec = tween(180)) + fadeIn(tween(180)),
+            exit = shrinkVertically(animationSpec = tween(160)) + fadeOut(tween(120))
         ) {
-            links.forEach { (label, url) ->
-                Text(
-                    text = label,
-                    color = Color.Black,
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center,
-                    style = androidx.compose.ui.text.TextStyle(textDecoration = TextDecoration.Underline),
-                    modifier = Modifier
-                        .padding(vertical = 4.dp, horizontal = 12.dp)
-                        .clickable { uriHandler.openUri(url) }
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                links.forEach { (label, url) ->
+                    Text(
+                        text = label,
+                        color = Color.Black,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center,
+                        style = androidx.compose.ui.text.TextStyle(
+                            textDecoration = TextDecoration.Underline
+                        ),
+                        modifier = Modifier
+                            .padding(vertical = 4.dp, horizontal = 12.dp)
+                            .clickable { uriHandler.openUri(url) }
+                    )
+                }
             }
         }
     }

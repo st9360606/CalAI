@@ -151,7 +151,8 @@
 
 
 
-    <string name="plan_sources_based_on">Based on trusted medical research</string>
-    <string name="plan_sources_more">See more sources ›</string>
+    <string name="plan_sources_based_on">Based on official dietary guidelines,for reference only, not medical advice.</string>
+    <string name="plan_sources_more">See all references ›</string>
+
 
 </resources>
