@@ -77,7 +77,7 @@ object HealthCalc {
      * LOSE(減重)：  P30 / F30 / C40
      * MAINTAIN(維持)：P25 / F30 / C45
      * GAIN(增肌)：  P30 / F25 / C45
-     * HEALTHY_EATING(健康)：P20 / F35 / C45
+     * HEALTHY_EATING(健康)：P20 / F30 / C50
      * 其他 / null → 維持
      */
     fun splitForGoalKey(goalKey: String?): MacroSplit = when (goalKey) {
@@ -85,7 +85,7 @@ object HealthCalc {
         "MAINTAIN"        -> MacroSplit(0.25f, 0.30f, 0.45f)
         "GAIN"            -> MacroSplit(0.30f, 0.25f, 0.45f)
         "HEALTHY_EATING"  -> MacroSplit(0.20f, 0.30f, 0.50f)
-        else              -> MacroSplit(0.20f, 0.30f, 0.50f) // default: 維持
+        else              -> MacroSplit(0.20f, 0.30f, 0.50f)
     }
 
     /**
@@ -157,11 +157,20 @@ object HealthCalc {
         return weightKg / (m * m)
     }
 
+    /** CDC/NIH 成人 BMI 分類（四大類） */
     fun classifyBmi(bmi: Double): BmiClass = when {
         bmi < 18.5 -> BmiClass.Underweight
         bmi < 25.0 -> BmiClass.Normal
         bmi < 30.0 -> BmiClass.Overweight
-        else -> BmiClass.Obesity
+        else       -> BmiClass.Obesity
+    }
+
+    /** 若為 Obesity，回傳 Class 1/2/3；否則回傳 null */
+    fun obesityClass(bmi: Double): Int? = when {
+        bmi >= 40.0 -> 3
+        bmi >= 35.0 -> 2
+        bmi >= 30.0 -> 1
+        else        -> null
     }
 
     private fun round1(v: Double) = (v * 10).roundToInt() / 10.0

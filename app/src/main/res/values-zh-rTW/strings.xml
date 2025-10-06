@@ -111,7 +111,7 @@
     <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>
 
     <!-- plan -->
-    <string name="plan_title_congrats">恭喜！</string>
+    <string name="plan_title_congrats">太棒了！</string>
     <string name="plan_subtitle_ready">你的個人健康計畫已完成！</string>
     <string name="plan_edit_anytime">每日攝取量已根據你的目標進行客製化</string>
 
@@ -127,13 +127,13 @@
     <string name="plan_bmi_label_normal">正常</string>
     <string name="plan_bmi_label_overweight">過重</string>
     <string name="plan_bmi_label_obesity">肥胖</string>
-    <string name="plan_bmi_classified_as">你的分類為：%1$s</string>
+    <string name="plan_bmi_classified_as">分類：%1$s</string>
 
-    <string name="plan_bmi_tick_15">15</string>
-    <string name="plan_bmi_tick_18_5">18.5</string>
+    <string name="plan_bmi_tick_18">18</string>
     <string name="plan_bmi_tick_25">25</string>
     <string name="plan_bmi_tick_30">30</string>
     <string name="plan_bmi_tick_35">35</string>
+    <string name="plan_bmi_tick_40">40</string>
 
     <string name="plan_disclaimer">計算以可信學術研究為基礎。可至「個人檔案 &gt; 健康資訊來源」查看來源。</string>
     <string name="plan_cta_start">開始使用</string>
@@ -142,12 +142,14 @@
     <string name="plan_weight_current">目前體重</string>
     <string name="plan_weight_delta">離目標體重</string>
 
-    <string name="plan_goals_title">如何達成\n你的目標</string>
 
-    <string name="plan_goal_card_health_scores">透過健康評分\n改善你的日常</string>
-    <string name="plan_goal_card_track_meals">輕鬆記錄\n你的餐點</string>
-    <string name="plan_goal_card_daily_calories">每日熱量追蹤\n幫助你維持進度</string>
-    <string name="plan_goal_card_balance_macros">平衡攝取\n碳水、蛋白質與脂肪</string>
+    <!-- Pack B: 動感激勵 -->
+    <string name="plan_goals_title">如何達成\n你的目標</string>
+    <string name="plan_goal_card_health_scores">健康評分指引，讓習慣自動養成</string>
+    <string name="plan_goal_card_track_meals">一鍵紀錄餐點，持之以恆更簡單</string>
+    <string name="plan_goal_card_daily_calories">每日熱量清晰可見，進度永不偏航</string>
+    <string name="plan_goal_card_balance_macros">碳水×蛋白×脂肪，吃對才能更有效</string>
+
 
     <string name="plan_sources_based_on">根據可信的醫學研究</string>
     <string name="plan_sources_more">查看更多來源 ›</string>

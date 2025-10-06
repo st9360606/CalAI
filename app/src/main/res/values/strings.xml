@@ -110,7 +110,7 @@
 
 
     <!-- plan -->
-    <string name="plan_title_congrats">Congratulations!</string>
+    <string name="plan_title_congrats">Awesome!</string>
     <string name="plan_subtitle_ready">Your personal health plan is ready.</string>
     <string name="plan_edit_anytime">Daily intake has been customized according to your target.</string>
 
@@ -126,13 +126,13 @@
     <string name="plan_bmi_label_normal">Normal</string>
     <string name="plan_bmi_label_overweight">Overweight</string>
     <string name="plan_bmi_label_obesity">Obesity</string>
-    <string name="plan_bmi_classified_as">You are classified as %1$s</string>
+    <string name="plan_bmi_classified_as">Classified as %1$s</string>
 
-    <string name="plan_bmi_tick_15">15</string>
-    <string name="plan_bmi_tick_18_5">18.5</string>
+    <string name="plan_bmi_tick_18">18</string>
     <string name="plan_bmi_tick_25">25</string>
     <string name="plan_bmi_tick_30">30</string>
     <string name="plan_bmi_tick_35">35</string>
+    <string name="plan_bmi_tick_40">40</string>
 
     <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
     <string name="plan_cta_start">Let\'s Get Started !</string>
@@ -141,12 +141,15 @@
     <string name="plan_weight_current">Current Weight</string>
     <string name="plan_weight_delta">To goal weight</string>
 
-    <string name="plan_goals_title">How to reach\nyour goals</string>
 
-    <string name="plan_goal_card_health_scores">Improve your routine\nwith health scores</string>
-    <string name="plan_goal_card_track_meals">Track your meals\neasily</string>
-    <string name="plan_goal_card_daily_calories">Stay on track with\ndaily calories</string>
-    <string name="plan_goal_card_balance_macros">Balance carbs,\nprotein &amp; fat</string>
+
+    <string name="plan_goals_title">How to reach\nyour goals</string>
+    <string name="plan_goal_card_health_scores">Health scores guide you,so habits form naturally</string>
+    <string name="plan_goal_card_track_meals">Log meals in one tap,staying consistent is easy</string>
+    <string name="plan_goal_card_daily_calories">See daily calories clearly,and never lose track</string>
+    <string name="plan_goal_card_balance_macros">Carbs × Protein × Fat,smart balance, better results</string>
+
+
 
     <string name="plan_sources_based_on">Based on trusted medical research</string>
     <string name="plan_sources_more">See more sources ›</string>

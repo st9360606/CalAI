@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.app.R
 import com.calai.app.core.health.BmiClass
+import com.calai.app.core.health.HealthCalc
 import com.calai.app.core.health.MacroPlan
 import com.calai.app.data.auth.store.UserProfileStore
 import java.util.Locale
@@ -190,9 +191,8 @@ fun HealthPlanScreen(
                 klass = plan.bmiClass,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 34.dp) // ← 和小圓進度條一致的左右內距
+                    .padding(horizontal = 28.dp) // ← 和小圓進度條一致的左右內距
             )
-
             // 留一點結尾空白（內容可滑，不會被底部按鈕遮住）
             Spacer(Modifier.height(24.dp))
         }
@@ -368,7 +368,7 @@ private fun HydrationAndWeightRings(
         MacroRingItem(
             title = stringResource(R.string.plan_weight_delta),
             centerText = deltaText,
-            color = WeightColor.copy(alpha = 0.85f),
+            color = WeightColor.copy(alpha = 0.50f),
             progress = deltaProgress
         )
     }
@@ -438,10 +438,25 @@ private fun BmiCard(
         BmiClass.Overweight -> R.string.plan_bmi_label_overweight
         BmiClass.Obesity -> R.string.plan_bmi_label_obesity
     }
-    val label = stringResource(labelRes)
+    val baseLabel = stringResource(labelRes)
     val tone = bmiClassColor(klass)
 
-    // 非常淡的藍色（類似原本綠底的淡度）
+    // 依 BMI 顯示「Obesity class I/II/III」
+    val obesityStage = HealthCalc.obesityClass(bmi)
+    val displayLabel = if (klass == BmiClass.Obesity && obesityStage != null) {
+        val roman = when (obesityStage) {
+            1 -> "I"
+            2 -> "II"
+            3 -> "III"
+            else -> obesityStage.toString()
+        }
+        // 文字而已，不改排版
+        "$baseLabel class $roman"
+    } else {
+        baseLabel
+    }
+
+    // 保持你原本的視覺設定（不動排版）
     val bmiBgBlue = Color(0xFFF3F8FF)
 
     Column(
@@ -461,7 +476,8 @@ private fun BmiCard(
             Column(Modifier.weight(1f)) {
                 val bmiText = remember(bmi) { String.format(Locale.getDefault(), "%.1f", bmi) }
                 Text(bmiText, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = tone)
-                Text(label, color = tone, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                // 用 displayLabel（可能含 class）
+                Text(displayLabel, color = tone, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
             }
             Box(
                 modifier = Modifier
@@ -469,11 +485,12 @@ private fun BmiCard(
                     .background(tone.copy(alpha = 0.15f))
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
-                val lower = label.lowercase(Locale.getDefault())
+                // 「You are classified as %1$s」→ 帶入同一組文字
+                val lower = displayLabel.uppercase(Locale.getDefault())
                 Text(
                     text = stringResource(R.string.plan_bmi_classified_as, lower),
                     color = tone,
-                    fontSize = 14.sp,
+                    fontSize = 9.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -499,11 +516,11 @@ private fun BmiCard(
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             listOf(
-                stringResource(R.string.plan_bmi_tick_15),
-                stringResource(R.string.plan_bmi_tick_18_5),
+                stringResource(R.string.plan_bmi_tick_18),
                 stringResource(R.string.plan_bmi_tick_25),
                 stringResource(R.string.plan_bmi_tick_30),
-                stringResource(R.string.plan_bmi_tick_35)
+                stringResource(R.string.plan_bmi_tick_35),
+                stringResource(R.string.plan_bmi_tick_40)
             ).forEach { m ->
                 Text(m, color = NeutralText, fontSize = 12.sp)
             }
@@ -517,19 +534,18 @@ private fun BmiCard(
         fontSize = 12.sp,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 40.dp) // ← 和小圓進度條一致的左右內距
+            .padding(horizontal = 40.dp)
     )
 
-    // ↓↓↓ 這段替換你的舊呼叫：寬度與 BMI Index 一樣（左右 34.dp）
     Spacer(Modifier.height(16.dp))
     GoalsHowToSection(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 34.dp),           // ← 和 BMI Index 一致
+            .padding(horizontal = 34.dp),
         trackMealsIconRes = R.drawable.ic_dish2,
-        mealBalanceIconRes = R.drawable.ic_meal_balance, // ← 你的「⚡💧」PNG
-        bookIconRes = R.drawable.ic_book,                 // ← 你的書本 PNG
-        onSeeMore = { /* TODO: 開啟來源列表 */ }
+        mealBalanceIconRes = R.drawable.ic_meal_balance,
+        bookIconRes = R.drawable.ic_book,
+        onSeeMore = { /* TODO */ }
     )
 }
 
@@ -677,9 +693,9 @@ private fun FeatureCard(
             // 右側文字
             Text(
                 text = stringResource(titleRes),
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                lineHeight = 24.sp
+                lineHeight = 20.sp
             )
         }
     }
