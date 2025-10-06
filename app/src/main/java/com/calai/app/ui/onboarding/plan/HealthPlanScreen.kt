@@ -1,5 +1,6 @@
 package com.calai.app.ui.onboarding.plan
 
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +61,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -718,14 +721,56 @@ private fun FeatureCard(
     }
 }
 
+// === 書本＋文字（置中），圖示放大到 28dp（可改 32.dp） ===
+@Composable
+private fun SourcesHeader(
+    @DrawableRes bookIconRes: Int? = null,
+    text: String,
+    iconSize: Dp = 32.dp,          // ← 放大（可改 28/34/36）
+    maxTextWidth: Dp = 360.dp,
+    nudgeLeft: Dp = 16.dp          // ← 往左靠一點的幅度（可改 12–16.dp）
+) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center  // 整體仍以中線對齊
+    ) {
+        Row(
+            modifier = Modifier.offset(x = -nudgeLeft), // ← 微移到左側
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (bookIconRes != null) {
+                Image(
+                    painter = painterResource(bookIconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(iconSize),
+                    alpha = 0.9f
+                )
+            }
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = text,
+                color = NeutralText,
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.widthIn(max = maxTextWidth)
+            )
+        }
+    }
+}
+
+// === Block：toggle 置中（不變），links 左對齊 24dp（不變） ===
 @Composable
 fun ResearchSourcesBlock(
     @DrawableRes bookIconRes: Int,
     modifier: Modifier = Modifier,
-    onSeeMore: () -> Unit = {}   // ✅ 維持原有參數：展開時會觸發一次
+    onSeeMore: () -> Unit = {}
 ) {
     val uriHandler = LocalUriHandler.current
-    var expanded by rememberSaveable { mutableStateOf(false) } // ✅ 旋轉不丟狀態
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
     val links: List<Pair<String, String>> = listOf(
         "US DRI – Water (National Academies)" to
@@ -737,54 +782,48 @@ fun ResearchSourcesBlock(
     )
 
     Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.Start
     ) {
-        // 標題列（書本圖示 + 文案）
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(bookIconRes),
-                contentDescription = null,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = stringResource(R.string.plan_sources_based_on),
-                color = NeutralText,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center
-            )
-        }
+        // ① Header：置中＋向左微移；ICON 放大
+        SourcesHeader(
+            bookIconRes = bookIconRes,
+            text = stringResource(R.string.plan_sources_based_on),
+            iconSize = 32.dp,       // 想更大可改 34/36.dp
+            nudgeLeft = 16.dp       // 想再靠左一點可改 12–16.dp
+        )
 
         Spacer(Modifier.height(6.dp))
 
-        // 「See more sources ›」做為切換按鈕
-        Text(
-            text = stringResource(R.string.plan_sources_more),
-            color = NeutralText,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
+        // ② Toggle：置中（收合＝顯示 plan_sources_more；展開＝顯示 Hide sources）
+        val toggleLabel = if (expanded) "Hide sources" else stringResource(R.string.plan_sources_more)
+        Box(
             modifier = Modifier
-                .testTag("sources_toggle") // ✅ for UI test
+                .fillMaxWidth()
+                .testTag("sources_toggle")
                 .semantics {
                     role = Role.Button
                     stateDescription = if (expanded) "expanded" else "collapsed"
-                }
-                .clickable {
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = toggleLabel,
+                color = Color.Black,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable {
                     val next = !expanded
                     expanded = next
-                    // 僅在「展開」那次觸發 onSeeMore（可做 analytics）
                     if (next) onSeeMore()
                 }
-        )
+            )
+        }
 
         Spacer(Modifier.height(8.dp))
 
-        // 折疊內容：三個超連結清單
+        // ③ Links：左對齊 24dp
         AnimatedVisibility(
             visible = expanded,
             enter = expandVertically(animationSpec = tween(180)) + fadeIn(tween(180)),
@@ -792,20 +831,23 @@ fun ResearchSourcesBlock(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .testTag("sources_links"),
+                horizontalAlignment = Alignment.Start
             ) {
                 links.forEach { (label, url) ->
                     Text(
                         text = label,
                         color = Color.Black,
                         fontSize = 13.sp,
-                        textAlign = TextAlign.Center,
+                        lineHeight = 18.sp,
+                        textAlign = TextAlign.Start,
                         style = androidx.compose.ui.text.TextStyle(
                             textDecoration = TextDecoration.Underline
                         ),
                         modifier = Modifier
-                            .padding(vertical = 4.dp, horizontal = 12.dp)
+                            .padding(vertical = 4.dp)
                             .clickable { uriHandler.openUri(url) }
                     )
                 }
