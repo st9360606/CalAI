@@ -126,7 +126,7 @@
     <string name="plan_bmi_label_normal">Normal</string>
     <string name="plan_bmi_label_overweight">Overweight</string>
     <string name="plan_bmi_label_obesity">Obesity</string>
-    <string name="plan_bmi_classified_as">Classified as %1$s</string>
+    <string name="plan_bmi_classified_as">classified as %1$s</string>
 
     <string name="plan_bmi_tick_18">18</string>
     <string name="plan_bmi_tick_25">25</string>

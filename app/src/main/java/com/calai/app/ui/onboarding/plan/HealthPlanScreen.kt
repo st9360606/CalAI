@@ -1,5 +1,7 @@
 package com.calai.app.ui.onboarding.plan
 
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Canvas
@@ -191,7 +193,7 @@ fun HealthPlanScreen(
                 klass = plan.bmiClass,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 28.dp) // ← 和小圓進度條一致的左右內距
+                    .padding(horizontal = 26.dp) // ← 和小圓進度條一致的左右內距
             )
             // 留一點結尾空白（內容可滑，不會被底部按鈕遮住）
             Spacer(Modifier.height(24.dp))
@@ -486,11 +488,11 @@ private fun BmiCard(
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 // 「You are classified as %1$s」→ 帶入同一組文字
-                val lower = displayLabel.uppercase(Locale.getDefault())
+                val lower = displayLabel.lowercase(Locale.getDefault())
                 Text(
                     text = stringResource(R.string.plan_bmi_classified_as, lower),
                     color = tone,
-                    fontSize = 9.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -534,7 +536,7 @@ private fun BmiCard(
         fontSize = 12.sp,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 40.dp)
+            .padding(horizontal = 32.dp)
     )
 
     Spacer(Modifier.height(16.dp))
@@ -707,6 +709,17 @@ fun ResearchSourcesBlock(
     modifier: Modifier = Modifier,
     onSeeMore: () -> Unit = {}
 ) {
+    val uriHandler = LocalUriHandler.current
+
+    val links: List<Pair<String, String>> = listOf(
+        "US DRI – Water (National Academies)" to
+                "https://nap.nationalacademies.org/read/10925/chapter/6?utm_source=chatgpt.com",
+        "EU – Food-Based Dietary Guidelines (Table 16)" to
+                "https://knowledge4policy.ec.europa.eu/health-promotion-knowledge-gateway/food-based-dietary-guidelines-europe-table-16_en?utm_source=chatgpt.com",
+        "NIH/NCBI – DRI (Macronutrients/Water)" to
+                "https://www.ncbi.nlm.nih.gov/books/NBK610333/?utm_source=chatgpt.com"
+    )
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -728,15 +741,39 @@ fun ResearchSourcesBlock(
                 textAlign = TextAlign.Center
             )
         }
+
         Spacer(Modifier.height(6.dp))
+
+        // 「See more sources ›」→ 改黑色
         Text(
             text = stringResource(R.string.plan_sources_more),
-            color = Color(0xFF2563EB),
+            color = Color.Black,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             modifier = Modifier.clickable { onSeeMore() }
         )
+
+        Spacer(Modifier.height(8.dp))
+
+        // 下面的超連結清單 → 改黑色（保留底線以維持可點擊感）
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            links.forEach { (label, url) ->
+                Text(
+                    text = label,
+                    color = Color.Black,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    style = androidx.compose.ui.text.TextStyle(textDecoration = TextDecoration.Underline),
+                    modifier = Modifier
+                        .padding(vertical = 4.dp, horizontal = 12.dp)
+                        .clickable { uriHandler.openUri(url) }
+                )
+            }
+        }
     }
 }
 

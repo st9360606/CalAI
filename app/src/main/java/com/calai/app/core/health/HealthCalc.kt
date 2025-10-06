@@ -81,7 +81,7 @@ object HealthCalc {
      * 其他 / null → 維持
      */
     fun splitForGoalKey(goalKey: String?): MacroSplit = when (goalKey) {
-        "LOSE"            -> MacroSplit(0.30f, 0.30f, 0.40f)
+        "LOSE"            -> MacroSplit(0.30f, 0.25f, 0.45f)
         "MAINTAIN"        -> MacroSplit(0.25f, 0.30f, 0.45f)
         "GAIN"            -> MacroSplit(0.30f, 0.25f, 0.45f)
         "HEALTHY_EATING"  -> MacroSplit(0.20f, 0.30f, 0.50f)
