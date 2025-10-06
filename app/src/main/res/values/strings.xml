@@ -141,18 +141,14 @@
     <string name="plan_weight_current">Current Weight</string>
     <string name="plan_weight_delta">To goal weight</string>
 
-
-
     <string name="plan_goals_title">How to reach\nyour goals</string>
     <string name="plan_goal_card_health_scores">Health scores guide you,so habits form naturally</string>
     <string name="plan_goal_card_track_meals">Log meals in one tap,staying consistent is easy</string>
     <string name="plan_goal_card_daily_calories">See daily calories clearly,and never lose track</string>
     <string name="plan_goal_card_balance_macros">Carbs × Protein × Fat,smart balance, better results</string>
 
-
-
     <string name="plan_sources_based_on">Based on official dietary guidelines,\nFor reference only, not medical advice.</string>
     <string name="plan_sources_more">See all references ›</string>
-
+    <string name="plan_sources_hide">Hide sources</string>
 
 </resources>

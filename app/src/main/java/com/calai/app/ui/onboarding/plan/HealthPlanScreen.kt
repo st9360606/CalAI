@@ -773,6 +773,10 @@ fun ResearchSourcesBlock(
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     val links: List<Pair<String, String>> = listOf(
+        "CDC – Adult BMI Categories" to
+                "https://www.cdc.gov/bmi/adult-calculator/bmi-categories.html?utm_source=chatgpt.com",
+        "MyProtein – How to Calculate BMR & TDEE" to
+                "https://us.myprotein.com/thezone/nutrition/how-to-calculate-bmr-tdee/?utm_source=chatgpt.com",
         "US DRI – Water (National Academies)" to
                 "https://nap.nationalacademies.org/read/10925/chapter/6?utm_source=chatgpt.com",
         "EU – Food-Based Dietary Guidelines (Table 16)" to
@@ -785,18 +789,16 @@ fun ResearchSourcesBlock(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.Start
     ) {
-        // ① Header：置中＋向左微移；ICON 放大
         SourcesHeader(
             bookIconRes = bookIconRes,
             text = stringResource(R.string.plan_sources_based_on),
-            iconSize = 32.dp,       // 想更大可改 34/36.dp
-            nudgeLeft = 16.dp       // 想再靠左一點可改 12–16.dp
+            iconSize = 32.dp,
+            nudgeLeft = 16.dp
         )
 
         Spacer(Modifier.height(6.dp))
 
-        // ② Toggle：置中（收合＝顯示 plan_sources_more；展開＝顯示 Hide sources）
-        val toggleLabel = if (expanded) "Hide sources" else stringResource(R.string.plan_sources_more)
+        val toggleLabel = if (expanded) stringResource(R.string.plan_sources_hide) else stringResource(R.string.plan_sources_more)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -809,9 +811,8 @@ fun ResearchSourcesBlock(
         ) {
             Text(
                 text = toggleLabel,
-                color = Color.Black,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+                color = NeutralText,
+                fontSize = 13.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.clickable {
                     val next = !expanded
@@ -823,7 +824,7 @@ fun ResearchSourcesBlock(
 
         Spacer(Modifier.height(8.dp))
 
-        // ③ Links：左對齊 24dp
+        // ✅ 展開後的連結「置中」
         AnimatedVisibility(
             visible = expanded,
             enter = expandVertically(animationSpec = tween(180)) + fadeIn(tween(180)),
@@ -832,9 +833,9 @@ fun ResearchSourcesBlock(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 16.dp) // 保留些微左右留白
                     .testTag("sources_links"),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 links.forEach { (label, url) ->
                     Text(
@@ -842,11 +843,10 @@ fun ResearchSourcesBlock(
                         color = Color.Black,
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
-                        textAlign = TextAlign.Start,
-                        style = androidx.compose.ui.text.TextStyle(
-                            textDecoration = TextDecoration.Underline
-                        ),
+                        textAlign = TextAlign.Center,
+                        style = TextStyle(textDecoration = TextDecoration.Underline),
                         modifier = Modifier
+                            .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .clickable { uriHandler.openUri(url) }
                     )
