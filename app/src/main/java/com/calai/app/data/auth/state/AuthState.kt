@@ -11,7 +11,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AuthState @Inject constructor(
-    private val tokenStore: TokenStore
+    tokenStore: TokenStore
 ) {
     val isSignedInFlow: Flow<Boolean> =
         tokenStore.accessTokenFlow.map { !it.isNullOrBlank() }

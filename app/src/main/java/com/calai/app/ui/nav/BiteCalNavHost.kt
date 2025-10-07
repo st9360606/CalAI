@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.HiltViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,6 +21,7 @@ import com.calai.app.data.auth.net.SessionBus
 import com.calai.app.di.AppEntryPoint
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.currentLocaleKey
+import com.calai.app.ui.appentry.AppEntryRoute
 import com.calai.app.ui.auth.RequireSignInScreen
 import com.calai.app.ui.auth.SignInSheetHost
 import com.calai.app.ui.auth.SignUpScreen
@@ -30,6 +30,8 @@ import com.calai.app.ui.auth.email.EmailEnterScreen
 import com.calai.app.ui.auth.email.EmailSignInViewModel
 import com.calai.app.ui.home.HomeScreen
 import com.calai.app.ui.landing.LandingScreen
+import com.calai.app.ui.nav.Routes.APP_ENTRY
+import com.calai.app.ui.nav.Routes.HOME
 import com.calai.app.ui.nav.Routes.LANDING
 import com.calai.app.ui.nav.Routes.ONBOARD_AGE
 import com.calai.app.ui.nav.Routes.ONBOARD_EXERCISE_FREQ
@@ -66,7 +68,9 @@ import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
 import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.app.ui.onboarding.weight.WeightSelectionViewModel
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object Routes {
     const val LANDING = "landing"
@@ -86,6 +90,7 @@ object Routes {
     const val ROUTE_PLAN = "plan"
     const val REQUIRE_SIGN_IN = "require_sign_in"
     const val HOME = "home"
+    const val APP_ENTRY = "app_entry"
 }
 
 private tailrec fun Context.findActivity(): Activity? =
@@ -95,7 +100,7 @@ private tailrec fun Context.findActivity(): Activity? =
         else -> null
     }
 
-private fun NavController.safePopBackStack(): Boolean =
+private fun androidx.navigation.NavController.safePopBackStack(): Boolean =
     if (previousBackStackEntry != null) popBackStack() else false
 
 @Composable
@@ -106,7 +111,6 @@ fun BiteCalNavHost(
 ) {
     val nav = rememberNavController()
 
-    // （若你有 AuthState 可在此收集）
     val appCtx = LocalContext.current.applicationContext
     val ep = remember(appCtx) {
         EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
@@ -114,22 +118,29 @@ fun BiteCalNavHost(
     val authState = remember(ep) { ep.authState() }
     val isSignedIn by authState.isSignedInFlow.collectAsState(initial = null)
 
-    val composeLocale = LocalLocaleController.current
-
+    // 逾期處理：跳 Email 登入頁，預設成功後回 HOME
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            nav.navigate(SIGNIN_EMAIL_ENTER) { popUpTo(0) { inclusive = true } }
+            nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$HOME") { popUpTo(0) { inclusive = true } }
         }
     }
 
-    NavHost(navController = nav, startDestination = LANDING, modifier = modifier) {
+    // ★ 冷啟起點 → APP_ENTRY
+    NavHost(navController = nav, startDestination = APP_ENTRY, modifier = modifier) {
+
+        composable(APP_ENTRY) {
+            AppEntryRoute(
+                onGoLanding = { nav.navigate(LANDING) { popUpTo(0) { inclusive = true } } },
+                onGoHome = { nav.navigate(HOME) { popUpTo(0) { inclusive = true } } }
+            )
+        }
 
         composable(LANDING) {
             LandingScreen(
                 hostActivity = hostActivity,
                 navController = nav,
                 onStart = { nav.navigate(ONBOARD_GENDER) },
-                // ✅ 從 Landing 走 Email 登入 → 成功後回 GENDER
+                // Landing 走 Email 登入 → 成功後回 GENDER
                 onLogin = { nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$ONBOARD_GENDER") },
                 onSetLocale = onSetLocale,
             )
@@ -145,7 +156,7 @@ fun BiteCalNavHost(
             arguments = listOf(
                 navArgument("redirect") {
                     type = NavType.StringType
-                    defaultValue = Routes.HOME   // 未帶時預設回 HOME
+                    defaultValue = Routes.HOME
                 }
             )
         ) { backStackEntry ->
@@ -181,20 +192,34 @@ fun BiteCalNavHost(
             val email = backStackEntry.arguments?.getString("email") ?: ""
             val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
 
+            // ★ 需要用到的單例（DataStore & Repository）
+            val store = remember(ep) { ep.userProfileStore() }
+            val profileRepo = remember(ep) { ep.profileRepository() }
+            val localeController = LocalLocaleController.current
+            val localeTag = localeController.tag.ifBlank { "en" }
+            val scope = rememberCoroutineScope()
+
             EmailCodeScreen(
                 vm = vm,
                 email = email,
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
-                    Toast.makeText(
-                        hostActivity,
-                        hostActivity.getString(R.string.msg_login_success),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    nav.navigate(redirect) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
-                        restoreState = false
+                    // 先把目前語言寫回 DataStore，再 upsert 到後端，最後導頁
+                    scope.launch {
+                        withContext(Dispatchers.IO) {
+                            runCatching { store.setLocaleTag(localeTag) }
+                            runCatching { profileRepo.upsertFromLocal() }
+                        }
+                        Toast.makeText(
+                            hostActivity,
+                            hostActivity.getString(R.string.msg_login_success),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        nav.navigate(redirect) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
                     }
                 }
             )
@@ -328,9 +353,9 @@ fun BiteCalNavHost(
             })
         }
 
-        // ===== ★ 登入 Gate（未登入顯示 Create an account，登入/Skip → redirect）=====
+        // ===== 登入 Gate（未登入顯示 Create an account，登入/Skip → redirect）=====
         composable(
-            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}",
+            route = "${REQUIRE_SIGN_IN}?redirect={redirect}",
             arguments = listOf(navArgument("redirect") {
                 type = NavType.StringType
                 defaultValue = Routes.HOME
@@ -341,21 +366,21 @@ fun BiteCalNavHost(
             val snackbarHostState = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
             val ctx = LocalContext.current
-            val composeLocale = LocalLocaleController.current
+            val localeController = LocalLocaleController.current
             val localeKey = currentLocaleKey()
-            val localeTag = composeLocale.tag.ifBlank { "en" }
+            val localeTag = localeController.tag.ifBlank { "en" }
 
-            // ★ 面板開關：第一次進來就顯示，取消後可再打開
+            // 面板開關：第一次進來就顯示，取消後可再打開
             val showSheet = remember { mutableStateOf(true) }
 
             RequireSignInScreen(
                 onBack = { nav.safePopBackStack() },
-                onGoogleClick = { showSheet.value = true },   // ← 點按鈕再次打開面板
+                onGoogleClick = { showSheet.value = true },
                 onSkip = { nav.navigate(redirect) },
                 snackbarHostState = snackbarHostState
             )
 
-            // ★ 永遠掛著，用 visible 控制顯示
+            // 永遠掛著，用 visible 控制顯示
             key(localeKey) {
                 SignInSheetHost(
                     activity = hostActivity,
@@ -373,7 +398,8 @@ fun BiteCalNavHost(
 
                     onEmail = {
                         showSheet.value = false
-                        nav.navigate(SIGNIN_EMAIL_ENTER) // 若有做 redirect 版，改成帶參數
+                        // 帶上 redirect，成功後回預期頁面
+                        nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$redirect")
                     },
 
                     onShowError = { msg ->
@@ -392,9 +418,8 @@ fun BiteCalNavHost(
             }
         }
 
-
-        // HOME 佔位
-        composable(Routes.HOME) {
+        // HOME
+        composable(HOME) {
             HomeScreen(onSignOut = {
                 nav.navigate(LANDING) { popUpTo(0) { inclusive = true } }
             })

@@ -28,27 +28,22 @@ class UserProfileStore @Inject constructor(
         val AGE_YEARS = intPreferencesKey("age_years")
         val HEIGHT = intPreferencesKey("height_cm")
         val HEIGHT_UNIT = stringPreferencesKey("height_unit")
-
-        // 目前體重
         val WEIGHT = floatPreferencesKey("weight_kg")
         val WEIGHT_UNIT = stringPreferencesKey("weight_unit")
-
-        // ✅ 目標體重（新增）
         val TARGET_WEIGHT = floatPreferencesKey("target_weight_kg")
         val TARGET_WEIGHT_UNIT = stringPreferencesKey("target_weight_unit")
-
         val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
         val GOAL = stringPreferencesKey("goal")
+        // ✅ 新增：目前 App 語言
+        val LOCALE_TAG = stringPreferencesKey("locale_tag")
     }
 
     // ======= 性別 =======
     suspend fun setGender(value: String) {
         context.userProfileDataStore.edit { it[Keys.GENDER] = value }
     }
-
     suspend fun gender(): String? =
         context.userProfileDataStore.data.map { it[Keys.GENDER] }.first()
-
     val genderFlow: Flow<String?> =
         context.userProfileDataStore.data.map { it[Keys.GENDER] }
 
@@ -56,9 +51,10 @@ class UserProfileStore @Inject constructor(
     suspend fun setReferralSource(value: String) {
         context.userProfileDataStore.edit { it[Keys.REFERRAL_SOURCE] = value }
     }
-
     suspend fun referralSource(): String? =
         context.userProfileDataStore.data.map { it[Keys.REFERRAL_SOURCE] }.first()
+    val referralSourceFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.REFERRAL_SOURCE] }
 
     // ======= 年齡 =======
     val ageFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.AGE_YEARS] }
@@ -66,52 +62,42 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.edit { it[Keys.AGE_YEARS] = years }
     }
 
-    // ======= 身高（數值） =======
+    // ======= 身高 =======
     val heightCmFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.HEIGHT] }
     suspend fun setHeightCm(cm: Int) {
         context.userProfileDataStore.edit { it[Keys.HEIGHT] = cm }
     }
-
-    // ======= 身高（單位） =======
     val heightUnitFlow: Flow<HeightUnit?> =
         context.userProfileDataStore.data.map { prefs ->
             prefs[Keys.HEIGHT_UNIT]?.let { runCatching { HeightUnit.valueOf(it) }.getOrNull() }
         }
-
     suspend fun setHeightUnit(unit: HeightUnit) {
         context.userProfileDataStore.edit { it[Keys.HEIGHT_UNIT] = unit.name }
     }
 
-    // ======= 目前體重（數值） =======
+    // ======= 現在體重 =======
     val weightKgFlow: Flow<Float?> = context.userProfileDataStore.data.map { it[Keys.WEIGHT] }
     suspend fun setWeightKg(kg: Float) {
         context.userProfileDataStore.edit { it[Keys.WEIGHT] = kg }
     }
-
-    // ======= 目前體重（單位） =======
     val weightUnitFlow: Flow<WeightUnit?> =
         context.userProfileDataStore.data.map { prefs ->
             prefs[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
         }
-
     suspend fun setWeightUnit(unit: WeightUnit) {
         context.userProfileDataStore.edit { it[Keys.WEIGHT_UNIT] = unit.name }
     }
 
-    // ======= 目標體重（數值） ✅ 新增 =======
+    // ======= 目標體重 =======
     val targetWeightKgFlow: Flow<Float?> =
         context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT] }
-
     suspend fun setTargetWeightKg(kg: Float) {
         context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT] = kg }
     }
-
-    // ======= 目標體重（單位） ✅ 新增 =======
     val targetWeightUnitFlow: Flow<WeightUnit?> =
         context.userProfileDataStore.data.map { prefs ->
             prefs[Keys.TARGET_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
         }
-
     suspend fun setTargetWeightUnit(unit: WeightUnit) {
         context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT_UNIT] = unit.name }
     }
@@ -119,7 +105,6 @@ class UserProfileStore @Inject constructor(
     // ======= 鍛鍊頻率 =======
     val exerciseFreqPerWeekFlow: Flow<Int?> =
         context.userProfileDataStore.data.map { it[Keys.EXERCISE_FREQ_PER_WEEK] }
-
     suspend fun setExerciseFreqPerWeek(v: Int) {
         context.userProfileDataStore.edit { it[Keys.EXERCISE_FREQ_PER_WEEK] = v.coerceIn(0, 7) }
     }
@@ -130,12 +115,51 @@ class UserProfileStore @Inject constructor(
     }
     suspend fun goal(): String? =
         context.userProfileDataStore.data.map { it[Keys.GOAL] }.first()
-    // ★ 新增：Flow 版本（建議在 VM 直接 combine）
     val goalFlow: Flow<String?> =
         context.userProfileDataStore.data.map { it[Keys.GOAL] }
 
+    // ======= 語言（localeTag） ✅ 新增 =======
+    suspend fun setLocaleTag(tag: String) {
+        context.userProfileDataStore.edit { it[Keys.LOCALE_TAG] = tag }
+    }
+    suspend fun localeTag(): String? =
+        context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }.first()
+    val localeTagFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }
 
-    // ======= 清空 Onboarding 所有欄位（冷啟時呼叫） =======
+    // ======= 快照（登入後上傳 & 冷啟檢查） =======
+    data class LocalProfileSnapshot(
+        val gender: String?,
+        val referralSource: String?,
+        val ageYears: Int?,
+        val heightCm: Int?,
+        val heightUnit: HeightUnit?,
+        val weightKg: Float?,
+        val weightUnit: WeightUnit?,
+        val targetWeightKg: Float?,
+        val targetWeightUnit: WeightUnit?,
+        val exerciseFreqPerWeek: Int?,
+        val goal: String?,
+        val locale: String?                 // ← ✅ 帶出 locale
+    )
+
+    suspend fun snapshot(): LocalProfileSnapshot {
+        return LocalProfileSnapshot(
+            gender = gender(),
+            referralSource = referralSource(),
+            ageYears = ageFlow.first(),
+            heightCm = heightCmFlow.first(),
+            heightUnit = heightUnitFlow.first(),
+            weightKg = weightKgFlow.first(),
+            weightUnit = weightUnitFlow.first(),
+            targetWeightKg = targetWeightKgFlow.first(),
+            targetWeightUnit = targetWeightUnitFlow.first(),
+            exerciseFreqPerWeek = exerciseFreqPerWeekFlow.first(),
+            goal = goalFlow.first(),
+            locale = localeTag()            // ← ✅
+        )
+    }
+
     suspend fun clearOnboarding() {
         context.userProfileDataStore.edit { p ->
             p.remove(Keys.GENDER)
@@ -145,10 +169,11 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.HEIGHT_UNIT)
             p.remove(Keys.WEIGHT)
             p.remove(Keys.WEIGHT_UNIT)
-            p.remove(Keys.TARGET_WEIGHT)         // ✅ 目標體重
-            p.remove(Keys.TARGET_WEIGHT_UNIT)    // ✅ 目標體重單位
+            p.remove(Keys.TARGET_WEIGHT)
+            p.remove(Keys.TARGET_WEIGHT_UNIT)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)
+            // 不清 LOCALE_TAG；保留使用者語言偏好
         }
     }
 }
