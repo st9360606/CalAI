@@ -151,4 +151,14 @@
     <string name="plan_sources_more">See all references ›</string>
     <string name="plan_sources_hide">Hide sources</string>
 
+
+
+    <string name="auth_create_account_title">Create an account</string>
+    <string name="auth_sign_in_with_google">Sign in with Google</string>
+    <string name="common_skip">Skip</string>
+
+    <string name="msg_login_success">Sign-in successful</string>
+    <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
+
+
 </resources>

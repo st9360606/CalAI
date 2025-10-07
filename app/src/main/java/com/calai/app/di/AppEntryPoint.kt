@@ -1,6 +1,8 @@
 package com.calai.app.di
 
 import com.calai.app.data.auth.repo.AuthRepository
+import com.calai.app.data.auth.repo.TokenStore
+import com.calai.app.data.auth.state.AuthState
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -13,4 +15,8 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 interface AppEntryPoint {
     fun authRepository(): AuthRepository
+
+    // ★ 新增讓 Compose 端可取得登入狀態與 TokenStore（兩者擇一使用也行）
+    fun authState(): AuthState
+    fun tokenStore(): TokenStore
 }

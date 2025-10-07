@@ -4,6 +4,8 @@ import android.app.Activity
 import android.accounts.AccountManager
 import android.content.Context
 import android.content.ContextWrapper
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,6 +27,8 @@ import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.launch
 
+private const val TAG = "SignInSheetHost"
+
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -43,27 +47,29 @@ private fun fmtNotCompleted(ctx: Context, resultCode: Int): CharSequence =
 @Composable
 fun SignInSheetHost(
     activity: ComponentActivity,   // 呼叫端保證提供
-    navController: NavController,  // ★ 新增：用來直接導頁
+    navController: NavController,
     localeTag: String,
     visible: Boolean,
     onDismiss: () -> Unit,
-    onGoogle: () -> Unit,          // 若你原本用它導頁，現在可改成 {} 或做分析事件
+    onGoogle: () -> Unit,
     onApple: () -> Unit = {},
     onEmail: () -> Unit = {},
-    onShowError: (CharSequence) -> Unit = {}
+    onShowError: (CharSequence) -> Unit = {},
+    // ★ 登入成功後要怎麼導頁（預設維持原本導到性別頁）
+    postLoginNavigate: (NavController) -> Unit = { it.navigateToOnboardAfterLogin() }
 ) {
     if (!visible) return
 
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
 
-    // ==== 所有訊息改成可本地化字串 ====
     val msgIdTokenEmpty   = stringResource(R.string.err_google_id_token_empty)
     val msgParseFailed    = stringResource(R.string.err_google_result_parse)
     val msgCancelled      = stringResource(R.string.err_google_cancelled)
     val tipNoAccount      = stringResource(R.string.err_google_no_account_hint)
     val fmtLaunchFailed   = { extra: String -> ctx.getString(R.string.err_google_launch_failed, extra) }
     val fallbackSignInErr = stringResource(R.string.err_google_signin_failed)
+    val msgLoginSuccess   = stringResource(R.string.msg_login_success)
 
     val repo = remember(appCtx) {
         val ep = EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
@@ -73,65 +79,85 @@ fun SignInSheetHost(
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    // 把 activity 提供給組成樹作為 ActivityResultRegistryOwner
+    fun toast(text: CharSequence) {
+        Toast.makeText(ctx, text, Toast.LENGTH_SHORT).show()
+    }
+
     CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
 
         val signInLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartIntentSenderForResult()
         ) { res: ActivityResult ->
+            Log.d(TAG, "GetSignInIntent resultCode=${res.resultCode}")
             if (res.resultCode == Activity.RESULT_OK) {
                 try {
                     @Suppress("DEPRECATION")
                     val credential = Identity.getSignInClient(ctx)
                         .getSignInCredentialFromIntent(res.data)
                     val idToken = credential.googleIdToken
+                    Log.d(TAG, "GetSignInIntent OK, idTokenIsNull=${idToken.isNullOrEmpty()}")
                     if (idToken.isNullOrEmpty()) {
                         loading = false
-                        onDismiss() // 空 token 也關面板
+                        onDismiss()
                         onShowError(msgIdTokenEmpty)
+                        toast(msgIdTokenEmpty)
                     } else {
                         scope.launch {
                             try {
                                 repo.loginWithGoogle(idToken)
+                                Log.d(TAG, "Backend login success (intent path)")
                                 loading = false
-                                onDismiss()                 // 成功 → 關面板
-                                navController.navigateToOnboardAfterLogin() // ★ 直接導到性別頁
-                                onGoogle()                  // 可留作分析事件
+                                onDismiss()
+                                // ★ 先提示，再導頁（避免導頁後 Toast 被吃掉）
+                                toast(msgLoginSuccess)
+                                postLoginNavigate(navController)
+                                onGoogle()
                             } catch (e: Exception) {
+                                Log.e(TAG, "Backend login failed (intent path): ${e.message}", e)
                                 loading = false
-                                onDismiss()                 // 失敗 → 關面板
-                                onShowError(e.message?.toString() ?: fallbackSignInErr)
+                                onDismiss()
+                                val msg = e.message?.toString() ?: fallbackSignInErr
+                                onShowError(msg)
+                                toast(msg)
                             }
                         }
                     }
                 } catch (e: Exception) {
+                    Log.e(TAG, "Parse sign-in result failed", e)
                     loading = false
-                    onDismiss()       // 解析例外 → 關面板
+                    onDismiss()
                     onShowError(msgParseFailed)
+                    toast(msgParseFailed)
                 }
             } else {
-                // 非 OK（例如使用者返回 / 流程被中止）
                 loading = false
-                onDismiss()           // ← 關面板（重點）
-                onShowError(fmtNotCompleted(ctx, res.resultCode))
+                onDismiss()
+                val msg = fmtNotCompleted(ctx, res.resultCode)
+                Log.w(TAG, "Sign-in not completed: code=${res.resultCode}")
+                onShowError(msg)
+                toast(msg)
             }
         }
 
         fun launchGoogleSignInIntent() {
+            // 若你專案已有 default_web_client_id，可改成它；否則保留 google_web_client_id 以避免資源缺失
             val serverClientId = ctx.getString(R.string.google_web_client_id)
             val req = GetSignInIntentRequest.Builder()
                 .setServerClientId(serverClientId)
-                // 這裡不要呼叫 setFilterByAuthorizedAccounts，該方法不屬於此類別
                 .build()
 
             Identity.getSignInClient(activity).getSignInIntent(req)
                 .addOnSuccessListener { pendingIntent ->
+                    Log.d(TAG, "Launching GetSignInIntent…")
                     signInLauncher.launch(IntentSenderRequest.Builder(pendingIntent).build())
                 }
-                .addOnFailureListener { _ ->
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "GetSignInIntent failed: ${e.message}", e)
                     loading = false
                     val extra = if (hasGoogleAccount(ctx)) "" else "\n$tipNoAccount"
-                    onShowError(fmtLaunchFailed(extra))
+                    val msg = fmtLaunchFailed(extra)
+                    onShowError(msg)
+                    toast(msg)
                 }
         }
 
@@ -140,22 +166,33 @@ fun SignInSheetHost(
             loading = true
             scope.launch {
                 try {
+                    Log.d(TAG, "CredentialManager: start getIdToken()")
                     val idToken = GoogleAuthService(ctx).getIdToken()
+                    Log.d(TAG, "CredentialManager: token acquired, posting to backend")
                     repo.loginWithGoogle(idToken)
+                    Log.d(TAG, "CredentialManager: backend OK")
                     loading = false
                     onDismiss()
-                    navController.navigateToOnboardAfterLogin()  // ★ 保留 Landing
+                    toast(msgLoginSuccess)
+                    // ★ 先提示，再導頁
+                    postLoginNavigate(navController)
                     onGoogle()
                 } catch (e: NoGoogleCredentialAvailableException) {
+                    Log.w(TAG, "No credential available, fallback to GetSignInIntent")
                     launchGoogleSignInIntent()
                 } catch (e: GetCredentialCancellationException) {
+                    Log.w(TAG, "User cancelled credential flow")
                     loading = false
                     onDismiss()
                     onShowError(msgCancelled)
+                    toast(msgCancelled)
                 } catch (e: Exception) {
+                    Log.e(TAG, "Credential flow error: ${e.message}", e)
                     loading = false
                     val tip = if (!hasGoogleAccount(ctx)) "\n$tipNoAccount" else ""
-                    onShowError((e.message ?: fallbackSignInErr) + tip)
+                    val msg = (e.message ?: fallbackSignInErr) + tip
+                    onShowError(msg)
+                    toast(msg)
                 }
             }
         }

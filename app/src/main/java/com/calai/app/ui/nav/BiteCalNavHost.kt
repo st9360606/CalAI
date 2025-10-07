@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.HiltViewModelFactory
@@ -17,11 +17,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.calai.app.R
 import com.calai.app.data.auth.net.SessionBus
+import com.calai.app.di.AppEntryPoint
+import com.calai.app.i18n.LocalLocaleController
+import com.calai.app.i18n.currentLocaleKey
+import com.calai.app.ui.auth.RequireSignInScreen
+import com.calai.app.ui.auth.SignInSheetHost
 import com.calai.app.ui.auth.SignUpScreen
 import com.calai.app.ui.auth.email.EmailCodeScreen
 import com.calai.app.ui.auth.email.EmailEnterScreen
 import com.calai.app.ui.auth.email.EmailSignInViewModel
+import com.calai.app.ui.home.HomeScreen
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.nav.Routes.LANDING
 import com.calai.app.ui.nav.Routes.ONBOARD_AGE
@@ -33,6 +40,7 @@ import com.calai.app.ui.nav.Routes.ONBOARD_NOTIF
 import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
 import com.calai.app.ui.nav.Routes.ONBOARD_TARGET_WEIGHT
 import com.calai.app.ui.nav.Routes.ONBOARD_WEIGHT
+import com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN
 import com.calai.app.ui.nav.Routes.ROUTE_PLAN
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
 import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
@@ -57,6 +65,8 @@ import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
 import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
 import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.app.ui.onboarding.weight.WeightSelectionViewModel
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.launch
 
 object Routes {
     const val LANDING = "landing"
@@ -73,11 +83,11 @@ object Routes {
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
     const val ONBOARD_NOTIF = "onboard_notif"
-
     const val ROUTE_PLAN = "plan"
+    const val REQUIRE_SIGN_IN = "require_sign_in"
+    const val HOME = "home"
 }
 
-// ── 安全往上找 Activity ───────────────────────────────────────────────
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -85,10 +95,8 @@ private tailrec fun Context.findActivity(): Activity? =
         else -> null
     }
 
-// ── 只在有上一頁時才 pop（根頁時不做事） ─────────────────────────────
-private fun NavController.safePopBackStack(): Boolean {
-    return if (previousBackStackEntry != null) popBackStack() else false
-}
+private fun NavController.safePopBackStack(): Boolean =
+    if (previousBackStackEntry != null) popBackStack() else false
 
 @Composable
 fun BiteCalNavHost(
@@ -98,57 +106,72 @@ fun BiteCalNavHost(
 ) {
     val nav = rememberNavController()
 
-    // 會話過期 → 直接帶到 Email 輸入頁（或改回 LANDING 視需求）
+    // （若你有 AuthState 可在此收集）
+    val appCtx = LocalContext.current.applicationContext
+    val ep = remember(appCtx) {
+        EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
+    }
+    val authState = remember(ep) { ep.authState() }
+    val isSignedIn by authState.isSignedInFlow.collectAsState(initial = null)
+
+    val composeLocale = LocalLocaleController.current
+
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            nav.navigate(SIGNIN_EMAIL_ENTER) {
-                popUpTo(0) { inclusive = true }
-            }
+            nav.navigate(SIGNIN_EMAIL_ENTER) { popUpTo(0) { inclusive = true } }
         }
     }
 
-    NavHost(
-        navController = nav,
-        startDestination = LANDING,
-        modifier = modifier
-    ) {
+    NavHost(navController = nav, startDestination = LANDING, modifier = modifier) {
+
         composable(LANDING) {
             LandingScreen(
                 hostActivity = hostActivity,
                 navController = nav,
-                onStart = { nav.navigate(ONBOARD_GENDER) },         // 免登入→性別頁
-                onLogin = { nav.navigate(SIGNIN_EMAIL_ENTER) },
+                onStart = { nav.navigate(ONBOARD_GENDER) },
+                // ✅ 從 Landing 走 Email 登入 → 成功後回 GENDER
+                onLogin = { nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$ONBOARD_GENDER") },
                 onSetLocale = onSetLocale,
             )
         }
 
         composable(SIGN_UP) {
-            SignUpScreen(
-                onBack = { nav.safePopBackStack() },
-                onSignedUp = { /* TODO */ }
-            )
+            SignUpScreen(onBack = { nav.safePopBackStack() }, onSignedUp = { })
         }
 
-        // ===== Email：輸入 Email 畫面 =====
-        composable(SIGNIN_EMAIL_ENTER) { backStackEntry ->
+        // ===== Email：輸入 Email 畫面（帶 redirect）=====
+        composable(
+            route = "${SIGNIN_EMAIL_ENTER}?redirect={redirect}",
+            arguments = listOf(
+                navArgument("redirect") {
+                    type = NavType.StringType
+                    defaultValue = Routes.HOME   // 未帶時預設回 HOME
+                }
+            )
+        ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: EmailSignInViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+
             EmailEnterScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onSent = { email -> nav.navigate("${SIGNIN_EMAIL_CODE}?email=$email") }
+                onSent = { email ->
+                    nav.navigate("${SIGNIN_EMAIL_CODE}?email=$email&redirect=$redirect")
+                }
             )
         }
 
-        // ===== Email：輸入驗證碼畫面 =====
+        // ===== Email：輸入驗證碼畫面（帶 redirect）=====
         composable(
-            route = "${SIGNIN_EMAIL_CODE}?email={email}",
-            arguments = listOf(navArgument("email") {
-                type = NavType.StringType; defaultValue = ""
-            })
+            route = "${SIGNIN_EMAIL_CODE}?email={email}&redirect={redirect}",
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType; defaultValue = "" },
+                navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME }
+            )
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: EmailSignInViewModel = viewModel(
@@ -156,16 +179,22 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val email = backStackEntry.arguments?.getString("email") ?: ""
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+
             EmailCodeScreen(
                 vm = vm,
                 email = email,
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
-                    Toast.makeText(hostActivity, "登入成功", Toast.LENGTH_SHORT).show()
-                    nav.navigate(ONBOARD_GENDER) {
-                        popUpTo(LANDING) { inclusive = false; saveState = true }
+                    Toast.makeText(
+                        hostActivity,
+                        hostActivity.getString(R.string.msg_login_success),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    nav.navigate(redirect) {
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
-                        restoreState = true
+                        restoreState = false
                     }
                 }
             )
@@ -181,13 +210,10 @@ fun BiteCalNavHost(
             GenderSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { _: GenderKey ->
-                    nav.navigate(ONBOARD_REFERRAL) { launchSingleTop = true }
-                }
+                onNext = { _: GenderKey -> nav.navigate(ONBOARD_REFERRAL) { launchSingleTop = true } }
             )
         }
 
-        // ===== Onboarding：你從哪裡知道我們 → 年齡 =====
         composable(ONBOARD_REFERRAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: ReferralSourceViewModel = viewModel(
@@ -201,7 +227,6 @@ fun BiteCalNavHost(
             )
         }
 
-        // ===== Onboarding：年齡 =====
         composable(ONBOARD_AGE) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: AgeSelectionViewModel = viewModel(
@@ -215,7 +240,6 @@ fun BiteCalNavHost(
             )
         }
 
-        // ===== Onboarding：身高 =====
         composable(ONBOARD_HEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: HeightSelectionViewModel = viewModel(
@@ -225,11 +249,10 @@ fun BiteCalNavHost(
             HeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_WEIGHT)  { launchSingleTop = true } }
+                onNext = { nav.navigate(ONBOARD_WEIGHT) { launchSingleTop = true } }
             )
         }
 
-        // ===== Onboarding：體重 =====
         composable(ONBOARD_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: WeightSelectionViewModel = viewModel(
@@ -243,8 +266,7 @@ fun BiteCalNavHost(
             )
         }
 
-        // ===== Onboarding：鍛鍊頻率 =====
-        composable(route = ONBOARD_EXERCISE_FREQ) { backStackEntry ->
+        composable(ONBOARD_EXERCISE_FREQ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: ExerciseFrequencyViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -257,8 +279,7 @@ fun BiteCalNavHost(
             )
         }
 
-        // ===== Onboarding：目標 =====
-        composable(route = ONBOARD_GOAL) { backStackEntry ->
+        composable(ONBOARD_GOAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: GoalSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -268,13 +289,9 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
-                    // TODO: 這裡接下一步頁（例如：飲食偏好 / Diet）
-                    // nav.navigate(ONBOARD_DIET) { launchSingleTop = true; restoreState = true }
-
             )
         }
 
-        // ===== Onboarding：目標體重 =====
         composable(ONBOARD_TARGET_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: WeightTargetViewModel = viewModel(
@@ -288,7 +305,7 @@ fun BiteCalNavHost(
             )
         }
 
-        composable(route = ONBOARD_NOTIF) {
+        composable(ONBOARD_NOTIF) {
             NotificationPermissionScreen(
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(ROUTE_PLAN) { launchSingleTop = true } }
@@ -301,7 +318,86 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            HealthPlanScreen(vm = vm, onStart = { /* TODO: go to Home */ })
+            HealthPlanScreen(vm = vm, onStart = {
+                val target = Routes.HOME
+                if (isSignedIn == true) {
+                    nav.navigate(target) { popUpTo(0) { inclusive = true } }
+                } else {
+                    nav.navigate("${REQUIRE_SIGN_IN}?redirect=$target")
+                }
+            })
+        }
+
+        // ===== ★ 登入 Gate（未登入顯示 Create an account，登入/Skip → redirect）=====
+        composable(
+            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}",
+            arguments = listOf(navArgument("redirect") {
+                type = NavType.StringType
+                defaultValue = Routes.HOME
+            })
+        ) { backStackEntry ->
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+
+            val snackbarHostState = remember { SnackbarHostState() }
+            val scope = rememberCoroutineScope()
+            val ctx = LocalContext.current
+            val composeLocale = LocalLocaleController.current
+            val localeKey = currentLocaleKey()
+            val localeTag = composeLocale.tag.ifBlank { "en" }
+
+            // ★ 面板開關：第一次進來就顯示，取消後可再打開
+            val showSheet = remember { mutableStateOf(true) }
+
+            RequireSignInScreen(
+                onBack = { nav.safePopBackStack() },
+                onGoogleClick = { showSheet.value = true },   // ← 點按鈕再次打開面板
+                onSkip = { nav.navigate(redirect) },
+                snackbarHostState = snackbarHostState
+            )
+
+            // ★ 永遠掛著，用 visible 控制顯示
+            key(localeKey) {
+                SignInSheetHost(
+                    activity = hostActivity,
+                    navController = nav,
+                    localeTag = localeTag,
+                    visible = showSheet.value,
+                    onDismiss = { showSheet.value = false },
+
+                    onGoogle = {
+                        showSheet.value = false
+                        scope.launch {
+                            snackbarHostState.showSnackbar(ctx.getString(R.string.msg_login_success))
+                        }
+                    },
+
+                    onEmail = {
+                        showSheet.value = false
+                        nav.navigate(SIGNIN_EMAIL_ENTER) // 若有做 redirect 版，改成帶參數
+                    },
+
+                    onShowError = { msg ->
+                        showSheet.value = false
+                        scope.launch { snackbarHostState.showSnackbar(msg.toString()) }
+                    },
+
+                    postLoginNavigate = { controller ->
+                        controller.navigate(redirect) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
+                )
+            }
+        }
+
+
+        // HOME 佔位
+        composable(Routes.HOME) {
+            HomeScreen(onSignOut = {
+                nav.navigate(LANDING) { popUpTo(0) { inclusive = true } }
+            })
         }
     }
 }

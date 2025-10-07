@@ -38,7 +38,10 @@ import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.auth.SignInSheetHost
 import com.calai.app.ui.common.FlagChip
 import kotlinx.coroutines.launch
-
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 // --- 安全往上溯源找 Activity（避免 Context 不是 Activity 的情況） ---
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
@@ -75,6 +78,10 @@ fun LandingScreen(
     var showLang by rememberSaveable { mutableStateOf(false) }
     var switching by rememberSaveable { mutableStateOf(false) }
     var showSignInSheet by rememberSaveable { mutableStateOf(false) }
+
+    // ★ 新增：SnackbarHostState
+    val snackbarHostState = remember { SnackbarHostState() }
+
 
     // ===== 可調參數（已縮小影片框，放大語言膠囊）=====
     val phoneTopPadding = 118.dp
@@ -255,21 +262,26 @@ fun LandingScreen(
                 SignInSheetHost(
                     activity = hostActivity,
                     navController = navController,
-                    // ✅ 預設 EN
                     localeTag = composeLocale.tag.ifBlank { "en" },
                     visible = true,
                     onDismiss = { showSignInSheet = false },
+                    // ★ 成功：Snackbar（替換原本 Toast）
                     onGoogle = {
                         showSignInSheet = false
-                        Toast.makeText(context, "登入成功", Toast.LENGTH_SHORT).show()
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                context.getString(R.string.msg_login_success)
+                            )
+                        }
                     },
                     onApple = { showSignInSheet = false },
                     onEmail = {
                         showSignInSheet = false
                         onLogin()
                     },
+                    // ★ 失敗：Snackbar（替換原本 Toast）
                     onShowError = { msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        scope.launch { snackbarHostState.showSnackbar(msg.toString()) }
                     }
                 )
             }
