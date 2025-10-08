@@ -124,7 +124,7 @@ fun BiteCalNavHost(
     val profileRepo = remember(ep) { ep.profileRepository() }
     val store = remember(ep) { ep.userProfileStore() }
 
-    // === 語言開機流程：DataStore → 裝置語言（不再依賴 LanguageStore.load）===
+    // === 語言開機流程：DataStore → 裝置語言 ===
     val localeController = LocalLocaleController.current
     LaunchedEffect(Unit) {
         val dsTag = withContext(Dispatchers.IO) { runCatching { store.localeTag() }.getOrNull() }
@@ -137,16 +137,15 @@ fun BiteCalNavHost(
             LanguageManager.applyLanguage(tag)
             onSetLocale(tag)
         }
-        // 同步存一份到 DataStore（若原本沒有）
         if (dsTag.isNullOrBlank()) {
             withContext(Dispatchers.IO) { runCatching { store.setLocaleTag(tag) } }
         }
     }
 
-    // Token 逾期：跳 Email 登入頁，完成後回 HOME
+    // Token 逾期：帶到 Gate，成功後回 HOME
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$HOME") { popUpTo(0) { inclusive = true } }
+            nav.navigate("$REQUIRE_SIGN_IN?redirect=$HOME") { popUpTo(0) { inclusive = true } }
         }
     }
 
@@ -162,7 +161,7 @@ fun BiteCalNavHost(
 
         composable(LANDING) {
             val scope = rememberCoroutineScope()
-            val localeController = LocalLocaleController.current
+            val localeControllerLocal = LocalLocaleController.current
 
             LandingScreen(
                 hostActivity = hostActivity,
@@ -183,13 +182,11 @@ fun BiteCalNavHost(
                         nav.navigate("$REQUIRE_SIGN_IN?redirect=$target")
                     }
                 },
-                // ✅ 切換語言：不要用 LaunchedEffect；用 scope.launch 即可
+                // 切換語言：立即套用並寫入 DataStore
                 onSetLocale = { tag ->
-                    // 1) 立即套用到 Compose & 系統
-                    localeController.set(tag)
+                    localeControllerLocal.set(tag)
                     LanguageManager.applyLanguage(tag)
                     onSetLocale(tag)
-                    // 2) 寫入 DataStore（登出也保留）
                     scope.launch {
                         withContext(Dispatchers.IO) {
                             runCatching { store.setLocaleTag(tag) }
@@ -423,7 +420,17 @@ fun BiteCalNavHost(
             RequireSignInScreen(
                 onBack = { nav.safePopBackStack() },
                 onGoogleClick = { showSheet.value = true },
-                onSkip = { nav.navigate(redirect) },
+                // ✅ Skip：優先返回上一頁；若沒有上一頁才用 redirect
+                onSkip = {
+                    val popped = nav.safePopBackStack()
+                    if (!popped) {
+                        nav.navigate(redirect) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
+                },
                 snackbarHostState = snackbarHostState
             )
 
