@@ -3,7 +3,6 @@ package com.calai.app.ui.landing
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -30,19 +29,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.calai.app.R
-import com.calai.app.i18n.LanguageManager
-import com.calai.app.i18n.LanguageStore
 import com.calai.app.i18n.LocalLocaleController
-import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.i18n.flagAndLabelFromTag
-import com.calai.app.ui.auth.SignInSheetHost
 import com.calai.app.ui.common.FlagChip
-import kotlinx.coroutines.launch
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-// --- 安全往上溯源找 Activity（避免 Context 不是 Activity 的情況） ---
+
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -58,32 +48,13 @@ fun LandingScreen(
     onLogin: () -> Unit,
     onSetLocale: (String) -> Unit
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val store = remember(context) { LanguageStore(context) }
     val composeLocale = LocalLocaleController.current
 
-    // ✅ 首次啟動或尚未選過語言時，預設成 EN
-    LaunchedEffect(Unit) {
-        if (composeLocale.tag.isBlank()) {
-            val def = "en"
-            composeLocale.set(def)               // Compose 層
-            LanguageManager.applyLanguage(def)   // 非 Compose 層
-            onSetLocale(def)                     // 外部回呼（若有需要）
-            store.save(def)                      // 記住下次打開仍為 EN
-        }
-    }
-
-    // ✅ 用 rememberSaveable 保存 UI 狀態
+    // 不在這裡預設 EN；語言開機流程由 NavHost 統一負責
     var showLang by rememberSaveable { mutableStateOf(false) }
     var switching by rememberSaveable { mutableStateOf(false) }
-    var showSignInSheet by rememberSaveable { mutableStateOf(false) }
 
-    // ★ 新增：SnackbarHostState
-    val snackbarHostState = remember { SnackbarHostState() }
-
-
-    // ===== 可調參數（已縮小影片框，放大語言膠囊）=====
+    // 版面參數
     val phoneTopPadding = 118.dp
     val phoneWidthFraction = 0.81f
     val phoneAspect = 11f / 16.5f
@@ -97,36 +68,30 @@ fun LandingScreen(
     val ctaWidthFraction = 0.92f
     val spaceTitleToCTA = 18.dp
 
-    // 統一字型
     val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
 
-    // 語系（Compose 畫面語系）→ 旗幟＋短標籤（預設 EN）
     val currentTag = composeLocale.tag.ifBlank { "en" }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
-    // 根頁 Back 保護：在 Landing（沒有上一頁）時，按返回「不做事」
     val isRoot = navController.previousBackStackEntry == null
-    BackHandler(enabled = !showSignInSheet && isRoot) { /* stay */ }
-    // 面板開啟時按返回關面板
-    BackHandler(enabled = showSignInSheet) { showSignInSheet = false }
+    BackHandler(enabled = isRoot) { /* stay */ }
 
     Box(
         Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // 右上：旗幟膠囊
+        // 右上：語言膠囊
         FlagChip(
             flag = flagEmoji,
             label = langLabel,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-
                 .windowInsetsPadding(
                     WindowInsets.displayCutout.union(WindowInsets.statusBars)
                 )
                 .padding(top = 0.dp, end = 20.dp)
-                .offset(y = (2).dp),
+                .offset(y = 2.dp),
         ) { if (!switching) showLang = true }
 
         Column(Modifier.fillMaxSize()) {
@@ -224,7 +189,7 @@ fun LandingScreen(
                         fontFamily = titleFont,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { showSignInSheet = true },
+                        modifier = Modifier.clickable { onLogin() }, // 導頁交給 Nav
                         style = LocalTextStyle.current.copy(
                             platformStyle = PlatformTextStyle(includeFontPadding = false)
                         )
@@ -233,7 +198,7 @@ fun LandingScreen(
             }
         }
 
-        // ===== 語言對話框（預設 EN）=====
+        // 語言選單
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
@@ -242,49 +207,13 @@ fun LandingScreen(
                     if (switching) return@LanguageDialog
                     switching = true
                     showLang = false
-                    scope.launch {
-                        composeLocale.set(picked.tag)
-                        LanguageManager.applyLanguage(picked.tag)
-                        onSetLocale(picked.tag)
-                        store.save(picked.tag)
-                        switching = false
-                    }
+                    // 交給外部 onSetLocale（NavHost 會同時：更新 Compose、applyLanguage、寫 DataStore）
+                    onSetLocale(picked.tag)
+                    switching = false
                 },
                 onDismiss = { showLang = false },
                 maxWidth = 320.dp
             )
-        }
-
-        // 登入底部面板
-        if (showSignInSheet) {
-            val localeKey = currentLocaleKey()
-            key(localeKey) {
-                SignInSheetHost(
-                    activity = hostActivity,
-                    navController = navController,
-                    localeTag = composeLocale.tag.ifBlank { "en" },
-                    visible = true,
-                    onDismiss = { showSignInSheet = false },
-                    // ★ 成功：Snackbar（替換原本 Toast）
-                    onGoogle = {
-                        showSignInSheet = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                context.getString(R.string.msg_login_success)
-                            )
-                        }
-                    },
-                    onApple = { showSignInSheet = false },
-                    onEmail = {
-                        showSignInSheet = false
-                        onLogin()
-                    },
-                    // ★ 失敗：Snackbar（替換原本 Toast）
-                    onShowError = { msg ->
-                        scope.launch { snackbarHostState.showSnackbar(msg.toString()) }
-                    }
-                )
-            }
         }
     }
 }

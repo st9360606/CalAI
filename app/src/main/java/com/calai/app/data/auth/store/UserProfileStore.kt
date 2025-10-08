@@ -1,10 +1,7 @@
 package com.calai.app.data.auth.store
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -34,8 +31,8 @@ class UserProfileStore @Inject constructor(
         val TARGET_WEIGHT_UNIT = stringPreferencesKey("target_weight_unit")
         val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
         val GOAL = stringPreferencesKey("goal")
-        // ✅ 新增：目前 App 語言
-        val LOCALE_TAG = stringPreferencesKey("locale_tag")
+        val LOCALE_TAG = stringPreferencesKey("locale_tag")                  // 語言
+        val HAS_SERVER_PROFILE = booleanPreferencesKey("has_server_profile") // 是否已有雲端檔
     }
 
     // ======= 性別 =======
@@ -118,7 +115,7 @@ class UserProfileStore @Inject constructor(
     val goalFlow: Flow<String?> =
         context.userProfileDataStore.data.map { it[Keys.GOAL] }
 
-    // ======= 語言（localeTag） ✅ 新增 =======
+    // ======= 語言（localeTag） =======
     suspend fun setLocaleTag(tag: String) {
         context.userProfileDataStore.edit { it[Keys.LOCALE_TAG] = tag }
     }
@@ -126,6 +123,20 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }.first()
     val localeTagFlow: Flow<String?> =
         context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }
+
+    // ======= 回訪旗標 =======
+    val hasServerProfileFlow: Flow<Boolean> =
+        context.userProfileDataStore.data.map { it[Keys.HAS_SERVER_PROFILE] ?: false }
+
+    suspend fun setHasServerProfile(value: Boolean) {
+        context.userProfileDataStore.edit { it[Keys.HAS_SERVER_PROFILE] = value }
+    }
+
+    suspend fun hasServerProfile(): Boolean = hasServerProfileFlow.first()
+
+    suspend fun clearHasServerProfile() {
+        context.userProfileDataStore.edit { it.remove(Keys.HAS_SERVER_PROFILE) }
+    }
 
     // ======= 快照（登入後上傳 & 冷啟檢查） =======
     data class LocalProfileSnapshot(
@@ -140,7 +151,7 @@ class UserProfileStore @Inject constructor(
         val targetWeightUnit: WeightUnit?,
         val exerciseFreqPerWeek: Int?,
         val goal: String?,
-        val locale: String?                 // ← ✅ 帶出 locale
+        val locale: String?
     )
 
     suspend fun snapshot(): LocalProfileSnapshot {
@@ -156,7 +167,7 @@ class UserProfileStore @Inject constructor(
             targetWeightUnit = targetWeightUnitFlow.first(),
             exerciseFreqPerWeek = exerciseFreqPerWeekFlow.first(),
             goal = goalFlow.first(),
-            locale = localeTag()            // ← ✅
+            locale = localeTag()
         )
     }
 
@@ -173,7 +184,7 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.TARGET_WEIGHT_UNIT)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)
-            // 不清 LOCALE_TAG；保留使用者語言偏好
+            // 不清 LOCALE_TAG、HAS_SERVER_PROFILE
         }
     }
 }

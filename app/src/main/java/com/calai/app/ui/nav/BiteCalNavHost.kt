@@ -19,6 +19,7 @@ import androidx.navigation.navArgument
 import com.calai.app.R
 import com.calai.app.data.auth.net.SessionBus
 import com.calai.app.di.AppEntryPoint
+import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.ui.appentry.AppEntryRoute
@@ -71,6 +72,7 @@ import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 object Routes {
     const val LANDING = "landing"
@@ -115,10 +117,33 @@ fun BiteCalNavHost(
     val ep = remember(appCtx) {
         EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
     }
+
     val authState = remember(ep) { ep.authState() }
     val isSignedIn by authState.isSignedInFlow.collectAsState(initial = null)
 
-    // 逾期處理：跳 Email 登入頁，預設成功後回 HOME
+    val profileRepo = remember(ep) { ep.profileRepository() }
+    val store = remember(ep) { ep.userProfileStore() }
+
+    // === 語言開機流程：DataStore → 裝置語言（不再依賴 LanguageStore.load）===
+    val localeController = LocalLocaleController.current
+    LaunchedEffect(Unit) {
+        val dsTag = withContext(Dispatchers.IO) { runCatching { store.localeTag() }.getOrNull() }
+        val tag: String = (dsTag?.takeIf { it.isNotBlank() }
+            ?: localeController.tag.takeIf { it.isNotBlank() }
+            ?: Locale.getDefault().toLanguageTag())
+
+        if (localeController.tag != tag) {
+            localeController.set(tag)
+            LanguageManager.applyLanguage(tag)
+            onSetLocale(tag)
+        }
+        // 同步存一份到 DataStore（若原本沒有）
+        if (dsTag.isNullOrBlank()) {
+            withContext(Dispatchers.IO) { runCatching { store.setLocaleTag(tag) } }
+        }
+    }
+
+    // Token 逾期：跳 Email 登入頁，完成後回 HOME
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
             nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$HOME") { popUpTo(0) { inclusive = true } }
@@ -136,13 +161,41 @@ fun BiteCalNavHost(
         }
 
         composable(LANDING) {
+            val scope = rememberCoroutineScope()
+            val localeController = LocalLocaleController.current
+
             LandingScreen(
                 hostActivity = hostActivity,
                 navController = nav,
-                onStart = { nav.navigate(ONBOARD_GENDER) },
-                // Landing 走 Email 登入 → 成功後回 GENDER
-                onLogin = { nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$ONBOARD_GENDER") },
-                onSetLocale = onSetLocale,
+                // Start：新用戶→Onboarding；回訪→登入 Gate
+                onStart = {
+                    scope.launch {
+                        val has = store.hasServerProfile()
+                        if (has) nav.navigate("$REQUIRE_SIGN_IN?redirect=$HOME")
+                        else nav.navigate(ONBOARD_GENDER)
+                    }
+                },
+                // Sign in：回訪→HOME；新用戶→Onboarding
+                onLogin = {
+                    scope.launch {
+                        val has = store.hasServerProfile()
+                        val target = if (has) HOME else ONBOARD_GENDER
+                        nav.navigate("$REQUIRE_SIGN_IN?redirect=$target")
+                    }
+                },
+                // ✅ 切換語言：不要用 LaunchedEffect；用 scope.launch 即可
+                onSetLocale = { tag ->
+                    // 1) 立即套用到 Compose & 系統
+                    localeController.set(tag)
+                    LanguageManager.applyLanguage(tag)
+                    onSetLocale(tag)
+                    // 2) 寫入 DataStore（登出也保留）
+                    scope.launch {
+                        withContext(Dispatchers.IO) {
+                            runCatching { store.setLocaleTag(tag) }
+                        }
+                    }
+                },
             )
         }
 
@@ -152,11 +205,11 @@ fun BiteCalNavHost(
 
         // ===== Email：輸入 Email 畫面（帶 redirect）=====
         composable(
-            route = "${SIGNIN_EMAIL_ENTER}?redirect={redirect}",
+            route = "$SIGNIN_EMAIL_ENTER?redirect={redirect}",
             arguments = listOf(
                 navArgument("redirect") {
                     type = NavType.StringType
-                    defaultValue = Routes.HOME
+                    defaultValue = HOME
                 }
             )
         ) { backStackEntry ->
@@ -165,23 +218,23 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: HOME
 
             EmailEnterScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onSent = { email ->
-                    nav.navigate("${SIGNIN_EMAIL_CODE}?email=$email&redirect=$redirect")
+                    nav.navigate("$SIGNIN_EMAIL_CODE?email=$email&redirect=$redirect")
                 }
             )
         }
 
         // ===== Email：輸入驗證碼畫面（帶 redirect）=====
         composable(
-            route = "${SIGNIN_EMAIL_CODE}?email={email}&redirect={redirect}",
+            route = "$SIGNIN_EMAIL_CODE?email={email}&redirect={redirect}",
             arguments = listOf(
                 navArgument("email") { type = NavType.StringType; defaultValue = "" },
-                navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME }
+                navArgument("redirect") { type = NavType.StringType; defaultValue = HOME }
             )
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
@@ -190,13 +243,9 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val email = backStackEntry.arguments?.getString("email") ?: ""
-            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: HOME
 
-            // ★ 需要用到的單例（DataStore & Repository）
-            val store = remember(ep) { ep.userProfileStore() }
-            val profileRepo = remember(ep) { ep.profileRepository() }
-            val localeController = LocalLocaleController.current
-            val localeTag = localeController.tag.ifBlank { "en" }
+            val currentTag = localeController.tag.ifBlank { "en" }
             val scope = rememberCoroutineScope()
 
             EmailCodeScreen(
@@ -204,11 +253,11 @@ fun BiteCalNavHost(
                 email = email,
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
-                    // 先把目前語言寫回 DataStore，再 upsert 到後端，最後導頁
                     scope.launch {
                         withContext(Dispatchers.IO) {
-                            runCatching { store.setLocaleTag(localeTag) }
-                            runCatching { profileRepo.upsertFromLocal() }
+                            runCatching { store.setLocaleTag(currentTag) }
+                            profileRepo.upsertFromLocal()
+                            runCatching { store.setHasServerProfile(true) }
                         }
                         Toast.makeText(
                             hostActivity,
@@ -344,33 +393,31 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             HealthPlanScreen(vm = vm, onStart = {
-                val target = Routes.HOME
+                val target = HOME
                 if (isSignedIn == true) {
                     nav.navigate(target) { popUpTo(0) { inclusive = true } }
                 } else {
-                    nav.navigate("${REQUIRE_SIGN_IN}?redirect=$target")
+                    nav.navigate("$REQUIRE_SIGN_IN?redirect=$target")
                 }
             })
         }
 
         // ===== 登入 Gate（未登入顯示 Create an account，登入/Skip → redirect）=====
         composable(
-            route = "${REQUIRE_SIGN_IN}?redirect={redirect}",
+            route = "$REQUIRE_SIGN_IN?redirect={redirect}",
             arguments = listOf(navArgument("redirect") {
                 type = NavType.StringType
-                defaultValue = Routes.HOME
+                defaultValue = HOME
             })
         ) { backStackEntry ->
-            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: HOME
 
             val snackbarHostState = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
             val ctx = LocalContext.current
-            val localeController = LocalLocaleController.current
             val localeKey = currentLocaleKey()
-            val localeTag = localeController.tag.ifBlank { "en" }
+            val currentTag = localeController.tag.ifBlank { "en" }
 
-            // 面板開關：第一次進來就顯示，取消後可再打開
             val showSheet = remember { mutableStateOf(true) }
 
             RequireSignInScreen(
@@ -380,12 +427,11 @@ fun BiteCalNavHost(
                 snackbarHostState = snackbarHostState
             )
 
-            // 永遠掛著，用 visible 控制顯示
             key(localeKey) {
                 SignInSheetHost(
                     activity = hostActivity,
                     navController = nav,
-                    localeTag = localeTag,
+                    localeTag = currentTag,
                     visible = showSheet.value,
                     onDismiss = { showSheet.value = false },
 
@@ -398,7 +444,6 @@ fun BiteCalNavHost(
 
                     onEmail = {
                         showSheet.value = false
-                        // 帶上 redirect，成功後回預期頁面
                         nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$redirect")
                     },
 
@@ -407,11 +452,19 @@ fun BiteCalNavHost(
                         scope.launch { snackbarHostState.showSnackbar(msg.toString()) }
                     },
 
+                    // 成功後：寫 locale、upsert、記 hasServerProfile → 導頁
                     postLoginNavigate = { controller ->
-                        controller.navigate(redirect) {
-                            popUpTo(0) { inclusive = true }
-                            launchSingleTop = true
-                            restoreState = false
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                runCatching { store.setLocaleTag(currentTag) }
+                                profileRepo.upsertFromLocal()
+                                runCatching { store.setHasServerProfile(true) }
+                            }
+                            controller.navigate(redirect) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
                         }
                     }
                 )
