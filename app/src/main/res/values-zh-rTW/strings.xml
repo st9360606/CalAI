@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">BiteCal｜卡路里相機（AI）：拍照計算卡路里與減脂記錄</string>
-    <string name="landing_title">拍一下，卡路里馬上知道</string>
+    <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
     <string name="cta_get_started">開始使用</string>
     <string name="cta_login_prefix">已有帳號？</string>
     <string name="cta_login">登入</string>
@@ -105,8 +105,8 @@
 
     <!-- notifications -->
     <string name="allow_notifications_cta">允許通知</string>
-    <string name="notif_title">讓你每一餐都算數</string>
-    <string name="notif_subtitle">開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
+    <string name="notif_title">每一餐都算數</string>
+    <string name="notif_subtitle">用餐前後貼心提示，健康改變從當下開始。\n開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>
 

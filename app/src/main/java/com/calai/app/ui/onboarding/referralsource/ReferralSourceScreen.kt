@@ -87,7 +87,7 @@ fun ReferralSourceScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 72.dp)
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(28.dp),
@@ -177,7 +177,7 @@ private fun ReferralOptionItem(
 
     Row(
         modifier = modifier
-            .height(72.dp)
+            .height(71.dp)
             .clip(RoundedCornerShape(26.dp))
             .background(bg)
             .clickable(

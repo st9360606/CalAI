@@ -171,7 +171,7 @@ fun NotificationPermissionScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
-                val panelWidth = maxWidth * 0.88f
+                val panelWidth = maxWidth * 0.86f
                 val panelHeight = (panelWidth * 1.27f).coerceIn(360.dp, 620.dp)
 
                 Column(
@@ -184,7 +184,7 @@ fun NotificationPermissionScreen(
                             .height(panelHeight),
                         bigClock = "8:30",
                         clockAlpha = 1f,
-                        clockSizeSp = 124,
+                        clockSizeSp = 110,
                         clockOffsetTop = 18.dp,
                         clockContentGap = 22.dp
                     ) {
@@ -251,7 +251,7 @@ private fun NotifBottomBar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom = 72.dp)
                 .fillMaxWidth()
                 .height(64.dp),
             shape = RoundedCornerShape(28.dp),
