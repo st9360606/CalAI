@@ -21,7 +21,6 @@ import com.calai.app.data.auth.store.UserProfileStore
 class MainActivity : ComponentActivity() {
 
     @Volatile private var splashUnlocked = false
-    private val fallbackMs = 350L
     private var fuseJob: Job? = null
 
     private fun logPoint(tag: String) {
@@ -48,11 +47,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        fuseJob = lifecycleScope.launch {
-            delay(fallbackMs)
-            unlockSplash("fallback-${fallbackMs}ms")
-        }
-
         setContent {
             FirstFrameUnlock {
                 unlockSplash("first-frame")
@@ -61,7 +55,6 @@ class MainActivity : ComponentActivity() {
             logPoint("setContent-enter")
             BiteCalApp(hostActivity = this)
         }
-
         logPoint("onCreate:end")
     }
 

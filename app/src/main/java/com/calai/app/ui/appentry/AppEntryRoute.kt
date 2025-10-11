@@ -2,6 +2,7 @@ package com.calai.app.ui.appentry
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -10,7 +11,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.calai.app.di.AppEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 
@@ -38,7 +41,11 @@ fun AppEntryRoute(
     }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(
+            color = Color.Black,
+            strokeWidth = 4.dp,
+            modifier = Modifier.size(28.dp)
+        )
     }
     SnackbarHost(hostState = snack)
 }
