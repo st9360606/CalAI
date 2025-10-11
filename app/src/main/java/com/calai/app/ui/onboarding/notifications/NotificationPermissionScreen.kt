@@ -171,8 +171,8 @@ fun NotificationPermissionScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
-                val panelWidth = maxWidth * 0.86f
-                val panelHeight = (panelWidth * 1.27f).coerceIn(360.dp, 620.dp)
+                val panelWidth = maxWidth * 0.84f
+                val panelHeight = (panelWidth * 1.20f).coerceIn(360.dp, 620.dp)
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -198,7 +198,7 @@ fun NotificationPermissionScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(20.dp))
 
                     val titleStyle = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 42.sp,          // 你的標題字級
@@ -210,14 +210,14 @@ fun NotificationPermissionScreen(
                     NotifTitleWithEndImageInline(
                         text = s(R.string.notif_title, "Make every meal count"),
                         tailRes = R.drawable.notifications,         // 你的彩色鈴鐺
-                        modifier = Modifier.width(panelWidth),
+                        modifier = Modifier.fillMaxWidth(0.82f),
                         tailSizeSp = titleStyle.fontSize,       // ★ 圖示大小=標題字級 → 幾乎一樣大
                         tailSpaceEm = 1.1f,                    // 與文字距離，想更緊可改 0.15f
                         textAlign = TextAlign.Start,
                         style = titleStyle
                     )
 
-                    Spacer(Modifier.height(9.dp))
+                    Spacer(Modifier.height(8.dp))
 
                     // 副標：與手機外框同寬（保持原樣）
                     Text(
@@ -230,7 +230,7 @@ fun NotificationPermissionScreen(
                             lineHeight = 22.sp
                         ),
                         color = Color(0xFF8F98A3),
-                        modifier = Modifier.width(panelWidth)
+                        modifier = Modifier.fillMaxWidth(0.80f),
                     )
                 }
             }

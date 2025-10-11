@@ -106,9 +106,30 @@
     <!-- notifications -->
     <string name="allow_notifications_cta">允許通知</string>
     <string name="notif_title">每一餐都算數</string>
-    <string name="notif_subtitle">用餐前後貼心提示，健康改變從當下開始。\n開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
+    <string name="notif_subtitle">用餐前後貼心提示，健康改變從當下開始，讓我們開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>
+
+    <!-- HealthConnect -->
+    <string name="hc_connect_title_prefix">連接到</string>
+    <string name="hc_connect_title_service">Health Connect</string>
+    <string name="hc_connect_body">在 BiteCal AI 與健康應用間同步日常活動，取得更完整的紀錄與分析。</string>
+    <string name="skip_text">暫不</string>
+
+    <!-- progress -->
+    <string name="progress_title_percent">%1$d%%</string>
+    <string name="progress_title_heading">正在建立你的每日計畫</string>
+    <string name="progress_phase_1">正在估算你的代謝年齡…</string>
+    <string name="progress_phase_2">正在計算營養目標…</string>
+    <string name="progress_phase_3">正在建立每日建議…</string>
+    <string name="progress_phase_4">正在完成結果分析…</string>
+    <string name="progress_card_title">每日建議項目</string>
+    <string name="progress_item_calories">卡路里</string>
+    <string name="progress_item_carbs">碳水化合物</string>
+    <string name="progress_item_protein">蛋白質</string>
+    <string name="progress_item_fats">脂肪</string>
+    <string name="progress_item_health_score">健康指數</string>
+
 
     <!-- plan -->
     <string name="plan_title_congrats">太棒了！</string>

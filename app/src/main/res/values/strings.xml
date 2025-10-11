@@ -104,9 +104,30 @@
     <string name="allow_notifications_cta">Allow Notifications</string>
     <string name="notif_title">Make every meal count !</string>
     <string name="notif_subtitle">Enable notifications—we’ll nudge you at the right moments so the occasional slip doesn’t set you back !</string>
-
     <string name="onb_notif_title_got_a_sec">Got 10 seconds ?</string>
     <string name="onb_notif_subtitle_log_meal_goal">Log what you just had—make every meal count.</string>
+
+    <!-- HealthConnect -->
+    <string name="hc_connect_title_prefix">Connect to</string>
+    <string name="hc_connect_title_service">Health Connect</string>
+    <string name="hc_connect_body">Sync your daily activity between BiteCal AI and your health apps for more complete tracking and insights.</string>
+    <string name="skip_text">Not now</string>
+
+    <!-- progress -->
+    <string name="progress_title_percent">%1$d%%</string>
+    <string name="progress_title_heading">We\'re building your daily plan</string>
+    <string name="progress_phase_1">Estimating your metabolic age…</string>
+    <string name="progress_phase_2">Crunching nutrition targets…</string>
+    <string name="progress_phase_3">Building daily recommendations…</string>
+    <string name="progress_phase_4">Finalizing results…</string>
+
+    <string name="progress_card_title">Daily recommendation for</string>
+    <string name="progress_item_calories">Calories</string>
+    <string name="progress_item_carbs">Carbs</string>
+    <string name="progress_item_protein">Protein</string>
+    <string name="progress_item_fats">Fats</string>
+    <string name="progress_item_health_score">Health score</string>
+
 
 
     <!-- plan -->

@@ -1,7 +1,5 @@
 package com.calai.app.ui.onboarding.healthconnect
 
-import androidx.compose.foundation.layout.width
-import android.R.attr.maxWidth
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -12,27 +10,53 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.health.connect.client.HealthConnectClient
@@ -42,15 +66,6 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import com.calai.app.R
-
-// 新增：畫粗白色勾勾需要的 Canvas 相關 import
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import com.calai.app.ui.common.OnboardingProgress
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +74,6 @@ fun HealthConnectIntroScreen(
     onBack: () -> Unit,
     onSkip: () -> Unit,
     onConnected: () -> Unit,
-    // 中央圖片（換成你的 drawable）
     @DrawableRes centerImageRes: Int = R.drawable.health_connect_logo
 ) {
     val ctx = LocalContext.current
@@ -107,12 +121,7 @@ fun HealthConnectIntroScreen(
                     val launcher = rememberLauncherForActivityResult(
                         contract = PermissionController.createRequestPermissionResultContract()
                     ) { granted ->
-                        if (setOf(
-                                HealthPermission.getReadPermission(StepsRecord::class),
-                                HealthPermission.getReadPermission(ExerciseSessionRecord::class),
-                                HealthPermission.getReadPermission(SleepSessionRecord::class)
-                            ).all { it in granted }
-                        ) onConnected()
+                        if (requiredPermissions.all { it in granted }) onConnected()
                     }
                     HCBottomBar(
                         onPrimary = {
@@ -123,27 +132,19 @@ fun HealthConnectIntroScreen(
                             ) {
                                 openHealthConnectStore(ctx)
                             } else {
-                                launcher.launch(
-                                    setOf(
-                                        HealthPermission.getReadPermission(StepsRecord::class),
-                                        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
-                                        HealthPermission.getReadPermission(SleepSessionRecord::class)
-                                    )
-                                )
+                                launcher.launch(requiredPermissions)
                             }
                         },
                         onSkip = onSkip
                     )
                 }
             } else {
-                // 沒有 ActivityResultRegistryOwner 時，直接觸發 onConnected（方便預覽/測試）
                 HCBottomBar(
                     onPrimary = onConnected,
                     onSkip = onSkip
                 )
             }
         }
-
     ) { inner ->
         Column(
             modifier = Modifier
@@ -159,18 +160,17 @@ fun HealthConnectIntroScreen(
                     .padding(horizontal = 20.dp)
             )
 
-            Spacer(Modifier.height(100.dp))
+            Spacer(Modifier.height(105.dp))
 
-            // ===== Hero 區：白色圓角方形（更窄＋更粗外框）+ 中央圖片 + 方框外下方綠勾 =====
+            // ===== Hero：白色圓角框 + 圖 + 下方綠勾 =====
             val cardCorner = 28.dp
             val cardHeight = 148.dp
-            val cardWidthFraction = 0.42f          // 更窄
-            val cardBorderWidth = 2.3.dp           // 更粗外框
+            val cardWidthFraction = 0.42f
+            val cardBorderWidth = 2.3.dp
 
-            // 勾勾大小與粗細（你要再調，改這兩個值）
-            val checkSize = 30.dp                  // 綠圓更小
-            val checkStroke = 4.dp                 // 白色勾更粗
-            val checkGap = 20.dp                    // 與方框底邊的間距
+            val checkSize = 30.dp
+            val checkStroke = 4.dp
+            val checkGap = 20.dp
 
             Box(
                 modifier = Modifier
@@ -179,7 +179,6 @@ fun HealthConnectIntroScreen(
                     .height(300.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // 白色圓角方形
                 val cardModifier = Modifier
                     .fillMaxWidth(cardWidthFraction)
                     .height(cardHeight)
@@ -194,32 +193,29 @@ fun HealthConnectIntroScreen(
                 Box(cardModifier, contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(centerImageRes),
-                        contentDescription = "Center Image",
+                        contentDescription = "logo", // ← 使用字串資源
                         modifier = Modifier.size(135.dp),
                         contentScale = ContentScale.Fit
                     )
                 }
 
-                // 綠圓＋「粗白勾」：在方框「外」的下方中央
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        // 置於外側：方框半高 + 間距 + 綠圓半徑
                         .offset(y = (cardHeight / 2) + checkGap + (checkSize / 2))
                         .size(checkSize)
                         .clip(CircleShape)
                         .background(Color(0xFF2BB673)),
                     contentAlignment = Alignment.Center
                 ) {
-                    // 用 Canvas 畫兩段線的 ✓，可調粗細
-                    Canvas(modifier = Modifier.fillMaxSize().padding((checkSize * 0.18f))) {
+                    Canvas(modifier = Modifier
+                        .fillMaxSize()
+                        .padding((checkSize * 0.18f))) {
                         val w = size.width
                         val h = size.height
-                        // ✓ 的三個關鍵點（比例坐標）
                         val p1 = Offset(w * 0.20f, h * 0.55f)
                         val p2 = Offset(w * 0.43f, h * 0.75f)
                         val p3 = Offset(w * 0.82f, h * 0.30f)
-
                         val strokePx = checkStroke.toPx()
                         drawLine(
                             color = Color.White,
@@ -237,25 +233,36 @@ fun HealthConnectIntroScreen(
                 }
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(6.dp))
 
-            // 放在你原本的 `Spacer(Modifier.height(30.dp))` 之後，直接替換原本的 Column 區塊
+            // 標題＋內文（全部改用 stringResource）
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 自訂一個更窄的比例（原 0.75f → 0.66f）
-                val titleWidthFraction = 0.78f
-                val bodyWidthFraction = 0.76f  // 內文可以略寬一點點，易讀
+                val titleWidthFraction = 0.74f
+                val bodyWidthFraction = 0.72f
 
                 Text(
-                    text = "連接到",
+                    text = stringResource(R.string.hc_connect_title_prefix), // 「連接到」
                     modifier = Modifier.fillMaxWidth(titleWidthFraction),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 42.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 45.sp
+                        lineHeight = 42.sp
+                    ),
+                    color = Color(0xFF111114),
+                    textAlign = TextAlign.Start,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = stringResource(R.string.hc_connect_title_service), // 「Health Connect」
+                    modifier = Modifier.fillMaxWidth(titleWidthFraction),
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontSize = 42.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        lineHeight = 42.sp
                     ),
                     color = Color(0xFF111114),
                     textAlign = TextAlign.Start,
@@ -263,24 +270,10 @@ fun HealthConnectIntroScreen(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Text(
-                    text = "Health Connect",
-                    modifier = Modifier.fillMaxWidth(titleWidthFraction),
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = 42.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 45.sp
-                    ),
-                    color = Color(0xFF111114),
-                    textAlign = TextAlign.Start,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(9.dp))
 
                 Text(
-                    text = "在 BiteCal AI 和健康應用之間同步你的日常活動，以獲得最全面的數據。",
+                    text = stringResource(R.string.hc_connect_body),
                     modifier = Modifier.fillMaxWidth(bodyWidthFraction),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 16.sp,
@@ -290,7 +283,6 @@ fun HealthConnectIntroScreen(
                     textAlign = TextAlign.Start
                 )
             }
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -301,7 +293,6 @@ private fun HCBottomBar(
     onSkip: () -> Unit,
 ) {
     Box {
-        // 主按鈕（黑底白字、64dp 高、28dp 圓角、底部 59dp）— 與 Allow Notifications 同款
         Button(
             onClick = onPrimary,
             modifier = Modifier
@@ -317,30 +308,28 @@ private fun HCBottomBar(
             )
         ) {
             Text(
-                text = "繼續",
+                text = stringResource(R.string.continue_btn), // ← 使用既有「繼續」
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
 
-        // 次要動作「暫不」— 與 NotificationPermissionScreen 配對的純文字樣式
         TextButton(
             onClick = onSkip,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(bottom = 18.dp) // 與主按鈕距離自然；可依需求微調
+                .padding(bottom = 18.dp)
         ) {
             Text(
-                text = "暫不",
+                text = stringResource(R.string.skip_text), // ← 新增「暫不」
                 color = Color.Black,
-                fontSize = 16.sp ,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
-
 
 /* ---------- 其他 ---------- */
 private fun openHealthConnectStore(ctx: Context) {
