@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -132,7 +133,7 @@ fun NotificationPermissionScreen(
         },
         bottomBar = {
             if (canUseLauncher) {
-                CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity!!) {
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
                     val launcher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.RequestPermission()
                     ) { ok ->
@@ -520,7 +521,9 @@ private fun NotifTitleWithEndImageInline(
                 )
             ) {
                 // 不加 tint -> 保留原本色彩
-                Image(painter = painterResource(id = tailRes), contentDescription = null)
+                Image(painter = painterResource(id = tailRes), contentDescription = null,
+                    modifier = Modifier
+                        .offset(y = 3.dp)) // ★ 關鍵：往下移)
             }
         )
     }
