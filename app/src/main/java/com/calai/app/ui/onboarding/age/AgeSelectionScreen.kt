@@ -111,7 +111,7 @@ fun AgeSelectionScreen(
                         // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
                         .navigationBarsPadding() // 先避開手勢列
                         // 2) 額外再往上推一點（你要的「再往上一點」）
-                        .padding(start = 20.dp, end = 20.dp, bottom = 72.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(28.dp),

@@ -160,7 +160,7 @@ fun HealthConnectIntroScreen(
                     .padding(horizontal = 20.dp)
             )
 
-            Spacer(Modifier.height(105.dp))
+            Spacer(Modifier.height(108.dp))
 
             // ===== Hero：白色圓角框 + 圖 + 下方綠勾 =====
             val cardCorner = 28.dp
@@ -253,7 +253,6 @@ fun HealthConnectIntroScreen(
                     ),
                     color = Color(0xFF111114),
                     textAlign = TextAlign.Start,
-                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
@@ -266,11 +265,10 @@ fun HealthConnectIntroScreen(
                     ),
                     color = Color(0xFF111114),
                     textAlign = TextAlign.Start,
-                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(Modifier.height(9.dp))
+                Spacer(Modifier.height(4.dp))
 
                 Text(
                     text = stringResource(R.string.hc_connect_body),
@@ -298,10 +296,10 @@ private fun HCBottomBar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 72.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
                 .fillMaxWidth()
                 .height(64.dp),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(31.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Black,
                 contentColor = Color.White

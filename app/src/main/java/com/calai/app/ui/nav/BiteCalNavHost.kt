@@ -5,10 +5,13 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.HiltViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -19,8 +22,8 @@ import androidx.navigation.navArgument
 import com.calai.app.R
 import com.calai.app.data.auth.net.SessionBus
 import com.calai.app.di.AppEntryPoint
-import com.calai.app.i18n.LanguageManager
 import com.calai.app.i18n.LocalLocaleController
+import com.calai.app.i18n.LanguageSessionFlag
 import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.ui.appentry.AppEntryRoute
 import com.calai.app.ui.auth.RequireSignInScreen
@@ -29,50 +32,14 @@ import com.calai.app.ui.auth.SignUpScreen
 import com.calai.app.ui.auth.email.EmailCodeScreen
 import com.calai.app.ui.auth.email.EmailEnterScreen
 import com.calai.app.ui.auth.email.EmailSignInViewModel
-import com.calai.app.ui.home.HomeScreen
+import com.calai.app.ui.home.HomeRoute
+import com.calai.app.ui.home.HomeTab
+import com.calai.app.ui.home.HomeViewModel
 import com.calai.app.ui.landing.LandingScreen
-import com.calai.app.ui.nav.Routes.APP_ENTRY
-import com.calai.app.ui.nav.Routes.HOME
-import com.calai.app.ui.nav.Routes.LANDING
-import com.calai.app.ui.nav.Routes.ONBOARD_AGE
-import com.calai.app.ui.nav.Routes.ONBOARD_EXERCISE_FREQ
-import com.calai.app.ui.nav.Routes.ONBOARD_GENDER
-import com.calai.app.ui.nav.Routes.ONBOARD_GOAL
-import com.calai.app.ui.nav.Routes.ONBOARD_HEIGHT
-import com.calai.app.ui.nav.Routes.ONBOARD_NOTIF
-import com.calai.app.ui.nav.Routes.ONBOARD_REFERRAL
-import com.calai.app.ui.nav.Routes.ONBOARD_TARGET_WEIGHT
-import com.calai.app.ui.nav.Routes.ONBOARD_WEIGHT
-import com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN
-import com.calai.app.ui.nav.Routes.ROUTE_PLAN
-import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_CODE
-import com.calai.app.ui.nav.Routes.SIGNIN_EMAIL_ENTER
-import com.calai.app.ui.nav.Routes.SIGN_UP
-import com.calai.app.ui.onboarding.age.AgeSelectionScreen
-import com.calai.app.ui.onboarding.age.AgeSelectionViewModel
-import com.calai.app.ui.onboarding.exercise.ExerciseFrequencyScreen
-import com.calai.app.ui.onboarding.exercise.ExerciseFrequencyViewModel
-import com.calai.app.ui.onboarding.gender.GenderKey
-import com.calai.app.ui.onboarding.gender.GenderSelectionScreen
-import com.calai.app.ui.onboarding.gender.GenderSelectionViewModel
-import com.calai.app.ui.onboarding.goal.GoalSelectionScreen
-import com.calai.app.ui.onboarding.goal.GoalSelectionViewModel
-import com.calai.app.ui.onboarding.height.HeightSelectionScreen
-import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
-import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
-import com.calai.app.ui.onboarding.plan.HealthPlanScreen
-import com.calai.app.ui.onboarding.plan.HealthPlanViewModel
-import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
-import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
-import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
-import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
-import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
-import com.calai.app.ui.onboarding.weight.WeightSelectionViewModel
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Locale
 
 object Routes {
     const val LANDING = "landing"
@@ -89,10 +56,19 @@ object Routes {
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
     const val ONBOARD_NOTIF = "onboard_notif"
+    const val ONBOARD_HEALTH_CONNECT = "onboard_health_connect"
+    const val PLAN_PROGRESS = "plan_progress"
     const val ROUTE_PLAN = "plan"
     const val REQUIRE_SIGN_IN = "require_sign_in"
     const val HOME = "home"
     const val APP_ENTRY = "app_entry"
+    // 其他暫時頁
+    const val PROGRESS = "progress"
+    const val NOTE = "note"
+    const val FASTING = "fasting"
+    const val PERSONAL = "personal"
+    const val CAMERA = "camera"
+    const val REMINDERS = "reminders"
 }
 
 private tailrec fun Context.findActivity(): Activity? =
@@ -103,7 +79,7 @@ private tailrec fun Context.findActivity(): Activity? =
     }
 
 private fun androidx.navigation.NavController.safePopBackStack(): Boolean =
-    if (previousBackStackEntry != null) popBackStack() else false
+    previousBackStackEntry != null && popBackStack()
 
 @Composable
 fun BiteCalNavHost(
@@ -124,68 +100,51 @@ fun BiteCalNavHost(
     val profileRepo = remember(ep) { ep.profileRepository() }
     val store = remember(ep) { ep.userProfileStore() }
 
-    // === 語言開機流程：DataStore → 裝置語言 ===
     val localeController = LocalLocaleController.current
-    LaunchedEffect(Unit) {
-        val dsTag = withContext(Dispatchers.IO) { runCatching { store.localeTag() }.getOrNull() }
-        val tag: String = (dsTag?.takeIf { it.isNotBlank() }
-            ?: localeController.tag.takeIf { it.isNotBlank() }
-            ?: Locale.getDefault().toLanguageTag())
 
-        if (localeController.tag != tag) {
-            localeController.set(tag)
-            LanguageManager.applyLanguage(tag)
-            onSetLocale(tag)
-        }
-        if (dsTag.isNullOrBlank()) {
-            withContext(Dispatchers.IO) { runCatching { store.setLocaleTag(tag) } }
-        }
-    }
+    // ✅ 不再在這裡初始化語言（交由 BiteCalApp 進行），以免造成啟動畫面語言跳動
+    // （原本 DataStore→裝置語言→set 的 LaunchedEffect 已移除）
 
     // Token 逾期：帶到 Gate，成功後回 HOME
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            nav.navigate("$REQUIRE_SIGN_IN?redirect=$HOME") { popUpTo(0) { inclusive = true } }
+            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}") {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
 
-    // ★ 冷啟起點 → APP_ENTRY
-    NavHost(navController = nav, startDestination = APP_ENTRY, modifier = modifier) {
+    NavHost(navController = nav, startDestination = Routes.APP_ENTRY, modifier = modifier) {
 
-        composable(APP_ENTRY) {
+        composable(Routes.APP_ENTRY) {
             AppEntryRoute(
-                onGoLanding = { nav.navigate(LANDING) { popUpTo(0) { inclusive = true } } },
-                onGoHome = { nav.navigate(HOME) { popUpTo(0) { inclusive = true } } }
+                onGoLanding = { nav.navigate(Routes.LANDING) { popUpTo(0) { inclusive = true } } },
+                onGoHome = { nav.navigate(Routes.HOME) { popUpTo(0) { inclusive = true } } }
             )
         }
 
-        composable(LANDING) {
+        composable(Routes.LANDING) {
             val scope = rememberCoroutineScope()
             val localeControllerLocal = LocalLocaleController.current
 
             LandingScreen(
                 hostActivity = hostActivity,
                 navController = nav,
-                // Start：新用戶→Onboarding；回訪→登入 Gate
                 onStart = {
-                    scope.launch {
-                        val has = store.hasServerProfile()
-                        if (has) nav.navigate("$REQUIRE_SIGN_IN?redirect=$HOME")
-                        else nav.navigate(ONBOARD_GENDER)
-                    }
+                    nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true }
                 },
-                // Sign in：回訪→HOME；新用戶→Onboarding
                 onLogin = {
                     scope.launch {
                         val has = store.hasServerProfile()
-                        val target = if (has) HOME else ONBOARD_GENDER
-                        nav.navigate("$REQUIRE_SIGN_IN?redirect=$target")
+                        val target = if (has) Routes.HOME else Routes.ONBOARD_GENDER
+                        nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target")
                     }
                 },
-                // 切換語言：立即套用並寫入 DataStore
                 onSetLocale = { tag ->
+                    // 只在使用者主動切換時才更新（這裡會順便寫 DataStore）
                     localeControllerLocal.set(tag)
-                    LanguageManager.applyLanguage(tag)
+                    // 如果你有 AppCompatDelegate.apply 的封裝，就在這裡呼叫
+                    com.calai.app.i18n.LanguageManager.applyLanguage(tag)
                     onSetLocale(tag)
                     scope.launch {
                         withContext(Dispatchers.IO) {
@@ -196,17 +155,17 @@ fun BiteCalNavHost(
             )
         }
 
-        composable(SIGN_UP) {
+        composable(Routes.SIGN_UP) {
             SignUpScreen(onBack = { nav.safePopBackStack() }, onSignedUp = { })
         }
 
         // ===== Email：輸入 Email 畫面（帶 redirect）=====
         composable(
-            route = "$SIGNIN_EMAIL_ENTER?redirect={redirect}",
+            route = "${Routes.SIGNIN_EMAIL_ENTER}?redirect={redirect}",
             arguments = listOf(
                 navArgument("redirect") {
                     type = NavType.StringType
-                    defaultValue = HOME
+                    defaultValue = Routes.HOME
                 }
             )
         ) { backStackEntry ->
@@ -215,23 +174,23 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            val redirect = backStackEntry.arguments?.getString("redirect") ?: HOME
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
 
             EmailEnterScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onSent = { email ->
-                    nav.navigate("$SIGNIN_EMAIL_CODE?email=$email&redirect=$redirect")
+                    nav.navigate("${Routes.SIGNIN_EMAIL_CODE}?email=$email&redirect=$redirect")
                 }
             )
         }
 
         // ===== Email：輸入驗證碼畫面（帶 redirect）=====
         composable(
-            route = "$SIGNIN_EMAIL_CODE?email={email}&redirect={redirect}",
+            route = "${Routes.SIGNIN_EMAIL_CODE}?email={email}&redirect={redirect}",
             arguments = listOf(
                 navArgument("email") { type = NavType.StringType; defaultValue = "" },
-                navArgument("redirect") { type = NavType.StringType; defaultValue = HOME }
+                navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME }
             )
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
@@ -240,7 +199,7 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val email = backStackEntry.arguments?.getString("email") ?: ""
-            val redirect = backStackEntry.arguments?.getString("redirect") ?: HOME
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
 
             val currentTag = localeController.tag.ifBlank { "en" }
             val scope = rememberCoroutineScope()
@@ -252,9 +211,21 @@ fun BiteCalNavHost(
                 onSuccess = {
                     scope.launch {
                         withContext(Dispatchers.IO) {
-                            runCatching { store.setLocaleTag(currentTag) }
-                            profileRepo.upsertFromLocal()
-                            runCatching { store.setHasServerProfile(true) }
+                            // 新/舊分流：存在＝回訪；不存在＝新用戶
+                            val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
+                            if (!exists) {
+                                // 新用戶：把當前語言寫入，再上傳完整 Onboarding
+                                runCatching { store.setLocaleTag(currentTag) }
+                                runCatching { profileRepo.upsertFromLocal() }
+                                runCatching { store.setHasServerProfile(true) }
+                            } else {
+                                // 回訪用戶：僅在本次 session 有改語言才覆蓋後端語系
+                                val changedThisSession = LanguageSessionFlag.consumeChanged()
+                                if (changedThisSession) {
+                                    runCatching { profileRepo.updateLocaleOnly(currentTag) }
+                                }
+                                runCatching { store.setHasServerProfile(true) }
+                            }
                         }
                         Toast.makeText(
                             hostActivity,
@@ -271,143 +242,182 @@ fun BiteCalNavHost(
             )
         }
 
-        // ===== Onboarding：性別 =====
-        composable(ONBOARD_GENDER) { backStackEntry ->
+        // ===== Onboarding：性別 → 目標體重 → 通知 → Plan =====
+        composable(Routes.ONBOARD_GENDER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: GenderSelectionViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.gender.GenderSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            GenderSelectionScreen(
+            com.calai.app.ui.onboarding.gender.GenderSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { _: GenderKey -> nav.navigate(ONBOARD_REFERRAL) { launchSingleTop = true } }
+                onNext = { _: com.calai.app.ui.onboarding.gender.GenderKey ->
+                    nav.navigate(Routes.ONBOARD_REFERRAL) { launchSingleTop = true }
+                }
             )
         }
 
-        composable(ONBOARD_REFERRAL) { backStackEntry ->
+        composable(Routes.ONBOARD_REFERRAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: ReferralSourceViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            ReferralSourceScreen(
+            com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_AGE) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_AGE) { launchSingleTop = true } }
             )
         }
 
-        composable(ONBOARD_AGE) { backStackEntry ->
+        composable(Routes.ONBOARD_AGE) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: AgeSelectionViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.age.AgeSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            AgeSelectionScreen(
+            com.calai.app.ui.onboarding.age.AgeSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_HEIGHT) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_HEIGHT) { launchSingleTop = true } }
             )
         }
 
-        composable(ONBOARD_HEIGHT) { backStackEntry ->
+        composable(Routes.ONBOARD_HEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: HeightSelectionViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.height.HeightSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            HeightSelectionScreen(
+            com.calai.app.ui.onboarding.height.HeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_WEIGHT) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_WEIGHT) { launchSingleTop = true } }
             )
         }
 
-        composable(ONBOARD_WEIGHT) { backStackEntry ->
+        composable(Routes.ONBOARD_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: WeightSelectionViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.weight.WeightSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            WeightSelectionScreen(
+            com.calai.app.ui.onboarding.weight.WeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_EXERCISE_FREQ) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_EXERCISE_FREQ) { launchSingleTop = true } }
             )
         }
 
-        composable(ONBOARD_EXERCISE_FREQ) { backStackEntry ->
+        composable(Routes.ONBOARD_EXERCISE_FREQ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: ExerciseFrequencyViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.exercise.ExerciseFrequencyViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            ExerciseFrequencyScreen(
+            com.calai.app.ui.onboarding.exercise.ExerciseFrequencyScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_GOAL) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_GOAL) { launchSingleTop = true } }
             )
         }
 
-        composable(ONBOARD_GOAL) { backStackEntry ->
+        composable(Routes.ONBOARD_GOAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: GoalSelectionViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.goal.GoalSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            GoalSelectionScreen(
+            com.calai.app.ui.onboarding.goal.GoalSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
             )
         }
 
-        composable(ONBOARD_TARGET_WEIGHT) { backStackEntry ->
+        composable(Routes.ONBOARD_TARGET_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: WeightTargetViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            WeightTargetScreen(
+            com.calai.app.ui.onboarding.targetweight.WeightTargetScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ONBOARD_NOTIF) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_NOTIF) { launchSingleTop = true } }
             )
         }
 
-        composable(ONBOARD_NOTIF) {
-            NotificationPermissionScreen(
+        composable(Routes.ONBOARD_NOTIF) {
+            com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen(
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(ROUTE_PLAN) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_HEALTH_CONNECT) { launchSingleTop = true } }
             )
         }
 
-        composable(ROUTE_PLAN) { backStackEntry ->
+        // Health Connect 連結頁 → 完成/略過都先進「運算進度頁」
+        composable(Routes.ONBOARD_HEALTH_CONNECT) {
+            com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen(
+                onBack = { nav.safePopBackStack() },
+                onSkip = {
+                    nav.navigate(Routes.PLAN_PROGRESS) {
+                        popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onConnected = {
+                    nav.navigate(Routes.PLAN_PROGRESS) {
+                        popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        // 運算進度頁
+        composable(Routes.PLAN_PROGRESS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: HealthPlanViewModel = viewModel(
+            val vm: com.calai.app.ui.onboarding.progress.ComputationProgressViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            HealthPlanScreen(vm = vm, onStart = {
-                val target = HOME
+            com.calai.app.ui.onboarding.progress.ComputationProgressScreen(
+                vm = vm,
+                onDone = {
+                    nav.navigate(Routes.ROUTE_PLAN) {
+                        popUpTo(Routes.PLAN_PROGRESS) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(Routes.ROUTE_PLAN) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: com.calai.app.ui.onboarding.plan.HealthPlanViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            com.calai.app.ui.onboarding.plan.HealthPlanScreen(vm = vm, onStart = {
+                val target = Routes.HOME
                 if (isSignedIn == true) {
                     nav.navigate(target) { popUpTo(0) { inclusive = true } }
                 } else {
-                    nav.navigate("$REQUIRE_SIGN_IN?redirect=$target")
+                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target")
                 }
             })
         }
 
-        // ===== 登入 Gate（未登入顯示 Create an account，登入/Skip → redirect）=====
+        // 登入 Gate
         composable(
-            route = "$REQUIRE_SIGN_IN?redirect={redirect}",
+            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}",
             arguments = listOf(navArgument("redirect") {
                 type = NavType.StringType
-                defaultValue = HOME
+                defaultValue = Routes.HOME
             })
         ) { backStackEntry ->
-            val redirect = backStackEntry.arguments?.getString("redirect") ?: HOME
+            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
 
             val snackbarHostState = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
@@ -420,7 +430,6 @@ fun BiteCalNavHost(
             RequireSignInScreen(
                 onBack = { nav.safePopBackStack() },
                 onGoogleClick = { showSheet.value = true },
-                // ✅ Skip：優先返回上一頁；若沒有上一頁才用 redirect
                 onSkip = {
                     val popped = nav.safePopBackStack()
                     if (!popped) {
@@ -451,7 +460,7 @@ fun BiteCalNavHost(
 
                     onEmail = {
                         showSheet.value = false
-                        nav.navigate("$SIGNIN_EMAIL_ENTER?redirect=$redirect")
+                        nav.navigate("${Routes.SIGNIN_EMAIL_ENTER}?redirect=$redirect")
                     },
 
                     onShowError = { msg ->
@@ -459,30 +468,54 @@ fun BiteCalNavHost(
                         scope.launch { snackbarHostState.showSnackbar(msg.toString()) }
                     },
 
-                    // 成功後：寫 locale、upsert、記 hasServerProfile → 導頁
+                    // 登入後僅導航；資料寫入由 SignInSheetHost 處理
                     postLoginNavigate = { controller ->
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                runCatching { store.setLocaleTag(currentTag) }
-                                profileRepo.upsertFromLocal()
-                                runCatching { store.setHasServerProfile(true) }
-                            }
-                            controller.navigate(redirect) {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
-                                restoreState = false
-                            }
+                        controller.navigate(redirect) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = false
                         }
                     }
                 )
             }
         }
 
-        // HOME
-        composable(HOME) {
-            HomeScreen(onSignOut = {
-                nav.navigate(LANDING) { popUpTo(0) { inclusive = true } }
-            })
+        // HOME + 暫時頁
+        composable(Routes.HOME) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: HomeViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            HomeRoute(
+                vm = vm,
+                onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
+                onOpenCamera = { nav.navigate(Routes.CAMERA) },
+                onOpenTab = { tab ->
+                    when (tab) {
+                        HomeTab.Home -> { /* stay */ }
+                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS)
+                        HomeTab.Note -> nav.navigate(Routes.NOTE)
+                        HomeTab.Fasting -> nav.navigate(Routes.FASTING)
+                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
+                    }
+                }
+            )
         }
+
+        composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
+        composable(Routes.NOTE) { SimplePlaceholder("Note") }
+        composable(Routes.FASTING) { SimplePlaceholder("Fasting") }
+        composable(Routes.PERSONAL) { SimplePlaceholder("Personal") }
+        composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
+        composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
     }
+}
+
+@Composable
+private fun SimplePlaceholder(title: String) {
+    Text(
+        modifier = Modifier.padding(24.dp),
+        text = "TODO: $title page"
+    )
 }

@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.calai.app.R
+import com.calai.app.i18n.LanguageSessionFlag
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.common.FlagChip
@@ -53,7 +54,7 @@ fun LandingScreen(
     var showLang by rememberSaveable { mutableStateOf(false) }
     var switching by rememberSaveable { mutableStateOf(false) }
 
-    // ===== 尺寸自適應：小寬度螢幕略降字級 =====
+    // ===== 尺寸自適應 =====
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
     val baseTitleSize = 32.sp
     val titleSize = when {
@@ -61,11 +62,17 @@ fun LandingScreen(
         screenWidthDp < 360 -> (baseTitleSize.value - 2).sp
         else -> baseTitleSize
     }
-    val titleLineHeight = (titleSize.value + 6).sp   // 行高跟著字級走，避免擁擠
-    val titleWidthFraction = 0.85f                   // 放寬寬度避免早早換行
-    val spaceVideoToTitle = 18.dp
+    val titleLineHeight = (titleSize.value + 2).sp
+    val titleWidthFraction = 0.85f
+    val spaceVideoToTitle = 15.dp
 
-    val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
+    val titleFont = remember {
+        FontFamily(
+            Font(R.font.montserrat_bold, weight = FontWeight.ExtraBold),
+            Font(R.font.notosanstc_bold, weight = FontWeight.ExtraBold),
+            Font(R.font.notosanssc_bold, weight = FontWeight.ExtraBold)
+        )
+    }
 
     val currentTag = composeLocale.tag.ifBlank { "en" }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
@@ -103,7 +110,7 @@ fun LandingScreen(
                 onStart = onStart,
                 onLogin = onLogin,
                 titleFont = titleFont,
-                bottomOffset = 34.dp
+                bottomOffset = 37.dp
             )
         }
     ) { inner ->
@@ -113,11 +120,11 @@ fun LandingScreen(
                 .padding(inner)
                 .imePadding()
         ) {
-            // ✅ 移除對外框的負向 offset，避免破圖
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
+                // 你自訂的 iPhone 外框
                 DeviceFrameIPhone(
                     modifier = Modifier
                         .fillMaxWidth(0.75f)
@@ -149,45 +156,35 @@ fun LandingScreen(
 
             Spacer(Modifier.height(spaceVideoToTitle))
 
-            // ===== 標題：關閉 Ellipsis，放寬寬度，允許 3 行 =====
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = stringResource(R.string.landing_title),
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = titleSize,
                     lineHeight = titleLineHeight,
-                    fontFamily = titleFont,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF111114),
                     textAlign = TextAlign.Center,
-                    maxLines = 3,
-                    overflow = TextOverflow.Clip,
-                    softWrap = true,
                     modifier = Modifier.fillMaxWidth(titleWidthFraction),
-                    style = LocalTextStyle.current.copy(
-                        platformStyle = PlatformTextStyle(includeFontPadding = false),
-                        lineHeightStyle = LineHeightStyle(
-                            alignment = LineHeightStyle.Alignment.Center,
-                            trim = LineHeightStyle.Trim.None
-                        )
-                    )
                 )
             }
-
-            // ===== 與 CTA 拉開距離（增加緩衝空白） =====
-//            Spacer(Modifier.height(15.dp)) // ★ 調整 24~40.dp 皆可
         }
 
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
-                currentTag = composeLocale.tag.ifBlank { "en" },
+                currentTag = currentTag,
                 onPick = { picked ->
                     if (switching) return@LanguageDialog
                     switching = true
                     showLang = false
+                    // ★ 若本次有改語言，打上 session 旗標
+                    if (!picked.tag.equals(currentTag, ignoreCase = true)) {
+                        LanguageSessionFlag.markChanged()
+                    }
                     onSetLocale(picked.tag)
                     switching = false
                 },
@@ -219,9 +216,9 @@ private fun LandingBottomBar(
             Button(
                 onClick = onStart,
                 modifier = Modifier
-                    .fillMaxWidth() // ★ 改：吃滿可用寬度（受外層 20dp padding 限制）
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(28.dp)),
+                    .fillMaxWidth()
+                    .height(64.dp),
+                shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black,
                     contentColor = Color.White

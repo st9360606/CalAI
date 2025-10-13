@@ -76,7 +76,7 @@ fun CircularProgressRing(
         Text(
             text = "$p%",
             color = percentColor,
-            fontSize = 60.sp,
+            fontSize = 28.sp,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleLarge.copy(

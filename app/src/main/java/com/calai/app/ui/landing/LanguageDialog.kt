@@ -60,7 +60,7 @@ fun LanguageDialog(
     onDismiss: () -> Unit,
     langs: List<LangItem> = LANGS,
     maxWidth: Dp = 320.dp,
-    maxHeightFraction: Float = 0.44f      // 想更矮就再調小
+    maxHeightFraction: Float = 0.44f
 ) {
     val screenH = LocalConfiguration.current.screenHeightDp.dp
     val maxHeight = screenH * maxHeightFraction
@@ -77,7 +77,6 @@ fun LanguageDialog(
             modifier = Modifier
                 .padding(24.dp)
                 .widthIn(max = maxWidth)
-                // ★ 關鍵：強制高度上限，讓內容取得「已界定高度」
                 .requiredHeightIn(max = maxHeight)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(22.dp),
@@ -112,11 +111,11 @@ fun LanguageDialog(
                     }
                 }
 
-                // ★ 清單：拿到剩餘高度 → 能在卡片內捲動
+                // 清單（卡片內可捲動）
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f, fill = true),   // ← 佔滿剩餘高度（有上限）
+                        .weight(1f, fill = true),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 8.dp)
                 ) {

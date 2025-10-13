@@ -23,6 +23,21 @@ class ProfileRepository @Inject constructor(
         when (e.code()) { 401, 404 -> false; else -> throw e }
     } catch (e: IOException) { throw e }
 
+    /** 取伺服器 Profile；401/404 視為沒有，其他錯誤拋出或回 null（保守） */
+    suspend fun getServerProfileOrNull(): UserProfileDto? = try {
+        api.getMyProfile()
+    } catch (e: HttpException) {
+        when (e.code()) { 401, 404 -> null; else -> throw e }
+    } catch (e: IOException) { null }
+
+    /** 將伺服器 locale（若有且非空）同步到本機 DataStore。回傳是否有同步 */
+    suspend fun syncLocaleFromServerToStore(): Boolean {
+        val p = getServerProfileOrNull() ?: return false
+        val tag = p.locale?.takeIf { it.isNotBlank() } ?: return false
+        runCatching { store.setLocaleTag(tag) }
+        return true
+    }
+
     /** 同時支援 raw 次數(0..7+) 與 bucket(0/2/4/6/7) 的對映 */
     private fun toExerciseLevel(freqOrBucket: Int?): String? = when (freqOrBucket) {
         null -> null

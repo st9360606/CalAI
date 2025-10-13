@@ -4,7 +4,6 @@ import android.app.Activity
 import android.accounts.AccountManager
 import android.content.Context
 import android.content.ContextWrapper
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
@@ -21,7 +20,8 @@ import com.calai.app.R
 import com.calai.app.data.auth.GoogleAuthService
 import com.calai.app.data.auth.NoGoogleCredentialAvailableException
 import com.calai.app.di.AppEntryPoint
-import com.calai.app.ui.nav.navigateToOnboardAfterLogin
+import com.calai.app.i18n.LanguageSessionFlag
+import com.calai.app.ui.nav.Routes
 import com.google.android.gms.auth.api.identity.GetSignInIntentRequest
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.EntryPointAccessors
@@ -49,14 +49,15 @@ private fun fmtNotCompleted(ctx: Context, resultCode: Int): CharSequence =
 fun SignInSheetHost(
     activity: ComponentActivity,
     navController: NavController,
-    localeTag: String,                     // ← 目前 App 語言
+    localeTag: String,
     visible: Boolean,
     onDismiss: () -> Unit,
     onGoogle: () -> Unit,
     onApple: () -> Unit = {},
     onEmail: () -> Unit = {},
     onShowError: (CharSequence) -> Unit = {},
-    postLoginNavigate: (NavController) -> Unit = { it.navigateToOnboardAfterLogin() }
+    // 仍保留參數，但實作上已不再使用；避免舊呼叫點爆炸
+    postLoginNavigate: (NavController) -> Unit = {}
 ) {
     if (!visible) return
 
@@ -75,8 +76,8 @@ fun SignInSheetHost(
         EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
     }
     val repo = remember(ep) { ep.authRepository() }
-    val profileRepo = remember(ep) { ep.profileRepository() }     // ← ✅
-    val store = remember(ep) { ep.userProfileStore() }            // ← ✅
+    val profileRepo = remember(ep) { ep.profileRepository() }
+    val store = remember(ep) { ep.userProfileStore() }
 
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -85,20 +86,40 @@ fun SignInSheetHost(
         Toast.makeText(ctx, text, Toast.LENGTH_SHORT).show()
     }
 
-    CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
+    suspend fun afterLoginNavigateByServerProfile() = withContext(Dispatchers.IO) {
+        val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
+        if (exists) {
+            // 回訪：本次 session 若改語言就只改語言欄位
+            val changedThisSession = LanguageSessionFlag.consumeChanged()
+            if (changedThisSession) {
+                runCatching { profileRepo.updateLocaleOnly(localeTag) }
+            }
+            runCatching { store.setHasServerProfile(true) }
 
-        suspend fun persistLocaleAndUpsert() {
-            // 1) 先把目前語言寫回 DataStore（避免 snapshot 讀到舊值）
-            withContext(Dispatchers.IO) {
-                runCatching { store.setLocaleTag(localeTag) }.onFailure {
-                    Log.w(TAG, "setLocaleTag failed: ${it.message}", it)
+            // 導 HOME
+            withContext(Dispatchers.Main) {
+                navController.navigate(Routes.HOME) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                    restoreState = false
                 }
             }
-            // 2) 再把整包 Profile 上傳（含 locale）
-            runCatching { profileRepo.upsertFromLocal() }.onFailure {
-                Log.w(TAG, "upsertFromLocal failed: ${it.message}", it)
+        } else {
+            // 新用戶：不要誤設 hasServerProfile，也不要 upsert
+            runCatching { store.setHasServerProfile(false) }
+
+            // 直接去 Onboarding 起點
+            withContext(Dispatchers.Main) {
+                navController.navigate(Routes.ONBOARD_GENDER) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                    restoreState = false
+                }
             }
         }
+    }
+
+    CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
 
         val signInLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -112,18 +133,16 @@ fun SignInSheetHost(
                     if (idToken.isNullOrEmpty()) {
                         loading = false
                         onDismiss()
-                        onShowError(msgIdTokenEmpty)
-                        toast(msgIdTokenEmpty)
+                        onShowError(msgIdTokenEmpty); toast(msgIdTokenEmpty)
                     } else {
                         scope.launch {
                             try {
                                 repo.loginWithGoogle(idToken)
-                                // ★ 先寫 locale、再 upsert、最後導頁
-                                persistLocaleAndUpsert()
                                 loading = false
                                 onDismiss()
                                 toast(msgLoginSuccess)
-                                postLoginNavigate(navController)
+                                // ★ 依伺服器是否已有 Profile 來決定導頁
+                                afterLoginNavigateByServerProfile()
                                 onGoogle()
                             } catch (e: Exception) {
                                 loading = false
@@ -155,7 +174,7 @@ fun SignInSheetHost(
                 .addOnSuccessListener { pendingIntent ->
                     signInLauncher.launch(IntentSenderRequest.Builder(pendingIntent).build())
                 }
-                .addOnFailureListener { e ->
+                .addOnFailureListener { _ ->
                     loading = false
                     val extra = if (hasGoogleAccount(ctx)) "" else "\n$tipNoAccount"
                     val msg = fmtLaunchFailed(extra)
@@ -170,12 +189,11 @@ fun SignInSheetHost(
                 try {
                     val idToken = GoogleAuthService(ctx).getIdToken()
                     repo.loginWithGoogle(idToken)
-                    // ★ 先寫 locale、再 upsert、最後導頁
-                    persistLocaleAndUpsert()
                     loading = false
                     onDismiss()
                     toast(msgLoginSuccess)
-                    postLoginNavigate(navController)
+                    // ★ 依伺服器是否已有 Profile 來決定導頁
+                    afterLoginNavigateByServerProfile()
                     onGoogle()
                 } catch (e: NoGoogleCredentialAvailableException) {
                     launchGoogleSignInIntent()

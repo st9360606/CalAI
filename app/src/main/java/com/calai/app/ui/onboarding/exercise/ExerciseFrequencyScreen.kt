@@ -117,7 +117,7 @@ fun ExerciseFrequencyScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 72.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(28.dp),
