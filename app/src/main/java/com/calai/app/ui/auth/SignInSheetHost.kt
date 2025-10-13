@@ -1,10 +1,10 @@
+// app/src/main/java/com/calai/app/ui/auth/SignInSheetHost.kt
 package com.calai.app.ui.auth
 
 import android.app.Activity
 import android.accounts.AccountManager
 import android.content.Context
 import android.content.ContextWrapper
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,15 +21,13 @@ import com.calai.app.data.auth.GoogleAuthService
 import com.calai.app.data.auth.NoGoogleCredentialAvailableException
 import com.calai.app.di.AppEntryPoint
 import com.calai.app.i18n.LanguageSessionFlag
-import com.calai.app.ui.nav.Routes
 import com.google.android.gms.auth.api.identity.GetSignInIntentRequest
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-private const val TAG = "SignInSheetHost"
+import androidx.lifecycle.lifecycleScope // ★ 新增
 
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
@@ -56,8 +54,6 @@ fun SignInSheetHost(
     onApple: () -> Unit = {},
     onEmail: () -> Unit = {},
     onShowError: (CharSequence) -> Unit = {},
-    // 仍保留參數，但實作上已不再使用；避免舊呼叫點爆炸
-    postLoginNavigate: (NavController) -> Unit = {}
 ) {
     if (!visible) return
 
@@ -70,7 +66,6 @@ fun SignInSheetHost(
     val tipNoAccount      = stringResource(R.string.err_google_no_account_hint)
     val fmtLaunchFailed   = { extra: String -> ctx.getString(R.string.err_google_launch_failed, extra) }
     val fallbackSignInErr = stringResource(R.string.err_google_signin_failed)
-    val msgLoginSuccess   = stringResource(R.string.msg_login_success)
 
     val ep = remember(appCtx) {
         EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
@@ -80,44 +75,39 @@ fun SignInSheetHost(
     val store = remember(ep) { ep.userProfileStore() }
 
     var loading by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+    // ★ 用 Activity 的 lifecycleScope，避免 Sheet 關閉時取消中的網路請求
+    val scope = remember(activity) { activity.lifecycleScope }
 
-    fun toast(text: CharSequence) {
-        Toast.makeText(ctx, text, Toast.LENGTH_SHORT).show()
-    }
-
+    // 登入後依伺服器是否已有 Profile 決定導頁；必要時僅更新 server 的語系
     suspend fun afterLoginNavigateByServerProfile() = withContext(Dispatchers.IO) {
         val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
         if (exists) {
-            // 回訪：本次 session 若改語言就只改語言欄位
             val changedThisSession = LanguageSessionFlag.consumeChanged()
             if (changedThisSession) {
                 runCatching { profileRepo.updateLocaleOnly(localeTag) }
             }
             runCatching { store.setHasServerProfile(true) }
-
-            // 導 HOME
             withContext(Dispatchers.Main) {
-                navController.navigate(Routes.HOME) {
-                    popUpTo(0) { inclusive = true }
+                navController.navigate(com.calai.app.ui.nav.Routes.HOME) {
+                    // ★ 只彈掉 Gate，自然保留 Landing / 前一頁
+                    popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
                 }
             }
         } else {
-            // 新用戶：不要誤設 hasServerProfile，也不要 upsert
             runCatching { store.setHasServerProfile(false) }
-
-            // 直接去 Onboarding 起點
             withContext(Dispatchers.Main) {
-                navController.navigate(Routes.ONBOARD_GENDER) {
-                    popUpTo(0) { inclusive = true }
+                navController.navigate(com.calai.app.ui.nav.Routes.ONBOARD_GENDER) {
+                    // ★ 只彈掉 Gate，自然保留 Landing
+                    popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
                 }
             }
         }
     }
+
 
     CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
 
@@ -132,36 +122,34 @@ fun SignInSheetHost(
                     val idToken = credential.googleIdToken
                     if (idToken.isNullOrEmpty()) {
                         loading = false
+                        onShowError(msgIdTokenEmpty)
                         onDismiss()
-                        onShowError(msgIdTokenEmpty); toast(msgIdTokenEmpty)
                     } else {
                         scope.launch {
                             try {
                                 repo.loginWithGoogle(idToken)
+                                // ★ 先做分流與導頁，再關閉 Sheet，避免取消 coroutine
+                                afterLoginNavigateByServerProfile()
                                 loading = false
                                 onDismiss()
-                                toast(msgLoginSuccess)
-                                // ★ 依伺服器是否已有 Profile 來決定導頁
-                                afterLoginNavigateByServerProfile()
                                 onGoogle()
                             } catch (e: Exception) {
                                 loading = false
-                                onDismiss()
                                 val msg = e.message?.toString() ?: fallbackSignInErr
-                                onShowError(msg); toast(msg)
+                                onShowError(msg)
+                                onDismiss()
                             }
                         }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     loading = false
+                    onShowError(msgParseFailed)
                     onDismiss()
-                    onShowError(msgParseFailed); toast(msgParseFailed)
                 }
             } else {
                 loading = false
+                onShowError(fmtNotCompleted(ctx, res.resultCode))
                 onDismiss()
-                val msg = fmtNotCompleted(ctx, res.resultCode)
-                onShowError(msg); toast(msg)
             }
         }
 
@@ -174,11 +162,10 @@ fun SignInSheetHost(
                 .addOnSuccessListener { pendingIntent ->
                     signInLauncher.launch(IntentSenderRequest.Builder(pendingIntent).build())
                 }
-                .addOnFailureListener { _ ->
+                .addOnFailureListener {
                     loading = false
                     val extra = if (hasGoogleAccount(ctx)) "" else "\n$tipNoAccount"
-                    val msg = fmtLaunchFailed(extra)
-                    onShowError(msg); toast(msg)
+                    onShowError(fmtLaunchFailed(extra))
                 }
         }
 
@@ -189,23 +176,24 @@ fun SignInSheetHost(
                 try {
                     val idToken = GoogleAuthService(ctx).getIdToken()
                     repo.loginWithGoogle(idToken)
+                    // ★ 先分流導頁，再關 Sheet
+                    afterLoginNavigateByServerProfile()
                     loading = false
                     onDismiss()
-                    toast(msgLoginSuccess)
-                    // ★ 依伺服器是否已有 Profile 來決定導頁
-                    afterLoginNavigateByServerProfile()
                     onGoogle()
                 } catch (e: NoGoogleCredentialAvailableException) {
+                    // 走 One Tap / 選帳號流程
                     launchGoogleSignInIntent()
                 } catch (e: GetCredentialCancellationException) {
                     loading = false
+                    onShowError(msgCancelled)
                     onDismiss()
-                    onShowError(msgCancelled); toast(msgCancelled)
                 } catch (e: Exception) {
                     loading = false
                     val tip = if (!hasGoogleAccount(ctx)) "\n$tipNoAccount" else ""
                     val msg = (e.message ?: fallbackSignInErr) + tip
-                    onShowError(msg); toast(msg)
+                    onShowError(msg)
+                    onDismiss()
                 }
             }
         }

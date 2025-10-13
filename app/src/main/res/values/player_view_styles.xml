@@ -1,8 +1,0 @@
-<resources>
-    <!-- 讓 PlayerView 使用 TextureView，避免 SurfaceView 的綠條/白線/抖動 -->
-    <style name="PlayerTextureView">
-        <item name="surface_type">texture_view</item>
-        <item name="use_controller">false</item>
-        <item name="show_buffering">never</item>
-    </style>
-</resources>

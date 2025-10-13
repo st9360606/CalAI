@@ -26,12 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import com.calai.app.i18n.ProvideComposeLocale  // ✅ 重點：引入你自家的覆蓋 Composable
+import com.calai.app.i18n.ProvideComposeLocale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignInSheet(
-    // ✅ 新增：由呼叫端傳入目前語言（例如 "zh-TW"）
     localeTag: String,
     onApple: () -> Unit,
     onGoogle: () -> Unit,
@@ -49,7 +48,6 @@ fun SignInSheet(
         shape = sheetShape,
         tonalElevation = 0.dp
     ) {
-        // ✅ 關鍵：在 BottomSheet「內容」裡重新覆蓋 LocalContext 為目標語系
         ProvideComposeLocale(tag = localeTag) {
             Column(
                 modifier = Modifier
@@ -57,14 +55,13 @@ fun SignInSheet(
                     .imePadding()
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                // 標題：置中 + 右上關閉
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(Modifier.width(48.dp)) // 與右側關閉鍵等寬，確保文字真正置中
+                    Spacer(Modifier.width(48.dp))
                     Text(
                         text = stringResource(R.string.signin_title),
                         style = MaterialTheme.typography.titleLarge,
@@ -85,38 +82,6 @@ fun SignInSheet(
 
                 Spacer(Modifier.height(8.dp))
 
-//                // Apple（黑底白字）
-//                Button(
-//                    onClick = onApple,
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(56.dp),
-//                    shape = RoundedCornerShape(28.dp),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Color.Black,
-//                        contentColor = Color.White
-//                    ),
-//                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-//                ) {
-//                    Icon(
-//                        painter = painterResource(R.drawable.ic_apple),
-//                        contentDescription = null,
-//                        modifier = Modifier
-//                            .size(20.dp)
-//                            .offset(x = (-6).dp), // 圖示更靠左一點
-//                        tint = Color.Unspecified
-//                    )
-//                    Spacer(Modifier.width(10.dp))
-//                    Text(
-//                        text = stringResource(R.string.signin_with_apple),
-//                        fontSize = 18.sp,
-//                        fontWeight = FontWeight.SemiBold
-//                    )
-//                }
-//
-//                Spacer(Modifier.height(12.dp))
-
-                // Google（白底描邊）
                 OutlinedButton(
                     onClick = onGoogle,
                     modifier = Modifier
@@ -144,7 +109,6 @@ fun SignInSheet(
 
                 Spacer(Modifier.height(12.dp))
 
-                // Email（白底描邊）
                 OutlinedButton(
                     onClick = onEmail,
                     modifier = Modifier
@@ -159,7 +123,7 @@ fun SignInSheet(
                     Icon(
                         imageVector = Icons.Outlined.Email,
                         contentDescription = null,
-                        modifier = Modifier.size(22.dp) // 信封再大一點
+                        modifier = Modifier.size(22.dp)
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
@@ -171,7 +135,6 @@ fun SignInSheet(
 
                 Spacer(Modifier.height(14.dp))
 
-                // 條款提示
                 val hintColor = MaterialTheme.colorScheme.onSurfaceVariant
                 val legalFontSize = 12.sp
                 val legalLineHeight = 16.sp
@@ -191,7 +154,6 @@ fun SignInSheet(
                     )
                 )
 
-                // Terms / and / Privacy（可點）
                 val uriHandler = LocalUriHandler.current
                 val termsUrl = stringResource(R.string.signin_url_terms)
                 val privacyUrl = stringResource(R.string.signin_url_privacy)

@@ -55,22 +55,16 @@ fun LandingScreen(
     var switching by rememberSaveable { mutableStateOf(false) }
 
     // ===== 尺寸自適應 =====
-    val screenWidthDp = LocalConfiguration.current.screenWidthDp
-    val baseTitleSize = 32.sp
-    val titleSize = when {
-        screenWidthDp < 340 -> (baseTitleSize.value - 4).sp
-        screenWidthDp < 360 -> (baseTitleSize.value - 2).sp
-        else -> baseTitleSize
-    }
-    val titleLineHeight = (titleSize.value + 2).sp
+    val titleSize = 32.sp
+    val titleLineHeight = 34.sp
     val titleWidthFraction = 0.85f
     val spaceVideoToTitle = 15.dp
 
     val titleFont = remember {
         FontFamily(
             Font(R.font.montserrat_bold, weight = FontWeight.ExtraBold),
-            Font(R.font.notosanstc_bold, weight = FontWeight.ExtraBold),
-            Font(R.font.notosanssc_bold, weight = FontWeight.ExtraBold)
+            Font(R.font.notosanstc_bold, weight = FontWeight.Bold),
+            Font(R.font.notosanssc_bold, weight = FontWeight.Bold)
         )
     }
 
@@ -145,11 +139,15 @@ fun LandingScreen(
                     powerButtonCenterBias = 0.12f,
                     showFrontCameraDot = true
                 ) {
-                    LandingVideo(
+                    LandingSlideshow(
                         modifier = Modifier.fillMaxSize(),
-                        resId = R.raw.intro,
-                        posterResId = null,
-                        placeholderColor = Color.Black
+                        slides = listOf(
+                            SlideItem(R.drawable.meal_1, contentDescription = "img_1"),
+                            SlideItem(R.drawable.meal_2, contentDescription = "img_2"),
+                            SlideItem(R.drawable.meal_3, contentDescription = "img_3")
+                        ),
+                        autoPlay = true,
+                        autoPlayIntervalMs = 2800L
                     )
                 }
             }
@@ -159,7 +157,7 @@ fun LandingScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp),
+                    .padding(top = 5.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(

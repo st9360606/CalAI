@@ -3,12 +3,12 @@ package com.calai.app.ui.nav
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.calai.app.R
@@ -88,6 +89,8 @@ fun BiteCalNavHost(
     onSetLocale: (String) -> Unit,
 ) {
     val nav = rememberNavController()
+    val backStackEntry by nav.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route.orEmpty()
 
     val appCtx = LocalContext.current.applicationContext
     val ep = remember(appCtx) {
@@ -102,13 +105,20 @@ fun BiteCalNavHost(
 
     val localeController = LocalLocaleController.current
 
-    // ✅ 不再在這裡初始化語言（交由 BiteCalApp 進行），以免造成啟動畫面語言跳動
-    // （原本 DataStore→裝置語言→set 的 LaunchedEffect 已移除）
-
-    // Token 逾期：帶到 Gate，成功後回 HOME
+    // Token 逾期：僅在非啟動入口/非 Landing/非已經在 Gate 時才導去 Gate
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}") {
+            val route = nav.currentBackStackEntry?.destination?.route.orEmpty()
+            val isOnEntry = route.startsWith(Routes.APP_ENTRY)
+            val isOnLanding = route.startsWith(Routes.LANDING)
+            val isOnGate = route.startsWith(Routes.REQUIRE_SIGN_IN)
+
+            if (isOnEntry || isOnLanding || isOnGate) {
+                // 啟動期或已在 Gate：忽略這次 expired，避免自動彈出又縮回
+                return@collect
+            }
+
+            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true") {
                 popUpTo(0) { inclusive = true }
             }
         }
@@ -137,13 +147,12 @@ fun BiteCalNavHost(
                     scope.launch {
                         val has = store.hasServerProfile()
                         val target = if (has) Routes.HOME else Routes.ONBOARD_GENDER
-                        nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target")
+                        // 這次是使用者主動點「登入」，所以帶 auto=true 讓 Sheet 自動開
+                        nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true")
                     }
                 },
                 onSetLocale = { tag ->
-                    // 只在使用者主動切換時才更新（這裡會順便寫 DataStore）
                     localeControllerLocal.set(tag)
-                    // 如果你有 AppCompatDelegate.apply 的封裝，就在這裡呼叫
                     com.calai.app.i18n.LanguageManager.applyLanguage(tag)
                     onSetLocale(tag)
                     scope.launch {
@@ -211,15 +220,12 @@ fun BiteCalNavHost(
                 onSuccess = {
                     scope.launch {
                         withContext(Dispatchers.IO) {
-                            // 新/舊分流：存在＝回訪；不存在＝新用戶
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
                             if (!exists) {
-                                // 新用戶：把當前語言寫入，再上傳完整 Onboarding
                                 runCatching { store.setLocaleTag(currentTag) }
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
                             } else {
-                                // 回訪用戶：僅在本次 session 有改語言才覆蓋後端語系
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
                                 if (changedThisSession) {
                                     runCatching { profileRepo.updateLocaleOnly(currentTag) }
@@ -227,13 +233,9 @@ fun BiteCalNavHost(
                                 runCatching { store.setHasServerProfile(true) }
                             }
                         }
-                        Toast.makeText(
-                            hostActivity,
-                            hostActivity.getString(R.string.msg_login_success),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        // ★ 改這裡：只 pop 到 Gate，保留 Landing
                         nav.navigate(redirect) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
                             launchSingleTop = true
                             restoreState = false
                         }
@@ -404,20 +406,27 @@ fun BiteCalNavHost(
                 if (isSignedIn == true) {
                     nav.navigate(target) { popUpTo(0) { inclusive = true } }
                 } else {
-                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target")
+                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true")
                 }
             })
         }
 
-        // 登入 Gate
+        // 登入 Gate：auto 參數控制是否自動打開 Sheet
         composable(
-            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}",
-            arguments = listOf(navArgument("redirect") {
-                type = NavType.StringType
-                defaultValue = Routes.HOME
-            })
+            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}&auto={auto}",
+            arguments = listOf(
+                navArgument("redirect") {
+                    type = NavType.StringType
+                    defaultValue = Routes.HOME
+                },
+                navArgument("auto") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
         ) { backStackEntry ->
             val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+            val autoOpen = backStackEntry.arguments?.getBoolean("auto") ?: false
 
             val snackbarHostState = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
@@ -425,7 +434,8 @@ fun BiteCalNavHost(
             val localeKey = currentLocaleKey()
             val currentTag = localeController.tag.ifBlank { "en" }
 
-            val showSheet = remember { mutableStateOf(true) }
+            // ★ 預設不自動開；當 auto=true（例如使用者點了「登入」或 token 逾期從保護頁導來）才自動開
+            val showSheet = rememberSaveable(autoOpen) { mutableStateOf(autoOpen) }
 
             RequireSignInScreen(
                 onBack = { nav.safePopBackStack() },
@@ -467,15 +477,6 @@ fun BiteCalNavHost(
                         showSheet.value = false
                         scope.launch { snackbarHostState.showSnackbar(msg.toString()) }
                     },
-
-                    // 登入後僅導航；資料寫入由 SignInSheetHost 處理
-                    postLoginNavigate = { controller ->
-                        controller.navigate(redirect) {
-                            popUpTo(0) { inclusive = true }
-                            launchSingleTop = true
-                            restoreState = false
-                        }
-                    }
                 )
             }
         }
