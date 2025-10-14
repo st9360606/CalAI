@@ -14,10 +14,8 @@
     <string name="signin_terms">Terms</string>
     <string name="signin_and">and</string>
     <string name="signin_privacy">Privacy Policy</string>
-
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
-
 
     <!-- common -->
     <string name="close">Close</string>
@@ -27,12 +25,22 @@
     <string name="email_label">Email</string>
     <string name="continue_btn">Continue</string>
     <string name="sending">Sending…</string>
-    <string name="verifying">Verifying…</string>
-    <string name="email_confirm_title">Confirm your email</string>
-    <string name="email_confirm_desc">Please enter the 4-digit code we\'ve just sent to\n%1$s</string>
+
+    <!-- Email OTP screen -->
+    <string name="confirm_email_title">Confirm your email</string>
+    <string name="confirm_email_hint">Please enter the 4-digit code we\'ve just sent to</string>
+
+    <!-- Resend -->
     <string name="didnt_receive_code">Didn’t receive the code?</string>
     <string name="resend">Resend</string>
-    <string name="resend_with_seconds">Resend (%1$d s)</string>
+    <string name="resend_countdown">Resend (%1$d s)</string>
+
+    <!-- Errors -->
+    <string name="err_otp_invalid">The code is incorrect. Please try again.</string>
+    <string name="err_otp_too_many_attempts">Too many attempts. Please try again later.</string>
+    <string name="err_network_io">Network error. Please try again.</string>
+    <string name="err_server_unavailable">Service is temporarily unavailable. Please try again later.</string>
+    <string name="err_generic">Something went wrong. Please try again.</string>
 
     <!-- Google -->
     <string name="err_google_id_token_empty">Google returned an empty ID token</string>
@@ -42,7 +50,6 @@
     <string name="err_google_no_account_hint">Tip: add a Google account in Settings → Accounts and try again</string>
     <string name="err_google_signin_failed">Google sign-in failed</string>
     <string name="err_google_not_completed_with_code">Sign-in wasn’t completed (code=%1$d). Please try again.</string>
-
 
     <!-- Onboarding: Gender -->
     <string name="onb_gender_title">Choose your Gender</string>
@@ -128,8 +135,6 @@
     <string name="progress_item_fats">Fats</string>
     <string name="progress_item_health_score">Health score</string>
 
-
-
     <!-- plan -->
     <string name="plan_title_congrats">Awesome!</string>
     <string name="plan_subtitle_ready">Your personal health plan is ready.</string>
@@ -172,12 +177,10 @@
     <string name="plan_sources_more">See all references ›</string>
     <string name="plan_sources_hide">Hide sources</string>
 
-
-
+    <!-- REQUIRE_SIGN_IN -->
     <string name="auth_create_account_title">Create an account</string>
     <string name="auth_sign_in_with_google">Sign in with Google</string>
     <string name="common_skip">Skip</string>
-
     <string name="msg_login_success">Sign-in successful</string>
     <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
 
