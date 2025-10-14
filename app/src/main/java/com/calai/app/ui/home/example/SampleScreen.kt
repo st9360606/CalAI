@@ -1,4 +1,4 @@
-package com.calai.app.ui.home
+package com.calai.app.ui.home.example
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button

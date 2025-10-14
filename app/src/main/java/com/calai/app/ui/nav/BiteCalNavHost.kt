@@ -1,3 +1,4 @@
+// app/src/main/java/com/calai/app/ui/nav/BiteCalNavHost.kt
 package com.calai.app.ui.nav
 
 import android.app.Activity
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -17,7 +17,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.calai.app.R
@@ -89,13 +88,9 @@ fun BiteCalNavHost(
     onSetLocale: (String) -> Unit,
 ) {
     val nav = rememberNavController()
-    val backStackEntry by nav.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route.orEmpty()
 
     val appCtx = LocalContext.current.applicationContext
-    val ep = remember(appCtx) {
-        EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
-    }
+    val ep = remember(appCtx) { EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java) }
 
     val authState = remember(ep) { ep.authState() }
     val isSignedIn by authState.isSignedInFlow.collectAsState(initial = null)
@@ -105,20 +100,10 @@ fun BiteCalNavHost(
 
     val localeController = LocalLocaleController.current
 
-    // Token 逾期：僅在非啟動入口/非 Landing/非已經在 Gate 時才導去 Gate
+    // Token 逾期：帶到 Gate，成功後回 HOME
     LaunchedEffect(Unit) {
         SessionBus.expired.collect {
-            val route = nav.currentBackStackEntry?.destination?.route.orEmpty()
-            val isOnEntry = route.startsWith(Routes.APP_ENTRY)
-            val isOnLanding = route.startsWith(Routes.LANDING)
-            val isOnGate = route.startsWith(Routes.REQUIRE_SIGN_IN)
-
-            if (isOnEntry || isOnLanding || isOnGate) {
-                // 啟動期或已在 Gate：忽略這次 expired，避免自動彈出又縮回
-                return@collect
-            }
-
-            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true") {
+            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}") {
                 popUpTo(0) { inclusive = true }
             }
         }
@@ -140,75 +125,64 @@ fun BiteCalNavHost(
             LandingScreen(
                 hostActivity = hostActivity,
                 navController = nav,
-                onStart = {
-                    nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true }
-                },
+                onStart = { nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true } },
                 onLogin = {
-                    scope.launch {
-                        val has = store.hasServerProfile()
-                        val target = if (has) Routes.HOME else Routes.ONBOARD_GENDER
-                        // 這次是使用者主動點「登入」，所以帶 auto=true 讓 Sheet 自動開
-                        nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true")
-                    }
+                    // 使用者主動點「登入」：自動開啟 Sheet
+                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true")
                 },
                 onSetLocale = { tag ->
                     localeControllerLocal.set(tag)
                     com.calai.app.i18n.LanguageManager.applyLanguage(tag)
                     onSetLocale(tag)
                     scope.launch {
-                        withContext(Dispatchers.IO) {
-                            runCatching { store.setLocaleTag(tag) }
-                        }
+                        withContext(Dispatchers.IO) { runCatching { store.setLocaleTag(tag) } }
                     }
                 },
             )
         }
 
-        composable(Routes.SIGN_UP) {
-            SignUpScreen(onBack = { nav.safePopBackStack() }, onSignedUp = { })
-        }
-
-        // ===== Email：輸入 Email 畫面（帶 redirect）=====
+        // ===== Email：輸入 Email（帶 redirect + uploadLocal）=====
         composable(
-            route = "${Routes.SIGNIN_EMAIL_ENTER}?redirect={redirect}",
+            route = "${Routes.SIGNIN_EMAIL_ENTER}?redirect={redirect}&uploadLocal={uploadLocal}",
             arguments = listOf(
-                navArgument("redirect") {
-                    type = NavType.StringType
-                    defaultValue = Routes.HOME
-                }
+                navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME },
+                navArgument("uploadLocal") { type = NavType.BoolType; defaultValue = false }
             )
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: EmailSignInViewModel = viewModel(
+            val vm: EmailSignInViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+            val uploadLocal = backStackEntry.arguments?.getBoolean("uploadLocal") ?: false
 
             EmailEnterScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onSent = { email ->
-                    nav.navigate("${Routes.SIGNIN_EMAIL_CODE}?email=$email&redirect=$redirect")
+                    nav.navigate("${Routes.SIGNIN_EMAIL_CODE}?email=$email&redirect=$redirect&uploadLocal=$uploadLocal")
                 }
             )
         }
 
-        // ===== Email：輸入驗證碼畫面（帶 redirect）=====
+        // ===== Email：輸入驗證碼畫面（帶 redirect + uploadLocal）=====
         composable(
-            route = "${Routes.SIGNIN_EMAIL_CODE}?email={email}&redirect={redirect}",
+            route = "${Routes.SIGNIN_EMAIL_CODE}?email={email}&redirect={redirect}&uploadLocal={uploadLocal}",
             arguments = listOf(
                 navArgument("email") { type = NavType.StringType; defaultValue = "" },
-                navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME }
+                navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME },
+                navArgument("uploadLocal") { type = NavType.BoolType; defaultValue = false }
             )
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: EmailSignInViewModel = viewModel(
+            val vm: EmailSignInViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val email = backStackEntry.arguments?.getString("email") ?: ""
             val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
+            val uploadLocal = backStackEntry.arguments?.getBoolean("uploadLocal") ?: false
 
             val currentTag = localeController.tag.ifBlank { "en" }
             val scope = rememberCoroutineScope()
@@ -219,22 +193,29 @@ fun BiteCalNavHost(
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
                     scope.launch {
-                        withContext(Dispatchers.IO) {
+                        val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
-                            if (!exists) {
+
+                            if (uploadLocal) {
+                                // ★ 從 ROUTE_PLAN 帶上來：一定 upsert 本機資料（不管 exists）
                                 runCatching { store.setLocaleTag(currentTag) }
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
-                            } else {
+                                Routes.HOME
+                            } else if (exists) {
+                                // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
-                                if (changedThisSession) {
-                                    runCatching { profileRepo.updateLocaleOnly(currentTag) }
-                                }
+                                if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(currentTag) }
                                 runCatching { store.setHasServerProfile(true) }
+                                Routes.HOME
+                            } else {
+                                // 首次登入且不是從 ROUTE_PLAN 來：照流程從 Gender 開始
+                                runCatching { store.setHasServerProfile(false) }
+                                Routes.ONBOARD_GENDER
                             }
                         }
-                        // ★ 改這裡：只 pop 到 Gate，保留 Landing
-                        nav.navigate(redirect) {
+
+                        nav.navigate(dest) {
                             popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
                             launchSingleTop = true
                             restoreState = false
@@ -244,7 +225,7 @@ fun BiteCalNavHost(
             )
         }
 
-        // ===== Onboarding：性別 → 目標體重 → 通知 → Plan =====
+        // ===== Onboarding：性別 → ... → Plan =====
         composable(Routes.ONBOARD_GENDER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: com.calai.app.ui.onboarding.gender.GenderSelectionViewModel = viewModel(
@@ -358,7 +339,7 @@ fun BiteCalNavHost(
             )
         }
 
-        // Health Connect 連結頁 → 完成/略過都先進「運算進度頁」
+        // Health Connect 連結頁 → 完成/略過都進「運算進度頁」
         composable(Routes.ONBOARD_HEALTH_CONNECT) {
             com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen(
                 onBack = { nav.safePopBackStack() },
@@ -395,38 +376,50 @@ fun BiteCalNavHost(
             )
         }
 
+        // ROUTE_PLAN：未登入 → Gate(禁止 Skip)；已登入 → 先 upsert 再進 HOME
         composable(Routes.ROUTE_PLAN) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.plan.HealthPlanViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
-            )
+            val vm: com.calai.app.ui.onboarding.plan.HealthPlanViewModel =
+                androidx.lifecycle.viewmodel.compose.viewModel(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = HiltViewModelFactory(activity, backStackEntry)
+                )
+            // ✅ 在 Composable 區塊建立 scope，而不是在 onStart 裡
+            val routeScope = rememberCoroutineScope()
             com.calai.app.ui.onboarding.plan.HealthPlanScreen(vm = vm, onStart = {
                 val target = Routes.HOME
                 if (isSignedIn == true) {
-                    nav.navigate(target) { popUpTo(0) { inclusive = true } }
+                    // ✅ 這裡使用上面建立好的 scope
+                    routeScope.launch {
+                        withContext(Dispatchers.IO) {
+                            runCatching { profileRepo.upsertFromLocal() }
+                            runCatching { store.setHasServerProfile(true) }
+                        }
+                        nav.navigate(target) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
                 } else {
-                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true")
+                    // 未登入：★ 改 auto=true → 進 Gate 時自動彈出 SignInSheet（唯一修改）
+                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true&uploadLocal=true")
                 }
             })
         }
 
-        // 登入 Gate：auto 參數控制是否自動打開 Sheet
+        // Gate：支援 auto + uploadLocal，且可禁止 Skip
         composable(
-            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}&auto={auto}",
+            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}&auto={auto}&uploadLocal={uploadLocal}",
             arguments = listOf(
-                navArgument("redirect") {
-                    type = NavType.StringType
-                    defaultValue = Routes.HOME
-                },
-                navArgument("auto") {
-                    type = NavType.BoolType
-                    defaultValue = false
-                }
+                navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME },
+                navArgument("auto") { type = NavType.BoolType; defaultValue = false },
+                navArgument("uploadLocal") { type = NavType.BoolType; defaultValue = false }
             )
         ) { backStackEntry ->
             val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
-            val autoOpen = backStackEntry.arguments?.getBoolean("auto") ?: false
+            val auto = backStackEntry.arguments?.getBoolean("auto") ?: false
+            val uploadLocal = backStackEntry.arguments?.getBoolean("uploadLocal") ?: false
 
             val snackbarHostState = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
@@ -434,21 +427,23 @@ fun BiteCalNavHost(
             val localeKey = currentLocaleKey()
             val currentTag = localeController.tag.ifBlank { "en" }
 
-            // ★ 預設不自動開；當 auto=true（例如使用者點了「登入」或 token 逾期從保護頁導來）才自動開
-            val showSheet = rememberSaveable(autoOpen) { mutableStateOf(autoOpen) }
+            val showSheet = remember { mutableStateOf(auto) }
 
             RequireSignInScreen(
                 onBack = { nav.safePopBackStack() },
                 onGoogleClick = { showSheet.value = true },
                 onSkip = {
-                    val popped = nav.safePopBackStack()
-                    if (!popped) {
-                        nav.navigate(redirect) {
-                            popUpTo(0) { inclusive = true }
-                            launchSingleTop = true
-                            restoreState = false
+                    // ★ 來自 ROUTE_PLAN（uploadLocal=true）時禁止略過
+                    if (!uploadLocal) {
+                        val popped = nav.safePopBackStack()
+                        if (!popped) {
+                            nav.navigate(redirect) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
                         }
-                    }
+                    } // else: do nothing
                 },
                 snackbarHostState = snackbarHostState
             )
@@ -461,18 +456,16 @@ fun BiteCalNavHost(
                     visible = showSheet.value,
                     onDismiss = { showSheet.value = false },
 
+                    uploadLocalOnLogin = uploadLocal,
+
                     onGoogle = {
                         showSheet.value = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar(ctx.getString(R.string.msg_login_success))
-                        }
+                        scope.launch { snackbarHostState.showSnackbar(ctx.getString(R.string.msg_login_success)) }
                     },
-
                     onEmail = {
                         showSheet.value = false
-                        nav.navigate("${Routes.SIGNIN_EMAIL_ENTER}?redirect=$redirect")
+                        nav.navigate("${Routes.SIGNIN_EMAIL_ENTER}?redirect=$redirect&uploadLocal=$uploadLocal")
                     },
-
                     onShowError = { msg ->
                         showSheet.value = false
                         scope.launch { snackbarHostState.showSnackbar(msg.toString()) }
@@ -515,8 +508,5 @@ fun BiteCalNavHost(
 
 @Composable
 private fun SimplePlaceholder(title: String) {
-    Text(
-        modifier = Modifier.padding(24.dp),
-        text = "TODO: $title page"
-    )
+    Text(modifier = Modifier.padding(24.dp), text = "TODO: $title page")
 }

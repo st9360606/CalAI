@@ -16,18 +16,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.navigation.NavController
+import androidx.lifecycle.lifecycleScope
 import com.calai.app.R
 import com.calai.app.data.auth.GoogleAuthService
 import com.calai.app.data.auth.NoGoogleCredentialAvailableException
 import com.calai.app.di.AppEntryPoint
 import com.calai.app.i18n.LanguageSessionFlag
+import com.calai.app.ui.nav.Routes
 import com.google.android.gms.auth.api.identity.GetSignInIntentRequest
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.lifecycle.lifecycleScope // ★ 新增
 
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
@@ -54,6 +55,8 @@ fun SignInSheetHost(
     onApple: () -> Unit = {},
     onEmail: () -> Unit = {},
     onShowError: (CharSequence) -> Unit = {},
+    // ★ 從 ROUTE_PLAN 來要把本機資料（剛填的表單）寫到伺服器
+    uploadLocalOnLogin: Boolean = false,
 ) {
     if (!visible) return
 
@@ -67,39 +70,65 @@ fun SignInSheetHost(
     val fmtLaunchFailed   = { extra: String -> ctx.getString(R.string.err_google_launch_failed, extra) }
     val fallbackSignInErr = stringResource(R.string.err_google_signin_failed)
 
-    val ep = remember(appCtx) {
-        EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
-    }
+    val ep = remember(appCtx) { EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java) }
     val repo = remember(ep) { ep.authRepository() }
     val profileRepo = remember(ep) { ep.profileRepository() }
     val store = remember(ep) { ep.userProfileStore() }
 
     var loading by remember { mutableStateOf(false) }
-    // ★ 用 Activity 的 lifecycleScope，避免 Sheet 關閉時取消中的網路請求
     val scope = remember(activity) { activity.lifecycleScope }
 
-    // 登入後依伺服器是否已有 Profile 決定導頁；必要時僅更新 server 的語系
+    suspend fun goHome() = withContext(Dispatchers.Main) {
+        navController.navigate(Routes.HOME) {
+            popUpTo(0) { inclusive = true }
+            launchSingleTop = true
+            restoreState = false
+        }
+    }
+    suspend fun goGender() = withContext(Dispatchers.Main) {
+        navController.navigate(Routes.ONBOARD_GENDER) {
+            popUpTo(0) { inclusive = true }
+            launchSingleTop = true
+            restoreState = false
+        }
+    }
+
+    // ★ 登入後導頁：若帶 uploadLocalOnLogin=true，無論 exists 與否都先 upsert 本機資料
     suspend fun afterLoginNavigateByServerProfile() = withContext(Dispatchers.IO) {
         val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
-        if (exists) {
-            val changedThisSession = LanguageSessionFlag.consumeChanged()
-            if (changedThisSession) {
-                runCatching { profileRepo.updateLocaleOnly(localeTag) }
-            }
+
+        if (uploadLocalOnLogin) {
+            // 這條代表從 ROUTE_PLAN 來：把剛在本機填完的 Onboarding 直接上傳合併
+            runCatching { store.setLocaleTag(localeTag) }       // 本機保持與當下語言一致
+            runCatching { profileRepo.upsertFromLocal() }       // ★ 關鍵：一定要 upsert
             runCatching { store.setHasServerProfile(true) }
             withContext(Dispatchers.Main) {
                 navController.navigate(com.calai.app.ui.nav.Routes.HOME) {
-                    // ★ 只彈掉 Gate，自然保留 Landing / 前一頁
+                    popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                    launchSingleTop = true
+                    restoreState = false
+                }
+            }
+            return@withContext
+        }
+
+        // 不是從 ROUTE_PLAN 來（例如 Landing 主動 Sign in）
+        if (exists) {
+            val changedThisSession = LanguageSessionFlag.consumeChanged()
+            if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(localeTag) }
+            runCatching { store.setHasServerProfile(true) }
+            withContext(Dispatchers.Main) {
+                navController.navigate(com.calai.app.ui.nav.Routes.HOME) {
                     popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
                 }
             }
         } else {
+            // 首次登入但不是從 ROUTE_PLAN 來：正常走 Onboarding
             runCatching { store.setHasServerProfile(false) }
             withContext(Dispatchers.Main) {
                 navController.navigate(com.calai.app.ui.nav.Routes.ONBOARD_GENDER) {
-                    // ★ 只彈掉 Gate，自然保留 Landing
                     popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
@@ -117,47 +146,39 @@ fun SignInSheetHost(
             if (res.resultCode == Activity.RESULT_OK) {
                 try {
                     @Suppress("DEPRECATION")
-                    val credential = Identity.getSignInClient(ctx)
-                        .getSignInCredentialFromIntent(res.data)
+                    val credential = Identity.getSignInClient(ctx).getSignInCredentialFromIntent(res.data)
                     val idToken = credential.googleIdToken
                     if (idToken.isNullOrEmpty()) {
                         loading = false
-                        onShowError(msgIdTokenEmpty)
-                        onDismiss()
+                        onShowError(msgIdTokenEmpty); onDismiss()
                     } else {
                         scope.launch {
                             try {
                                 repo.loginWithGoogle(idToken)
-                                // ★ 先做分流與導頁，再關閉 Sheet，避免取消 coroutine
                                 afterLoginNavigateByServerProfile()
                                 loading = false
                                 onDismiss()
                                 onGoogle()
                             } catch (e: Exception) {
                                 loading = false
-                                val msg = e.message?.toString() ?: fallbackSignInErr
-                                onShowError(msg)
+                                onShowError(e.message?.toString() ?: fallbackSignInErr)
                                 onDismiss()
                             }
                         }
                     }
                 } catch (_: Exception) {
                     loading = false
-                    onShowError(msgParseFailed)
-                    onDismiss()
+                    onShowError(msgParseFailed); onDismiss()
                 }
             } else {
                 loading = false
-                onShowError(fmtNotCompleted(ctx, res.resultCode))
-                onDismiss()
+                onShowError(fmtNotCompleted(ctx, res.resultCode)); onDismiss()
             }
         }
 
         fun launchGoogleSignInIntent() {
             val serverClientId = ctx.getString(R.string.google_web_client_id)
-            val req = GetSignInIntentRequest.Builder()
-                .setServerClientId(serverClientId)
-                .build()
+            val req = GetSignInIntentRequest.Builder().setServerClientId(serverClientId).build()
             Identity.getSignInClient(activity).getSignInIntent(req)
                 .addOnSuccessListener { pendingIntent ->
                     signInLauncher.launch(IntentSenderRequest.Builder(pendingIntent).build())
@@ -176,24 +197,18 @@ fun SignInSheetHost(
                 try {
                     val idToken = GoogleAuthService(ctx).getIdToken()
                     repo.loginWithGoogle(idToken)
-                    // ★ 先分流導頁，再關 Sheet
                     afterLoginNavigateByServerProfile()
                     loading = false
-                    onDismiss()
-                    onGoogle()
+                    onDismiss(); onGoogle()
                 } catch (e: NoGoogleCredentialAvailableException) {
-                    // 走 One Tap / 選帳號流程
                     launchGoogleSignInIntent()
                 } catch (e: GetCredentialCancellationException) {
                     loading = false
-                    onShowError(msgCancelled)
-                    onDismiss()
+                    onShowError(msgCancelled); onDismiss()
                 } catch (e: Exception) {
                     loading = false
                     val tip = if (!hasGoogleAccount(ctx)) "\n$tipNoAccount" else ""
-                    val msg = (e.message ?: fallbackSignInErr) + tip
-                    onShowError(msg)
-                    onDismiss()
+                    onShowError((e.message ?: fallbackSignInErr) + tip); onDismiss()
                 }
             }
         }
