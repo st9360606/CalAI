@@ -32,4 +32,8 @@ class WeightTargetViewModel @Inject constructor(
     fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch {
         usr.setTargetWeightUnit(u)
     }
+
+    fun saveTargetWeightLbs(lbs: Int) = viewModelScope.launch { usr.setTargetWeightLbs(lbs) }
+    fun clearTargetWeightLbs() = viewModelScope.launch { usr.clearTargetWeightLbs() }
+
 }

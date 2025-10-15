@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
@@ -34,6 +35,10 @@ import com.calai.app.ui.home.components.DonutProgress
 import com.calai.app.ui.home.components.MealCard
 import com.calai.app.ui.home.model.HomeViewModel
 import java.time.LocalDate
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.round
+import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(
@@ -223,32 +228,51 @@ private fun TwoPageCards(
     }
 }
 
-@Composable private fun WaterGoalCard(s: HomeSummary, onAddWater: (Int) -> Unit) {
+@Composable
+private fun WaterGoalCard(s: HomeSummary, onAddWater: (Int) -> Unit) {
     Card(shape = RoundedCornerShape(18.dp)) {
         Column(Modifier.padding(16.dp)) {
             Text("Water / Weight / Fasting", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                // ---- 水分 ----
                 Column(Modifier.weight(1f)) {
-                    Text("${s.waterTodayMl}/${s.waterGoalMl} ml",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        "${s.waterTodayMl}/${s.waterGoalMl} ml",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
                     Row {
                         AssistChip("+250 ml") { onAddWater(250) }
                         Spacer(Modifier.width(8.dp))
                         AssistChip("+500 ml") { onAddWater(500) }
                     }
                 }
+
+                // ---- 體重差（Δ = target - current；lbs 整數、kg 小數一位）----
                 Column(Modifier.weight(1f)) {
-                    val diff = s.weightDiffKg
+                    val deltaSigned = -s.weightDiffSigned  // repository 是 current - target，這裡取反得到 target - current
+                    val unit = s.weightDiffUnit
+                    val valueText =
+                        if (unit == "lbs") {
+                            val v = deltaSigned.roundToInt() // lbs 取整數
+                            "$v $unit"
+                        } else {
+                            String.format(Locale.getDefault(), "%.1f %s", deltaSigned, unit) // kg 一位小數
+                        }
+
                     Text(
-                        text = if (diff == null) "—"
-                        else String.format("%.1f kg %s", kotlin.math.abs(diff), if (diff>0) "to goal" else "past goal"),
+                        text = valueText,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                     )
                     Text("Δ weight", style = MaterialTheme.typography.bodySmall)
                 }
+
+                // ---- 斷食方案 ----
                 Column(Modifier.weight(1f)) {
-                    Text(s.fastingPlan ?: "—", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        s.fastingPlan ?: "—",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
                     Text("Fasting plan", style = MaterialTheme.typography.bodySmall)
                 }
             }

@@ -46,9 +46,9 @@ object HealthCalc {
     /** UI 的運動次數 → 桶化（與 0/1–3/3–5/6–7/7+ 一致） */
     private fun bucketWorkouts(v: Int): Int = when {
         v <= 0      -> 0
-        v in 1..3   -> 2
-        v in 4..5   -> 4
-        v in 6..7   -> 6
+        v in 1..2   -> 2
+        v in 3..4   -> 4
+        v in 5..6   -> 6
         else        -> 7
     }
 

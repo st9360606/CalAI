@@ -6,6 +6,7 @@ import com.calai.app.core.health.Gender
 import com.calai.app.core.health.HealthCalc
 import com.calai.app.core.health.HealthInputs
 import com.calai.app.core.health.MacroPlan
+import com.calai.app.core.health.toCalcGender // ★ 共用的性別對應：只有 "MALE" 算 Male，其餘視為 Female
 import com.calai.app.data.profile.repo.UserProfileStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -48,7 +49,8 @@ class HealthPlanViewModel @Inject constructor(
                     null
                 } else {
                     HealthInputs(
-                        gender = if (g.equals("female", true)) Gender.Female else Gender.Male,
+                        // ★ 性別統一轉換：只有 "MALE" 算男性，其餘 (FEMALE/OTHER/null) 一律算女性
+                        gender = toCalcGender(g),
                         age = age,
                         heightCm = h.toFloat(),
                         weightKg = w,

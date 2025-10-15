@@ -52,10 +52,16 @@ fun AppEntryRoute(
         }
 
         // 2) 背景校驗伺服器存在性（限制 800ms，不阻塞導頁）
-        val existsDeferred = async(Dispatchers.IO) {
-            withTimeoutOrNull(800) {
-                runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
+        // ⛔ 僅在「已登入」時才打 API，避免未登入時觸發 TokenAuthenticator/SessionBus.expired 導致被帶去登入頁
+        val existsDeferred = if (signedIn) {
+            async(Dispatchers.IO) {
+                withTimeoutOrNull(800) {
+                    runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
+                }
             }
+        } else {
+            // 未登入：不打 API，直接回傳 null（第 5 步就不會寫入/導頁）
+            async { null }
         }
 
         // 3) 確保畫面至少顯示 MIN_SHOW_MS

@@ -128,10 +128,13 @@ fun WeightSelectionScreen(
                 Button(
                     onClick = {
                         vm.saveWeightKg(roundKg2(valueKg))
-                        vm.saveWeightUnit(
-                            if (useMetric) UserProfileStore.WeightUnit.KG
-                            else UserProfileStore.WeightUnit.LBS
-                        )
+                        if (useMetric) {
+                            vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
+                            vm.clearWeightLbs() // 不存 lbs
+                        } else {
+                            vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
+                            vm.saveWeightLbs(kgToLbsInt(valueKg)) // 存整數 lbs
+                        }
                         onNext()
                     },
                     enabled = valueKg > 0.0,

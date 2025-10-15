@@ -1,6 +1,6 @@
 package com.calai.app.data.profile.repo
 
-import android.util.Log
+
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.profile.api.UpsertProfileRequest
 import com.calai.app.data.profile.api.UserProfileDto
@@ -50,22 +50,51 @@ class ProfileRepository @Inject constructor(
         else                 -> "very_active"// 7 以上（含 bucket=7）
     }
 
-    /** 新用戶：把本機 Onboarding 上傳；成功→標記 hasServerProfile=true */
+    /** 上傳策略：一律送出 cm/kg；若使用者當下選英制，**同時**送 ft/in 或 lbs */
     suspend fun upsertFromLocal(): Result<UserProfileDto> = runCatching {
         val p = store.snapshot()
-        Log.d("ProfileRepo", "freq=${p.exerciseFreqPerWeek} -> level=${toExerciseLevel(p.exerciseFreqPerWeek)}")
 
-        val localeTag = p.locale?.takeIf { it.isNotBlank() }
-            ?: Locale.getDefault().toLanguageTag()
+        // 取得 locale
+        val localeTag = p.locale?.takeIf { it.isNotBlank() } ?: Locale.getDefault().toLanguageTag()
+
+        // 身高：cm 一律送；英制在使用者選 FT_IN 且有值時才送
+        val heightCm = p.heightCm?.toDouble()
+        val (feet, inches) = when (p.heightUnit) {
+            UserProfileStore.HeightUnit.FT_IN -> {
+                // 優先用使用者實際輸入（若有），否則由 cm 推導
+                val f = p.heightFeet ?: (heightCm?.let { cmToFeetInches(it.toInt()).first })
+                val i = p.heightInches ?: (heightCm?.let { cmToFeetInches(it.toInt()).second })
+                f to i
+            }
+            else -> null to null
+        }
+
+        // 體重：kg 一律送；英制在使用者選 LBS 且有值時才送
+        val weightKg = p.weightKg?.toDouble()
+        val weightLbs = when (p.weightUnit) {
+            UserProfileStore.WeightUnit.LBS -> p.weightLbs ?: weightKg?.let { kgToLbsInt(it) }
+            else -> null
+        }
+
+        // 目標體重：同上
+        val targetWeightKg = p.targetWeightKg?.toDouble()
+        val targetWeightLbs = when (p.targetWeightUnit) {
+            UserProfileStore.WeightUnit.LBS -> p.targetWeightLbs ?: targetWeightKg?.let { kgToLbsInt(it) }
+            else -> null
+        }
 
         val req = UpsertProfileRequest(
             gender = p.gender,
             age = p.ageYears,
-            heightCm = p.heightCm?.toDouble(),
-            weightKg = p.weightKg?.toDouble(),
+            heightCm = heightCm,
+            heightFeet = feet,
+            heightInches = inches,
+            weightKg = weightKg,
+            weightLbs = weightLbs,
             exerciseLevel = toExerciseLevel(p.exerciseFreqPerWeek),
             goal = p.goal,
-            targetWeightKg = p.targetWeightKg?.toDouble(),
+            targetWeightKg = targetWeightKg,
+            targetWeightLbs = targetWeightLbs,
             referralSource = p.referralSource,
             locale = localeTag
         )
@@ -74,17 +103,20 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
-    /** 回訪用戶：只更新語言（其餘欄位沿用 Server 值，避免被 null 蓋掉） */
     suspend fun updateLocaleOnly(newLocale: String): Result<UserProfileDto> = runCatching {
-        val cur = api.getMyProfile() // 需已登入
+        val cur = api.getMyProfile()
         val req = UpsertProfileRequest(
             gender = cur.gender,
             age = cur.age,
             heightCm = cur.heightCm,
+            heightFeet = cur.heightFeet,
+            heightInches = cur.heightInches,
             weightKg = cur.weightKg,
+            weightLbs = cur.weightLbs,
             exerciseLevel = cur.exerciseLevel,
             goal = cur.goal,
             targetWeightKg = cur.targetWeightKg,
+            targetWeightLbs = cur.targetWeightLbs,
             referralSource = cur.referralSource,
             locale = newLocale
         )

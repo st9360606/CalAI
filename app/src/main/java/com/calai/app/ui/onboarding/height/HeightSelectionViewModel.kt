@@ -28,6 +28,13 @@ class HeightSelectionViewModel @Inject constructor(
     fun saveHeightCm(cm: Int) = viewModelScope.launch { usr.setHeightCm(cm) }
     fun saveHeightUnit(unit: UserProfileStore.HeightUnit) =
         viewModelScope.launch { usr.setHeightUnit(unit) }
+
+    fun saveHeightImperial(feet: Int, inches: Int) = viewModelScope.launch {
+        usr.setHeightImperial(feet, inches)
+    }
+    fun clearHeightImperial() = viewModelScope.launch {
+        usr.clearHeightImperial()
+    }
 }
 
 /** 換算工具（無條件捨去） */

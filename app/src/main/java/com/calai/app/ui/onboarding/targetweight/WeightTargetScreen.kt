@@ -127,13 +127,16 @@ fun WeightTargetScreen(
             Box {
                 Button(
                     onClick = {
-                        // 以 kg 存（保留兩位小數），並記住單位
-                        vm.saveWeightKg(roundKg2(valueKg))
-                        vm.saveWeightUnit(
-                            if (useMetric) UserProfileStore.WeightUnit.KG
-                            else UserProfileStore.WeightUnit.LBS
-                        )
+                        vm.saveWeightKg(roundKg2(valueKg)) // 寫入 target kg
+                        if (useMetric) {
+                            vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
+                            vm.clearTargetWeightLbs()
+                        } else {
+                            vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
+                            vm.saveTargetWeightLbs(kgToLbsInt(valueKg))
+                        }
                         onNext()
+
                     },
                     enabled = valueKg > 0.0,
                     modifier = Modifier

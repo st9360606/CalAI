@@ -83,11 +83,14 @@ fun HeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        vm.saveHeightCm(cmVal) // 只存 cm
-                        vm.saveHeightUnit(
-                            if (useMetric) UserProfileStore.HeightUnit.CM
-                            else UserProfileStore.HeightUnit.FT_IN
-                        )
+                        vm.saveHeightCm(cmVal) // 一律存 cm
+                        if (useMetric) {
+                            vm.saveHeightUnit(UserProfileStore.HeightUnit.CM)
+                            vm.clearHeightImperial() // 不存英制
+                        } else {
+                            vm.saveHeightUnit(UserProfileStore.HeightUnit.FT_IN)
+                            vm.saveHeightImperial(feet, inches) // 存 ft/in
+                        }
                         onNext()
                     },
                     modifier = Modifier
