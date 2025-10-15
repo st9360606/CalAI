@@ -2,7 +2,7 @@ package com.calai.app.ui.onboarding.exercise
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -9,13 +9,12 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import com.calai.app.ui.BiteCalApp
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

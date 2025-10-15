@@ -4,7 +4,7 @@ import com.calai.app.BuildConfig
 import com.calai.app.data.auth.api.AuthApi
 import com.calai.app.data.auth.net.AuthInterceptor
 import com.calai.app.data.auth.net.TokenAuthenticator
-import com.calai.app.data.profile.ProfileApi
+import com.calai.app.data.profile.api.ProfileApi
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 // * 統一的網路模組：
 // * - authRetrofit：僅處理 /auth/*，不掛 TokenAuthenticator，避免 refresh 循環。
-// * - apiRetrofit：一般受保護 API（含 ProfileApi），掛 AuthInterceptor + TokenAuthenticator。
+// * - apiRetrofit：一般受保護 API（含 ProfileApi / FoodApi），掛 AuthInterceptor + TokenAuthenticator。
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -76,7 +76,7 @@ object NetworkModule {
     @Named("authRetrofit")
     fun provideAuthRetrofit(@Named("authClient") client: OkHttpClient): Retrofit =
         Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL) // 確保結尾有 /
+            .baseUrl(BuildConfig.BASE_URL) // ⚠️ 確保結尾有 /
             .client(client)
             .addConverterFactory(json().asConverterFactory(contentType()))
             .build()
@@ -87,7 +87,7 @@ object NetworkModule {
     @Named("apiRetrofit")
     fun provideApiRetrofit(@Named("apiClient") client: OkHttpClient): Retrofit =
         Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl(BuildConfig.BASE_URL) // ⚠️ 確保結尾有 /
             .client(client)
             .addConverterFactory(json().asConverterFactory(contentType()))
             .build()

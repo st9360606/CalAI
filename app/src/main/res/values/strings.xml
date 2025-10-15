@@ -185,4 +185,8 @@
     <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
 
 
+
+
+    <string name="recently_uploaded">Recently uploaded</string>
+
 </resources>

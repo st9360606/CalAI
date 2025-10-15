@@ -57,7 +57,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
 import kotlin.math.round
 import kotlin.math.roundToInt

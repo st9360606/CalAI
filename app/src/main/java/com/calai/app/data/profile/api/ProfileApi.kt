@@ -1,4 +1,4 @@
-package com.calai.app.data.profile
+package com.calai.app.data.profile.api
 
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body

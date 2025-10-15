@@ -6,7 +6,7 @@ import com.calai.app.core.health.Gender
 import com.calai.app.core.health.HealthCalc
 import com.calai.app.core.health.HealthInputs
 import com.calai.app.core.health.MacroPlan
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow

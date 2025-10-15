@@ -131,98 +131,84 @@ android {
 }
 
 dependencies {
-    // Compose / AndroidX（以 BOM 對齊）
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))   // ✅ 只保留這個 BOM
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)              // ✅ 保留這個
-    implementation(libs.androidx.junit.ktx)
-    implementation(libs.androidx.startup.runtime)
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.foundation.layout)
-    implementation(libs.foundation)
-    implementation(libs.androidx.ui.unit)
-    implementation(libs.androidx.ui.geometry)
-    "baselineProfile"(project(":baselineprofile"))
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-
-    // 測試
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    // ===================== Compose（用 BOM 對齊版本） =====================
+    implementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
 
-    // Retrofit / OkHttp
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
-    // ViewModel（Compose）
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+
+    // Compose UI 基本模組（不帶版本，交由 BOM 管理）
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+
+    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    // ===================== Navigation / Hilt =====================
+    implementation("androidx.navigation:navigation-compose:2.8.3")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
-    // Hilt
     implementation("com.google.dagger:hilt-android:2.52")
     kapt("com.google.dagger:hilt-android-compiler:2.52")
     kapt("com.squareup:javapoet:1.13.0")
 
-    // DataStore
+    // ===================== Kotlin / 協程 / 資料儲存 =====================
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // 測試輔助
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
-    testImplementation(kotlin("test"))
+    // ===================== 網路層 =====================
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("com.google.code.gson:gson:2.11.0")
 
-    // Splash
-    implementation("androidx.core:core-splashscreen:1.0.1")
+    // ===================== Health Connect / 圖片 / 分頁 / 資料庫 =====================
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("androidx.paging:paging-compose:3.3.2")
 
-    // Material / AppCompat
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
 
-    // Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.3")
-
-    // Media3 / ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.4.1")
-    implementation("androidx.media3:media3-ui:1.4.1")
-
-    // Material Icons
-    implementation("androidx.compose.material:material-icons-extended")
-
-    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
-    implementation("androidx.activity:activity-ktx:1.9.2")
-
-    // Credential Manager + Google ID
+    // ===================== Google 登入 / Credential Manager =====================
     implementation("androidx.credentials:credentials:1.5.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
-    // Kotlinx Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    // ===================== 其他支援（Splash / AppCompat / Media3 等） =====================
+    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
+    implementation("androidx.activity:activity-ktx:1.9.2")
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-ui:1.4.1")
 
-    implementation("com.google.code.gson:gson:2.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-
-    //Test
+    // ===================== 測試 =====================
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 
-
+    // Baseline Profile（保持你的既有模組）
+    baselineProfile(project(":baselineprofile"))
 }
+
 
 kapt {
     correctErrorTypes = true

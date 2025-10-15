@@ -32,9 +32,9 @@ import com.calai.app.ui.auth.SignUpScreen
 import com.calai.app.ui.auth.email.EmailCodeScreen
 import com.calai.app.ui.auth.email.EmailEnterScreen
 import com.calai.app.ui.auth.email.EmailSignInViewModel
-import com.calai.app.ui.home.HomeRoute
+import com.calai.app.ui.home.HomeScreen
 import com.calai.app.ui.home.HomeTab
-import com.calai.app.ui.home.HomeViewModel
+import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.landing.LandingScreen
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
@@ -481,7 +481,7 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            HomeRoute(
+            HomeScreen(
                 vm = vm,
                 onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
                 onOpenCamera = { nav.navigate(Routes.CAMERA) },

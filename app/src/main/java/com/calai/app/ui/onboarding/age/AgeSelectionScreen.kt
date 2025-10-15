@@ -61,7 +61,7 @@ fun AgeSelectionScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,             // ← 只通知導頁，不再回傳年齡
     minAge: Int = 10,
-    maxAge: Int = 100
+    maxAge: Int = 150
 ) {
     // 從 DataStore 讀取已保存年齡作為初始值
     val persistedAge = vm.ageState.collectAsState().value

@@ -1,12 +1,14 @@
-package com.calai.app.data.profile
+package com.calai.app.data.profile.repo
 
 import android.util.Log
-import com.calai.app.data.auth.store.UserProfileStore
-import javax.inject.Inject
-import javax.inject.Singleton
+import com.calai.app.data.profile.api.ProfileApi
+import com.calai.app.data.profile.api.UpsertProfileRequest
+import com.calai.app.data.profile.api.UserProfileDto
 import retrofit2.HttpException
 import java.io.IOException
 import java.util.Locale
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
 class ProfileRepository @Inject constructor(

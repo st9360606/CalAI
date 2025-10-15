@@ -73,7 +73,7 @@ import com.calai.app.R
 import com.calai.app.core.health.BmiClass
 import com.calai.app.core.health.HealthCalc
 import com.calai.app.core.health.MacroPlan
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min

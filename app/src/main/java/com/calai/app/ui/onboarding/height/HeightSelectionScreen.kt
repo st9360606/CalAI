@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
 
 // ← 調整這個數值即可讓「CM 單一滾輪」往右/往左偏移
@@ -169,7 +169,7 @@ fun HeightSelectionScreen(
             if (useMetric) {
                 // ✅ CM 單一滾輪：整組往右偏一點
                 NumberWheel(
-                    range = 100..250,
+                    range = 80..350,
                     value = cmVal,
                     onValueChange = { cmVal = it },
                     rowHeight = rowHeight,

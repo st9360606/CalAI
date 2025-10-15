@@ -3,8 +3,8 @@ package com.calai.app.di
 import com.calai.app.data.auth.repo.AuthRepository
 import com.calai.app.data.auth.repo.TokenStore
 import com.calai.app.data.auth.state.AuthState
-import com.calai.app.data.auth.store.UserProfileStore
-import com.calai.app.data.profile.ProfileRepository
+import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.profile.repo.ProfileRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent

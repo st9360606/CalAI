@@ -85,7 +85,7 @@ object HealthCalc {
         "MAINTAIN"        -> MacroSplit(0.25f, 0.30f, 0.45f)
         "GAIN"            -> MacroSplit(0.30f, 0.25f, 0.45f)
         "HEALTHY_EATING"  -> MacroSplit(0.20f, 0.30f, 0.50f)
-        else              -> MacroSplit(0.20f, 0.30f, 0.50f)
+        else              -> MacroSplit(0.25f, 0.30f, 0.45f)
     }
 
     /**
@@ -104,38 +104,6 @@ object HealthCalc {
         val proteinG = ((kcal * norm.proteinPct) / 4.0f).roundToInt()
         val fatG     = ((kcal * norm.fatPct) / 9.0f).roundToInt()
         val carbsG   = ((kcal * norm.carbPct) / 4.0f).roundToInt()
-
-        val bmiVal = bmi(inputs.weightKg.toDouble(), inputs.heightCm.toDouble())
-        val bmiClass = classifyBmi(bmiVal)
-
-        return MacroPlan(
-            kcal = kcal,
-            carbsGrams = carbsG,
-            proteinGrams = proteinG,
-            fatGrams = fatG,
-            bmi = round1(bmiVal),
-            bmiClass = bmiClass
-        )
-    }
-
-    /** 若你仍需要舊版（依 g/kg + 碳水比例）的計算，保留原 API */
-    fun macroPlan(
-        inputs: HealthInputs,
-        targetKcal: Int? = null,
-        proteinGPerKg: Float = 1.5f,
-        carbPct: Float = 0.55f
-    ): MacroPlan {
-        val kcal = max(1000, (targetKcal ?: tdee(inputs).roundToInt()))
-        val proteinG = (inputs.weightKg * proteinGPerKg)
-            .coerceIn(1.2f * inputs.weightKg, 2.2f * inputs.weightKg)
-            .roundToInt()
-
-        val proteinKcal = proteinG * 4
-        val carbsKcal = (kcal * carbPct).roundToInt()
-        val fatKcal = max(0, kcal - proteinKcal - carbsKcal)
-
-        val carbsG = (carbsKcal / 4.0).roundToInt()
-        val fatG = (fatKcal / 9.0).roundToInt()
 
         val bmiVal = bmi(inputs.weightKg.toDouble(), inputs.heightCm.toDouble())
         val bmiClass = classifyBmi(bmiVal)
