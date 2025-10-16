@@ -5,6 +5,7 @@ import com.calai.app.data.auth.api.AuthApi
 import com.calai.app.data.auth.net.AuthInterceptor
 import com.calai.app.data.auth.net.TokenAuthenticator
 import com.calai.app.data.profile.api.ProfileApi
+import com.calai.app.data.users.api.UsersApi
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -104,5 +105,11 @@ object NetworkModule {
     @Singleton
     fun provideProfileApi(@Named("apiRetrofit") retrofit: Retrofit): ProfileApi =
         retrofit.create(ProfileApi::class.java)
+
+    // 7) 提供 UsersApi：使用「apiRetrofit」
+    @Provides
+    @Singleton
+    fun provideUsersApi(@Named("apiRetrofit") retrofit: Retrofit): UsersApi =
+        retrofit.create(UsersApi::class.java)
 
 }

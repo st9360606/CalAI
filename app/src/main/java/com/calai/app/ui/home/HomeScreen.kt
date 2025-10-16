@@ -7,7 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
@@ -18,19 +18,23 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.calai.app.R
 import com.calai.app.data.home.repo.HomeSummary
-import com.calai.app.ui.home.components.DayItem
-import com.calai.app.ui.home.components.DayPillCalendar
+import com.calai.app.ui.home.components.CalendarStrip
+
 import com.calai.app.ui.home.components.DonutProgress
 import com.calai.app.ui.home.components.MealCard
 import com.calai.app.ui.home.model.HomeViewModel
@@ -88,19 +92,18 @@ fun HomeScreen(
                 }
             }
 
-            // ===== Calendar (一週)
-            val week = remember {
-                val today = LocalDate.now()
-                (-3..3).map { DayItem(today.plusDays(it.toLong())) }
-            }
-            var selected by remember { mutableStateOf(LocalDate.now()) }
-            DayPillCalendar(
-                days = week,
+            // ===== Calendar（當日前後 15 天；可左右滑動） =====
+            val today = remember { LocalDate.now() }
+            val days = remember(today) { (-15..15).map { today.plusDays(it.toLong()) } }
+            var selected by rememberSaveable { mutableStateOf(LocalDate.now()) }
+            CalendarStrip(
+                days = days,
                 selected = selected,
                 onSelect = { selected = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                selectedBgCorner = 16.dp   // ← 圓角更圓（原 8.dp）
             )
 
             // ===== Second block: Pager-like（左右滑）
@@ -134,14 +137,37 @@ fun HomeScreen(
 }
 
 @Composable private fun Avatar(url: Uri?) {
-    AsyncImage(
-        model = url,
-        contentDescription = "avatar",
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape),
-        contentScale = ContentScale.Crop
-    )
+    val modifier = Modifier
+        .size(40.dp)
+        .clip(CircleShape)
+
+    if (url == null) {
+        // 沒有頭像 → 直接顯示本地預設圖（不經過 Coil，避免不必要的過場）
+        Image(
+            painter = painterResource(R.drawable.profile),
+            contentDescription = "avatar_default",
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        val ctx = LocalContext.current
+        // ✅ 方式 A（推薦）：記憶住 ImageRequest，避免每次重組產生新實例→重載
+        val request = remember(url) {
+            ImageRequest.Builder(ctx)
+                .data(url)
+                .crossfade(false)        // 關閉 crossfade，避免「切換一下」動畫
+                .allowHardware(true)
+                .build()
+        }
+        AsyncImage(
+            model = request,
+            contentDescription = "avatar",
+            modifier = modifier,
+            contentScale = ContentScale.Crop,
+            // 不設 placeholder：避免先出現預設圖再切換的視覺閃爍
+            error = painterResource(R.drawable.profile) // 只有載入失敗才用預設圖
+        )
+    }
 }
 
 @Composable

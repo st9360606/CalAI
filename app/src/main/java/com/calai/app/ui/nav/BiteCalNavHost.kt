@@ -433,8 +433,17 @@ fun BiteCalNavHost(
                 onBack = { nav.safePopBackStack() },
                 onGoogleClick = { showSheet.value = true },
                 onSkip = {
-                    // ★ 來自 ROUTE_PLAN（uploadLocal=true）時禁止略過
-                    if (!uploadLocal) {
+                    if (uploadLocal) {
+                        // 來自 ROUTE_PLAN：允許返回 ROUTE_PLAN（不登入先回規劃頁）
+                        val popped = nav.popBackStack(Routes.ROUTE_PLAN, inclusive = false)
+                        if (!popped) {
+                            nav.navigate(Routes.ROUTE_PLAN) {
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
+                    } else {
+                        // 其他情境（例如從 Landing 來）：維持原本邏輯
                         val popped = nav.safePopBackStack()
                         if (!popped) {
                             nav.navigate(redirect) {
@@ -443,7 +452,7 @@ fun BiteCalNavHost(
                                 restoreState = false
                             }
                         }
-                    } // else: do nothing
+                    }
                 },
                 snackbarHostState = snackbarHostState
             )

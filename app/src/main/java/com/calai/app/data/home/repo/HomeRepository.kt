@@ -11,10 +11,10 @@ import com.calai.app.data.meals.api.MealItemDto
 import com.calai.app.data.meals.repo.MealRepository
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.users.api.UsersApi
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.abs
 import kotlin.math.round
 import kotlin.math.roundToInt
 
@@ -42,6 +42,7 @@ data class HomeSummary(
 @Singleton
 class HomeRepository @Inject constructor(
     private val profileApi: ProfileApi,
+    private val usersApi: UsersApi,           // ★ 新增：讀取 users.picture
     private val store: UserProfileStore,
     private val hc: HealthConnectRepository,
     private val meals: MealRepository
@@ -87,6 +88,13 @@ class HomeRepository @Inject constructor(
         // 以 Server 為主，但僅在「有效」才採用；否則回落 Store，再不行用安全預設
         val server = runCatching { profileApi.getMyProfile() }.getOrNull()
         val snap = store.snapshot()
+
+        // ★ 讀取帳號資訊（users.picture）
+        val avatarUrl: Uri? = runCatching { usersApi.me() }
+            .getOrNull()
+            ?.picture
+            ?.takeIf { !it.isNullOrBlank() }
+            ?.let { Uri.parse(it) }
 
         // ★ 統一性別口徑：只有 "MALE" 算男性，其餘（含 OTHER）算女性
         val gender: Gender = toCalcGender(server?.gender ?: snap.gender)
@@ -200,7 +208,7 @@ class HomeRepository @Inject constructor(
             fastingPlan = snap.fastingPlan,
             todayActivity = activity,
             recentMeals = recent,
-            avatarUrl = null // 如要顯示 Google 頭像，從你的 auth 狀態帶入 Uri
+            avatarUrl = avatarUrl              // ★ 傳給 UI；若後端沒圖就為 null
         )
     }
 

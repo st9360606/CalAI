@@ -41,7 +41,7 @@ fun AppEntryRoute(
 
     LaunchedEffect(Unit) {
         // 最短顯示時間（可依需求 800~1500ms）
-        val MIN_SHOW_MS = 1200L
+        val MIN_SHOW_MS = 1500L
         val start = SystemClock.uptimeMillis()
 
         // 1) 讀本機快取與登入狀態（快）

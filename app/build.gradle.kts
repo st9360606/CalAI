@@ -133,6 +133,7 @@ android {
 dependencies {
     // ===================== Compose（用 BOM 對齊版本） =====================
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.foundation.foundation)
     androidTestImplementation(platform(libs.androidx.compose.bom))
 
     implementation(libs.androidx.core.ktx)
