@@ -1,13 +1,24 @@
 package com.calai.app.ui.home
 
 import android.net.Uri
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
@@ -15,10 +26,24 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,14 +60,15 @@ import coil.request.ImageRequest
 import com.calai.app.R
 import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.ui.home.components.CalendarStrip
-
+import com.calai.app.ui.home.components.CaloriesCardModern
 import com.calai.app.ui.home.components.DonutProgress
+import com.calai.app.ui.home.components.MacroRowModern
 import com.calai.app.ui.home.components.MealCard
+import com.calai.app.ui.home.components.PagerDots
+import com.calai.app.ui.home.components.StepsWorkoutRowModern
 import com.calai.app.ui.home.model.HomeViewModel
 import java.time.LocalDate
 import java.util.Locale
-import kotlin.math.abs
-import kotlin.math.round
 import kotlin.math.roundToInt
 
 @Composable
@@ -112,15 +138,14 @@ fun HomeScreen(
             )
 
             // ===== Second block: Pager-like（左右滑）
-            TwoPageCards(
+            TwoPagePager(
                 summary = s,
                 onAddWater = { vm.onAddWater(it) }
             )
 
             Spacer(Modifier.height(12.dp))
 
-            // ===== Third block: 三個小卡
-            TripleStats(summary = s, onAddWater = { vm.onAddWater(it) })
+            StepsWorkoutRowModern(summary = s)
 
             // ===== Fourth block: 最近上傳
             if (s.recentMeals.isNotEmpty()) {
@@ -178,42 +203,53 @@ private fun Avatar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TwoPageCards(
+private fun TwoPagePager(
     summary: HomeSummary,
     onAddWater: (Int) -> Unit
 ) {
-    // 這裡用 Row + horizontalScroll 簡單實作左右滑
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Page 1: TDEE + Macro
-        Column(
-            modifier = Modifier
-                .width(IntrinsicSize.Max)
-                .fillMaxWidth()
-        ) {
-            BigTdeeCard(summary)
-            Spacer(Modifier.height(12.dp))
-            MacroRow(summary)
+    val pageCount = 2
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
+
+    Column {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth()
+        ) { page ->
+            when (page) {
+                0 -> {
+                    Column {
+                        // ↓↓↓ 這裡換成「精簡高度」參數 ↓↓↓
+                        CaloriesCardModern(
+                            caloriesLeft = summary.tdee,
+                            progress = 0f,
+                            contentPaddingV = 12.dp, // 原 18.dp → 12.dp
+                            ringSize = 76.dp,        // 原 84.dp → 76.dp
+                            ringStroke = 9.dp        // 原 12.dp → 9.dp
+                        )
+                        Spacer(Modifier.height(10.dp))   // 原 12.dp → 10.dp
+                        MacroRowModern(summary)          // 保持不動（你的 Macro 高度維持原設定）
+                    }
+                }
+                1 -> {
+                    Column {
+                        WaterGoalCard(summary, onAddWater)
+                        Spacer(Modifier.height(12.dp))
+                        ExerciseDiaryCard(summary)
+                    }
+                }
+            }
         }
-        // Page 2: 飲水/體重差/斷食 + 運動日記
-        Column(
-            modifier = Modifier
-                .width(IntrinsicSize.Max)
-                .fillMaxWidth()
-        ) {
-            WaterGoalCard(summary, onAddWater)
-            Spacer(Modifier.height(12.dp))
-            ExerciseDiaryCard(summary)
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            PagerDots(count = pageCount, current = pagerState.currentPage)
         }
     }
 }
 
-@Composable private fun BigTdeeCard(s: HomeSummary) {
+@Composable
+private fun BigTdeeCard(s: HomeSummary) {
     Card(shape = RoundedCornerShape(18.dp)) {
         Row(
             Modifier
@@ -223,7 +259,10 @@ private fun TwoPageCards(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("${s.tdee}", style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold))
+                Text(
+                    "${s.tdee}",
+                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
+                )
                 Text("Calories left", style = MaterialTheme.typography.bodyMedium)
             }
             DonutProgress(
@@ -234,7 +273,8 @@ private fun TwoPageCards(
     }
 }
 
-@Composable private fun StatSmallCard(
+@Composable
+private fun StatSmallCard(
     title: String,
     value: String,
     icon: @Composable (() -> Unit)? = null
@@ -244,14 +284,18 @@ private fun TwoPageCards(
             Modifier.padding(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
+            )
             Spacer(Modifier.height(6.dp))
             Text(title, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
 
-@Composable private fun MacroRow(s: HomeSummary) {
+@Composable
+private fun MacroRow(s: HomeSummary) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -284,14 +328,20 @@ private fun WaterGoalCard(s: HomeSummary, onAddWater: (Int) -> Unit) {
 
                 // ---- 體重差（Δ = target - current；lbs 整數、kg 小數一位）----
                 Column(Modifier.weight(1f)) {
-                    val deltaSigned = -s.weightDiffSigned  // repository 是 current - target，這裡取反得到 target - current
+                    val deltaSigned =
+                        -s.weightDiffSigned  // repository 是 current - target，這裡取反得到 target - current
                     val unit = s.weightDiffUnit
                     val valueText =
                         if (unit == "lbs") {
                             val v = deltaSigned.roundToInt() // lbs 取整數
                             "$v $unit"
                         } else {
-                            String.format(Locale.getDefault(), "%.1f %s", deltaSigned, unit) // kg 一位小數
+                            String.format(
+                                Locale.getDefault(),
+                                "%.1f %s",
+                                deltaSigned,
+                                unit
+                            ) // kg 一位小數
                         }
 
                     Text(
@@ -314,7 +364,8 @@ private fun WaterGoalCard(s: HomeSummary, onAddWater: (Int) -> Unit) {
     }
 }
 
-@Composable private fun AssistChip(label: String, onClick: () -> Unit) {
+@Composable
+private fun AssistChip(label: String, onClick: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(12.dp),
@@ -324,7 +375,8 @@ private fun WaterGoalCard(s: HomeSummary, onAddWater: (Int) -> Unit) {
     }
 }
 
-@Composable private fun ExerciseDiaryCard(s: HomeSummary) {
+@Composable
+private fun ExerciseDiaryCard(s: HomeSummary) {
     Card(shape = RoundedCornerShape(18.dp)) {
         Column(Modifier.padding(16.dp)) {
             Text("Workout diary", style = MaterialTheme.typography.titleSmall)
@@ -342,55 +394,38 @@ private fun WaterGoalCard(s: HomeSummary, onAddWater: (Int) -> Unit) {
     }
 }
 
-@Composable private fun TripleStats(summary: HomeSummary, onAddWater: (Int) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        SmallCircleWithLabel(
-            title = "Steps",
-            value = "${summary.todayActivity.steps}",
-        )
-        SmallCircleWithLabel(
-            title = "Water today",
-            value = "${summary.waterTodayMl} ml",
-            trailing = { AssistChip("+250") { onAddWater(250) } }
-        )
-        SmallCircleWithLabel(
-            title = "Workout",
-            value = "${summary.todayActivity.activeKcal.toInt()} kcal / ${summary.todayActivity.exerciseMinutes} m"
-        )
-    }
-}
-
-@Composable private fun SmallCircleWithLabel(
-    title: String,
-    value: String,
-    trailing: (@Composable () -> Unit)? = null
-) {
-    Card(shape = RoundedCornerShape(18.dp)) {
-        Column(Modifier.padding(16.dp)) {
-            Text(value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
-            Text(title, style = MaterialTheme.typography.bodySmall)
-            if (trailing != null) {
-                Spacer(Modifier.height(6.dp))
-                trailing()
-            }
-        }
-    }
-}
-
 enum class HomeTab { Home, Progress, Note, Fasting, Personal }
 
-@Composable private fun BottomBar(
+@Composable
+private fun BottomBar(
     current: HomeTab,
     onOpenTab: (HomeTab) -> Unit
 ) {
     NavigationBar {
-        NavigationBarItem(selected = current==HomeTab.Home,     onClick = { onOpenTab(HomeTab.Home) },     label = { Text("Home") },     icon = { Icon(Icons.Filled.Home, null) })
-        NavigationBarItem(selected = current==HomeTab.Progress, onClick = { onOpenTab(HomeTab.Progress) }, label = { Text("Progress") }, icon = { Icon(Icons.Filled.BarChart, null) })
-        NavigationBarItem(selected = current==HomeTab.Note,     onClick = { onOpenTab(HomeTab.Note) },     label = { Text("Note") },     icon = { Icon(Icons.Filled.Edit, null) })
-        NavigationBarItem(selected = current==HomeTab.Fasting,  onClick = { onOpenTab(HomeTab.Fasting) },  label = { Text("Fasting") },  icon = { Icon(Icons.Filled.AccessTime, null) })
-        NavigationBarItem(selected = current==HomeTab.Personal, onClick = { onOpenTab(HomeTab.Personal) }, label = { Text("Personal") }, icon = { Icon(Icons.Filled.Person, null) })
+        NavigationBarItem(
+            selected = current == HomeTab.Home,
+            onClick = { onOpenTab(HomeTab.Home) },
+            label = { Text("Home") },
+            icon = { Icon(Icons.Filled.Home, null) })
+        NavigationBarItem(
+            selected = current == HomeTab.Progress,
+            onClick = { onOpenTab(HomeTab.Progress) },
+            label = { Text("Progress") },
+            icon = { Icon(Icons.Filled.BarChart, null) })
+        NavigationBarItem(
+            selected = current == HomeTab.Note,
+            onClick = { onOpenTab(HomeTab.Note) },
+            label = { Text("Note") },
+            icon = { Icon(Icons.Filled.Edit, null) })
+        NavigationBarItem(
+            selected = current == HomeTab.Fasting,
+            onClick = { onOpenTab(HomeTab.Fasting) },
+            label = { Text("Fasting") },
+            icon = { Icon(Icons.Filled.AccessTime, null) })
+        NavigationBarItem(
+            selected = current == HomeTab.Personal,
+            onClick = { onOpenTab(HomeTab.Personal) },
+            label = { Text("Personal") },
+            icon = { Icon(Icons.Filled.Person, null) })
     }
 }
