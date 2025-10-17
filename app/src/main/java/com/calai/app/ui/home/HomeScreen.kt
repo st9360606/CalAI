@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -86,9 +87,13 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Avatar(s.avatarUrl)
+                Avatar(s.avatarUrl, size = 48.dp, startPadding = 6.dp)  // 放大＋往右一些
                 IconButton(onClick = onOpenAlarm) {
-                    Icon(Icons.Outlined.Notifications, contentDescription = "alarm")
+                    Icon(
+                        painter = painterResource(R.drawable.home_notification), // ← 換成你的 drawable
+                        contentDescription = "alarm",
+                        modifier = Modifier.size(28.dp)                     // ← 再大一點
+                    )
                 }
             }
 
@@ -136,13 +141,18 @@ fun HomeScreen(
     }
 }
 
-@Composable private fun Avatar(url: Uri?) {
+@Composable
+private fun Avatar(
+    url: Uri?,
+    size: Dp = 40.dp,
+    startPadding: Dp = 0.dp
+) {
     val modifier = Modifier
-        .size(40.dp)
+        .padding(start = startPadding) // ← 新增：整體往右一點
+        .size(size)                    // ← 新增：支援放大
         .clip(CircleShape)
 
     if (url == null) {
-        // 沒有頭像 → 直接顯示本地預設圖（不經過 Coil，避免不必要的過場）
         Image(
             painter = painterResource(R.drawable.profile),
             contentDescription = "avatar_default",
@@ -151,11 +161,10 @@ fun HomeScreen(
         )
     } else {
         val ctx = LocalContext.current
-        // ✅ 方式 A（推薦）：記憶住 ImageRequest，避免每次重組產生新實例→重載
         val request = remember(url) {
             ImageRequest.Builder(ctx)
                 .data(url)
-                .crossfade(false)        // 關閉 crossfade，避免「切換一下」動畫
+                .crossfade(false)
                 .allowHardware(true)
                 .build()
         }
@@ -164,8 +173,7 @@ fun HomeScreen(
             contentDescription = "avatar",
             modifier = modifier,
             contentScale = ContentScale.Crop,
-            // 不設 placeholder：避免先出現預設圖再切換的視覺閃爍
-            error = painterResource(R.drawable.profile) // 只有載入失敗才用預設圖
+            error = painterResource(R.drawable.profile)
         )
     }
 }
