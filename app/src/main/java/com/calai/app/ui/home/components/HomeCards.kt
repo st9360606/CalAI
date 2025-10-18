@@ -232,7 +232,7 @@ fun StepsWorkoutRowModern(summary: HomeSummary) {
             ringColor = Color(0xFF3B82F6),
             progress = 0f,
             modifier = Modifier.weight(1f),
-            minHeight = 120.dp,           // 兩張卡一致
+            minHeight = 132.dp,           // 兩張卡一致
             ringSize = 76.dp,             // 兩張卡一致
             ringStroke = 8.dp,
             centerDisk = 30.dp
@@ -247,7 +247,7 @@ fun StepsWorkoutRowModern(summary: HomeSummary) {
             ringColor = Color(0xFFA855F7),
             progress = 0f,
             modifier = Modifier.weight(1f),
-            minHeight = 120.dp,           // 兩張卡一致
+            minHeight = 132.dp,           // 兩張卡一致
             ringSize = 76.dp,             // 兩張卡一致
             ringStroke = 8.dp,
             centerDisk = 30.dp,
@@ -278,7 +278,7 @@ fun ActivityStatCardSplit(
     ringColor: Color,
     progress: Float = 0f,
     modifier: Modifier = Modifier,
-    minHeight: Dp = 116.dp,               // 與兩張卡一致
+    minHeight: Dp = 132.dp,
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
@@ -291,11 +291,10 @@ fun ActivityStatCardSplit(
         border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        // 用固定內容高度做對齊基準
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(minHeight)
+                .height(minHeight) // 固定內容高度作為對齊基準
         ) {
             Row(
                 modifier = Modifier
@@ -304,10 +303,12 @@ fun ActivityStatCardSplit(
                 horizontalArrangement = Arrangement.spacedBy(0.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 左欄
+                // 左欄：填滿高度，內容靠上（兩卡主/副標位置一致）
                 Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.Top
                 ) {
                     Text(text = title, style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280))
                     Spacer(Modifier.height(4.dp))
@@ -317,14 +318,17 @@ fun ActivityStatCardSplit(
                         color = Color(0xFF0F172A),
                         maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(Modifier.height(2.dp))
                     if (!secondary.isNullOrBlank()) {
-                        Spacer(Modifier.height(2.dp))
                         Text(
                             text = secondary,
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF6B7280),
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
+                    } else {
+                        // ★ 占位：沒有副標時也保留同等高度，避免主標上下位移
+                        Spacer(Modifier.height(18.dp)) // ≈ 一行 bodySmall 的高度
                     }
                     if (leftExtra != null) {
                         Spacer(Modifier.height(8.dp))
@@ -332,17 +336,14 @@ fun ActivityStatCardSplit(
                     }
                 }
 
-                // 右欄：填滿卡片高度，再在右半區塊內置中
+                // 右欄：占右半區塊，內容幾何置中
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),          // ★ 關鍵：確保右欄高度 = 卡片高度
+                        .fillMaxHeight(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier.size(ringSize),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.size(ringSize), contentAlignment = Alignment.Center) {
                         GaugeRing(
                             progress = progress,
                             sizeDp = ringSize,
@@ -352,12 +353,7 @@ fun ActivityStatCardSplit(
                             drawTopTick = true,
                             tickColor = ringColor
                         )
-                        Surface(
-                            color = Color(0xFFF3F4F6),
-                            shape = CircleShape,
-                            modifier = Modifier.size(centerDisk),
-                            content = {}
-                        )
+                        Surface(color = Color(0xFFF3F4F6), shape = CircleShape, modifier = Modifier.size(centerDisk)) {}
                     }
                 }
             }
