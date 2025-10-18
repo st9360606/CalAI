@@ -5,7 +5,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
+import java.util.Locale
+import kotlin.math.abs
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -49,51 +50,50 @@ private object RingDefaults {
 fun CaloriesCardModern(
     caloriesLeft: Int,
     progress: Float,
-    contentPaddingH: Dp = 20.dp,
-    contentPaddingV: Dp = 14.dp, // ← 原本 18.dp，調小一點
-    ringSize: Dp = 80.dp,        // ← 原本 84.dp
-    ringStroke: Dp = 10.dp       // ← 原本 12.dp
+    modifier: Modifier = Modifier,
+    cardHeight: Dp = PanelHeights.Metric,   // ★ 新增：固定高度
+    ringSize: Dp = RingDefaults.Size,
+    ringStroke: Dp = RingDefaults.Stroke,
+    centerDisk: Dp = RingDefaults.CenterDisk,
+    contentPaddingH: Dp = 16.dp,
+    contentPaddingV: Dp = 12.dp,
 ) {
     Card(
-        shape = RoundedCornerShape(22.dp),
+        modifier = modifier.height(cardHeight), // ★ 固定高度，避免分頁高度不一
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(cardHeight)
                 .padding(horizontal = contentPaddingH, vertical = contentPaddingV),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(Modifier.weight(1f)) {
                 Text(
                     text = "$caloriesLeft",
-                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
-                    color = Color(0xFF0F172A)
+                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
                 )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    "Calories left",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF6B7280)
-                )
+                Text("Calories left", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6B7280))
             }
-            Box(contentAlignment = Alignment.Center) {
+            Box(Modifier.size(ringSize), contentAlignment = Alignment.Center) {
                 GaugeRing(
                     progress = progress,
                     sizeDp = ringSize,
                     strokeDp = ringStroke,
                     trackColor = Color(0xFFE8EAEE),
                     progressColor = Color(0xFF111827),
-                    drawTopTick = true
+                    drawTopTick = true,
+                    tickColor = Color(0xFF111827)
                 )
-                Icon(
-                    imageVector = Icons.Filled.Whatshot,
-                    contentDescription = null,
-                    tint = Color(0xFF111827),
-                    modifier = Modifier.size(22.dp)
+                androidx.compose.material3.Surface(
+                    color = Color(0xFFF3F4F6),
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    modifier = Modifier.size(centerDisk),
+                    content = {}
                 )
             }
         }
@@ -232,7 +232,7 @@ fun StepsWorkoutRowModern(summary: HomeSummary) {
             ringColor = Color(0xFF3B82F6),
             progress = 0f,
             modifier = Modifier.weight(1f),
-            minHeight = 132.dp,           // 兩張卡一致
+            cardHeight = PanelHeights.Metric,
             ringSize = 76.dp,             // 兩張卡一致
             ringStroke = 8.dp,
             centerDisk = 30.dp
@@ -247,7 +247,7 @@ fun StepsWorkoutRowModern(summary: HomeSummary) {
             ringColor = Color(0xFFA855F7),
             progress = 0f,
             modifier = Modifier.weight(1f),
-            minHeight = 132.dp,           // 兩張卡一致
+            cardHeight = PanelHeights.Metric,
             ringSize = 76.dp,             // 兩張卡一致
             ringStroke = 8.dp,
             centerDisk = 30.dp,
@@ -278,72 +278,70 @@ fun ActivityStatCardSplit(
     ringColor: Color,
     progress: Float = 0f,
     modifier: Modifier = Modifier,
-    minHeight: Dp = 132.dp,
+    cardHeight: Dp = PanelHeights.Metric, // ← 改用固定高度（預設 = Macro 高度）
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
+    drawRing: Boolean = true,
     leftExtra: (@Composable () -> Unit)? = null
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.height(cardHeight), // ★ 直接鎖定卡片高度
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
+        // 內容用「填滿卡片高度」當置中基準
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(minHeight) // 固定內容高度作為對齊基準
+                .height(cardHeight)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
+            // 左欄：靠上；沒副標就用 Spacer 占位，避免高度漂移
+            Column(
                 modifier = Modifier
-                    .matchParentSize()
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Top
             ) {
-                // 左欄：填滿高度，內容靠上（兩卡主/副標位置一致）
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.Top
-                ) {
-                    Text(text = title, style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280))
-                    Spacer(Modifier.height(4.dp))
+                Text(text = title, style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280))
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = primary,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Color(0xFF0F172A),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                if (!secondary.isNullOrBlank()) {
                     Text(
-                        text = primary,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        color = Color(0xFF0F172A),
+                        text = secondary,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF6B7280),
                         maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(Modifier.height(2.dp))
-                    if (!secondary.isNullOrBlank()) {
-                        Text(
-                            text = secondary,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF6B7280),
-                            maxLines = 1, overflow = TextOverflow.Ellipsis
-                        )
-                    } else {
-                        // ★ 占位：沒有副標時也保留同等高度，避免主標上下位移
-                        Spacer(Modifier.height(18.dp)) // ≈ 一行 bodySmall 的高度
-                    }
-                    if (leftExtra != null) {
-                        Spacer(Modifier.height(8.dp))
-                        leftExtra()
-                    }
+                } else {
+                    Spacer(Modifier.height(18.dp)) // ≈ 一行 bodySmall 的高度
                 }
+                if (leftExtra != null) {
+                    Spacer(Modifier.height(8.dp))
+                    leftExtra()
+                }
+            }
 
-                // 右欄：占右半區塊，內容幾何置中
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(modifier = Modifier.size(ringSize), contentAlignment = Alignment.Center) {
+            // 右欄：幾何置中；關閉圓環時保留同等空間
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(modifier = Modifier.size(ringSize), contentAlignment = Alignment.Center) {
+                    if (drawRing) {
                         GaugeRing(
                             progress = progress,
                             sizeDp = ringSize,
@@ -353,10 +351,62 @@ fun ActivityStatCardSplit(
                             drawTopTick = true,
                             tickColor = ringColor
                         )
-                        Surface(color = Color(0xFFF3F4F6), shape = CircleShape, modifier = Modifier.size(centerDisk)) {}
+                        Surface(
+                            color = Color(0xFFF3F4F6),
+                            shape = CircleShape,
+                            modifier = Modifier.size(centerDisk),
+                            content = {}
+                        )
+                    } else {
+                        Spacer(Modifier.size(ringSize))
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun WeightFastingRowModern(summary: HomeSummary) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // ===== Weight（顯示「距離目標」）=====
+        val unit = summary.weightDiffUnit
+        val deltaToGoal = -summary.weightDiffSigned
+        val absDelta = abs(deltaToGoal)
+        val primaryText =
+            if (unit == "lbs") "${absDelta.roundToInt()} $unit"
+            else String.format(Locale.getDefault(), "%.1f %s", absDelta, unit)
+
+        ActivityStatCardSplit(
+            title = "Weight",
+            primary = primaryText,
+            secondary = "from goal",
+            ringColor = Color(0xFF06B6D4),
+            progress = 0f,
+            modifier = Modifier.weight(1f),
+            cardHeight = PanelHeights.Metric,   // ★ 固定高度
+            ringSize = RingDefaults.Size,
+            ringStroke = RingDefaults.Stroke,
+            centerDisk = RingDefaults.CenterDisk
+        )
+
+        // ===== Fasting plan（無圓環）=====
+        val plan = summary.fastingPlan ?: "—"
+        ActivityStatCardSplit(
+            title = "Fasting plan",
+            primary = plan,
+            secondary = null,
+            ringColor = Color.Transparent,
+            progress = 0f,
+            modifier = Modifier.weight(1f),
+            cardHeight = PanelHeights.Metric,   // ★ 固定高度
+            ringSize = RingDefaults.Size,
+            ringStroke = RingDefaults.Stroke,
+            centerDisk = RingDefaults.CenterDisk,
+            drawRing = false
+        )
     }
 }

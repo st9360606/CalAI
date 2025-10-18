@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,7 +66,9 @@ import com.calai.app.ui.home.components.DonutProgress
 import com.calai.app.ui.home.components.MacroRowModern
 import com.calai.app.ui.home.components.MealCard
 import com.calai.app.ui.home.components.PagerDots
+import com.calai.app.ui.home.components.PanelHeights
 import com.calai.app.ui.home.components.StepsWorkoutRowModern
+import com.calai.app.ui.home.components.WeightFastingRowModern
 import com.calai.app.ui.home.model.HomeViewModel
 import java.time.LocalDate
 import java.util.Locale
@@ -213,31 +216,36 @@ private fun TwoPagePager(
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
 
+    // ★ 固定頁面高度：上卡 132 + 間距 10 + 下卡 132
+    val spacerV = 10.dp
+    val pageHeight = PanelHeights.Metric * 2 + spacerV
+
     Column {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(pageHeight) // ★ 這樣滑動時不會因內容高度不同而跳動
         ) { page ->
-            when (page) {
-                0 -> {
-                    Column {
-                        // ↓↓↓ 這裡換成「精簡高度」參數 ↓↓↓
+            Column(Modifier.fillMaxSize()) {
+                when (page) {
+                    0 -> {
+                        // 頁面 1：Calories（固定高） + Macro（每張也固定高）
                         CaloriesCardModern(
                             caloriesLeft = summary.tdee,
                             progress = 0f,
-                            contentPaddingV = 12.dp, // 原 18.dp → 12.dp
-                            ringSize = 76.dp,        // 原 84.dp → 76.dp
-                            ringStroke = 9.dp        // 原 12.dp → 9.dp
+                            cardHeight = PanelHeights.Metric, // ★ 固定
+                            ringSize = 76.dp,
+                            ringStroke = 9.dp
                         )
-                        Spacer(Modifier.height(10.dp))   // 原 12.dp → 10.dp
-                        MacroRowModern(summary)          // 保持不動（你的 Macro 高度維持原設定）
+                        Spacer(Modifier.height(spacerV))
+                        MacroRowModern(summary) // 你這邊的三張 Macro 卡已是同高
                     }
-                }
-                1 -> {
-                    Column {
-                        WaterGoalCard(summary, onAddWater)
-                        Spacer(Modifier.height(12.dp))
-                        ExerciseDiaryCard(summary)
+                    1 -> {
+                        // 頁面 2：Weight/Fasting（左右分欄，行高＝132） + Workout diary（132）
+                        WeightFastingRowModern(summary)
+                        Spacer(Modifier.height(spacerV))
+                        ExerciseDiaryCard(summary, cardHeight = PanelHeights.Metric) // ★ 固定
                     }
                 }
             }
@@ -377,8 +385,8 @@ private fun AssistChip(label: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ExerciseDiaryCard(s: HomeSummary) {
-    Card(shape = RoundedCornerShape(18.dp)) {
+private fun ExerciseDiaryCard(s: HomeSummary, cardHeight: Dp = PanelHeights.Metric) {
+    Card(shape = RoundedCornerShape(18.dp), modifier = Modifier.height(cardHeight)) {
         Column(Modifier.padding(16.dp)) {
             Text("Workout diary", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
