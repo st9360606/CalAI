@@ -123,9 +123,10 @@ fun HomeScreen(
                 }
             }
 
-            // ===== Calendar（當日前後 15 天；可左右滑動） =====
             val today = remember { LocalDate.now() }
-            val days = remember(today) { (-15..15).map { today.plusDays(it.toLong()) } }
+            val pastDays = 20
+            val futureDays = 1   // 若不想顯示未來任何一天，改成 0
+            val days = remember(today) { (-pastDays..futureDays).map { today.plusDays(it.toLong()) } }
             var selected by rememberSaveable { mutableStateOf(LocalDate.now()) }
             CalendarStrip(
                 days = days,
