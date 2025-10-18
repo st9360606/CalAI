@@ -37,7 +37,7 @@ fun CalendarStrip(
     disableFuture: Boolean = true,
     selectedBgWidthFraction: Float = 0.83f,
     selectedBgCorner: Dp = 16.dp,
-    itemHeight: Dp = 73.dp,
+    itemHeight: Dp = 74.dp,
 ) {
     val today = LocalDate.now()
 

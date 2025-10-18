@@ -141,15 +141,33 @@ fun HomeScreen(
                 selectedBgCorner = 16.dp   // ← 圓角更圓（原 8.dp）
             )
 
-            // ===== Second block: Pager-like（左右滑）
+            // ★ 這兩個值就是你要調的數字（正數=上面減、下面加；負數相反）
+            val topSwap = 20.dp        // 例：Calories -8dp；Macro +8dp  第一頁 Calories 變矮、Macro 變高（或相反），但整頁高度不變、不跳動。
+            val bottomSwap = 12.dp    // 例：Workout -12dp；Weight/Fasting +12dp 第二頁 Workout 變矮、Weight/Fasting 變高（或相反），整頁高度不變。
+
+            // ★ 兩邊總高度控制（共同升降）
+            val baseHeight = 124.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
+            val verticalGap = 10.dp    // ← 上下卡的間距
+
             TwoPagePager(
                 summary = s,
-                onAddWater = { vm.onAddWater(it) }
+                onAddWater = { vm.onAddWater(it) },
+                topSwap = topSwap,
+                bottomSwap = bottomSwap,
+                baseHeight = baseHeight,      // ★ 新增
+                verticalGap = verticalGap     // ★ 新增
             )
 
             Spacer(Modifier.height(12.dp))
 
-            StepsWorkoutRowModern(summary = s)
+            // ★ 想再小就把 cardHeight 調更小，環也可一起調
+            StepsWorkoutRowModern(
+                summary = s,
+                cardHeight = 120.dp,   // ← 你想要的高度
+                ringSize = 74.dp,      // ← 對應縮小的圓環
+                centerDisk = 32.dp,    // ← 對應縮小的中心灰圓
+                ringStroke = 6.dp      // ← 視覺厚度；想更輕可 7.dp
+            )
 
             // ===== Fourth block: 最近上傳
             if (s.recentMeals.isNotEmpty()) {
@@ -211,41 +229,69 @@ private fun Avatar(
 @Composable
 private fun TwoPagePager(
     summary: HomeSummary,
-    onAddWater: (Int) -> Unit
+    onAddWater: (Int) -> Unit,
+    // 互沖用（不改總高）
+    topSwap: Dp = 0.dp,
+    bottomSwap: Dp = 0.dp,
+    // ★ 總高度控制（共同升降）
+    baseHeight: Dp = PanelHeights.Metric,
+    verticalGap: Dp = 10.dp
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
 
-    // ★ 固定頁面高度：上卡 132 + 間距 10 + 下卡 132
-    val spacerV = 10.dp
-    val pageHeight = PanelHeights.Metric * 2 + spacerV
+    // ★ 固定頁面總高度：上卡 + 間距 + 下卡
+    val spacerV = verticalGap
+    val pageHeight = baseHeight * 2 + spacerV
+
+    // ★ 卡片最小高度，避免太扁（若你有 PanelHeights.Min 就用那個）
+    val minCard = 96.dp
+    val maxSwap = (baseHeight - minCard).coerceAtLeast(0.dp)
+
+    // 第一頁對沖
+    val topSwapClamped = topSwap.coerceIn(-maxSwap, maxSwap)
+    val caloriesH = baseHeight - topSwapClamped
+    val macroH = baseHeight + topSwapClamped
+
+    // 第二頁對沖
+    val bottomSwapClamped = bottomSwap.coerceIn(-maxSwap, maxSwap)
+    val workoutH = baseHeight - bottomSwapClamped
+    val wfH = baseHeight + bottomSwapClamped
 
     Column {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(pageHeight) // ★ 這樣滑動時不會因內容高度不同而跳動
+                .height(pageHeight) // ★ 總高度由 baseHeight / verticalGap 控制
         ) { page ->
             Column(Modifier.fillMaxSize()) {
                 when (page) {
                     0 -> {
-                        // 頁面 1：Calories（固定高） + Macro（每張也固定高）
                         CaloriesCardModern(
                             caloriesLeft = summary.tdee,
                             progress = 0f,
-                            cardHeight = PanelHeights.Metric, // ★ 固定
+                            cardHeight = caloriesH,
                             ringSize = 76.dp,
-                            ringStroke = 9.dp
+                            centerDisk = 36.dp,    // ← 對應縮小的中心灰圓
+                            ringStroke = 6.dp
                         )
                         Spacer(Modifier.height(spacerV))
-                        MacroRowModern(summary) // 你這邊的三張 Macro 卡已是同高
+                        MacroRowModern(
+                            s = summary,
+                            cardHeight = macroH
+                        )
                     }
                     1 -> {
-                        // 頁面 2：Weight/Fasting（左右分欄，行高＝132） + Workout diary（132）
-                        WeightFastingRowModern(summary)
+                        WeightFastingRowModern(
+                            summary = summary,
+                            cardHeight = wfH
+                        )
                         Spacer(Modifier.height(spacerV))
-                        ExerciseDiaryCard(summary, cardHeight = PanelHeights.Metric) // ★ 固定
+                        ExerciseDiaryCard(
+                            s = summary,
+                            cardHeight = workoutH
+                        )
                     }
                 }
             }
@@ -254,133 +300,6 @@ private fun TwoPagePager(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             PagerDots(count = pageCount, current = pagerState.currentPage)
         }
-    }
-}
-
-@Composable
-private fun BigTdeeCard(s: HomeSummary) {
-    Card(shape = RoundedCornerShape(18.dp)) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    "${s.tdee}",
-                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
-                )
-                Text("Calories left", style = MaterialTheme.typography.bodyMedium)
-            }
-            DonutProgress(
-                progress = 0f, // 若未做「已吃」整合，先顯示 0 進度圈
-                modifier = Modifier.size(90.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatSmallCard(
-    title: String,
-    value: String,
-    icon: @Composable (() -> Unit)? = null
-) {
-    Card(shape = RoundedCornerShape(18.dp)) {
-        Column(
-            Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                value,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(title, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-private fun MacroRow(s: HomeSummary) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        StatSmallCard("Protein left", "${s.proteinG}g")
-        StatSmallCard("Carbs left", "${s.carbsG}g")
-        StatSmallCard("Fats left", "${s.fatG}g")
-    }
-}
-
-@Composable
-private fun WaterGoalCard(s: HomeSummary, onAddWater: (Int) -> Unit) {
-    Card(shape = RoundedCornerShape(18.dp)) {
-        Column(Modifier.padding(16.dp)) {
-            Text("Water / Weight / Fasting", style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                // ---- 水分 ----
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "${s.waterTodayMl}/${s.waterGoalMl} ml",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Row {
-                        AssistChip("+250 ml") { onAddWater(250) }
-                        Spacer(Modifier.width(8.dp))
-                        AssistChip("+500 ml") { onAddWater(500) }
-                    }
-                }
-
-                // ---- 體重差（Δ = target - current；lbs 整數、kg 小數一位）----
-                Column(Modifier.weight(1f)) {
-                    val deltaSigned =
-                        -s.weightDiffSigned  // repository 是 current - target，這裡取反得到 target - current
-                    val unit = s.weightDiffUnit
-                    val valueText =
-                        if (unit == "lbs") {
-                            val v = deltaSigned.roundToInt() // lbs 取整數
-                            "$v $unit"
-                        } else {
-                            String.format(
-                                Locale.getDefault(),
-                                "%.1f %s",
-                                deltaSigned,
-                                unit
-                            ) // kg 一位小數
-                        }
-
-                    Text(
-                        text = valueText,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text("Δ weight", style = MaterialTheme.typography.bodySmall)
-                }
-
-                // ---- 斷食方案 ----
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        s.fastingPlan ?: "—",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text("Fasting plan", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AssistChip(label: String, onClick: () -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(12.dp),
-        onClick = onClick
-    ) {
-        Text(label, modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp))
     }
 }
 

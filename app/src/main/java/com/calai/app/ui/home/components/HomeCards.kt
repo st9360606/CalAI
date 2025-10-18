@@ -5,16 +5,21 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Path
 import java.util.Locale
 import kotlin.math.abs
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,12 +44,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.calai.app.data.home.repo.HomeSummary
 import kotlin.math.roundToInt
+import androidx.compose.ui.text.TextStyle
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
-    val Size = 60.dp      // 圓直徑
-    val Stroke = 6.dp     // 圓環粗細
-    val CenterDisk = 26.dp// 圓心淺灰底大小
+    val Size = 64.dp      // 圓直徑
+    val Stroke = 5.dp     // 圓環粗細
+    val CenterDisk = 32.dp// 圓心淺灰底大小
 }
 
 @Composable
@@ -101,12 +108,14 @@ fun CaloriesCardModern(
 }
 
 @Composable
-fun MacroRowModern(s: HomeSummary) {
+fun MacroRowModern(
+    s: HomeSummary,
+    cardHeight: Dp = PanelHeights.Metric
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Protein = 紅
         MacroStatCardModern(
             value = "${s.proteinG}g",
             label = "Protein left",
@@ -119,9 +128,9 @@ fun MacroRowModern(s: HomeSummary) {
                     modifier = Modifier.size(20.dp)
                 )
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            cardHeight = cardHeight
         )
-        // Carbs = 橘（麵包）
         MacroStatCardModern(
             value = "${s.carbsG}g",
             label = "Carbs left",
@@ -134,9 +143,9 @@ fun MacroRowModern(s: HomeSummary) {
                     modifier = Modifier.size(24.dp)
                 )
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            cardHeight = cardHeight
         )
-        // Fats = 綠（油滴；若要酪梨需自訂向量）
         MacroStatCardModern(
             value = "${s.fatG}g",
             label = "Fats left",
@@ -149,7 +158,8 @@ fun MacroRowModern(s: HomeSummary) {
                     modifier = Modifier.size(20.dp)
                 )
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            cardHeight = cardHeight
         )
     }
 }
@@ -162,15 +172,14 @@ private fun MacroStatCardModern(
     icon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     progress: Float = 0f,
-    // ↓ 改成跟蛋白質一致的預設（之後 Steps/Workout 也會引用同一組）
-    minHeight: Dp = 132.dp,
+    cardHeight: Dp = PanelHeights.Metric, // ← 改成固定高度參數
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
     spacingTop: Dp = 12.dp
 ) {
     Card(
-        modifier = modifier.heightIn(min = minHeight),
+        modifier = modifier.height(cardHeight),          // ← 固定高度
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
@@ -192,7 +201,6 @@ private fun MacroStatCardModern(
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF6B7280)
             )
-
             Spacer(Modifier.height(spacingTop))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 GaugeRing(
@@ -216,7 +224,17 @@ private fun MacroStatCardModern(
 }
 
 @Composable
-fun StepsWorkoutRowModern(summary: HomeSummary) {
+fun StepsWorkoutRowModern(
+    summary: HomeSummary,
+    // ★ 新增：卡片高度 & 圓環大小，可依需求調整
+    cardHeight: Dp = 120.dp,   // 原 132.dp → 小一點
+    ringSize: Dp = 68.dp,      // 原 76.dp → 略小，避免卡片太擠
+    centerDisk: Dp = 28.dp,    // 原 30.dp → 跟著縮小一點
+    ringStroke: Dp = 8.dp,    // 保持視覺厚度不變（要更輕可改 7.dp）
+    // ★ 新增：Workout 黑圓＋大小可調
+    plusButtonSize: Dp = 24.dp,  // 黑色圓的直徑（預設放大）
+    plusIconSize: Dp = 19.dp     // 中間白色「＋」圖示大小
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -232,10 +250,10 @@ fun StepsWorkoutRowModern(summary: HomeSummary) {
             ringColor = Color(0xFF3B82F6),
             progress = 0f,
             modifier = Modifier.weight(1f),
-            cardHeight = PanelHeights.Metric,
-            ringSize = 76.dp,             // 兩張卡一致
-            ringStroke = 8.dp,
-            centerDisk = 30.dp
+            cardHeight = cardHeight,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk
         )
 
         // Workout
@@ -247,18 +265,29 @@ fun StepsWorkoutRowModern(summary: HomeSummary) {
             ringColor = Color(0xFFA855F7),
             progress = 0f,
             modifier = Modifier.weight(1f),
-            cardHeight = PanelHeights.Metric,
-            ringSize = 76.dp,             // 兩張卡一致
-            ringStroke = 8.dp,
-            centerDisk = 30.dp,
+            cardHeight = cardHeight,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk,
             leftExtra = {
-                Surface(color = Color.Black, shape = CircleShape) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.padding(4.dp)
-                    )
+                // ★ 用 requiredSize 強制正方形，避免被父層拉伸
+                Surface(
+                    modifier = Modifier.requiredSize(plusButtonSize),
+                    shape = CircleShape,
+                    color = Color.Black
+                ) {
+                    // ★ 填滿 Surface（已是正方形），就不會變橢圓
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(plusIconSize)
+                        )
+                    }
                 }
             }
         )
@@ -278,21 +307,33 @@ fun ActivityStatCardSplit(
     ringColor: Color,
     progress: Float = 0f,
     modifier: Modifier = Modifier,
-    cardHeight: Dp = PanelHeights.Metric, // ← 改用固定高度（預設 = Macro 高度）
+    cardHeight: Dp = PanelHeights.Metric,
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
     drawRing: Boolean = true,
+    // ↓↓↓ 新增：標題前綴（例如小三角）與間距
+    titlePrefix: (@Composable () -> Unit)? = null,
+    titlePrefixGap: Dp = 4.dp,
+    // 文字樣式/間距（先前就有）
+    titleTextStyle: TextStyle? = null,
+    primaryTextStyle: TextStyle? = null,
+    secondaryTextStyle: TextStyle? = null,
+    gapTitleToPrimary: Dp = 4.dp,
+    gapPrimaryToSecondary: Dp = 2.dp,
     leftExtra: (@Composable () -> Unit)? = null
 ) {
+    val titleStyle = titleTextStyle ?: MaterialTheme.typography.bodySmall
+    val primaryStyle = primaryTextStyle ?: MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+    val secondaryStyle = secondaryTextStyle ?: MaterialTheme.typography.bodySmall
+
     Card(
-        modifier = modifier.height(cardHeight), // ★ 直接鎖定卡片高度
+        modifier = modifier.height(cardHeight),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        // 內容用「填滿卡片高度」當置中基準
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -301,43 +342,57 @@ fun ActivityStatCardSplit(
             horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 左欄：靠上；沒副標就用 Spacer 占位，避免高度漂移
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.Top
             ) {
-                Text(text = title, style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280))
-                Spacer(Modifier.height(4.dp))
+                // 標題列：可插入前綴小圖示（例如小三角）
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (titlePrefix != null) {
+                        titlePrefix()
+                        Spacer(Modifier.width(titlePrefixGap))
+                    }
+                    Text(
+                        text = title,
+                        style = titleStyle,
+                        color = Color(0xFF6B7280),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(Modifier.height(gapTitleToPrimary))
+
                 Text(
                     text = primary,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = primaryStyle,
                     color = Color(0xFF0F172A),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(gapPrimaryToSecondary))
                 if (!secondary.isNullOrBlank()) {
                     Text(
                         text = secondary,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = secondaryStyle,
                         color = Color(0xFF6B7280),
-                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 } else {
-                    Spacer(Modifier.height(18.dp)) // ≈ 一行 bodySmall 的高度
+                    Spacer(Modifier.height(18.dp))
                 }
-                if (leftExtra != null) {
+                leftExtra?.let {
                     Spacer(Modifier.height(8.dp))
-                    leftExtra()
+                    it()
                 }
             }
 
-            // 右欄：幾何置中；關閉圓環時保留同等空間
+            // 右側圓環（略，與你現有相同）
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
                 Box(modifier = Modifier.size(ringSize), contentAlignment = Alignment.Center) {
@@ -351,12 +406,7 @@ fun ActivityStatCardSplit(
                             drawTopTick = true,
                             tickColor = ringColor
                         )
-                        Surface(
-                            color = Color(0xFFF3F4F6),
-                            shape = CircleShape,
-                            modifier = Modifier.size(centerDisk),
-                            content = {}
-                        )
+                        Surface(color = Color(0xFFF3F4F6), shape = CircleShape, modifier = Modifier.size(centerDisk)) {}
                     } else {
                         Spacer(Modifier.size(ringSize))
                     }
@@ -367,46 +417,107 @@ fun ActivityStatCardSplit(
 }
 
 @Composable
-fun WeightFastingRowModern(summary: HomeSummary) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // ===== Weight（顯示「距離目標」）=====
+fun WeightFastingRowModern(
+    summary: HomeSummary,
+    cardHeight: Dp = PanelHeights.Metric,
+    plusButtonSize: Dp = 24.dp,
+    plusIconSize: Dp = 19.dp
+
+) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         val unit = summary.weightDiffUnit
         val deltaToGoal = -summary.weightDiffSigned
         val absDelta = abs(deltaToGoal)
         val primaryText =
             if (unit == "lbs") "${absDelta.roundToInt()} $unit"
-            else String.format(Locale.getDefault(), "%.1f %s", absDelta, unit)
+            else String.format(java.util.Locale.getDefault(), "%.1f %s", absDelta, unit)
 
         ActivityStatCardSplit(
             title = "Weight",
-            primary = primaryText,
+            primary = primaryText,          // 例：3.2 lbs 或 5 lbs
             secondary = "from goal",
             ringColor = Color(0xFF06B6D4),
             progress = 0f,
             modifier = Modifier.weight(1f),
-            cardHeight = PanelHeights.Metric,   // ★ 固定高度
-            ringSize = RingDefaults.Size,
-            ringStroke = RingDefaults.Stroke,
-            centerDisk = RingDefaults.CenterDisk
+            cardHeight = cardHeight,
+
+            // ★ 這三個改成與 Steps 一樣的樣式與尺寸
+            ringSize = 74.dp,
+            ringStroke = 6.dp,
+            centerDisk = 32.dp,
+            drawRing = true,
+
+            // ★ 小實心黑三角（靠左、等邊、朝上）
+            titlePrefix = { TitlePrefixTriangle(side = 6.dp, color = Color.Black) },
+            titlePrefixGap = 6.dp,
+
+            // ★ 重點：放大主文字，並拉開與標題的距離
+            titleTextStyle = MaterialTheme.typography.bodySmall,
+            primaryTextStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold), // ← 放大
+            secondaryTextStyle = MaterialTheme.typography.bodySmall,
+            gapTitleToPrimary = 10.dp,     // ← 與「Weight」間距更大
+            gapPrimaryToSecondary = 2.dp,
+            // ★ 左下角黑圓底白十字（與 Workout 同款）
+            leftExtra = {
+                Surface(
+                    modifier = Modifier.requiredSize(plusButtonSize), // 強制正方形避免變橢圓
+                    shape = CircleShape,
+                    color = Color.Black
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.requiredSize(plusIconSize)
+                        )
+                    }
+                }
+            }
         )
 
-        // ===== Fasting plan（無圓環）=====
         val plan = summary.fastingPlan ?: "—"
         ActivityStatCardSplit(
-            title = "Fasting plan",
+            title = "Fasting Plan",
             primary = plan,
             secondary = null,
             ringColor = Color.Transparent,
             progress = 0f,
             modifier = Modifier.weight(1f),
-            cardHeight = PanelHeights.Metric,   // ★ 固定高度
+            cardHeight = cardHeight,              // ← 動態高度
             ringSize = RingDefaults.Size,
             ringStroke = RingDefaults.Stroke,
             centerDisk = RingDefaults.CenterDisk,
-            drawRing = false
+            drawRing = false,
+            titleTextStyle = MaterialTheme.typography.bodySmall,
+            primaryTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            secondaryTextStyle = MaterialTheme.typography.bodySmall,
+            gapTitleToPrimary = 4.dp,
+            gapPrimaryToSecondary = 2.dp
         )
+    }
+}
+
+/**
+ * 小三角（等邊，頂點朝上），尺寸獨立於文字大小
+ */
+@Composable
+fun TitlePrefixTriangle(
+    side: Dp = 8.dp,                 // ← 想更小/更大改這裡
+    color: Color = Color(0xFF06B6D4) // ← 品牌色/想要的顏色
+) {
+    Canvas(modifier = Modifier.size(side)) {
+        val w = size.width
+        val h = size.height
+        val path = Path().apply {
+            moveTo(w / 2f, 0f)   // 上頂點
+            lineTo(0f, h)        // 左下
+            lineTo(w, h)         // 右下
+            close()
+        }
+        drawPath(path = path, color = color)
     }
 }
