@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.calai.app.data.health.HealthConnectRepository
 import com.calai.app.data.home.repo.HomeRepository
 import com.calai.app.data.home.repo.HomeSummary
+import com.calai.app.data.profile.repo.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -30,11 +32,11 @@ private data class SummaryUiKey(
     val fatG: Int,
     val waterTodayMl: Int,
     val waterGoalMl: Int,
-    val steps: Long,                 // ← Long（修正）
-    val exerciseMinutes: Long,       // ← Long（修正）
-    val activeKcalInt: Int,          // 仍量化成 Int，避免小數級抖動
+    val steps: Long,
+    val exerciseMinutes: Long,
+    val activeKcalInt: Int,
     val fastingPlan: String?,
-    val weightDiffSigned: Double,    // ← Double（修正）
+    val weightDiffSigned: Double,
     val weightDiffUnit: String,
     val recentMealsSig: String
 )
@@ -42,51 +44,86 @@ private data class SummaryUiKey(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repo: HomeRepository,
-    private val hc: HealthConnectRepository
+    private val hc: HealthConnectRepository,
+    private val profileRepo: ProfileRepository // ★ 新增：用於 401/404 自動補救
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(HomeUiState())
     val ui: StateFlow<HomeUiState> = _ui.asStateFlow()
 
-    // 上一次已送出的 summary 簽章（用於去重）
     private var lastSummaryKey: SummaryUiKey? = null
 
     fun refresh() = viewModelScope.launch {
         _ui.value = _ui.value.copy(loading = true, error = null)
 
-        runCatching {
-            withContext(Dispatchers.IO) { repo.loadSummary() }
-        }.onSuccess { summary ->
-            val newKey = summary.toUiKey()
-            val firstTime = _ui.value.summary == null
-            val changed = newKey != lastSummaryKey
+        // 第一次嘗試：Server 為唯一事實來源
+        val first = runCatching {
+            withContext(Dispatchers.IO) { repo.loadSummaryFromServer().getOrThrow() }
+        }
 
-            if (firstTime || changed) {
-                lastSummaryKey = newKey
-                _ui.value = HomeUiState(
-                    loading = false,
-                    summary = summary,
-                    error = null,
-                    selectedDayOffset = _ui.value.selectedDayOffset
-                )
-            } else {
-                if (_ui.value.loading) {
-                    _ui.value = _ui.value.copy(loading = false)
+        if (first.isSuccess) {
+            applySummary(first.getOrThrow())
+            return@launch
+        }
+
+        // 若為 401/404：補救（建立或同步一份 Server Profile），再重試一次
+        val e = first.exceptionOrNull()
+        val code = (e as? HttpException)?.code()
+        val recoverable = code == 401 || code == 404
+        if (recoverable) {
+            val ok = withContext(Dispatchers.IO) {
+                profileRepo.upsertFromLocal().isSuccess
+            }
+            if (ok) {
+                val second = runCatching {
+                    withContext(Dispatchers.IO) { repo.loadSummaryFromServer().getOrThrow() }
+                }
+                if (second.isSuccess) {
+                    applySummary(second.getOrThrow())
+                    return@launch
+                } else {
+                    _ui.value = _ui.value.copy(
+                        loading = false,
+                        error = second.exceptionOrNull()?.message ?: "Failed after recovery"
+                    )
+                    return@launch
                 }
             }
-        }.onFailure { t ->
-            _ui.value = _ui.value.copy(loading = false, error = t.message)
+        }
+
+        // 其它錯誤：顯示錯誤訊息
+        _ui.value = _ui.value.copy(
+            loading = false,
+            error = e?.message ?: "Failed to load profile"
+        )
+    }
+
+    private fun applySummary(summary: HomeSummary) {
+        val newKey = summary.toUiKey()
+        val firstTime = _ui.value.summary == null
+        val changed = newKey != lastSummaryKey
+        lastSummaryKey = newKey
+
+        _ui.value = HomeUiState(
+            loading = false,
+            summary = summary,
+            error = null,
+            selectedDayOffset = _ui.value.selectedDayOffset
+        )
+
+        // 若只是 Loading 結束，但內容沒變，也要把 loading 關掉
+        if (!firstTime && !changed && _ui.value.loading) {
+            _ui.value = _ui.value.copy(loading = false)
         }
     }
 
+    // ✅ 簡化：避免 withContext 推斷問題
     fun onAddWater(ml: Int) = viewModelScope.launch {
-        withContext(Dispatchers.IO) { repo.addWater(ml) }
+        runCatching { withContext(Dispatchers.IO) { repo.addWater(ml) } }
         refresh()
     }
 
-    fun onRequestHealthPermissions() = viewModelScope.launch {
-        refresh()
-    }
+    fun onRequestHealthPermissions() = viewModelScope.launch { refresh() }
 
     init { refresh() }
 }
@@ -97,9 +134,7 @@ private fun HomeSummary.toUiKey(): SummaryUiKey {
     val rm = this.recentMeals
     val recentSig = buildString {
         append(rm.size)
-        rm.take(3).forEach { m ->
-            append('|').append(m.hashCode())
-        }
+        rm.take(3).forEach { m -> append('|').append(m.hashCode()) }
     }
     return SummaryUiKey(
         avatarUrl = this.avatarUrl?.toString(),
@@ -109,11 +144,11 @@ private fun HomeSummary.toUiKey(): SummaryUiKey {
         fatG = this.fatG,
         waterTodayMl = this.waterTodayMl,
         waterGoalMl = this.waterGoalMl,
-        steps = this.todayActivity.steps,                       // Long
-        exerciseMinutes = this.todayActivity.exerciseMinutes,   // Long
-        activeKcalInt = this.todayActivity.activeKcal.toInt(),  // 量化
+        steps = this.todayActivity.steps,
+        exerciseMinutes = this.todayActivity.exerciseMinutes,
+        activeKcalInt = this.todayActivity.activeKcal.toInt(),
         fastingPlan = this.fastingPlan,
-        weightDiffSigned = this.weightDiffSigned,               // Double
+        weightDiffSigned = this.weightDiffSigned,
         weightDiffUnit = this.weightDiffUnit,
         recentMealsSig = recentSig
     )
