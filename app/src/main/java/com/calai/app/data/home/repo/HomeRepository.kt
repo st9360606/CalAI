@@ -94,6 +94,7 @@ class HomeRepository @Inject constructor(
         val waterNow = runCatching { store.waterTodayFlow.first() }.getOrDefault(0)
 
         // 4) 體重差（優先 lbs，否則 kg）
+        // === 體重差（用「當前 - 目標」；正=還需減，負=已低於目標） ===
         val (weightDiffSigned, weightDiffUnit) = run {
             val currentLbs = p.weightLbs
             if (currentLbs != null) {
@@ -101,7 +102,8 @@ class HomeRepository @Inject constructor(
                 val diff = if (targetLbs != null) (currentLbs - targetLbs).toDouble() else 0.0
                 diff to "lbs"
             } else {
-                val diff = if (targetWeightKg != null) round1(weightKg - targetWeightKg) else 0.0
+                val targetKg = p.targetWeightKg
+                val diff = if (targetKg != null) round1(weightKg - targetKg) else 0.0
                 diff to "kg"
             }
         }

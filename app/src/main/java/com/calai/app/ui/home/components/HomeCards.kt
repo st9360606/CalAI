@@ -425,17 +425,20 @@ fun WeightFastingRowModern(
 
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        // ✅ UI 顯示語義：負數 = 還需要減重；正數 = 已低於目標
+        // 後端給的是 (current − goal)，這裡轉成 (goal − current) 來顯示
+        val goal = -summary.weightDiffSigned
         val unit = summary.weightDiffUnit
-        val deltaToGoal = -summary.weightDiffSigned
-        val absDelta = abs(deltaToGoal)
         val primaryText =
-            if (unit == "lbs") "${absDelta.roundToInt()} $unit"
-            else String.format(java.util.Locale.getDefault(), "%.1f %s", absDelta, unit)
+            if (unit == "lbs")
+                String.format(java.util.Locale.getDefault(), "%+d lbs", goal.roundToInt())
+            else
+                String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit) // 例：-10.2 kg
 
         ActivityStatCardSplit(
             title = "Weight",
             primary = primaryText,          // 例：3.2 lbs 或 5 lbs
-            secondary = "from goal",
+            secondary = "to goal",
             ringColor = Color(0xFF06B6D4),
             progress = 0f,
             modifier = Modifier.weight(1f),
@@ -451,12 +454,13 @@ fun WeightFastingRowModern(
             titlePrefix = { TitlePrefixTriangle(side = 6.dp, color = Color.Black) },
             titlePrefixGap = 6.dp,
 
-            // ★ 重點：放大主文字，並拉開與標題的距離
+            // ✅ 2) 把主數字字體縮小：原本 titleLarge → 改成 titleMedium（你也可用 bodyLarge 再小一級）
             titleTextStyle = MaterialTheme.typography.bodySmall,
-            primaryTextStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold), // ← 放大
+            primaryTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             secondaryTextStyle = MaterialTheme.typography.bodySmall,
-            gapTitleToPrimary = 10.dp,     // ← 與「Weight」間距更大
+            gapTitleToPrimary = 10.dp,
             gapPrimaryToSecondary = 2.dp,
+
             // ★ 左下角黑圓底白十字（與 Workout 同款）
             leftExtra = {
                 Surface(
