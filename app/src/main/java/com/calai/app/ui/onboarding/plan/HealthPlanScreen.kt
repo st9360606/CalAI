@@ -327,45 +327,45 @@ private fun HydrationAndWeightRings(
     targetWeightKg: Float?,
     targetWeightUnit: UserProfileStore.WeightUnit?
 ) {
-    // 1) Daily water (ml) = 35 * kg
+    // 以當前體重頁單位為唯一真相（null 視為 KG）
+    val displayUnit = when (weightUnit) {
+        UserProfileStore.WeightUnit.LBS -> UserProfileStore.WeightUnit.LBS
+        else -> UserProfileStore.WeightUnit.KG
+    }
+
+    // 1) 飲水量：35 ml * kg
     val waterMl = (35f * weightKg).roundToInt()
 
-    // 2) Current Weight display（lbs → 四捨五入整數）
-    val (currText, currProgress) = when (weightUnit) {
+    // 2) 當前體重（用 displayUnit）
+    val (currText, currProgress) = when (displayUnit) {
         UserProfileStore.WeightUnit.LBS -> {
             val lbs = kgToLbs(weightKg)
             val lbsInt = lbs.roundToInt()
-            "$lbsInt lbs" to min(lbsInt / 330f, 1f) // 330lb 作為上限
+            "$lbsInt lbs" to min(lbsInt / 330f, 1f) // 330 lb 上限
         }
-
-        else -> {
+        UserProfileStore.WeightUnit.KG -> {
             String.format(Locale.getDefault(), "%.1f kg", weightKg) to
-                    min(weightKg / 150f, 1f) // 150kg 作為上限
+                    min(weightKg / 150f, 1f) // 150 kg 上限
         }
     }
 
-    // 3) Target Delta display（目標 - 當前；lbs → 四捨五入整數）
-    val deltaText: String
-    val deltaProgress: Float
-    if (targetWeightKg == null) {
-        deltaText = "—"
-        deltaProgress = 0f
-    } else {
-        val deltaKg = targetWeightKg - weightKg
-        when (targetWeightUnit) {
-            UserProfileStore.WeightUnit.LBS -> {
-                val deltaLbs = kgToLbs(deltaKg)
-                val deltaInt = deltaLbs.roundToInt()
-                deltaText = signedInt(deltaInt) + " lbs"
-                deltaProgress = min(abs(deltaInt).toFloat() / 44f, 1f) // ±44lb 作為上限
-            }
-
-            else -> {
-                deltaText = signed(deltaKg) + " kg"
-                deltaProgress = min(abs(deltaKg) / 20f, 1f)             // ±20kg 作為上限
+    // 3) 目標差 Δ（完全用 displayUnit，不看 targetWeightUnit）
+    val (deltaText, deltaProgress) =
+        if (targetWeightKg == null) {
+            "—" to 0f
+        } else {
+            val deltaKg = targetWeightKg - weightKg // 先用 kg 算差
+            when (displayUnit) {
+                UserProfileStore.WeightUnit.LBS -> {
+                    val deltaLbs = kgToLbs(deltaKg)
+                    val deltaInt = deltaLbs.roundToInt()
+                    (signedInt(deltaInt) + " lbs") to min(abs(deltaInt).toFloat() / 44f, 1f) // ±44 lb
+                }
+                UserProfileStore.WeightUnit.KG -> {
+                    (signed(deltaKg) + " kg") to min(abs(deltaKg) / 20f, 1f) // ±20 kg
+                }
             }
         }
-    }
 
     Row(
         Modifier
