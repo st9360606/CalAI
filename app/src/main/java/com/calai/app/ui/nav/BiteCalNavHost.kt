@@ -539,6 +539,10 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+            val fastingVm: FastingPlanViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
             HomeScreen(
                 vm = vm,
                 onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
@@ -552,7 +556,8 @@ fun BiteCalNavHost(
                         HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
                     }
                 },
-                onOpenFastingPlans = { nav.navigate(Routes.FASTING) } // ★ 新增：提供給 HomeScreen
+                onOpenFastingPlans = { nav.navigate(Routes.FASTING) } ,// ★ 新增：提供給 HomeScreen
+                fastingVm = fastingVm // ★ 傳入
             )
         }
 

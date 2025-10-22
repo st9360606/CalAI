@@ -1,6 +1,14 @@
 package com.calai.app.ui.home
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -10,10 +18,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -36,9 +42,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,7 +68,6 @@ import com.calai.app.R
 import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.ui.home.components.CalendarStrip
 import com.calai.app.ui.home.components.CaloriesCardModern
-import com.calai.app.ui.home.components.DonutProgress
 import com.calai.app.ui.home.components.MacroRowModern
 import com.calai.app.ui.home.components.MealCard
 import com.calai.app.ui.home.components.PagerDots
@@ -70,9 +75,10 @@ import com.calai.app.ui.home.components.PanelHeights
 import com.calai.app.ui.home.components.StepsWorkoutRowModern
 import com.calai.app.ui.home.components.WeightFastingRowModern
 import com.calai.app.ui.home.model.HomeViewModel
+import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import java.time.LocalDate
-import java.util.Locale
-import kotlin.math.roundToInt
+import java.time.format.DateTimeFormatter
+
 
 @Composable
 fun HomeScreen(
@@ -80,9 +86,56 @@ fun HomeScreen(
     onOpenAlarm: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
-    onOpenFastingPlans: () -> Unit      // ★ 新增：由 NavHost 傳入
+    onOpenFastingPlans: () -> Unit,
+    fastingVm: FastingPlanViewModel,     // ← 有傳入
 ) {
     val ui by vm.ui.collectAsState()
+
+    // ====== Fasting VM 狀態 / 權限設定 ======
+    val fastingUi by fastingVm.state.collectAsState()
+    val ctx = LocalContext.current
+    val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
+
+    // ⚠️ 關鍵：先拿 owner；可能為 null（某些 Nav/容器或 Preview）
+    val registryOwner = LocalActivityResultRegistryOwner.current
+
+    // 只有在 owner 存在時才建立 launcher，否則用 null 表示不用它
+    val requestNotifications = if (registryOwner != null) {
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                // 允許後才真正開啟（VM 內會 persist & schedule）
+                fastingVm.onToggleEnabled(
+                    requested = true,
+                    onNeedPermission = {},   // 已授權，不會再被叫到
+                    onDenied = {}
+                )
+            }
+        }
+    } else null
+
+    // Switch 行為：一律讓 VM 做權限判斷；onNeedPermission 內採用「能 launcher 就 launcher；否則導到設定頁」
+    val onToggleFasting: (Boolean) -> Unit = remember {
+        { requested ->
+            fastingVm.onToggleEnabled(
+                requested = requested,
+                onNeedPermission = {
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        if (requestNotifications != null) {
+                            requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            // 沒有 ActivityResultRegistryOwner → 走降級路徑
+                            openAppNotificationSettings(ctx)
+                        }
+                    }
+                },
+                onDenied = {
+                    // 可選：顯示 SnackBar/Toast「需要通知權限才能開啟提醒」
+                }
+            )
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -150,15 +203,27 @@ fun HomeScreen(
             val baseHeight = 124.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
             val verticalGap = 10.dp    // ← 上下卡的間距
 
+            // 將 VM 狀態轉為卡片顯示字串
+            val planName = fastingUi.selected.code
+            val startText = fastingUi.start.format(timeFmt)
+            val endText = fastingUi.end.format(timeFmt)
+
             TwoPagePager(
                 summary = s,
                 onAddWater = { vm.onAddWater(it) },
                 topSwap = topSwap,
                 bottomSwap = bottomSwap,
-                baseHeight = baseHeight,      // ★ 新增
-                verticalGap = verticalGap,     // ★ 新增
-                onOpenFastingPlans = onOpenFastingPlans   // ★ 傳下去
+                baseHeight = baseHeight,
+                verticalGap = verticalGap,
+                onOpenFastingPlans = onOpenFastingPlans,
+                // ★ 傳入 VM 狀態給 Home 卡片
+                planOverride = planName,
+                fastingStartText = startText,
+                fastingEndText = endText,
+                fastingEnabled = fastingUi.enabled,
+                onToggleFasting = onToggleFasting
             )
+
 
             Spacer(Modifier.height(12.dp))
 
@@ -232,13 +297,17 @@ private fun Avatar(
 private fun TwoPagePager(
     summary: HomeSummary,
     onAddWater: (Int) -> Unit,
-    // 互沖用（不改總高）
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
-    // ★ 總高度控制（共同升降）
     baseHeight: Dp = PanelHeights.Metric,
     verticalGap: Dp = 10.dp,
-    onOpenFastingPlans: () -> Unit = {}   // ★ 新增：給預設值，避免舊呼叫點爆
+    onOpenFastingPlans: () -> Unit = {},
+    // Fasting 卡片資料
+    planOverride: String? = null,
+    fastingStartText: String? = null,
+    fastingEndText: String? = null,
+    fastingEnabled: Boolean = false,
+    onToggleFasting: (Boolean) -> Unit = {}
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
@@ -289,8 +358,12 @@ private fun TwoPagePager(
                         WeightFastingRowModern(
                             summary = summary,
                             cardHeight = wfH,
-                            onOpenFastingPlans = onOpenFastingPlans
-                            // 若暫時沒有 start/end 文本，就先不傳，預設會顯示 "—"
+                            onOpenFastingPlans = onOpenFastingPlans,
+                            planOverride = planOverride,
+                            fastingStartText = fastingStartText,
+                            fastingEndText = fastingEndText,
+                            fastingEnabled = fastingEnabled,
+                            onToggle = onToggleFasting
                         )
                         Spacer(Modifier.height(spacerV))
                         ExerciseDiaryCard(
@@ -361,4 +434,13 @@ private fun BottomBar(
             label = { Text("Personal") },
             icon = { Icon(Icons.Filled.Person, null) })
     }
+}
+private fun openAppNotificationSettings(ctx: Context) {
+    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+        // 新舊 API 都照顧到
+        putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)
+        putExtra("android.provider.extra.APP_PACKAGE", ctx.packageName)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    ctx.startActivity(intent)
 }

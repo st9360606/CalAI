@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.EggAlt
@@ -46,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import com.calai.app.data.home.repo.HomeSummary
 import kotlin.math.roundToInt
 import androidx.compose.ui.text.TextStyle
-
+import androidx.compose.material3.Switch
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
     val Size = 64.dp      // 圓直徑
@@ -423,11 +424,14 @@ fun WeightFastingRowModern(
     cardHeight: Dp = PanelHeights.Metric,
     plusButtonSize: Dp = 24.dp,
     plusIconSize: Dp = 19.dp,
-    // ★ 新增：點擊禁食卡片導到詳頁（有預設空實作，不會破既有呼叫）
     onOpenFastingPlans: () -> Unit = {},
-    // ★ 新增：若你已在 HomeSummary 帶回時間，可把字串丟進來；沒帶就顯示 "—"
     fastingStartText: String? = null,
-    fastingEndText: String? = null
+    fastingEndText: String? = null,
+    // ★ DB 值覆蓋顯示的計畫名稱
+    planOverride: String? = null,
+    // ★ Switch 與事件
+    fastingEnabled: Boolean = false,
+    onToggle: (Boolean) -> Unit = {}
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
@@ -485,14 +489,14 @@ fun WeightFastingRowModern(
             }
         )
 
-        // ===== 右卡：Fasting Plan（可點開詳頁；右側顯示 start/end） =====
-        val plan = summary.fastingPlan ?: "—"
+        // ===== 右卡：Fasting Plan（左下角 Switch；右側 start/end；最末箭頭） =====
+        val plan = planOverride ?: (summary.fastingPlan ?: "—")
         Card(
             shape = MaterialTheme.shapes.large,
             modifier = Modifier
                 .weight(1f)
                 .height(cardHeight)
-                .clickable { onOpenFastingPlans() } // ★ 點擊導頁
+                .clickable { onOpenFastingPlans() }
         ) {
             Row(
                 modifier = Modifier
@@ -501,18 +505,37 @@ fun WeightFastingRowModern(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 左側：標題＋目前方案
-                Column(Modifier.weight(1f)) {
-                    Text("Fasting Plan", style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.height(4.dp))
-                    Text(plan, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                // 左側：標題＋目前方案（與 Weight 標題同級）＋ 左下角 Switch
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Fasting Plan", style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            plan,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            if (fastingEnabled) "On" else "Off",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Switch(checked = fastingEnabled, onCheckedChange = onToggle)
+                    }
                 }
 
                 Spacer(Modifier.width(12.dp))
 
-                // 右側：start/end 兩組，僅顯示（真實鬧鐘以 /next-triggers 的 UTC 排程）
+                // 右側：start/end 與箭頭
                 Column(
-                    horizontalAlignment = Alignment.End
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text("start time", style = MaterialTheme.typography.labelSmall)
                     Text(fastingStartText ?: "—", style = MaterialTheme.typography.bodyMedium)
@@ -520,6 +543,11 @@ fun WeightFastingRowModern(
                     Text("end time", style = MaterialTheme.typography.labelSmall)
                     Text(fastingEndText ?: "—", style = MaterialTheme.typography.bodyMedium)
                 }
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null
+                )
             }
         }
     }
