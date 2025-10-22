@@ -79,7 +79,8 @@ fun HomeScreen(
     vm: HomeViewModel,
     onOpenAlarm: () -> Unit,
     onOpenCamera: () -> Unit,
-    onOpenTab: (HomeTab) -> Unit
+    onOpenTab: (HomeTab) -> Unit,
+    onOpenFastingPlans: () -> Unit      // ★ 新增：由 NavHost 傳入
 ) {
     val ui by vm.ui.collectAsState()
 
@@ -155,7 +156,8 @@ fun HomeScreen(
                 topSwap = topSwap,
                 bottomSwap = bottomSwap,
                 baseHeight = baseHeight,      // ★ 新增
-                verticalGap = verticalGap     // ★ 新增
+                verticalGap = verticalGap,     // ★ 新增
+                onOpenFastingPlans = onOpenFastingPlans   // ★ 傳下去
             )
 
             Spacer(Modifier.height(12.dp))
@@ -235,7 +237,8 @@ private fun TwoPagePager(
     bottomSwap: Dp = 0.dp,
     // ★ 總高度控制（共同升降）
     baseHeight: Dp = PanelHeights.Metric,
-    verticalGap: Dp = 10.dp
+    verticalGap: Dp = 10.dp,
+    onOpenFastingPlans: () -> Unit = {}   // ★ 新增：給預設值，避免舊呼叫點爆
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
@@ -285,7 +288,9 @@ private fun TwoPagePager(
                     1 -> {
                         WeightFastingRowModern(
                             summary = summary,
-                            cardHeight = wfH
+                            cardHeight = wfH,
+                            onOpenFastingPlans = onOpenFastingPlans
+                            // 若暫時沒有 start/end 文本，就先不傳，預設會顯示 "—"
                         )
                         Spacer(Modifier.height(spacerV))
                         ExerciseDiaryCard(

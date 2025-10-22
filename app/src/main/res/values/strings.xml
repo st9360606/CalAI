@@ -113,6 +113,7 @@
     <string name="notif_subtitle">Enable notifications—we’ll nudge you at the right moments so the occasional slip doesn’t set you back !</string>
     <string name="onb_notif_title_got_a_sec">Got 10 seconds ?</string>
     <string name="onb_notif_subtitle_log_meal_goal">Log what you just had—make every meal count.</string>
+    <string name="open_notification_settings">Open notification settings</string>
 
     <!-- HealthConnect -->
     <string name="hc_connect_title_prefix">Connect to</string>
@@ -188,5 +189,22 @@
 
 
     <string name="recently_uploaded">Recently uploaded</string>
+
+
+
+    <!-- res/values/strings.xml（節錄） -->
+    <string name="fasting_plan_title">Fasting Plan</string>
+    <string name="fasting_plans">Fasting Plans</string>
+    <string name="start_time">start time</string>
+    <string name="end_time">end time</string>
+    <string name="enable_reminders">Enable reminders</string>
+    <string name="fasting_plan_save">Save</string>
+
+    <!-- Fasting notifications -->
+    <string name="fasting_window_started">Eating window started</string>
+    <string name="fasting_window_started_body">This reminder is for self-management only and is not medical advice.</string>
+    <string name="fasting_window_ended">Eating window ended</string>
+    <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
+    <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
 
 </resources>

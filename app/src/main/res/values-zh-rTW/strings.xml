@@ -113,6 +113,7 @@
     <string name="notif_subtitle">用餐前後貼心提示，健康改變從當下開始，讓我們開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>
+    <string name="open_notification_settings">開啟通知設定</string>
 
     <!-- HealthConnect -->
     <string name="hc_connect_title_prefix">連接到</string>
@@ -184,4 +185,20 @@
     <string name="msg_login_failed_generic">登入失敗，請再試一次</string>
 
     <string name="recently_uploaded">最近上傳</string>
+
+
+    <!-- res/values-zh-rTW/strings.xml -->
+    <string name="fasting_plan_title">禁食計畫</string>
+    <string name="fasting_plans">選擇禁食計畫</string>
+    <string name="start_time">開始時間</string>
+    <string name="end_time">結束時間</string>
+    <string name="enable_reminders">開啟提醒</string>
+    <string name="fasting_plan_save">儲存</string>
+
+    <!-- Fasting notifications -->
+    <string name="fasting_window_started">進食時段開始</string>
+    <string name="fasting_window_started_body">僅供自我管理，非醫療建議。</string>
+    <string name="fasting_window_ended">進食時段結束</string>
+    <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
+    <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
 </resources>

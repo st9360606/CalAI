@@ -1,5 +1,6 @@
 package com.calai.app.ui.onboarding.notifications
 
+import android.Manifest.permission.POST_NOTIFICATIONS
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -82,9 +83,17 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import android.util.Log
+import com.calai.app.BuildConfig
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.activity.result.ActivityResultRegistryOwner
 
-private const val POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
-
+// 若 OEM 攔截或無法再顯示權限彈窗，是否導向系統「App 的通知設定」頁
+private const val ENABLE_SETTINGS_FALLBACK = true
+private const val TAG_NOTIF = "NotifPerm"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationPermissionScreen(
@@ -96,12 +105,17 @@ fun NotificationPermissionScreen(
     val activity = remember(ctx) { ctx.findActivity() as? ComponentActivity }
 
     var granted by remember { mutableStateOf(isNotificationsEnabled(ctx)) }
-    val hasManifestDecl by remember {
-        mutableStateOf(isPermissionInManifest(ctx, POST_NOTIFICATIONS))
+    val hasManifestDecl by remember { mutableStateOf(isPermissionInManifest(ctx, POST_NOTIFICATIONS)) }
+
+    // ❶ 不再依賴 activity 是否為 null
+    val canUseLauncher = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && hasManifestDecl
+
+    // ❷ 除錯日誌（僅開發）
+    if (BuildConfig.DEBUG) {
+        Log.d(TAG_NOTIF, "sdk=${Build.VERSION.SDK_INT}, target=${ctx.applicationInfo.targetSdkVersion}, " +
+                "hasManifest=$hasManifestDecl, granted=$granted, activity=${activity != null}")
     }
 
-    val canUseLauncher = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            hasManifestDecl && activity != null
 
     Scaffold(
         containerColor = Color.White,
@@ -132,21 +146,57 @@ fun NotificationPermissionScreen(
             )
         },
         bottomBar = {
-            if (canUseLauncher) {
-                CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
-                    val launcher = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.RequestPermission()
-                    ) { ok ->
-                        granted = ok || isNotificationsEnabled(ctx)
-                        if (granted) onNext()
+            // ★ 在 Composable 這裡先取得所需變數，lambda 內只使用這些捕獲值
+            val ctx = LocalContext.current
+            val lifecycleOwner = LocalLifecycleOwner.current
+            val activity = remember(ctx) { ctx.findActivity() as? ComponentActivity }
+
+            // 1) 依序嘗試從三個來源取得可用的 RegistryOwner
+            val ownerFromLocal = LocalActivityResultRegistryOwner.current
+            val ownerFromLifecycle = lifecycleOwner as? ActivityResultRegistryOwner
+            val effectiveOwner: ActivityResultRegistryOwner? = ownerFromLocal ?: ownerFromLifecycle ?: activity
+
+            // 2) 僅在 33+、有宣告、尚未授權時需要彈窗
+            val shouldRequest =
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        isPermissionInManifest(ctx, POST_NOTIFICATIONS) &&
+                        ContextCompat.checkSelfPermission(ctx, POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+
+            if (BuildConfig.DEBUG) {
+                Log.d(
+                    TAG_NOTIF,
+                    "shouldRequest=$shouldRequest, owner=${effectiveOwner != null}, " +
+                            "granted=${isNotificationsEnabled(ctx)}, sdk=${Build.VERSION.SDK_INT}"
+                )
+            }
+
+            when {
+                shouldRequest && effectiveOwner != null -> {
+                    // 3) 只有在拿到 owner 時才提供並建立 launcher
+                    CompositionLocalProvider(LocalActivityResultRegistryOwner provides effectiveOwner) {
+                        val launcher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.RequestPermission()
+                        ) { ok ->
+                            // 可視需要更新本地 UI 狀態
+                            // granted = ok || isNotificationsEnabled(ctx)
+                            // ★ 需求：允許或不允許 → 一律往下一頁，不開設定頁
+                            onNext()
+                        }
+
+                        NotifBottomBar(
+                            granted = isNotificationsEnabled(ctx),
+                            onClick = { launcher.launch(POST_NOTIFICATIONS) }
+                        )
                     }
+                }
+
+                else -> {
+                    // 無 owner / 已授權 / <33 → 不建 launcher，直接往下一頁
                     NotifBottomBar(
-                        granted = granted,
-                        onClick = { if (granted) onNext() else launcher.launch(POST_NOTIFICATIONS) }
+                        granted = isNotificationsEnabled(ctx),
+                        onClick = { onNext() }
                     )
                 }
-            } else {
-                NotifBottomBar(granted = granted, onClick = { onNext() })
             }
         }
     ) { inner ->
@@ -578,4 +628,20 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+private fun openAppNotifSettings(context: Context) {
+    try {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    } catch (_: Exception) {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", context.packageName, null)
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    }
 }

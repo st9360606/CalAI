@@ -176,7 +176,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
 
     // ===================== Health Connect / 圖片 / 分頁 / 資料庫 =====================
-    implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
+    implementation("androidx.health.connect:connect-client:1.1.0") // 2025/10 已穩定
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.paging:paging-compose:3.3.2")
 
@@ -208,6 +208,11 @@ dependencies {
 
     // Baseline Profile（保持你的既有模組）
     baselineProfile(project(":baselineprofile"))
+
+
+    implementation ("androidx.work:work-runtime-ktx:2.9.0")
+    implementation ("androidx.hilt:hilt-work:1.2.0")
+    kapt ("androidx.hilt:hilt-compiler:1.2.0")
 }
 
 

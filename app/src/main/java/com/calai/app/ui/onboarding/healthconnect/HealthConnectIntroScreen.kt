@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -44,6 +45,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,7 +69,10 @@ import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
+import kotlinx.coroutines.launch
 
+private const val TAG = "HC-PERM"
+private const val HC_PROVIDER = "com.google.android.apps.healthdata"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthConnectIntroScreen(
@@ -79,7 +84,8 @@ fun HealthConnectIntroScreen(
     val ctx = LocalContext.current
     val activity = remember(ctx) { ctx.findActivity() as? ComponentActivity }
 
-    val requiredPermissions = remember {
+    // ✅ 用 Set<String>，不要再 .toString()，HealthPermission.getReadPermission(...) 本來就回傳字串
+    val requiredPermissions: Set<String> = remember {
         setOf(
             HealthPermission.getReadPermission(StepsRecord::class),
             HealthPermission.getReadPermission(ExerciseSessionRecord::class),
@@ -116,34 +122,55 @@ fun HealthConnectIntroScreen(
             )
         },
         bottomBar = {
-            if (activity != null) {
-                CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
-                    val launcher = rememberLauncherForActivityResult(
-                        contract = PermissionController.createRequestPermissionResultContract()
-                    ) { granted ->
-                        if (requiredPermissions.all { it in granted }) onConnected()
-                    }
-                    HCBottomBar(
-                        onPrimary = {
-                            val status = HealthConnectClient.getSdkStatus(ctx)
-                            if (
-                                status == HealthConnectClient.SDK_UNAVAILABLE ||
-                                status == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED
-                            ) {
-                                openHealthConnectStore(ctx)
-                            } else {
-                                launcher.launch(requiredPermissions)
-                            }
-                        },
-                        onSkip = onSkip
-                    )
+            val scope = rememberCoroutineScope()
+            val client = remember { HealthConnectClient.getOrCreate(ctx) }
+
+            val launcher = rememberLauncherForActivityResult(
+                contract = PermissionController.createRequestPermissionResultContract()
+            ) { granted: Set<String> ->   // ✅ 這裡明確是 Set<String>
+                Log.d(TAG, "onActivityResult granted=${granted.joinToString()}")
+                if (granted.containsAll(requiredPermissions)) {
+                    onConnected()
+                } else {
+                    val missing = requiredPermissions - granted
+                    Log.d(TAG, "Not all permissions granted, missing=$missing")
+                    // 可在此顯示 Snackbar/提示，但先不改 UI
                 }
-            } else {
-                HCBottomBar(
-                    onPrimary = onConnected,
-                    onSkip = onSkip
-                )
             }
+
+            HCBottomBar(
+                onPrimary = {
+                    scope.launch {
+                        // 1) 檢查 Health Connect 可用性（不同版 SDK 相容寫法）
+                        val status = runCatching { HealthConnectClient.getSdkStatus(ctx, HC_PROVIDER) }
+                            .getOrElse { HealthConnectClient.getSdkStatus(ctx) }
+                        Log.d(TAG, "getSdkStatus=$status")
+                        if (status == HealthConnectClient.SDK_UNAVAILABLE ||
+                            status == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
+                            openHealthConnectStore(ctx)
+                            return@launch
+                        }
+
+                        // 2) 查目前已授權（Set<String>）
+                        val grantedNow: Set<String> = client.permissionController.getGrantedPermissions()
+                        Log.d(TAG, "granted(now)=${grantedNow.joinToString()}")
+                        Log.d(TAG, "required=${requiredPermissions.joinToString()}")
+
+                        val missing = requiredPermissions - grantedNow
+                        Log.d(TAG, "missingPerms=$missing")
+
+                        if (missing.isEmpty()) {
+                            Log.d(TAG, "All required permissions already granted → onConnected()")
+                            onConnected()
+                        } else {
+                            // 3) 只請求缺少的，提高成功率
+                            Log.d(TAG, "Requesting permissions via launcher: $missing")
+                            launcher.launch(missing)
+                        }
+                    }
+                },
+                onSkip = onSkip
+            )
         }
     ) { inner ->
         Column(
@@ -331,10 +358,15 @@ private fun HCBottomBar(
 
 /* ---------- 其他 ---------- */
 private fun openHealthConnectStore(ctx: Context) {
-    val market = Uri.parse("market://details?id=com.google.android.healthconnect")
-    val web = Uri.parse("https://play.google.com/store/apps/details?id=com.google.android.healthconnect")
-    try { ctx.startActivity(Intent(Intent.ACTION_VIEW, market).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-    catch (_: ActivityNotFoundException) { ctx.startActivity(Intent(Intent.ACTION_VIEW, web).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    // 依官方：apps.healthdata + onboarding 參數
+    val pkg = HC_PROVIDER
+    val market = Uri.parse("market://details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding")
+    val web = Uri.parse("https://play.google.com/store/apps/details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding")
+    try {
+        ctx.startActivity(Intent(Intent.ACTION_VIEW, market).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: ActivityNotFoundException) {
+        ctx.startActivity(Intent(Intent.ACTION_VIEW, web).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

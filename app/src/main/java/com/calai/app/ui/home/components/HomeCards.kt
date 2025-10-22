@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Path
 import java.util.Locale
 import kotlin.math.abs
@@ -421,57 +422,58 @@ fun WeightFastingRowModern(
     summary: HomeSummary,
     cardHeight: Dp = PanelHeights.Metric,
     plusButtonSize: Dp = 24.dp,
-    plusIconSize: Dp = 19.dp
-
+    plusIconSize: Dp = 19.dp,
+    // ★ 新增：點擊禁食卡片導到詳頁（有預設空實作，不會破既有呼叫）
+    onOpenFastingPlans: () -> Unit = {},
+    // ★ 新增：若你已在 HomeSummary 帶回時間，可把字串丟進來；沒帶就顯示 "—"
+    fastingStartText: String? = null,
+    fastingEndText: String? = null
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        // ✅ UI 顯示語義：負數 = 還需要減重；正數 = 已低於目標
-        // 後端給的是 (current − goal)，這裡轉成 (goal − current) 來顯示
-        val goal = -summary.weightDiffSigned
+
+        // ===== 左卡：Weight（維持你原樣式） =====
+        val goal = -summary.weightDiffSigned         // 後端 current - goal → 這裡顯示 goal - current
         val unit = summary.weightDiffUnit
         val primaryText =
             if (unit == "lbs")
                 String.format(java.util.Locale.getDefault(), "%+d lbs", goal.roundToInt())
             else
-                String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit) // 例：-10.2 kg
+                String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit)
 
         ActivityStatCardSplit(
             title = "Weight",
-            primary = primaryText,          // 例：3.2 lbs 或 5 lbs
+            primary = primaryText,
             secondary = "to goal",
             ringColor = Color(0xFF06B6D4),
             progress = 0f,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
 
-            // ★ 這三個改成與 Steps 一樣的樣式與尺寸
+            // 與 Steps 同風格
             ringSize = 74.dp,
             ringStroke = 6.dp,
             centerDisk = 32.dp,
             drawRing = true,
 
-            // ★ 小實心黑三角（靠左、等邊、朝上）
+            // 左上黑色小三角
             titlePrefix = { TitlePrefixTriangle(side = 6.dp, color = Color.Black) },
             titlePrefixGap = 6.dp,
 
-            // ✅ 2) 把主數字字體縮小：原本 titleLarge → 改成 titleMedium（你也可用 bodyLarge 再小一級）
+            // 主字縮小
             titleTextStyle = MaterialTheme.typography.bodySmall,
             primaryTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             secondaryTextStyle = MaterialTheme.typography.bodySmall,
             gapTitleToPrimary = 10.dp,
             gapPrimaryToSecondary = 2.dp,
 
-            // ★ 左下角黑圓底白十字（與 Workout 同款）
+            // 左下角黑圓＋白十字
             leftExtra = {
                 Surface(
-                    modifier = Modifier.requiredSize(plusButtonSize), // 強制正方形避免變橢圓
+                    modifier = Modifier.requiredSize(plusButtonSize),
                     shape = CircleShape,
                     color = Color.Black
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Filled.Add,
                             contentDescription = null,
@@ -483,25 +485,43 @@ fun WeightFastingRowModern(
             }
         )
 
+        // ===== 右卡：Fasting Plan（可點開詳頁；右側顯示 start/end） =====
         val plan = summary.fastingPlan ?: "—"
-        ActivityStatCardSplit(
-            title = "Fasting Plan",
-            primary = plan,
-            secondary = null,
-            ringColor = Color.Transparent,
-            progress = 0f,
-            modifier = Modifier.weight(1f),
-            cardHeight = cardHeight,              // ← 動態高度
-            ringSize = RingDefaults.Size,
-            ringStroke = RingDefaults.Stroke,
-            centerDisk = RingDefaults.CenterDisk,
-            drawRing = false,
-            titleTextStyle = MaterialTheme.typography.bodySmall,
-            primaryTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            secondaryTextStyle = MaterialTheme.typography.bodySmall,
-            gapTitleToPrimary = 4.dp,
-            gapPrimaryToSecondary = 2.dp
-        )
+        Card(
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier
+                .weight(1f)
+                .height(cardHeight)
+                .clickable { onOpenFastingPlans() } // ★ 點擊導頁
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 左側：標題＋目前方案
+                Column(Modifier.weight(1f)) {
+                    Text("Fasting Plan", style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(4.dp))
+                    Text(plan, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                // 右側：start/end 兩組，僅顯示（真實鬧鐘以 /next-triggers 的 UTC 排程）
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text("start time", style = MaterialTheme.typography.labelSmall)
+                    Text(fastingStartText ?: "—", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(Modifier.height(6.dp))
+                    Text("end time", style = MaterialTheme.typography.labelSmall)
+                    Text(fastingEndText ?: "—", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
     }
 }
 

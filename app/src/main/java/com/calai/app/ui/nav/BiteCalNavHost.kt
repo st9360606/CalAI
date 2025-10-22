@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -28,18 +30,23 @@ import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.ui.appentry.AppEntryRoute
 import com.calai.app.ui.auth.RequireSignInScreen
 import com.calai.app.ui.auth.SignInSheetHost
-import com.calai.app.ui.auth.SignUpScreen
 import com.calai.app.ui.auth.email.EmailCodeScreen
 import com.calai.app.ui.auth.email.EmailEnterScreen
 import com.calai.app.ui.auth.email.EmailSignInViewModel
 import com.calai.app.ui.home.HomeScreen
 import com.calai.app.ui.home.HomeTab
 import com.calai.app.ui.home.model.HomeViewModel
+import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
+import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.landing.LandingScreen
+import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
+import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
+import com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen
 
 object Routes {
     const val LANDING = "landing"
@@ -321,41 +328,83 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_TARGET_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel = viewModel(
+            val vm: WeightTargetViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.targetweight.WeightTargetScreen(
+            WeightTargetScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_NOTIF) { launchSingleTop = true } }
             )
         }
 
-        composable(Routes.ONBOARD_NOTIF) {
-            com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen(
-                onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(Routes.ONBOARD_HEALTH_CONNECT) { launchSingleTop = true } }
-            )
+        // =====★ 調整這一段：在 route 外層提供 ActivityResultRegistryOwner ★=====
+        composable(Routes.ONBOARD_NOTIF) { backStackEntry ->
+            val ctx = LocalContext.current
+            // 1) 優先取當前 Activity；2) 退回用你外層傳入的 hostActivity
+            val owner: ActivityResultRegistryOwner? =
+                (ctx.findActivity() as? ComponentActivity) ?: (hostActivity as? ComponentActivity)
+
+            if (owner != null) {
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                    NotificationPermissionScreen(
+                        onBack = { nav.safePopBackStack() },
+                        onNext = { nav.navigate(Routes.ONBOARD_HEALTH_CONNECT) { launchSingleTop = true } }
+                    )
+                }
+            } else {
+                // 極少數情境（例如 Preview 或特殊容器）取不到 owner：畫面照常顯示，
+                // 你的 NotificationPermissionScreen 會走「不建 launcher → 直接 onNext()」路徑，不會崩。
+                NotificationPermissionScreen(
+                    onBack = { nav.safePopBackStack() },
+                    onNext = { nav.navigate(Routes.ONBOARD_HEALTH_CONNECT) { launchSingleTop = true } }
+                )
+            }
         }
 
-        // Health Connect 連結頁 → 完成/略過都進「運算進度頁」
-        composable(Routes.ONBOARD_HEALTH_CONNECT) {
-            com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen(
-                onBack = { nav.safePopBackStack() },
-                onSkip = {
-                    nav.navigate(Routes.PLAN_PROGRESS) {
-                        popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                onConnected = {
-                    nav.navigate(Routes.PLAN_PROGRESS) {
-                        popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
-                        launchSingleTop = true
-                    }
+        composable(Routes.ONBOARD_HEALTH_CONNECT) { backStackEntry ->
+            val ctx = LocalContext.current
+            val activity = (ctx.findActivity() as? ComponentActivity)
+                ?: (hostActivity as? ComponentActivity)  // 你專案裡已經有 hostActivity 的話，這行可留作備援
+
+            if (activity != null) {
+                // ★ 關鍵：在 route 外層提供 Owner，確保 rememberLauncherForActivityResult 有可用的 registry
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
+                    com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen(
+                        onBack = { nav.safePopBackStack() },
+                        onSkip = {
+                            nav.navigate(Routes.PLAN_PROGRESS) {
+                                popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        },
+                        onConnected = {
+                            nav.navigate(Routes.PLAN_PROGRESS) {
+                                popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
                 }
-            )
+            } else {
+                // 拿不到 owner（極少數情況，例如 Preview）→ 畫面照常，按「繼續」會直接 onSkip，不會閃退
+                com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen(
+                    onBack = { nav.safePopBackStack() },
+                    onSkip = {
+                        nav.navigate(Routes.PLAN_PROGRESS) {
+                            popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onConnected = {
+                        nav.navigate(Routes.PLAN_PROGRESS) {
+                            popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
 
         // 運算進度頁
@@ -502,13 +551,25 @@ fun BiteCalNavHost(
                         HomeTab.Fasting -> nav.navigate(Routes.FASTING)
                         HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
                     }
-                }
+                },
+                onOpenFastingPlans = { nav.navigate(Routes.FASTING) } // ★ 新增：提供給 HomeScreen
             )
         }
 
         composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
         composable(Routes.NOTE) { SimplePlaceholder("Note") }
-        composable(Routes.FASTING) { SimplePlaceholder("Fasting") }
+        composable(Routes.FASTING) { entry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: FastingPlanViewModel = viewModel(
+                viewModelStoreOwner = entry,
+                factory = HiltViewModelFactory(activity, entry)
+            )
+            FastingPlansScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() }
+                // snackbar 與權限統一由畫面內處理，這裡不需要再放 launcher/snackbar
+            )
+        }
         composable(Routes.PERSONAL) { SimplePlaceholder("Personal") }
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
