@@ -1,24 +1,36 @@
 package com.calai.app.ui.home.ui.fasting
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.calai.app.data.fasting.model.FastingPlan
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,51 +39,18 @@ fun FastingPlansScreen(
     onBack: () -> Unit
 ) {
     val state by vm.state.collectAsState()
-
-    // 第一次進入頁面時（新用戶會建立預設）
     LaunchedEffect(Unit) { if (state.loading) vm.load() }
 
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
+    var showCupertinoPicker by rememberSaveable { mutableStateOf(false) }
+    BackHandler(true) { onBack() }
 
-    if (showStartPicker) {
-        val st = rememberTimePickerState(state.start.hour, state.start.minute, is24Hour = true)
-        AlertDialog(
-            onDismissRequest = { showStartPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    vm.onChangeStart(LocalTime.of(st.hour, st.minute))
-                    showStartPicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton({ showStartPicker = false }) { Text("Cancel") } },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Start time", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(8.dp))
-                    TimePicker(state = st)
-                }
-            }
-        )
-    }
-
-    if (showEndPicker) {
-        val et = rememberTimePickerState(state.end.hour, state.end.minute, is24Hour = true)
-        AlertDialog(
-            onDismissRequest = { showEndPicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    vm.onChangeEnd(LocalTime.of(et.hour, et.minute))
-                    showEndPicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton({ showEndPicker = false }) { Text("Cancel") } },
-            text = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("End time", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(8.dp))
-                    TimePicker(state = et)
-                }
+    if (showCupertinoPicker) {
+        CupertinoWheelTimePickerDialog(
+            initial = state.start,
+            onDismiss = { showCupertinoPicker = false },
+            onConfirm = { picked ->
+                vm.onChangeStart(picked)     // 依方案自動推 end
+                showCupertinoPicker = false
             }
         )
     }
@@ -81,7 +60,7 @@ fun FastingPlansScreen(
             TopAppBar(
                 title = { Text("Fasting Plans") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {  // ← 只返回，不保存
+                    IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 }
@@ -91,10 +70,8 @@ fun FastingPlansScreen(
             Surface(tonalElevation = 0.dp) {
                 Button(
                     onClick = {
-                        // 先回 HOME（VM 作用域仍是 HOME 的 entry，所以能安全持續工作）
-                        onBack()
-                        // 再啟動保存與排程（避免 Composable 正在收攤導致閃退）
-                        vm.persistAndReschedule()
+                        onBack()                 // 先返回 HOME
+                        vm.persistAndReschedule()// 再保存 + 重新排程
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,20 +106,18 @@ fun FastingPlansScreen(
             }
 
             Text("開始時間", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            OutlinedButton(onClick = { showStartPicker = true }, shape = MaterialTheme.shapes.large) {
-                Text("%02d:%02d".format(state.start.hour, state.start.minute),
-                    style = MaterialTheme.typography.titleLarge)
-            }
+            OutlinedButton(
+                onClick = { showCupertinoPicker = true },
+                shape = MaterialTheme.shapes.large
+            ) { Text(format12h(state.start), style = MaterialTheme.typography.titleLarge) }
 
             Text("結束時間", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            OutlinedButton(onClick = { showEndPicker = true }, shape = MaterialTheme.shapes.large) {
-                Text("%02d:%02d".format(state.end.hour, state.end.minute),
-                    style = MaterialTheme.typography.titleLarge)
+            OutlinedButton(onClick = { /* no-op */ }, enabled = false, shape = MaterialTheme.shapes.large) {
+                Text(format12h(state.end), style = MaterialTheme.typography.titleLarge)
             }
         }
     }
 }
-
 
 @Composable
 private fun PlanRow(plan: FastingPlan, selected: Boolean, onSelect: () -> Unit) {
@@ -164,3 +139,236 @@ private fun PlanRow(plan: FastingPlan, selected: Boolean, onSelect: () -> Unit) 
         }
     }
 }
+
+/* ==============================
+   iOS 風格轉盤（灰底在數字下面，固定純灰）
+   ============================== */
+
+private val IOS_BLUE = Color(0xFF007AFF)
+private val IOS_TEXT = Color(0xFF1C1C1E)     // 主字：純深灰(幾近黑)
+private val IOS_TEXT_FADED = Color(0xFF8E8E93) // 次字：systemGray
+
+@Composable
+private fun CupertinoWheelTimePickerDialog(
+    initial: LocalTime,
+    onDismiss: () -> Unit,
+    onConfirm: (LocalTime) -> Unit
+) {
+    val (initHour12, initMinute, initIsAm) = remember(initial) { to12hTuple(initial) }
+    var hour by remember { mutableStateOf(initHour12) }    // 1..12
+    var minute by remember { mutableStateOf(initMinute) }  // 0..59
+    var isAm by remember { mutableStateOf(initIsAm) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        // 讓內建動作區留白，我們自己在內容裡置中放按鈕
+        confirmButton = {},
+        dismissButton = {},
+        shape = MaterialTheme.shapes.medium,
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                // 轉盤本體
+                Box(
+                    modifier = Modifier
+                        .width(300.dp)
+                        .height(220.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SelectionBandBehind() // 灰底在數字下方
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        WheelColumn(
+                            values = (1..12).map { it.toString() },
+                            startIndex = hour - 1,
+                            columnWidth = 84.dp,
+                            onSnapped = { hour = it + 1 },
+                            infinite = true
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        WheelColumn(
+                            values = (0..59).map { "%02d".format(it) },
+                            startIndex = minute,
+                            columnWidth = 84.dp,
+                            onSnapped = { minute = it },
+                            infinite = true
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        WheelColumn(
+                            values = listOf("AM", "PM"),
+                            startIndex = if (isAm) 0 else 1,
+                            columnWidth = 84.dp,
+                            onSnapped = { isAm = it == 0 },
+                            infinite = false
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // ★ 置中按鈕列
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("CANCEL", fontSize = 20.sp, color = IOS_BLUE, fontWeight = FontWeight.SemiBold)
+                    }
+                    Spacer(Modifier.width(28.dp))
+                    TextButton(onClick = { onConfirm(from12h(hour, minute, isAm)) }) {
+                        Text("OK", fontSize = 20.sp, color = IOS_BLUE, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+    )
+}
+
+
+@Composable
+private fun SelectionBandBehind() {
+    val bandHeight = 44.dp
+    val bandRadius = 10.dp
+
+    // 更淡的灰：systemGray6 / systemGray4
+    val bandColor = Color(0xFFF2F2F7) // 更淡的背景灰
+    val lineColor = Color(0xFFD1D1D6) // 更淡的分隔線灰
+
+    Box(Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(0.88f)
+                .height(bandHeight)
+                .clip(RoundedCornerShape(bandRadius))
+                .background(bandColor)      // 淡灰底
+        )
+        val lineW = 1.dp                   // 線也細一點
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .offset(y = -bandHeight / 2)
+                .fillMaxWidth(0.92f)
+                .height(lineW)
+                .background(lineColor)
+        )
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .offset(y = bandHeight / 2)
+                .fillMaxWidth(0.92f)
+                .height(lineW)
+                .background(lineColor)
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun WheelColumn(
+    values: List<String>,
+    startIndex: Int,
+    columnWidth: Dp,
+    onSnapped: (index: Int) -> Unit,
+    infinite: Boolean
+) {
+    val visibleCount = 5
+    val itemHeight = 44.dp
+
+    // 是否無限滾動
+    val total: Int
+    val initIndex: Int
+    val normalize: (Int) -> Int
+    if (infinite) {
+        val loop = 1000
+        total = values.size * loop
+        val base = (loop / 2) * values.size
+        initIndex = (base + startIndex).coerceIn(0, total - 1)
+        normalize = { idx -> ((idx % values.size) + values.size) % values.size }
+    } else {
+        total = values.size
+        initIndex = startIndex.coerceIn(0, total - 1)
+        normalize = { idx -> idx.coerceIn(0, total - 1) }
+    }
+
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initIndex)
+    val fling = rememberSnapFlingBehavior(listState)
+
+    // 找到最接近中央的 item
+    val centerListIndex by remember {
+        derivedStateOf {
+            val info = listState.layoutInfo
+            val vpCenter = (info.viewportStartOffset + info.viewportEndOffset) / 2
+            info.visibleItemsInfo.minByOrNull { item ->
+                val itemCenter = item.offset + item.size / 2
+                abs(itemCenter - vpCenter)
+            }?.index ?: initIndex
+        }
+    }
+
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val target = centerListIndex
+            listState.animateScrollToItem(target, 0)
+            onSnapped(normalize(target))
+        }
+    }
+
+    LazyColumn(
+        state = listState,
+        flingBehavior = fling,
+        contentPadding = PaddingValues(vertical = itemHeight * (visibleCount / 2)),
+        modifier = Modifier
+            .width(columnWidth)
+            .height(itemHeight * visibleCount),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        items(total) { i ->
+            val show = values[normalize(i)]
+            val isCenter = i == centerListIndex
+            val fontSize = if (isCenter) 28.sp else 18.sp
+            val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
+            // ✅ 固定純灰，不用主題色也不用 alpha 疊色
+            val color = if (isCenter) IOS_TEXT else IOS_TEXT_FADED
+
+            Box(
+                modifier = Modifier
+                    .height(itemHeight)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = show,
+                    fontSize = fontSize,
+                    fontWeight = weight,
+                    color = color,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+/* -------- helpers -------- */
+
+private fun to12hTuple(t: LocalTime): Triple<Int, Int, Boolean> {
+    val isAm = t.hour < 12
+    val h12 = when (val h = t.hour % 12) { 0 -> 12; else -> h }
+    return Triple(h12, t.minute, isAm)
+}
+private fun from12h(hour12: Int, minute: Int, isAm: Boolean): LocalTime {
+    val h = when {
+        isAm && hour12 == 12 -> 0
+        !isAm && hour12 != 12 -> hour12 + 12
+        else -> hour12
+    }
+    return LocalTime.of(h, minute)
+}
+private fun format12h(t: LocalTime): String =
+    t.format(DateTimeFormatter.ofPattern("h:mm a"))
