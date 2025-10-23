@@ -1,6 +1,7 @@
 package com.calai.app.ui.home.ui.fasting
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -30,6 +33,7 @@ import com.calai.app.data.fasting.model.FastingPlan
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +53,7 @@ fun FastingPlansScreen(
             initial = state.start,
             onDismiss = { showCupertinoPicker = false },
             onConfirm = { picked ->
-                vm.onChangeStart(picked)     // 依方案自動推 end
+                vm.onChangeStart(picked)
                 showCupertinoPicker = false
             }
         )
@@ -67,54 +71,113 @@ fun FastingPlansScreen(
             )
         },
         bottomBar = {
-            Surface(tonalElevation = 0.dp) {
-                Button(
-                    onClick = {
-                        onBack()                 // 先返回 HOME
-                        vm.persistAndReschedule()// 再保存 + 重新排程
-                    },
+            Surface(
+                tonalElevation = 0.dp,
+                color = Color.Transparent
+            ) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    shape = MaterialTheme.shapes.large
+                        .navigationBarsPadding()  // 保留安全區
+                        .padding(bottom = 37.dp)  // 浮起距離底部
                 ) {
-                    Text("儲存", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Button(
+                        onClick = {
+                            onBack()
+                            vm.persistAndReschedule()
+                        },
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth(0.9f)
+                            .height(60.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF000000),  // 🔥 黑底
+                            contentColor = Color.White           // 白字
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 10.dp
+                        )
+                    ) {
+                        Text(
+                            text = "儲存",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 19.sp
+                            )
+                        )
+                    }
                 }
             }
         }
     ) { p ->
+        // ★ 改成可滾動
         Column(
-            Modifier
+            modifier = Modifier
                 .padding(p)
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .verticalScroll(rememberScrollState()) // 加入滾動
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Text("選擇禁食計畫", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(FastingPlan.entries) { plan ->
-                    PlanRow(
-                        plan = plan,
-                        selected = plan == state.selected,
-                        onSelect = { vm.onPlanSelected(plan) }
-                    )
-                }
-            }
+            FastingPlanList(
+                plans = FastingPlan.entries,
+                selected = state.selected,
+                onSelect = vm::onPlanSelected
+            )
 
             Text("開始時間", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             OutlinedButton(
                 onClick = { showCupertinoPicker = true },
-                shape = MaterialTheme.shapes.large
-            ) { Text(format12h(state.start), style = MaterialTheme.typography.titleLarge) }
+                shape = MaterialTheme.shapes.large,
+                border = BorderStroke(1.dp, Color(0xFF8C8C8C)), // 🔹 淺灰邊框 (#BDBDBD)
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.Black
+                )
+            ) {
+                Text(
+                    format12hEn(state.start), // 🔹 改成 AM/PM 英文格式
+                    style = MaterialTheme.typography.titleLarge.copy(color = Color.Black)
+                )
+            }
 
             Text("結束時間", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            OutlinedButton(onClick = { /* no-op */ }, enabled = false, shape = MaterialTheme.shapes.large) {
-                Text(format12h(state.end), style = MaterialTheme.typography.titleLarge)
+            OutlinedButton(
+                onClick = { /* no-op */ },
+                enabled = false,
+                shape = MaterialTheme.shapes.large,
+                border = BorderStroke(1.dp, Color(0xFFE0E0E0)), // 🔹 更淡灰邊框 (#E0E0E0)
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.Black
+                )
+            ) {
+                Text(
+                    format12hEn(state.end),
+                    style = MaterialTheme.typography.titleLarge.copy(color = Color.Black.copy(alpha = 0.6f))
+                )
             }
+
+            Spacer(Modifier.height(80.dp)) // 確保滾動時底部留白
+        }
+    }
+}
+
+@Composable
+private fun FastingPlanList(
+    plans: List<FastingPlan>,
+    selected: FastingPlan?,
+    onSelect: (FastingPlan) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        plans.forEach { plan ->
+            PlanRow(
+                plan = plan,
+                selected = plan == selected,
+                onSelect = { onSelect(plan) }
+            )
         }
     }
 }
@@ -370,5 +433,8 @@ private fun from12h(hour12: Int, minute: Int, isAm: Boolean): LocalTime {
     }
     return LocalTime.of(h, minute)
 }
-private fun format12h(t: LocalTime): String =
-    t.format(DateTimeFormatter.ofPattern("h:mm a"))
+private fun format12hEn(t: LocalTime): String {
+    val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+    return t.format(formatter)
+}
+
