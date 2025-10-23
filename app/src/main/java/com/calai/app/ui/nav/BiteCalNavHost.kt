@@ -563,18 +563,23 @@ fun BiteCalNavHost(
 
         composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
         composable(Routes.NOTE) { SimplePlaceholder("Note") }
-        composable(Routes.FASTING) { entry ->
+        // ★ 新增／取代 FASTING route：與 HOME 共享同一個 ViewModel
+        composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: FastingPlanViewModel = viewModel(
-                viewModelStoreOwner = entry,
-                factory = HiltViewModelFactory(activity, entry)
+
+            // ✅ 用當前 backStackEntry 當 key，安全記住 HOME 的 entry
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val fastingVm: FastingPlanViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
+
             FastingPlansScreen(
-                vm = vm,
+                vm = fastingVm,
                 onBack = { nav.popBackStack() }
-                // snackbar 與權限統一由畫面內處理，這裡不需要再放 launcher/snackbar
             )
         }
+
         composable(Routes.PERSONAL) { SimplePlaceholder("Personal") }
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }

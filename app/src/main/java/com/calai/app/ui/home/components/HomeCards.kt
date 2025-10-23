@@ -1,53 +1,55 @@
 package com.calai.app.ui.home.components
 
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.Path
-import java.util.Locale
-import kotlin.math.abs
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.EggAlt
 import androidx.compose.material.icons.filled.Opacity
-import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.calai.app.data.home.repo.HomeSummary
 import kotlin.math.roundToInt
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.material3.Switch
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
     val Size = 64.dp      // 圓直徑
@@ -427,22 +429,18 @@ fun WeightFastingRowModern(
     onOpenFastingPlans: () -> Unit = {},
     fastingStartText: String? = null,
     fastingEndText: String? = null,
-    // ★ DB 值覆蓋顯示的計畫名稱
     planOverride: String? = null,
-    // ★ Switch 與事件
     fastingEnabled: Boolean = false,
     onToggle: (Boolean) -> Unit = {}
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
-        // ===== 左卡：Weight（維持你原樣式） =====
-        val goal = -summary.weightDiffSigned         // 後端 current - goal → 這裡顯示 goal - current
+        // 左卡：Weight（維持原樣）
+        val goal = -summary.weightDiffSigned
         val unit = summary.weightDiffUnit
         val primaryText =
-            if (unit == "lbs")
-                String.format(java.util.Locale.getDefault(), "%+d lbs", goal.roundToInt())
-            else
-                String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit)
+            if (unit == "lbs") String.format(java.util.Locale.getDefault(), "%+d lbs", goal.roundToInt())
+            else String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit)
 
         ActivityStatCardSplit(
             title = "Weight",
@@ -452,25 +450,17 @@ fun WeightFastingRowModern(
             progress = 0f,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
-
-            // 與 Steps 同風格
             ringSize = 74.dp,
             ringStroke = 6.dp,
             centerDisk = 32.dp,
             drawRing = true,
-
-            // 左上黑色小三角
             titlePrefix = { TitlePrefixTriangle(side = 6.dp, color = Color.Black) },
             titlePrefixGap = 6.dp,
-
-            // 主字縮小
             titleTextStyle = MaterialTheme.typography.bodySmall,
             primaryTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             secondaryTextStyle = MaterialTheme.typography.bodySmall,
             gapTitleToPrimary = 10.dp,
             gapPrimaryToSecondary = 2.dp,
-
-            // 左下角黑圓＋白十字
             leftExtra = {
                 Surface(
                     modifier = Modifier.requiredSize(plusButtonSize),
@@ -489,14 +479,15 @@ fun WeightFastingRowModern(
             }
         )
 
-        // ===== 右卡：Fasting Plan（左下角 Switch；右側 start/end；最末箭頭） =====
+        // 右卡：Fasting Plan（白底、無箭頭、左下自訂綠色開關）
         val plan = planOverride ?: (summary.fastingPlan ?: "—")
         Card(
             shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(containerColor = Color.White),
             modifier = Modifier
                 .weight(1f)
-                .height(cardHeight)
-                .clickable { onOpenFastingPlans() }
+                .height(cardHeight),
+            onClick = onOpenFastingPlans
         ) {
             Row(
                 modifier = Modifier
@@ -505,7 +496,6 @@ fun WeightFastingRowModern(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 左側：標題＋目前方案（與 Weight 標題同級）＋ 左下角 Switch
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -520,19 +510,16 @@ fun WeightFastingRowModern(
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
+                    // ★ 自訂綠色 Switch（仿 iOS）
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            if (fastingEnabled) "On" else "Off",
-                            style = MaterialTheme.typography.labelSmall
-                        )
+                        Text(if (fastingEnabled) "On" else "Off", style = MaterialTheme.typography.labelSmall)
                         Spacer(Modifier.width(8.dp))
-                        Switch(checked = fastingEnabled, onCheckedChange = onToggle)
+                        GreenSwitch(checked = fastingEnabled, onCheckedChange = onToggle)
                     }
                 }
 
                 Spacer(Modifier.width(12.dp))
 
-                // 右側：start/end 與箭頭
                 Column(
                     horizontalAlignment = Alignment.End,
                     modifier = Modifier.weight(1f)
@@ -543,13 +530,55 @@ fun WeightFastingRowModern(
                     Text("end time", style = MaterialTheme.typography.labelSmall)
                     Text(fastingEndText ?: "—", style = MaterialTheme.typography.bodyMedium)
                 }
-                Spacer(Modifier.width(8.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null
-                )
             }
         }
+    }
+}
+
+/** 自訂綠色開關（#34C759），接近你上傳圖檔風格 */
+@Composable
+fun GreenSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    width: Dp = 52.dp,
+    height: Dp = 32.dp,
+) {
+    val radius = height / 2
+    val thumbSize = height - 4.dp
+    val trackOn = Color(0xFF34C759)
+    val trackOff = Color(0xFFE5E7EB)
+    val thumb = Color.White
+
+    val offset by animateDpAsState(
+        targetValue = if (checked) width - thumbSize - 2.dp else 2.dp,
+        label = "thumbOffset"
+    )
+
+    // 取消 ripple/press 陰影，避免顏色變暗
+    val interaction = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = modifier
+            .size(width, height)
+            .clip(RoundedCornerShape(radius))
+            .background(if (checked) trackOn else trackOff)
+            .toggleable(
+                value = checked,
+                onValueChange = onCheckedChange,
+                role = Role.Switch,
+                interactionSource = interaction,
+                indication = null
+            )
+            .padding(2.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = offset)
+                .size(thumbSize)
+                .shadow(3.dp, CircleShape, clip = false)
+                .background(thumb, CircleShape)
+        )
     }
 }
 

@@ -78,7 +78,8 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.calai.app.data.fasting.notifications.NotificationPermission
 
 @Composable
 fun HomeScreen(
@@ -93,6 +94,9 @@ fun HomeScreen(
 
     // ====== Fasting VM 狀態 / 權限設定 ======
     val fastingUi by fastingVm.state.collectAsState()
+    // 首次進入 Home 就載入 DB（含 enabled/plan/time）
+    LaunchedEffect(Unit) { fastingVm.load() }
+
     val ctx = LocalContext.current
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
@@ -115,23 +119,32 @@ fun HomeScreen(
         }
     } else null
 
+    // ★ 監聽 App 回到前景（例如從系統設定頁返回），自動完成 pending 啟用與 DB 更新
+    LifecycleResumeEffect(Unit) {
+        // Activity/Fragment 進入 RESUMED 時會觸發這裡
+        fastingVm.onAppResumed()
+        onPauseOrDispose { /* no-op */ }
+    }
+
     // Switch 行為：一律讓 VM 做權限判斷；onNeedPermission 內採用「能 launcher 就 launcher；否則導到設定頁」
     val onToggleFasting: (Boolean) -> Unit = remember {
         { requested ->
             fastingVm.onToggleEnabled(
                 requested = requested,
                 onNeedPermission = {
-                    if (Build.VERSION.SDK_INT >= 33) {
-                        if (requestNotifications != null) {
-                            requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (NotificationPermission.isGranted(ctx)) {
+                            fastingVm.onToggleEnabled(true, onNeedPermission = {}, onDenied = {})
                         } else {
-                            // 沒有 ActivityResultRegistryOwner → 走降級路徑
-                            openAppNotificationSettings(ctx)
+                            requestNotifications?.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                ?: openAppNotificationSettings(ctx)
                         }
+                    } else {
+                        fastingVm.onToggleEnabled(true, onNeedPermission = {}, onDenied = {})
                     }
                 },
                 onDenied = {
-                    // 可選：顯示 SnackBar/Toast「需要通知權限才能開啟提醒」
+                    // 可選：顯示提示；不加也不會影響穩定性
                 }
             )
         }

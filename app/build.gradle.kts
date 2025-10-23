@@ -213,6 +213,9 @@ dependencies {
     implementation ("androidx.work:work-runtime-ktx:2.9.0")
     implementation ("androidx.hilt:hilt-work:1.2.0")
     kapt ("androidx.hilt:hilt-compiler:1.2.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+
 }
 
 

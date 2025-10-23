@@ -7,5 +7,11 @@ enum class FastingPlan(val code: String, val eatingHours: Int) {
     P22_2("22:2", 2),
     P12_12("12:12", 12),
     P18_6("18:6", 6);
-    companion object { fun of(code: String) = entries.first { it.code == code } }
+
+    // ★ 新增：禁食時數（24h 制）
+    val fastingHours: Int get() = 24 - eatingHours
+
+    companion object {
+        fun of(code: String) = entries.first { it.code == code }
+    }
 }

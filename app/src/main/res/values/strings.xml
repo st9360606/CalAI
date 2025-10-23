@@ -195,6 +195,7 @@
     <!-- res/values/strings.xml（節錄） -->
     <string name="fasting_plan_title">Fasting Plan</string>
     <string name="fasting_plans">Fasting Plans</string>
+    <string name="choose_fasting_plan">Choose fasting plan</string>
     <string name="start_time">start time</string>
     <string name="end_time">end time</string>
     <string name="enable_reminders">Enable reminders</string>
@@ -205,6 +206,7 @@
     <string name="fasting_window_started_body">This reminder is for self-management only and is not medical advice.</string>
     <string name="fasting_window_ended">Eating window ended</string>
     <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
-    <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
+    <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
+
 
 </resources>
