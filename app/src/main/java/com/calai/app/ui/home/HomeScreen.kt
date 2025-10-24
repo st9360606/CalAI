@@ -385,11 +385,8 @@ private fun TwoPagePager(
             pageSpacing = 28.dp   // 可依實際觀感微調 (建議 24~36.dp)
         ) { page ->
             // ★ 外層留白 + 陰影強化分頁感
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 8.dp)
-            ) {
+            Box(modifier = Modifier.fillMaxSize()) 
+             {
                 Column(Modifier.fillMaxSize()) {
                     when (page) {
                         0 -> {
