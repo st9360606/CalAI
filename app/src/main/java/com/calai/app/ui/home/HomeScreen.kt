@@ -11,7 +11,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +36,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +44,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -80,7 +85,9 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.calai.app.data.fasting.notifications.NotificationPermission
-
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
@@ -149,8 +156,33 @@ fun HomeScreen(
             )
         }
     }
+// ---- 這三個色碼是從你的截圖取樣 ----
+    val bgTopLeft = Color(0xFFD4D5D8) // 左上較冷灰
+    val bgTopRight = Color(0xFFEAE5E6) // 右上偏暖
+    val bgBottom = Color(0xFFE6E5E5)   // 底部更亮
 
+    // 用 Box 當背景畫布
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .drawWithCache {
+                // 對角線（左上→右下）線性漸層，含三段 color stop
+                val brush = Brush.linearGradient(
+                    colorStops = arrayOf(
+                        0.00f to bgTopLeft,
+                        0.52f to bgTopRight,
+                        1.00f to bgBottom
+                    ),
+                    start = Offset.Zero,
+                    end = Offset(size.width, size.height)
+                )
+                onDrawBehind { drawRect(brush = brush) }
+            }
+    ) {
+
+    }
     Scaffold(
+        containerColor = Color.Transparent,   // ★ 讓下方漸層透出
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onOpenCamera,
@@ -420,34 +452,92 @@ private fun BottomBar(
     current: HomeTab,
     onOpenTab: (HomeTab) -> Unit
 ) {
-    NavigationBar {
-        NavigationBarItem(
-            selected = current == HomeTab.Home,
-            onClick = { onOpenTab(HomeTab.Home) },
-            label = { Text("Home") },
-            icon = { Icon(Icons.Filled.Home, null) })
-        NavigationBarItem(
-            selected = current == HomeTab.Progress,
-            onClick = { onOpenTab(HomeTab.Progress) },
-            label = { Text("Progress") },
-            icon = { Icon(Icons.Filled.BarChart, null) })
-        NavigationBarItem(
-            selected = current == HomeTab.Note,
-            onClick = { onOpenTab(HomeTab.Note) },
-            label = { Text("Note") },
-            icon = { Icon(Icons.Filled.Edit, null) })
-        NavigationBarItem(
-            selected = current == HomeTab.Fasting,
-            onClick = { onOpenTab(HomeTab.Fasting) },
-            label = { Text("Fasting") },
-            icon = { Icon(Icons.Filled.AccessTime, null) })
-        NavigationBarItem(
-            selected = current == HomeTab.Personal,
-            onClick = { onOpenTab(HomeTab.Personal) },
-            label = { Text("Personal") },
-            icon = { Icon(Icons.Filled.Person, null) })
+    val container = Color.White
+    val selected = Color(0xFF111114)
+    val unselected = Color(0xFF9CA3AF)
+
+    Column(modifier = Modifier.background(container)) {
+        // ★ 用 HorizontalDivider 取代已棄用的 Divider
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color(0xFFE5E7EB),
+            thickness = 1.dp
+        )
+
+        NavigationBar(
+            containerColor = container,
+            contentColor = selected,
+            tonalElevation = 0.dp
+        ) {
+            NavigationBarItem(
+                selected = current == HomeTab.Home,
+                onClick = { onOpenTab(HomeTab.Home) },
+                label = { Text("Home") },
+                icon = { Icon(Icons.Filled.Home, null) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = selected,
+                    selectedTextColor = selected,
+                    unselectedIconColor = unselected,
+                    unselectedTextColor = unselected,
+                    indicatorColor = Color.Transparent
+                )
+            )
+            NavigationBarItem(
+                selected = current == HomeTab.Progress,
+                onClick = { onOpenTab(HomeTab.Progress) },
+                label = { Text("Progress") },
+                icon = { Icon(Icons.Filled.BarChart, null) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = selected,
+                    selectedTextColor = selected,
+                    unselectedIconColor = unselected,
+                    unselectedTextColor = unselected,
+                    indicatorColor = Color.Transparent
+                )
+            )
+            NavigationBarItem(
+                selected = current == HomeTab.Note,
+                onClick = { onOpenTab(HomeTab.Note) },
+                label = { Text("Note") },
+                icon = { Icon(Icons.Filled.Edit, null) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = selected,
+                    selectedTextColor = selected,
+                    unselectedIconColor = unselected,
+                    unselectedTextColor = unselected,
+                    indicatorColor = Color.Transparent
+                )
+            )
+            NavigationBarItem(
+                selected = current == HomeTab.Fasting,
+                onClick = { onOpenTab(HomeTab.Fasting) },
+                label = { Text("Fasting") },
+                icon = { Icon(Icons.Filled.AccessTime, null) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = selected,
+                    selectedTextColor = selected,
+                    unselectedIconColor = unselected,
+                    unselectedTextColor = unselected,
+                    indicatorColor = Color.Transparent
+                )
+            )
+            NavigationBarItem(
+                selected = current == HomeTab.Personal,
+                onClick = { onOpenTab(HomeTab.Personal) },
+                label = { Text("Personal") },
+                icon = { Icon(Icons.Filled.Person, null) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = selected,
+                    selectedTextColor = selected,
+                    unselectedIconColor = unselected,
+                    unselectedTextColor = unselected,
+                    indicatorColor = Color.Transparent
+                )
+            )
+        }
     }
 }
+
 private fun openAppNotificationSettings(ctx: Context) {
     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
         // 新舊 API 都照顧到
