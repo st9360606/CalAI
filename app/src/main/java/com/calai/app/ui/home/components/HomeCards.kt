@@ -50,6 +50,8 @@ import com.calai.app.data.home.repo.HomeSummary
 import kotlin.math.roundToInt
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.unit.sp
+
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
     val Size = 64.dp      // 圓直徑
@@ -442,13 +444,14 @@ fun WeightFastingRowModern(
             if (unit == "lbs") String.format(java.util.Locale.getDefault(), "%+d lbs", goal.roundToInt())
             else String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit)
 
+        // 左卡 Weight（原樣，重點是有 weight(1f)）
         ActivityStatCardSplit(
             title = "Weight",
             primary = primaryText,
             secondary = "to goal",
             ringColor = Color(0xFF06B6D4),
             progress = 0f,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f), // ★ 保持 50%
             cardHeight = cardHeight,
             ringSize = 74.dp,
             ringStroke = 6.dp,
@@ -478,60 +481,26 @@ fun WeightFastingRowModern(
                 }
             }
         )
-
-        // 右卡：Fasting Plan（白底、無箭頭、左下自訂綠色開關）
+        // 右卡 Fasting Plan（改用 modifier.weight(1f).height(cardHeight)）
         val plan = planOverride ?: (summary.fastingPlan ?: "—")
-        Card(
-            shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            modifier = Modifier
-                .weight(1f)
-                .height(cardHeight),
-            onClick = onOpenFastingPlans
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text("Fasting Plan", style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            plan,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                    }
-                    // ★ 自訂綠色 Switch（仿 iOS）
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (fastingEnabled) "On" else "Off", style = MaterialTheme.typography.labelSmall)
-                        Spacer(Modifier.width(8.dp))
-                        GreenSwitch(checked = fastingEnabled, onCheckedChange = onToggle)
-                    }
-                }
 
-                Spacer(Modifier.width(12.dp))
-
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("start time", style = MaterialTheme.typography.labelSmall)
-                    Text(fastingStartText ?: "—", style = MaterialTheme.typography.bodyMedium)
-                    Spacer(Modifier.height(6.dp))
-                    Text("end time", style = MaterialTheme.typography.labelSmall)
-                    Text(fastingEndText ?: "—", style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-        }
+        FastingPlanCard(
+            planTitle = "Fasting Plan",
+            planName = plan,
+            startLabel = "start time",
+            startText = fastingStartText,
+            endLabel = "end time",
+            endText = fastingEndText,
+            enabled = fastingEnabled,
+            onToggle = onToggle,
+            onClick = onOpenFastingPlans,
+            cardHeight = cardHeight,
+            modifier = Modifier.weight(1f).height(cardHeight),
+            topBarHeight = 30.dp,            // ★ 更薄
+            topBarTextStyle = MaterialTheme.typography.labelMedium, // 更低調一點
+            planNameYOffset = (2).dp,        // ★ 再往上
+            planNameFontSize = 32.sp
+        )
     }
 }
 
