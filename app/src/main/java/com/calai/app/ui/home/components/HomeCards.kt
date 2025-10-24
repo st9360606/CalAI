@@ -77,7 +77,7 @@ fun CaloriesCardModern(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+        border = CardStyles.Border
     ) {
         Row(
             modifier = Modifier
@@ -189,7 +189,7 @@ private fun MacroStatCardModern(
         modifier = modifier.height(cardHeight),          // ← 固定高度
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+        border = CardStyles.Border,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -338,7 +338,7 @@ fun ActivityStatCardSplit(
         modifier = modifier.height(cardHeight),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+        border = CardStyles.Border,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -427,8 +427,6 @@ fun ActivityStatCardSplit(
 fun WeightFastingRowModern(
     summary: HomeSummary,
     cardHeight: Dp = PanelHeights.Metric,
-    plusButtonSize: Dp = 24.dp,
-    plusIconSize: Dp = 19.dp,
     onOpenFastingPlans: () -> Unit = {},
     fastingStartText: String? = null,
     fastingEndText: String? = null,

@@ -88,6 +88,8 @@ import com.calai.app.data.fasting.notifications.NotificationPermission
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
+import com.calai.app.ui.home.components.CardStyles
+
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
@@ -357,70 +359,83 @@ private fun TwoPagePager(
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
 
-    // ★ 固定頁面總高度：上卡 + 間距 + 下卡
+    // 固定頁面總高度
     val spacerV = verticalGap
     val pageHeight = baseHeight * 2 + spacerV
-
-    // ★ 卡片最小高度，避免太扁（若你有 PanelHeights.Min 就用那個）
     val minCard = 96.dp
     val maxSwap = (baseHeight - minCard).coerceAtLeast(0.dp)
 
-    // 第一頁對沖
+    // 上下區塊對沖
     val topSwapClamped = topSwap.coerceIn(-maxSwap, maxSwap)
     val caloriesH = baseHeight - topSwapClamped
     val macroH = baseHeight + topSwapClamped
 
-    // 第二頁對沖
     val bottomSwapClamped = bottomSwap.coerceIn(-maxSwap, maxSwap)
     val workoutH = baseHeight - bottomSwapClamped
     val wfH = baseHeight + bottomSwapClamped
 
     Column {
+
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(pageHeight) // ★ 總高度由 baseHeight / verticalGap 控制
+                .height(pageHeight),
+            // ★ 新增頁面間距，視覺上讓兩個頁面更分開
+            pageSpacing = 28.dp   // 可依實際觀感微調 (建議 24~36.dp)
         ) { page ->
-            Column(Modifier.fillMaxSize()) {
-                when (page) {
-                    0 -> {
-                        CaloriesCardModern(
-                            caloriesLeft = summary.tdee,
-                            progress = 0f,
-                            cardHeight = caloriesH,
-                            ringSize = 76.dp,
-                            centerDisk = 36.dp,    // ← 對應縮小的中心灰圓
-                            ringStroke = 6.dp
-                        )
-                        Spacer(Modifier.height(spacerV))
-                        MacroRowModern(
-                            s = summary,
-                            cardHeight = macroH
-                        )
-                    }
-                    1 -> {
-                        WeightFastingRowModern(
-                            summary = summary,
-                            cardHeight = wfH,
-                            onOpenFastingPlans = onOpenFastingPlans,
-                            planOverride = planOverride,
-                            fastingStartText = fastingStartText,
-                            fastingEndText = fastingEndText,
-                            fastingEnabled = fastingEnabled,
-                            onToggle = onToggleFasting
-                        )
-                        Spacer(Modifier.height(spacerV))
-                        ExerciseDiaryCard(
-                            s = summary,
-                            cardHeight = workoutH
-                        )
+            // ★ 外層留白 + 陰影強化分頁感
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Column(Modifier.fillMaxSize()) {
+                    when (page) {
+                        0 -> {
+                            CaloriesCardModern(
+                                caloriesLeft = summary.tdee,
+                                progress = 0f,
+                                cardHeight = caloriesH,
+                                ringSize = 76.dp,
+                                centerDisk = 36.dp,
+                                ringStroke = 6.dp
+                            )
+                            Spacer(Modifier.height(spacerV))
+                            MacroRowModern(
+                                s = summary,
+                                cardHeight = macroH
+                            )
+                        }
+                        1 -> {
+                            WeightFastingRowModern(
+                                summary = summary,
+                                cardHeight = wfH,
+                                onOpenFastingPlans = onOpenFastingPlans,
+                                planOverride = planOverride,
+                                fastingStartText = fastingStartText,
+                                fastingEndText = fastingEndText,
+                                fastingEnabled = fastingEnabled,
+                                onToggle = onToggleFasting
+                            )
+                            Spacer(Modifier.height(spacerV))
+                            ExerciseDiaryCard(
+                                s = summary,
+                                cardHeight = workoutH
+                            )
+                        }
                     }
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+
+        Spacer(Modifier.height(10.dp))
+
+        // 分頁圓點
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
             PagerDots(count = pageCount, current = pagerState.currentPage)
         }
     }
@@ -428,7 +443,11 @@ private fun TwoPagePager(
 
 @Composable
 private fun ExerciseDiaryCard(s: HomeSummary, cardHeight: Dp = PanelHeights.Metric) {
-    Card(shape = RoundedCornerShape(18.dp), modifier = Modifier.height(cardHeight)) {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        modifier = Modifier.height(cardHeight),
+        border = CardStyles.Border
+    ) {
         Column(Modifier.padding(16.dp)) {
             Text("Workout diary", style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))

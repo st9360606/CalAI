@@ -18,7 +18,7 @@ import com.calai.app.data.meals.api.MealItemDto
 
 @Composable
 fun MealCard(item: MealItemDto, modifier: Modifier = Modifier) {
-    Card(shape = RoundedCornerShape(18.dp), modifier = modifier.fillMaxWidth()) {
+    Card(shape = RoundedCornerShape(18.dp), modifier = modifier.fillMaxWidth(),border = CardStyles.Border) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically

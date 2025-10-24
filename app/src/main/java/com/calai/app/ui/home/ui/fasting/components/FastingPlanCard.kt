@@ -54,7 +54,7 @@ fun FastingPlanCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+        border = CardStyles.Border,
         onClick = onClick
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
