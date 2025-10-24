@@ -51,6 +51,7 @@ import kotlin.math.roundToInt
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.unit.sp
+import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
@@ -436,51 +437,38 @@ fun WeightFastingRowModern(
     onToggle: (Boolean) -> Unit = {}
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        val commonTopBarHeight = 30.dp
+        val commonTopBarTextStyle = MaterialTheme.typography.labelMedium
 
-        // 左卡：Weight（維持原樣）
+        // === 左卡：Weight（新元件）
         val goal = -summary.weightDiffSigned
         val unit = summary.weightDiffUnit
         val primaryText =
             if (unit == "lbs") String.format(java.util.Locale.getDefault(), "%+d lbs", goal.roundToInt())
             else String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit)
 
-        // 左卡 Weight（原樣，重點是有 weight(1f)）
-        ActivityStatCardSplit(
-            title = "Weight",
+        WeightCardNew(
             primary = primaryText,
             secondary = "to goal",
             ringColor = Color(0xFF06B6D4),
             progress = 0f,
-            modifier = Modifier.weight(1f), // ★ 保持 50%
+            modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = 74.dp,
             ringStroke = 6.dp,
             centerDisk = 32.dp,
-            drawRing = true,
-            titlePrefix = { TitlePrefixTriangle(side = 6.dp, color = Color.Black) },
-            titlePrefixGap = 6.dp,
-            titleTextStyle = MaterialTheme.typography.bodySmall,
-            primaryTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            secondaryTextStyle = MaterialTheme.typography.bodySmall,
-            gapTitleToPrimary = 10.dp,
-            gapPrimaryToSecondary = 2.dp,
-            leftExtra = {
-                Surface(
-                    modifier = Modifier.requiredSize(plusButtonSize),
-                    shape = CircleShape,
-                    color = Color.Black
-                ) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.requiredSize(plusIconSize)
-                        )
-                    }
-                }
-            }
+            topBarTitle = "Weight",
+            topBarHeight = commonTopBarHeight,
+            topBarTextStyle = commonTopBarTextStyle,
+            // ★ 放大到 19sp，並往上移 4dp，減少上方空隙到 4dp
+            primaryFontSize = 19.sp,
+            primaryYOffset = (-4).dp,
+            primaryTopSpacing = 4.dp,
+            secondaryYOffset = (-2).dp,        // ★ secondary 往上
+            gapPrimaryToSecondary = 0.dp       // 可視覺需要把間距縮小
         )
+
+
         // 右卡 Fasting Plan（改用 modifier.weight(1f).height(cardHeight)）
         val plan = planOverride ?: (summary.fastingPlan ?: "—")
 
@@ -496,8 +484,8 @@ fun WeightFastingRowModern(
             onClick = onOpenFastingPlans,
             cardHeight = cardHeight,
             modifier = Modifier.weight(1f).height(cardHeight),
-            topBarHeight = 30.dp,            // ★ 更薄
-            topBarTextStyle = MaterialTheme.typography.labelMedium, // 更低調一點
+            topBarHeight = commonTopBarHeight,           // ★ 更薄
+            topBarTextStyle = commonTopBarTextStyle, // 更低調一點
             planNameYOffset = (2).dp,        // ★ 再往上
             planNameFontSize = 32.sp
         )
