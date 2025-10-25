@@ -71,8 +71,8 @@ object Routes {
     const val APP_ENTRY = "app_entry"
     // 其他暫時頁
     const val PROGRESS = "progress"
-    const val NOTE = "note"
-    const val FASTING = "fasting"
+    const val WORKOUT = "workout"   // ← 原 NOTE
+    const val DAILY = "daily"       // ← 原 FASTING
     const val PERSONAL = "personal"
     const val CAMERA = "camera"
     const val REMINDERS = "reminders"
@@ -532,7 +532,6 @@ fun BiteCalNavHost(
             }
         }
 
-        // HOME + 暫時頁
         composable(Routes.HOME) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: HomeViewModel = viewModel(
@@ -543,6 +542,7 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+
             HomeScreen(
                 vm = vm,
                 onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
@@ -551,23 +551,27 @@ fun BiteCalNavHost(
                     when (tab) {
                         HomeTab.Home -> { /* stay */ }
                         HomeTab.Progress -> nav.navigate(Routes.PROGRESS)
-                        HomeTab.Note -> nav.navigate(Routes.NOTE)
-                        HomeTab.Fasting -> nav.navigate(Routes.FASTING)
+                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT) // ← 原本 Note -> WORKOUT
+                        HomeTab.Daily -> nav.navigate(Routes.DAILY)     // ← 原本 Fasting -> DAILY
                         HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
                     }
                 },
-                onOpenFastingPlans = { nav.navigate(Routes.FASTING) } ,// ★ 新增：提供給 HomeScreen
-                fastingVm = fastingVm // ★ 傳入
+                onOpenFastingPlans = { nav.navigate(Routes.DAILY) }, // ← 之前走 FASTING，現在對應 DAILY
+                fastingVm = fastingVm
             )
         }
 
+// 以下是個別頁的 composable 宣告
         composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
-        composable(Routes.NOTE) { SimplePlaceholder("Note") }
-        // ★ 新增／取代 FASTING route：與 HOME 共享同一個 ViewModel
-        composable(Routes.FASTING) { backStackEntry ->
+
+// 這裡原本 NOTE → 改成 WORKOUT
+        composable(Routes.WORKOUT) { SimplePlaceholder("Workout") }
+
+// 這裡原本 FASTING → 改成 DAILY
+        composable(Routes.DAILY) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
-            // ✅ 用當前 backStackEntry 當 key，安全記住 HOME 的 entry
+            // 從 HOME 共用同一個 fastingVm（維持原本共享 ViewModel 的做法）
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
             val fastingVm: FastingPlanViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,

@@ -479,20 +479,20 @@ private fun ExerciseDiaryCard(
     }
 }
 
-enum class HomeTab { Home, Progress, Note, Fasting, Personal }
+// 1. HomeTab：改成 Workout / Daily
+enum class HomeTab { Home, Progress, Workout, Daily, Personal }
 
+// 2. BottomBar：文字與點擊目標更新成 Workout / Daily
 @Composable
 private fun BottomBar(
     current: HomeTab,
     onOpenTab: (HomeTab) -> Unit
 ) {
-    // 背景透明化
     val barBg = Color.Transparent
     val selected = Color(0xFF111114)
     val unselected = Color(0xFF9CA3AF)
 
     Column(modifier = Modifier.background(barBg)) {
-        // 頂部 1dp 分隔線，保留
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = Color(0xFFE5E7EB),
@@ -500,10 +500,11 @@ private fun BottomBar(
         )
 
         NavigationBar(
-            containerColor = Color.Transparent, // 透明
+            containerColor = Color.Transparent,
             contentColor = selected,
             tonalElevation = 0.dp
         ) {
+            // Home
             NavigationBarItem(
                 selected = current == HomeTab.Home,
                 onClick = { onOpenTab(HomeTab.Home) },
@@ -517,6 +518,8 @@ private fun BottomBar(
                     indicatorColor = Color.Transparent
                 )
             )
+
+            // Progress
             NavigationBarItem(
                 selected = current == HomeTab.Progress,
                 onClick = { onOpenTab(HomeTab.Progress) },
@@ -530,11 +533,13 @@ private fun BottomBar(
                     indicatorColor = Color.Transparent
                 )
             )
+
+            // Workout 〈原 Note〉
             NavigationBarItem(
-                selected = current == HomeTab.Note,
-                onClick = { onOpenTab(HomeTab.Note) },
-                label = { Text("Note") },
-                icon = { Icon(Icons.Filled.Edit, null) },
+                selected = current == HomeTab.Workout,
+                onClick = { onOpenTab(HomeTab.Workout) },
+                label = { Text("Workout") },
+                icon = { Icon(Icons.Filled.Edit, null) }, // 先沿用舊 icon，不動版面
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = selected,
                     selectedTextColor = selected,
@@ -543,11 +548,13 @@ private fun BottomBar(
                     indicatorColor = Color.Transparent
                 )
             )
+
+            // Daily 〈原 Fasting〉
             NavigationBarItem(
-                selected = current == HomeTab.Fasting,
-                onClick = { onOpenTab(HomeTab.Fasting) },
-                label = { Text("Fasting") },
-                icon = { Icon(Icons.Filled.AccessTime, null) },
+                selected = current == HomeTab.Daily,
+                onClick = { onOpenTab(HomeTab.Daily) },
+                label = { Text("Daily") },
+                icon = { Icon(Icons.Filled.AccessTime, null) }, // 先沿用舊 icon
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = selected,
                     selectedTextColor = selected,
@@ -556,6 +563,8 @@ private fun BottomBar(
                     indicatorColor = Color.Transparent
                 )
             )
+
+            // Personal
             NavigationBarItem(
                 selected = current == HomeTab.Personal,
                 onClick = { onOpenTab(HomeTab.Personal) },
