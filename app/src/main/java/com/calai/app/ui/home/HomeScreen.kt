@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -88,6 +89,7 @@ import com.calai.app.data.fasting.notifications.NotificationPermission
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
+import androidx.compose.ui.draw.shadow
 import com.calai.app.ui.home.components.CardStyles
 
 @Composable
@@ -439,14 +441,29 @@ private fun TwoPagePager(
 }
 
 @Composable
-private fun ExerciseDiaryCard(s: HomeSummary, cardHeight: Dp = PanelHeights.Metric) {
+private fun ExerciseDiaryCard(
+    s: HomeSummary,
+    cardHeight: Dp = PanelHeights.Metric
+) {
     Card(
-        shape = RoundedCornerShape(18.dp),
-        modifier = Modifier.height(cardHeight),
-        border = CardStyles.Border
+        modifier = Modifier
+            .height(cardHeight)
+            .shadow(
+                CardStyles.Elevation,
+                CardStyles.Corner,
+                clip = false
+            ),
+        shape = CardStyles.Corner,
+        border = CardStyles.Border,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("Workout diary", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Workout diary",
+                style = MaterialTheme.typography.titleSmall,
+                color = Color(0xFF0F172A)
+            )
             Spacer(Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = { (s.todayActivity.exerciseMinutes / 60f).coerceIn(0f, 1f) },
@@ -455,7 +472,8 @@ private fun ExerciseDiaryCard(s: HomeSummary, cardHeight: Dp = PanelHeights.Metr
             Spacer(Modifier.height(6.dp))
             Text(
                 "${s.todayActivity.activeKcal.toInt()} kcal • ${s.todayActivity.exerciseMinutes} min",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF6B7280)
             )
         }
     }
@@ -468,12 +486,13 @@ private fun BottomBar(
     current: HomeTab,
     onOpenTab: (HomeTab) -> Unit
 ) {
-    val container = Color.White
+    // 背景透明化
+    val barBg = Color.Transparent
     val selected = Color(0xFF111114)
     val unselected = Color(0xFF9CA3AF)
 
-    Column(modifier = Modifier.background(container)) {
-        // ★ 用 HorizontalDivider 取代已棄用的 Divider
+    Column(modifier = Modifier.background(barBg)) {
+        // 頂部 1dp 分隔線，保留
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = Color(0xFFE5E7EB),
@@ -481,7 +500,7 @@ private fun BottomBar(
         )
 
         NavigationBar(
-            containerColor = container,
+            containerColor = Color.Transparent, // 透明
             contentColor = selected,
             tonalElevation = 0.dp
         ) {

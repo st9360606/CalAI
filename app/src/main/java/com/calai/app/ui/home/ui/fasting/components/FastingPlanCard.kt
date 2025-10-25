@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,13 +51,22 @@ fun FastingPlanCard(
     topBarPaddingH: Dp = 16.dp                                      // 左右內距
 ) {
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier
+            .height(cardHeight)
+            // ★ 統一陰影＋圓角 → 跟其他卡片同一套視覺（立體浮起來）
+            .shadow(
+                CardStyles.Elevation,
+                CardStyles.Corner,
+                clip = false
+            ),
+        shape = CardStyles.Corner, // 20.dp 圓角，和其他卡片一致
+        colors = CardDefaults.cardColors(
+            containerColor = CardStyles.Bg // 微暖白
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border,
         onClick = onClick
-    ) {
+    ){
         Column(modifier = Modifier.fillMaxSize()) {
 
             // ===== 上方：黑底白字標題條（固定高度，垂直置中） =====

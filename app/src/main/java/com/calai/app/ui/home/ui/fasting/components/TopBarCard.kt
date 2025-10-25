@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.shadow
+import com.calai.app.ui.home.components.CardStyles
 import com.calai.app.ui.home.components.TitlePrefixTriangle
 
 object TopBarDefaults {
@@ -30,11 +32,19 @@ fun TopBarCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier
+            // ★ 統一陰影：讓卡片浮起來（跟 Home 其他卡片一致）
+            .shadow(
+                CardStyles.Elevation,
+                CardStyles.Corner,
+                clip = false
+            ),
+        shape = CardStyles.Corner, // 20.dp 圓角一致
+        colors = CardDefaults.cardColors(
+            containerColor = CardStyles.Bg // 微暖白，不是死白
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+        border = CardStyles.Border      // 更明顯的灰邊框
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 黑底白字頂欄（可選擇顯示白色三角形）

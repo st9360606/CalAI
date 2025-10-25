@@ -73,9 +73,11 @@ fun CaloriesCardModern(
     contentPaddingV: Dp = 12.dp,
 ) {
     Card(
-        modifier = modifier.height(cardHeight), // ★ 固定高度，避免分頁高度不一
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier
+            .height(cardHeight)
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border
     ) {
@@ -186,9 +188,11 @@ private fun MacroStatCardModern(
     spacingTop: Dp = 12.dp
 ) {
     Card(
-        modifier = modifier.height(cardHeight),          // ← 固定高度
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier
+            .height(cardHeight)
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -335,9 +339,11 @@ fun ActivityStatCardSplit(
     val secondaryStyle = secondaryTextStyle ?: MaterialTheme.typography.bodySmall
 
     Card(
-        modifier = modifier.height(cardHeight),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = modifier
+            .height(cardHeight)
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
