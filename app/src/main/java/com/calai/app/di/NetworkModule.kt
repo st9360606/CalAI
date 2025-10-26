@@ -106,4 +106,11 @@ object NetworkModule {
     @Provides @Singleton
     fun provideFastingAlarmScheduler(@ApplicationContext ctx: Context): FastingAlarmScheduler =
         FastingAlarmScheduler(ctx)
+
+    // 在 NetworkModule.kt 裡加
+    @Provides
+    @Singleton
+    fun provideWaterApi(@Named("apiRetrofit") retrofit: Retrofit): com.calai.app.data.water.api.WaterApi =
+        retrofit.create(com.calai.app.data.water.api.WaterApi::class.java)
+
 }

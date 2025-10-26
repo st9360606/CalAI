@@ -38,6 +38,7 @@ import com.calai.app.ui.home.HomeTab
 import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
 import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
@@ -71,8 +72,9 @@ object Routes {
     const val APP_ENTRY = "app_entry"
     // 其他暫時頁
     const val PROGRESS = "progress"
-    const val WORKOUT = "workout"   // ← 原 NOTE
-    const val DAILY = "daily"       // ← 原 FASTING
+    const val WORKOUT = "workout"
+    const val DAILY = "daily"
+    const val FASTING = "fasting"
     const val PERSONAL = "personal"
     const val CAMERA = "camera"
     const val REMINDERS = "reminders"
@@ -542,33 +544,37 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+            val waterVm: WaterViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
 
             HomeScreen(
                 vm = vm,
+                waterVm = waterVm, // ★ 新增參數
                 onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
                 onOpenCamera = { nav.navigate(Routes.CAMERA) },
                 onOpenTab = { tab ->
                     when (tab) {
                         HomeTab.Home -> { /* stay */ }
                         HomeTab.Progress -> nav.navigate(Routes.PROGRESS)
-                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT) // ← 原本 Note -> WORKOUT
-                        HomeTab.Daily -> nav.navigate(Routes.DAILY)     // ← 原本 Fasting -> DAILY
+                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT)
+                        HomeTab.Daily -> nav.navigate(Routes.DAILY)
                         HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
                     }
                 },
-                onOpenFastingPlans = { nav.navigate(Routes.DAILY) }, // ← 之前走 FASTING，現在對應 DAILY
+                onOpenFastingPlans = { nav.navigate(Routes.FASTING) },
                 fastingVm = fastingVm
             )
         }
 
-// 以下是個別頁的 composable 宣告
+        // 以下是個別頁的 composable 宣告
         composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
-
-// 這裡原本 NOTE → 改成 WORKOUT
+        // 這裡原本 NOTE → 改成 WORKOUT
         composable(Routes.WORKOUT) { SimplePlaceholder("Workout") }
-
-// 這裡原本 FASTING → 改成 DAILY
-        composable(Routes.DAILY) { backStackEntry ->
+        composable(Routes.DAILY) { SimplePlaceholder("Daily") }
+        // 這裡原本 FASTING → 改成 DAILY
+        composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
             // 從 HOME 共用同一個 fastingVm（維持原本共享 ViewModel 的做法）

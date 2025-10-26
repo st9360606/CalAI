@@ -26,7 +26,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -37,7 +36,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -91,10 +89,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
 import androidx.compose.ui.draw.shadow
 import com.calai.app.ui.home.components.CardStyles
+import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
+import com.calai.app.ui.home.ui.water.model.WaterUiState
+import com.calai.app.ui.home.ui.water.model.WaterViewModel
 
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
+    waterVm: WaterViewModel, // ★ 新增
     onOpenAlarm: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
@@ -102,6 +104,7 @@ fun HomeScreen(
     fastingVm: FastingPlanViewModel,     // ← 有傳入
 ) {
     val ui by vm.ui.collectAsState()
+    val waterState by waterVm.ui.collectAsState()
 
     // ====== Fasting VM 狀態 / 權限設定 ======
     val fastingUi by fastingVm.state.collectAsState()
@@ -259,7 +262,6 @@ fun HomeScreen(
 
             TwoPagePager(
                 summary = s,
-                onAddWater = { vm.onAddWater(it) },
                 topSwap = topSwap,
                 bottomSwap = bottomSwap,
                 baseHeight = baseHeight,
@@ -270,7 +272,13 @@ fun HomeScreen(
                 fastingStartText = startText,
                 fastingEndText = endText,
                 fastingEnabled = fastingUi.enabled,
-                onToggleFasting = onToggleFasting
+                onToggleFasting = onToggleFasting,
+
+                // ★ 傳進去給第二頁下半部喝水卡
+                waterState = waterState,
+                onWaterPlus = { waterVm.adjust(+1) },
+                onWaterMinus = { waterVm.adjust(-1) },
+                onWaterSettings = { waterVm.toggleUnit() }
             )
 
 
@@ -345,7 +353,6 @@ private fun Avatar(
 @Composable
 private fun TwoPagePager(
     summary: HomeSummary,
-    onAddWater: (Int) -> Unit,
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
     baseHeight: Dp = PanelHeights.Metric,
@@ -356,7 +363,13 @@ private fun TwoPagePager(
     fastingStartText: String? = null,
     fastingEndText: String? = null,
     fastingEnabled: Boolean = false,
-    onToggleFasting: (Boolean) -> Unit = {}
+    onToggleFasting: (Boolean) -> Unit = {},
+
+    // ★ 新增：喝水卡需要的資料與 callback
+    waterState: WaterUiState,
+    onWaterPlus: () -> Unit,
+    onWaterMinus: () -> Unit,
+    onWaterSettings: () -> Unit
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
@@ -417,10 +430,16 @@ private fun TwoPagePager(
                                 fastingEnabled = fastingEnabled,
                                 onToggle = onToggleFasting
                             )
+
                             Spacer(Modifier.height(spacerV))
-                            ExerciseDiaryCard(
-                                s = summary,
-                                cardHeight = workoutH
+
+                            // ★ 取代原本的 ExerciseDiaryCard
+                            WaterIntakeCard(
+                                cardHeight = workoutH,
+                                state = waterState,
+                                onPlus = onWaterPlus,
+                                onMinus = onWaterMinus,
+                                onSettings = onWaterSettings
                             )
                         }
                     }
