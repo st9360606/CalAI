@@ -281,7 +281,7 @@ fun HomeScreen(
                 waterState = waterState,
                 onWaterPlus = { waterVm.adjust(+1) },
                 onWaterMinus = { waterVm.adjust(-1) },
-                onWaterSettings = { waterVm.toggleUnit() }
+                onToggleUnit = { waterVm.toggleUnit() } // ← 這裡原本是 onWaterSettings
             )
 
 
@@ -372,7 +372,7 @@ private fun TwoPagePager(
     waterState: WaterUiState,
     onWaterPlus: () -> Unit,
     onWaterMinus: () -> Unit,
-    onWaterSettings: () -> Unit
+    onToggleUnit: () -> Unit
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
@@ -442,7 +442,7 @@ private fun TwoPagePager(
                                 state = waterState,
                                 onPlus = onWaterPlus,
                                 onMinus = onWaterMinus,
-                                onSettings = onWaterSettings
+                                onToggleUnit = onToggleUnit // ← 用 switch 切 ml/oz
                             )
                         }
                     }
