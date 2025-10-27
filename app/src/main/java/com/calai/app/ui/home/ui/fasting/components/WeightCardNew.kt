@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.calai.app.ui.home.components.GaugeRing
+import com.calai.app.ui.home.components.RingColors
 
 @Composable
 fun WeightCardNew(
@@ -134,7 +135,7 @@ fun WeightCardNew(
                         tickColor = ringColor
                     )
                     Surface(
-                        color = Color(0xFFF3F4F6),
+                        color = RingColors.CenterFill, // ★ 更淺
                         shape = androidx.compose.foundation.shape.CircleShape,
                         modifier = Modifier.size(centerDisk)
                     ) {}

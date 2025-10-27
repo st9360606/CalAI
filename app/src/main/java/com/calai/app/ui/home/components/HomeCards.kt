@@ -105,9 +105,9 @@ fun CaloriesCardModern(
                     drawTopTick = true,
                     tickColor = Color(0xFF111827)
                 )
-                androidx.compose.material3.Surface(
-                    color = Color(0xFFF3F4F6),
-                    shape = androidx.compose.foundation.shape.CircleShape,
+                Surface(
+                    color = RingColors.CenterFill, // ★ 使用統一更淺的顏色
+                    shape = CircleShape,
                     modifier = Modifier.size(centerDisk),
                     content = {}
                 )
@@ -123,7 +123,7 @@ fun MacroRowModern(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)// ★ 更新：間距由 12.dp -> 8.dp，再更緊一點
     ) {
         MacroStatCardModern(
             value = "${s.proteinG}g",
@@ -224,7 +224,7 @@ private fun MacroStatCardModern(
                     tickColor = ringColor
                 )
                 Surface(
-                    color = Color(0xFFF3F4F6),
+                    color = RingColors.CenterFill, // ★ 更淺
                     shape = CircleShape,
                     modifier = Modifier.size(centerDisk)
                 ) {}
@@ -361,7 +361,6 @@ fun ActivityStatCardSplit(
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.Top
             ) {
-                // 標題列：可插入前綴小圖示（例如小三角）
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (titlePrefix != null) {
                         titlePrefix()
@@ -419,7 +418,7 @@ fun ActivityStatCardSplit(
                             drawTopTick = true,
                             tickColor = ringColor
                         )
-                        Surface(color = Color(0xFFF3F4F6), shape = CircleShape, modifier = Modifier.size(centerDisk)) {}
+                        Surface(color = RingColors.CenterFill, shape = CircleShape, modifier = Modifier.size(centerDisk)) {}
                     } else {
                         Spacer(Modifier.size(ringSize))
                     }

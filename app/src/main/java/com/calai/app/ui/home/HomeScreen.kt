@@ -163,27 +163,30 @@ fun HomeScreen(
             )
         }
     }
-// ---- 這三個色碼是從你的截圖取樣 ----
-    val bgTopLeft = Color(0xFFD4D5D8) // 左上較冷灰
-    val bgTopRight = Color(0xFFEAE5E6) // 右上偏暖
-    val bgBottom = Color(0xFFE6E5E5)   // 底部更亮
-
-    // 用 Box 當背景畫布
+    // ---- 首頁背景漸層：左上(淡藍) → 中段(米白) → 右下(紅橘) ----
+    // 左上：淡藍，比之前更明顯一點，但還是非常淺，不會像純藍背景
+    val bgLeftNeutralCooler = Color(0xFFF1F4FC) // ★ 更新後，比 F5F6F8 再淡藍一點
+    val bgMidNeutral        = Color(0xFFF6F4F2) // 中間米白，維持
+    val bgRightWarmer       = Color(0xFFF6EDE4) // ★ 更新後，比 F4EFEA 再暖一點
+    // 背景畫布：這個 Box 放在 Scaffold 之前，當整個畫面底層
     Box(
         modifier = Modifier
             .fillMaxSize()
             .drawWithCache {
-                // 對角線（左上→右下）線性漸層，含三段 color stop
+                // ★ 關鍵：start=Offset.Zero(左上0,0)，end=Offset(size.width, size.height)
+                //     = 從左上角走到右下角
                 val brush = Brush.linearGradient(
                     colorStops = arrayOf(
-                        0.00f to bgTopLeft,
-                        0.52f to bgTopRight,
-                        1.00f to bgBottom
+                        0.00f to bgLeftNeutralCooler, // 左上：帶一點淡藍灰
+                        0.55f to bgMidNeutral,        // 中段：柔米白
+                        1.00f to bgRightWarmer        // 右下：淡暖拿鐵杏色
                     ),
                     start = Offset.Zero,
-                    end = Offset(size.width, size.height)
+                    end = Offset(size.width, size.height) // ← 左上 → 右下
                 )
-                onDrawBehind { drawRect(brush = brush) }
+                onDrawBehind {
+                    drawRect(brush = brush)
+                }
             }
     ) {
 
@@ -218,7 +221,7 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 8.dp),
+                    .padding(top = 12.dp, bottom = 0.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -248,11 +251,11 @@ fun HomeScreen(
             )
 
             // ★ 這兩個值就是你要調的數字（正數=上面減、下面加；負數相反）
-            val topSwap = 20.dp        // 例：Calories -8dp；Macro +8dp  第一頁 Calories 變矮、Macro 變高（或相反），但整頁高度不變、不跳動。
-            val bottomSwap = 12.dp    // 例：Workout -12dp；Weight/Fasting +12dp 第二頁 Workout 變矮、Weight/Fasting 變高（或相反），整頁高度不變。
+            val topSwap = 16.dp        // 例：Calories -8dp；Macro +8dp  第一頁 Calories 變矮、Macro 變高（或相反），但整頁高度不變、不跳動。
+            val bottomSwap = 8.dp    // 例：Workout -12dp；Weight/Fasting +12dp 第二頁 Workout 變矮、Weight/Fasting 變高（或相反），整頁高度不變。
 
             // ★ 兩邊總高度控制（共同升降）
-            val baseHeight = 124.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
+            val baseHeight = 128.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
             val verticalGap = 10.dp    // ← 上下卡的間距
 
             // 將 VM 狀態轉為卡片顯示字串
@@ -282,14 +285,14 @@ fun HomeScreen(
             )
 
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(5.dp))
 
             // ★ 想再小就把 cardHeight 調更小，環也可一起調
             StepsWorkoutRowModern(
                 summary = s,
-                cardHeight = 120.dp,   // ← 你想要的高度
-                ringSize = 74.dp,      // ← 對應縮小的圓環
-                centerDisk = 32.dp,    // ← 對應縮小的中心灰圓
+                cardHeight = 112.dp,   // ← 你想要的高度
+                ringSize = 70.dp,      // ← 對應縮小的圓環
+                centerDisk = 30.dp,    // ← 對應縮小的中心灰圓
                 ringStroke = 6.dp      // ← 視覺厚度；想更輕可 7.dp
             )
 
@@ -397,7 +400,7 @@ private fun TwoPagePager(
                 .fillMaxWidth()
                 .height(pageHeight),
             // ★ 新增頁面間距，視覺上讓兩個頁面更分開
-            pageSpacing = 28.dp   // 可依實際觀感微調 (建議 24~36.dp)
+            pageSpacing = 38.dp   // 可依實際觀感微調 (建議 24~36.dp)
         ) { page ->
             // ★ 外層留白 + 陰影強化分頁感
             Box(modifier = Modifier.fillMaxSize()) 
@@ -507,11 +510,17 @@ private fun BottomBar(
     current: HomeTab,
     onOpenTab: (HomeTab) -> Unit
 ) {
-    val barBg = Color.Transparent
+    // 固定底色：非常淡、帶一點暖米白
+    // 這個顏色在你的整體 UI（偏柔和、非純白）裡面不會突兀
+    val barSurface = Color(0xFFF6F4F2) // ★ 新增：固定底色，避免被漸層污染
+
     val selected = Color(0xFF111114)
     val unselected = Color(0xFF9CA3AF)
 
-    Column(modifier = Modifier.background(barBg)) {
+    Column(
+        modifier = Modifier.background(barSurface) // ★ 改：原本是 Transparent
+    ) {
+        // 上方 1dp 分隔線維持原色，讓 BottomBar 和內容區有清楚邊界
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = Color(0xFFE5E7EB),
@@ -519,7 +528,7 @@ private fun BottomBar(
         )
 
         NavigationBar(
-            containerColor = Color.Transparent,
+            containerColor = barSurface, // ★ 改：原本是 Color.Transparent
             contentColor = selected,
             tonalElevation = 0.dp
         ) {
