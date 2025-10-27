@@ -1,5 +1,6 @@
 package com.calai.app.ui.home.ui.water.components
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,8 +13,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,7 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -48,20 +51,17 @@ import com.calai.app.ui.home.components.CardStyles
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
+import androidx.compose.ui.semantics.Role
 /**
- * RoundActionButton v15
+ * RoundActionButton v16
  *
- * 改動 vs v14：
- * 1. 按下去的高亮圈顏色：改成「比較淺的深灰」
- *    - flashAlphaTarget 從 0.5f 降到 0.4f
- *    - 疊色 alpha 係數從 0.5f 降到 0.4f
- *    => 視覺上比 v14 更淡一點，還是灰，不是白
+ * 和 v15 幾乎相同：
+ * - outerSizeDp：外圈(高亮圈/點擊區)，比按鈕本體大
+ * - innerSizeDp：真正顯示的按鈕大小
+ * - 點擊時顯示深灰半透明圓形(比按鈕大)，120ms 後自動淡掉
  *
- * 2. 高亮圈還是比按鈕大 (outerSizeDp > innerSizeDp)
- *
- * 3. 我們仍用 coroutine 做瞬間閃光，120ms 後自動收掉
- *    => 快速連打不會卡亮
+ * 差異 vs 早期版本：
+ * - flashAlphaTarget = 0.4f，顏色是黑色 * 0.4f -> 視覺是淺一點的深灰
  */
 @Composable
 private fun RoundActionButton(
@@ -75,10 +75,10 @@ private fun RoundActionButton(
 ) {
     val scope = rememberCoroutineScope()
 
-    // 這是「我們想要呈現的亮度」
+    // 控制閃光的目標亮度
     var flashAlphaTarget by remember { mutableFloatStateOf(0f) }
 
-    // 用動畫把 alpha 慢慢往 flashAlphaTarget 跑 (淡出不會硬切)
+    // 用動畫平滑淡出
     val animatedAlpha by animateFloatAsState(
         targetValue = flashAlphaTarget,
         label = "pressFlashAlphaAnim"
@@ -88,14 +88,14 @@ private fun RoundActionButton(
 
     Box(
         modifier = Modifier
-            .size(outerSizeDp) // 外圈：決定高亮圈的半徑 (比內層大)
+            .size(outerSizeDp) // 外圈半徑（也是高亮圈大小）
             .clickable(
-                indication = null, // 我們自己畫高亮圈，不用 ripple
+                indication = null, // 我們自己畫閃光，所以不要 ripple
                 interactionSource = interactionSource
             ) {
                 scope.launch {
-                    // 輕灰 / 深灰感：flashAlphaTarget 越大越深
-                    flashAlphaTarget = 0.4f   // v15: 比 v14 稍微再淺一點
+                    // 亮一下深灰圈（比按鈕大）
+                    flashAlphaTarget = 0.4f
                     delay(120)
                     flashAlphaTarget = 0f
                 }
@@ -103,20 +103,19 @@ private fun RoundActionButton(
             },
         contentAlignment = Alignment.Center
     ) {
-        // 深灰閃光圈，尺寸 = outerSizeDp
+        // 深灰閃光圈，尺寸 = outerSizeDp，比內層按鈕大一圈
         if (animatedAlpha > 0f) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .background(
-                        // 用黑色乘透明度做成深灰。係數 0.4f => 比 v14 的 0.5f 再淡一點
                         color = Color.Black.copy(alpha = animatedAlpha * 0.4f),
                         shape = CircleShape
                     )
             )
         }
 
-        // 內層實際可見的按鈕 (40dp)
+        // 內層實際按鈕 (顯示出來的 - / +)
         Box(
             modifier = Modifier
                 .size(innerSizeDp)
@@ -140,13 +139,11 @@ private fun RoundActionButton(
 }
 
 /**
- * WaterIntakeCard v15
+ * WaterIntakeCard v16
  *
- * 改動 vs v14：
- * 1. - / + 之間距離：20.dp -> 16.dp
- * 2. Switch 往上靠近按鈕：
- *    - Spacer(8.dp) -> Spacer(4.dp)
- * 3. 其他保持不變（字體、杯子大小、switch style 等）
+ * 變更點 vs 你給的版本：
+ * - Switch：拿掉 Modifier.scale(...)，回復原生大小，所以白色 thumb(圓形)不會縮小。
+ * - 其他 spacing、按鈕行為、深灰閃光都維持。
  */
 @Composable
 fun WaterIntakeCard(
@@ -184,10 +181,10 @@ fun WaterIntakeCard(
                 verticalAlignment = Alignment.Top
             ) {
 
-                // 左邊淡藍底方塊 (主視覺)
+                // 左邊淺藍底塊 (主視覺)
                 Box(
                     modifier = Modifier
-                        .size(60.dp) // 背景塊維持 60dp
+                        .size(60.dp) // 保持 60dp
                         .background(
                             color = Color(0xFFF2F3FF), // 淺藍/淡紫
                             shape = RoundedCornerShape(10.dp)
@@ -206,9 +203,10 @@ fun WaterIntakeCard(
                 Spacer(Modifier.size(12.dp))
 
                 Column(
+                    modifier = Modifier.padding(top = 4.dp),
                     verticalArrangement = Arrangement.Top
                 ) {
-                    // 標題 "Water"：要細，不要粗
+                    // "Water" 細字
                     Text(
                         text = "Water",
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -217,9 +215,9 @@ fun WaterIntakeCard(
                         )
                     )
 
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(6.dp))
 
-                    // 數值 "237 ml (1 cups)" / "16 fl oz (2 cups)"
+                    // 當前數值 e.g. "237 ml (1 cups)" or "16 fl oz (2 cups)"
                     val mainText = when (state.unit) {
                         WaterUnit.ML -> "${state.ml} ml"
                         WaterUnit.OZ -> "${state.flOz} fl oz"
@@ -244,17 +242,17 @@ fun WaterIntakeCard(
                 verticalArrangement = Arrangement.Center
             ) {
 
-                // 右半整塊靠上：保持 4.dp (v14 也是 4dp，比 v13 的 16dp 更高)
-                Spacer(Modifier.height(4.dp))
+                // 靠上（4dp）
+                Spacer(Modifier.height(0.dp))
 
                 // 第一排：- / +
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 減號：白底 + 黑框 + 黑圖示
+                    // 減號：白底 + 黑框 + 黑icon
                     RoundActionButton(
-                        outerSizeDp = 50.dp,   // 外圈(高亮圈/點擊區) 大
-                        innerSizeDp = 36.dp,   // 內圈實際按鈕本體
+                        outerSizeDp = 50.dp,   // 點擊/閃光區 (比較大)
+                        innerSizeDp = 38.dp,   // 按鈕本體
                         bgColor = Color.White,
                         borderColor = Color(0xFF111114),
                         iconTint = Color(0xFF111114),
@@ -262,12 +260,12 @@ fun WaterIntakeCard(
                         onClick = onMinus
                     )
 
-                    Spacer(Modifier.size(14.dp)) // v15: 20.dp -> 16.dp
+                    Spacer(Modifier.size(14.dp)) // 兩顆按鈕距離
 
-                    // 加號：黑底 + 白圖示
+                    // 加號：黑底 + 白icon
                     RoundActionButton(
                         outerSizeDp = 50.dp,
-                        innerSizeDp = 36.dp,
+                        innerSizeDp = 38.dp,
                         bgColor = Color(0xFF111114),
                         borderColor = null,
                         iconTint = Color.White,
@@ -276,12 +274,12 @@ fun WaterIntakeCard(
                     )
                 }
 
-                // Switch 再往上靠近一點：
-                // v14: 8.dp -> v15: 4.dp
-                Spacer(Modifier.height(4.dp))
+                // Switch 再往上靠近 (4dp)
+                Spacer(Modifier.height(10.dp))
 
                 // 第二排：oz [Switch] ml
                 Row(
+                    modifier = Modifier.padding(bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -289,31 +287,25 @@ fun WaterIntakeCard(
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = FontWeight.Medium,
                             color = if (state.unit == WaterUnit.OZ)
-                                Color(0xFF0F172A) // 選中高亮
+                                Color(0xFF0F172A) // 高亮
                             else
-                                Color(0xFF6B7280) // 未選灰
+                                Color(0xFF6B7280) // 灰
                         )
                     )
 
                     Spacer(Modifier.size(6.dp))
 
-                    Switch(
+                    // 🔥 v16 變更：
+                    // 移除 Modifier.scale(...)，用原生 Switch 尺寸
+                    // → 白色圓球(thumb) 不會被縮小或壓扁
+                    UnitSwitch(
                         checked = (state.unit == WaterUnit.ML),
                         onCheckedChange = { onToggleUnit() },
-                        modifier = Modifier.scale(
-                            scaleX = 0.9f, // 拉長
-                            scaleY = 0.85f  // 稍扁
-                        ),
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = Color(0xFF111114), // ML 模式：黑底
-                            checkedBorderColor = Color.Transparent,
-                            uncheckedThumbColor = Color.White,
-                            uncheckedTrackColor = Color(0xFF9CA3AF), // OZ 模式：灰底
-                            uncheckedBorderColor = Color.Transparent,
-                            uncheckedIconColor = Color.White,
-                            checkedIconColor = Color.White
-                        )
+                        width = 46.dp,
+                        height = 32.dp,
+                        thumbSize = 18.dp,        // 固定白圓大小
+                        checkedTrack = Color(0xFF111114),
+                        uncheckedTrack = Color(0xFF9CA3AF)
                     )
 
                     Spacer(Modifier.size(6.dp))
@@ -333,3 +325,44 @@ fun WaterIntakeCard(
         }
     }
 }
+@Composable
+private fun UnitSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    width: Dp = 46.dp,          // 窄長一點
+    height: Dp = 32.dp,         // 與設計相符的高度
+    thumbSize: Dp = 18.dp,      // 白色圓固定尺寸（不縮）
+    padding: Dp = 3.dp,         // 內距，讓 thumb 不會貼邊
+    checkedTrack: Color = Color(0xFF111114),   // 黑色
+    uncheckedTrack: Color = Color(0xFF9CA3AF), // 灰色
+    thumbColor: Color = Color.White
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val targetX = if (checked) (width - thumbSize - padding) else padding
+    val animatedX by animateDpAsState(targetValue = targetX, label = "unitSwitchThumbX")
+
+    Box(
+        modifier = modifier
+            .size(width, height)
+            .clip(RoundedCornerShape(height / 2))
+            .background(if (checked) checkedTrack else uncheckedTrack)
+            .toggleable(
+                value = checked,
+                onValueChange = onCheckedChange,
+                role = Role.Switch,
+                indication = null, // 不要 ripple
+                interactionSource = interaction
+            ),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        // 固定尺寸的白色圓形 thumb（不會縮小）
+        Box(
+            modifier = Modifier
+                .offset(x = animatedX)
+                .size(thumbSize)
+                .background(thumbColor, CircleShape)
+        )
+    }
+}
+
