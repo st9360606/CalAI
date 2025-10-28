@@ -146,7 +146,7 @@ fun FastingPlanCard(
                     )
                     Text(
                         text = startText ?: "—",
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF0F172A),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -164,7 +164,7 @@ fun FastingPlanCard(
                     )
                     Text(
                         text = endText ?: "—",
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF0F172A),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
