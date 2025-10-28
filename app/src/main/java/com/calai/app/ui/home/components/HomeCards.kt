@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -244,7 +245,9 @@ fun StepsWorkoutRowModern(
     ringStroke: Dp = 8.dp,    // 保持視覺厚度不變（要更輕可改 7.dp）
     // ★ 新增：Workout 黑圓＋大小可調
     plusButtonSize: Dp = 24.dp,  // 黑色圓的直徑（預設放大）
-    plusIconSize: Dp = 19.dp     // 中間白色「＋」圖示大小
+    plusIconSize: Dp = 19.dp,     // 中間白色「＋」圖示大小
+    // ★ 新增：點擊黑色 + 要做什麼
+    onAddWorkoutClick: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -281,13 +284,21 @@ fun StepsWorkoutRowModern(
             ringStroke = ringStroke,
             centerDisk = centerDisk,
             leftExtra = {
-                // ★ 用 requiredSize 強制正方形，避免被父層拉伸
+                // 黑色圓形＋ 可以點，但不出 ripple
+                val noRipple = remember { MutableInteractionSource() }
+
                 Surface(
-                    modifier = Modifier.requiredSize(plusButtonSize),
+                    modifier = Modifier
+                        .requiredSize(plusButtonSize)
+                        .clickable(
+                            interactionSource = noRipple,
+                            indication = null
+                        ) {
+                            onAddWorkoutClick()
+                        },
                     shape = CircleShape,
                     color = Color.Black
                 ) {
-                    // ★ 填滿 Surface（已是正方形），就不會變橢圓
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center

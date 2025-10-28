@@ -102,6 +102,7 @@ fun HomeScreen(
     onOpenTab: (HomeTab) -> Unit,
     onOpenFastingPlans: () -> Unit,
     fastingVm: FastingPlanViewModel,     // ← 有傳入
+    onOpenWorkoutTracker: () -> Unit, // ★★★ 新增：打開 Workout Tracker sheet
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -293,7 +294,11 @@ fun HomeScreen(
                 cardHeight = 112.dp,   // ← 你想要的高度
                 ringSize = 70.dp,      // ← 對應縮小的圓環
                 centerDisk = 30.dp,    // ← 對應縮小的中心灰圓
-                ringStroke = 6.dp      // ← 視覺厚度；想更輕可 7.dp
+                ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
+                onAddWorkoutClick = {
+                    // ← 這裡叫外層 callback
+                    onOpenWorkoutTracker()
+                }
             )
 
             // ===== Fourth block: 最近上傳
@@ -458,45 +463,6 @@ private fun TwoPagePager(
             horizontalArrangement = Arrangement.Center
         ) {
             PagerDots(count = pageCount, current = pagerState.currentPage)
-        }
-    }
-}
-
-@Composable
-private fun ExerciseDiaryCard(
-    s: HomeSummary,
-    cardHeight: Dp = PanelHeights.Metric
-) {
-    Card(
-        modifier = Modifier
-            .height(cardHeight)
-            .shadow(
-                CardStyles.Elevation,
-                CardStyles.Corner,
-                clip = false
-            ),
-        shape = CardStyles.Corner,
-        border = CardStyles.Border,
-        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(
-                "Workout diary",
-                style = MaterialTheme.typography.titleSmall,
-                color = Color(0xFF0F172A)
-            )
-            Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { (s.todayActivity.exerciseMinutes / 60f).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "${s.todayActivity.activeKcal.toInt()} kcal • ${s.todayActivity.exerciseMinutes} min",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF6B7280)
-            )
         }
     }
 }

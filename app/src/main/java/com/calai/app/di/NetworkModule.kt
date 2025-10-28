@@ -10,6 +10,7 @@ import com.calai.app.data.fasting.notifications.FastingAlarmScheduler
 import com.calai.app.data.fasting.repo.FastingRepository
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.users.api.UsersApi
+import com.calai.app.data.workout.api.WorkoutApi
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -107,10 +108,13 @@ object NetworkModule {
     fun provideFastingAlarmScheduler(@ApplicationContext ctx: Context): FastingAlarmScheduler =
         FastingAlarmScheduler(ctx)
 
-    // 在 NetworkModule.kt 裡加
-    @Provides
-    @Singleton
+    @Provides @Singleton
     fun provideWaterApi(@Named("apiRetrofit") retrofit: Retrofit): com.calai.app.data.water.api.WaterApi =
         retrofit.create(com.calai.app.data.water.api.WaterApi::class.java)
+
+    @Provides @Singleton
+    fun provideWorkoutApi(
+        @Named("apiRetrofit") retrofit: Retrofit
+    ): WorkoutApi = retrofit.create(WorkoutApi::class.java)
 
 }

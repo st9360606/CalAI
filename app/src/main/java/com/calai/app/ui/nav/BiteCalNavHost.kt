@@ -39,6 +39,8 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
+import com.calai.app.ui.home.ui.workout.WorkoutTrackerScreen
+import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
 import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
@@ -536,14 +538,17 @@ fun BiteCalNavHost(
 
         composable(Routes.HOME) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
             val vm: HomeViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+
             val fastingVm: FastingPlanViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+
             val waterVm: WaterViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
@@ -551,9 +556,11 @@ fun BiteCalNavHost(
 
             HomeScreen(
                 vm = vm,
-                waterVm = waterVm, // ★ 新增參數
+                waterVm = waterVm,
                 onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
                 onOpenCamera = { nav.navigate(Routes.CAMERA) },
+
+                // Bottom bar tab 切換維持原本的行為
                 onOpenTab = { tab ->
                     when (tab) {
                         HomeTab.Home -> { /* stay */ }
@@ -563,16 +570,39 @@ fun BiteCalNavHost(
                         HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
                     }
                 },
+
                 onOpenFastingPlans = { nav.navigate(Routes.FASTING) },
-                fastingVm = fastingVm
+                fastingVm = fastingVm,
+
+                // ★★★ 新增這段，解決「Workout 卡片內的 + 沒反應」
+                // 當使用者在 Home 畫面點右邊那張 Workout 卡片的黑色圓形「＋」，
+                // 我們就直接走到 Routes.WORKOUT（你的 Workout Tracker 畫面/BottomSheet）。
+                onOpenWorkoutTracker = {
+                    nav.navigate(Routes.WORKOUT)
+                }
             )
         }
 
         // 以下是個別頁的 composable 宣告
         composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
-        // 這裡原本 NOTE → 改成 WORKOUT
-        composable(Routes.WORKOUT) { SimplePlaceholder("Workout") }
-        composable(Routes.DAILY) { SimplePlaceholder("Daily") }
+
+        composable(Routes.WORKOUT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            // 用 HiltViewModelFactory 跟 backStackEntry 產生 WorkoutViewModel
+            val workoutVm: WorkoutViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            WorkoutTrackerScreen(
+                onClose = {
+                    // 對應畫面右上角 "✕" / Cancel → 回上一頁 (HOME)
+                    nav.popBackStack()
+                },
+                vm = workoutVm
+            )
+        }
         // 這裡原本 FASTING → 改成 DAILY
         composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
