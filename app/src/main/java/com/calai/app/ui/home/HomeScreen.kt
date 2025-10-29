@@ -92,17 +92,19 @@ import com.calai.app.ui.home.components.CardStyles
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
+import com.calai.app.ui.home.ui.workout.WorkoutTrackerSheet
+import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
     waterVm: WaterViewModel, // ★ 新增
+    workoutVm: WorkoutViewModel,          // ★ 新增
     onOpenAlarm: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
     onOpenFastingPlans: () -> Unit,
     fastingVm: FastingPlanViewModel,     // ← 有傳入
-    onOpenWorkoutTracker: () -> Unit, // ★★★ 新增：打開 Workout Tracker sheet
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -117,6 +119,9 @@ fun HomeScreen(
 
     // ⚠️ 關鍵：先拿 owner；可能為 null（某些 Nav/容器或 Preview）
     val registryOwner = LocalActivityResultRegistryOwner.current
+
+    // === 這裡是新增的狀態：控制 bottom sheet (Workout Tracker) 是否顯示 ===
+    var showWorkoutSheet by rememberSaveable { mutableStateOf(false) }
 
     // 只有在 owner 存在時才建立 launcher，否則用 null 表示不用它
     val requestNotifications = if (registryOwner != null) {
@@ -295,10 +300,7 @@ fun HomeScreen(
                 ringSize = 70.dp,      // ← 對應縮小的圓環
                 centerDisk = 30.dp,    // ← 對應縮小的中心灰圓
                 ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
-                onAddWorkoutClick = {
-                    // ← 這裡叫外層 callback
-                    onOpenWorkoutTracker()
-                }
+                onAddWorkoutClick = { showWorkoutSheet = true }
             )
 
             // ===== Fourth block: 最近上傳
@@ -317,6 +319,13 @@ fun HomeScreen(
 
             Spacer(Modifier.height(80.dp))
         }
+    }
+    // === 在 Home 畫面最外層掛上 Bottom Sheet。當 showWorkoutSheet=true 時彈出 ===
+    if (showWorkoutSheet) {
+        WorkoutTrackerSheet(
+            vm = workoutVm,
+            onDismiss = { showWorkoutSheet = false }
+        )
     }
 }
 

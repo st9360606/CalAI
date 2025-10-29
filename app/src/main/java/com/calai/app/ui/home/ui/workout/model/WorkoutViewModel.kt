@@ -1,12 +1,12 @@
 package com.calai.app.ui.home.ui.workout.model
 
-import com.calai.app.data.workout.store.WorkoutTodayStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.app.data.workout.api.EstimateResponse
 import com.calai.app.data.workout.api.PresetWorkoutDto
 import com.calai.app.data.workout.api.TodayWorkoutResponse
 import com.calai.app.data.workout.repo.WorkoutRepository
+import com.calai.app.data.workout.store.WorkoutTodayStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,12 +18,12 @@ data class WorkoutUiState(
     val presets: List<PresetWorkoutDto> = emptyList(),
     val today: TodayWorkoutResponse? = null,
 
-    // 狀態控制
+    // 狀態控制 (對應你的畫面流程)
     val estimating: Boolean = false,
-    val estimateResult: EstimateResponse? = null, // 用於顯示(6.jpg)
-    val showDurationPickerFor: PresetWorkoutDto? = null, // (2.jpg)
-    val toastMessage: String? = null,
-    val errorScanFailed: Boolean = false
+    val estimateResult: EstimateResponse? = null,        // (6.jpg) 確認卡路里頁
+    val showDurationPickerFor: PresetWorkoutDto? = null, // (2.jpg) 選分鐘底板
+    val toastMessage: String? = null,                    // (3.jpg) "Workout saved successfully!"
+    val errorScanFailed: Boolean = false                 // (7.jpg) Scan Failed
 )
 
 @HiltViewModel
@@ -35,12 +35,25 @@ class WorkoutViewModel @Inject constructor(
     private val _ui = MutableStateFlow(WorkoutUiState())
     val ui: StateFlow<WorkoutUiState> = _ui
 
+    /**
+     * 初始化 Workout Tracker bottom sheet:
+     * - 載入預設清單 (Walking / Running ...)
+     * - 載入今天已記錄的活動與總消耗 (給 Activity History / Home 卡片)
+     *
+     * 注意：repo.loadToday() 內部現在會自動帶 X-Client-Timezone
+     */
     fun init() {
         viewModelScope.launch {
             val presets = repo.loadPresets()
             val today = repo.loadToday()
-            _ui.value = _ui.value.copy(presets = presets, today = today)
-            todayStore.setFromServer(today) // push 給首頁
+
+            _ui.value = _ui.value.copy(
+                presets = presets,
+                today = today
+            )
+
+            // 同步到全域 store，讓 Home 畫面 ACTIVITY 卡片即時更新
+            todayStore.setFromServer(today)
         }
     }
 
@@ -48,7 +61,15 @@ class WorkoutViewModel @Inject constructor(
         _ui.value = _ui.value.copy(textInput = v)
     }
 
-    /** WS2：自由輸入 → /estimate → 顯示 Loading(5.jpg) → 結果 or ScanFailed(7.jpg) */
+    /**
+     * WS2：
+     * 使用者輸入「15 min walking」→ 按 Add Workout
+     * 我們先呼叫 /estimate
+     * UI 流程：
+     *   1. estimating = true → 顯示 (5.jpg) loading
+     *   2. 如果 status="ok" → estimateResult = resp → 彈出 (6.jpg)
+     *   3. 否則 → errorScanFailed = true → 彈出 (7.jpg)
+     */
     fun estimate() {
         val text = _ui.value.textInput.trim()
         if (text.isBlank()) return
@@ -61,6 +82,7 @@ class WorkoutViewModel @Inject constructor(
             )
 
             val resp = repo.estimateFreeText(text)
+
             if (resp.status == "ok") {
                 _ui.value = _ui.value.copy(
                     estimating = false,
@@ -75,17 +97,30 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    /** WS3：使用者在結果頁(6.jpg)按 Save → /log → Toast + 回主畫面 + 刷新首頁卡片 */
+    /**
+     * WS3：
+     * (6.jpg) 畫面按 Save
+     *
+     * 行為：
+     *   - 呼叫 /log，後端回傳 LogWorkoutResponse { savedSession, today }
+     *   - 我們不用再手動 call /today()，因為 today 已經是「依照 X-Client-Timezone 切出的當地今天」
+     *   - 更新 todayStore → Home ACTIVITY 卡片的 kcal 立刻刷新
+     *   - 清空 textInput
+     *   - 顯示 "Workout saved successfully!"
+     */
     fun confirmSaveFromEstimate() {
         val r = _ui.value.estimateResult ?: return
         val activityId = r.activityId ?: return
         val minutes = r.minutes ?: return
 
         viewModelScope.launch {
-            val logResp = repo.saveWorkout(activityId, minutes, r.kcal)
+            val logResp = repo.saveWorkout(
+                activityId = activityId,
+                minutes = minutes,
+                kcal = r.kcal
+            )
 
-            // 更新今日資料（Activity History + 首頁卡片）
-            val today = repo.loadToday()
+            val today = logResp.today
             todayStore.setFromServer(today)
 
             _ui.value = _ui.value.copy(
@@ -97,21 +132,34 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    /** WS4：點預設清單的 + → (2.jpg) 選分鐘 → Save */
+    /**
+     * WS4：
+     * 預設清單 (Walking / Running...) 右邊的「＋」被點到
+     * → 顯示 (2.jpg) 的時間選擇底板 (DurationPickerSheet)
+     */
     fun openDurationPicker(preset: PresetWorkoutDto) {
         _ui.value = _ui.value.copy(showDurationPickerFor = preset)
     }
 
+    /**
+     * WS4：
+     * 使用者在 DurationPickerSheet (2.jpg) 選好分鐘數按 Save
+     *
+     * 行為：
+     *   - 呼叫 /log(activityId=那個 preset, minutes=使用者選的分鐘)
+     *   - 同樣直接拿回 logResp.today 做 UI 更新，不再額外呼叫 /today()
+     */
     fun savePresetDuration(minutes: Int) {
         val preset = _ui.value.showDurationPickerFor ?: return
+
         viewModelScope.launch {
             val logResp = repo.saveWorkout(
                 activityId = preset.activityId,
                 minutes = minutes,
-                kcal = null
+                kcal = null // 後端會自己算 kcal
             )
 
-            val today = repo.loadToday()
+            val today = logResp.today
             todayStore.setFromServer(today)
 
             _ui.value = _ui.value.copy(
@@ -122,10 +170,18 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    /** 關掉上方白色圓角 Toast (3.jpg 風格) */
     fun clearToast() {
         _ui.value = _ui.value.copy(toastMessage = null)
     }
 
+    /**
+     * 關閉各種 Dialog/Sheet：
+     * - Loading(5.jpg)
+     * - Estimate 結果(6.jpg)
+     * - Scan Failed(7.jpg)
+     * - Duration picker(2.jpg)
+     */
     fun dismissDialogs() {
         _ui.value = _ui.value.copy(
             estimating = false,
@@ -135,4 +191,3 @@ class WorkoutViewModel @Inject constructor(
         )
     }
 }
-

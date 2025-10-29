@@ -39,7 +39,6 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
-import com.calai.app.ui.home.ui.workout.WorkoutTrackerScreen
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
@@ -554,9 +553,16 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
+            // ★ 新增：Workout 專用 VM，跟 Home 同一個 backStackEntry，讓狀態共享當天數據
+            val workoutVm: WorkoutViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
             HomeScreen(
                 vm = vm,
                 waterVm = waterVm,
+                workoutVm = workoutVm,
                 onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
                 onOpenCamera = { nav.navigate(Routes.CAMERA) },
 
@@ -565,7 +571,7 @@ fun BiteCalNavHost(
                     when (tab) {
                         HomeTab.Home -> { /* stay */ }
                         HomeTab.Progress -> nav.navigate(Routes.PROGRESS)
-                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT)
+                        HomeTab.Workout -> { /* 不切頁，不 nav。因為 Workout Sheet 在 Home 內彈出 */ }
                         HomeTab.Daily -> nav.navigate(Routes.DAILY)
                         HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
                     }
@@ -574,36 +580,11 @@ fun BiteCalNavHost(
                 onOpenFastingPlans = { nav.navigate(Routes.FASTING) },
                 fastingVm = fastingVm,
 
-                // ★★★ 新增這段，解決「Workout 卡片內的 + 沒反應」
-                // 當使用者在 Home 畫面點右邊那張 Workout 卡片的黑色圓形「＋」，
-                // 我們就直接走到 Routes.WORKOUT（你的 Workout Tracker 畫面/BottomSheet）。
-                onOpenWorkoutTracker = {
-                    nav.navigate(Routes.WORKOUT)
-                }
             )
         }
 
-        // 以下是個別頁的 composable 宣告
         composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
 
-        composable(Routes.WORKOUT) { backStackEntry ->
-            val activity = (LocalContext.current.findActivity() ?: hostActivity)
-
-            // 用 HiltViewModelFactory 跟 backStackEntry 產生 WorkoutViewModel
-            val workoutVm: WorkoutViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
-            )
-
-            WorkoutTrackerScreen(
-                onClose = {
-                    // 對應畫面右上角 "✕" / Cancel → 回上一頁 (HOME)
-                    nav.popBackStack()
-                },
-                vm = workoutVm
-            )
-        }
-        // 這裡原本 FASTING → 改成 DAILY
         composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 

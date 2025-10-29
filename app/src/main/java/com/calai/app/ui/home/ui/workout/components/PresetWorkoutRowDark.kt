@@ -2,11 +2,15 @@ package com.calai.app.ui.home.ui.workout.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,46 +19,89 @@ import androidx.compose.ui.unit.dp
 import com.calai.app.data.workout.api.EstimateResponse
 import com.calai.app.data.workout.api.PresetWorkoutDto
 
+/**
+ * 單一預設運動列 (像 1.jpg 的 Walking / Running)
+ *
+ * - 左：綠色圓圈 + 小圖示 (目前先放首字母，你之後可以改成真的走路/跑步 icon)
+ * - 中：白色大字 (活動名稱) + 灰色小字 ("140 kcal per 30 min")
+ * - 右：深灰圓形 + 白色「＋」
+ */
 @Composable
-fun PresetWorkoutRow(
+fun PresetWorkoutRowDark(
     preset: PresetWorkoutDto,
     onClickPlus: () -> Unit
 ) {
+    val workoutName = preset.name
+    // 這個欄位名稱依你的 DTO，假設是 kcalPer30Min
+    val kcalText = "${preset.kcalPer30Min} kcal per 30 min"
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        Column {
-            Text(
-                text = preset.name,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    color = Color(0xFF111114),
-                    fontWeight = FontWeight.SemiBold
+        // 綠色圓圈 (左側圖示)
+        Surface(
+            modifier = Modifier.size(44.dp),
+            shape = CircleShape,
+            color = Color(0xFF65A30D) // 綠色，接近螢幕截圖
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                // 先用活動名稱第一個字母當 placeholder
+                Text(
+                    text = workoutName.trim().take(1).uppercase(),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
                 )
+            }
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        // 中間文字區
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = workoutName,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = Color.White
             )
             Text(
-                text = "${preset.kcalPer30Min} kcal per 30 min",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color(0xFF6B7280)
-                )
+                text = kcalText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF9CA3AF)
             )
         }
 
-        // 右側圓形 + 處理 (和 1.jpg 相同概念)
+        // 右邊深灰圓形 + 白色「＋」
         Surface(
             modifier = Modifier
-                .size(32.dp)
-                .clickable { onClickPlus() },
+                .size(36.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onClickPlus() },
             shape = CircleShape,
-            color = Color(0xFFE5E7EB),
-            shadowElevation = 0.dp
+            color = Color(0xFF4B5563)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text("+", color = Color(0xFF111114), fontWeight = FontWeight.Bold)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "add preset workout",
+                    tint = Color.White
+                )
             }
         }
     }

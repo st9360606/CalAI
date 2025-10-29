@@ -3,6 +3,7 @@ package com.calai.app.data.workout.api
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 /**
@@ -11,30 +12,35 @@ import retrofit2.http.POST
 interface WorkoutApi {
 
     @POST("/api/v1/workouts/estimate")
-    suspend fun estimate(@Body body: EstimateRequest): EstimateResponse
+    suspend fun estimate(
+        @Body body: EstimateRequest
+    ): EstimateResponse
 
     @POST("/api/v1/workouts/log")
-    suspend fun log(@Body body: LogWorkoutRequest): LogWorkoutResponse
+    suspend fun log(
+        @Body body: LogWorkoutRequest,
+        @Header("X-Client-Timezone") tz: String
+    ): LogWorkoutResponse
 
     @GET("/api/v1/workouts/presets")
     suspend fun presets(): PresetListResponse
 
     @GET("/api/v1/workouts/today")
-    suspend fun today(): TodayWorkoutResponse
+    suspend fun today(
+        @Header("X-Client-Timezone") tz: String
+    ): TodayWorkoutResponse
 }
 
 /** 使用者自由輸入的句子 */
 @Serializable
-data class EstimateRequest(
-    val text: String // ex: "15 min Nằm đẩy tạ"
-)
+data class EstimateRequest(val text: String)
 
 /** 後端估算結果 */
 @Serializable
 data class EstimateResponse(
-    val status: String,           // "ok" | "not_found"
-    val activityId: Long? = null, // 後端識別到的標準運動 ID
-    val activityDisplay: String? = null, // "Nằm đẩy tạ"
+    val status: String,
+    val activityId: Long? = null,
+    val activityDisplay: String? = null,
     val minutes: Int? = null,
     val kcal: Int? = null
 )
@@ -42,16 +48,16 @@ data class EstimateResponse(
 /** 寫入實際運動紀錄。 */
 @Serializable
 data class LogWorkoutRequest(
-    val activityId: Long, // standard workout id (dictionary_id)
+    val activityId: Long,
     val minutes: Int,
-    val kcal: Int? = null // optional；後端可重算，前端只是給參考
+    val kcal: Int? = null
 )
 
 /** 建檔後回傳本次 session & 今日累積 */
 @Serializable
 data class LogWorkoutResponse(
     val savedSession: WorkoutSessionDto,
-    val totalKcalToday: Int
+    val today: TodayWorkoutResponse
 )
 
 /** 給列表下半部（Walking / Running ...） */
@@ -63,9 +69,9 @@ data class PresetListResponse(
 @Serializable
 data class PresetWorkoutDto(
     val activityId: Long,
-    val name: String,            // "Walking"
-    val kcalPer30Min: Int,       // 140
-    val iconKey: String          // "walk"
+    val name: String,
+    val kcalPer30Min: Int,
+    val iconKey: String
 )
 
 /** 今日紀錄 + 總和，for History(4.jpg) & Home card */
@@ -81,5 +87,5 @@ data class WorkoutSessionDto(
     val name: String,
     val minutes: Int,
     val kcal: Int,
-    val timeLabel: String        // "12:05 PM"
+    val timeLabel: String
 )
