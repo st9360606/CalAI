@@ -284,33 +284,12 @@ fun StepsWorkoutRowModern(
             ringStroke = ringStroke,
             centerDisk = centerDisk,
             leftExtra = {
-                // 黑色圓形＋ 可以點，但不出 ripple
-                val noRipple = remember { MutableInteractionSource() }
-
-                Surface(
-                    modifier = Modifier
-                        .requiredSize(plusButtonSize)
-                        .clickable(
-                            interactionSource = noRipple,
-                            indication = null
-                        ) {
-                            onAddWorkoutClick()
-                        },
-                    shape = CircleShape,
-                    color = Color.Black
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(plusIconSize)
-                        )
-                    }
-                }
+                // ✅ 新版：使用共用按鈕 + 灰色閃光
+                WorkoutAddButton(
+                    onClick = onAddWorkoutClick,
+                    outerSizeDp = 36.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
+                    innerSizeDp = 26.dp   // 黑底圓按鈕大小 (和 Water 卡一致)
+                )
             }
         )
     }
@@ -334,15 +313,19 @@ fun ActivityStatCardSplit(
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
     drawRing: Boolean = true,
-    // ↓↓↓ 新增：標題前綴（例如小三角）與間距
+
+    // 小三角 prefix（可選）
     titlePrefix: (@Composable () -> Unit)? = null,
     titlePrefixGap: Dp = 4.dp,
-    // 文字樣式/間距（先前就有）
+
+    // 文字樣式/間距
     titleTextStyle: TextStyle? = null,
     primaryTextStyle: TextStyle? = null,
     secondaryTextStyle: TextStyle? = null,
     gapTitleToPrimary: Dp = 4.dp,
     gapPrimaryToSecondary: Dp = 2.dp,
+
+    // ⭐ 左下角額外內容（Workout 的「+」按鈕）
     leftExtra: (@Composable () -> Unit)? = null
 ) {
     val titleStyle = titleTextStyle ?: MaterialTheme.typography.bodySmall
@@ -366,59 +349,82 @@ fun ActivityStatCardSplit(
             horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
+            // ========= 左半：用 Box 疊兩層 =========
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Top
+                    .fillMaxHeight()
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (titlePrefix != null) {
-                        titlePrefix()
-                        Spacer(Modifier.width(titlePrefixGap))
+                // 文字群組 (置頂)
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (titlePrefix != null) {
+                            titlePrefix()
+                            Spacer(Modifier.width(titlePrefixGap))
+                        }
+                        Text(
+                            text = title,
+                            style = titleStyle,
+                            color = Color(0xFF6B7280),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
+
+                    Spacer(Modifier.height(gapTitleToPrimary))
+
                     Text(
-                        text = title,
-                        style = titleStyle,
-                        color = Color(0xFF6B7280),
+                        text = primary,
+                        style = primaryStyle,
+                        color = Color(0xFF0F172A),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
+
+                    Spacer(Modifier.height(gapPrimaryToSecondary))
+
+                    if (!secondary.isNullOrBlank()) {
+                        Text(
+                            text = secondary,
+                            style = secondaryStyle,
+                            color = Color(0xFF6B7280),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        // 保留占位高度，避免版面大跳
+                        Spacer(Modifier.height(18.dp))
+                    }
                 }
 
-                Spacer(Modifier.height(gapTitleToPrimary))
-
-                Text(
-                    text = primary,
-                    style = primaryStyle,
-                    color = Color(0xFF0F172A),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(Modifier.height(gapPrimaryToSecondary))
-                if (!secondary.isNullOrBlank()) {
-                    Text(
-                        text = secondary,
-                        style = secondaryStyle,
-                        color = Color(0xFF6B7280),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                } else {
-                    Spacer(Modifier.height(18.dp))
-                }
-                leftExtra?.let {
-                    Spacer(Modifier.height(8.dp))
-                    it()
+                // ⬇⬇⬇ Workout 的 + 按鈕固定在左下角，不再被 Column 擠壓
+                leftExtra?.let { extraContent ->
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                    ) {
+                        extraContent()
+                    }
                 }
             }
 
-            // 右側圓環（略，與你現有相同）
+            // ========= 右半：圓環進度 =========
             Box(
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                Box(modifier = Modifier.size(ringSize), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.size(ringSize),
+                    contentAlignment = Alignment.Center
+                ) {
                     if (drawRing) {
                         GaugeRing(
                             progress = progress,
@@ -429,7 +435,11 @@ fun ActivityStatCardSplit(
                             drawTopTick = true,
                             tickColor = ringColor
                         )
-                        Surface(color = RingColors.CenterFill, shape = CircleShape, modifier = Modifier.size(centerDisk)) {}
+                        Surface(
+                            color = RingColors.CenterFill,
+                            shape = CircleShape,
+                            modifier = Modifier.size(centerDisk)
+                        ) {}
                     } else {
                         Spacer(Modifier.size(ringSize))
                     }
@@ -476,9 +486,9 @@ fun WeightFastingRowModern(
             topBarTextStyle = commonTopBarTextStyle,
             // ★ 放大到 19sp，並往上移 4dp，減少上方空隙到 4dp
             primaryFontSize = 19.sp,
-            primaryYOffset = (-4).dp,
+            primaryYOffset = (-6).dp,
             primaryTopSpacing = 4.dp,
-            secondaryYOffset = (-2).dp,        // ★ secondary 往上
+            secondaryYOffset = (-6).dp,        // ★ secondary 往上
             gapPrimaryToSecondary = 0.dp       // 可視覺需要把間距縮小
         )
 
