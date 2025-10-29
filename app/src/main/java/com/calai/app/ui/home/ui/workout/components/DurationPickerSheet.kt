@@ -10,6 +10,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,14 @@ fun DurationPickerSheet(
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val maxSheetHeight = (screenHeightDp * 0.75f).dp
 
+    // 這個 state 回到「預設」的行為：
+    // - 往下拉 sheet -> 關
+    // - 點外面灰色背景 -> 關
+    // - 按 Cancel -> 我們自己呼叫 onCancel()
+    val bottomSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
     // 初始值：00 hr 30 min
     var hours by remember { mutableStateOf(0) }
     var minutes by remember { mutableStateOf(30) }
@@ -42,7 +51,11 @@ fun DurationPickerSheet(
     val scrollState = rememberScrollState()
 
     ModalBottomSheet(
-        onDismissRequest = onCancel,
+        sheetState = bottomSheetState,
+        onDismissRequest = {
+            // 系統偵測到「關」的動作（往下拉、點外面）時會呼叫這裡
+            onCancel()
+        },
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         containerColor = Color.White,           // 白底
         tonalElevation = 0.dp,
@@ -65,13 +78,13 @@ fun DurationPickerSheet(
                     .padding(
                         start = 24.dp,
                         end = 24.dp,
-                        top = 0.dp,
-                        bottom = 168.dp // ⬅ 從 140.dp 增加，因為下面我們會墊高按鈕
+                        top = 0.dp,        // 讓 presetName 靠近灰色手把
+                        bottom = 168.dp    // 預留底部按鈕區高度，避免被覆蓋
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // 標題 Walking
+                // 標題 (Walking)
                 Text(
                     text = presetName,
                     color = Color(0xFF111114),      // 幾乎黑
@@ -79,11 +92,11 @@ fun DurationPickerSheet(
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(10.dp))
 
                 // 副標
                 Text(
-                    text = "Select the duration to log this activity",
+                    text = "Add this workout time to your activity log",
                     color = Color(0xFF6B7280),      // 灰
                     fontSize = 18.sp
                 )
@@ -112,7 +125,7 @@ fun DurationPickerSheet(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 小時數
+                        // 小時數字輪
                         ScrollingNumberWheel(
                             value = hours,
                             range = 0..12, // 你目前的上限
@@ -122,7 +135,7 @@ fun DurationPickerSheet(
 
                         Spacer(Modifier.width(8.dp))
 
-                        // hr 單位
+                        // "hr" 固定
                         Text(
                             text = "hr",
                             color = Color(0xFF6B7280),
@@ -132,7 +145,7 @@ fun DurationPickerSheet(
 
                         Spacer(Modifier.width(24.dp))
 
-                        // 分鐘數
+                        // 分鐘數字輪
                         ScrollingNumberWheel(
                             value = minutes,
                             range = 0..59,
@@ -142,7 +155,7 @@ fun DurationPickerSheet(
 
                         Spacer(Modifier.width(8.dp))
 
-                        // min 單位
+                        // "min" 固定
                         Text(
                             text = "min",
                             color = Color(0xFF6B7280),
@@ -152,7 +165,7 @@ fun DurationPickerSheet(
                     }
                 }
 
-                // 你想保留的額外空白區（讓畫面跟你截圖一樣有呼吸感）
+                // 額外空白讓版面有呼吸感
                 Spacer(Modifier.height(42.dp))
             }
 
@@ -168,7 +181,7 @@ fun DurationPickerSheet(
                         start = 24.dp,
                         end = 24.dp,
                         top = 16.dp,
-                        bottom = 32.dp    // ⬅ 從原本 vertical=16，改成多留 32dp 底部空白
+                        bottom = 32.dp    // 往上浮一點點
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
