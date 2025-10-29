@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.workout
+package com.calai.app.ui.home.ui.workout.sheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,9 +9,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,242 +23,175 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import com.calai.app.data.workout.api.PresetWorkoutDto
-import androidx.compose.material3.ExperimentalMaterial3Api
-import com.calai.app.ui.home.ui.workout.components.DurationPickerSheet
-import com.calai.app.ui.home.ui.workout.components.PresetWorkoutRowDark
-import com.calai.app.ui.home.ui.workout.components.WorkoutConfirmDialog
-import com.calai.app.ui.home.ui.workout.components.WorkoutEstimatingDialog
-import com.calai.app.ui.home.ui.workout.components.WorkoutScanFailedDialog
-import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
+import com.calai.app.ui.home.ui.workout.model.WorkoutUiState
+import kotlinx.coroutines.delay
 
-/**
- * Workout Tracker bottom sheet
- * - 如 1.jpg：可以上彈/下滑關閉
- * - 標題置中，往下一點，右上圓形深灰 X
- * - 下方有自由輸入 + Add Workout
- * - "or select from the list" + 預設活動列表 (Walking...)
- * - 點每列右邊的「＋」→ 彈出 DurationPickerSheet (2.jpg)
- * - Save → vm.savePresetDuration(minutes) → 寫 DB + 更新今日鍛鍊歷史
- */
+// 一些固定色
+private val Black = Color(0xFF111114)
+private val LightGrayBg = Color(0xFFF3F4F6)
+private val Gray300 = Color(0xFFE5E7EB)
+private val Gray500 = Color(0xFF6B7280)
+private val Gray600 = Color(0xFF4B5563)
+private val DividerGray = Color(0xFFD1D5DB)
+private val TextPrimary = Color(0xFF111114)
+private val TextSecondary = Color(0xFF4B5563)
+private val HandleGray = Color(0xFF9CA3AF)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutTrackerSheet(
-    vm: WorkoutViewModel,
-    onDismiss: () -> Unit
+    uiState: WorkoutUiState,
+    onClose: () -> Unit,
+    onTextChanged: (String) -> Unit,
+    onAddWorkout: () -> Unit,
+    onClickPresetPlus: (PresetWorkoutDto) -> Unit,
+    onToastCleared: () -> Unit
 ) {
-    val ui by vm.ui.collectAsState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // BottomSheet 狀態：支援往下 swipe 關閉
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-
-    // 初始化預設活動、今日資料
-    LaunchedEffect(Unit) {
-        vm.init()
-    }
+    // 提高整個 bottom sheet 的高度 (~93% 螢幕高)
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val maxSheetHeight = (screenHeightDp * 0.93f).dp
 
     ModalBottomSheet(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = { onClose() },
         sheetState = sheetState,
-        // 我們自己畫 handle，不用預設
-        dragHandle = {},
+        dragHandle = { /* 我們自己畫 handle */ },
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = Color(0xFF1A1A1A), // 深色底，貼近 1.jpg
-        tonalElevation = 0.dp
+        containerColor = Color.White,
+        tonalElevation = 0.dp,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
     ) {
-        // 用 Box 包住 LazyColumn，這樣可以把 toast 疊在上面 (不會影響 scroll)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding() // 避免底部手勢條遮住
+                .heightIn(max = maxSheetHeight)
+                .navigationBarsPadding()
         ) {
-
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 contentPadding = PaddingValues(bottom = 200.dp)
             ) {
-
-                // ===== Header + 輸入區 =====
+                // ===== Header / 輸入框 / Add Workout / 分隔線 =====
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp) // "往下一點"
-                    ) {
-                        // 中央區塊：handle + title + desc
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // 上方小手把
-                            Box(
-                                modifier = Modifier
-                                    .width(40.dp)
-                                    .height(4.dp)
-                                    .background(
-                                        color = Color(0xFF9CA3AF).copy(alpha = 0.5f),
-                                        shape = RoundedCornerShape(2.dp)
-                                    )
-                            )
+                    HeaderSection(
+                        title = "Workout Tracker",
+                        subtitle = "Describe the Type of Exercise and the duration",
+                        onClose = onClose
+                    )
 
-                            Spacer(Modifier.height(12.dp))
-
-                            Text(
-                                text = "Workout Tracker",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = Color.White,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(Modifier.height(8.dp))
-
-                            Text(
-                                text = "Describe the Type of Exercise and the duration",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF9CA3AF),
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(Modifier.height(16.dp))
-                        }
-
-                        // 右上角 X：深灰圓底 + 白色 X
-                        Surface(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(top = 32.dp)
-                                .size(36.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) { onDismiss() },
-                            shape = CircleShape,
-                            color = Color(0xFF4B5563)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = "close",
-                                    tint = Color.White
-                                )
-                            }
-                        }
-                    }
-
-                    // ==== 自由輸入框 (多國語言、使用者自己打 "15 min walking") ====
+                    // 自由輸入框
                     OutlinedTextField(
-                        value = ui.textInput,
-                        onValueChange = { vm.onTextChanged(it) },
+                        value = uiState.textInput,
+                        onValueChange = { onTextChanged(it) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 120.dp),
                         placeholder = {
                             Text(
                                 text = "Examples: 45 min cycling",
-                                color = Color(0xFF9CA3AF)
+                                color = Gray500
                             )
                         },
                         textStyle = MaterialTheme.typography.bodyLarge.copy(
-                            color = Color.White
+                            color = TextPrimary
                         ),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF4B5563),
-                            unfocusedBorderColor = Color(0xFF4B5563),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = Color.White,
-                            focusedContainerColor = Color(0xFF2A2A2A),
-                            unfocusedContainerColor = Color(0xFF2A2A2A),
-                            focusedPlaceholderColor = Color(0xFF9CA3AF),
-                            unfocusedPlaceholderColor = Color(0xFF9CA3AF)
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            cursorColor = TextPrimary,
+                            focusedContainerColor = LightGrayBg,
+                            unfocusedContainerColor = LightGrayBg,
+                            disabledContainerColor = LightGrayBg,
+                            focusedBorderColor = Gray300,
+                            unfocusedBorderColor = Gray300,
+                            focusedPlaceholderColor = Gray500,
+                            unfocusedPlaceholderColor = Gray500
                         )
                     )
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(20.dp))
 
-                    // ==== Add Workout 按鈕 -> 走估算流程 (WS2) ====
+                    // Add Workout 按鈕
+                    // 要求：
+                    // - 底是黑色
+                    // - 文字永遠白色（包含 disabled 狀態）
+                    val isEnabled = uiState.textInput.isNotBlank()
                     Button(
-                        onClick = { vm.estimate() },
-                        enabled = ui.textInput.isNotBlank(),
+                        onClick = { onAddWorkout() },
+                        enabled = isEnabled,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF2A2A2A),
-                            contentColor = Color(0xFF9CA3AF),
-                            disabledContainerColor = Color(0xFF2A2A2A),
-                            disabledContentColor = Color(0xFF4B5563)
+                            containerColor = Black,
+                            contentColor = Color.White,
+                            disabledContainerColor = Black,   // 就算 disabled 也保持黑底
+                            disabledContentColor = Color.White // ← 這裡改成白色
                         )
                     ) {
-                        Text("Add Workout")
+                        Text("Add Workout", color = Color.White)
                     }
 
                     Spacer(Modifier.height(24.dp))
 
-                    // ==== "or select from the list" 分隔線 ====
+                    // "or select from the list"
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = Color(0xFF4B5563)
+                            color = DividerGray
                         )
                         Text(
                             text = "or select from the list",
                             modifier = Modifier.padding(horizontal = 8.dp),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF9CA3AF)
+                            color = Gray600
                         )
                         HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = Color(0xFF4B5563)
+                            color = DividerGray
                         )
                     }
 
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // ===== 預設運動清單 (Walking / Running / ...) =====
-                items(ui.presets) { preset: PresetWorkoutDto ->
-                    PresetWorkoutRowDark(
+                // ====== 預設活動清單 (Walking / Running / ...) ======
+                items(uiState.presets) { preset ->
+                    PresetWorkoutRowLight(
                         preset = preset,
-                        onClickPlus = {
-                            // WS4：跳出 (2.jpg) 的時間選擇底板
-                            vm.openDurationPicker(preset)
-                        }
+                        onClickPlus = { onClickPresetPlus(preset) }
                     )
-                    HorizontalDivider(color = Color(0xFF4B5563))
+                    HorizontalDivider(color = Gray300)
                 }
             }
 
-            // === 儲存完的 Toast (成功訊息) ===
-            ui.toastMessage?.let { msg ->
+            // ===== 儲存成功的 Toast =====
+            uiState.toastMessage?.let { msg ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 24.dp)
-                        .align(Alignment.TopCenter)
+                        .align(Alignment.TopCenter),
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     Surface(
                         shape = RoundedCornerShape(24.dp),
@@ -265,8 +200,9 @@ fun WorkoutTrackerSheet(
                     ) {
                         Text(
                             text = msg,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                            color = Color(0xFF111114),
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            color = TextPrimary,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -274,47 +210,168 @@ fun WorkoutTrackerSheet(
 
                 LaunchedEffect(msg) {
                     delay(2000)
-                    vm.clearToast()
+                    onToastCleared()
                 }
             }
         }
     }
+}
 
-    // === 以下是那些彈出式流程畫面 ===
-    // 1. 估算中動畫 (5.jpg)
-    if (ui.estimating) {
-        WorkoutEstimatingDialog(
-            onDismiss = { /* loading 時不允許手動關 */ }
+/**
+ * Header:
+ * - 上方手把
+ * - 中間置中的 "Workout Tracker"
+ * - 右上角關閉 X（黑圓底 + 白 X），跟 title 同一列
+ * - Subtitle 在下面一行
+ */
+@Composable
+private fun HeaderSection(
+    title: String,
+    subtitle: String,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+    ) {
+        // 手把
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(40.dp)
+                .height(4.dp)
+                .background(
+                    color = HandleGray.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(2.dp)
+                )
         )
-    }
 
-    // 2. 估算成功後顯示卡路里 (6.jpg)
-    ui.estimateResult?.let { r ->
-        WorkoutConfirmDialog(
-            result = r,
-            onSave = { vm.confirmSaveFromEstimate() }, // WS3: /log -> 存到DB -> 更新今天
-            onCancel = { vm.dismissDialogs() }
-        )
-    }
+        Spacer(Modifier.height(12.dp))
 
-    // 3. 找不到/無法解析 → Scan Failed (7.jpg)
-    if (ui.errorScanFailed) {
-        WorkoutScanFailedDialog(
-            onTryAgain = { vm.dismissDialogs() },
-            onCancel = { vm.dismissDialogs() }
-        )
-    }
+        // title + X 同一列
+        Box(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = title,
+                modifier = Modifier.align(Alignment.Center),
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = TextPrimary,
+                textAlign = TextAlign.Center
+            )
 
-    // 4. 按預設活動右邊的 + → 時間選擇底板 (2.jpg)
-    ui.showDurationPickerFor?.let { preset ->
-        DurationPickerSheet(
-            presetName = preset.name,
-            onSave = { minutes ->
-                // WS4: Save -> DB -> 寫入今日鍛鍊歷史
-                vm.savePresetDuration(minutes)
-            },
-            onCancel = { vm.dismissDialogs() }
+            // 關閉按鈕：黑圓底 + 白色 X
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Black)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onClose() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "close",
+                    tint = Color.White
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Gray600,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
+
+        Spacer(Modifier.height(16.dp))
     }
 }
 
+/**
+ * 一行預設運動（Walking / Running / ...）
+ *
+ * - 左邊圓鈕：現在改成「黑色圓底」+ 白字母
+ * - 中間：名稱 + "xxx kcal per 30 min"
+ * - 右邊圓鈕：黑底 + 白色＋號（已是黑底）
+ */
+@Composable
+private fun PresetWorkoutRowLight(
+    preset: PresetWorkoutDto,
+    onClickPlus: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 左邊圓鈕：黑圓底（更新需求 #1）
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF84CC16)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = preset.name.take(1).uppercase(),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = preset.name,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = TextPrimary
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "${preset.kcalPer30Min} kcal per 30 min",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        // 右邊＋圓鈕：黑圓底（之前就已經做成黑底＋縮小 32dp）
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(Black)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onClickPlus() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "add preset",
+                tint = Color.White
+            )
+        }
+    }
+}

@@ -92,7 +92,7 @@ import com.calai.app.ui.home.components.CardStyles
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
-import com.calai.app.ui.home.ui.workout.WorkoutTrackerSheet
+import com.calai.app.ui.home.ui.workout.WorkoutTrackerHost
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 
 @Composable
@@ -104,6 +104,7 @@ fun HomeScreen(
     onOpenCamera: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
     onOpenFastingPlans: () -> Unit,
+    onOpenActivityHistory: () -> Unit,
     fastingVm: FastingPlanViewModel,     // ← 有傳入
 ) {
     val ui by vm.ui.collectAsState()
@@ -210,8 +211,16 @@ fun HomeScreen(
         bottomBar = {
             BottomBar(
                 current = HomeTab.Home,
-                onOpenTab = onOpenTab
+                onOpenTab = { tab ->
+                    when (tab) {
+                        HomeTab.Workout -> {
+                            showWorkoutSheet = true
+                        }
+                        else -> onOpenTab(tab)
+                    }
+                }
             )
+
         }
     ) { inner ->
         val s = ui.summary ?: return@Scaffold
@@ -322,9 +331,12 @@ fun HomeScreen(
     }
     // === 在 Home 畫面最外層掛上 Bottom Sheet。當 showWorkoutSheet=true 時彈出 ===
     if (showWorkoutSheet) {
-        WorkoutTrackerSheet(
+        WorkoutTrackerHost(
             vm = workoutVm,
-            onDismiss = { showWorkoutSheet = false }
+            onClose = {
+                showWorkoutSheet = false
+                workoutVm.dismissDialogs() // 把 picker / dialogs 關掉，回到純 Home
+            }
         )
     }
 }

@@ -39,6 +39,7 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
+import com.calai.app.ui.home.ui.workout.ActivityHistoryScreen
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
@@ -79,6 +80,8 @@ object Routes {
     const val PERSONAL = "personal"
     const val CAMERA = "camera"
     const val REMINDERS = "reminders"
+    const val WORKOUT_HISTORY = "workout_history"
+
 }
 
 private tailrec fun Context.findActivity(): Activity? =
@@ -578,6 +581,10 @@ fun BiteCalNavHost(
                 },
 
                 onOpenFastingPlans = { nav.navigate(Routes.FASTING) },
+                // 這個用來打開「完整歷史列表」ActivityHistoryScreen (4.jpg)
+                onOpenActivityHistory = {
+                    nav.navigate(Routes.WORKOUT_HISTORY)
+                },
                 fastingVm = fastingVm,
 
             )
@@ -597,6 +604,26 @@ fun BiteCalNavHost(
 
             FastingPlansScreen(
                 vm = fastingVm,
+                onBack = { nav.popBackStack() }
+            )
+        }
+
+        composable(Routes.WORKOUT_HISTORY) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            // ★ 用 HOME 的 backStackEntry 來取得同一個 WorkoutViewModel
+            //   這樣 ActivityHistoryScreen 看到的是同一份 ui.today.sessions
+            val homeBackStackEntry = remember(backStackEntry) {
+                nav.getBackStackEntry(Routes.HOME)
+            }
+
+            val workoutVm: WorkoutViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            ActivityHistoryScreen(
+                vm = workoutVm,
                 onBack = { nav.popBackStack() }
             )
         }
