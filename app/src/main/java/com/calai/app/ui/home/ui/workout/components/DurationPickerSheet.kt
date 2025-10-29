@@ -1,50 +1,26 @@
-package com.calai.app.ui.home.ui.workout.sheet
+package com.calai.app.ui.home.ui.workout.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.calai.app.ui.home.components.ScrollingNumberWheel
 
-/**
- * 第二層的「選擇分鐘數」bottom sheet（對應 2.jpg）
- *
- * - 深色底
- * - 上面顯示活動名稱 (Walking)
- * - 中間用 +/- stepper 來挑 minutes (每次加減 5 分鐘)
- * - Save -> onSaveMinutes(totalMinutes)
- * - Cancel -> onCancel()
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DurationPickerSheet(
@@ -52,148 +28,195 @@ fun DurationPickerSheet(
     onSaveMinutes: (Int) -> Unit,
     onCancel: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val maxSheetHeight = (screenHeightDp * 0.75f).dp
 
-    var minutes by remember { mutableStateOf(30) } // 預設 30 分鐘
+    // 初始值：00 hr 30 min
+    var hours by remember { mutableStateOf(0) }
+    var minutes by remember { mutableStateOf(30) }
+
+    val rowItemHeight = 48.dp
+    val visibleCount = 5
+    val wheelAreaHeight = rowItemHeight * visibleCount
+
+    val scrollState = rememberScrollState()
 
     ModalBottomSheet(
-        onDismissRequest = { onCancel() },
-        sheetState = sheetState,
-        dragHandle = { /* 我們自己畫 handle */ },
+        onDismissRequest = onCancel,
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = Color(0xFF1A1A1A),
-        tonalElevation = 0.dp
+        containerColor = Color.White,           // 白底
+        tonalElevation = 0.dp,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
     ) {
-        Column(
+        // 整個 sheet 最高只佔畫面大約 75%，避免撐太高
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .heightIn(max = maxSheetHeight)
         ) {
-            // 小手把
-            Box(
+            //
+            // 上半：可捲動內容
+            //
+            Column(
                 modifier = Modifier
-                    .width(40.dp)
-                    .height(4.dp)
-                    .background(
-                        color = Color(0xFF9CA3AF).copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(2.dp)
-                    )
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                text = presetName,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = Color.White,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Select the duration to log this activity",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF9CA3AF),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            // Stepper 選分鐘
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
-            ) {
-                StepButton(label = "-") {
-                    minutes = (minutes - 5).coerceAtLeast(5)
-                }
-
-                Text(
-                    text = "$minutes min",
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 0.dp,
+                        bottom = 168.dp // ⬅ 從 140.dp 增加，因為下面我們會墊高按鈕
                     ),
-                    color = Color.White,
-                    textAlign = TextAlign.Center
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                // 標題 Walking
+                Text(
+                    text = presetName,
+                    color = Color(0xFF111114),      // 幾乎黑
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
                 )
 
-                StepButton(label = "+") {
-                    minutes = (minutes + 5).coerceAtMost(180)
+                Spacer(Modifier.height(12.dp))
+
+                // 副標
+                Text(
+                    text = "Select the duration to log this activity",
+                    color = Color(0xFF6B7280),      // 灰
+                    fontSize = 18.sp
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                // ===== 時間滾輪區塊 =====
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(wheelAreaHeight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // 中央膠囊 (淡灰底，圓角)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth()
+                            .height(rowItemHeight)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color(0xFFF2F2F2)) // 很淡的灰
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 小時數
+                        ScrollingNumberWheel(
+                            value = hours,
+                            range = 0..12, // 你目前的上限
+                            onValueChange = { hours = it },
+                            textColor = Color(0xFF111114) // 黑字
+                        )
+
+                        Spacer(Modifier.width(8.dp))
+
+                        // hr 單位
+                        Text(
+                            text = "hr",
+                            color = Color(0xFF6B7280),
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Spacer(Modifier.width(24.dp))
+
+                        // 分鐘數
+                        ScrollingNumberWheel(
+                            value = minutes,
+                            range = 0..59,
+                            onValueChange = { minutes = it },
+                            textColor = Color(0xFF111114)
+                        )
+
+                        Spacer(Modifier.width(8.dp))
+
+                        // min 單位
+                        Text(
+                            text = "min",
+                            color = Color(0xFF6B7280),
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                // 你想保留的額外空白區（讓畫面跟你截圖一樣有呼吸感）
+                Spacer(Modifier.height(42.dp))
+            }
+
+            //
+            // 下半：固定在底部的按鈕們
+            //
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 16.dp,
+                        bottom = 32.dp    // ⬅ 從原本 vertical=16，改成多留 32dp 底部空白
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Save（深色底、白字、圓角大 pill）
+                Button(
+                    onClick = {
+                        val total = hours * 60 + minutes
+                        if (total > 0) { // 不記錄 0 分鐘
+                            onSaveMinutes(total)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF111114), // 黑
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = "Save",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // Cancel（淺灰底、黑字、圓角 pill）
+                Button(
+                    onClick = onCancel,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE5E7EB), // 淺灰
+                        contentColor = Color(0xFF111114)     // 黑字
+                    )
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
-
-            Spacer(Modifier.height(32.dp))
-
-            // Save
-            Button(
-                onClick = { onSaveMinutes(minutes) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color(0xFF111114)
-                )
-            ) {
-                Text("Save")
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // Cancel
-            Button(
-                onClick = { onCancel() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF2A2A2A),
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Cancel")
-            }
-
-            Spacer(Modifier.height(16.dp))
-        }
-    }
-}
-
-@Composable
-private fun StepButton(
-    label: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .size(48.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onClick() },
-        shape = CircleShape,
-        color = Color(0xFF2A2A2A)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = label,
-                color = Color.White,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }

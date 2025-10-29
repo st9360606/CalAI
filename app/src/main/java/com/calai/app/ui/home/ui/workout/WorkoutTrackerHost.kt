@@ -3,14 +3,12 @@ package com.calai.app.ui.home.ui.workout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.calai.app.data.workout.api.PresetWorkoutDto
+import com.calai.app.ui.home.ui.workout.components.DurationPickerSheet
 import com.calai.app.ui.home.ui.workout.components.WorkoutConfirmDialog
 import com.calai.app.ui.home.ui.workout.components.WorkoutEstimatingDialog
 import com.calai.app.ui.home.ui.workout.components.WorkoutScanFailedDialog
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
-import com.calai.app.ui.home.ui.workout.sheet.DurationPickerSheet
 import com.calai.app.ui.home.ui.workout.sheet.WorkoutTrackerSheet
 
 /**
