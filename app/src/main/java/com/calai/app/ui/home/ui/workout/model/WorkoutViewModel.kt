@@ -10,6 +10,7 @@ import com.calai.app.data.workout.store.WorkoutTodayStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,7 +24,8 @@ data class WorkoutUiState(
     val estimateResult: EstimateResponse? = null,        // (6.jpg)
     val showDurationPickerFor: PresetWorkoutDto? = null, // (2.jpg)
     val toastMessage: String? = null,                    // 成功儲存吐司
-    val errorScanFailed: Boolean = false                 // Scan Failed (7.jpg)
+    val errorScanFailed: Boolean = false,                // Scan Failed (7.jpg)
+    val saving: Boolean = false                          // 防止連點送出
 )
 
 @HiltViewModel
@@ -35,116 +37,54 @@ class WorkoutViewModel @Inject constructor(
     private val _ui = MutableStateFlow(WorkoutUiState())
     val ui: StateFlow<WorkoutUiState> = _ui
 
+    // 避免多次呼叫 init() 造成重複收集
+    @Volatile private var initialized = false
+
     // 這組是你想要顯示在列表裡的固定項目 (跟截圖一樣)
+    // ※ 僅作為後端失敗時的 UI 後備；若後端不可用，儲存也會失敗屬正常情況。
     private val fallbackPresets = listOf(
-        PresetWorkoutDto(
-            activityId = 1L,
-            name = "Walking",
-            kcalPer30Min = 140,
-            iconKey = "walk"
-        ),
-        PresetWorkoutDto(
-            activityId = 2L,
-            name = "Running",
-            kcalPer30Min = 350,
-            iconKey = "run"
-        ),
-        PresetWorkoutDto(
-            activityId = 3L,
-            name = "Cycling",
-            kcalPer30Min = 325,
-            iconKey = "bike"
-        ),
-        PresetWorkoutDto(
-            activityId = 4L,
-            name = "Swimming",
-            kcalPer30Min = 400,
-            iconKey = "swimming"
-        ),
-        PresetWorkoutDto(
-            activityId = 5L,
-            name = "Hiking",
-            kcalPer30Min = 300,
-            iconKey = "hiking"
-        ),
-        PresetWorkoutDto(
-            activityId = 6L,
-            name = "Aerobic exercise",
-            kcalPer30Min = 350,
-            iconKey = "aerobic_exercise"
-        ),
-        PresetWorkoutDto(
-            activityId = 7L,
-            name = "Strength Training",
-            kcalPer30Min = 240,
-            iconKey = "strength"
-        ),
-        PresetWorkoutDto(
-            activityId = 8L,
-            name = "Weight training",
-            kcalPer30Min = 300,
-            iconKey = "weight_training"
-        ),
-        PresetWorkoutDto(
-            activityId = 7L,
-            name = "Basketball",
-            kcalPer30Min = 300,
-            iconKey = "basketball"
-        ),
-        PresetWorkoutDto(
-            activityId = 8L,
-            name = "Soccer",
-            kcalPer30Min = 320,
-            iconKey = "soccer"
-        ),
-        PresetWorkoutDto(
-            activityId = 9L,
-            name = "Tennis",
-            kcalPer30Min = 250,
-            iconKey = "tennis"
-        ),
-        PresetWorkoutDto(
-            activityId = 10L,
-            name = "Yoga",
-            kcalPer30Min = 190,
-            iconKey = "yoga"
-        ),
+        PresetWorkoutDto(1L,  "Walking",            140, "walk"),
+        PresetWorkoutDto(2L,  "Running",            350, "run"),
+        PresetWorkoutDto(3L,  "Cycling",            325, "bike"),
+        PresetWorkoutDto(4L,  "Swimming",           400, "swimming"),
+        PresetWorkoutDto(5L,  "Hiking",             300, "hiking"),
+        PresetWorkoutDto(6L,  "Aerobic exercise",   350, "aerobic_exercise"),
+        PresetWorkoutDto(7L,  "Strength Training",  240, "strength"),
+        PresetWorkoutDto(8L,  "Weight training",    300, "weight_training"),
+        PresetWorkoutDto(9L,  "Basketball",         300, "basketball"),
+        PresetWorkoutDto(10L, "Soccer",             320, "soccer"),
+        PresetWorkoutDto(11L, "Tennis",             250, "tennis"),
+        PresetWorkoutDto(12L, "Yoga",               190, "yoga")
     )
 
     /**
      * 初始化 Workout Tracker：
-     * - 抓 /presets 跟 /today
-     * - 如果 /presets 是空的 / 失敗，就塞 fallbackPresets
+     * - 抓 /presets 與 /today（透過 todayStore）
+     * - 如果 /presets 失敗或為空，就塞 fallbackPresets
+     * - 只初始化一次，並長期收集 todayStore.today 讓所有畫面同步
      */
     fun init() {
+        if (initialized) return
+        initialized = true
+
         viewModelScope.launch {
-            // 嘗試叫後端
-            val fromServerPresets = try {
-                repo.loadPresets()
-            } catch (e: Exception) {
-                emptyList()
-            }
-
-            val presetsToUse = if (fromServerPresets.isNullOrEmpty()) {
+            // 1) 載入 presets（失敗時用 fallback）
+            val presetsToUse = try {
+                val server = repo.loadPresets()
+                if (server.isNullOrEmpty()) fallbackPresets else server
+            } catch (_: Exception) {
                 fallbackPresets
-            } else {
-                fromServerPresets
             }
+            _ui.value = _ui.value.copy(presets = presetsToUse)
 
-            val todayResp = try {
-                repo.loadToday()
-            } catch (e: Exception) {
-                null
-            }
+            // 2) 取得今天資料（透過 store；會自帶 X-Client-Timezone）
+            runCatching { todayStore.refresh() }
 
-            _ui.value = _ui.value.copy(
-                presets = presetsToUse,
-                today = todayResp
-            )
-
-            // 同步給 Home，那張 ACTIVITY 卡能即時更新 kcal
-            if (todayResp != null) {
-                todayStore.setFromServer(todayResp)
+            // 3) 長期收集 today 狀態，讓 ActivityHistoryScreen 立即更新
+            viewModelScope.launch {
+                todayStore.today.collectLatest { resp ->
+                    _ui.value = _ui.value.copy(today = resp)
+                }
             }
         }
     }
@@ -153,6 +93,7 @@ class WorkoutViewModel @Inject constructor(
         _ui.value = _ui.value.copy(textInput = v)
     }
 
+    /** 自由文字估算 → 顯示估算結果彈窗 */
     fun estimate() {
         val text = _ui.value.textInput.trim()
         if (text.isBlank()) return
@@ -163,40 +104,39 @@ class WorkoutViewModel @Inject constructor(
                 errorScanFailed = false,
                 estimateResult = null
             )
-
-            val resp = repo.estimateFreeText(text)
+            val resp = runCatching { repo.estimateFreeText(text) }.getOrElse {
+                _ui.value = _ui.value.copy(estimating = false, errorScanFailed = true)
+                return@launch
+            }
 
             if (resp.status == "ok") {
-                _ui.value = _ui.value.copy(
-                    estimating = false,
-                    estimateResult = resp
-                )
+                _ui.value = _ui.value.copy(estimating = false, estimateResult = resp)
             } else {
-                _ui.value = _ui.value.copy(
-                    estimating = false,
-                    errorScanFailed = true
-                )
+                _ui.value = _ui.value.copy(estimating = false, errorScanFailed = true)
             }
         }
     }
 
+    /** 在估算彈窗按下 Save → 寫 DB → 更新 today */
     fun confirmSaveFromEstimate() {
         val r = _ui.value.estimateResult ?: return
         val activityId = r.activityId ?: return
         val minutes = r.minutes ?: return
+        if (_ui.value.saving) return
 
         viewModelScope.launch {
-            val logResp = repo.saveWorkout(
-                activityId = activityId,
-                minutes = minutes,
-                kcal = r.kcal
-            )
+            _ui.value = _ui.value.copy(saving = true)
+            val logResp = runCatching {
+                repo.saveWorkout(activityId = activityId, minutes = minutes, kcal = r.kcal)
+            }.getOrElse { e ->
+                _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
+                return@launch
+            }
 
-            val todayResp = logResp.today
-            todayStore.setFromServer(todayResp)
-
+            // 更新全域 today，歷史畫面立即刷新
+            todayStore.setFromServer(logResp.today)
             _ui.value = _ui.value.copy(
-                today = todayResp,
+                saving = false,
                 toastMessage = "Workout saved successfully!",
                 estimateResult = null,
                 textInput = ""
@@ -204,25 +144,29 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    /** 點擊預設活動的「+」→ 打開時長選擇面板 */
     fun openDurationPicker(preset: PresetWorkoutDto) {
         _ui.value = _ui.value.copy(showDurationPickerFor = preset)
     }
 
+    /** 在時長面板按 Save → 寫 DB → 更新 today → 關閉面板 */
     fun savePresetDuration(minutes: Int) {
         val preset = _ui.value.showDurationPickerFor ?: return
+        if (minutes <= 0 || _ui.value.saving) return
 
         viewModelScope.launch {
-            val logResp = repo.saveWorkout(
-                activityId = preset.activityId,
-                minutes = minutes,
-                kcal = null // 後端自行算 kcal
-            )
+            _ui.value = _ui.value.copy(saving = true)
+            val logResp = runCatching {
+                // kcal = null → 後端依 MET*體重*分鐘計算
+                repo.saveWorkout(activityId = preset.activityId, minutes = minutes, kcal = null)
+            }.getOrElse { e ->
+                _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
+                return@launch
+            }
 
-            val todayResp = logResp.today
-            todayStore.setFromServer(todayResp)
-
+            todayStore.setFromServer(logResp.today)
             _ui.value = _ui.value.copy(
-                today = todayResp,
+                saving = false,
                 toastMessage = "Workout saved successfully!",
                 showDurationPickerFor = null
             )

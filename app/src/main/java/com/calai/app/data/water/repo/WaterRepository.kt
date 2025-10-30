@@ -13,6 +13,10 @@ class WaterRepository @Inject constructor(
     suspend fun loadToday(): WaterSummaryDto = api.today()
 
     suspend fun adjustCups(delta: Int): WaterSummaryDto {
-        return api.increment(AdjustRequest(cupsDelta = delta))
+        // 修正點：使用具名參數把 AdjustRequest 指定給 req，
+        // 讓 tz 使用預設值 ZoneId.systemDefault().id
+        return api.increment(
+            req = AdjustRequest(cupsDelta = delta)
+        )
     }
 }

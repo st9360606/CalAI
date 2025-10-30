@@ -3,7 +3,9 @@ package com.calai.app.data.water.api
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
+import java.time.ZoneId
 
 /**
  * 後端回傳今天喝水的摘要
@@ -31,10 +33,14 @@ data class AdjustRequest(
 )
 
 interface WaterApi {
-
     @GET("/water/today")
-    suspend fun today(): WaterSummaryDto
+    suspend fun today(
+        @Header("X-Client-Timezone") tz: String = ZoneId.systemDefault().id
+    ): WaterSummaryDto
 
     @POST("/water/increment")
-    suspend fun increment(@Body req: AdjustRequest): WaterSummaryDto
+    suspend fun increment(
+        @Header("X-Client-Timezone") tz: String = ZoneId.systemDefault().id,
+        @Body req: AdjustRequest
+    ): WaterSummaryDto
 }
