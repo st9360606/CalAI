@@ -103,7 +103,7 @@ fun WorkoutTrackerSheet(
                             .heightIn(min = 120.dp),
                         placeholder = {
                             Text(
-                                text = "Examples: 45 min cycling",
+                                text = "Examples: 45 min Running",
                                 color = Gray500
                             )
                         },

@@ -57,22 +57,58 @@ class WorkoutViewModel @Inject constructor(
         ),
         PresetWorkoutDto(
             activityId = 4L,
-            name = "Elliptical",
-            kcalPer30Min = 300,
-            iconKey = "elliptical"
+            name = "Swimming",
+            kcalPer30Min = 400,
+            iconKey = "swimming"
         ),
         PresetWorkoutDto(
             activityId = 5L,
-            name = "Strength Training",
-            kcalPer30Min = 215,
-            iconKey = "strength"
+            name = "Hiking",
+            kcalPer30Min = 300,
+            iconKey = "hiking"
         ),
         PresetWorkoutDto(
             activityId = 6L,
-            name = "Swimming",
-            kcalPer30Min = 400,
-            iconKey = "swim"
-        )
+            name = "Aerobic exercise",
+            kcalPer30Min = 350,
+            iconKey = "aerobic_exercise"
+        ),
+        PresetWorkoutDto(
+            activityId = 7L,
+            name = "Strength Training",
+            kcalPer30Min = 240,
+            iconKey = "strength"
+        ),
+        PresetWorkoutDto(
+            activityId = 8L,
+            name = "Weight training",
+            kcalPer30Min = 300,
+            iconKey = "weight_training"
+        ),
+        PresetWorkoutDto(
+            activityId = 7L,
+            name = "Basketball",
+            kcalPer30Min = 300,
+            iconKey = "basketball"
+        ),
+        PresetWorkoutDto(
+            activityId = 8L,
+            name = "Soccer",
+            kcalPer30Min = 320,
+            iconKey = "soccer"
+        ),
+        PresetWorkoutDto(
+            activityId = 9L,
+            name = "Tennis",
+            kcalPer30Min = 250,
+            iconKey = "tennis"
+        ),
+        PresetWorkoutDto(
+            activityId = 10L,
+            name = "Yoga",
+            kcalPer30Min = 190,
+            iconKey = "yoga"
+        ),
     )
 
     /**
