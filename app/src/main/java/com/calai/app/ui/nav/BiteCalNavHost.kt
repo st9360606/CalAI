@@ -556,7 +556,7 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
-            // ★ 新增：Workout 專用 VM，跟 Home 同一個 backStackEntry，讓狀態共享當天數據
+            // 與 Home 共用的 Workout VM（維持原本共享當天數據）
             val workoutVm: WorkoutViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
@@ -566,27 +566,58 @@ fun BiteCalNavHost(
                 vm = vm,
                 waterVm = waterVm,
                 workoutVm = workoutVm,
-                onOpenAlarm = { nav.navigate(Routes.REMINDERS) },
-                onOpenCamera = { nav.navigate(Routes.CAMERA) },
-
-                // Bottom bar tab 切換維持原本的行為
-                onOpenTab = { tab ->
-                    when (tab) {
-                        HomeTab.Home -> { /* stay */ }
-                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS)
-                        HomeTab.Workout -> { /* 不切頁，不 nav。因為 Workout Sheet 在 Home 內彈出 */ }
-                        HomeTab.Daily -> nav.navigate(Routes.DAILY)
-                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL)
+                onOpenAlarm = {
+                    nav.navigate(Routes.REMINDERS) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onOpenCamera = {
+                    nav.navigate(Routes.CAMERA) {
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 },
 
-                onOpenFastingPlans = { nav.navigate(Routes.FASTING) },
-                // 這個用來打開「完整歷史列表」ActivityHistoryScreen (4.jpg)
+                // ★ 這裡改成：點 Workout 分頁 → 跳到 ActivityHistoryScreen
+                onOpenTab = { tab ->
+                    when (tab) {
+                        HomeTab.Home -> Unit
+                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) {
+                            // 保留 HOME 在 back stack，返回鍵回首頁
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                        HomeTab.Daily -> nav.navigate(Routes.DAILY) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
+
+                onOpenFastingPlans = {
+                    nav.navigate(Routes.FASTING) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+
+                // 仍保留：從首頁卡片「查看更多」到完整歷史列表
                 onOpenActivityHistory = {
-                    nav.navigate(Routes.WORKOUT_HISTORY)
+                    nav.navigate(Routes.WORKOUT_HISTORY) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 },
                 fastingVm = fastingVm,
-
             )
         }
 
@@ -594,33 +625,28 @@ fun BiteCalNavHost(
 
         composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-
-            // 從 HOME 共用同一個 fastingVm（維持原本共享 ViewModel 的做法）
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
             val fastingVm: FastingPlanViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            FastingPlansScreen(
-                vm = fastingVm,
-                onBack = { nav.popBackStack() }
-            )
+            FastingPlansScreen(vm = fastingVm, onBack = { nav.popBackStack() })
         }
 
         composable(Routes.WORKOUT_HISTORY) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
-            // ★ 用 HOME 的 backStackEntry 來取得同一個 WorkoutViewModel
-            //   這樣 ActivityHistoryScreen 看到的是同一份 ui.today.sessions
+            // 取得與 HOME 相同的 VM（共享 today 狀態）
             val homeBackStackEntry = remember(backStackEntry) {
                 nav.getBackStackEntry(Routes.HOME)
             }
-
             val workoutVm: WorkoutViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
+
+            // ✅ 確保從 BottomBar 直接進來也會載入 presets/today
+            LaunchedEffect(Unit) { workoutVm.init() }
 
             ActivityHistoryScreen(
                 vm = workoutVm,
@@ -628,9 +654,11 @@ fun BiteCalNavHost(
             )
         }
 
+
         composable(Routes.PERSONAL) { SimplePlaceholder("Personal") }
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
+
     }
 }
 

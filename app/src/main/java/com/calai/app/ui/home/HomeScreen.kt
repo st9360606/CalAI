@@ -226,7 +226,7 @@ fun HomeScreen(
                 onOpenTab = { tab ->
                     when (tab) {
                         HomeTab.Workout -> {
-                            showWorkoutSheet = true
+                            onOpenTab(HomeTab.Workout)
                         }
                         else -> onOpenTab(tab)
                     }
