@@ -29,6 +29,10 @@ interface WorkoutApi {
     suspend fun today(
         @Header("X-Client-Timezone") tz: String
     ): TodayWorkoutResponse
+
+    // ★ 取得目前使用者體重(kg)，供 fallback 計算使用
+    @GET("/api/v1/workouts/me/weight")
+    suspend fun myWeight(): WeightDto
 }
 
 /** 使用者自由輸入的句子 */
@@ -88,4 +92,10 @@ data class WorkoutSessionDto(
     val minutes: Int,
     val kcal: Int,
     val timeLabel: String
+)
+
+// ★ 新增：使用者體重（kg）
+@Serializable
+data class WeightDto(
+    val kg: Double
 )

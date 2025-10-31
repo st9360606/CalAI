@@ -43,4 +43,9 @@ class WorkoutRepository @Inject constructor(
             tz = deviceTz()            // ★ 同樣帶出去
         )
     }
+
+    // ★ 新增：從後端拿目前用戶體重(kg)，供 fallback 動態計算
+    suspend fun loadMyWeightKg(): Double {
+        return api.myWeight().kg
+    }
 }

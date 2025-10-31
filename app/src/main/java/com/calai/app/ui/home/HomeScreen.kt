@@ -115,6 +115,9 @@ fun HomeScreen(
     // 首次進入 Home 就載入 DB（含 enabled/plan/time）
     LaunchedEffect(Unit) { fastingVm.load() }
 
+    // ★ 新增：監聽 Workout VM 狀態（為了一次性導航）
+    val workoutUi by workoutVm.ui.collectAsState()
+
     val ctx = LocalContext.current
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
@@ -145,6 +148,15 @@ fun HomeScreen(
         // Activity/Fragment 進入 RESUMED 時會觸發這裡
         fastingVm.onAppResumed()
         onPauseOrDispose { /* no-op */ }
+    }
+
+    // ★ 關鍵：偵測一次性導航旗標 → 關 Sheet → 導到歷史頁 → consume 旗標
+    LaunchedEffect(workoutUi.navigateHistoryOnce) {
+        if (workoutUi.navigateHistoryOnce) {
+            showWorkoutSheet = false                          // 關閉底部彈窗
+            onOpenActivityHistory()                           // 導航到歷史頁
+            workoutVm.consumeNavigateHistory()                // 清旗標，避免重複觸發
+        }
     }
 
     // Switch 行為：一律讓 VM 做權限判斷；onNeedPermission 內採用「能 launcher 就 launcher；否則導到設定頁」
