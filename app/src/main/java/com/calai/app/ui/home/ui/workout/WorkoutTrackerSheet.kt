@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.calai.app.data.workout.api.PresetWorkoutDto
+import com.calai.app.ui.home.ui.workout.components.SuccessTopToast
 import com.calai.app.ui.home.ui.workout.model.WorkoutUiState
 import kotlinx.coroutines.delay
 
@@ -184,30 +185,9 @@ fun WorkoutTrackerSheet(
                 }
             }
 
-            // ===== 儲存成功的 Toast =====
+            // ===== 成功提示（新樣式） =====
             uiState.toastMessage?.let { msg ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp)
-                        .align(Alignment.TopCenter),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(24.dp),
-                        color = Color.White,
-                        shadowElevation = 4.dp
-                    ) {
-                        Text(
-                            text = msg,
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            color = TextPrimary,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-
+                SuccessTopToast(message = msg, modifier = Modifier.align(Alignment.TopCenter))
                 LaunchedEffect(msg) {
                     delay(2000)
                     onToastCleared()

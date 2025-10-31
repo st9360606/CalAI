@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.app.data.workout.api.WorkoutSessionDto
+import com.calai.app.ui.home.ui.workout.components.SuccessTopToast
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -143,11 +144,20 @@ fun ActivityHistoryScreen(
         }
     }
 
-    // === 這裡直接掛出「新增運動」的 BottomSheet Host ===
+    // 成功提示：只有在沒有開 Sheet 的時候才顯示，避免重複
+    if (ui.toastMessage != null && !showTracker) {
+        SuccessTopToast(message = ui.toastMessage!!)
+        LaunchedEffect(ui.toastMessage) {
+            kotlinx.coroutines.delay(2000)
+            vm.clearToast()
+        }
+    }
+
+    // 新增運動 BottomSheet
     if (showTracker) {
         WorkoutTrackerHost(
             vm = vm,
-            onClose = { showTracker = false } // scrim / X / 系統手勢都會關閉
+            onClose = { showTracker = false }
         )
     }
 }
