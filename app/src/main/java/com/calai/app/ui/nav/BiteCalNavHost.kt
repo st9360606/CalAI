@@ -39,7 +39,7 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
-import com.calai.app.ui.home.ui.workout.ActivityHistoryScreen
+import com.calai.app.ui.home.ui.workout.WorkoutHistoryScreen
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
@@ -648,7 +648,7 @@ fun BiteCalNavHost(
             // ✅ 確保從 BottomBar 直接進來也會載入 presets/today
             LaunchedEffect(Unit) { workoutVm.init() }
 
-            ActivityHistoryScreen(
+            WorkoutHistoryScreen(
                 vm = workoutVm,
                 onBack = { nav.popBackStack() }
             )

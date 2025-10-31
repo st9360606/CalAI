@@ -25,7 +25,7 @@ import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActivityHistoryScreen(
+fun WorkoutHistoryScreen(
     vm: WorkoutViewModel,
     onBack: () -> Unit
 ) {
@@ -77,7 +77,7 @@ fun ActivityHistoryScreen(
                 },
                 title = {
                     Text(
-                        text = "Activity History",
+                        text = "Workout History",
                         modifier = Modifier.padding(top = 6.dp),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.SemiBold
