@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.workout.sheet
+package com.calai.app.ui.home.ui.workout
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

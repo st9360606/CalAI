@@ -9,7 +9,6 @@ import com.calai.app.ui.home.ui.workout.components.WorkoutConfirmDialog
 import com.calai.app.ui.home.ui.workout.components.WorkoutEstimatingDialog
 import com.calai.app.ui.home.ui.workout.components.WorkoutScanFailedDialog
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
-import com.calai.app.ui.home.ui.workout.sheet.WorkoutTrackerSheet
 
 /**
  * Host: 進入 Routes.WORKOUT 時呼叫這個。
