@@ -68,8 +68,6 @@ val LANGS = listOf(
     LangItem("Čeština", "cs", "🇨🇿"),
     LangItem("हिन्दी", "hi", "🇮🇳"),
 
-    // 你原本的
-    LangItem("ਪੰਜਾਬੀ", "pa", "🇮🇳"),
     LangItem("Basa Jawa", "jv", "🇮🇩")
 )
 

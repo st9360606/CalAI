@@ -45,9 +45,6 @@ val LANGS: List<LangOption> = listOf(
     LangOption("ro",      "Română",          "🇷🇴", "RO"),
     LangOption("cs",      "Čeština",         "🇨🇿", "CS"),
     LangOption("hi",      "हिन्दी",           "🇮🇳", "HI"),
-
-    // 你原本的
-    LangOption("pa",      "ਪੰਜਾਬੀ",            "🇮🇳", "PA"),
     LangOption("jv",      "Basa Jawa",       "🇮🇩", "JV")
 )
 

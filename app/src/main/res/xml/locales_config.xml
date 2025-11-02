@@ -9,7 +9,6 @@
     <locale android:name="ru" />
     <locale android:name="ja" />
     <locale android:name="de" />
-    <locale android:name="pa" />
     <locale android:name="jv" />
     <locale android:name="fr" />
     <locale android:name="vi" />
