@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 既有 -->
     <locale android:name="en" />
     <locale android:name="es" />
     <locale android:name="ar" />
     <locale android:name="bn" />
-    <locale android:name="pt" />
     <locale android:name="ru" />
     <locale android:name="ja" />
     <locale android:name="de" />
@@ -18,4 +19,25 @@
     <locale android:name="id" />
     <locale android:name="zh-TW" />
     <locale android:name="zh-CN" />
+
+    <!-- 先前新增 -->
+    <locale android:name="it" />
+    <locale android:name="nl" />
+    <locale android:name="sv" />
+    <locale android:name="da" />
+    <locale android:name="nb" />
+    <locale android:name="he" />
+    <locale android:name="tr" />
+    <locale android:name="pl" />
+    <locale android:name="zh-HK" />
+    <locale android:name="fil" />
+
+    <!-- 本次必補 -->
+    <locale android:name="fi" />     <!-- 芬蘭 -->
+    <locale android:name="ro" />     <!-- 羅馬尼亞 -->
+    <locale android:name="cs" />     <!-- 捷克 -->
+    <locale android:name="pt-PT" />  <!-- 葡萄牙（歐洲葡語） -->
+    <locale android:name="pt-BR" />  <!-- 巴西（巴西葡語） -->
+    <locale android:name="hi" />     <!-- 印地語（印度） -->
+
 </locale-config>

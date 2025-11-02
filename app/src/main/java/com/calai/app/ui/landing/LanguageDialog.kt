@@ -30,23 +30,45 @@ import androidx.compose.ui.window.DialogProperties
 // 語言清單（BCP-47）
 data class LangItem(val label: String, val tag: String, val flag: String)
 
+// ✅ 已加入 it/nl/sv/da/nb/he/tr/pl/zh-HK/fil
 val LANGS = listOf(
     LangItem("English", "en", "🇺🇸"),
     LangItem("Español", "es", "🇪🇸"),
-    LangItem("বাংলা", "bn", "🇧🇩"),
-    LangItem("Português", "pt", "🇵🇹"),
     LangItem("العربية", "ar", "🇸🇦"),
+    LangItem("বাংলা", "bn", "🇧🇩"),
     LangItem("Русский", "ru", "🇷🇺"),
     LangItem("Français", "fr", "🇫🇷"),
+    LangItem("Deutsch", "de", "🇩🇪"),
     LangItem("日本語", "ja", "🇯🇵"),
     LangItem("한국어", "ko", "🇰🇷"),
     LangItem("Tiếng Việt", "vi", "🇻🇳"),
     LangItem("ไทย", "th", "🇹🇭"),
-    LangItem("繁體中文", "zh-TW", "🇹🇼"),
     LangItem("Bahasa Indonesia", "id", "🇮🇩"),
     LangItem("Bahasa Melayu", "ms", "🇲🇾"),
-    LangItem("Deutsch", "de", "🇩🇪"),
+    LangItem("繁體中文", "zh-TW", "🇹🇼"),
     LangItem("简体中文", "zh-CN", "🇨🇳"),
+
+    // 先前新增
+    LangItem("Italiano", "it", "🇮🇹"),
+    LangItem("Nederlands", "nl", "🇳🇱"),
+    LangItem("Svenska", "sv", "🇸🇪"),
+    LangItem("Dansk", "da", "🇩🇰"),
+    LangItem("Norsk (Bokmål)", "nb", "🇳🇴"),
+    LangItem("עברית", "he", "🇮🇱"),
+    LangItem("Türkçe", "tr", "🇹🇷"),
+    LangItem("Polski", "pl", "🇵🇱"),
+    LangItem("繁體中文", "zh-HK", "🇭🇰"),
+    LangItem("Filipino", "fil", "🇵🇭"),
+
+    // 本次必補
+    LangItem("Português (Brasil)", "pt-BR", "🇧🇷"),
+    LangItem("Português (Portugal)", "pt-PT", "🇵🇹"),
+    LangItem("Suomi", "fi", "🇫🇮"),
+    LangItem("Română", "ro", "🇷🇴"),
+    LangItem("Čeština", "cs", "🇨🇿"),
+    LangItem("हिन्दी", "hi", "🇮🇳"),
+
+    // 你原本的
     LangItem("ਪੰਜਾਬੀ", "pa", "🇮🇳"),
     LangItem("Basa Jawa", "jv", "🇮🇩")
 )

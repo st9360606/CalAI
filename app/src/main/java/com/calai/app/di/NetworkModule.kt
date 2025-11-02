@@ -44,12 +44,35 @@ object NetworkModule {
         chain.proceed(req)
     }
 
-    // --- auth 客戶端（不可帶 Authorization、不掛 Authenticator） ---
+    private fun logging(): HttpLoggingInterceptor {
+        return HttpLoggingInterceptor().apply {
+            // Debug 顯示標頭；Release 關閉或降到 BASIC
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS
+            else HttpLoggingInterceptor.Level.NONE
+            redactHeader("Authorization")
+            redactHeader("Cookie")
+        }
+    }
+
     @Provides @Singleton @Named("authClient")
     fun provideAuthOkHttp(): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(tzHeaderInterceptor()) // ★ FE-FP-5
-            .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.HEADERS })
+            .addInterceptor(tzHeaderInterceptor())
+            .addInterceptor(logging())              // ← 改用封裝好的 logging()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build()
+
+    @Provides @Singleton @Named("apiClient")
+    fun provideApiOkHttp(
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator
+    ): OkHttpClient =
+        OkHttpClient.Builder()
+            .addInterceptor(tzHeaderInterceptor())
+            .addInterceptor(authInterceptor)
+            .authenticator(tokenAuthenticator)
+            .addInterceptor(logging())              // ← 同上
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .build()
@@ -66,20 +89,6 @@ object NetworkModule {
     fun provideAuthApi(@Named("authRetrofit") retrofit: Retrofit): AuthApi =
         retrofit.create(AuthApi::class.java)
 
-    // --- 一般 API 客戶端（自動 Bearer + 自動 refresh） ---
-    @Provides @Singleton @Named("apiClient")
-    fun provideApiOkHttp(
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator
-    ): OkHttpClient =
-        OkHttpClient.Builder()
-            .addInterceptor(tzHeaderInterceptor()) // ★ FE-FP-5
-            .addInterceptor(authInterceptor)
-            .authenticator(tokenAuthenticator)
-            .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.HEADERS })
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .build()
 
     @Provides @Singleton @Named("apiRetrofit")
     fun provideApiRetrofit(@Named("apiClient") client: OkHttpClient): Retrofit =
