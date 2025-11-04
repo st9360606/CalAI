@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.calai.app.data.workout.api.PresetWorkoutDto
 import com.calai.app.ui.home.ui.workout.components.SuccessTopToast
@@ -67,19 +68,12 @@ fun WorkoutTrackerSheet(
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val maxSheetHeight = (screenHeightDp * 0.93f).dp
 
-    // ▼▼▼ 只顯示 Top N + 展開/收合 ▼▼▼
     val initialLimit = 20
     val totalCount = uiState.presets.size
     var expanded = rememberSaveable { false }
 
-    // 依需求：預設只取前 N；若展開則全部顯示
-    val presetsToShow =
-        if (expanded) uiState.presets
-        else uiState.presets.take(initialLimit)
-
-    // 剩餘數量（用於 Show more 標籤）
+    val presetsToShow = if (expanded) uiState.presets else uiState.presets.take(initialLimit)
     val remaining = (totalCount - initialLimit).coerceAtLeast(0)
-    // ▲▲▲
 
     ModalBottomSheet(
         onDismissRequest = { onClose() },
@@ -88,43 +82,41 @@ fun WorkoutTrackerSheet(
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         containerColor = Color.White,
         tonalElevation = 0.dp,
+        // 讓我們自行處理 insets（保留）
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
     ) {
+        // ✅ 移除 navigationBarsPadding()，避免與 LazyColumn 的 contentPadding 重複
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = maxSheetHeight)
-                .navigationBarsPadding()
+                .imePadding() // ✅ 鍵盤出現時頂起內容
         ) {
+            // 動態計算底部 padding：導覽列高度 + 少許緩衝
+            val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            val bottomPad: Dp = navBottom + 12.dp
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 20.dp, vertical = 16.dp),
-                contentPadding = PaddingValues(bottom = 200.dp)
+                // ✅ 原本是 200.dp，改成動態 insets，消除大片空白
+                contentPadding = PaddingValues(bottom = bottomPad)
             ) {
-                // ===== Header / 輸入框 / Add Workout / 分隔線 =====
                 item {
                     HeaderSection(
                         title = "Workout Tracker",
                         subtitle = "Describe the Type of Exercise and the duration",
                         onClose = onClose
                     )
-
                     OutlinedTextField(
                         value = uiState.textInput,
                         onValueChange = { onTextChanged(it) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 120.dp),
-                        placeholder = {
-                            Text(
-                                text = "Examples: 45 min Running",
-                                color = Gray500
-                            )
-                        },
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(
-                            color = TextPrimary
-                        ),
+                        placeholder = { Text("Examples: 45 min Running", color = Gray500) },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = TextPrimary,
@@ -156,9 +148,7 @@ fun WorkoutTrackerSheet(
                             disabledContainerColor = Black,
                             disabledContentColor = Color.White
                         )
-                    ) {
-                        Text("Add Workout", color = Color.White)
-                    }
+                    ) { Text("Add Workout", color = Color.White) }
 
                     Spacer(Modifier.height(24.dp))
 
@@ -176,7 +166,6 @@ fun WorkoutTrackerSheet(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // ====== 預設活動清單（裁切後的 presetsToShow） ======
                 items(presetsToShow) { preset ->
                     PresetWorkoutRowLight(
                         preset = preset,
@@ -185,24 +174,13 @@ fun WorkoutTrackerSheet(
                     HorizontalDivider(color = Gray300)
                 }
 
-                // ====== 展開/收合控制（只有當總數 > initialLimit 才出現） ======
                 if (totalCount > initialLimit) {
                     item {
                         Spacer(Modifier.height(8.dp))
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            TextButton(
-                                onClick = { expanded = !expanded }
-                            ) {
-                                val label = if (expanded) "Show less"
-                                else "Show more (${remaining})"
-                                Text(
-                                    text = label,
-                                    color = Black,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            TextButton(onClick = { expanded = !expanded }) {
+                                val label = if (expanded) "Show less" else "Show more (${remaining})"
+                                Text(text = label, color = Black, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                         Spacer(Modifier.height(8.dp))
@@ -210,7 +188,7 @@ fun WorkoutTrackerSheet(
                 }
             }
 
-            // ===== 成功提示 =====
+            // 成功提示（在頂部，不影響底部 padding）
             uiState.toastMessage?.let { msg ->
                 SuccessTopToast(message = msg, modifier = Modifier.align(Alignment.TopCenter))
                 LaunchedEffect(msg) {
