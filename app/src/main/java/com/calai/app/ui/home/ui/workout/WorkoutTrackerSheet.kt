@@ -22,10 +22,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,14 +64,27 @@ fun WorkoutTrackerSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // 提高整個 bottom sheet 的高度 (~93% 螢幕高)
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val maxSheetHeight = (screenHeightDp * 0.93f).dp
+
+    // ▼▼▼ 只顯示 Top N + 展開/收合 ▼▼▼
+    val initialLimit = 20
+    val totalCount = uiState.presets.size
+    var expanded = rememberSaveable { false }
+
+    // 依需求：預設只取前 N；若展開則全部顯示
+    val presetsToShow =
+        if (expanded) uiState.presets
+        else uiState.presets.take(initialLimit)
+
+    // 剩餘數量（用於 Show more 標籤）
+    val remaining = (totalCount - initialLimit).coerceAtLeast(0)
+    // ▲▲▲
 
     ModalBottomSheet(
         onDismissRequest = { onClose() },
         sheetState = sheetState,
-        dragHandle = { /* 我們自己畫 handle */ },
+        dragHandle = { /* 自定手把 */ },
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         containerColor = Color.White,
         tonalElevation = 0.dp,
@@ -95,7 +110,6 @@ fun WorkoutTrackerSheet(
                         onClose = onClose
                     )
 
-                    // 自由輸入框
                     OutlinedTextField(
                         value = uiState.textInput,
                         onValueChange = { onTextChanged(it) },
@@ -128,10 +142,6 @@ fun WorkoutTrackerSheet(
 
                     Spacer(Modifier.height(20.dp))
 
-                    // Add Workout 按鈕
-                    // 要求：
-                    // - 底是黑色
-                    // - 文字永遠白色（包含 disabled 狀態）
                     val isEnabled = uiState.textInput.isNotBlank()
                     Button(
                         onClick = { onAddWorkout() },
@@ -143,8 +153,8 @@ fun WorkoutTrackerSheet(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Black,
                             contentColor = Color.White,
-                            disabledContainerColor = Black,   // 就算 disabled 也保持黑底
-                            disabledContentColor = Color.White // ← 這裡改成白色
+                            disabledContainerColor = Black,
+                            disabledContentColor = Color.White
                         )
                     ) {
                         Text("Add Workout", color = Color.White)
@@ -152,40 +162,55 @@ fun WorkoutTrackerSheet(
 
                     Spacer(Modifier.height(24.dp))
 
-                    // "or select from the list"
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        HorizontalDivider(
-                            modifier = Modifier.weight(1f),
-                            color = DividerGray
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = DividerGray)
                         Text(
                             text = "or select from the list",
                             modifier = Modifier.padding(horizontal = 8.dp),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Gray600
                         )
-                        HorizontalDivider(
-                            modifier = Modifier.weight(1f),
-                            color = DividerGray
-                        )
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = DividerGray)
                     }
 
                     Spacer(Modifier.height(16.dp))
                 }
 
-                // ====== 預設活動清單 (Walking / Running / ...) ======
-                items(uiState.presets) { preset ->
+                // ====== 預設活動清單（裁切後的 presetsToShow） ======
+                items(presetsToShow) { preset ->
                     PresetWorkoutRowLight(
                         preset = preset,
                         onClickPlus = { onClickPresetPlus(preset) }
                     )
                     HorizontalDivider(color = Gray300)
                 }
+
+                // ====== 展開/收合控制（只有當總數 > initialLimit 才出現） ======
+                if (totalCount > initialLimit) {
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            TextButton(
+                                onClick = { expanded = !expanded }
+                            ) {
+                                val label = if (expanded) "Show less"
+                                else "Show more (${remaining})"
+                                Text(
+                                    text = label,
+                                    color = Black,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
             }
 
-            // ===== 成功提示（新樣式） =====
+            // ===== 成功提示 =====
             uiState.toastMessage?.let { msg ->
                 SuccessTopToast(message = msg, modifier = Modifier.align(Alignment.TopCenter))
                 LaunchedEffect(msg) {
