@@ -29,29 +29,30 @@ fun WorkoutHistoryScreen(
     vm: WorkoutViewModel,
     onBack: () -> Unit
 ) {
-    // ✅ 防守式初始化（ViewModel 有 initialized 旗標，不會重複載）
+    // 初始化（只執行一次）
     LaunchedEffect(Unit) { vm.init() }
+
+    // ⭐ 進入頁面就 refresh 一次，避免冷啟後畫面空白
+    LaunchedEffect(Unit) { vm.refreshToday() }
 
     val ui by vm.ui.collectAsStateWithLifecycle()
     val today = ui.today
     val total = today?.totalKcalToday ?: 0
     val list = today?.sessions ?: emptyList()
 
-    // 控制是否顯示 WorkoutTrackerSheet
     var showTracker by rememberSaveable { mutableStateOf(false) }
 
-    // ⭐ 關鍵修正：在歷史頁內消化 navigateHistoryOnce，避免回 HOME 後又被導回來
+    // 在歷史頁內消化 navigateHistoryOnce，避免回 HOME 後又被導回來
     LaunchedEffect(ui.navigateHistoryOnce) {
         if (ui.navigateHistoryOnce) {
-            showTracker = false         // 關 Sheet
-            vm.consumeNavigateHistory() // 立刻清旗標
-            // 不做任何導航：因為我們已經在歷史頁
+            showTracker = false
+            vm.consumeNavigateHistory()
         }
     }
 
     val surface = Color.White
     val onSurface = Color(0xFF111114)
-    val onSurfaceSecondary = Color(0xFF6B7280) // 次要文字灰
+    val onSurfaceSecondary = Color(0xFF6B7280)
     val divider = Color(0xFFE5E7EB)
 
     Scaffold(
@@ -67,7 +68,7 @@ fun WorkoutHistoryScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
-                        modifier = Modifier.padding(top = 6.dp) // 與標題同一水平
+                        modifier = Modifier.padding(top = 6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -85,7 +86,6 @@ fun WorkoutHistoryScreen(
                     )
                 },
                 actions = {
-                    // 右上黑圓白加號（點擊彈出 WorkoutTrackerSheet）
                     Box(
                         modifier = Modifier
                             .padding(end = 12.dp, top = 6.dp)
@@ -144,7 +144,6 @@ fun WorkoutHistoryScreen(
         }
     }
 
-    // 成功提示：只有在沒有開 Sheet 的時候才顯示，避免重複
     if (ui.toastMessage != null && !showTracker) {
         SuccessTopToast(message = ui.toastMessage!!)
         LaunchedEffect(ui.toastMessage) {
@@ -153,7 +152,6 @@ fun WorkoutHistoryScreen(
         }
     }
 
-    // 新增運動 BottomSheet
     if (showTracker) {
         WorkoutTrackerHost(
             vm = vm,
@@ -172,7 +170,6 @@ private fun HistoryRow(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top
     ) {
-        // 左側綠色圓（placeholder）
         Surface(
             modifier = Modifier.size(56.dp),
             shape = CircleShape,
@@ -218,7 +215,6 @@ private fun HistoryRow(
 
         Spacer(Modifier.width(12.dp))
 
-        // 右邊時間（後端已提供 24 小時制 "HH:mm"）
         Text(
             text = session.timeLabel,
             style = MaterialTheme.typography.bodyMedium.copy(

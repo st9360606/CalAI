@@ -218,4 +218,15 @@ class WorkoutViewModel @Inject constructor(
             showDurationPickerFor = null
         )
     }
+
+    fun refreshToday() {
+        viewModelScope.launch {
+            runCatching { todayStore.refresh() }
+                .onFailure { e ->
+                    _ui.value = _ui.value.copy(
+                        toastMessage = e.message ?: "Refresh failed"
+                    )
+                }
+        }
+    }
 }
