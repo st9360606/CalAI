@@ -42,6 +42,11 @@ fun WorkoutHistoryScreen(
 
     var showTracker by rememberSaveable { mutableStateOf(false) }
 
+    // ★ 共用 BottomSheetState（僅建立一次）
+    val trackerSheetState: SheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
     // 在歷史頁內消化 navigateHistoryOnce，避免回 HOME 後又被導回來
     LaunchedEffect(ui.navigateHistoryOnce) {
         if (ui.navigateHistoryOnce) {
@@ -144,6 +149,7 @@ fun WorkoutHistoryScreen(
         }
     }
 
+    // 成功 toast
     if (ui.toastMessage != null && !showTracker) {
         SuccessTopToast(message = ui.toastMessage!!)
         LaunchedEffect(ui.toastMessage) {
@@ -152,12 +158,13 @@ fun WorkoutHistoryScreen(
         }
     }
 
-    if (showTracker) {
-        WorkoutTrackerHost(
-            vm = vm,
-            onClose = { showTracker = false }
-        )
-    }
+    // ★ Host 常駐，用 visible 控制顯示（修正：補上 sheetState / visible 兩參數）
+    WorkoutTrackerHost(
+        vm = vm,
+        onClose = { showTracker = false },
+        sheetState = trackerSheetState,
+        visible = showTracker
+    )
 }
 
 @Composable

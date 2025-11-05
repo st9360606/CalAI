@@ -9,6 +9,7 @@ import android.provider.Settings
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -87,6 +89,8 @@ import com.calai.app.data.fasting.notifications.NotificationPermission
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.draw.shadow
 import com.calai.app.ui.home.components.CardStyles
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
@@ -95,6 +99,7 @@ import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutTrackerHost
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
@@ -126,6 +131,11 @@ fun HomeScreen(
 
     // === 這裡是新增的狀態：控制 bottom sheet (Workout Tracker) 是否顯示 ===
     var showWorkoutSheet by rememberSaveable { mutableStateOf(false) }
+
+    // ★ 共用 BottomSheetState（僅建立一次）
+    val workoutSheetState: SheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
     // 只有在 owner 存在時才建立 launcher，否則用 null 表示不用它
     val requestNotifications = if (registryOwner != null) {
@@ -342,16 +352,16 @@ fun HomeScreen(
             Spacer(Modifier.height(80.dp))
         }
     }
-    // === 在 Home 畫面最外層掛上 Bottom Sheet。當 showWorkoutSheet=true 時彈出 ===
-    if (showWorkoutSheet) {
-        WorkoutTrackerHost(
-            vm = workoutVm,
-            onClose = {
-                showWorkoutSheet = false
-                workoutVm.dismissDialogs() // 把 picker / dialogs 關掉，回到純 Home
-            }
-        )
-    }
+    // === 共用 BottomSheetState；Host 常駐，用 visible 控制 ===
+    WorkoutTrackerHost(
+        vm = workoutVm,
+        sheetState = workoutSheetState,
+        visible = showWorkoutSheet,
+        onClose = {
+            showWorkoutSheet = false
+            workoutVm.dismissDialogs()
+        }
+    )
 }
 
 @Composable

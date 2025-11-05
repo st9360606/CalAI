@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -61,9 +62,9 @@ fun WorkoutTrackerSheet(
     onTextChanged: (String) -> Unit,
     onAddWorkout: () -> Unit,
     onClickPresetPlus: (PresetWorkoutDto) -> Unit,
-    onToastCleared: () -> Unit
+    onToastCleared: () -> Unit,
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true) // ★ 新增
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val maxSheetHeight = (screenHeightDp * 0.93f).dp
@@ -76,8 +77,8 @@ fun WorkoutTrackerSheet(
     val remaining = (totalCount - initialLimit).coerceAtLeast(0)
 
     ModalBottomSheet(
-        onDismissRequest = { onClose() },
         sheetState = sheetState,
+        onDismissRequest = { onClose() },
         dragHandle = { /* 自定手把 */ },
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         containerColor = Color.White,

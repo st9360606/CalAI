@@ -1,8 +1,8 @@
 package com.calai.app.ui.home.ui.workout
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SheetState
+import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.app.ui.home.ui.workout.components.DurationPickerSheet
 import com.calai.app.ui.home.ui.workout.components.WorkoutConfirmDialog
@@ -10,83 +10,70 @@ import com.calai.app.ui.home.ui.workout.components.WorkoutEstimatingDialog
 import com.calai.app.ui.home.ui.workout.components.WorkoutScanFailedDialog
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 
-/**
- * Host: 進入 Routes.WORKOUT 時呼叫這個。
- *
- * - 第一次進來時呼叫 vm.init() 去抓 presets & today。
- * - 根據 vm.ui.showDurationPickerFor：
- *   * null    -> 顯示主的 WorkoutTrackerSheet (白底，輸入框/預設清單)
- *   * 非 null -> 顯示 DurationPickerSheet (挑時長)
- *
- * 另外三個情境：
- *   ui.estimating            -> loading 動畫 (5.jpg)
- *   ui.estimateResult !=null -> 確認 kcal 頁 (6.jpg)
- *   ui.errorScanFailed       -> Uh-oh Scan Failed (7.jpg)
- *
- * onClose(): 使用者往下滑或按右上 X 時 -> nav.popBackStack()
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutTrackerHost(
     vm: WorkoutViewModel,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    sheetState: SheetState,
+    visible: Boolean
 ) {
-    val ui by vm.ui.collectAsStateWithLifecycle()
+    val ui = vm.ui.collectAsStateWithLifecycle().value
 
-    // ✅ 這段是新的：當這個 Host 第一次被組進樹裡的時候，
-    //    如果還沒載入 presets / today，就叫 vm.init()
     LaunchedEffect(Unit) {
-        if (ui.presets.isEmpty() || ui.today == null) {
-            vm.init()
-        }
+        if (ui.presets.isEmpty() || ui.today == null) vm.init()
+    }
+    if (!visible) return
+
+    // ★ Save 後直到關閉前，鎖定顯示 Picker，避免在 VM 改狀態時先看到主單一幀
+    var keepPickerUntilClose by remember { mutableStateOf(false) }
+    // reset 鎖定：當 Host 關閉時清掉
+    LaunchedEffect(visible) {
+        if (!visible) keepPickerUntilClose = false
     }
 
-    // 拿出 picker 方便 smart cast
-    val picker = ui.showDurationPickerFor
+    // 記住最後一次的 picker 名稱，若 VM 先清空 picker 再關閉，也能顯示正確標題
+    var lastPickerName by remember { mutableStateOf("Workout") }
+    LaunchedEffect(ui.showDurationPickerFor?.name) {
+        ui.showDurationPickerFor?.name?.let { lastPickerName = it }
+    }
 
-    if (picker != null) {
-        // 第二層：深色 "選分鐘數" sheet (2.jpg)
+    val picker = ui.showDurationPickerFor
+    val showPicker = (picker != null) || keepPickerUntilClose
+
+    if (showPicker) {
         DurationPickerSheet(
-            presetName = picker.name,
+            presetName = picker?.name ?: lastPickerName,
             onSaveMinutes = { minutes ->
-                vm.savePresetDuration(minutes) // /log -> 更新 today + toast
+                // ★ 先鎖再交給 VM（A 方案內已先 hide()，這裡是雙重保險）
+                keepPickerUntilClose = true
+                vm.savePresetDuration(minutes)
             },
-            onCancel = {
-                vm.dismissDialogs() // 關閉 picker，回到主單
-            }
+            onCancel = { vm.dismissDialogs() },
+            sheetState = sheetState
         )
     } else {
-        // 第一層：白底 Workout Tracker 主單 (1.jpg)
         WorkoutTrackerSheet(
             uiState = ui,
             onClose = onClose,
             onTextChanged = vm::onTextChanged,
-            onAddWorkout = { vm.estimate() }, // /estimate -> estimating dialog 等
-            onClickPresetPlus = { preset ->
-                vm.openDurationPicker(preset)
-            },
-            onToastCleared = { vm.clearToast() }
+            onAddWorkout = { vm.estimate() },
+            onClickPresetPlus = { preset -> vm.openDurationPicker(preset) },
+            onToastCleared = { vm.clearToast() },
+            sheetState = sheetState
         )
     }
 
-    // Loading (5.jpg)
     if (ui.estimating) {
-        WorkoutEstimatingDialog(
-            onDismiss = { /* loading 狀態下不讓用戶主動取消 */ }
-        )
+        WorkoutEstimatingDialog(onDismiss = { /* loading 中不允許取消 */ })
     }
-
-    // 估算成功 (6.jpg)
     ui.estimateResult?.let { r ->
         WorkoutConfirmDialog(
             result = r,
-            onSave = {
-                vm.confirmSaveFromEstimate() // /log -> 更新 today + 清輸入
-            },
+            onSave = { vm.confirmSaveFromEstimate() },
             onCancel = { vm.dismissDialogs() }
         )
     }
-
-    // Scan Failed (7.jpg)
     if (ui.errorScanFailed) {
         WorkoutScanFailedDialog(
             onTryAgain = { vm.dismissDialogs() },
@@ -94,4 +81,3 @@ fun WorkoutTrackerHost(
         )
     }
 }
-
