@@ -321,7 +321,8 @@ fun HomeScreen(
                 ringSize = 70.dp,      // ← 對應縮小的圓環
                 centerDisk = 30.dp,    // ← 對應縮小的中心灰圓
                 ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
-                onAddWorkoutClick = { showWorkoutSheet = true }
+                onAddWorkoutClick = { showWorkoutSheet = true },
+                onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁
             )
 
             // ===== Fourth block: 最近上傳

@@ -247,7 +247,8 @@ fun StepsWorkoutRowModern(
     plusButtonSize: Dp = 24.dp,  // 黑色圓的直徑（預設放大）
     plusIconSize: Dp = 19.dp,     // 中間白色「＋」圖示大小
     // ★ 新增：點擊黑色 + 要做什麼
-    onAddWorkoutClick: () -> Unit
+    onAddWorkoutClick: () -> Unit,
+    onWorkoutCardClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -290,7 +291,8 @@ fun StepsWorkoutRowModern(
                     outerSizeDp = 36.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
                     innerSizeDp = 26.dp   // 黑底圓按鈕大小 (和 Water 卡一致)
                 )
-            }
+            },
+            onCardClick = onWorkoutCardClick          // ★ 串進來
         )
     }
 }
@@ -326,14 +328,27 @@ fun ActivityStatCardSplit(
     gapPrimaryToSecondary: Dp = 2.dp,
 
     // ⭐ 左下角額外內容（Workout 的「+」按鈕）
-    leftExtra: (@Composable () -> Unit)? = null
+    leftExtra: (@Composable () -> Unit)? = null,
+
+    // ★★★ 新增：整張卡片點擊（可為 null 表示不啟用）
+    onCardClick: (() -> Unit)? = null
 ) {
     val titleStyle = titleTextStyle ?: MaterialTheme.typography.bodySmall
     val primaryStyle = primaryTextStyle ?: MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
     val secondaryStyle = secondaryTextStyle ?: MaterialTheme.typography.bodySmall
 
+    // ★ 為保持樣式不變：不使用 ripple
+    val interaction = remember { MutableInteractionSource() }
+    val clickableMod = if (onCardClick != null) {
+        Modifier.clickable(
+            interactionSource = interaction,
+            indication = null
+        ) { onCardClick() }
+    } else Modifier
+
     Card(
         modifier = modifier
+            .then(clickableMod)                 // ★ 套在 Card 上：整張卡片可點
             .height(cardHeight)
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
         shape = CardStyles.Corner,
