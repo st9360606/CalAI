@@ -22,8 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.components.ScrollingNumberWheel
-import kotlinx.coroutines.launch // ★ 新增
-// ^ 請確認已在 module 依賴 kotlinx-coroutines-android
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,8 +43,6 @@ fun DurationPickerSheet(
     val wheelAreaHeight = rowItemHeight * visibleCount
 
     val scrollState = rememberScrollState()
-
-    // ★ 關鍵：為了在 Save 前先 hide()
     val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
@@ -136,15 +133,17 @@ fun DurationPickerSheet(
                     onClick = {
                         val total = hours * 60 + minutes
                         if (total > 0) {
-                            // ★★★ 1) 先關閉 Sheet（避免在動畫期間內容切換）
                             scope.launch {
-                                sheetState.hide()
-                                // ★★★ 2) 關閉後才回呼 VM 儲存 → Host/父層會顯示成功 Toast、刷新清單
+                                // ✅ 先儲存（立即觸發 VM：ui.saving=true → History 立即返回 HOME）
                                 onSaveMinutes(total)
+                                // ✅ 再把面板收起（fire-and-forget，不等待）
+                                launch { runCatching { sheetState.hide() } }
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF111114),
@@ -158,7 +157,9 @@ fun DurationPickerSheet(
 
                 Button(
                     onClick = onCancel,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFE5E7EB),

@@ -188,15 +188,6 @@ fun WorkoutTrackerSheet(
                     }
                 }
             }
-
-            // 成功提示（在頂部，不影響底部 padding）
-            uiState.toastMessage?.let { msg ->
-                SuccessTopToast(message = msg, modifier = Modifier.align(Alignment.TopCenter))
-                LaunchedEffect(msg) {
-                    delay(2000)
-                    onToastCleared()
-                }
-            }
         }
     }
 }

@@ -166,7 +166,6 @@ class WorkoutViewModel @Inject constructor(
                 toastMessage = "Workout saved successfully!",
                 estimateResult = null,
                 textInput = "",
-                navigateHistoryOnce = true
             )
         }
     }
@@ -196,7 +195,6 @@ class WorkoutViewModel @Inject constructor(
                 saving = false,
                 toastMessage = "Workout saved successfully!",
                 showDurationPickerFor = null,
-                navigateHistoryOnce = true
             )
         }
     }

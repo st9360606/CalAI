@@ -90,14 +90,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.draw.shadow
 import com.calai.app.ui.home.components.CardStyles
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutTrackerHost
+import com.calai.app.ui.home.ui.workout.components.SuccessTopToast
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,12 +164,10 @@ fun HomeScreen(
         onPauseOrDispose { /* no-op */ }
     }
 
-    // ★ 關鍵：偵測一次性導航旗標 → 關 Sheet → 導到歷史頁 → consume 旗標
-    LaunchedEffect(workoutUi.navigateHistoryOnce) {
-        if (workoutUi.navigateHistoryOnce) {
-            showWorkoutSheet = false                          // 關閉底部彈窗
-            onOpenActivityHistory()                           // 導航到歷史頁
-            workoutVm.consumeNavigateHistory()                // 清旗標，避免重複觸發
+    // ✅ 有成功訊息就關掉 Host（停留在 HOME）
+    LaunchedEffect(workoutUi.toastMessage) {
+        if (workoutUi.toastMessage != null) {
+            showWorkoutSheet = false
         }
     }
 
@@ -213,155 +215,179 @@ fun HomeScreen(
                     start = Offset.Zero,
                     end = Offset(size.width, size.height) // ← 左上 → 右下
                 )
-                onDrawBehind {
-                    drawRect(brush = brush)
-                }
+                onDrawBehind { drawRect(brush = brush)}
             }
     ) {
+        Scaffold(
+            containerColor = Color.Transparent,   // ★ 讓下方漸層透出
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = onOpenCamera,
+                    containerColor = Color(0xFF111114),
+                    contentColor = Color.White,
+                    shape = CircleShape
+                ) { Icon(Icons.Default.Add, contentDescription = "cam") }
+            },
+            bottomBar = {
+                BottomBar(
+                    current = HomeTab.Home,
+                    onOpenTab = { tab ->
+                        when (tab) {
+                            HomeTab.Workout -> {
+                                onOpenTab(HomeTab.Workout)
+                            }
 
-    }
-    Scaffold(
-        containerColor = Color.Transparent,   // ★ 讓下方漸層透出
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onOpenCamera,
-                containerColor = Color(0xFF111114),
-                contentColor = Color.White,
-                shape = CircleShape
-            ) { Icon(Icons.Default.Add, contentDescription = "cam") }
-        },
-        bottomBar = {
-            BottomBar(
-                current = HomeTab.Home,
-                onOpenTab = { tab ->
-                    when (tab) {
-                        HomeTab.Workout -> {
-                            onOpenTab(HomeTab.Workout)
+                            else -> onOpenTab(tab)
                         }
-                        else -> onOpenTab(tab)
+                    }
+                )
+
+            }
+        ) { inner ->
+            val s = ui.summary ?: return@Scaffold
+
+            Column(
+                modifier = Modifier
+                    .padding(inner)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp)
+            ) {
+                // ===== Top bar: avatar + bell
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp, bottom = 0.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Avatar(s.avatarUrl, size = 48.dp, startPadding = 6.dp)  // 放大＋往右一些
+                    IconButton(onClick = onOpenAlarm) {
+                        Icon(
+                            painter = painterResource(R.drawable.home_notification), // ← 換成你的 drawable
+                            contentDescription = "alarm",
+                            modifier = Modifier.size(28.dp)                     // ← 再大一點
+                        )
                     }
                 }
-            )
 
-        }
-    ) { inner ->
-        val s = ui.summary ?: return@Scaffold
-
-        Column(
-            modifier = Modifier
-                .padding(inner)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-        ) {
-            // ===== Top bar: avatar + bell
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 0.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Avatar(s.avatarUrl, size = 48.dp, startPadding = 6.dp)  // 放大＋往右一些
-                IconButton(onClick = onOpenAlarm) {
-                    Icon(
-                        painter = painterResource(R.drawable.home_notification), // ← 換成你的 drawable
-                        contentDescription = "alarm",
-                        modifier = Modifier.size(28.dp)                     // ← 再大一點
-                    )
-                }
-            }
-
-            val today = remember { LocalDate.now() }
-            val pastDays = 20
-            val futureDays = 1   // 若不想顯示未來任何一天，改成 0
-            val days = remember(today) { (-pastDays..futureDays).map { today.plusDays(it.toLong()) } }
-            var selected by rememberSaveable { mutableStateOf(LocalDate.now()) }
-            CalendarStrip(
-                days = days,
-                selected = selected,
-                onSelect = { selected = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                selectedBgCorner = 16.dp   // ← 圓角更圓（原 8.dp）
-            )
-
-            // ★ 這兩個值就是你要調的數字（正數=上面減、下面加；負數相反）
-            val topSwap = 16.dp        // 例：Calories -8dp；Macro +8dp  第一頁 Calories 變矮、Macro 變高（或相反），但整頁高度不變、不跳動。
-            val bottomSwap = 8.dp    // 例：Workout -12dp；Weight/Fasting +12dp 第二頁 Workout 變矮、Weight/Fasting 變高（或相反），整頁高度不變。
-
-            // ★ 兩邊總高度控制（共同升降）
-            val baseHeight = 128.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
-            val verticalGap = 10.dp    // ← 上下卡的間距
-
-            // 將 VM 狀態轉為卡片顯示字串
-            val planName = fastingUi.selected.code
-            val startText = fastingUi.start.format(timeFmt)
-            val endText = fastingUi.end.format(timeFmt)
-
-            TwoPagePager(
-                summary = s,
-                topSwap = topSwap,
-                bottomSwap = bottomSwap,
-                baseHeight = baseHeight,
-                verticalGap = verticalGap,
-                onOpenFastingPlans = onOpenFastingPlans,
-                // ★ 傳入 VM 狀態給 Home 卡片
-                planOverride = planName,
-                fastingStartText = startText,
-                fastingEndText = endText,
-                fastingEnabled = fastingUi.enabled,
-                onToggleFasting = onToggleFasting,
-
-                // ★ 傳進去給第二頁下半部喝水卡
-                waterState = waterState,
-                onWaterPlus = { waterVm.adjust(+1) },
-                onWaterMinus = { waterVm.adjust(-1) },
-                onToggleUnit = { waterVm.toggleUnit() } // ← 這裡原本是 onWaterSettings
-            )
-
-
-            Spacer(Modifier.height(5.dp))
-
-            // ★ 想再小就把 cardHeight 調更小，環也可一起調
-            StepsWorkoutRowModern(
-                summary = s,
-                cardHeight = 112.dp,   // ← 你想要的高度
-                ringSize = 70.dp,      // ← 對應縮小的圓環
-                centerDisk = 30.dp,    // ← 對應縮小的中心灰圓
-                ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
-                onAddWorkoutClick = { showWorkoutSheet = true },
-                onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁
-            )
-
-            // ===== Fourth block: 最近上傳
-            if (s.recentMeals.isNotEmpty()) {
-                Spacer(Modifier.height(20.dp))
-                Text(
-                    text = stringResource(R.string.recently_uploaded),
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                val today = remember { LocalDate.now() }
+                val pastDays = 20
+                val futureDays = 1   // 若不想顯示未來任何一天，改成 0
+                val days =
+                    remember(today) { (-pastDays..futureDays).map { today.plusDays(it.toLong()) } }
+                var selected by rememberSaveable { mutableStateOf(LocalDate.now()) }
+                CalendarStrip(
+                    days = days,
+                    selected = selected,
+                    onSelect = { selected = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    selectedBgCorner = 16.dp   // ← 圓角更圓（原 8.dp）
                 )
-                for (m in s.recentMeals) {
-                    MealCard(m)
-                    Spacer(Modifier.height(12.dp))
+
+                // ★ 這兩個值就是你要調的數字（正數=上面減、下面加；負數相反）
+                val topSwap =
+                    16.dp        // 例：Calories -8dp；Macro +8dp  第一頁 Calories 變矮、Macro 變高（或相反），但整頁高度不變、不跳動。
+                val bottomSwap =
+                    8.dp    // 例：Workout -12dp；Weight/Fasting +12dp 第二頁 Workout 變矮、Weight/Fasting 變高（或相反），整頁高度不變。
+
+                // ★ 兩邊總高度控制（共同升降）
+                val baseHeight = 128.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
+                val verticalGap = 10.dp    // ← 上下卡的間距
+
+                // 將 VM 狀態轉為卡片顯示字串
+                val planName = fastingUi.selected.code
+                val startText = fastingUi.start.format(timeFmt)
+                val endText = fastingUi.end.format(timeFmt)
+
+                TwoPagePager(
+                    summary = s,
+                    topSwap = topSwap,
+                    bottomSwap = bottomSwap,
+                    baseHeight = baseHeight,
+                    verticalGap = verticalGap,
+                    onOpenFastingPlans = onOpenFastingPlans,
+                    // ★ 傳入 VM 狀態給 Home 卡片
+                    planOverride = planName,
+                    fastingStartText = startText,
+                    fastingEndText = endText,
+                    fastingEnabled = fastingUi.enabled,
+                    onToggleFasting = onToggleFasting,
+
+                    // ★ 傳進去給第二頁下半部喝水卡
+                    waterState = waterState,
+                    onWaterPlus = { waterVm.adjust(+1) },
+                    onWaterMinus = { waterVm.adjust(-1) },
+                    onToggleUnit = { waterVm.toggleUnit() } // ← 這裡原本是 onWaterSettings
+                )
+
+
+                Spacer(Modifier.height(5.dp))
+
+                // ★ 想再小就把 cardHeight 調更小，環也可一起調
+                StepsWorkoutRowModern(
+                    summary = s,
+                    cardHeight = 112.dp,   // ← 你想要的高度
+                    ringSize = 70.dp,      // ← 對應縮小的圓環
+                    centerDisk = 30.dp,    // ← 對應縮小的中心灰圓
+                    ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
+                    onAddWorkoutClick = { showWorkoutSheet = true },
+                    onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁
+                )
+
+                // ===== Fourth block: 最近上傳
+                if (s.recentMeals.isNotEmpty()) {
+                    Spacer(Modifier.height(20.dp))
+                    Text(
+                        text = stringResource(R.string.recently_uploaded),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    for (m in s.recentMeals) {
+                        MealCard(m)
+                        Spacer(Modifier.height(12.dp))
+                    }
+                }
+
+                Spacer(Modifier.height(80.dp))
+            }
+        }
+        // ===== ✅ Toast 疊加層（只在 Sheet 完全關閉 & flag 為 false 時顯示） =====
+        val sheetFullyHidden by remember {
+            derivedStateOf { workoutSheetState.currentValue == SheetValue.Hidden }
+        }
+
+        // ⚠️ 改成「或」：Host 關閉（!showWorkoutSheet）就可顯示；
+        // 仍保留 sheetFullyHidden 以兼容動畫完成後的情況。
+        val canShowToast = !showWorkoutSheet || sheetFullyHidden
+        val toastMsg = workoutUi.toastMessage
+
+        Box(Modifier.fillMaxSize()) {
+            if (canShowToast && toastMsg != null) {
+                SuccessTopToast(
+                    message = toastMsg,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+                LaunchedEffect(toastMsg) {
+                    delay(2000)
+                    workoutVm.clearToast()
                 }
             }
+        }
 
-            Spacer(Modifier.height(80.dp))
-        }
+        // ===== 共用 BottomSheet Host（常駐），以 visible 控制顯示 =====
+        WorkoutTrackerHost(
+            vm = workoutVm,
+            sheetState = workoutSheetState,
+            visible = showWorkoutSheet,
+            onClose = {
+                showWorkoutSheet = false
+                workoutVm.dismissDialogs()
+            }
+        )
     }
-    // === 共用 BottomSheetState；Host 常駐，用 visible 控制 ===
-    WorkoutTrackerHost(
-        vm = workoutVm,
-        sheetState = workoutSheetState,
-        visible = showWorkoutSheet,
-        onClose = {
-            showWorkoutSheet = false
-            workoutVm.dismissDialogs()
-        }
-    )
 }
 
 @Composable

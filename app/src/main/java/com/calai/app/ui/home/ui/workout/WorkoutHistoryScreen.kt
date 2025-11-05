@@ -20,8 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.app.data.workout.api.WorkoutSessionDto
-import com.calai.app.ui.home.ui.workout.components.SuccessTopToast
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.rememberModalBottomSheetState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,10 +30,8 @@ fun WorkoutHistoryScreen(
     vm: WorkoutViewModel,
     onBack: () -> Unit
 ) {
-    // 初始化（只執行一次）
+    // 初始化
     LaunchedEffect(Unit) { vm.init() }
-
-    // ⭐ 進入頁面就 refresh 一次，避免冷啟後畫面空白
     LaunchedEffect(Unit) { vm.refreshToday() }
 
     val ui by vm.ui.collectAsStateWithLifecycle()
@@ -41,13 +40,23 @@ fun WorkoutHistoryScreen(
     val list = today?.sessions ?: emptyList()
 
     var showTracker by rememberSaveable { mutableStateOf(false) }
+    var navigated by rememberSaveable { mutableStateOf(false) }
 
-    // ★ 共用 BottomSheetState（僅建立一次）
+    // 共用 BottomSheetState（僅建立一次）
     val trackerSheetState: SheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
 
-    // 在歷史頁內消化 navigateHistoryOnce，避免回 HOME 後又被導回來
+    // ✅ 更快返回：一偵測到開始儲存就立刻回 HOME（Toast 交給 HOME 顯示）
+    LaunchedEffect(ui.saving) {
+        if (ui.saving && !navigated) {
+            navigated = true
+            showTracker = false
+            onBack()
+        }
+    }
+
+    // （相容路徑：若 VM 仍可能設 navigateHistoryOnce，就消化掉）
     LaunchedEffect(ui.navigateHistoryOnce) {
         if (ui.navigateHistoryOnce) {
             showTracker = false
@@ -71,10 +80,7 @@ fun WorkoutHistoryScreen(
                     actionIconContentColor = onSurface
                 ),
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.padding(top = 6.dp)
-                    ) {
+                    IconButton(onClick = onBack, modifier = Modifier.padding(top = 6.dp)) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "back"
@@ -85,9 +91,7 @@ fun WorkoutHistoryScreen(
                     Text(
                         text = "Workout History",
                         modifier = Modifier.padding(top = 6.dp),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                     )
                 },
                 actions = {
@@ -101,9 +105,7 @@ fun WorkoutHistoryScreen(
                     ) {
                         IconButton(
                             onClick = { showTracker = true },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                contentColor = Color.White
-                            )
+                            colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
@@ -149,19 +151,16 @@ fun WorkoutHistoryScreen(
         }
     }
 
-    // 成功 toast
-    if (ui.toastMessage != null && !showTracker) {
-        SuccessTopToast(message = ui.toastMessage!!)
-        LaunchedEffect(ui.toastMessage) {
-            kotlinx.coroutines.delay(2000)
-            vm.clearToast()
-        }
-    }
+    // ❌ 不在 History 顯示成功 Toast（交給 HOME 顯示）
+    // if (ui.toastMessage != null && !showTracker) { ... } ← 已移除
 
-    // ★ Host 常駐，用 visible 控制顯示（修正：補上 sheetState / visible 兩參數）
+    // Host 常駐，用 visible 控制顯示
     WorkoutTrackerHost(
         vm = vm,
-        onClose = { showTracker = false },
+        onClose = {
+            showTracker = false
+            vm.dismissDialogs()
+        },
         sheetState = trackerSheetState,
         visible = showTracker
     )
