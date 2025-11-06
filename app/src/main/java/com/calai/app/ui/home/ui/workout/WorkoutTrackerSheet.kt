@@ -1,5 +1,9 @@
 package com.calai.app.ui.home.ui.workout
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.calai.app.data.workout.api.PresetWorkoutDto
+import com.calai.app.ui.home.ui.workout.components.FixedModalSheet
 import com.calai.app.ui.home.ui.workout.components.trackerSheetHeight
 import com.calai.app.ui.home.ui.workout.model.WorkoutUiState
 
@@ -47,137 +53,124 @@ fun WorkoutTrackerSheet(
     onAddWorkout: () -> Unit,
     onClickPresetPlus: (PresetWorkoutDto) -> Unit,
     onToastCleared: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    @Suppress("UNUSED_PARAMETER") sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
     val sheetH = trackerSheetHeight()
 
-    // ✅ 狀態放在 LazyColumn 外層
     var expanded by rememberSaveable { mutableStateOf(false) }
     val initialLimit = 20
     val totalCount = uiState.presets.size
-    val presetsToShow: List<PresetWorkoutDto> =
-        if (expanded) uiState.presets else uiState.presets.take(initialLimit)
+    val presetsToShow = if (expanded) uiState.presets else uiState.presets.take(initialLimit)
     val remaining = (totalCount - initialLimit).coerceAtLeast(0)
 
-    ModalBottomSheet(
-        sheetState = sheetState,
-        onDismissRequest = { onClose() },
-        dragHandle = null, // ★ 與 Flow 一致：不顯示預設手把
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-        containerColor = Color.White,
-        tonalElevation = 0.dp,
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(sheetH) // ★ 固定高度（與 Flow 一致）
-                .imePadding()
-                .padding(horizontal = 24.dp, vertical = 24.dp) // ★ 內距一致
-        ) {
-            val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-            val bottomPad: Dp = navBottom + 12.dp
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = bottomPad)
+    // 以 Dialog 呈現，不受 IME 影響位置
+    FixedModalSheet(
+        visible = true,
+        onDismissRequest = onClose,
+        panel = {
+            // 統一外距 & 固定高度（面板本身不動）
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(sheetH)
+                    .padding(horizontal = 24.dp, vertical = 24.dp)
             ) {
-                item {
-                    HeaderSection(
-                        title = "Workout Tracker",
-                        subtitle = "Describe the Type of Exercise and the duration",
-                        onClose = onClose
-                    )
+                val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                val imeBottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+                val bottomPad: Dp = maxOf(navBottom, imeBottom) + 12.dp
 
-                    OutlinedTextField(
-                        value = uiState.textInput,
-                        onValueChange = { onTextChanged(it) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 120.dp),
-                        placeholder = { Text("Examples: 45 min Running", color = Gray500) },
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            cursorColor = TextPrimary,
-                            focusedContainerColor = LightGrayBg,
-                            unfocusedContainerColor = LightGrayBg,
-                            disabledContainerColor = LightGrayBg,
-                            focusedBorderColor = Gray300,
-                            unfocusedBorderColor = Gray300,
-                            focusedPlaceholderColor = Gray500,
-                            unfocusedPlaceholderColor = Gray500
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = bottomPad)
+                ) {
+                    item {
+                        HeaderSection(
+                            title = "Workout Tracker",
+                            subtitle = "Describe the Type of Exercise and the duration",
+                            onClose = onClose
                         )
-                    )
 
-                    Spacer(Modifier.height(20.dp))
-
-                    val isEnabled = uiState.textInput.isNotBlank()
-                    Button(
-                        onClick = { onAddWorkout() },
-                        enabled = isEnabled,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Black,
-                            contentColor = Color.White,
-                            disabledContainerColor = Black,
-                            disabledContentColor = Color.White
+                        OutlinedTextField(
+                            value = uiState.textInput,
+                            onValueChange = { onTextChanged(it) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 120.dp),
+                            placeholder = { Text("Examples: 45 min Running", color = Gray500) },
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary,
+                                cursorColor = TextPrimary,
+                                focusedContainerColor = LightGrayBg,
+                                unfocusedContainerColor = LightGrayBg,
+                                disabledContainerColor = LightGrayBg,
+                                focusedBorderColor = Gray300,
+                                unfocusedBorderColor = Gray300,
+                                focusedPlaceholderColor = Gray500,
+                                unfocusedPlaceholderColor = Gray500
+                            )
                         )
-                    ) { Text("Add Workout", color = Color.White) }
 
-                    Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(20.dp))
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = DividerGray)
-                        Text(
-                            text = "or select from the list",
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Gray600
-                        )
-                        HorizontalDivider(modifier = Modifier.weight(1f), color = DividerGray)
+                        val isEnabled = uiState.textInput.isNotBlank()
+                        Button(
+                            onClick = { onAddWorkout() },
+                            enabled = isEnabled,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Black,
+                                contentColor = Color.White,
+                                disabledContainerColor = Black,
+                                disabledContentColor = Color.White
+                            )
+                        ) { Text("Add Workout", color = Color.White) }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = DividerGray)
+                            Text(
+                                text = "or select from the list",
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Gray600
+                            )
+                            HorizontalDivider(modifier = Modifier.weight(1f), color = DividerGray)
+                        }
+
+                        Spacer(Modifier.height(16.dp))
                     }
 
-                    Spacer(Modifier.height(16.dp))
-                }
+                    items(presetsToShow) { preset ->
+                        PresetWorkoutRowLight(
+                            preset = preset,
+                            onClickPlus = { onClickPresetPlus(preset) }
+                        )
+                        HorizontalDivider(color = Gray300)
+                    }
 
-                // ★ 明確型別，避免推斷受前面錯誤干擾
-                items<PresetWorkoutDto>(presetsToShow) { preset: PresetWorkoutDto ->
-                    PresetWorkoutRowLight(
-                        preset = preset,
-                        onClickPlus = { onClickPresetPlus(preset) }
-                    )
-                    HorizontalDivider(color = Gray300)
-                }
-
-                if (totalCount > initialLimit) {
-                    item {
-                        Spacer(Modifier.height(8.dp))
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            TextButton(onClick = { expanded = !expanded }) {
-                                val label: String =
-                                    if (expanded) "Show less" else "Show more ($remaining)"
-                                Text(
-                                    text = label,
-                                    color = Black,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                    if (totalCount > initialLimit) {
+                        item {
+                            Spacer(Modifier.height(8.dp))
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                TextButton(onClick = { expanded = !expanded }) {
+                                    val label = if (expanded) "Show less" else "Show more ($remaining)"
+                                    Text(text = label, color = Black, style = MaterialTheme.typography.bodyMedium)
+                                }
                             }
+                            Spacer(Modifier.height(8.dp))
                         }
-                        Spacer(Modifier.height(8.dp))
                     }
                 }
             }
         }
-    }
+    )
 }
 
 /**

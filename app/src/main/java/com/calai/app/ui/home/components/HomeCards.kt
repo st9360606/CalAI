@@ -289,7 +289,8 @@ fun StepsWorkoutRowModern(
                 WorkoutAddButton(
                     onClick = onAddWorkoutClick,
                     outerSizeDp = 36.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
-                    innerSizeDp = 26.dp   // 黑底圓按鈕大小 (和 Water 卡一致)
+                    innerSizeDp = 28.dp, // 黑底圓按鈕大小 (和 Water 卡一致)
+                    iconSizeDp = 24.dp
                 )
             },
             onCardClick = onWorkoutCardClick          // ★ 串進來
@@ -506,7 +507,6 @@ fun WeightFastingRowModern(
             secondaryYOffset = (-6).dp,        // ★ secondary 往上
             gapPrimaryToSecondary = 0.dp       // 可視覺需要把間距縮小
         )
-
 
         // 右卡 Fasting Plan（改用 modifier.weight(1f).height(cardHeight)）
         val plan = planOverride ?: (summary.fastingPlan ?: "—")

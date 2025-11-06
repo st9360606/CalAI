@@ -382,11 +382,16 @@ fun HomeScreen(
             vm = workoutVm,
             sheetState = workoutSheetState,
             visible = showWorkoutSheet,
-            onClose = {
+            onCloseFull = {            // 完整關閉：收合 + 清 VM
                 showWorkoutSheet = false
                 workoutVm.dismissDialogs()
+            },
+            onCollapseOnly = {         // 只收合：不清 VM（供 onClickPresetPlus 使用）
+                showWorkoutSheet = false
+                // 切記不要呼叫 workoutVm.dismissDialogs()
             }
         )
+
     }
 }
 

@@ -144,6 +144,9 @@ fun WeightCardNew(
                 // 加號按鈕：固定貼在左下角，尺寸不被壓縮
                 WeightAddButton(
                     onClick = onAddWeightClick,
+                    outerSizeDp = 36.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
+                    innerSizeDp = 28.dp, // 黑底圓按鈕大小 (和 Water 卡一致)
+                    iconSizeDp = 24.dp,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                 )
@@ -194,7 +197,9 @@ private fun WeightAddButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     outerSizeDp: Dp = 36.dp,   // 和 Water/Workout 一致
-    innerSizeDp: Dp = 26.dp    // 黑色圓的實際直徑
+    innerSizeDp: Dp = 30.dp,    // 黑色圓的實際直徑
+    iconSizeDp: Dp = 24.dp    // ✅ 白色「＋」加大
+
 ) {
     val scope = rememberCoroutineScope()
 
@@ -248,7 +253,8 @@ private fun WeightAddButton(
             androidx.compose.material3.Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = "add weight entry",
-                tint = Color.White
+                tint = Color.White,
+                modifier = Modifier.size(iconSizeDp)
             )
         }
     }

@@ -159,7 +159,6 @@ class WorkoutViewModel @Inject constructor(
         viewModelScope.launch {
             _ui.value = _ui.value.copy(saving = true)
             val logResp = runCatching {
-                // kcal = r.kcal 也可以，但為了前後一致，允許 null 由後端重算
                 repo.saveWorkout(activityId = activityId, minutes = minutes, kcal = null)
             }.getOrElse { e ->
                 _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
@@ -172,9 +171,11 @@ class WorkoutViewModel @Inject constructor(
                 toastMessage = "Workout saved successfully!",
                 estimateResult = null,
                 textInput = "",
+                navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
             )
         }
     }
+
 
     /** 點擊預設活動的「+」→ 打開時長面板 */
     fun openDurationPicker(preset: PresetWorkoutDto) {
@@ -183,13 +184,12 @@ class WorkoutViewModel @Inject constructor(
 
     /** 時長面板按 Save → 寫 DB → 更新 today → 關閉面板 → 觸發一次性導航 */
     fun savePresetDuration(minutes: Int) {
-        val preset = _ui.value.showDurationPickerFor ?: return
+        val preset = _ui.value.showDurationPickerFor ?: return  // ★ 若沒呼叫 openDurationPicker(preset) 就會是 null
         if (minutes <= 0 || _ui.value.saving) return
 
         viewModelScope.launch {
             _ui.value = _ui.value.copy(saving = true)
             val logResp = runCatching {
-                // kcal = null → 後端依 MET*體重*分鐘計算，與 UI fallback 相同邏輯
                 repo.saveWorkout(activityId = preset.activityId, minutes = minutes, kcal = null)
             }.getOrElse { e ->
                 _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
@@ -201,6 +201,7 @@ class WorkoutViewModel @Inject constructor(
                 saving = false,
                 toastMessage = "Workout saved successfully!",
                 showDurationPickerFor = null,
+                navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
             )
         }
     }

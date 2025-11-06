@@ -6,8 +6,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 object WorkoutSheetSpec {
-    // 想再低：改 0.84f / 0.82f
-    const val HEIGHT_FRACTION: Float = 0.86f
+    const val HEIGHT_FRACTION: Float = 0.92f
 }
 
 @Composable
