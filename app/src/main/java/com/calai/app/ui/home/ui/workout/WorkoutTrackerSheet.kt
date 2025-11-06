@@ -11,39 +11,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.* // ★ 包含 getValue/setValue/mutableStateOf/rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.calai.app.data.workout.api.PresetWorkoutDto
-import com.calai.app.ui.home.ui.workout.components.SuccessTopToast
+import com.calai.app.ui.home.ui.workout.components.trackerSheetHeight
 import com.calai.app.ui.home.ui.workout.model.WorkoutUiState
-import kotlinx.coroutines.delay
 
-// 一些固定色
+// 固定色
 private val Black = Color(0xFF111114)
 private val LightGrayBg = Color(0xFFF3F4F6)
 private val Gray300 = Color(0xFFE5E7EB)
@@ -63,45 +47,39 @@ fun WorkoutTrackerSheet(
     onAddWorkout: () -> Unit,
     onClickPresetPlus: (PresetWorkoutDto) -> Unit,
     onToastCleared: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true) // ★ 新增
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
+    val sheetH = trackerSheetHeight()
 
-    val screenHeightDp = LocalConfiguration.current.screenHeightDp
-    val maxSheetHeight = (screenHeightDp * 0.93f).dp
-
+    // ✅ 狀態放在 LazyColumn 外層
+    var expanded by rememberSaveable { mutableStateOf(false) }
     val initialLimit = 20
     val totalCount = uiState.presets.size
-    var expanded = rememberSaveable { false }
-
-    val presetsToShow = if (expanded) uiState.presets else uiState.presets.take(initialLimit)
+    val presetsToShow: List<PresetWorkoutDto> =
+        if (expanded) uiState.presets else uiState.presets.take(initialLimit)
     val remaining = (totalCount - initialLimit).coerceAtLeast(0)
 
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = { onClose() },
-        dragHandle = { /* 自定手把 */ },
+        dragHandle = null, // ★ 與 Flow 一致：不顯示預設手把
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         containerColor = Color.White,
         tonalElevation = 0.dp,
-        // 讓我們自行處理 insets（保留）
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
     ) {
-        // ✅ 移除 navigationBarsPadding()，避免與 LazyColumn 的 contentPadding 重複
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = maxSheetHeight)
-                .imePadding() // ✅ 鍵盤出現時頂起內容
+                .height(sheetH) // ★ 固定高度（與 Flow 一致）
+                .imePadding()
+                .padding(horizontal = 24.dp, vertical = 24.dp) // ★ 內距一致
         ) {
-            // 動態計算底部 padding：導覽列高度 + 少許緩衝
             val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
             val bottomPad: Dp = navBottom + 12.dp
 
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                // ✅ 原本是 200.dp，改成動態 insets，消除大片空白
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = bottomPad)
             ) {
                 item {
@@ -110,6 +88,7 @@ fun WorkoutTrackerSheet(
                         subtitle = "Describe the Type of Exercise and the duration",
                         onClose = onClose
                     )
+
                     OutlinedTextField(
                         value = uiState.textInput,
                         onValueChange = { onTextChanged(it) },
@@ -167,7 +146,8 @@ fun WorkoutTrackerSheet(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                items(presetsToShow) { preset ->
+                // ★ 明確型別，避免推斷受前面錯誤干擾
+                items<PresetWorkoutDto>(presetsToShow) { preset: PresetWorkoutDto ->
                     PresetWorkoutRowLight(
                         preset = preset,
                         onClickPlus = { onClickPresetPlus(preset) }
@@ -178,10 +158,18 @@ fun WorkoutTrackerSheet(
                 if (totalCount > initialLimit) {
                     item {
                         Spacer(Modifier.height(8.dp))
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             TextButton(onClick = { expanded = !expanded }) {
-                                val label = if (expanded) "Show less" else "Show more (${remaining})"
-                                Text(text = label, color = Black, style = MaterialTheme.typography.bodyMedium)
+                                val label: String =
+                                    if (expanded) "Show less" else "Show more ($remaining)"
+                                Text(
+                                    text = label,
+                                    color = Black,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
                         }
                         Spacer(Modifier.height(8.dp))

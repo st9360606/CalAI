@@ -8,6 +8,8 @@ import com.calai.app.data.workout.api.TodayWorkoutResponse
 import com.calai.app.data.workout.repo.WorkoutRepository
 import com.calai.app.data.workout.store.WorkoutTodayStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -119,23 +121,27 @@ class WorkoutViewModel @Inject constructor(
         _ui.value = _ui.value.copy(textInput = v)
     }
 
-    /** 自由文字估算 → 顯示估算結果彈窗 */
-    fun estimate() {
+    // 新增：最少 5 秒轉圈的估算流程
+    fun estimateWithSpinner() {
         val text = _ui.value.textInput.trim()
         if (text.isBlank()) return
 
         viewModelScope.launch {
+            // 進入運轉中
             _ui.value = _ui.value.copy(
                 estimating = true,
                 errorScanFailed = false,
                 estimateResult = null
             )
-            val resp = runCatching { repo.estimateFreeText(text) }.getOrElse {
-                _ui.value = _ui.value.copy(estimating = false, errorScanFailed = true)
-                return@launch
-            }
 
-            if (resp.status == "ok") {
+            // 並行：一邊打 API，一邊確保至少 5 秒
+            val req = async { runCatching { repo.estimateFreeText(text) }.getOrNull() }
+            val minSpinner = async { delay(5_000) }
+
+            val resp = req.await()
+            minSpinner.await() // 保證至少 5 秒
+
+            if (resp != null && resp.status == "ok") {
                 _ui.value = _ui.value.copy(estimating = false, estimateResult = resp)
             } else {
                 _ui.value = _ui.value.copy(estimating = false, errorScanFailed = true)

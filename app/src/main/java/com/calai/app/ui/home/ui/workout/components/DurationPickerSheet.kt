@@ -22,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.components.ScrollingNumberWheel
-import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +43,6 @@ fun DurationPickerSheet(
     val wheelAreaHeight = rowItemHeight * visibleCount
 
     val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
         sheetState = sheetState,
@@ -133,12 +132,8 @@ fun DurationPickerSheet(
                     onClick = {
                         val total = hours * 60 + minutes
                         if (total > 0) {
-                            scope.launch {
-                                // ✅ 先儲存（立即觸發 VM：ui.saving=true → History 立即返回 HOME）
-                                onSaveMinutes(total)
-                                // ✅ 再把面板收起（fire-and-forget，不等待）
-                                launch { runCatching { sheetState.hide() } }
-                            }
+                            // ✅ 立刻進入 saving（由 VM 設定），不呼叫 hide()，交給上層 gating/導航處理
+                            onSaveMinutes(total)
                         }
                     },
                     modifier = Modifier
@@ -172,3 +167,4 @@ fun DurationPickerSheet(
         }
     }
 }
+
