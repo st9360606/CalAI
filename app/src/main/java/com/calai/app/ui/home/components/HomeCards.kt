@@ -538,7 +538,7 @@ fun GreenSwitch(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     width: Dp = 52.dp,
-    height: Dp = 32.dp,
+    height: Dp = 38.dp,
 ) {
     val radius = height / 2
     val thumbSize = height - 4.dp

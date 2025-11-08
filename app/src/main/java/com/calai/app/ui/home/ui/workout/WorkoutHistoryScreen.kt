@@ -207,9 +207,9 @@ private fun HistoryRow(
         verticalAlignment = Alignment.Top
     ) {
         Surface(
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier.size(48.dp),
             shape = CircleShape,
-            color = Color(0xFF84CC16),
+            color = Color(0xFFB5B5B5),
             contentColor = Color.White
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

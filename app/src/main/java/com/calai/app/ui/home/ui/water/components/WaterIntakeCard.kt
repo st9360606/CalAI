@@ -186,7 +186,7 @@ fun WaterIntakeCard(
                     modifier = Modifier
                         .size(60.dp) // 保持 60dp
                         .background(
-                            color = Color(0xFFF2F3FF), // 淺藍/淡紫
+                            color = Color(0xFFE8EAFF), // 淺藍/淡紫
                             shape = RoundedCornerShape(10.dp)
                         ),
                     contentAlignment = Alignment.Center

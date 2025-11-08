@@ -42,8 +42,8 @@ fun FastingPlanCard(
     planNameYOffset: Dp = 0.dp,
 
     // ===== Switch 尺寸（保留） =====
-    switchWidth: Dp = 55.dp,
-    switchHeight: Dp = 26.dp,
+    switchWidth: Dp = 52.dp,
+    switchHeight: Dp = 28.dp,
 
     // ===== 黑底標題條參數（新） =====
     topBarHeight: Dp = 26.dp,                                       // ★ 固定高度，視覺更薄

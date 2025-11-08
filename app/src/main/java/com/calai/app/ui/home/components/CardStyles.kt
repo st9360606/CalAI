@@ -13,11 +13,11 @@ object CardStyles {
 
     // 邊框：比之前更深一點，幫助卡片邊界更明顯
     val BorderColor = Color(0xFFC9CDD4)
-    val Border = BorderStroke(1.dp, BorderColor)
+    val Border = BorderStroke(0.5.dp, BorderColor)
 
     // 統一圓角（Home 主要卡片都是 20.dp 圓角）
     val Corner = RoundedCornerShape(20.dp)
 
     // 統一陰影高度：讓卡片浮起來（立體感）
-    val Elevation: Dp = 2.dp
+    val Elevation: Dp = 0.5.dp
 }

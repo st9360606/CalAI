@@ -1,5 +1,6 @@
 package com.calai.app.ui.home.ui.workout
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -69,7 +70,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.calai.app.R
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.ColorFilter
 
 // 色票
 private val Black = Color(0xFF111114)
@@ -203,7 +214,14 @@ fun WorkoutUnifiedSheet(
                             onClose = { vm.dismissDialogs(); onClose() } // ★ 用具名參數
                         )
                         Spacer(Modifier.height(4.dp))
-                        ResultContent(result = m.result, onSave = onFlowSave, onCancel = onFlowCancel)
+                        ResultContent(
+                            result = m.result,
+                            onSave = onFlowSave,
+                            onCancel = onFlowCancel,
+                            activityIconRes = R.drawable.workout_activity,
+                            activityIconSize = 130.dp,
+                            activityIconTopPadding = 0.dp
+                        )
                     }
 
                     is SheetMode.Failed -> Column(Modifier.fillMaxSize()) {
@@ -396,11 +414,11 @@ fun CyclingEstimatingLine(
 @Composable
 fun IndeterminateRing(
     modifier: Modifier = Modifier,
-    diameter: Dp = 128.dp,   // ★ 預設改大
-    ringWidth: Dp = 12.dp,   // ★ 預設改粗
+    diameter: Dp = 80.dp,   // ★ 預設改大
+    ringWidth: Dp = 8.dp,   // ★ 預設改粗
     sweepDegrees: Float = 90f,
     durationMillis: Int = 900,
-    color: Color = Green,
+    color: Color = Color(0xFFFF8F33),
     trackColor: Color = TrackGray
 ) {
     val t = rememberInfiniteTransition(label = "ring")
@@ -554,85 +572,206 @@ fun EstimatingContent(
         )
     }
 }
+/**
+ * 中央徽章：黑色圓＋白色勾
+ * - 勾的線條粗細以元件直徑的百分比計算（預設 14%）
+ * - 勾的路徑採三點路徑，端點/轉角皆為圓角，視覺更「厚實」
+ */
+/** 中央徽章：黑色圓＋白色勾（勾大小與粗細可調） */
+@Composable
+private fun CheckBadge(
+    badgeSize: Dp,
+    bgColor: Color = Black,
+    checkColor: Color = Color.White,
+    checkStrokePercent: Float = 0.16f,  // 勾線粗細（占直徑比例，建議 0.12f–0.18f）
+    checkScale: Float = 0.80f           // 勾整體縮放（1.0=原始；<1 變小）
+) {
+    val clampedScale = checkScale.coerceIn(0.7f, 1.1f)
 
+    Box(
+        modifier = Modifier
+            .size(badgeSize)
+            .clip(CircleShape)
+            .background(bgColor),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val cx = w * 0.5f
+            val cy = h * 0.5f
+
+            // 原始三點（較大幅度的打勾）
+            val p1 = Pair(w * 0.24f, h * 0.54f)
+            val p2 = Pair(w * 0.45f, h * 0.74f)
+            val p3 = Pair(w * 0.78f, h * 0.34f)
+
+            fun scaleAroundCenter(px: Float, py: Float): Pair<Float, Float> {
+                val sx = cx + (px - cx) * clampedScale
+                val sy = cy + (py - cy) * clampedScale
+                return sx to sy
+            }
+            val (x1, y1) = scaleAroundCenter(p1.first, p1.second)
+            val (x2, y2) = scaleAroundCenter(p2.first, p2.second)
+            val (x3, y3) = scaleAroundCenter(p3.first, p3.second)
+
+            val path = Path().apply {
+                moveTo(x1, y1)
+                lineTo(x2, y2)
+                lineTo(x3, y3)
+            }
+
+            // 筆畫隨 scale 等比，維持視覺比例；若想「小但很粗」，移除 * clampedScale
+            val strokeWidth = minOf(w, h) * checkStrokePercent * clampedScale
+            drawPath(
+                path = path,
+                color = checkColor,
+                style = Stroke(
+                    width = strokeWidth,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round
+                )
+            )
+        }
+    }
+}
+/**
+ * 變更點：
+ * - horizontalMargin：左右邊距（越小越「寬」；0.dp = 滿版）
+ * - buttonHeight：按鈕高度（建議 68–72.dp）
+ * - bottomLift：整組 CTA 自底部往上「抬」的距離（越大越上移）
+ */
+/**
+ * - 將 horizontalMargin 預設為 0.dp：兩顆按鈕滿版最寬
+ * - applySafeEdgePadding：若為 true，會在左右加上「安全邊界」(safeDrawing Horizontal)
+ */
 @Composable
 fun ResultContent(
     result: EstimateResponse,
     onSave: () -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    centerLift: Dp = 110.dp,
+    indicatorSize: Dp = 32.dp,         // 勾徽章大小
+    horizontalMargin: Dp = 0.dp,       // CTA 滿版
+    buttonHeight: Dp = 60.dp,
+    bottomLift: Dp = 40.dp,
+    applySafeEdgePadding: Boolean = false,
+    kcalTextSize: TextUnit = 40.sp,    // kcal 字級
+    @DrawableRes activityIconRes: Int? = null, // 例：R.drawable.workout_activity
+    activityIconSize: Dp = 90.dp,      // 圖示大小
+    activityIconTopPadding: Dp = 0.dp, // 圖示頂部內距
+    activityIconTint: Color? = Color(0xFFFF8F33), // ★ 預設橘色；不要上色→傳 null
+    activityIconLift: Dp = 8.dp        // ★ 僅圖示向上位移量
 ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White) // 白底
+            .background(Color.White)
     ) {
+        // 中央內容（整塊上移 centerLift）
         Column(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 12.dp),
+                .align(Alignment.Center)
+                .offset(y = -centerLift),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
-                modifier = Modifier
-                    .size(156.dp)
-                    .clip(CircleShape)
-                    .background(Green)
-            )
-            Spacer(Modifier.height(24.dp))
-            Text(
-                text = "${result.minutes ?: 0} min ${result.activityDisplay.orEmpty()}",
-                color = Black,
-                // ✅ 修正拼字：typography
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
-            )
-            Spacer(Modifier.height(8.dp))
+            // (1) 活動圖示（可選）
+            if (activityIconRes != null) {
+                Spacer(Modifier.height(activityIconTopPadding))
+                Image(
+                    painter = painterResource(id = activityIconRes),
+                    contentDescription = result.activityDisplay ?: "Activity",
+                    modifier = Modifier
+                        .size(activityIconSize)
+                        .offset(y = -activityIconLift), // ← 圖示往上移
+                    contentScale = ContentScale.Fit,
+                    colorFilter = activityIconTint?.let { tint ->
+                        ColorFilter.tint(tint, blendMode = BlendMode.SrcIn)
+                    }
+                )
+                Spacer(Modifier.height(20.dp))
+            }
+
+            // (2) kcal
             Text(
                 text = "${result.kcal ?: 0} kcal",
                 color = Black,
-                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = kcalTextSize
+                )
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // (3) minutes + activity（單行省略）
+            Text(
+                text = "${result.minutes ?: 0} min ${result.activityDisplay.orEmpty()}",
+                color = Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            // (4) 黑圓白勾徽章
+            CheckBadge(
+                badgeSize = indicatorSize,
+                bgColor = Black,
+                checkColor = Color.White,
+                checkStrokePercent = 0.16f,
+                checkScale = 0.60f
             )
         }
 
+        // 底部兩顆按鈕（滿版）
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .offset(y = -bottomLift)
+                .then(
+                    if (applySafeEdgePadding)
+                        Modifier.windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+                        )
+                    else Modifier
+                )
+                .padding(horizontal = horizontalMargin, vertical = 16.dp)
         ) {
             Button(
                 onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.extraLarge,
+                    .height(buttonHeight),
+                shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Black
+                    containerColor = Black,
+                    contentColor = Color.White
                 )
             ) {
-                Text(
-                    "Save Activity",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
+                Text("Add Workout", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
+
             Spacer(Modifier.height(12.dp))
+
             Button(
                 onClick = onCancel,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.extraLarge,
+                    .height(buttonHeight),
+                shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = GrayBtn,
-                    contentColor = Color.White
+                    containerColor = Gray300,
+                    contentColor = Black
                 )
             ) {
-                Text("Cancel", style = MaterialTheme.typography.titleMedium)
+                Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Medium)
             }
         }
     }
 }
-
 @Composable
 fun FailedContent(
     onTryAgain: () -> Unit,
@@ -656,7 +795,7 @@ fun FailedContent(
                     .background(Amber),
                 contentAlignment = Alignment.Center
             ) {
-                androidx.compose.material3.Icon(
+                Icon(
                     imageVector = Icons.Filled.Warning,
                     contentDescription = null,
                     tint = Color.White,
@@ -798,7 +937,7 @@ private fun PresetWorkoutRow(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF84CC16)),
+                .background(Color(0xFFB5B5B5)),
             contentAlignment = Alignment.Center
         ) {
             Text(

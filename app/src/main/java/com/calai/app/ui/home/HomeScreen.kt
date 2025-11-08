@@ -9,7 +9,6 @@ import android.provider.Settings
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,13 +34,10 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -59,7 +55,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -86,15 +81,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.calai.app.data.fasting.notifications.NotificationPermission
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.ui.draw.shadow
-import com.calai.app.ui.home.components.CardStyles
+import com.calai.app.ui.home.components.HomeBackground
+import com.calai.app.ui.home.components.LightHomeBackground
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
@@ -194,30 +187,11 @@ fun HomeScreen(
             )
         }
     }
-    // ---- 首頁背景漸層：左上(淡藍) → 中段(米白) → 右下(紅橘) ----
-    // 左上：淡藍，比之前更明顯一點，但還是非常淺，不會像純藍背景
-    val bgLeftNeutralCooler = Color(0xFFF1F4FC) // ★ 更新後，比 F5F6F8 再淡藍一點
-    val bgMidNeutral        = Color(0xFFF6F4F2) // 中間米白，維持
-    val bgRightWarmer       = Color(0xFFF6EDE4) // ★ 更新後，比 F4EFEA 再暖一點
-    // 背景畫布：這個 Box 放在 Scaffold 之前，當整個畫面底層
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .drawWithCache {
-                // ★ 關鍵：start=Offset.Zero(左上0,0)，end=Offset(size.width, size.height)
-                //     = 從左上角走到右下角
-                val brush = Brush.linearGradient(
-                    colorStops = arrayOf(
-                        0.00f to bgLeftNeutralCooler, // 左上：帶一點淡藍灰
-                        0.55f to bgMidNeutral,        // 中段：柔米白
-                        1.00f to bgRightWarmer        // 右下：淡暖拿鐵杏色
-                    ),
-                    start = Offset.Zero,
-                    end = Offset(size.width, size.height) // ← 左上 → 右下
-                )
-                onDrawBehind { drawRect(brush = brush)}
-            }
-    ) {
+    // ========= 「背景」改在這裡放一層即可 =========
+    Box(Modifier.fillMaxSize()) {
+        LightHomeBackground() // ← 背景
+//        DarkHomeBackground();
+    }
         Scaffold(
             containerColor = Color.Transparent,   // ★ 讓下方漸層透出
             floatingActionButton = {
@@ -393,7 +367,6 @@ fun HomeScreen(
         )
 
     }
-}
 
 @Composable
 private fun Avatar(
