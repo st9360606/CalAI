@@ -121,8 +121,8 @@ fun WorkoutHistoryScreen(
                     FilledIconButton(
                         onClick = { onBack() }, // ★ 直接關閉 WorkoutHistoryScreen
                         modifier = Modifier
-                            .padding(end = 12.dp, top = 6.dp)
-                            .size(36.dp)                 // ★ 保持 36dp 黑圓
+                            .padding(end = 14.dp, top = 10.dp)
+                            .size(32.dp)                 // ★ 保持 36dp 黑圓
                             .clip(CircleShape),
                         shape = CircleShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
@@ -132,7 +132,9 @@ fun WorkoutHistoryScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "close"
+                            contentDescription = "close",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp) // ← X 更大
                         )
                     }
                 }

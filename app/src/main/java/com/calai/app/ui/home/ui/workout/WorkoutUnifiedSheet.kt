@@ -25,7 +25,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -43,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.app.data.workout.api.EstimateResponse
 import com.calai.app.data.workout.api.PresetWorkoutDto
-import com.calai.app.ui.home.components.ScrollingNumberWheel
 import com.calai.app.ui.home.ui.workout.components.DurationPickerSheet
 import com.calai.app.ui.home.ui.workout.components.FixedModalSheet
 import com.calai.app.ui.home.ui.workout.components.trackerSheetHeight
@@ -61,6 +58,18 @@ import com.calai.app.ui.home.ui.workout.model.WorkoutUiState
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.foundation.Canvas
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 // 色票
 private val Black = Color(0xFF111114)
@@ -71,9 +80,10 @@ private val TextPrimary = Color(0xFF111114)
 private val TextSecondary = Color(0xFF4B5563)
 private val HandleGray = Color(0xFF9CA3AF)
 private val DarkSurface = Color(0xFF111114)
-private val Green = Color(0xFF4CAF50)
+private val Green = Color(0xFF84CC16)
 private val GrayBtn = Color(0xFF374151)
-
+private val TrackGray = Color(0xFFE6E9EF) // 很淡的灰，近截圖
+private val Amber = Color(0xFFF59E0B)
 /** 面板模式（都在同一顆 Sheet 內切換） */
 private sealed interface SheetMode {
     data object Tracker : SheetMode
@@ -178,16 +188,32 @@ fun WorkoutUnifiedSheet(
                         onAddWorkout = onAddWorkoutClick,
                         onClickPresetPlus = onClickPresetPlus
                     )
-                    is SheetMode.Estimating -> EstimatingContent()
-                    is SheetMode.Result -> ResultContent(
-                        result = m.result,
-                        onSave = onFlowSave,
-                        onCancel = onFlowCancel
-                    )
-                    is SheetMode.Failed -> FailedContent(
-                        onTryAgain = onFlowTryAgain,
-                        onCancel = onFlowCancel
-                    )
+                    is SheetMode.Estimating -> Column(Modifier.fillMaxSize()) {
+                        SimpleHeaderBar(
+                            title = "Workout Tracker",
+                            onClose = { vm.dismissDialogs(); onClose() } // ★ 用具名參數
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        EstimatingContent()
+                    }
+
+                    is SheetMode.Result -> Column(Modifier.fillMaxSize()) {
+                        SimpleHeaderBar(
+                            title = "Workout Tracker",
+                            onClose = { vm.dismissDialogs(); onClose() } // ★ 用具名參數
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        ResultContent(result = m.result, onSave = onFlowSave, onCancel = onFlowCancel)
+                    }
+
+                    is SheetMode.Failed -> Column(Modifier.fillMaxSize()) {
+                        SimpleHeaderBar(
+                            title = "Workout Tracker",
+                            onClose = { vm.dismissDialogs(); onClose() } // ★ 用具名參數
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        FailedContent(onTryAgain = onFlowTryAgain, onCancel = onFlowCancel)
+                    }
                 }
             }
         }
@@ -325,217 +351,368 @@ private fun TrackerContent(
     }
 }
 
+/**
+ * 簡單輪播文字：每 intervalMs 切換下一句，使用淡入/淡出轉場。
+ * - phrases：要輪播的多句文案（至少 1 句）
+ * - intervalMs：每句顯示時間，預設 1600ms
+ */
 @Composable
-private fun DurationContent(
-    presetName: String,
-    onSaveMinutes: (Int) -> Unit,
-    onCancel: () -> Unit
+fun CyclingEstimatingLine(
+    phrases: List<String>,
+    modifier: Modifier = Modifier,
+    intervalMs: Int = 1600
 ) {
-    val screenHeightDp = LocalConfiguration.current.screenHeightDp
-    // ✅ 彈窗高度改為螢幕的 45%
-    val maxSheetHeight = (screenHeightDp * 0.45f).dp
+    // 保底：避免空陣列造成 crash
+    val safePhrases = if (phrases.isEmpty()) listOf("Estimating…") else phrases
 
-    var hours by remember { mutableStateOf(0) }
-    var minutes by remember { mutableStateOf(30) }
+    var index by remember { mutableStateOf(0) }
+    LaunchedEffect(safePhrases) {
+        while (true) {
+            delay(intervalMs.toLong())
+            index = (index + 1) % safePhrases.size
+        }
+    }
 
+    AnimatedContent(
+        targetState = index,
+        transitionSpec = {
+            fadeIn(tween(160)) togetherWith fadeOut(tween(120))
+        },
+        modifier = modifier,
+        label = "estimating_cycling"
+    ) { i ->
+        Text(
+            text = safePhrases[i],
+            color = Black,
+            textAlign = TextAlign.Center,
+            // 與你既有風格一致（titleLarge + SemiBold）
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.2.sp
+            )
+        )
+    }
+}
+@Composable
+fun IndeterminateRing(
+    modifier: Modifier = Modifier,
+    diameter: Dp = 128.dp,   // ★ 預設改大
+    ringWidth: Dp = 12.dp,   // ★ 預設改粗
+    sweepDegrees: Float = 90f,
+    durationMillis: Int = 900,
+    color: Color = Green,
+    trackColor: Color = TrackGray
+) {
+    val t = rememberInfiniteTransition(label = "ring")
+    val startAngle by t.animateFloat(
+        initialValue = -90f,
+        targetValue = 270f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "angle"
+    )
+    Box(modifier = modifier.size(diameter), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = ringWidth.toPx()
+            val inset = stroke / 2f
+            val arcSize = Size(size.width - 2 * inset, size.height - 2 * inset)
+            val topLeft = Offset(inset, inset)
+
+            drawArc(
+                color = trackColor,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = stroke, cap = StrokeCap.Round)
+            )
+            drawArc(
+                color = color,
+                startAngle = startAngle,
+                sweepAngle = sweepDegrees,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = stroke, cap = StrokeCap.Round)
+            )
+        }
+    }
+}
+
+
+
+@Composable
+private fun SimpleHeaderBar(
+    title: String,
+    onClose: () -> Unit,
+    topPadding: Dp = 12.dp,       // ★ 原 8.dp → 12.dp：整體往下
+    gapAfterHandle: Dp = 20.dp,   // ★ 原 12.dp → 20.dp：把手到標題更遠
+    closeSize: Dp = 32.dp,        // ★ 原 32.dp → 40.dp
+    closeIconSize: Dp = 24.dp     // ★ 原 24.dp → 28.dp
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight() // ✅ 不再撐滿
-            .padding(bottom = 24.dp)
+            .padding(top = topPadding, bottom = 12.dp)
     ) {
-        // 標題
-        Text(
-            text = presetName,
-            color = TextPrimary,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = "Add this workout time to your activity log",
-            color = Gray600,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-        Spacer(Modifier.height(24.dp))
-
-        // 時間選擇區
-        val rowItemHeight = 48.dp
+        // 上方小把手
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = maxSheetHeight)
-                .weight(1f, fill = false), // ✅ 不填滿
-            contentAlignment = Alignment.Center
+                .align(Alignment.CenterHorizontally)
+                .width(40.dp)
+                .height(4.dp)
+                .background(color = HandleGray.copy(alpha = 0.5f), shape = RoundedCornerShape(2.dp))
+        )
+
+        Spacer(Modifier.height(gapAfterHandle)) // ★ 拉開距離
+
+        // 標題 + 右上關閉
+        Box(Modifier.fillMaxWidth()) {
+            Text(
+                text = title,
+                modifier = Modifier.align(Alignment.Center),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = Black
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(closeSize)                 // ★ 放大按鈕外徑
+                    .clip(CircleShape)
+                    .background(Black)
+                    .clickable { onClose() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "close",
+                    tint = Color.White,
+                    modifier = Modifier.size(closeIconSize) // ★ 放大 icon
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EstimatingContent(
+    // ★ 新增：整組（進度環＋主文案）往上抬高的距離
+    centerLift: Dp = 110.dp,
+    // ★ 新增：底部提示文字往上抬高的距離
+    bottomLift: Dp = 20.dp,
+    // 其餘保持你的預設視覺
+    ringDiameter: Dp = 128.dp,
+    ringWidth: Dp = 12.dp,
+    ringSweep: Float = 90f,
+    ringDurationMillis: Int = 900
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
+        contentAlignment = Alignment.Center
+    ) {
+        // 中央：進度環 + 主文案（整組往上）
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = -centerLift),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            IndeterminateRing(
+                diameter = ringDiameter,
+                ringWidth = ringWidth,
+                sweepDegrees = ringSweep,
+                durationMillis = ringDurationMillis
+            )
+            Spacer(Modifier.height(28.dp))
+
+            CyclingEstimatingLine(
+                phrases = listOf(
+                    "Analyzing your activity…",
+                    "Working on your numbers…",
+                    "Estimating effort, calculating calories..."
+                ),
+                intervalMs = 1600, // 1.6 秒切換一次（可依體感調整）
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 底部提示（相對底部再往上）
+        Text(
+            text = "Please do not close the app or lock your device",
+            color = Black.copy(alpha = 0.70f),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 24.dp, vertical = 28.dp)
+                .offset(y = -bottomLift) // ★ 再上移一點
+        )
+    }
+}
+
+@Composable
+fun ResultContent(
+    result: EstimateResponse,
+    onSave: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White) // 白底
+    ) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth()
-                    .height(rowItemHeight)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFFF2F2F2))
+                    .size(156.dp)
+                    .clip(CircleShape)
+                    .background(Green)
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ScrollingNumberWheel(
-                    value = hours,
-                    range = 0..12,
-                    onValueChange = { hours = it },
-                    textColor = TextPrimary
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("hr", color = Gray600, style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.width(24.dp))
-                ScrollingNumberWheel(
-                    value = minutes,
-                    range = 0..59,
-                    onValueChange = { minutes = it },
-                    textColor = TextPrimary
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("min", color = Gray600, style = MaterialTheme.typography.titleMedium)
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // 底部按鈕
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-        ) {
-            Button(
-                onClick = {
-                    val total = hours * 60 + minutes
-                    if (total > 0) onSaveMinutes(total)
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Black,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    "Save",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Medium
-                    )
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            Button(
-                onClick = onCancel,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE5E7EB),
-                    contentColor = Black
-                )
-            ) {
-                Text(
-                    "Cancel",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Medium
-                    )
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun EstimatingContent() {
-    Box(Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .size(132.dp)
-                .align(Alignment.Center)
-                .clip(CircleShape)
-                .background(Green)
-        )
-        Column(Modifier.align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Estimating effort, calculating calories...", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
-            Spacer(Modifier.height(6.dp))
-            Text("Please do not close the app or lock your device", color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-private fun ResultContent(result: EstimateResponse, onSave: () -> Unit, onCancel: () -> Unit) {
-    Box(Modifier.fillMaxSize()) {
-        Column(Modifier.align(Alignment.TopCenter), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.size(132.dp).clip(CircleShape).background(Green))
             Spacer(Modifier.height(24.dp))
-            Text("${result.minutes ?: 0} min ${result.activityDisplay.orEmpty()}", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "${result.minutes ?: 0} min ${result.activityDisplay.orEmpty()}",
+                color = Black,
+                // ✅ 修正拼字：typography
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+            )
             Spacer(Modifier.height(8.dp))
-            Text("${result.kcal ?: 0} kcal", color = Color.White, style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold))
+            Text(
+                text = "${result.kcal ?: 0} kcal",
+                color = Black,
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold)
+            )
         }
-        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+        ) {
             Button(
                 onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = DarkSurface)
-            ){ Text("Save Activity", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)) }
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Black
+                )
+            ) {
+                Text(
+                    "Save Activity",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
             Spacer(Modifier.height(12.dp))
             Button(
                 onClick = onCancel,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = GrayBtn, contentColor = Color.White)
-            ){ Text("Cancel", style = MaterialTheme.typography.titleMedium) }
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GrayBtn,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Cancel", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }
 
 @Composable
-private fun FailedContent(onTryAgain: () -> Unit, onCancel: () -> Unit) {
-    Box(Modifier.fillMaxSize()) {
-        Column(Modifier.align(Alignment.TopCenter), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.size(132.dp).clip(CircleShape).background(Color(0xFFF59E0B)))
+fun FailedContent(
+    onTryAgain: () -> Unit,
+    onCancel: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White) // ★ 白底
+    ) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(156.dp)
+                    .clip(CircleShape)
+                    .background(Amber),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(56.dp)
+                )
+            }
             Spacer(Modifier.height(16.dp))
-            Text("Uh-oh! Scan Failed", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+            Text(
+                "Uh-oh! Scan Failed",
+                color = Black,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
             Spacer(Modifier.height(8.dp))
-            Text("The activity description may be incorrect, or the internet connection is weak.",
-                color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "The activity description may be incorrect, or the internet connection is weak.",
+                color = Black.copy(alpha = 0.9f),
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
-        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+        ) {
             Button(
                 onClick = onTryAgain,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = DarkSurface)
-            ){ Text("Try Again", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)) }
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Black
+                )
+            ) {
+                Text(
+                    "Try Again",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
             Spacer(Modifier.height(12.dp))
             Button(
                 onClick = onCancel,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = GrayBtn, contentColor = Color.White)
-            ){ Text("Cancel", style = MaterialTheme.typography.titleMedium) }
+                shape = MaterialTheme.shapes.extraLarge,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GrayBtn,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Cancel", style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 }
