@@ -105,7 +105,7 @@ fun CalendarStrip(
                                 val chipH = size.height
                                 val left = (size.width - chipW) / 2f
                                 drawRoundRect(
-                                    color = Color.White,
+                                    color = Color(0xFFFF8A33).copy(alpha = 0.88f),
                                     topLeft = Offset(left, 0f),
                                     size = Size(chipW, chipH),
                                     cornerRadius = CornerRadius(
@@ -123,7 +123,8 @@ fun CalendarStrip(
                             style = DotStyle.Dashed,
                             dashedPath = dashedPath,
                             onClick = {},
-                            useClickable = false
+                            useClickable = false,
+                            isSelected = true // ← 加上這行
                         )
                     }
                 }
@@ -139,7 +140,7 @@ fun CalendarStrip(
                                 val chipH = size.height
                                 val left = (size.width - chipW) / 2f
                                 drawRoundRect(
-                                    color = Color.Gray.copy(alpha = 0.1f), // 淺白
+                                    color = Color.Gray.copy(alpha = 0.25f), // 淺白
                                     topLeft = Offset(left, 0f),
                                     size = Size(chipW, chipH),
                                     cornerRadius = CornerRadius(
@@ -196,23 +197,19 @@ private fun DayDot(
     style: DotStyle,
     dashedPath: PathEffect,
     onClick: () -> Unit,
-    useClickable: Boolean = true
+    useClickable: Boolean = true,
+    isSelected: Boolean = false
 ) {
-    // ★ ② 星期英文顏色改深黑
     val weekdayColor = Color.Black
-
-    // ★ ③ 再加深虛線顏色（Slate-700）
-    val dashedStrokeColor = Color(0xFF334155)
+    val dashedStrokeColor = Color(0xFF000000)
     val disabledStrokeColor = Color(0xFF9CA3AF)
 
-    // ★ ⑤ 未來日「實線描邊」加粗
     val futureStrokeColor = Color(0xFF9CA3AF)
-    val futureStrokeWidthPx = 4f // from 3f → 4f
+    val futureStrokeWidthPx = 5f
 
     val textColor = if (enabled) Color.Black else Color(0xFF9CA3AF)
     val alpha = if (enabled) 1f else 0.85f
 
-    // 既有：圓圈 34.dp、日期字 14sp（上一版已調過）
     val dotSize = 34.dp
 
     Column(
@@ -224,11 +221,13 @@ private fun DayDot(
     ) {
         Text(
             text = dayOfWeekAbbrev(date.dayOfWeek),
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-            color = weekdayColor, // 深黑
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 12.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            ),
+            color = weekdayColor,
             textAlign = TextAlign.Center,
             maxLines = 1,
-            softWrap = false,
             overflow = TextOverflow.Clip
         )
         Spacer(Modifier.height(6.dp))
@@ -237,22 +236,24 @@ private fun DayDot(
                 val radius = size.minDimension / 2f - 2f
                 when (style) {
                     DotStyle.Dashed -> {
+                        val dashedStrokeWidth = if (isSelected) 5f else 3f
                         drawCircle(
                             color = (if (enabled) dashedStrokeColor else disabledStrokeColor).copy(alpha = alpha),
                             radius = radius,
                             center = Offset(size.width / 2f, size.height / 2f),
                             style = Stroke(
-                                width = 3f,
+                                width = dashedStrokeWidth,
                                 pathEffect = dashedPath
                             )
                         )
                     }
+
                     DotStyle.SolidStroke -> {
                         drawCircle(
                             color = futureStrokeColor.copy(alpha = alpha),
                             radius = radius,
                             center = Offset(size.width / 2f, size.height / 2f),
-                            style = Stroke(width = futureStrokeWidthPx) // 加粗
+                            style = Stroke(width = futureStrokeWidthPx)
                         )
                     }
                 }
@@ -261,14 +262,14 @@ private fun DayDot(
                 text = date.dayOfMonth.toString(),
                 color = textColor.copy(alpha = alpha),
                 fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                 maxLines = 1,
-                softWrap = false,
                 overflow = TextOverflow.Clip
             )
         }
     }
 }
+
 
 private fun dayOfWeekAbbrev(d: DayOfWeek): String = when (d) {
     DayOfWeek.MONDAY -> "Mon"

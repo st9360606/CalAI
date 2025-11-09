@@ -84,35 +84,7 @@ private fun makeNoiseImage(side: Int, alpha: Float): ImageBitmap {
 fun LightHomeBackground(modifier: Modifier = Modifier) {
     Canvas(modifier.fillMaxSize()) {
         // --- 主底：奶白 ---
-        drawRect(color = Color(0xFFF9F8F6), size = size)
-
-        // --- 左上：淡藍光暈 ---
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    Color(0xFFAFC7FA).copy(alpha = 0.50f), // 藍光可見但柔和
-                    Color.Transparent
-                ),
-                center = Offset(x = size.width * 0.0f, y = size.height * 0.0f), // 左上角
-                radius = size.minDimension * 0.9f
-            ),
-            center = Offset(x = size.width * 0.0f, y = size.height * 0.0f),
-            radius = size.minDimension * 0.9f
-        )
-
-        // --- 右上：橘光暈 ---
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    Color(0xFFFFE3C8).copy(alpha = 0.40f), // 橘光更明顯
-                    Color.Transparent
-                ),
-                center = Offset(x = size.width, y = 0f), // 右上角
-                radius = size.minDimension * 0.8f
-            ),
-            center = Offset(x = size.width, y = 0f),
-            radius = size.minDimension * 0.8f
-        )
+        drawRect(color = Color(0xFFF5F5F5), size = size)
     }
 }
 

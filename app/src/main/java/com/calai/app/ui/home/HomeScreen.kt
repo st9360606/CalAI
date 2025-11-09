@@ -524,29 +524,29 @@ private fun BottomBar(
     current: HomeTab,
     onOpenTab: (HomeTab) -> Unit
 ) {
-    // 固定底色：非常淡、帶一點暖米白
-    // 這個顏色在你的整體 UI（偏柔和、非純白）裡面不會突兀
-    val barSurface = Color(0xFFF6F4F2) // ★ 新增：固定底色，避免被漸層污染
+    // ✔️ 改為更中性的淺灰白
+    val barSurface = Color(0xFFF5F5F5)
 
     val selected = Color(0xFF111114)
     val unselected = Color(0xFF9CA3AF)
 
     Column(
-        modifier = Modifier.background(barSurface) // ★ 改：原本是 Transparent
+        modifier = Modifier.background(barSurface)
     ) {
-        // 上方 1dp 分隔線維持原色，讓 BottomBar 和內容區有清楚邊界
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFE5E7EB),
-            thickness = 1.dp
-        )
+        // ❌ 移除這一行就不會有灰色分隔線了
+        // HorizontalDivider(
+        //     modifier = Modifier.fillMaxWidth(),
+        //     color = Color(0xFFE5E7EB),
+        //     thickness = 1.dp
+        // )
 
         NavigationBar(
-            containerColor = barSurface, // ★ 改：原本是 Color.Transparent
+            modifier = Modifier
+                .padding(horizontal = 8.dp), // 左右不留空
+            containerColor = barSurface,
             contentColor = selected,
             tonalElevation = 0.dp
         ) {
-            // Home
             NavigationBarItem(
                 selected = current == HomeTab.Home,
                 onClick = { onOpenTab(HomeTab.Home) },
@@ -561,7 +561,6 @@ private fun BottomBar(
                 )
             )
 
-            // Progress
             NavigationBarItem(
                 selected = current == HomeTab.Progress,
                 onClick = { onOpenTab(HomeTab.Progress) },
@@ -576,12 +575,11 @@ private fun BottomBar(
                 )
             )
 
-            // Workout 〈原 Note〉
             NavigationBarItem(
                 selected = current == HomeTab.Workout,
                 onClick = { onOpenTab(HomeTab.Workout) },
                 label = { Text("Workout") },
-                icon = { Icon(Icons.Filled.Edit, null) }, // 先沿用舊 icon，不動版面
+                icon = { Icon(Icons.Filled.Edit, null) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = selected,
                     selectedTextColor = selected,
@@ -591,12 +589,11 @@ private fun BottomBar(
                 )
             )
 
-            // Daily 〈原 Fasting〉
             NavigationBarItem(
                 selected = current == HomeTab.Daily,
                 onClick = { onOpenTab(HomeTab.Daily) },
                 label = { Text("Daily") },
-                icon = { Icon(Icons.Filled.AccessTime, null) }, // 先沿用舊 icon
+                icon = { Icon(Icons.Filled.AccessTime, null) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = selected,
                     selectedTextColor = selected,
@@ -606,7 +603,6 @@ private fun BottomBar(
                 )
             )
 
-            // Personal
             NavigationBarItem(
                 selected = current == HomeTab.Personal,
                 onClick = { onOpenTab(HomeTab.Personal) },
@@ -623,6 +619,7 @@ private fun BottomBar(
         }
     }
 }
+
 
 private fun openAppNotificationSettings(ctx: Context) {
     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
