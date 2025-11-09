@@ -53,12 +53,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
+import com.calai.app.R
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
-    val Size = 64.dp      // 圓直徑
+    val Size = 66.dp      // 圓直徑
     val Stroke = 5.dp     // 圓環粗細
-    val CenterDisk = 32.dp// 圓心淺灰底大小
+    val CenterDisk = 34.dp// 圓心淺灰底大小
 }
 
 @Composable
@@ -94,14 +97,14 @@ fun CaloriesCardModern(
                     text = "$caloriesLeft",
                     style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
                 )
-                Text("Calories left", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6B7280))
+                Text("Calories left", style = MaterialTheme.typography.bodyMedium, color = Color.Black)
             }
             Box(Modifier.size(ringSize), contentAlignment = Alignment.Center) {
                 GaugeRing(
                     progress = progress,
                     sizeDp = ringSize,
                     strokeDp = ringStroke,
-                    trackColor = Color(0xFFE8EAEE),
+                    trackColor = Color(0xFFEFF0F3),
                     progressColor = Color(0xFF111827),
                     drawTopTick = true,
                     tickColor = Color(0xFF111827)
@@ -111,6 +114,12 @@ fun CaloriesCardModern(
                     shape = CircleShape,
                     modifier = Modifier.size(centerDisk),
                     content = {}
+                )
+                // 🔥 圖片：火焰 icon 疊在灰圓上
+                Image(
+                    painter = painterResource(R.drawable.fire),
+                    contentDescription = "Fire",
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -135,7 +144,7 @@ fun MacroRowModern(
                     imageVector = Icons.Filled.EggAlt,
                     contentDescription = null,
                     tint = Color(0xFFEF4444),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(21.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -150,7 +159,7 @@ fun MacroRowModern(
                     imageVector = Icons.Filled.BakeryDining,
                     contentDescription = null,
                     tint = Color(0xFFF59E0B),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(30.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -165,7 +174,7 @@ fun MacroRowModern(
                     imageVector = Icons.Filled.Opacity,
                     contentDescription = null,
                     tint = Color(0xFF22C55E),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -211,7 +220,7 @@ private fun MacroStatCardModern(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF6B7280)
+                color = Color.Black
             )
             Spacer(Modifier.height(spacingTop))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -219,7 +228,7 @@ private fun MacroStatCardModern(
                     progress = progress,
                     sizeDp = ringSize,
                     strokeDp = ringStroke,
-                    trackColor = Color(0xFFE8EAEE),
+                    trackColor = Color(0xFFEFF0F3),
                     progressColor = ringColor,
                     drawTopTick = true,
                     tickColor = ringColor
@@ -240,9 +249,9 @@ fun StepsWorkoutRowModern(
     summary: HomeSummary,
     // ★ 新增：卡片高度 & 圓環大小，可依需求調整
     cardHeight: Dp = 120.dp,   // 原 132.dp → 小一點
-    ringSize: Dp = 68.dp,      // 原 76.dp → 略小，避免卡片太擠
-    centerDisk: Dp = 28.dp,    // 原 30.dp → 跟著縮小一點
-    ringStroke: Dp = 8.dp,    // 保持視覺厚度不變（要更輕可改 7.dp）
+    ringSize: Dp = 74.dp,      // 原 76.dp → 略小，避免卡片太擠
+    centerDisk: Dp = 36.dp,    // 原 30.dp → 跟著縮小一點
+    ringStroke: Dp = 6.dp,    // 保持視覺厚度不變（要更輕可改 7.dp）
     // ★ 新增：Workout 黑圓＋大小可調
     plusButtonSize: Dp = 24.dp,  // 黑色圓的直徑（預設放大）
     plusIconSize: Dp = 19.dp,     // 中間白色「＋」圖示大小
@@ -387,7 +396,7 @@ fun ActivityStatCardSplit(
                         Text(
                             text = title,
                             style = titleStyle,
-                            color = Color(0xFF6B7280),
+                            color = Color(0xFF111114),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -409,7 +418,7 @@ fun ActivityStatCardSplit(
                         Text(
                             text = secondary,
                             style = secondaryStyle,
-                            color = Color(0xFF6B7280),
+                            color = Color(0xFF111114),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -446,7 +455,7 @@ fun ActivityStatCardSplit(
                             progress = progress,
                             sizeDp = ringSize,
                             strokeDp = ringStroke,
-                            trackColor = Color(0xFFE8EAEE),
+                            trackColor = Color(0xFFEFF0F3),
                             progressColor = ringColor,
                             drawTopTick = true,
                             tickColor = ringColor
@@ -496,7 +505,7 @@ fun WeightFastingRowModern(
             cardHeight = cardHeight,
             ringSize = 74.dp,
             ringStroke = 6.dp,
-            centerDisk = 32.dp,
+            centerDisk = 36.dp,
             topBarTitle = "Weight",
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,

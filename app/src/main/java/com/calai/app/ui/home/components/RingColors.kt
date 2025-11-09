@@ -8,5 +8,5 @@ import androidx.compose.ui.graphics.Color
  */
 object RingColors {
     // ★ 新色：更淺的灰白
-    val CenterFill = Color(0xFFF7F8FA)
+    val CenterFill = Color(0xFFF5F7F9)
 }

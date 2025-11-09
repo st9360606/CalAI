@@ -61,7 +61,7 @@ fun WeightCardNew(
     // 右側圓環尺寸
     ringSize: Dp = 74.dp,
     ringStroke: Dp = 6.dp,
-    centerDisk: Dp = 32.dp,
+    centerDisk: Dp = 36.dp,
 
     // 標題頂欄（與 FastingPlan 一致）
     topBarTitle: String = "Weight",
@@ -131,7 +131,7 @@ fun WeightCardNew(
                             text = secondary,
                             style = secondaryTextStyle,
                             fontSize = secondaryFontSize ?: secondaryTextStyle.fontSize,
-                            color = Color(0xFF6B7280),
+                            color = Color(0xFF111114),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.offset(y = secondaryYOffset)
@@ -167,7 +167,7 @@ fun WeightCardNew(
                         progress = progress,
                         sizeDp = ringSize,
                         strokeDp = ringStroke,
-                        trackColor = Color(0xFFE8EAEE),
+                        trackColor = Color(0xFFEFF0F3),
                         progressColor = ringColor,
                         drawTopTick = true,
                         tickColor = ringColor

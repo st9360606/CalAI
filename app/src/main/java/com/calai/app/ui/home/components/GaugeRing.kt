@@ -20,7 +20,7 @@ fun GaugeRing(
     modifier: Modifier = Modifier,
     sizeDp: Dp = 84.dp,
     strokeDp: Dp = 12.dp,
-    trackColor: Color = Color(0xFFE8EAEE),
+    trackColor: Color = Color(0xFFEFF0F3),
     progressColor: Color = Color(0xFF111827),
     drawTopTick: Boolean = true,
     tickColor: Color = progressColor

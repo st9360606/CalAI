@@ -304,8 +304,8 @@ fun HomeScreen(
                 StepsWorkoutRowModern(
                     summary = s,
                     cardHeight = 112.dp,   // ← 你想要的高度
-                    ringSize = 70.dp,      // ← 對應縮小的圓環
-                    centerDisk = 30.dp,    // ← 對應縮小的中心灰圓
+                    ringSize = 74.dp,      // ← 對應縮小的圓環
+                    centerDisk = 36.dp,    // ← 對應縮小的中心灰圓
                     ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
                     onAddWorkoutClick = { showWorkoutSheet = true },
                     onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁
@@ -466,7 +466,7 @@ private fun TwoPagePager(
                                 progress = 0f,
                                 cardHeight = caloriesH,
                                 ringSize = 76.dp,
-                                centerDisk = 36.dp,
+                                centerDisk = 38.dp,
                                 ringStroke = 6.dp
                             )
                             Spacer(Modifier.height(spacerV))
