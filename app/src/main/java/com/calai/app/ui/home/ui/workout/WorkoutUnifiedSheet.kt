@@ -780,17 +780,22 @@ fun FailedContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White) // ★ 白底
+            .background(Color.White)
     ) {
+        // 中央警示圖示（放大）
         Column(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 12.dp),
+                .align(Alignment.Center)
+                .offset(y = -110.dp), // 與 ResultContent 一致
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 頂部留白可選擇調整
+            Spacer(Modifier.height(0.dp))
+
             Box(
                 modifier = Modifier
-                    .size(156.dp)
+                    .size(112.dp) // ✅ 比原本 90.dp 更大
+                    .offset(y = -12.dp) // ✅ 稍微上移一點，保持視覺平衡
                     .clip(CircleShape)
                     .background(Amber),
                 contentAlignment = Alignment.Center
@@ -799,58 +804,73 @@ fun FailedContent(
                     imageVector = Icons.Filled.Warning,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(64.dp) // ✅ 原本 56 → 放大為 64
                 )
             }
-            Spacer(Modifier.height(16.dp))
+
+            Spacer(Modifier.height(20.dp))
+
             Text(
                 "Uh-oh! Scan Failed",
                 color = Black,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
+
             Spacer(Modifier.height(8.dp))
+
             Text(
-                "The activity description may be incorrect, or the internet connection is weak.",
+                "The workout description may be incorrect ( For example : 30 min Running ),  or the internet connection is weak.",
                 color = Black.copy(alpha = 0.9f),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
         }
 
+        // ✅ 底部按鈕與 ResultContent 對齊
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .offset(y = -40.dp)
+                .padding(horizontal = 0.dp, vertical = 16.dp)
         ) {
             Button(
                 onClick = onTryAgain,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.extraLarge,
+                    .height(60.dp),
+                shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Black
+                    containerColor = Black,
+                    contentColor = Color.White
                 )
             ) {
                 Text(
                     "Try Again",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
+
             Spacer(Modifier.height(12.dp))
+
             Button(
                 onClick = onCancel,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.extraLarge,
+                    .height(60.dp),
+                shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = GrayBtn,
-                    contentColor = Color.White
+                    containerColor = Gray300,
+                    contentColor = Black
                 )
             ) {
-                Text("Cancel", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Cancel",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }
