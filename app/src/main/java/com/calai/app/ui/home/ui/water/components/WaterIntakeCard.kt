@@ -1,6 +1,5 @@
 package com.calai.app.ui.home.ui.water.components
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,10 +12,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,8 +23,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,23 +40,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.water.store.WaterUnit
 import com.calai.app.ui.home.components.CardStyles
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import androidx.compose.ui.semantics.Role
+
 /**
- * RoundActionButton v16
- *
- * 和 v15 幾乎相同：
- * - outerSizeDp：外圈(高亮圈/點擊區)，比按鈕本體大
- * - innerSizeDp：真正顯示的按鈕大小
- * - 點擊時顯示深灰半透明圓形(比按鈕大)，120ms 後自動淡掉
- *
- * 差異 vs 早期版本：
- * - flashAlphaTarget = 0.4f，顏色是黑色 * 0.4f -> 視覺是淺一點的深灰
+ * RoundActionButton v16.1
+ * - 覆蓋層改用 fillMaxSize()，避免 matchParentSize() import 爭議。
  */
 @Composable
 private fun RoundActionButton(
@@ -107,7 +96,7 @@ private fun RoundActionButton(
         if (animatedAlpha > 0f) {
             Box(
                 modifier = Modifier
-                    .matchParentSize()
+                    .fillMaxSize() // ← 取代 matchParentSize()
                     .background(
                         color = Color.Black.copy(alpha = animatedAlpha * 0.4f),
                         shape = CircleShape
@@ -139,11 +128,8 @@ private fun RoundActionButton(
 }
 
 /**
- * WaterIntakeCard v16
- *
- * 變更點 vs 你給的版本：
- * - Switch：拿掉 Modifier.scale(...)，回復原生大小，所以白色 thumb(圓形)不會縮小。
- * - 其他 spacing、按鈕行為、深灰閃光都維持。
+ * WaterIntakeCard v17
+ * - 單位切換改用 UnitSwitchLabeled（文字內嵌在切換鈕上）
  */
 @Composable
 fun WaterIntakeCard(
@@ -236,15 +222,11 @@ fun WaterIntakeCard(
 
             Spacer(Modifier.size(8.dp))
 
-            // ===== 右半：(- / +) + Switch 區 =====
+            // ===== 右半：(- / +) + 切換鈕 =====
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-
-                // 靠上（4dp）
-                Spacer(Modifier.height(0.dp))
-
                 // 第一排：- / +
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -274,95 +256,26 @@ fun WaterIntakeCard(
                     )
                 }
 
-                // Switch 再往上靠近 (4dp)
                 Spacer(Modifier.height(10.dp))
 
-                // 第二排：oz [Switch] ml
-                Row(
-                    modifier = Modifier.padding(bottom = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "oz",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = if (state.unit == WaterUnit.OZ)
-                                Color(0xFF0F172A) // 高亮
-                            else
-                                Color(0xFF6B7280) // 灰
-                        )
+                // 第二排：單位切換（文字在切換鈕上）
+                UnitSwitchLabeled(
+                    checked = (state.unit == WaterUnit.ML), // true=ml, false=oz
+                    onCheckedChange = { newChecked ->
+                        val isMlNow = (state.unit == WaterUnit.ML)
+                        if (newChecked != isMlNow) onToggleUnit()
+                    },
+                    width = 92.dp,
+                    height = 38.dp,
+                    leftLabel = "oz",
+                    rightLabel = "ml",
+                    trackBase = Color(0xFF888888).copy(alpha = 0.25f),
+                    textStyle = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp // ★ 再放大
                     )
-
-                    Spacer(Modifier.size(6.dp))
-
-                    // 🔥 v16 變更：
-                    // 移除 Modifier.scale(...)，用原生 Switch 尺寸
-                    // → 白色圓球(thumb) 不會被縮小或壓扁
-                    UnitSwitch(
-                        checked = (state.unit == WaterUnit.ML),
-                        onCheckedChange = { onToggleUnit() },
-                        width = 46.dp,
-                        height = 32.dp,
-                        thumbSize = 18.dp,        // 固定白圓大小
-                        checkedTrack = Color(0xFF111114),
-                        uncheckedTrack = Color(0xFF9CA3AF)
-                    )
-
-                    Spacer(Modifier.size(6.dp))
-
-                    Text(
-                        text = "ml",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = if (state.unit == WaterUnit.ML)
-                                Color(0xFF0F172A) // 高亮
-                            else
-                                Color(0xFF6B7280) // 灰
-                        )
-                    )
-                }
+                )
             }
         }
     }
 }
-@Composable
-private fun UnitSwitch(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    width: Dp = 46.dp,          // 窄長一點
-    height: Dp = 32.dp,         // 與設計相符的高度
-    thumbSize: Dp = 18.dp,      // 白色圓固定尺寸（不縮）
-    padding: Dp = 3.dp,         // 內距，讓 thumb 不會貼邊
-    checkedTrack: Color = Color(0xFF111114),   // 黑色
-    uncheckedTrack: Color = Color(0xFF9CA3AF), // 灰色
-    thumbColor: Color = Color.White
-) {
-    val interaction = remember { MutableInteractionSource() }
-    val targetX = if (checked) (width - thumbSize - padding) else padding
-    val animatedX by animateDpAsState(targetValue = targetX, label = "unitSwitchThumbX")
-
-    Box(
-        modifier = modifier
-            .size(width, height)
-            .clip(RoundedCornerShape(height / 2))
-            .background(if (checked) checkedTrack else uncheckedTrack)
-            .toggleable(
-                value = checked,
-                onValueChange = onCheckedChange,
-                role = Role.Switch,
-                indication = null, // 不要 ripple
-                interactionSource = interaction
-            ),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        // 固定尺寸的白色圓形 thumb（不會縮小）
-        Box(
-            modifier = Modifier
-                .offset(x = animatedX)
-                .size(thumbSize)
-                .background(thumbColor, CircleShape)
-        )
-    }
-}
-
