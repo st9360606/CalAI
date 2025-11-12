@@ -266,7 +266,7 @@ fun WaterIntakeCard(
                         if (newChecked != isMlNow) onToggleUnit()
                     },
                     width = 92.dp,
-                    height = 38.dp,
+                    height = 30.dp,
                     leftLabel = "oz",
                     rightLabel = "ml",
                     trackBase = Color(0xFF888888).copy(alpha = 0.25f),
