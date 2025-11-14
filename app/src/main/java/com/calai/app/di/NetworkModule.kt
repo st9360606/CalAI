@@ -10,6 +10,8 @@ import com.calai.app.data.fasting.notifications.FastingAlarmScheduler
 import com.calai.app.data.fasting.repo.FastingRepository
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.users.api.UsersApi
+import com.calai.app.data.weight.api.WeightApi
+import com.calai.app.data.weight.repo.WeightRepository
 import com.calai.app.data.workout.api.WorkoutApi
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
@@ -125,5 +127,18 @@ object NetworkModule {
     fun provideWorkoutApi(
         @Named("apiRetrofit") retrofit: Retrofit
     ): WorkoutApi = retrofit.create(WorkoutApi::class.java)
+
+    @Provides @Singleton
+    fun provideWeightApi(@Named("apiRetrofit") retrofit: Retrofit): WeightApi =
+        retrofit.create(WeightApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideWeightRepository(
+        weightApi: WeightApi
+    ): WeightRepository {
+        return WeightRepository(weightApi)
+    }
+
 
 }

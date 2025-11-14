@@ -7,8 +7,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
     alias(libs.plugins.baselineprofile)
-    // ✅ 明確指定 Kotlin Serialization 插件版本（請與你的 Kotlin 版本一致）
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.20"
+    alias(libs.plugins.kotlin.serialization)
 }
 
 @Suppress("UnstableApiUsage")
@@ -131,41 +130,41 @@ android {
 }
 
 dependencies {
-    // ===================== Compose（用 BOM 對齊版本） =====================
+    // ===== Compose（僅保留一份 BOM） =====
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.foundation.foundation)
     androidTestImplementation(platform(libs.androidx.compose.bom))
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
-
-    // Compose UI 基本模組（不帶版本，交由 BOM 管理）
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
-    // ===================== Navigation / Hilt =====================
+    // ===== 核心/生命週期 =====
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+
+    // ===== Navigation / Hilt =====
     implementation("androidx.navigation:navigation-compose:2.8.3")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     implementation("com.google.dagger:hilt-android:2.52")
     kapt("com.google.dagger:hilt-android-compiler:2.52")
-    kapt("com.squareup:javapoet:1.13.0")
+    // ← Hilt-Work 的編譯器
+    kapt("androidx.hilt:hilt-compiler:1.2.0")
 
-    // ===================== Kotlin / 協程 / 資料儲存 =====================
+    // ===== 協程 / DataStore =====
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // ===================== 網路層 =====================
+    // ===== 網路層 =====
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
@@ -175,8 +174,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("com.google.code.gson:gson:2.11.0")
 
-    // ===================== Health Connect / 圖片 / 分頁 / 資料庫 =====================
-    implementation("androidx.health.connect:connect-client:1.1.0") // 2025/10 已穩定
+    // ===== 其他（Health Connect / Coil / Paging / Room / Media） =====
+    implementation("androidx.health.connect:connect-client:1.1.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.paging:paging-compose:3.3.2")
 
@@ -184,13 +183,11 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
 
-    // ===================== Google 登入 / Credential Manager =====================
     implementation("androidx.credentials:credentials:1.5.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
-    // ===================== 其他支援（Splash / AppCompat / Media3 等） =====================
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
@@ -199,25 +196,20 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.4.1")
     implementation("androidx.media3:media3-ui:1.4.1")
 
-    // ===================== 測試 =====================
+    // ===== WorkManager + Hilt =====
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+
+    // ===== 測試 =====
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 
-    // Baseline Profile（保持你的既有模組）
+    // Baseline Profile
     baselineProfile(project(":baselineprofile"))
-
-
-    implementation ("androidx.work:work-runtime-ktx:2.9.0")
-    implementation ("androidx.hilt:hilt-work:1.2.0")
-    kapt ("androidx.hilt:hilt-compiler:1.2.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
-    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
-
 }
-
 
 kapt {
     correctErrorTypes = true

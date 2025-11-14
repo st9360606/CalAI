@@ -1,7 +1,6 @@
-package com.calai.app.ui.home.components
+package com.calai.app.ui.home.ui.fasting.components
 
 // ===== Imports =====
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -21,6 +20,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import com.calai.app.ui.home.components.CardStyles
+import com.calai.app.ui.home.components.GreenSwitch
 
 @Composable
 fun FastingPlanCard(

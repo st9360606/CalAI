@@ -1,7 +1,6 @@
 package com.calai.app.ui.home.components
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,19 +10,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.EggAlt
 import androidx.compose.material.icons.filled.Opacity
@@ -56,6 +52,7 @@ import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
 import com.calai.app.R
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import com.calai.app.ui.home.ui.fasting.components.FastingPlanCard
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
@@ -483,7 +480,10 @@ fun WeightFastingRowModern(
     fastingEndText: String? = null,
     planOverride: String? = null,
     fastingEnabled: Boolean = false,
-    onToggle: (Boolean) -> Unit = {}
+    onToggle: (Boolean) -> Unit = {},
+    // ★ 新增：Weight 導航
+    onOpenWeight: () -> Unit,
+    onQuickLogWeight: () -> Unit
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         val commonTopBarHeight = 30.dp
@@ -501,7 +501,10 @@ fun WeightFastingRowModern(
             secondary = "to goal",
             ringColor = Color(0xFF06B6D4),
             progress = 0f,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .height(cardHeight)
+                .clickable { onOpenWeight() }, // ★ 整張卡片可點
             cardHeight = cardHeight,
             ringSize = 74.dp,
             ringStroke = 6.dp,
@@ -509,17 +512,16 @@ fun WeightFastingRowModern(
             topBarTitle = "Weight",
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,
-            // ★ 放大到 19sp，並往上移 4dp，減少上方空隙到 4dp
             primaryFontSize = 19.sp,
             primaryYOffset = (-6).dp,
             primaryTopSpacing = 4.dp,
-            secondaryYOffset = (-6).dp,        // ★ secondary 往上
-            gapPrimaryToSecondary = 0.dp       // 可視覺需要把間距縮小
+            secondaryYOffset = (-6).dp,
+            gapPrimaryToSecondary = 0.dp,
+            onAddWeightClick = onQuickLogWeight        // ★ 按「＋」直接開記錄頁
         )
 
         // 右卡 Fasting Plan（改用 modifier.weight(1f).height(cardHeight)）
         val plan = planOverride ?: (summary.fastingPlan ?: "—")
-
         FastingPlanCard(
             planTitle = "Fasting Plan",
             planName = plan,

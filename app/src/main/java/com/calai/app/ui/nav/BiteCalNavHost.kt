@@ -39,6 +39,8 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
+import com.calai.app.ui.home.ui.weight.RecordWeightScreen
+import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutHistoryScreen
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.app.ui.landing.LandingScreen
@@ -49,7 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
-import com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen
+import com.calai.app.ui.home.ui.weight.WeightScreen
 
 object Routes {
     const val LANDING = "landing"
@@ -81,7 +83,8 @@ object Routes {
     const val CAMERA = "camera"
     const val REMINDERS = "reminders"
     const val WORKOUT_HISTORY = "workout_history"
-
+    const val WEIGHT = "weight"
+    const val RECORD_WEIGHT = "record_weight"
 }
 
 private tailrec fun Context.findActivity(): Activity? =
@@ -566,6 +569,7 @@ fun BiteCalNavHost(
                 vm = vm,
                 waterVm = waterVm,
                 workoutVm = workoutVm,
+                fastingVm = fastingVm,
                 onOpenAlarm = {
                     nav.navigate(Routes.REMINDERS) {
                         launchSingleTop = true
@@ -617,7 +621,19 @@ fun BiteCalNavHost(
                         restoreState = true
                     }
                 },
-                fastingVm = fastingVm,
+                // ====== ★ Weight 相關 ======
+                onOpenWeight = {                      // 整張卡 → 進 Weight 主畫面（維持原行為）
+                    nav.navigate(Routes.WEIGHT) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onQuickLogWeight = {                  // 卡片上的「＋」→ 也改成進 Weight 主畫面
+                    nav.navigate(Routes.WEIGHT) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
 
@@ -653,6 +669,41 @@ fun BiteCalNavHost(
                 onBack = { nav.popBackStack() }
             )
         }
+
+        // === ★ WEIGHT 主畫面（與 RECORD_WEIGHT 共用 HOME 作用域的 WeightViewModel） ===
+        composable(Routes.WEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val vm: WeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+            // 視需求：初次進來做初始化
+            LaunchedEffect(Unit) { vm.initIfNeeded() }
+
+            WeightScreen(
+                vm = vm,
+                onLogClick = { nav.navigate(Routes.RECORD_WEIGHT) },
+                onBack = { nav.popBackStack() }
+            )
+        }
+
+        // === ★ WEIGHT 記錄頁（直接從 Home 開也能拿到同一顆 VM） ===
+        composable(Routes.RECORD_WEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val vm: WeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            RecordWeightScreen(
+                vm = vm,
+                onDone = { nav.popBackStack() },    // 完成後返回
+                onBack = { nav.popBackStack() }
+            )
+        }
+
 
 
         composable(Routes.PERSONAL) { SimplePlaceholder("Personal") }

@@ -4,9 +4,12 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -152,6 +155,12 @@ class UserProfileStore @Inject constructor(
     val waterGoalFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.WATER_GOAL_ML] }
     suspend fun setWaterGoalMl(ml: Int) { context.userProfileDataStore.edit { it[Keys.WATER_GOAL_ML] = ml.coerceAtLeast(0) } }
 
+    // === 讀一次目前單位（可能為 null） ===
+    suspend fun getWeightUnitOnce(): WeightUnit? {
+        val p = context.userProfileDataStore.data.first()
+        return p[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+    }
+
     /** 確保今日容器（若跨日則自動歸零） */
     private suspend fun ensureTodayWater() {
         context.userProfileDataStore.edit { p ->
@@ -233,10 +242,10 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.HEIGHT_FEET)
             p.remove(Keys.HEIGHT_INCHES)
             p.remove(Keys.WEIGHT)
-            p.remove(Keys.WEIGHT_UNIT)
+//            p.remove(Keys.WEIGHT_UNIT)
             p.remove(Keys.WEIGHT_LBS)
             p.remove(Keys.TARGET_WEIGHT)
-            p.remove(Keys.TARGET_WEIGHT_UNIT)
+//            p.remove(Keys.TARGET_WEIGHT_UNIT)
             p.remove(Keys.TARGET_WEIGHT_LBS)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)

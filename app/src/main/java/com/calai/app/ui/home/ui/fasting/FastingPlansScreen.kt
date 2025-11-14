@@ -64,7 +64,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -109,7 +111,6 @@ fun FastingPlansScreen(
     }
 
     Scaffold(
-        containerColor = Color.White,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -124,7 +125,8 @@ fun FastingPlansScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
-                            tint = Color.Black
+                            tint = Color.Black,
+                            modifier = Modifier.size(28.dp) // 箭頭放大
                         )
                     }
                 },
@@ -319,12 +321,12 @@ private fun FastingPlanCard(
             .drawBehind {
                 drawRoundRect(
                     color = neutralCard,
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx())
+                    cornerRadius = CornerRadius(16.dp.toPx())
                 )
                 drawRoundRect(
                     color = cardBorder,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx())
+                    style = Stroke(width = 1.dp.toPx()),
+                    cornerRadius = CornerRadius(16.dp.toPx())
                 )
             }
             .padding(2.dp)

@@ -1,7 +1,8 @@
-package com.calai.app.ui.home.ui.workout.components
+package com.calai.app.ui.home.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -54,7 +55,7 @@ fun SuccessTopToast(
             shadowElevation = 8.dp,
             tonalElevation = 0.dp
         ) {
-            androidx.compose.foundation.layout.Row(
+            Row(
                 modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp), // 內距加大
                 verticalAlignment = Alignment.CenterVertically
             ) {

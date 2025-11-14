@@ -81,18 +81,16 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.calai.app.data.fasting.notifications.NotificationPermission
-import androidx.compose.material3.HorizontalDivider // ★ 新增：取代舊 Divider
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.derivedStateOf
-import com.calai.app.ui.home.components.HomeBackground
 import com.calai.app.ui.home.components.LightHomeBackground
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutTrackerHost
-import com.calai.app.ui.home.ui.workout.components.SuccessTopToast
+import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
 
@@ -100,14 +98,17 @@ import kotlinx.coroutines.delay
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
-    waterVm: WaterViewModel, // ★ 新增
-    workoutVm: WorkoutViewModel,          // ★ 新增
+    waterVm: WaterViewModel,
+    workoutVm: WorkoutViewModel,
     onOpenAlarm: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
     onOpenFastingPlans: () -> Unit,
     onOpenActivityHistory: () -> Unit,
-    fastingVm: FastingPlanViewModel,     // ← 有傳入
+    fastingVm: FastingPlanViewModel,
+    // ★ 新增這兩個參數
+    onOpenWeight: () -> Unit,
+    onQuickLogWeight: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -289,7 +290,8 @@ fun HomeScreen(
                     fastingEndText = endText,
                     fastingEnabled = fastingUi.enabled,
                     onToggleFasting = onToggleFasting,
-
+                    onOpenWeight = onOpenWeight,
+                    onQuickLogWeight = onQuickLogWeight,
                     // ★ 傳進去給第二頁下半部喝水卡
                     waterState = waterState,
                     onWaterPlus = { waterVm.adjust(+1) },
@@ -420,7 +422,9 @@ private fun TwoPagePager(
     fastingEndText: String? = null,
     fastingEnabled: Boolean = false,
     onToggleFasting: (Boolean) -> Unit = {},
-
+    // ★ 新增：Weight 導航事件
+    onOpenWeight: () -> Unit,
+    onQuickLogWeight: () -> Unit,
     // ★ 新增：喝水卡需要的資料與 callback
     waterState: WaterUiState,
     onWaterPlus: () -> Unit,
@@ -484,7 +488,10 @@ private fun TwoPagePager(
                                 fastingStartText = fastingStartText,
                                 fastingEndText = fastingEndText,
                                 fastingEnabled = fastingEnabled,
-                                onToggle = onToggleFasting
+                                onToggle = onToggleFasting,
+                                // ★ 傳遞 Weight 兩個事件
+                                onOpenWeight = onOpenWeight,
+                                onQuickLogWeight = onQuickLogWeight
                             )
 
                             Spacer(Modifier.height(spacerV))
