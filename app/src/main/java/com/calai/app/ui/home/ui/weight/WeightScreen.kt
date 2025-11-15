@@ -1,29 +1,50 @@
 package com.calai.app.ui.home.ui.weight
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.calai.app.ui.home.ui.components.ErrorTopToast
-import com.calai.app.ui.home.ui.components.SuccessTopToast
+import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.ui.weight.components.FilterTabs
 import com.calai.app.ui.home.ui.weight.components.HistoryRow
 import com.calai.app.ui.home.ui.weight.components.SegmentedButtons
 import com.calai.app.ui.home.ui.weight.components.SummaryCards
 import com.calai.app.ui.home.ui.weight.components.WeightChartCard
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,11 +58,11 @@ fun WeightScreen(
     LaunchedEffect(Unit) { vm.initIfNeeded() }
 
     Scaffold(
-        containerColor = Color(0xFFF5F5F5), // ★ 整頁白底
+        containerColor = Color(0xFFF5F5F5),
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFFF5F5F5),      // ★ AppBar 白底
+                    containerColor = Color(0xFFF5F5F5),
                     titleContentColor = Color.Black,
                     navigationIconContentColor = Color.Black,
                     actionIconContentColor = Color.Black
@@ -49,7 +70,7 @@ fun WeightScreen(
                 title = {
                     Text(
                         text = "Weight",
-                        style = MaterialTheme.typography.headlineMedium, // 比 Overview 大一階
+                        style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -60,58 +81,59 @@ fun WeightScreen(
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
-                            .padding(start = 8.dp) // 與螢幕邊緣更遠
-                            .size(48.dp)          // 觸控目標 48dp
+                            .padding(start = 8.dp)
+                            .height(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            modifier = Modifier.size(28.dp) // 箭頭放大
+                            modifier = Modifier.height(28.dp)
                         )
                     }
                 }
-                // ← actions 移除，SegmentedButtons 會放到 Overview 右側
             )
         },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text("+ Log Weight") },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                onClick = onLogClick
+        bottomBar = {
+            BottomLogWeightBar(
+                onLogClick = onLogClick
             )
         }
     ) { inner ->
-        Box(Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5)) // ★ 保險：內容區白底
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF5F5F5))
         ) {
             LazyColumn(
                 modifier = Modifier
                     .padding(inner)
                     .fillMaxSize(),
-                // ↓ 把 top 從 16.dp 改為 8.dp，縮短 Weight 與 Overview 的距離
-                contentPadding = PaddingValues(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = 6.dp,
+                    end = 16.dp,
+                    bottom = 96.dp // ★ 為底部固定按鈕預留空間
+                ),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
             ) {
+                // Overview + Unit switch
                 item {
-                    // Overview（更大更粗） + 右側單位切換
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "Overview",
-                            style = MaterialTheme.typography.titleLarge, // 比先前 titleMedium 大一點
+                            style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 8.dp)   // 微調視覺右移
+                            modifier = Modifier.padding(start = 8.dp)
                         )
                         SegmentedButtons(
                             selected = ui.unit,
                             onSelect = { vm.setUnit(it) },
-                            // 這裡可放寬高度，依畫面調整
                             width = 108.dp,
                             height = 36.dp,
                             pillExtraWidth = 6.dp,
@@ -119,50 +141,85 @@ fun WeightScreen(
                         )
                     }
                 }
+                // Summary cards
                 item { SummaryCards(ui = ui) }
+
+                // Filter tabs
                 item {
                     FilterTabs(
                         selected = ui.range,
                         onSelect = { vm.setRange(it) }
                     )
                 }
+                // Chart card
                 item {
                     WeightChartCard(
                         ui = ui,
-                        // ★ 把全時段第一筆傳給 chart
-                        startWeightAllTimeKg = ui.firstWeightAllTimeKg  // ★ 這行一定要傳
+                        startWeightAllTimeKg = ui.firstWeightAllTimeKg
                     )
                 }
+                // History title
                 item {
-                    // History：與 Overview 同層級
                     Text(
                         text = "History",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
+                // History items
                 items(ui.history7) { item ->
                     HistoryRow(item, ui.unit)
                 }
-                item { Spacer(Modifier.height(80.dp)) }
             }
+        }
+    }
+}
 
-            // 成功提示（2 秒後清除）
-            ui.toastMessage?.let { toast ->
-                SuccessTopToast(message = toast, modifier = Modifier.align(Alignment.TopCenter))
-                LaunchedEffect(toast) {
-                    delay(2000)
-                    vm.clearToast()
-                }
-            }
-
-            // 錯誤提示
-            ui.error?.let { err ->
-                ErrorTopToast(message = err, modifier = Modifier.align(Alignment.TopCenter))
-            }
+@Composable
+private fun BottomLogWeightBar(
+    onLogClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF5F5F5))
+            // 先吃掉系統 navigation bar 的安全區
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            // 再自己多加一點底部 padding，讓按鈕往上浮
+            .padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 0.dp,
+                bottom = 16.dp      // ★ 核心：底部多留一點空間
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Button(
+            onClick = onLogClick,
+            modifier = Modifier
+                .width(158.dp)      // 你調過的寬度，覺得 OK 就維持
+                .height(52.dp),
+            shape = RoundedCornerShape(999.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF111114),
+                contentColor = Color.White
+            ),
+            contentPadding = PaddingValues(horizontal = 20.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = null,
+                modifier = Modifier.height(20.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "Log Weight",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }

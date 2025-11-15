@@ -47,8 +47,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.hypot
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.input.pointer.pointerInput
@@ -61,6 +59,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 
@@ -856,13 +855,15 @@ private fun GoalProgressChart(
         profileWeightKg      = profileWeightKg,
         startWeightAllTimeKg = startWeightAllTimeKg
     )
-
-    // ★ 互動狀態：指向「第幾個資料點」（不是 xLabels）
-    //   把 unit 加進 key，切換 kg / lb 時會重置狀態，避免 tooltip 卡住舊值
-    var activeIndex by remember(chartData.points.size, unit) {
+    // ★ 修正 1：只用 points.size 當 key，不再包含 unit
+    //   避免切換單位時，產生新的 MutableState 物件，導致 pointerInput 還在改「舊的那顆」。
+    var activeIndex by remember(chartData.points.size) {
         mutableStateOf<Int?>(null)
     }
-
+    // ★ 修正 2：如果你希望切換 kg/lbs 時順便把 tooltip 收掉，就用 LaunchedEffect 重設 value
+    LaunchedEffect(unit) {
+        activeIndex = null
+    }
     // ★ 圖表實際寬高（px）
     var chartWidthPx by remember { mutableStateOf(0f) }
     var chartHeightPx by remember { mutableStateOf(0f) }
@@ -923,7 +924,6 @@ private fun GoalProgressChart(
                             updateActiveIndex(change.position.x)
                             change.consume()
                         }
-
                         // ❸ UP：放開就清除 tooltip
                         activeIndex = null
                     }
