@@ -69,19 +69,14 @@ import androidx.compose.ui.Alignment
 val Green = Color(0xFF22C55E)
 @Composable
 fun SummaryCards(ui: WeightViewModel.UiState) {
-    val cardBg  = Color(0xFFF5F5F5)
     val label   = Color.Black.copy(alpha = 0.60f)
     val big     = Color(0xFF111114)
     val divider = Color(0xFFE2E5EA)
-    val edgeTx  = Color(0xFF111114).copy(alpha = 0.88f)
-    val arrow   = Color(0xFF6B7280)
-
     val trackColor  = Color(0xFFDCE1E7)
     val stripeColor = Color.White.copy(alpha = 0.35f)
     val fillColor   = Color(0xFFFF8A33).copy(alpha = 0.85f)
 
     val unit = ui.unit
-
     val currentKg = ui.current ?: ui.profileWeightKg
     val goalKg    = ui.profileTargetWeightKg ?: ui.goal
 
