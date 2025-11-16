@@ -17,9 +17,14 @@ data class HomeSummary(
     val bmiLabel: String,
     val waterGoalMl: Int,
     val waterTodayMl: Int,
-    // current - target（正=還需減；負=已低於目標）
+    /**
+     * Δ = current - target
+     * - 正數：目前比目標重 → 還需要「減重」的量
+     * - 負數：目前比目標輕 → 已超過目標，理論上可以「增重」到目標
+     */
     val weightDiffSigned: Double,
-    val weightDiffUnit: String, // "kg" or "lbs"
+    /** weightDiffSigned 使用的單位，"kg" 或 "lbs" */
+    val weightDiffUnit: String,
     val fastingPlan: String?,
     val todayActivity: TodayActivity,
     val recentMeals: List<MealItemDto>,

@@ -4,17 +4,13 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.round
 
 private val Context.userProfileDataStore by preferencesDataStore(name = "user_profile")
 
@@ -30,8 +26,8 @@ class UserProfileStore @Inject constructor(
         val REFERRAL_SOURCE = stringPreferencesKey("referral_source")
         val AGE_YEARS = intPreferencesKey("age_years")
 
-        // Height (metric + imperial)
-        val HEIGHT = intPreferencesKey("height_cm")
+        // Height
+        val HEIGHT = floatPreferencesKey("height_cm")
         val HEIGHT_UNIT = stringPreferencesKey("height_unit")
         val HEIGHT_FEET = intPreferencesKey("height_feet")
         val HEIGHT_INCHES = intPreferencesKey("height_inches")
@@ -39,12 +35,12 @@ class UserProfileStore @Inject constructor(
         // Weight (metric + imperial)
         val WEIGHT = floatPreferencesKey("weight_kg")
         val WEIGHT_UNIT = stringPreferencesKey("weight_unit")
-        val WEIGHT_LBS = intPreferencesKey("weight_lbs")
+        val WEIGHT_LBS = floatPreferencesKey("weight_lbs")
 
         // Target Weight (metric + imperial)
         val TARGET_WEIGHT = floatPreferencesKey("target_weight_kg")
         val TARGET_WEIGHT_UNIT = stringPreferencesKey("target_weight_unit")
-        val TARGET_WEIGHT_LBS = intPreferencesKey("target_weight_lbs")
+        val TARGET_WEIGHT_LBS = floatPreferencesKey("target_weight_lbs")
 
         val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
         val GOAL = stringPreferencesKey("goal")
@@ -61,37 +57,71 @@ class UserProfileStore @Inject constructor(
     private val dateFmt: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     private fun todayStr(): String = LocalDate.now().format(dateFmt)
 
+    // 本機 LBS 防呆（避免太誇張的值）
+    private fun clampLbsForStore(v: Float): Float =
+        v.coerceIn(0f, 900f)
+
     // ======= 性別 =======
-    suspend fun setGender(value: String) { context.userProfileDataStore.edit { it[Keys.GENDER] = value } }
-    suspend fun gender(): String? = context.userProfileDataStore.data.map { it[Keys.GENDER] }.first()
-    val genderFlow: Flow<String?> = context.userProfileDataStore.data.map { it[Keys.GENDER] }
+    suspend fun setGender(value: String) {
+        context.userProfileDataStore.edit { it[Keys.GENDER] = value }
+    }
+
+    suspend fun gender(): String? =
+        context.userProfileDataStore.data.map { it[Keys.GENDER] }.first()
+
+    val genderFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.GENDER] }
 
     // ======= 推薦來源 =======
-    suspend fun setReferralSource(value: String) { context.userProfileDataStore.edit { it[Keys.REFERRAL_SOURCE] = value } }
-    suspend fun referralSource(): String? = context.userProfileDataStore.data.map { it[Keys.REFERRAL_SOURCE] }.first()
-    val referralSourceFlow: Flow<String?> = context.userProfileDataStore.data.map { it[Keys.REFERRAL_SOURCE] }
+    suspend fun setReferralSource(value: String) {
+        context.userProfileDataStore.edit { it[Keys.REFERRAL_SOURCE] = value }
+    }
+
+    suspend fun referralSource(): String? =
+        context.userProfileDataStore.data.map { it[Keys.REFERRAL_SOURCE] }.first()
+
+    val referralSourceFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.REFERRAL_SOURCE] }
 
     // ======= 年齡 =======
-    val ageFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.AGE_YEARS] }
-    suspend fun setAge(years: Int) { context.userProfileDataStore.edit { it[Keys.AGE_YEARS] = years } }
+    val ageFlow: Flow<Int?> =
+        context.userProfileDataStore.data.map { it[Keys.AGE_YEARS] }
+
+    suspend fun setAge(years: Int) {
+        context.userProfileDataStore.edit { it[Keys.AGE_YEARS] = years }
+    }
 
     // ======= 身高（cm + ft/in） =======
-    val heightCmFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.HEIGHT] }
-    suspend fun setHeightCm(cm: Int) { context.userProfileDataStore.edit { it[Keys.HEIGHT] = cm } }
+    val heightCmFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.HEIGHT] }
 
-    val heightUnitFlow: Flow<HeightUnit?> = context.userProfileDataStore.data.map { p ->
-        p[Keys.HEIGHT_UNIT]?.let { runCatching { HeightUnit.valueOf(it) }.getOrNull() }
+    suspend fun setHeightCm(cm: Float) {
+        // 一位小數已在呼叫端處理
+        context.userProfileDataStore.edit { it[Keys.HEIGHT] = cm }
     }
-    suspend fun setHeightUnit(unit: HeightUnit) { context.userProfileDataStore.edit { it[Keys.HEIGHT_UNIT] = unit.name } }
 
-    val heightFeetFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.HEIGHT_FEET] }
-    val heightInchesFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.HEIGHT_INCHES] }
+    val heightUnitFlow: Flow<HeightUnit?> =
+        context.userProfileDataStore.data.map { p ->
+            p[Keys.HEIGHT_UNIT]?.let { runCatching { HeightUnit.valueOf(it) }.getOrNull() }
+        }
+
+    suspend fun setHeightUnit(unit: HeightUnit) {
+        context.userProfileDataStore.edit { it[Keys.HEIGHT_UNIT] = unit.name }
+    }
+
+    val heightFeetFlow: Flow<Int?> =
+        context.userProfileDataStore.data.map { it[Keys.HEIGHT_FEET] }
+
+    val heightInchesFlow: Flow<Int?> =
+        context.userProfileDataStore.data.map { it[Keys.HEIGHT_INCHES] }
+
     suspend fun setHeightImperial(feet: Int, inches: Int) {
         context.userProfileDataStore.edit {
             it[Keys.HEIGHT_FEET] = feet.coerceIn(0, 8)
             it[Keys.HEIGHT_INCHES] = inches.coerceIn(0, 11)
         }
     }
+
     suspend fun clearHeightImperial() {
         context.userProfileDataStore.edit {
             it.remove(Keys.HEIGHT_FEET)
@@ -100,60 +130,130 @@ class UserProfileStore @Inject constructor(
     }
 
     // ======= 現在體重（kg + lbs） =======
-    val weightKgFlow: Flow<Float?> = context.userProfileDataStore.data.map { it[Keys.WEIGHT] }
-    suspend fun setWeightKg(kg: Float) { context.userProfileDataStore.edit { it[Keys.WEIGHT] = kg } }
+    val weightKgFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.WEIGHT] }
 
-    val weightUnitFlow: Flow<WeightUnit?> = context.userProfileDataStore.data.map { p ->
-        p[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+    suspend fun setWeightKg(kg: Float) {
+        context.userProfileDataStore.edit { it[Keys.WEIGHT] = kg }
     }
-    suspend fun setWeightUnit(unit: WeightUnit) { context.userProfileDataStore.edit { it[Keys.WEIGHT_UNIT] = unit.name } }
 
-    val weightLbsFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.WEIGHT_LBS] }
-    suspend fun setWeightLbs(lbs: Int) { context.userProfileDataStore.edit { it[Keys.WEIGHT_LBS] = lbs.coerceAtLeast(0) } }
-    suspend fun clearWeightLbs() { context.userProfileDataStore.edit { it.remove(Keys.WEIGHT_LBS) } }
+    val weightUnitFlow: Flow<WeightUnit?> =
+        context.userProfileDataStore.data.map { p ->
+            p[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+        }
+
+    suspend fun setWeightUnit(unit: WeightUnit) {
+        context.userProfileDataStore.edit { it[Keys.WEIGHT_UNIT] = unit.name }
+    }
+
+    // ======= 現在體重 LBS =======
+    val weightLbsFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.WEIGHT_LBS] }
+
+    suspend fun setWeightLbs(lbs: Float) {
+        context.userProfileDataStore.edit {
+            it[Keys.WEIGHT_LBS] = clampLbsForStore(lbs)
+        }
+    }
+
+    suspend fun clearWeightLbs() {
+        context.userProfileDataStore.edit { it.remove(Keys.WEIGHT_LBS) }
+    }
 
     // ======= 目標體重（kg + lbs） =======
-    val targetWeightKgFlow: Flow<Float?> = context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT] }
-    suspend fun setTargetWeightKg(kg: Float) { context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT] = kg } }
+    val targetWeightKgFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT] }
 
-    val targetWeightUnitFlow: Flow<WeightUnit?> = context.userProfileDataStore.data.map { p ->
-        p[Keys.TARGET_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+    suspend fun setTargetWeightKg(kg: Float) {
+        context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT] = kg }
     }
-    suspend fun setTargetWeightUnit(unit: WeightUnit) { context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT_UNIT] = unit.name } }
 
-    val targetWeightLbsFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT_LBS] }
-    suspend fun setTargetWeightLbs(lbs: Int) { context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT_LBS] = lbs.coerceAtLeast(0) } }
-    suspend fun clearTargetWeightLbs() { context.userProfileDataStore.edit { it.remove(Keys.TARGET_WEIGHT_LBS) } }
+    val targetWeightUnitFlow: Flow<WeightUnit?> =
+        context.userProfileDataStore.data.map { p ->
+            p[Keys.TARGET_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+        }
+
+    suspend fun setTargetWeightUnit(unit: WeightUnit) {
+        context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT_UNIT] = unit.name }
+    }
+
+    // ======= 目標體重 LBS =======
+    val targetWeightLbsFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT_LBS] }
+
+    suspend fun setTargetWeightLbs(lbs: Float) {
+        context.userProfileDataStore.edit {
+            it[Keys.TARGET_WEIGHT_LBS] = clampLbsForStore(lbs)
+        }
+    }
+
+    suspend fun clearTargetWeightLbs() {
+        context.userProfileDataStore.edit { it.remove(Keys.TARGET_WEIGHT_LBS) }
+    }
 
     // ======= 鍛鍊頻率 =======
-    val exerciseFreqPerWeekFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.EXERCISE_FREQ_PER_WEEK] }
+    val exerciseFreqPerWeekFlow: Flow<Int?> =
+        context.userProfileDataStore.data.map { it[Keys.EXERCISE_FREQ_PER_WEEK] }
+
     suspend fun setExerciseFreqPerWeek(v: Int) {
-        context.userProfileDataStore.edit { it[Keys.EXERCISE_FREQ_PER_WEEK] = v.coerceIn(0, 7) }
+        context.userProfileDataStore.edit {
+            it[Keys.EXERCISE_FREQ_PER_WEEK] = v.coerceIn(0, 7)
+        }
     }
 
     // ======= 目標 =======
-    suspend fun setGoal(value: String) { context.userProfileDataStore.edit { it[Keys.GOAL] = value } }
-    suspend fun goal(): String? = context.userProfileDataStore.data.map { it[Keys.GOAL] }.first()
-    val goalFlow: Flow<String?> = context.userProfileDataStore.data.map { it[Keys.GOAL] }
+    suspend fun setGoal(value: String) {
+        context.userProfileDataStore.edit { it[Keys.GOAL] = value }
+    }
+
+    suspend fun goal(): String? =
+        context.userProfileDataStore.data.map { it[Keys.GOAL] }.first()
+
+    val goalFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.GOAL] }
 
     // ======= 語言 =======
-    suspend fun setLocaleTag(tag: String) { context.userProfileDataStore.edit { it[Keys.LOCALE_TAG] = tag } }
-    suspend fun localeTag(): String? = context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }.first()
-    val localeTagFlow: Flow<String?> = context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }
+    suspend fun setLocaleTag(tag: String) {
+        context.userProfileDataStore.edit { it[Keys.LOCALE_TAG] = tag }
+    }
+
+    suspend fun localeTag(): String? =
+        context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }.first()
+
+    val localeTagFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.LOCALE_TAG] }
 
     // ======= 回訪旗標 =======
     val hasServerProfileFlow: Flow<Boolean> =
         context.userProfileDataStore.data.map { it[Keys.HAS_SERVER_PROFILE] ?: false }
-    suspend fun setHasServerProfile(value: Boolean) { context.userProfileDataStore.edit { it[Keys.HAS_SERVER_PROFILE] = value } }
-    suspend fun hasServerProfile(): Boolean = hasServerProfileFlow.first()
-    suspend fun clearHasServerProfile() { context.userProfileDataStore.edit { it.remove(Keys.HAS_SERVER_PROFILE) } }
+
+    suspend fun setHasServerProfile(value: Boolean) {
+        context.userProfileDataStore.edit { it[Keys.HAS_SERVER_PROFILE] = value }
+    }
+
+    suspend fun hasServerProfile(): Boolean =
+        hasServerProfileFlow.first()
+
+    suspend fun clearHasServerProfile() {
+        context.userProfileDataStore.edit { it.remove(Keys.HAS_SERVER_PROFILE) }
+    }
 
     // ======= 斷食方案 / 飲水 =======
-    val fastingPlanFlow: Flow<String?> = context.userProfileDataStore.data.map { it[Keys.FASTING_PLAN] }
-    suspend fun setFastingPlan(plan: String) { context.userProfileDataStore.edit { it[Keys.FASTING_PLAN] = plan } }
+    val fastingPlanFlow: Flow<String?> =
+        context.userProfileDataStore.data.map { it[Keys.FASTING_PLAN] }
 
-    val waterGoalFlow: Flow<Int?> = context.userProfileDataStore.data.map { it[Keys.WATER_GOAL_ML] }
-    suspend fun setWaterGoalMl(ml: Int) { context.userProfileDataStore.edit { it[Keys.WATER_GOAL_ML] = ml.coerceAtLeast(0) } }
+    suspend fun setFastingPlan(plan: String) {
+        context.userProfileDataStore.edit { it[Keys.FASTING_PLAN] = plan }
+    }
+
+    val waterGoalFlow: Flow<Int?> =
+        context.userProfileDataStore.data.map { it[Keys.WATER_GOAL_ML] }
+
+    suspend fun setWaterGoalMl(ml: Int) {
+        context.userProfileDataStore.edit {
+            it[Keys.WATER_GOAL_ML] = ml.coerceAtLeast(0)
+        }
+    }
 
     // === 讀一次目前單位（可能為 null） ===
     suspend fun getWeightUnitOnce(): WeightUnit? {
@@ -172,7 +272,10 @@ class UserProfileStore @Inject constructor(
             }
         }
     }
-    val waterTodayFlow: Flow<Int> = context.userProfileDataStore.data.map { p -> p[Keys.WATER_TODAY_ML] ?: 0 }
+
+    val waterTodayFlow: Flow<Int> =
+        context.userProfileDataStore.data.map { p -> p[Keys.WATER_TODAY_ML] ?: 0 }
+
     suspend fun addWaterToday(ml: Int) {
         ensureTodayWater()
         context.userProfileDataStore.edit { p ->
@@ -180,9 +283,12 @@ class UserProfileStore @Inject constructor(
             p[Keys.WATER_TODAY_ML] = (cur + ml).coerceAtLeast(0)
         }
     }
+
     suspend fun setWaterToday(ml: Int) {
         ensureTodayWater()
-        context.userProfileDataStore.edit { it[Keys.WATER_TODAY_ML] = ml.coerceAtLeast(0) }
+        context.userProfileDataStore.edit {
+            it[Keys.WATER_TODAY_ML] = ml.coerceAtLeast(0)
+        }
     }
 
     // ======= 快照（登入後上傳 & 冷啟檢查） =======
@@ -190,16 +296,16 @@ class UserProfileStore @Inject constructor(
         val gender: String?,
         val referralSource: String?,
         val ageYears: Int?,
-        val heightCm: Int?,
+        val heightCm: Float?,
         val heightUnit: HeightUnit?,
         val heightFeet: Int?,
         val heightInches: Int?,
         val weightKg: Float?,
         val weightUnit: WeightUnit?,
-        val weightLbs: Int?,
+        val weightLbs: Float?,
         val targetWeightKg: Float?,
         val targetWeightUnit: WeightUnit?,
-        val targetWeightLbs: Int?,
+        val targetWeightLbs: Float?,
         val exerciseFreqPerWeek: Int?,
         val goal: String?,
         val locale: String?,
@@ -242,23 +348,14 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.HEIGHT_FEET)
             p.remove(Keys.HEIGHT_INCHES)
             p.remove(Keys.WEIGHT)
-//            p.remove(Keys.WEIGHT_UNIT)
+            // p.remove(Keys.WEIGHT_UNIT)
             p.remove(Keys.WEIGHT_LBS)
             p.remove(Keys.TARGET_WEIGHT)
-//            p.remove(Keys.TARGET_WEIGHT_UNIT)
+            // p.remove(Keys.TARGET_WEIGHT_UNIT)
             p.remove(Keys.TARGET_WEIGHT_LBS)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)
             // 不清 LOCALE_TAG、HAS_SERVER_PROFILE、FASTING_PLAN、WATER_*
         }
     }
-}
-
-/* ======= 換算（與畫面一致）======= */
-fun kgToLbsInt(v: Double): Int = round(v * 2.2).toInt()
-fun cmToFeetInches(cm: Int): Pair<Int, Int> {
-    val totalInches = (cm / 2.54).toInt() // floor
-    val feet = totalInches / 12
-    val inch = totalInches % 12
-    return feet to inch
 }

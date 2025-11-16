@@ -2,12 +2,13 @@ package com.calai.app.ui.onboarding.plan
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.calai.app.core.health.Gender
 import com.calai.app.core.health.HealthCalc
 import com.calai.app.core.health.HealthInputs
 import com.calai.app.core.health.MacroPlan
 import com.calai.app.core.health.toCalcGender // ★ 共用的性別對應：只有 "MALE" 算 Male，其餘視為 Female
 import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.profile.repo.kgToLbs1
+import com.calai.app.data.profile.repo.lbsToKg1
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,10 +22,16 @@ data class HealthPlanUiState(
     val loading: Boolean = true,
     val inputs: HealthInputs? = null,
     val plan: MacroPlan? = null,
-    // 額外提供給 UI 顯示單位/目標差
+
+    // 原本就有的欄位（保留）
     val weightUnit: UserProfileStore.WeightUnit? = null,
     val targetWeightKg: Float? = null,
-    val targetWeightUnit: UserProfileStore.WeightUnit? = null
+    val targetWeightUnit: UserProfileStore.WeightUnit? = null,
+
+    // ★ 新增：給 UI 顯示用（已依 displayUnit 轉成 kg 或 lbs）
+    val weightDisplay: Float? = null,
+    val targetWeightDisplay: Float? = null,
+    val displayUnit: UserProfileStore.WeightUnit? = null
 )
 
 @HiltViewModel
@@ -62,44 +69,100 @@ class HealthPlanViewModel @Inject constructor(
             // 依序把其他 Flow 串上（避免 6+ 參數的 combine vararg 型別不推斷）
             inputsFlow
                 .combine(store.goalFlow) { inputs, goalKey ->
-                    Pair(inputs, goalKey)
+                    inputs to goalKey
                 }
-                .combine(store.weightUnitFlow) { pair, weightUnit ->
-                    Triple(pair.first, pair.second, weightUnit)
+                .combine(store.weightUnitFlow) { (inputs, goalKey), weightUnit ->
+                    Triple(inputs, goalKey, weightUnit)
                 }
-                .combine(store.targetWeightKgFlow) { triple, targetKg ->
-                    Combined(
+                .combine(store.weightKgFlow) { triple, weightKg ->
+                    // 這裡 weightKg 就是 DataStore 裡的 kg buffer
+                    CombinedInputs(
                         inputs = triple.first,
                         goalKey = triple.second,
                         weightUnit = triple.third,
-                        targetWeightKg = targetKg,
-                        targetWeightUnit = null
+                        weightKg = weightKg
                     )
+                }
+                .combine(store.weightLbsFlow) { combined, weightLbs ->
+                    combined.copy(weightLbs = weightLbs)
+                }
+                .combine(store.targetWeightKgFlow) { combined, targetKg ->
+                    combined.copy(targetWeightKg = targetKg)
+                }
+                .combine(store.targetWeightLbsFlow) { combined, targetLbs ->
+                    combined.copy(targetWeightLbs = targetLbs)
                 }
                 .combine(store.targetWeightUnitFlow) { combined, targetUnit ->
                     combined.copy(targetWeightUnit = targetUnit)
                 }
-                .collect { combined ->
-                    val split = HealthCalc.splitForGoalKey(combined.goalKey)
-                    val plan = HealthCalc.macroPlanBySplit(combined.inputs, split)
+                .collect { c ->
+                    // === 決定顯示單位 ===
+                    val unit = c.weightUnit ?: UserProfileStore.WeightUnit.KG
+                    val displayUnit = unit // 目前直接沿用，可依需求改成「若 current null 就看 targetUnit」
+
+                    // === 目前體重顯示值（已依 displayUnit 換算） ===
+                    val weightDisplay: Float? = when (displayUnit) {
+                        UserProfileStore.WeightUnit.LBS ->
+                            c.weightLbs
+                                ?: c.weightKg?.let { kg ->
+                                    kgToLbs1(kg.toDouble()).toFloat()
+                                }
+
+                        UserProfileStore.WeightUnit.KG ->
+                            c.weightKg
+                                ?: c.weightLbs?.let { lbs ->
+                                    lbsToKg1(lbs.toDouble()).toFloat()
+                                }
+                    }
+
+                    // === 目標體重顯示值（已依 displayUnit 換算） ===
+                    val targetDisplay: Float? = when (displayUnit) {
+                        UserProfileStore.WeightUnit.LBS ->
+                            c.targetWeightLbs
+                                ?: c.targetWeightKg?.let { kg ->
+                                    kgToLbs1(kg.toDouble()).toFloat()
+                                }
+
+                        UserProfileStore.WeightUnit.KG ->
+                            c.targetWeightKg
+                                ?: c.targetWeightLbs?.let { lbs ->
+                                    lbsToKg1(lbs.toDouble()).toFloat()
+                                }
+                    }
+
+                    val split = HealthCalc.splitForGoalKey(c.goalKey)
+                    val plan = HealthCalc.macroPlanBySplit(c.inputs, split)
 
                     _ui.value = HealthPlanUiState(
                         loading = false,
-                        inputs = combined.inputs,
+                        inputs = c.inputs,
                         plan = plan,
-                        weightUnit = combined.weightUnit,
-                        targetWeightKg = combined.targetWeightKg,
-                        targetWeightUnit = combined.targetWeightUnit
+                        weightUnit = unit,
+                        targetWeightKg = c.targetWeightKg,
+                        targetWeightUnit = c.targetWeightUnit,
+                        weightDisplay = weightDisplay,
+                        targetWeightDisplay = targetDisplay,
+                        displayUnit = displayUnit
                     )
                 }
         }
     }
 }
 
-private data class Combined(
+/**
+ * 用來把所有相關 Flow 串起來的中繼資料結構。
+ * - weightKg / weightLbs：目前體重（兩種單位）
+ * - targetWeightKg / targetWeightLbs：目標體重（兩種單位）
+ * - weightUnit / targetWeightUnit：使用者偏好的單位
+ */
+private data class CombinedInputs(
     val inputs: HealthInputs,
     val goalKey: String?,
     val weightUnit: UserProfileStore.WeightUnit?,
-    val targetWeightKg: Float?,
-    val targetWeightUnit: UserProfileStore.WeightUnit?
+    val weightKg: Float?,
+
+    val weightLbs: Float? = null,
+    val targetWeightKg: Float? = null,
+    val targetWeightLbs: Float? = null,
+    val targetWeightUnit: UserProfileStore.WeightUnit? = null
 )

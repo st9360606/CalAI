@@ -16,24 +16,24 @@ class WeightSelectionViewModel @Inject constructor(
     private val usr: UserProfileStore
 ) : ViewModel() {
 
-    // 預設 65.0 kg
     val weightKgState = usr.weightKgFlow
         .map { it ?: 65.0f }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 65.0f)
 
-    // 體重單位（預設 KG）
     val weightUnitState = usr.weightUnitFlow
         .map { it ?: WeightUnit.KG }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WeightUnit.KG)
 
-    fun saveWeightKg(kg: Float) = viewModelScope.launch {
-        usr.setWeightKg(kg)
-    }
+    // lbs 狀態（null → 0f 當作沒資料）
+    val weightLbsState = usr.weightLbsFlow
+        .map { it ?: 0f }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
 
-    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch {
-        usr.setWeightUnit(u)
-    }
+    fun saveWeightKg(kg: Float) = viewModelScope.launch { usr.setWeightKg(kg) }
 
-    fun saveWeightLbs(lbs: Int) = viewModelScope.launch { usr.setWeightLbs(lbs) }
+    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch { usr.setWeightUnit(u) }
+
+    // lbs = 0.1 精度，呼叫者已處理
+    fun saveWeightLbs(lbs: Float) = viewModelScope.launch { usr.setWeightLbs(lbs) }
     fun clearWeightLbs() = viewModelScope.launch { usr.clearWeightLbs() }
 }

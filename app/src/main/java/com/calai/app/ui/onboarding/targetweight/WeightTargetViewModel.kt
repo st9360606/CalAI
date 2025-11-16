@@ -16,24 +16,22 @@ class WeightTargetViewModel @Inject constructor(
     private val usr: UserProfileStore
 ) : ViewModel() {
 
-    // 使用「目標體重」欄位
     val weightKgState = usr.targetWeightKgFlow
-        .map { it ?: 65.0f } // 預設 65.0 kg
+        .map { it ?: 65.0f }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 65.0f)
 
     val weightUnitState = usr.targetWeightUnitFlow
-        .map { it ?: WeightUnit.KG } // 預設 KG
+        .map { it ?: WeightUnit.KG }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WeightUnit.KG)
 
-    fun saveWeightKg(kg: Float) = viewModelScope.launch {
-        usr.setTargetWeightKg(kg)
-    }
+    // 新增：目標體重 lbs 狀態（null → 0f，視為沒設定）
+    val weightLbsState = usr.targetWeightLbsFlow
+        .map { it ?: 0f }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
 
-    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch {
-        usr.setTargetWeightUnit(u)
-    }
+    fun saveWeightKg(kg: Float) = viewModelScope.launch { usr.setTargetWeightKg(kg) }
+    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch { usr.setTargetWeightUnit(u) }
 
-    fun saveTargetWeightLbs(lbs: Int) = viewModelScope.launch { usr.setTargetWeightLbs(lbs) }
+    fun saveTargetWeightLbs(lbs: Float) = viewModelScope.launch { usr.setTargetWeightLbs(lbs) }
     fun clearTargetWeightLbs() = viewModelScope.launch { usr.clearTargetWeightLbs() }
-
 }

@@ -29,8 +29,13 @@ import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
 
 // ← 調整這個數值即可讓「CM 單一滾輪」往右/往左偏移
-private val CM_WHEEL_X_SHIFT = 24.dp
 
+
+import androidx.compose.runtime.mutableIntStateOf
+import com.calai.app.data.profile.repo.roundCm1     // ★ 新增
+import com.calai.app.data.profile.repo.cmToFeetInches1
+import com.calai.app.data.profile.repo.feetInchesToCm1
+private val CM_WHEEL_X_SHIFT = 24.dp
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HeightSelectionScreen(
@@ -42,14 +47,20 @@ fun HeightSelectionScreen(
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()
 
-    // 單位：從存檔載入；預設英制（FT/IN）
     var useMetric by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.HeightUnit.CM) }
 
-    // cm 為 SSOT；切換單位只改顯示，不改 cm
-    var cmVal by rememberSaveable(heightCm) { mutableIntStateOf(heightCm) }
-    var feet by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches(cmVal).first) }
-    var inches by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches(cmVal).second) }
+    // ★ cm 為 SSOT，Double 一位小數
+    val CM_MIN = 80.0
+    val CM_MAX = 350.0
+
+    var cmVal by rememberSaveable(heightCm) {
+        mutableStateOf(roundCm1(heightCm.toDouble()).toDouble())
+    }
+
+    // ★ ft/in 初始值從 cm 推導
+    var feet by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).first) }
+    var inches by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).second) }
 
     Scaffold(
         containerColor = Color.White,
@@ -83,13 +94,14 @@ fun HeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        vm.saveHeightCm(cmVal) // 一律存 cm
+                        // ★ 一律存 cm（1 位小數）
+                        vm.saveHeightCm(roundCm1(cmVal))
                         if (useMetric) {
                             vm.saveHeightUnit(UserProfileStore.HeightUnit.CM)
-                            vm.clearHeightImperial() // 不存英制
+                            vm.clearHeightImperial()
                         } else {
                             vm.saveHeightUnit(UserProfileStore.HeightUnit.FT_IN)
-                            vm.saveHeightImperial(feet, inches) // 存 ft/in
+                            vm.saveHeightImperial(feet, inches)
                         }
                         onNext()
                     },
@@ -159,7 +171,8 @@ fun HeightSelectionScreen(
                 useMetric = useMetric,
                 onChange = { isMetric ->
                     if (!isMetric) {
-                        val (ft, inch) = cmToFeetInches(cmVal) // 165cm -> 5ft4in（floor）
+                        // cm → ft/in
+                        val (ft, inch) = cmToFeetInches1(cmVal)
                         feet = ft; inches = inch
                     }
                     useMetric = isMetric
@@ -170,20 +183,73 @@ fun HeightSelectionScreen(
             )
 
             if (useMetric) {
-                // ✅ CM 單一滾輪：整組往右偏一點
-                NumberWheel(
-                    range = 80..350,
-                    value = cmVal,
-                    onValueChange = { cmVal = it },
-                    rowHeight = rowHeight,
-                    centerTextSize = 42.sp,
-                    sideAlpha = 0.35f,
-                    unitLabel = "cm",
-                    modifier = Modifier
+                // ===== CM：整數位 + 小數位 =====
+                val cmTenths = (cmVal * 10.0).toInt()
+                    .coerceIn((CM_MIN * 10).toInt(), (CM_MAX * 10).toInt())
+                val cmIntSel = cmTenths / 10
+                val cmDecSel = cmTenths % 10
+
+                Row(
+                    Modifier
                         .fillMaxWidth()
-                        .padding(start = CM_WHEEL_X_SHIFT) // ← 這行就是右移關鍵
-                )
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 整數位滾輪
+                    NumberWheel(
+                        range = CM_MIN.toInt()..CM_MAX.toInt(),
+                        value = cmIntSel,
+                        onValueChange = { newInt ->
+                            val newCm = (newInt * 10 + cmDecSel) / 10.0
+                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                        },
+                        rowHeight = rowHeight,
+                        centerTextSize = 40.sp,
+                        sideAlpha = 0.35f,
+                        unitLabel = null,
+                        modifier = Modifier.width(120.dp)
+                    )
+
+                    // ★ 用固定寬度的 Box，讓小數點剛好在兩個滾輪中間
+                    Box(
+                        modifier = Modifier
+                            .width(18.dp),        // 18dp 大概剛好，之後你可以微調
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ".",
+                            fontSize = 34.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    // 小數位滾輪
+                    NumberWheel(
+                        range = 0..9,
+                        value = cmDecSel,
+                        onValueChange = { newDec ->
+                            val newCm = (cmIntSel * 10 + newDec) / 10.0
+                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                        },
+                        rowHeight = rowHeight,
+                        centerTextSize = 40.sp,
+                        sideAlpha = 0.35f,
+                        unitLabel = null,
+                        modifier = Modifier.width(80.dp)
+                    )
+
+                    // ★ 調小間距，讓「cm」貼在小數位後面
+                    Spacer(Modifier.width(4.dp))
+
+                    Text(
+                        text = "cm",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             } else {
+                // ===== FT / IN 保持兩輪，cm 由 ft/in 推導 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -191,14 +257,15 @@ fun HeightSelectionScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     NumberWheel(
-                        range = 4..7,
+                        range = 4..8,
                         value = feet,
                         onValueChange = { newFeet ->
                             feet = newFeet
-                            cmVal = feetInchesToCm(feet = newFeet, inches = inches)
+                            cmVal = feetInchesToCm1(newFeet, inches)
+                                .coerceIn(CM_MIN, CM_MAX)
                         },
                         rowHeight = rowHeight,
-                        centerTextSize = 42.sp,
+                        centerTextSize = 40.sp,
                         sideAlpha = 0.35f,
                         unitLabel = "ft",
                         modifier = Modifier.width(120.dp)
@@ -209,16 +276,29 @@ fun HeightSelectionScreen(
                         value = inches,
                         onValueChange = { newIn ->
                             inches = newIn
-                            cmVal = feetInchesToCm(feet = feet, inches = newIn)
+                            cmVal = feetInchesToCm1(feet, newIn)
+                                .coerceIn(CM_MIN, CM_MAX)
                         },
                         rowHeight = rowHeight,
-                        centerTextSize = 42.sp,
+                        centerTextSize = 40.sp,
                         sideAlpha = 0.35f,
                         unitLabel = "in",
                         modifier = Modifier.width(120.dp)
                     )
                 }
             }
+            Spacer(Modifier.height(16.dp))
+
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.onboard_weight_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF9AA3AE),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(0.62f)
+                )
+            }
+            Spacer(Modifier.height(16.dp))
         }
     }
 }

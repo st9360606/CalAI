@@ -74,8 +74,8 @@ import com.calai.app.core.health.BmiClass
 import com.calai.app.core.health.HealthCalc
 import com.calai.app.core.health.MacroPlan
 import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.profile.repo.kgToLbs1 // ★ 共用轉換工具
 import java.util.Locale
-import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -186,9 +186,9 @@ fun HealthPlanScreen(
             // 第二排：Water / Current Weight / Target Δ
             HydrationAndWeightRings(
                 weightKg = inputs.weightKg,
-                weightUnit = weightUnit,
-                targetWeightKg = targetWeightKg,
-                targetWeightUnit = targetWeightUnit
+                displayUnit = ui.displayUnit ?: weightUnit ?: UserProfileStore.WeightUnit.KG,
+                displayWeight = ui.weightDisplay,
+                displayTarget = ui.targetWeightDisplay
             )
 
             Spacer(Modifier.height(18.dp))
@@ -295,7 +295,7 @@ private fun MacrosRings(plan: MacroPlan) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 18.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         MacroRingItem(
@@ -322,62 +322,54 @@ private fun MacrosRings(plan: MacroPlan) {
 /** 第二排：Water / Current Weight / Target Δ */
 @Composable
 private fun HydrationAndWeightRings(
-    weightKg: Float,
-    weightUnit: UserProfileStore.WeightUnit?,
-    targetWeightKg: Float?,
-    targetWeightUnit: UserProfileStore.WeightUnit?
+    weightKg: Float,                              // 計算用 kg（HealthInputs）
+    displayUnit: UserProfileStore.WeightUnit,     // 顯示用單位
+    displayWeight: Float?,                        // 顯示用 current
+    displayTarget: Float?                         // 顯示用 target
 ) {
-    // 以當前體重頁單位為唯一真相（null 視為 KG）
-    val displayUnit = when (weightUnit) {
-        UserProfileStore.WeightUnit.LBS -> UserProfileStore.WeightUnit.LBS
-        else -> UserProfileStore.WeightUnit.KG
-    }
-
-    // 1) 飲水量：35 ml * kg
+    // 1) 水量：還是以 kg 算
     val waterMl = (35f * weightKg).roundToInt()
 
-    // 2) 當前體重（用 displayUnit）
+    // 2) current 顯示
     val (currText, currProgress) = when (displayUnit) {
         UserProfileStore.WeightUnit.LBS -> {
-            val lbs = kgToLbs(weightKg)
-            val lbsInt = lbs.roundToInt()
-            "$lbsInt lbs" to min(lbsInt / 330f, 1f) // 330 lb 上限
+            val lbs = displayWeight ?: kgToLbsFloor1(weightKg)
+            val text = String.format(Locale.getDefault(), "%.1f lbs", lbs)
+            val progress = min(lbs / 330f, 1f)
+            text to progress
         }
         UserProfileStore.WeightUnit.KG -> {
-            String.format(Locale.getDefault(), "%.1f kg", weightKg) to
-                    min(weightKg / 150f, 1f) // 150 kg 上限
+            val kg = displayWeight ?: ((weightKg * 10f).toInt() / 10f)
+            val text = String.format(Locale.getDefault(), "%.1f kg", kg)
+            val progress = min(kg / 150f, 1f)
+            text to progress
         }
     }
 
-    // 3) 目標差 Δ（完全用 displayUnit，不看 targetWeightUnit）
+    // 3) delta 顯示：直接用「顯示用的數字」算
     val (deltaText, deltaProgress) =
-        if (targetWeightKg == null) {
+        if (displayTarget == null || displayWeight == null) {
             "—" to 0f
         } else {
-            val deltaKg = targetWeightKg - weightKg // 先用 kg 算差
-            when (displayUnit) {
-                UserProfileStore.WeightUnit.LBS -> {
-                    val deltaLbs = kgToLbs(deltaKg)
-                    val deltaInt = deltaLbs.roundToInt()
-                    (signedInt(deltaInt) + " lbs") to min(abs(deltaInt).toFloat() / 44f, 1f) // ±44 lb
-                }
-                UserProfileStore.WeightUnit.KG -> {
-                    (signed(deltaKg) + " kg") to min(abs(deltaKg) / 20f, 1f) // ±20 kg
-                }
-            }
+            val diff = delta1(displayTarget, displayWeight)  // target - current
+            val unitStr = if (displayUnit == UserProfileStore.WeightUnit.LBS) "lbs" else "kg"
+            val abs = kotlin.math.abs(diff)
+            val full = if (displayUnit == UserProfileStore.WeightUnit.LBS) 44f else 20f
+            val progress = min(abs / full, 1f)
+            String.format(Locale.getDefault(), "%.1f %s", diff, unitStr) to progress
         }
 
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 18.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         MacroRingItem(
             title = stringResource(R.string.plan_water_daily),
             centerText = "${waterMl} ml",
             color = WaterColor,
-            progress = min(waterMl / 4000f, 1f) // 4L 作為上限
+            progress = min(waterMl / 4000f, 1f)
         )
         MacroRingItem(
             title = stringResource(R.string.plan_weight_current),
@@ -394,6 +386,14 @@ private fun HydrationAndWeightRings(
     }
 }
 
+// ★ 工具：用「x10 再整數」確保 0.1 精度的差值
+private fun delta1(target: Float, current: Float): Float {
+    val t10 = (target * 10f).roundToInt()
+    val c10 = (current * 10f).roundToInt()
+    val diff10 = t10 - c10
+    return diff10 / 10f
+}
+
 /** 小圓形進度條（通用版本） */
 @Composable
 private fun MacroRingItem(
@@ -404,7 +404,7 @@ private fun MacroRingItem(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            modifier = Modifier.size(84.dp),
+            modifier = Modifier.size(92.dp),
             contentAlignment = Alignment.Center
         ) {
             Canvas(Modifier.matchParentSize()) {
@@ -762,7 +762,7 @@ private fun SourcesHeader(
     }
 }
 
-// === Block：toggle 置中（不變），links 左對齊 24dp（不變） ===
+// === Block：toggle 置中，links 置中 ===
 @Composable
 fun ResearchSourcesBlock(
     @DrawableRes bookIconRes: Int,
@@ -833,7 +833,7 @@ fun ResearchSourcesBlock(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp) // 保留些微左右留白
+                    .padding(horizontal = 16.dp)
                     .testTag("sources_links"),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -857,11 +857,14 @@ fun ResearchSourcesBlock(
 }
 
 // === Utils ===
-private fun kgToLbs(kg: Float): Float = kg * 2.2046226f
-private fun kgToLbs(kg: Double): Double = kg * 2.20462262185
-private fun signed(v: Float): String =
-    if (v >= 0f) "+${String.format(Locale.getDefault(), "%.1f", v)}"
-    else String.format(Locale.getDefault(), "%.1f", v)
+// 使用 DataStore 共用的 lbs 換算（1kg = 2.2lbs，無條件捨去到 0.1）
+private fun kgToLbsFloor1(v: Float): Float =
+    kgToLbs1(v.toDouble()).toFloat()
 
-private fun signedInt(v: Int): String =
-    if (v >= 0) "+$v" else "$v"
+// Δ（目標 - 現在），結果一律無條件捨去到 0.1 lbs
+private fun lbsDiffFloor1(currKg: Float, targetKg: Float): Float {
+    val currLbs = kgToLbsFloor1(currKg)
+    val targetLbs = kgToLbsFloor1(targetKg)
+    val diff = targetLbs - currLbs
+    return ((diff * 10f).toInt() / 10f)
+}

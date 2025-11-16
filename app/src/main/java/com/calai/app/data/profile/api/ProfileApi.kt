@@ -21,11 +21,11 @@ data class UserProfileDto(
     val heightFeet: Int? = null,
     val heightInches: Int? = null,
     val weightKg: Double? = null,
-    val weightLbs: Int? = null,
+    val weightLbs: Double? = null,      // ★ Int? -> Double?
     val exerciseLevel: String? = null,
     val goal: String? = null,
     val targetWeightKg: Double? = null,
-    val targetWeightLbs: Int? = null,
+    val targetWeightLbs: Double? = null, // ★ Int? -> Double?
     val referralSource: String? = null,
     val locale: String? = null
 )
@@ -38,11 +38,11 @@ data class UpsertProfileRequest(
     val heightFeet: Int?,
     val heightInches: Int?,
     val weightKg: Double?,
-    val weightLbs: Int?,
+    val weightLbs: Double?,            // ★
     val exerciseLevel: String?,
     val goal: String?,
     val targetWeightKg: Double?,
-    val targetWeightLbs: Int?,
+    val targetWeightLbs: Double?,      // ★
     val referralSource: String?,
     val locale: String?
 )

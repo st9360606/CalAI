@@ -15,27 +15,25 @@ class HeightSelectionViewModel @Inject constructor(
     private val usr: UserProfileStore
 ) : ViewModel() {
 
-    // ✅ 預設 165 cm（英制顯示 5ft 4in）
+    // ★ 改成 Float，預設 165.0f
     val heightCmState = usr.heightCmFlow
-        .map { it ?: 165 }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 165)
+        .map { it ?: 165.0f }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 165.0f)
 
-    // 預設顯示英制；如果想預設顯示公制改成 HeightUnit.CM
     val heightUnitState = usr.heightUnitFlow
         .map { it ?: UserProfileStore.HeightUnit.FT_IN }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserProfileStore.HeightUnit.FT_IN)
 
-    fun saveHeightCm(cm: Int) = viewModelScope.launch { usr.setHeightCm(cm) }
+    fun saveHeightCm(cm: Float) = viewModelScope.launch { usr.setHeightCm(cm) }
     fun saveHeightUnit(unit: UserProfileStore.HeightUnit) =
         viewModelScope.launch { usr.setHeightUnit(unit) }
 
-    fun saveHeightImperial(feet: Int, inches: Int) = viewModelScope.launch {
-        usr.setHeightImperial(feet, inches)
-    }
-    fun clearHeightImperial() = viewModelScope.launch {
-        usr.clearHeightImperial()
-    }
+    fun saveHeightImperial(feet: Int, inches: Int) =
+        viewModelScope.launch { usr.setHeightImperial(feet, inches) }
+
+    fun clearHeightImperial() = viewModelScope.launch { usr.clearHeightImperial() }
 }
+
 
 /** 換算工具（無條件捨去） */
 fun cmToFeetInches(cm: Int): Pair<Int, Int> {

@@ -1,6 +1,5 @@
 package com.calai.app.data.profile.repo
 
-
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.profile.api.UpsertProfileRequest
 import com.calai.app.data.profile.api.UserProfileDto
@@ -22,15 +21,25 @@ class ProfileRepository @Inject constructor(
         runCatching { store.setHasServerProfile(true) }
         true
     } catch (e: HttpException) {
-        when (e.code()) { 401, 404 -> false; else -> throw e }
-    } catch (e: IOException) { throw e }
+        when (e.code()) {
+            401, 404 -> false
+            else     -> throw e
+        }
+    } catch (e: IOException) {
+        throw e
+    }
 
     /** 取伺服器 Profile；401/404 視為沒有，其他錯誤拋出或回 null（保守） */
     suspend fun getServerProfileOrNull(): UserProfileDto? = try {
         api.getMyProfile()
     } catch (e: HttpException) {
-        when (e.code()) { 401, 404 -> null; else -> throw e }
-    } catch (e: IOException) { null }
+        when (e.code()) {
+            401, 404 -> null
+            else     -> throw e
+        }
+    } catch (e: IOException) {
+        null
+    }
 
     /** 將伺服器 locale（若有且非空）同步到本機 DataStore。回傳是否有同步 */
     suspend fun syncLocaleFromServerToStore(): Boolean {
@@ -42,45 +51,58 @@ class ProfileRepository @Inject constructor(
 
     /** 同時支援 raw 次數(0..7+) 與 bucket(0/2/4/6/7) 的對映 */
     private fun toExerciseLevel(freqOrBucket: Int?): String? = when (freqOrBucket) {
-        null -> null
-        in Int.MIN_VALUE..0 -> "sedentary"   // 0 或更小
-        in 1..3              -> "light"      // 1–3（含 bucket=2）
-        in 4..5              -> "moderate"   // 4–5（含 bucket=4）
-        6                    -> "active"     // 6（含 bucket=6）
-        else                 -> "very_active"// 7 以上（含 bucket=7）
+        null                  -> null
+        in Int.MIN_VALUE..0   -> "sedentary"    // 0 或更小
+        in 1..3               -> "light"        // 1–3（含 bucket=2）
+        in 4..5               -> "moderate"     // 4–5（含 bucket=4）
+        6                     -> "active"       // 6（含 bucket=6）
+        else                  -> "very_active"  // 7 以上（含 bucket=7）
     }
 
-    /** 上傳策略：一律送出 cm/kg；若使用者當下選英制，**同時**送 ft/in 或 lbs */
+    /**
+     * 上傳策略：
+     * - 身高：一律送 cm；若使用者是 ft/in，就另外送 feet/inches。
+     * - 體重：只送「使用者選的主單位」，另一個單位交給 Server 自己換算。
+     */
     suspend fun upsertFromLocal(): Result<UserProfileDto> = runCatching {
         val p = store.snapshot()
 
-        // 取得 locale
-        val localeTag = p.locale?.takeIf { it.isNotBlank() } ?: Locale.getDefault().toLanguageTag()
+        val localeTag = p.locale?.takeIf { it.isNotBlank() }
+            ?: Locale.getDefault().toLanguageTag()
 
-        // 身高：cm 一律送；英制在使用者選 FT_IN 且有值時才送
-        val heightCm = p.heightCm?.toDouble()
+        // ★ 身高 cm：保持 0.1 精度（無條件捨去）
+        val heightCm: Double? = p.heightCm
+            ?.toDouble()
+            ?.let { round1Floor(it) }
+
+        // 若是英制身高就一併送 feet/inches
         val (feet, inches) = when (p.heightUnit) {
-            UserProfileStore.HeightUnit.FT_IN -> {
-                // 優先用使用者實際輸入（若有），否則由 cm 推導
-                val f = p.heightFeet ?: (heightCm?.let { cmToFeetInches(it.toInt()).first })
-                val i = p.heightInches ?: (heightCm?.let { cmToFeetInches(it.toInt()).second })
-                f to i
-            }
-            else -> null to null
+            UserProfileStore.HeightUnit.FT_IN ->
+                p.heightFeet to p.heightInches
+            else ->
+                null to null
         }
 
-        // 體重：kg 一律送；英制在使用者選 LBS 且有值時才送
-        val weightKg = p.weightKg?.toDouble()
-        val weightLbs = when (p.weightUnit) {
-            UserProfileStore.WeightUnit.LBS -> p.weightLbs ?: weightKg?.let { kgToLbsInt(it) }
-            else -> null
+        // 原始 current / target 體重
+        val rawWeightKg:   Double? = p.weightKg?.toDouble()
+        val rawWeightLbs:  Double? = p.weightLbs?.toDouble()
+        val rawTargetKg:   Double? = p.targetWeightKg?.toDouble()
+        val rawTargetLbs:  Double? = p.targetWeightLbs?.toDouble()
+
+        // 使用者偏好的主單位
+        val weightUnit = p.weightUnit ?: UserProfileStore.WeightUnit.KG
+        val targetWeightUnit = p.targetWeightUnit ?: weightUnit
+
+        // --- current：只送主單位 ---
+        val (weightKgToSend, weightLbsToSend) = when (weightUnit) {
+            UserProfileStore.WeightUnit.KG  -> rawWeightKg  to null
+            UserProfileStore.WeightUnit.LBS -> null         to rawWeightLbs
         }
 
-        // 目標體重：同上
-        val targetWeightKg = p.targetWeightKg?.toDouble()
-        val targetWeightLbs = when (p.targetWeightUnit) {
-            UserProfileStore.WeightUnit.LBS -> p.targetWeightLbs ?: targetWeightKg?.let { kgToLbsInt(it) }
-            else -> null
+        // --- target：只送主單位 ---
+        val (targetKgToSend, targetLbsToSend) = when (targetWeightUnit) {
+            UserProfileStore.WeightUnit.KG  -> rawTargetKg  to null
+            UserProfileStore.WeightUnit.LBS -> null         to rawTargetLbs
         }
 
         val req = UpsertProfileRequest(
@@ -89,20 +111,22 @@ class ProfileRepository @Inject constructor(
             heightCm = heightCm,
             heightFeet = feet,
             heightInches = inches,
-            weightKg = weightKg,
-            weightLbs = weightLbs,
+            weightKg = weightKgToSend,
+            weightLbs = weightLbsToSend,
             exerciseLevel = toExerciseLevel(p.exerciseFreqPerWeek),
             goal = p.goal,
-            targetWeightKg = targetWeightKg,
-            targetWeightLbs = targetWeightLbs,
+            targetWeightKg = targetKgToSend,
+            targetWeightLbs = targetLbsToSend,
             referralSource = p.referralSource,
             locale = localeTag
         )
+
         val resp = api.upsertMyProfile(req)
         runCatching { store.setHasServerProfile(true) }
         resp
     }
 
+    /** 只更新 locale（語系切換時使用） */
     suspend fun updateLocaleOnly(newLocale: String): Result<UserProfileDto> = runCatching {
         val cur = api.getMyProfile()
         val req = UpsertProfileRequest(

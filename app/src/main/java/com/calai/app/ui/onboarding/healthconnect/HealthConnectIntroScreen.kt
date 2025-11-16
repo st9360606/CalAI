@@ -333,7 +333,7 @@ private fun HCBottomBar(
             )
         ) {
             Text(
-                text = stringResource(R.string.continue_btn), // ← 使用既有「繼續」
+                text = stringResource(R.string.continue_text), // ← 使用既有「繼續」
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -349,7 +349,7 @@ private fun HCBottomBar(
             Text(
                 text = stringResource(R.string.skip_text), // ← 新增「暫不」
                 color = Color.Black,
-                fontSize = 16.sp,
+                fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }

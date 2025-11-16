@@ -23,6 +23,8 @@ class BiteCal : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         // 提前建立通知頻道（避免第一次發通知前沒有頻道）
+        // ★ 只要這行有出現在 Logcat，就代表 app 至少有成功啟動到 Application
+        Log.d("CalAiApp", "Application onCreate() started")
         FastingReceiver.ensureChannel(this)
     }
 }
