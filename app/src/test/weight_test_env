@@ -1,0 +1,26 @@
+測試情境1:當用戶輸入current = 143.5 lbs、target = 140.1 lbs，HealthPlanScreen 就要顯示畫面的目前體重顯示143.5 lbs、離目標體重是-3.4lbs，因為還沒有保存到DB所以先不轉換成KG，等到用戶在HealthPlanScreen按了開始使用的按鈕才會把lbs跟轉換後的KG一起存入DB，存到DB的weight_lbs: 143.5 lbs、target_weight_lbs:140.1 lbs，這兩個數字一定要是用戶輸入的值，KG有誤差不管
+
+測試情境2:當用戶輸入current = 43.5 kg、target = 40.1kg ，HealthPlanScreen 畫面顯示的目前體重顯示43.5 kg、離目標體重是-3.4kg，kg，這是對的，但等到用戶在HealthPlanScreen按了開始使用的按鈕後，存到DB的weight_kg: 43.5 kg、target_weight_kg:40.0 kg，target_weight_kg正確應該是40.10才對吧
+
+測試情境3當用戶輸入current = 143.5 lbs、target = 60kg ，正確應該顯示的是目前體重顯示143.5 lbs、離目標體重是-11.3 lbs 才對 ，而存到DB的資料是對的
+
+測試情境4當用戶輸入current = 43.5 kg、target = 79.3lbs ，正確應該顯示的是目前體重顯示43.5 kg、離目標體重是-7.6kg 才對，而存到DB的資料是對的
+
+
+
+
+
+
+
+
+
+情境1:當用戶輸入current = 143.5 lbs、target = 140.1 lbs，HealthPlanScreen 就要顯示畫面的目前體重顯示143.5 lbs、離目標體重是-3.4lbs，因為還沒有保存到DB所以先不轉換成KG，等到用戶在HealthPlanScreen按了開始使用的按鈕才會把lbs跟轉換後的KG一起存入DB，存到DB的weight_lbs: 143.5 lbs、target_weight_lbs:140.1 lbs，這兩個數字一定要是用戶輸入的值，KG有誤差不管
+
+
+情境2:當用戶輸入current = 143.5 kg、target = 140.1 ，HealthPlanScreen 就要顯示畫面的目前體重顯示143.5 kg、離目標體重是-3.4kg，kg，因為還沒有保存到DB所以先不轉換成lbs，等到用戶在HealthPlanScreen按了開始使用的按鈕才會把kg跟轉換後的lbs一起存入DB，存到DB的weight_kg: 143.5 kg、target_weight_kg:140.1 kg，這兩個數字一定要是用戶輸入的值，lbs有誤差不管
+
+
+情境3:當用戶輸入current = 143.5 lbs、target = 60kg，就要幫用戶把target轉換成lbs 再計算，一切以當前體重單位為主，HealthPlanScreen 就要顯示畫面的目前體重顯示143.5 lbs、離目標體重是-11.3lbs，因為還沒有保存到DB所以先不轉換成KG，等到用戶在HealthPlanScreen按了開始使用的按鈕才會把lbs跟轉換後的KG一起存入DB，存到DB的weight_lbs: 143.5 lbs、target_weight_lbs:132.2 lbs，這兩個數字一定要是用戶輸入的值，DB的KG有誤差不管，一切以用戶輸入的當前體重單位為主
+
+
+情境4:當用戶輸入current = 43.5 kg、target = 79.3lbs，就要幫用戶把target轉換成kg 再計算，一切以當前體重單位為主，HealthPlanScreen 就要顯示畫面的目前體重顯示43.5 kg、離目標體重是-7.6kg，因為還沒有保存到DB所以先不轉換成KG，等到用戶在HealthPlanScreen按了開始使用的按鈕才會把lbs跟轉換後的KG一起存入DB，存到DB的weight_kg: 43.5 kg、target_weight_kg:35.9kg，這兩個數字一定要是用戶輸入的值，DB的LBS有誤差不管，一切以用戶輸入的當前體重單位為主

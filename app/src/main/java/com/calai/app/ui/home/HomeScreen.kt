@@ -85,12 +85,15 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.derivedStateOf
+import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.ui.home.components.LightHomeBackground
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutTrackerHost
 import com.calai.app.ui.home.ui.components.SuccessTopToast
+import com.calai.app.ui.home.ui.weight.components.formatDeltaGoalMinusCurrent
+import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
 
@@ -100,6 +103,7 @@ fun HomeScreen(
     vm: HomeViewModel,
     waterVm: WaterViewModel,
     workoutVm: WorkoutViewModel,
+    weightVm: WeightViewModel,
     onOpenAlarm: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
@@ -117,6 +121,33 @@ fun HomeScreen(
     val fastingUi by fastingVm.state.collectAsState()
     // 首次進入 Home 就載入 DB（含 enabled/plan/time）
     LaunchedEffect(Unit) { fastingVm.load() }
+
+    // === Weight UI（為了拿跟 SummaryCards 相同的 TO TARGET） ===
+    val weightUi by weightVm.ui.collectAsState()
+
+    // 確保 Weight summary 有被拉一次
+    LaunchedEffect(Unit) {
+        weightVm.initIfNeeded()
+    }
+
+    // 用跟 SummaryCards 一模一樣的邏輯來算 TO TARGET 顯示字串
+    val weightUnit = weightUi.unit
+    val effectiveCurrentKg = weightUi.current ?: weightUi.profileWeightKg
+    val effectiveGoalKg = weightUi.profileTargetWeightKg ?: weightUi.goal
+
+    val weightPrimaryText = formatDeltaGoalMinusCurrent(
+        goalKg = effectiveGoalKg,
+        currentKg = effectiveCurrentKg,
+        unit = weightUnit,
+        lbsAsInt = (weightUnit == UserProfileStore.WeightUnit.LBS)
+    )
+
+    // ✅ 新：Home WeightCardNew 進度 = (latest - start)/(target - start)
+    val weightProgress: Float = computeHomeWeightProgress(
+        profileWeightKg = weightUi.profileWeightKg,                 // start = user_profiles.weight_kg
+        targetWeightKg  = weightUi.profileTargetWeightKg ?: weightUi.goal, // target
+        latestWeightKg  = weightUi.current                          // latest = 最新 timeseries
+    )
 
     // ★ 新增：監聽 Workout VM 狀態（為了一次性導航）
     val workoutUi by workoutVm.ui.collectAsState()
@@ -290,6 +321,9 @@ fun HomeScreen(
                     fastingEndText = endText,
                     fastingEnabled = fastingUi.enabled,
                     onToggleFasting = onToggleFasting,
+                    // ★ 新增：直接傳 SummaryCards 的 TO TARGET 字串
+                    weightPrimary = weightPrimaryText,
+                    weightProgress = weightProgress,
                     onOpenWeight = onOpenWeight,
                     onQuickLogWeight = onQuickLogWeight,
                     // ★ 傳進去給第二頁下半部喝水卡
@@ -422,6 +456,9 @@ private fun TwoPagePager(
     fastingEndText: String? = null,
     fastingEnabled: Boolean = false,
     onToggleFasting: (Boolean) -> Unit = {},
+    // ★ 新增：直接吃 Weight 畫面算好的 TO TARGET 文案
+    weightPrimary: String,
+    weightProgress: Float,
     // ★ 新增：Weight 導航事件
     onOpenWeight: () -> Unit,
     onQuickLogWeight: () -> Unit,
@@ -489,7 +526,8 @@ private fun TwoPagePager(
                                 fastingEndText = fastingEndText,
                                 fastingEnabled = fastingEnabled,
                                 onToggle = onToggleFasting,
-                                // ★ 傳遞 Weight 兩個事件
+                                weightPrimary = weightPrimary,
+                                weightProgress = weightProgress,
                                 onOpenWeight = onOpenWeight,
                                 onQuickLogWeight = onQuickLogWeight
                             )
@@ -636,4 +674,27 @@ private fun openAppNotificationSettings(ctx: Context) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     ctx.startActivity(intent)
+}
+
+fun computeHomeWeightProgress(
+    profileWeightKg: Double?,     // user_profiles.weight_kg（起始）
+    targetWeightKg: Double?,      // user_profiles.target_weight_kg（目標）
+    latestWeightKg: Double?       // weight_timeseries 最新一筆 weight_kg
+): Float {
+    // 情境3：沒有 timeseries → 最新體重 = null → 進度 0%
+    if (latestWeightKg == null) return 0f
+    if (profileWeightKg == null || targetWeightKg == null) return 0f
+
+    val start  = profileWeightKg
+    val target = targetWeightKg
+    val latest = latestWeightKg
+
+    val denominator = target - start
+    if (denominator == 0.0) return 0f      // 起始 = 目標 → 避免除以 0
+
+    // ✅ 已完成比例： (latest - start) / (target - start)
+    val raw = ((latest - start) / denominator).toFloat()
+
+    // clamp 到 0~1，避免超過目標或資料錯誤
+    return raw.coerceIn(0f, 1f)
 }

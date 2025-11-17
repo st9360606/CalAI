@@ -565,11 +565,18 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
+            // ★ 新增：與 HOME 綁同一個 backStackEntry 的 WeightViewModel
+            val weightVm: WeightViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
             HomeScreen(
                 vm = vm,
                 waterVm = waterVm,
                 workoutVm = workoutVm,
                 fastingVm = fastingVm,
+                weightVm = weightVm,
                 onOpenAlarm = {
                     nav.navigate(Routes.REMINDERS) {
                         launchSingleTop = true

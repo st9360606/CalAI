@@ -481,7 +481,9 @@ fun WeightFastingRowModern(
     planOverride: String? = null,
     fastingEnabled: Boolean = false,
     onToggle: (Boolean) -> Unit = {},
-    // ★ 新增：Weight 導航
+    // ★ 新增：Weight 卡上的主文字（= TO TARGET）
+    weightPrimary: String,
+    weightProgress: Float,
     onOpenWeight: () -> Unit,
     onQuickLogWeight: () -> Unit
 ) {
@@ -490,17 +492,11 @@ fun WeightFastingRowModern(
         val commonTopBarTextStyle = MaterialTheme.typography.labelMedium
 
         // === 左卡：Weight（新元件）
-        val goal = -summary.weightDiffSigned
-        val unit = summary.weightDiffUnit
-        val primaryText =
-            if (unit == "lbs") String.format(java.util.Locale.getDefault(), "%+d lbs", goal.roundToInt())
-            else String.format(java.util.Locale.getDefault(), "%+.1f %s", goal, unit)
-
         WeightCardNew(
-            primary = primaryText,
-            secondary = "to goal",
+            primary = weightPrimary,
+            secondary = "to goal",  // "p=${(weightProgress * 100).toInt()}%",
             ringColor = Color(0xFF06B6D4),
-            progress = 0f,
+            progress = weightProgress,
             modifier = Modifier
                 .weight(1f)
                 .height(cardHeight)

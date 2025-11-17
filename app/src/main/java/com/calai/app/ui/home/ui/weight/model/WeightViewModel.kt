@@ -91,17 +91,17 @@ class WeightViewModel @Inject constructor(
             val s = repo.summary(_ui.value.range)
             val h = repo.recent7()
             val snapshot = _ui.value
-            val effectiveCurrent = s.currentKg ?: snapshot.profileWeightKg
+
             val effectiveGoal = snapshot.profileTargetWeightKg ?: s.goalKg
 
             _ui.update {
                 it.copy(
                     goal = effectiveGoal,
-                    current = effectiveCurrent,
+                    // ✅ current = 後端 summary 回傳的最新 timeseries 體重（可能為 null）
+                    current = s.currentKg,
                     achievedPercent = s.achievedPercent,
                     series = s.series,
                     history7 = h,
-                    // ★ 把後端算好的全時段第一筆帶進來
                     firstWeightAllTimeKg = s.firstWeightKgAllTimeKg,
                     error = null
                 )

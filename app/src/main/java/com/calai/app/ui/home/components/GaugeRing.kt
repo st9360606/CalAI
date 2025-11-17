@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -11,52 +12,73 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 
-/**
- * 共用圓環儀表（灰底 + 進度 + 上方小刻度點）
- */
 @Composable
 fun GaugeRing(
-    progress: Float,                 // 0f..1f
-    modifier: Modifier = Modifier,
-    sizeDp: Dp = 84.dp,
-    strokeDp: Dp = 12.dp,
-    trackColor: Color = Color(0xFFEFF0F3),
-    progressColor: Color = Color(0xFF111827),
-    drawTopTick: Boolean = true,
-    tickColor: Color = progressColor
+    progress: Float,
+    sizeDp: Dp,
+    strokeDp: Dp,
+    trackColor: Color,
+    progressColor: Color,
+    drawTopTick: Boolean = false,
+    tickColor: Color = progressColor,
+    // ★ 新增：控制「起始小點」相對於線寬的比例（0~1）
+    tickRadiusScale: Float = 0.45f
 ) {
-    Canvas(modifier = modifier.size(sizeDp)) {
-        val stroke = Stroke(width = strokeDp.toPx(), cap = StrokeCap.Round)
+    Canvas(modifier = Modifier.size(sizeDp)) {
+        val strokePx = strokeDp.toPx()
         val radius = size.minDimension / 2f
-        val startAngle = -90f
+        val inset = strokePx / 2f
+        val clampedProgress = progress.coerceIn(0f, 1f)
+        val sweep = 360f * clampedProgress
 
-        // 背景圈
+        val arcSize = Size(
+            width = size.width - inset * 2,
+            height = size.height - inset * 2
+        )
+        val arcTopLeft = Offset(inset, inset)
+
+        val trackStroke = Stroke(width = strokePx, cap = StrokeCap.Round)
+
+        // 背景圓環
         drawArc(
             color = trackColor,
-            startAngle = startAngle,
+            startAngle = -90f,
             sweepAngle = 360f,
             useCenter = false,
-            style = stroke
+            topLeft = arcTopLeft,
+            size = arcSize,
+            style = trackStroke
         )
 
-        // 進度圈
-        val p = progress.coerceIn(0f, 1f)
-        if (p > 0f) {
+        // 進度圓環
+        if (sweep > 0f) {
             drawArc(
                 color = progressColor,
-                startAngle = startAngle,
-                sweepAngle = 360f * p,
+                startAngle = -90f,
+                sweepAngle = sweep,
                 useCenter = false,
-                style = stroke
+                topLeft = arcTopLeft,
+                size = arcSize,
+                style = trackStroke
             )
         }
 
-        // 12 點方向小刻度
+        // ★ 起始小點（藍點）
         if (drawTopTick) {
-            val r = radius - stroke.width / 2f
-            val center = Offset(size.width / 2f, size.height / 2f)
-            val dot = Offset(center.x, center.y - r)
-            drawCircle(color = tickColor, radius = stroke.width / 2.2f, center = dot)
+            // 讓小點半徑 < 線寬：預設 0.45 * 線寬，看起來會比進度條細
+            val tickRadius = strokePx * tickRadiusScale.coerceIn(0f, 1f)
+
+            // 12 點鐘方向（稍微往內縮，避免超出外圈）
+            val centerOffset = Offset(
+                x = center.x,
+                y = center.y - radius + inset
+            )
+
+            drawCircle(
+                color = tickColor,
+                radius = tickRadius,
+                center = centerOffset
+            )
         }
     }
 }
