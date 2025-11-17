@@ -338,21 +338,6 @@ private fun HCBottomBar(
                 fontWeight = FontWeight.SemiBold
             )
         }
-
-        TextButton(
-            onClick = onSkip,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 18.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.skip_text), // ← 新增「暫不」
-                color = Color.Black,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
     }
 }
 
