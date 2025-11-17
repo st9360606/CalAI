@@ -340,7 +340,7 @@ fun formatWeightCard(
         val lbs = kgToLbs(kg)
         if (lbsAsInt) {
             val rounded = kotlin.math.round(lbs).toInt()
-            String.format("%d lb", rounded)
+            String.format("%d lbs", rounded)
         } else {
             String.format("%.1f lbs", lbs)
         }
@@ -807,7 +807,8 @@ private fun WeightTooltip(
         val weightText = formatWeightCard(
             kg = weightKg,
             unit = unit,
-            lbsAsInt = unit == UserProfileStore.WeightUnit.LBS
+            // ✅ 這裡固定用 false：KG / LBS 都顯示到小數點一位
+            lbsAsInt = false
         )
         val dateText = tooltipDateFormatter.format(date)
 
