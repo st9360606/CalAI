@@ -130,16 +130,17 @@ fun HomeScreen(
         weightVm.initIfNeeded()
     }
 
-    // 用跟 SummaryCards 一模一樣的邏輯來算 TO TARGET 顯示字串
+    // === Weight UI（為了拿跟 SummaryCards 相同的 TO TARGET） ===
     val weightUnit = weightUi.unit
     val effectiveCurrentKg = weightUi.current ?: weightUi.profileWeightKg
     val effectiveGoalKg = weightUi.profileTargetWeightKg ?: weightUi.goal
 
+    // ★ 修改這裡：固定用小數點一位（KG 本來就一位；LBS 原本是整數）
     val weightPrimaryText = formatDeltaGoalMinusCurrent(
         goalKg = effectiveGoalKg,
         currentKg = effectiveCurrentKg,
         unit = weightUnit,
-        lbsAsInt = (weightUnit == UserProfileStore.WeightUnit.LBS)
+        lbsAsInt = (weightUnit == UserProfileStore.WeightUnit.LBS)          // ← 原本是 (weightUnit == UserProfileStore.WeightUnit.LBS)
     )
 
     // ✅ 新：Home WeightCardNew 進度 = (latest - start)/(target - start)
@@ -333,7 +334,6 @@ fun HomeScreen(
                     onToggleUnit = { waterVm.toggleUnit() } // ← 這裡原本是 onWaterSettings
                 )
 
-
                 Spacer(Modifier.height(5.dp))
 
                 // ★ 想再小就把 cardHeight 調更小，環也可一起調
@@ -346,7 +346,6 @@ fun HomeScreen(
                     onAddWorkoutClick = { showWorkoutSheet = true },
                     onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁
                 )
-
                 // ===== Fourth block: 最近上傳
                 if (s.recentMeals.isNotEmpty()) {
                     Spacer(Modifier.height(20.dp))
@@ -360,7 +359,6 @@ fun HomeScreen(
                         Spacer(Modifier.height(12.dp))
                     }
                 }
-
                 Spacer(Modifier.height(80.dp))
             }
         }
@@ -386,7 +384,6 @@ fun HomeScreen(
                 }
             }
         }
-
         // ===== 共用 BottomSheet Host（常駐），以 visible 控制顯示 =====
         WorkoutTrackerHost(
             vm = workoutVm,
@@ -401,7 +398,6 @@ fun HomeScreen(
                 // 切記不要呼叫 workoutVm.dismissDialogs()
             }
         )
-
     }
 
 @Composable

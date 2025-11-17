@@ -72,7 +72,6 @@ fun WeightCardNew(
     primaryFontSize: TextUnit? = null,      // 同時給時，以這個優先生效
     primaryYOffset: Dp = 0.dp,              // 負值 = 往上
     primaryTopSpacing: Dp = 10.dp,          // 與頂欄距離
-
     // ★ secondary 可調
     secondaryTextStyle: TextStyle = MaterialTheme.typography.bodySmall,
     secondaryFontSize: TextUnit? = null,

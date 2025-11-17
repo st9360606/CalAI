@@ -80,11 +80,12 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     val currentKg = ui.current ?: ui.profileWeightKg
     val goalKg    = ui.profileTargetWeightKg ?: ui.goal
 
+    // ★ 1) TO TARGET：LBS 改成顯示到小數點後一位 → lbsAsInt = false
     val gainedText = formatDeltaGoalMinusCurrent(
         goalKg = goalKg,
         currentKg = currentKg,
         unit = unit,
-        lbsAsInt = (unit == UserProfileStore.WeightUnit.LBS)
+        lbsAsInt = false      // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
     )
 
     val pr = computeWeightProgress(
@@ -95,8 +96,17 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     )
     val progress = pr.fraction
 
-    val edgeLeft  = formatWeightCard(currentKg, unit, lbsAsInt = (unit == UserProfileStore.WeightUnit.LBS))
-    val edgeRight = formatWeightCard(goalKg, unit, lbsAsInt = (unit == UserProfileStore.WeightUnit.LBS))
+    // ★ 2) edgeLeft / edgeRight：LBS 改成顯示到小數點後一位 → lbsAsInt = false
+    val edgeLeft  = formatWeightCard(
+        currentKg,
+        unit,
+        lbsAsInt = false      // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
+    )
+    val edgeRight = formatWeightCard(
+        goalKg,
+        unit,
+        lbsAsInt = false      // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
+    )
 
     Card(
         modifier = Modifier
@@ -149,10 +159,11 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
                     )
                     Spacer(Modifier.height(12.dp))
                     Text(
+                        // ★ 3) CURRENT WEIGHT：LBS 也顯示到小數點一位 → lbsAsInt = false
                         text = formatWeightCard(
                             currentKg,
                             unit,
-                            lbsAsInt = (unit == UserProfileStore.WeightUnit.LBS)
+                            lbsAsInt = false   // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
                         ),
                         color = big,
                         fontSize = 27.sp,
@@ -331,7 +342,7 @@ fun formatWeightCard(
             val rounded = kotlin.math.round(lbs).toInt()
             String.format("%d lb", rounded)
         } else {
-            String.format("%.1f lb", lbs)
+            String.format("%.1f lbs", lbs)
         }
     }
 }
@@ -351,7 +362,7 @@ fun formatDeltaGoalMinusCurrent(
         val lbs = kgToLbs(abs(diffKg))
         val v = if (lbsAsInt) kotlin.math.round(lbs).toInt().toString()
         else String.format("%.1f", lbs)
-        "$sign$v lb"
+        "$sign$v lbs"
     }
 }
 
