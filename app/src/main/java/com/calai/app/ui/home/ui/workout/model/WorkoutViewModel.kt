@@ -76,7 +76,11 @@ class WorkoutViewModel @Inject constructor(
     }
 
     private fun buildFallbackPresets(userKg: Double): List<PresetWorkoutDto> {
-        val kg = if (userKg.isFinite() && userKg > 0.0) userKg else 70.0
+        val kg = if (userKg.isFinite() && userKg in 20.0..800.0) {
+            userKg
+        } else {
+            70.0
+        }
         return fallbackMeta.map { m ->
             PresetWorkoutDto(
                 activityId = m.activityId,
