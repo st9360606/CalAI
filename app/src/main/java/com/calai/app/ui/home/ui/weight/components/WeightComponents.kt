@@ -62,6 +62,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
+
+private const val X_TICK_COUNT = 5
 
 // ----------------------------------------------------------
 // Summary Cards
@@ -585,12 +588,14 @@ private data class ChartPointNormalized(
 
 private data class WeightChartData(
     val yLabels: List<String>,              // 由上到下
-    val xLabels: List<String>,              // 由左到右（軸上刻度）
-    val points: List<ChartPointNormalized>, // 折線所有點（正規化）
+    val xLabels: List<String>,              // 由左到右（X 軸顯示文字）
+    val points: List<ChartPointNormalized>, // 折線所有點（0f..1f）
     val dates: List<LocalDate>,             // 每個資料點的日期（對應 points）
     val weightsKg: List<Double>,            // 每個資料點的體重（對應 points）
-    val axisDates: List<LocalDate>          // X 軸刻度實際日期（對應 xLabels）
+    val axisDates: List<LocalDate>,         // X 軸刻度實際日期（對應 xLabels）
+    val axisX: List<Float>                  // ★ 每個刻度在 X 軸上的位置（0f..1f）
 )
+
 
 // X 軸日期格式（軸上字）
 private val axisDateFormatter: DateTimeFormatter =
@@ -618,11 +623,12 @@ private fun buildWeightChartData(
             points = emptyList(),
             dates = emptyList(),
             weightsKg = emptyList(),
-            axisDates = emptyList()
+            axisDates = emptyList(),
+            axisX = emptyList()
         )
     }
 
-    // 1) 解析日期 + 排序（這裡就是折線的所有點）
+    // 1) 解析日期 + 排序
     val sorted = series.mapNotNull { item ->
         runCatching { LocalDate.parse(item.logDate) }.getOrNull()
             ?.let { d -> d to item.weightKg }
@@ -635,7 +641,8 @@ private fun buildWeightChartData(
             points = emptyList(),
             dates = emptyList(),
             weightsKg = emptyList(),
-            axisDates = emptyList()
+            axisDates = emptyList(),
+            axisX = emptyList()
         )
     }
 
@@ -652,17 +659,17 @@ private fun buildWeightChartData(
     val effGoal    = goalKg    ?: currentKg ?: startKg
     val effCurrent = currentKg ?: startKg
 
-    // 2) 先決定「原始」上下界（包住 start / goal / current / 區間 min/max）
+    // 2) 決定原始上下界（包住 start / goal / current / 區間 min/max）
     var topKg: Double
     var bottomKg: Double
 
     if (goalKg != null && currentKg != null) {
         if (goalKg > currentKg) {
-            // 增重：目標 > 當前
+            // 增重
             topKg = maxOf(goalKg, dataMax, startKg)
             bottomKg = minOf(startKg, dataMin)
         } else if (goalKg < currentKg) {
-            // 減重：目標 < 當前
+            // 減重
             topKg = maxOf(startKg, dataMax)
             bottomKg = minOf(goalKg, dataMin)
         } else {
@@ -674,7 +681,7 @@ private fun buildWeightChartData(
         bottomKg = minOf(startKg, dataMin, effGoal, effCurrent)
     }
 
-    // 3) 加上上下 5% margin，避免線貼死邊界
+    // 3) 上下加一點 margin
     run {
         val rawTop = topKg
         val rawBottom = bottomKg
@@ -706,14 +713,15 @@ private fun buildWeightChartData(
     val yLabels = buildYAxisLabels(topKg, bottomKg, unit)
 
     val allDates  = datesSorted
-    val axisDates = buildXAxisDates(allDates, maxLabels = 5)
+    val axisDates = buildXAxisDates(allDates, maxLabels = X_TICK_COUNT)
     val xLabels   = axisDates.map { axisDateFormatter.format(it) }
 
+    // ★ 共同的時間座標基準（所有點 / X 軸刻度都用這一組）
     val firstDay = allDates.first().toEpochDay()
     val lastDay  = allDates.last().toEpochDay()
     val daySpan  = (lastDay - firstDay).coerceAtLeast(1L)
 
-    // 5) 正規化點
+    // 5) 折線上的所有資料點 → 正規化
     val points = datesSorted.zip(weightsSorted).map { (date, wKg) ->
         val x = ((date.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
             .coerceIn(0f, 1f)
@@ -722,13 +730,20 @@ private fun buildWeightChartData(
         ChartPointNormalized(x, y)
     }
 
+    // ★ 6) X 軸刻度的位置 (0f..1f) — 之後畫 label / 對齊垂直線都用這個
+    val axisX = axisDates.map { d ->
+        ((d.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
+            .coerceIn(0f, 1f)
+    }
+
     return WeightChartData(
         yLabels   = yLabels,
         xLabels   = xLabels,
         points    = points,
         dates     = datesSorted,
         weightsKg = weightsSorted,
-        axisDates = axisDates
+        axisDates = axisDates,
+        axisX     = axisX
     )
 }
 
@@ -759,25 +774,50 @@ private fun buildYAxisLabels(
     return final.map { kg -> formatAxisWeightLabel(kg, unit) }
 }
 
-/** X 軸：最多 maxLabels 個日期，最左最右一定存在 */
+/** X 軸：最多 maxLabels 個日期，最左最右一定是目前 range 內的最舊 / 最新日期 */
 private fun buildXAxisDates(
     dates: List<LocalDate>,
     maxLabels: Int
 ): List<LocalDate> {
     if (dates.isEmpty()) return emptyList()
-    val sorted = dates.distinct().sorted()
-    val count  = sorted.size
-    if (count <= maxLabels) return sorted
 
-    val result    = mutableListOf<LocalDate>()
-    val lastIndex = count - 1
-    for (i in 0 until maxLabels) {
-        val index = (lastIndex * i) / (maxLabels - 1)
-        val d = sorted[index]
-        if (result.isEmpty() || result.last() != d) {
-            result.add(d)
+    // 1) 先去重 + 排序，取得這個 range 內的真實最小 / 最大日期
+    val sortedDistinct = dates.distinct().sorted()
+    val count = sortedDistinct.size
+
+    // 資料少於等於 maxLabels：全部拿來畫，最左 = 最舊，最右 = 最新
+    if (count <= maxLabels) return sortedDistinct
+
+    val minDate = sortedDistinct.first()   // 這個周期內最舊的創建日期
+    val maxDate = sortedDistinct.last()    // 這個周期內最新的創建日期
+
+    val result = mutableListOf<LocalDate>()
+    result += minDate                      // ★ 第 1 刻度：鎖死在最舊日期
+
+    // 2) 中間刻度：在 [minDate, maxDate] 中平均取樣 index
+    //    例如 maxLabels = 4 時：slot = 1, 2 → 大約 1/3, 2/3 處
+    if (maxLabels > 2) {
+        val slotCount = maxLabels - 1      // min 與 max 之間切成幾段
+        val step = (count - 1).toFloat() / slotCount.toFloat()
+
+        for (slot in 1 until maxLabels - 1) {
+            // 理想中的 index
+            val rawIndex = (slot * step).roundToInt()
+
+            // 避免又取到 0 或最後一個 → 強制夾在 [1, count-2]
+            val index = rawIndex.coerceIn(1, count - 2)
+
+            val d = sortedDistinct[index]
+            if (d !in result) {
+                result += d
+            }
         }
     }
+
+    result += maxDate                      // ★ 最後一個刻度：鎖死在最新日期
+
+    // 不強求一定要剛好 maxLabels 個，重點是：第一個 = minDate、最後一個 = maxDate
+    // 以及所有日期都在 [minDate, maxDate] 之內。
     return result
 }
 
@@ -855,11 +895,11 @@ private fun GoalProgressChart(
         .height(190.dp)
 ) {
     val chartData = buildWeightChartData(
-        series               = series,
-        unit                 = unit,
-        currentKg            = currentKg,
-        goalKg               = goalKg,
-        profileWeightKg      = profileWeightKg,
+        series = series,
+        unit = unit,
+        currentKg = currentKg,
+        goalKg = goalKg,
+        profileWeightKg = profileWeightKg,
         startWeightAllTimeKg = startWeightAllTimeKg
     )
     // ★ 修正 1：只用 points.size 當 key，不再包含 unit
@@ -878,13 +918,13 @@ private fun GoalProgressChart(
     // ★ 跟左右 / 上下 padding 對齊（Canvas 內部）
     val density = LocalDensity.current
     val startPaddingDp = 40.dp
-    val endPaddingDp   = 6.dp
-    val topPaddingDp   = 8.dp
+    val endPaddingDp = 6.dp
+    val topPaddingDp = 8.dp
     val bottomPaddingDp = 8.dp
 
     val startPaddingPx = with(density) { startPaddingDp.toPx() }
-    val endPaddingPx   = with(density) { endPaddingDp.toPx() }
-    val topPaddingPx   = with(density) { topPaddingDp.toPx() }
+    val endPaddingPx = with(density) { endPaddingDp.toPx() }
+    val topPaddingPx = with(density) { topPaddingDp.toPx() }
     val bottomPaddingPx = with(density) { bottomPaddingDp.toPx() }
 
     // ★ 將手指 x 座標轉成「第幾個資料點」
@@ -990,28 +1030,8 @@ private fun GoalProgressChart(
                         val xsAll = allPoints.map { it.x * w }
                         val ysAll = allPoints.map { it.y * h }
 
-                        fun buildSmoothPath(xs: List<Float>, ys: List<Float>): Path {
-                            val p = Path()
-                            if (xs.isEmpty()) return p
-                            p.moveTo(xs.first(), ys.first())
-                            for (i in 1 until xs.size) {
-                                val prevX = xs[i - 1]
-                                val prevY = ys[i - 1]
-                                val currX = xs[i]
-                                val currY = ys[i]
-                                val midX = (prevX + currX) / 2f
-                                val midY = (prevY + currY) / 2f
-                                p.quadraticBezierTo(prevX, prevY, midX, midY)
-                            }
-                            if (xs.size >= 2) {
-                                val prevX = xs[xs.size - 2]
-                                val prevY = ys[xs.size - 2]
-                                p.quadraticBezierTo(prevX, prevY, xs.last(), ys.last())
-                            }
-                            return p
-                        }
-
-                        val linePathAll = buildSmoothPath(xsAll, ysAll)
+                        // ★ 改用 Catmull-Rom，曲線會通過每一個資料點
+                        val linePathAll = buildCatmullRomPath(xsAll, ysAll)
                         val areaPathAll = Path().apply {
                             addPath(linePathAll)
                             lineTo(xsAll.last(), h)
@@ -1043,7 +1063,7 @@ private fun GoalProgressChart(
                             // ★ 綠圓尺寸（縮小一點）
                             val circleOuter = 5.dp.toPx()   // 主綠圓半徑
                             val circleInner = 3.dp.toPx()   // 白心半徑
-                            val circleHalo  = 8.dp.toPx()   // 淡綠光暈半徑
+                            val circleHalo = 8.dp.toPx()   // 淡綠光暈半徑
 
                             // **補償值**：用於左 / 右半段 clip，不動線段分割邏輯
                             val leftClip = -halfStroke - 2f
@@ -1051,15 +1071,20 @@ private fun GoalProgressChart(
 
                             // ❹ 左半段 (0..xSel) 綠色覆蓋
                             withTransform({
-                                clipRect(left = leftClip, top = 0f, right = xSel + halfStroke, bottom = h)
+                                clipRect(
+                                    left = leftClip,
+                                    top = 0f,
+                                    right = xSel + halfStroke,
+                                    bottom = h
+                                )
                             }) {
                                 // 綠色底
                                 drawPath(
                                     path = areaPathAll,
                                     brush = Brush.verticalGradient(
-                                        0f    to highlightGreen.copy(alpha = 0.24f),
+                                        0f to highlightGreen.copy(alpha = 0.24f),
                                         0.55f to highlightGreen.copy(alpha = 0.16f),
-                                        1f    to Color.Transparent
+                                        1f to Color.Transparent
                                     )
                                 )
                                 // 綠線覆蓋黑線（無光暈）
@@ -1072,14 +1097,19 @@ private fun GoalProgressChart(
 
                             // ❺ 右半段 (xSel..end) 灰底
                             withTransform({
-                                clipRect(left = xSel - halfStroke, top = 0f, right = rightClip, bottom = h)
+                                clipRect(
+                                    left = xSel - halfStroke,
+                                    top = 0f,
+                                    right = rightClip,
+                                    bottom = h
+                                )
                             }) {
                                 drawPath(
                                     path = areaPathAll,
                                     brush = Brush.verticalGradient(
-                                        0f    to Color(0xFF111114).copy(alpha = 0.16f),
+                                        0f to Color(0xFF111114).copy(alpha = 0.16f),
                                         0.55f to Color(0xFF111114).copy(alpha = 0.10f),
-                                        1f    to Color.Transparent
+                                        1f to Color.Transparent
                                     )
                                 )
                             }
@@ -1093,7 +1123,7 @@ private fun GoalProgressChart(
                             drawLine(
                                 color = Green.copy(alpha = 0.45f),
                                 start = Offset(xSel, 0f),
-                                end   = Offset(xSel, h),
+                                end = Offset(xSel, h),
                                 strokeWidth = 1.5.dp.toPx()
                             )
 
@@ -1148,8 +1178,8 @@ private fun GoalProgressChart(
             ) {
                 val pointNorm = chartData.points[idx]
 
-                val innerWidthPx  = chartWidthPx  - startPaddingPx - endPaddingPx
-                val innerHeightPx = chartHeightPx - topPaddingPx  - bottomPaddingPx
+                val innerWidthPx = chartWidthPx - startPaddingPx - endPaddingPx
+                val innerHeightPx = chartHeightPx - topPaddingPx - bottomPaddingPx
 
                 // 與綠圓同一組半徑
                 val circleOuterPx = with(density) { 5.dp.toPx() }
@@ -1162,7 +1192,7 @@ private fun GoalProgressChart(
 
                 // 真正的中心 X / Y（含 padding）
                 val centerX = startPaddingPx + xSafeInner
-                val centerY = topPaddingPx    + pointNorm.y * innerHeightPx
+                val centerY = topPaddingPx + pointNorm.y * innerHeightPx
 
                 // Tooltip 寬度
                 val tooltipWidthPx = with(density) { 98.dp.toPx() }  // 跟 WeightTooltip 的 width 對齊
@@ -1195,50 +1225,125 @@ private fun GoalProgressChart(
 
         Spacer(Modifier.height(6.dp))
 
-        // X 軸標籤：選到的日期附近那個加粗
+        // 只有當「資料點日期剛好存在於 axisDates」時，才加粗對應的 xLabel
         val selectedLabelIndex: Int? = activeIndex?.let { pi ->
             if (pi !in chartData.dates.indices) {
                 null
             } else {
-                val targetEpoch = chartData.dates[pi].toEpochDay()
-                var bestIndex = 0
-                var bestDiff = Long.MAX_VALUE
-                chartData.axisDates.forEachIndexed { idx, d ->
-                    val diff = kotlin.math.abs(d.toEpochDay() - targetEpoch)
-                    if (diff < bestDiff) {
-                        bestDiff = diff
-                        bestIndex = idx
-                    }
-                }
-                bestIndex
+                val targetDate = chartData.dates[pi]
+                chartData.axisDates.indexOfFirst { it == targetDate }
+                    .takeIf { it >= 0 }
             }
         }
 
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = startPaddingDp, end = endPaddingDp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(start = startPaddingDp, end = endPaddingDp)
+                .height(24.dp)
         ) {
-            chartData.xLabels.forEachIndexed { index, label ->
-                val selected = selectedLabelIndex != null && index == selectedLabelIndex
-                Text(
-                    text = label,
-                    fontSize = 12.sp,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (selected)
-                        Color(0xFF111114)
-                    else
-                        Color.Black.copy(alpha = 0.60f)
-                )
+            if (chartWidthPx > 0f && chartData.xLabels.isNotEmpty()) {
+                // Canvas 內部實際寬度（扣掉左右 padding）
+                val innerWidthPx =
+                    (chartWidthPx - startPaddingPx - endPaddingPx).coerceAtLeast(1f)
+
+                // 每個刻度在 X 軸上的實際像素位置
+                val positions = chartData.axisX.map { it * innerWidthPx }
+
+                // 根據目前 range（日期跨度）調整「最小間距」
+                val daySpan: Long = if (chartData.dates.size >= 2) {
+                    chartData.dates.last().toEpochDay() - chartData.dates.first().toEpochDay()
+                } else 0L
+
+                val minSpacingDp = when {
+                    daySpan >= 365L -> 60.dp   // ~ 1 年以上
+                    daySpan >= 180L -> 52.dp   // 半年以上
+                    daySpan >= 90L  -> 44.dp   // 3 個月以上
+                    else            -> 36.dp   // < 3 個月
+                }
+                val minSpacingPx = with(density) { minSpacingDp.toPx() }
+
+                // ⭐ 新增：第一個 label 至少往右 4.dp（你可以改成 6.dp 看起來會更鬆）
+                val firstLabelMinTranslatePx = with(density) { 4.dp.toPx() }
+                // ⭐ 新增：最後一個 label 往左挪一點，例如 4.dp
+                val lastLabelShiftPx = with(density) { 15.dp.toPx() }
+                // 根據 spacing 決定要顯示哪些 label（一定保留第一個與最後一個）
+                val lastIndex = positions.lastIndex
+                val accepted = mutableListOf<Int>()
+
+                for (i in positions.indices) {
+                    val cx = positions[i]
+                    if (i == 0) {
+                        // 最左邊永遠保留
+                        accepted += i
+                        continue
+                    }
+                    if (i == lastIndex) {
+                        // 最右邊永遠保留；若跟前一個太近，就先把前一個刪掉
+                        if (accepted.isNotEmpty()) {
+                            val prevIdx = accepted.last()
+                            val prevX = positions[prevIdx]
+                            if (cx - prevX < minSpacingPx && accepted.size >= 2) {
+                                accepted.removeAt(accepted.lastIndex)
+                            }
+                        }
+                        accepted += i
+                        continue
+                    }
+                    // 中間的刻度：距離上一個 accepted 足夠才保留
+                    val prevIdx = accepted.lastOrNull()
+                    if (prevIdx == null) {
+                        accepted += i
+                    } else {
+                        val prevX = positions[prevIdx]
+                        if (cx - prevX >= minSpacingPx) {
+                            accepted += i
+                        }
+                    }
+                }
+                // 實際畫出被接受的 label
+                accepted.forEach { index ->
+                    val label = chartData.xLabels.getOrNull(index) ?: return@forEach
+                    val centerX = positions[index]
+                    val selected = (selectedLabelIndex == index)
+                    Text(
+                        text = label,
+                        fontSize = 12.sp,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (selected)
+                            Color(0xFF111114)
+                        else
+                            Color.Black.copy(alpha = 0.60f),
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .graphicsLayer {
+                                val baseTx = centerX - size.width / 2f
+
+                                val isFirst = index == accepted.first()
+                                val isLast  = index == accepted.last()
+
+                                translationX = when {
+                                    // ⭐ 第一個：至少往右一小段，避免貼住左邊界
+                                    isFirst -> {
+                                        if (baseTx < firstLabelMinTranslatePx) {
+                                            firstLabelMinTranslatePx
+                                        } else {
+                                            baseTx
+                                        }
+                                    }
+                                    // ⭐ 最後一個：往左挪一點，並且不要小於 0（避免跑出畫面）
+                                    isLast -> {
+                                        (baseTx - lastLabelShiftPx).coerceAtLeast(0f)
+                                    }
+                                    else -> baseTx
+                                }
+                            }
+                    )
+                }
             }
         }
     }
 }
-
-
-
-
 
 // ----------------------------------------------------------
 // Motivation & History
@@ -1312,4 +1417,48 @@ private fun FilterTabsPreview() {
             FilterTabs(selected = "all", onSelect = {})
         }
     }
+}
+
+// ★ 新增：Catmull-Rom cubic spline，讓曲線通過每一個點
+private fun buildCatmullRomPath(
+    xs: List<Float>,
+    ys: List<Float>,
+    tension: Float = 0.5f   // 0.0 = 折線、1.0 = 很彎，0.5 較穩定
+): Path {
+    val path = Path()
+    val n = xs.size
+    if (n == 0) return path
+    if (n == 1) {
+        path.moveTo(xs[0], ys[0])
+        return path
+    }
+
+    path.moveTo(xs[0], ys[0])
+
+    val last = n - 1
+    for (i in 0 until last) {
+        // P0, P1, P2, P3
+        val p0x = if (i == 0) xs[i] else xs[i - 1]
+        val p0y = if (i == 0) ys[i] else ys[i - 1]
+
+        val p1x = xs[i]
+        val p1y = ys[i]
+
+        val p2x = xs[i + 1]
+        val p2y = ys[i + 1]
+
+        val p3x = if (i + 1 == last) xs[i + 1] else xs[i + 2]
+        val p3y = if (i + 1 == last) ys[i + 1] else ys[i + 2]
+
+        val t = tension
+        // Catmull-Rom 轉 cubic 的控制點公式
+        val c1x = p1x + (p2x - p0x) / 6f * t
+        val c1y = p1y + (p2y - p0y) / 6f * t
+        val c2x = p2x - (p3x - p1x) / 6f * t
+        val c2y = p2y - (p3y - p1y) / 6f * t
+
+        path.cubicTo(c1x, c1y, c2x, c2y, p2x, p2y)
+    }
+
+    return path
 }
