@@ -635,8 +635,8 @@ fun BiteCalNavHost(
                         restoreState = true
                     }
                 },
-                onQuickLogWeight = {                  // 卡片上的「＋」→ 也改成進 Weight 主畫面
-                    nav.navigate(Routes.WEIGHT) {
+                onQuickLogWeight = {
+                    nav.navigate(Routes.RECORD_WEIGHT) {
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -690,26 +690,55 @@ fun BiteCalNavHost(
 
             WeightScreen(
                 vm = vm,
-                onLogClick = { nav.navigate(Routes.RECORD_WEIGHT) },
+                // Weight 畫面底部「Log Weight」→ Record Weight
+                onLogClick = {
+                    nav.navigate(Routes.RECORD_WEIGHT) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 onBack = { nav.popBackStack() }
             )
         }
 
         // === ★ WEIGHT 記錄頁（直接從 Home 開也能拿到同一顆 VM） ===
         composable(Routes.RECORD_WEIGHT) { backStackEntry ->
-            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val ctx = LocalContext.current
+
+            // 1) 優先用 LocalContext 找到真正的 Activity；找不到就用你傳進來的 hostActivity
+            val activity = (ctx.findActivity() ?: hostActivity)
+
+            // 2) WeightViewModel 照舊：綁在 HOME 的 backStackEntry 上，共用同一顆 VM
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
             val vm: WeightViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            RecordWeightScreen(
-                vm = vm,
-                onDone = { nav.popBackStack() },    // 完成後返回
-                onBack = { nav.popBackStack() }
-            )
+            // 3) 嘗試把 Activity 轉成 ActivityResultRegistryOwner
+            val owner: ActivityResultRegistryOwner? =
+                (activity as? ActivityResultRegistryOwner)
+                    ?: (hostActivity as? ActivityResultRegistryOwner)
+
+            if (owner != null) {
+                // ★ 核心：在這個 route 外層明確提供 LocalActivityResultRegistryOwner
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                    RecordWeightScreen(
+                        vm = vm,
+                        onSaved = { nav.popBackStack() },    // 完成後返回
+                        onBack = { nav.popBackStack() }
+                    )
+                }
+            } else {
+                // 極少數情況（例如 Preview 或特殊容器）拿不到 owner，就讓 RecordWeightScreen 走自己內建的降級路徑
+                RecordWeightScreen(
+                    vm = vm,
+                    onSaved = { nav.popBackStack() },
+                    onBack = { nav.popBackStack() }
+                )
+            }
         }
+
 
 
 

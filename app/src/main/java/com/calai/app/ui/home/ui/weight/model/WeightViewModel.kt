@@ -84,7 +84,9 @@ class WeightViewModel @Inject constructor(
         store.setWeightUnit(u) // 只在用戶操作時寫入
     }
 
-    fun setRange(r: String) { _ui.update { it.copy(range = r) }; refresh() }
+    fun setRange(r: String) {
+        _ui.update { it.copy(range = r) }; refresh()
+    }
 
     fun refresh() = viewModelScope.launch {
         runCatching {
@@ -123,5 +125,7 @@ class WeightViewModel @Inject constructor(
             .also { _ui.update { it.copy(saving = false) } }
     }
 
-    fun clearToast() { _ui.update { it.copy(toastMessage = null) } }
+    fun clearToast() {
+        _ui.update { it.copy(toastMessage = null) }
+    }
 }

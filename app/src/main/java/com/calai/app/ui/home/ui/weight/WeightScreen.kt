@@ -44,11 +44,12 @@ import com.calai.app.ui.home.ui.weight.components.HistoryRow
 import com.calai.app.ui.home.ui.weight.components.SegmentedButtons
 import com.calai.app.ui.home.ui.weight.components.SummaryCards
 import com.calai.app.ui.home.ui.weight.components.WeightChartCard
+import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WeightScreen(
+    fun WeightScreen(
     vm: WeightViewModel,
     onLogClick: () -> Unit,
     onBack: () -> Unit
@@ -60,37 +61,9 @@ fun WeightScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFFF5F5F5),
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black,
-                    actionIconContentColor = Color.Black
-                ),
-                title = {
-                    Text(
-                        text = "Weight",
-                        style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = Color.Black
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .height(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            modifier = Modifier.height(28.dp)
-                        )
-                    }
-                }
+            WeightTopBar(
+                title = "Weight",
+                onBack = onBack
             )
         },
         bottomBar = {
