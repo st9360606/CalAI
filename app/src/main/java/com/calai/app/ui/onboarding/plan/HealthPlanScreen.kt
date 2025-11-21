@@ -194,14 +194,14 @@ fun HealthPlanScreen(
             Spacer(Modifier.height(18.dp))
             Box(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center   // ★ 用二維 Alignment，水平靠左、垂直置中
             ) {
                 Text(
                     text = stringResource(R.string.plan_edit_anytime),
-                    color = NeutralText,
+                    color = Color(0xFF9AA3AF),
                     fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(0.55f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center             // ★ 文字也用 Start，比較自然
                 )
             }
 
@@ -437,12 +437,12 @@ private fun MacroRingItem(
             Text(
                 centerText,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
         }
         Spacer(Modifier.height(6.dp))
-        Text(title, color = NeutralText, fontSize = 14.sp, textAlign = TextAlign.Center)
+        Text(title, color = NeutralText, fontSize = 12.sp, textAlign = TextAlign.Center)
     }
 }
 
@@ -550,7 +550,7 @@ private fun BmiCard(
     Spacer(Modifier.height(12.dp))
     Text(
         text = stringResource(R.string.plan_disclaimer),
-        color = NeutralText,
+        color = Color(0xFF9AA3AF),
         fontSize = 12.sp,
         modifier = Modifier
             .fillMaxWidth()
@@ -750,7 +750,7 @@ private fun SourcesHeader(
             Spacer(Modifier.width(10.dp))
             Text(
                 text = text,
-                color = NeutralText,
+                color = Color(0xFF9AA3AF),
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
                 textAlign = TextAlign.Center,
@@ -811,7 +811,7 @@ fun ResearchSourcesBlock(
         ) {
             Text(
                 text = toggleLabel,
-                color = NeutralText,
+                color = Color(0xFF9AA3AF),
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.clickable {
@@ -840,7 +840,7 @@ fun ResearchSourcesBlock(
                 links.forEach { (label, url) ->
                     Text(
                         text = label,
-                        color = Color.Black,
+                        color = Color(0xFF9AA3AF),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
                         textAlign = TextAlign.Center,

@@ -235,7 +235,7 @@ private fun LandingBottomBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(R.string.cta_login_prefix),
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontFamily = titleFont,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF111114).copy(alpha = 0.72f),
@@ -246,7 +246,7 @@ private fun LandingBottomBar(
                 Spacer(Modifier.width(9.dp))
                 Text(
                     text = stringResource(R.string.cta_login),
-                    fontSize = 18.sp,
+                    fontSize = 17.sp,
                     fontFamily = titleFont,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,

@@ -166,7 +166,7 @@
 
     <string name="plan_water_daily">Daily Water</string>
     <string name="plan_weight_current">Current Weight</string>
-    <string name="plan_weight_delta">To goal weight</string>
+    <string name="plan_weight_delta">To Goal Weight</string>
 
     <string name="plan_goals_title">How to reach\nyour goals</string>
     <string name="plan_goal_card_health_scores">Health scores guide you,so habits form naturally</string>

@@ -251,21 +251,20 @@ fun WeightSelectionScreen(
             Text(
                 text = stringResource(R.string.onboard_weight_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
+                    color = Color(0xFF9AA3AF),
+                    lineHeight = 20.sp
                 ),
-                color = Color(0xFFB6BDC6),
-                textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 6.dp)
+                    .padding(horizontal = 24.dp),
+                textAlign = TextAlign.Center
             )
 
             WeightUnitSegmented(
                 useMetric = useMetric,
                 onChange = { useMetric = it },
                 modifier = Modifier
-                    .padding(top = 12.dp)
+                    .padding(top = 25.dp)
                     .align(Alignment.CenterHorizontally)
             )
 
@@ -274,7 +273,7 @@ fun WeightSelectionScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 2.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {

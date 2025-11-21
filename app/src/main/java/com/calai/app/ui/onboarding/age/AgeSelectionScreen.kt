@@ -174,8 +174,8 @@ fun AgeSelectionScreen(
                 maxAge = maxAge,
                 value = selectedAge,
                 onValueChange = { selectedAge = it },
-                rowHeight = 56.dp,
-                centerTextSize = 40.sp,
+                rowHeight = 58.dp,
+                centerTextSize = 50.sp,
                 sideAlpha = 0.35f
             )
         }

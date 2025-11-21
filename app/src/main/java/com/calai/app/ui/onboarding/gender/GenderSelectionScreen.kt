@@ -158,10 +158,13 @@ fun GenderSelectionScreen(
 
             Text(
                 text = stringResource(R.string.onb_gender_subtitle),
-                fontSize = 17.sp,
-                color = Color(0xFF6B7280),
-                lineHeight = 22.sp,
-                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF9AA3AF),
+                    lineHeight = 20.sp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 textAlign = TextAlign.Center
             )
 

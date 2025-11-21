@@ -151,19 +151,18 @@ fun HeightSelectionScreen(
                     .padding(top = 20.dp)
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
             Text(
                 text = stringResource(R.string.onboard_height_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
+                    color = Color(0xFF9AA3AF),
+                    lineHeight = 20.sp
                 ),
-                color = Color(0xFFB6BDC6),
-                textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 6.dp)
+                    .padding(horizontal = 24.dp),
+                textAlign = TextAlign.Center
             )
 
             // 切換單位：只更新顯示值；不改 cmVal
@@ -178,7 +177,7 @@ fun HeightSelectionScreen(
                     useMetric = isMetric
                 },
                 modifier = Modifier
-                    .padding(top = 12.dp)
+                    .padding(top = 25.dp)
                     .align(Alignment.CenterHorizontally)
             )
 
@@ -192,7 +191,7 @@ fun HeightSelectionScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 2.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {

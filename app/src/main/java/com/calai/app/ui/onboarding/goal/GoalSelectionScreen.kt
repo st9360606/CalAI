@@ -126,22 +126,25 @@ fun GoalSelectionScreen(
                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                textAlign = TextAlign.Start
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = stringResource(R.string.onboard_goal_subtitle),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
-                ),
-                color = Color(0xFF8F98A3),
+                textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
+                    .padding(top = 20.dp)
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = stringResource(R.string.onboard_goal_subtitle),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF9AA3AF),
+                    lineHeight = 20.sp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                textAlign = TextAlign.Center
             )
 
             Spacer(Modifier.height(55.dp))
