@@ -754,19 +754,39 @@ private fun buildWeightChartData(
     val daySpan  = (lastDay - firstDay).coerceAtLeast(1L)
 
     // 5) 折線上的所有資料點 → 正規化
-    val points = datesSorted.zip(weightsSorted).map { (date, wKg) ->
-        val x = ((date.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
-            .coerceIn(0f, 1f)
-        val clamped = wKg.coerceIn(bottomKg, topKg)
-        val y = (((topKg - clamped) / span).toFloat()).coerceIn(0f, 1f)
-        ChartPointNormalized(x, y)
-    }
+    val points: List<ChartPointNormalized> =
+        if (datesSorted.size == 1) {
+            // ★ 只有一筆資料：X 固定在最左邊 (0f)，日期顯示在左邊時會對齊
+            val onlyKg = weightsSorted.first()
+            val clamped = onlyKg.coerceIn(bottomKg, topKg)
+            val y = (((topKg - clamped) / span).toFloat()).coerceIn(0f, 1f)
+            listOf(
+                ChartPointNormalized(
+                    x = 0f,   // ← 0f = 最左側
+                    y = y
+                )
+            )
+        } else {
+            datesSorted.zip(weightsSorted).map { (date, wKg) ->
+                val x = ((date.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
+                    .coerceIn(0f, 1f)
+                val clamped = wKg.coerceIn(bottomKg, topKg)
+                val y = (((topKg - clamped) / span).toFloat()).coerceIn(0f, 1f)
+                ChartPointNormalized(x, y)
+            }
+        }
 
     // ★ 6) X 軸刻度的位置 (0f..1f) — 之後畫 label / 對齊垂直線都用這個
-    val axisX = axisDates.map { d ->
-        ((d.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
-            .coerceIn(0f, 1f)
-    }
+    val axisX: List<Float> =
+        if (axisDates.size == 1) {
+            // 只有一個刻度 → 也放在最左側
+            listOf(0f)
+        } else {
+            axisDates.map { d ->
+                ((d.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
+                    .coerceIn(0f, 1f)
+            }
+        }
 
     return WeightChartData(
         yLabels   = yLabels,
@@ -1053,7 +1073,78 @@ private fun GoalProgressChart(
                     }
 
                     val allPoints = chartData.points
-                    if (allPoints.size >= 2) {
+                    if (allPoints.isEmpty()) {
+                        // 沒資料：只留背景 + 網格
+                    } else if (allPoints.size == 1) {
+                        // ★ 只有一筆資料：黑色橫線（未按）、漸層、按下變綠線
+                        val highlightGreen = Color(0xFF22C55E)
+                        val baseStroke = 2.1.dp.toPx()
+
+                        val xsAll = allPoints.map { it.x * w }
+                        val ysAll = allPoints.map { it.y * h }
+
+                        val xSingle = xsAll[0]
+                        val ySingle = ysAll[0]
+
+                        // 1) 橫線以下的漸層區域
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                0f to Color(0xFF111114).copy(alpha = 0.15f),
+                                1f to Color.Transparent
+                            ),
+                            topLeft = Offset(0f, ySingle),
+                            size = Size(w, h - ySingle)
+                        )
+
+                        // 是否正在被按壓
+                        val isActive = (activeIndex != null && activeIndex == 0)
+
+                        // 2) 橫向基線：未按壓 = 黑色；按壓 = 綠色
+                        drawLine(
+                            color = if (isActive) highlightGreen else Color(0xFF111114),
+                            start = Offset(0f, ySingle),
+                            end = Offset(w, ySingle),
+                            strokeWidth = baseStroke,
+                            cap = StrokeCap.Round
+                        )
+
+                        if (isActive) {
+                            // ★ 按壓時再加「垂直綠線 + 綠色圓點 + 光暈」
+                            val circleOuter = 5.dp.toPx()   // 主綠圓半徑
+                            val circleInner = 3.dp.toPx()   // 白心半徑
+                            val circleHalo  = 8.dp.toPx()   // 淡綠光暈半徑
+
+                            // 垂直綠線（蓋過原本的粗直線）
+                            drawLine(
+                                color = Green.copy(alpha = 0.45f),
+                                start = Offset(xSingle, 0f),
+                                end = Offset(xSingle, h),
+                                strokeWidth = 1.5.dp.toPx()
+                            )
+
+                            // 光暈
+                            drawCircle(
+                                color = Green.copy(alpha = 0.28f),
+                                radius = circleHalo,
+                                center = Offset(xSingle, ySingle)
+                            )
+
+                            // 綠色實心圓
+                            drawCircle(
+                                color = highlightGreen,
+                                radius = circleOuter,
+                                center = Offset(xSingle, ySingle)
+                            )
+
+                            // 中心白點
+                            drawCircle(
+                                color = Color.White,
+                                radius = circleInner,
+                                center = Offset(xSingle, ySingle)
+                            )
+                        }
+                    } else {
+                        // ★ 兩筆以上：保持原本 Catmull-Rom + 綠色高亮行為
                         val highlightGreen = Color(0xFF22C55E)
                         // 基礎線條粗細
                         val baseStroke = 2.1.dp.toPx()
@@ -1062,7 +1153,7 @@ private fun GoalProgressChart(
                         val xsAll = allPoints.map { it.x * w }
                         val ysAll = allPoints.map { it.y * h }
 
-                        // ★ 改用 Catmull-Rom，曲線會通過每一個資料點
+                        // ★ 曲線通過每個資料點
                         val linePathAll = buildCatmullRomPath(xsAll, ysAll)
                         val areaPathAll = Path().apply {
                             addPath(linePathAll)
@@ -1071,16 +1162,16 @@ private fun GoalProgressChart(
                             close()
                         }
 
-                        // ❸ 先畫「全域底部灰色漸層」（無論是否有 activeIndex 都存在）
+                        // 底部灰色漸層
                         drawPath(
                             path = areaPathAll,
                             brush = Brush.verticalGradient(
-                                0f to Color(0xFF111114).copy(alpha = 0.15f), // 上方淡灰
-                                1f to Color.Transparent                       // 下方透明
+                                0f to Color(0xFF111114).copy(alpha = 0.15f),
+                                1f to Color.Transparent
                             )
                         )
 
-                        // ❹ 再畫「完整黑線」作為基準
+                        // 黑色基線
                         drawPath(
                             path = linePathAll,
                             color = Color(0xFF111114),
@@ -1092,16 +1183,15 @@ private fun GoalProgressChart(
                             val xSel = xsAll[idx]
                             val ySel = ysAll[idx]
 
-                            // ★ 綠圓尺寸（縮小一點）
                             val circleOuter = 5.dp.toPx()   // 主綠圓半徑
                             val circleInner = 3.dp.toPx()   // 白心半徑
-                            val circleHalo = 8.dp.toPx()   // 淡綠光暈半徑
+                            val circleHalo  = 8.dp.toPx()   // 淡綠光暈半徑
 
                             // **補償值**：用於左 / 右半段 clip，不動線段分割邏輯
-                            val leftClip = -halfStroke - 2f
+                            val leftClip  = -halfStroke - 2f
                             val rightClip = w + halfStroke + 2f
 
-                            // ❹ 左半段 (0..xSel) 綠色覆蓋
+                            // 左半段綠色覆蓋
                             withTransform({
                                 clipRect(
                                     left = leftClip,
@@ -1110,16 +1200,14 @@ private fun GoalProgressChart(
                                     bottom = h
                                 )
                             }) {
-                                // 綠色底
                                 drawPath(
                                     path = areaPathAll,
                                     brush = Brush.verticalGradient(
-                                        0f to highlightGreen.copy(alpha = 0.24f),
+                                        0f    to highlightGreen.copy(alpha = 0.24f),
                                         0.55f to highlightGreen.copy(alpha = 0.16f),
-                                        1f to Color.Transparent
+                                        1f    to Color.Transparent
                                     )
                                 )
-                                // 綠線覆蓋黑線（無光暈）
                                 drawPath(
                                     path = linePathAll,
                                     color = highlightGreen,
@@ -1127,7 +1215,7 @@ private fun GoalProgressChart(
                                 )
                             }
 
-                            // ❺ 右半段 (xSel..end) 灰底
+                            // 右半段灰底
                             withTransform({
                                 clipRect(
                                     left = xSel - halfStroke,
@@ -1139,19 +1227,14 @@ private fun GoalProgressChart(
                                 drawPath(
                                     path = areaPathAll,
                                     brush = Brush.verticalGradient(
-                                        0f to Color(0xFF111114).copy(alpha = 0.16f),
+                                        0f    to Color(0xFF111114).copy(alpha = 0.16f),
                                         0.55f to Color(0xFF111114).copy(alpha = 0.10f),
-                                        1f to Color.Transparent
+                                        1f    to Color.Transparent
                                     )
                                 )
                             }
 
-                            // -------------------------------
-                            // ★ 關鍵：垂直線＋圓點全部用 xSel
-                            //     這樣就會跟最左邊那條 Y 軸直線「同一條」，直接蓋住
-                            // -------------------------------
-
-                            // 垂直輔助線（綠色蓋住原本的直線）
+                            // 垂直綠線
                             drawLine(
                                 color = Green.copy(alpha = 0.45f),
                                 start = Offset(xSel, 0f),
@@ -1159,21 +1242,17 @@ private fun GoalProgressChart(
                                 strokeWidth = 1.5.dp.toPx()
                             )
 
-                            // 淡綠光暈
+                            // 光暈 + 綠圓 + 白心
                             drawCircle(
                                 color = Green.copy(alpha = 0.28f),
                                 radius = circleHalo,
                                 center = Offset(xSel, ySel)
                             )
-
-                            // 主綠圓（小一點）
                             drawCircle(
                                 color = Green,
                                 radius = circleOuter,
                                 center = Offset(xSel, ySel)
                             )
-
-                            // 內圈白色
                             drawCircle(
                                 color = Color.White,
                                 radius = circleInner,
