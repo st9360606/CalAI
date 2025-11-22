@@ -20,6 +20,9 @@ interface WeightApi {
 
     @GET("/api/v1/weights/summary")
     suspend fun summary(@Query("range") range: String): SummaryDto
+
+    @POST("/api/v1/weights/baseline")
+    suspend fun ensureBaseline()
 }
 
 @Serializable

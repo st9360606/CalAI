@@ -132,13 +132,4 @@ object NetworkModule {
     fun provideWeightApi(@Named("apiRetrofit") retrofit: Retrofit): WeightApi =
         retrofit.create(WeightApi::class.java)
 
-    @Provides
-    @Singleton
-    fun provideWeightRepository(
-        weightApi: WeightApi
-    ): WeightRepository {
-        return WeightRepository(weightApi)
-    }
-
-
 }

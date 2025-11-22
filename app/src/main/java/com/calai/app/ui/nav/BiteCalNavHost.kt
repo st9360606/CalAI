@@ -4,6 +4,7 @@ package com.calai.app.ui.nav
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistryOwner
@@ -23,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.calai.app.R
 import com.calai.app.data.auth.net.SessionBus
+import com.calai.app.data.weight.repo.WeightRepository
 import com.calai.app.di.AppEntryPoint
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.LanguageSessionFlag
@@ -112,6 +114,9 @@ fun BiteCalNavHost(
     val isSignedIn by authState.isSignedInFlow.collectAsState(initial = null)
 
     val profileRepo = remember(ep) { ep.profileRepository() }
+
+    val weightRepo  = remember(ep) { ep.weightRepository() }
+
     val store = remember(ep) { ep.userProfileStore() }
 
     val localeController = LocalLocaleController.current
@@ -209,14 +214,17 @@ fun BiteCalNavHost(
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
                     scope.launch {
+                        // ★ 先印一個 flow log，確定有進來
+                        Log.d("WeightFlow", "EmailCode onSuccess, uploadLocal=$uploadLocal")
                         val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
-
                             if (uploadLocal) {
                                 // ★ 從 ROUTE_PLAN 帶上來：一定 upsert 本機資料（不管 exists）
                                 runCatching { store.setLocaleTag(currentTag) }
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
+                                runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
+                                Log.d("WeightFlow", "uploadLocal branch: upsertFromLocal() done")
                                 Routes.HOME
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
@@ -452,6 +460,7 @@ fun BiteCalNavHost(
                         withContext(Dispatchers.IO) {
                             runCatching { profileRepo.upsertFromLocal() }
                             runCatching { store.setHasServerProfile(true) }
+                            runCatching { weightRepo.ensureBaseline() }  // ⭐ 新增：告訴後端「如果這是新用戶，就幫我建 baseline 體重」
                         }
                         nav.navigate(target) {
                             popUpTo(0) { inclusive = true }

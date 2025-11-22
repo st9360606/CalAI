@@ -1,5 +1,6 @@
 package com.calai.app.data.weight.repo
 
+import android.util.Log
 import com.calai.app.data.weight.api.WeightApi
 import com.calai.app.data.weight.api.WeightItemDto
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +42,14 @@ class WeightRepository @Inject constructor(
 
     suspend fun recent7() = withContext(Dispatchers.IO) { api.recent7() }
     suspend fun summary(range: String) = withContext(Dispatchers.IO) { api.summary(range) }
+
+    suspend fun ensureBaseline() {
+        Log.d("WeightRepo", "ensureBaseline() called")   // ★ 先看這行有沒有出現
+        runCatching { api.ensureBaseline() }
+            .onFailure { e ->
+                Log.e("WeightRepo", "ensureBaseline failed", e)
+            }
+    }
 
     fun kgToLbsInt(kg: Double): Int = (kg * 2.20462262).roundToInt()
 }

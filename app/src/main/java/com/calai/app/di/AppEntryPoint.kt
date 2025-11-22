@@ -5,6 +5,7 @@ import com.calai.app.data.auth.repo.TokenStore
 import com.calai.app.data.auth.state.AuthState
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.ProfileRepository
+import com.calai.app.data.weight.repo.WeightRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -20,4 +21,5 @@ interface AppEntryPoint {
     fun tokenStore(): TokenStore
     fun profileRepository(): ProfileRepository
     fun userProfileStore(): UserProfileStore   // ✅ 新增
+    fun weightRepository(): WeightRepository
 }
