@@ -275,7 +275,9 @@ fun HatchedProgressBar(
     stripePhasePx: Float = 0f
 ) {
     val clamped = progress.coerceIn(0f, 1f)
-    Box(Modifier.fillMaxWidth().height(height)) {
+    Box(Modifier
+        .fillMaxWidth()
+        .height(height)) {
         Canvas(Modifier.matchParentSize()) {
             val r = corner.toPx()
             val cr = CornerRadius(r, r)
@@ -628,11 +630,11 @@ private data class WeightChartData(
     val xLabels: List<String>,              // 由左到右（X 軸顯示文字）
     val points: List<ChartPointNormalized>, // 折線所有點（0f..1f）
     val dates: List<LocalDate>,             // 每個資料點的日期（對應 points）
-    val weightsKg: List<Double>,            // 每個資料點的體重（對應 points）
+    val weightsKg: List<Double>,            // 每個資料點的體重（kg）
+    val weightsLbs: List<Double?>,          // ★ 新增：每個點的 DB lbs（直接吃 DTO，可能為 null）
     val axisDates: List<LocalDate>,         // X 軸刻度實際日期（對應 xLabels）
-    val axisX: List<Float>                  // ★ 每個刻度在 X 軸上的位置（0f..1f）
+    val axisX: List<Float>                  // 每個刻度在 X 軸上的位置（0f..1f）
 )
-
 
 // X 軸日期格式（軸上字）
 private val axisDateFormatter: DateTimeFormatter =
@@ -655,43 +657,52 @@ private fun buildWeightChartData(
 ): WeightChartData {
     if (series.isEmpty()) {
         return WeightChartData(
-            yLabels = emptyList(),
-            xLabels = emptyList(),
-            points = emptyList(),
-            dates = emptyList(),
-            weightsKg = emptyList(),
-            axisDates = emptyList(),
-            axisX = emptyList()
+            yLabels    = emptyList(),
+            xLabels    = emptyList(),
+            points     = emptyList(),
+            dates      = emptyList(),
+            weightsKg  = emptyList(),
+            weightsLbs = emptyList(),   // ★ 一定要補這個
+            axisDates  = emptyList(),
+            axisX      = emptyList()
         )
     }
 
-    // 1) 解析日期 + 排序
-    val sorted = series.mapNotNull { item ->
+    // 1) 解析日期 + 排序（同時保留 kg / lbs）
+    val sorted: List<Triple<LocalDate, Double, Double?>> = series.mapNotNull { item ->
         runCatching { LocalDate.parse(item.logDate) }.getOrNull()
-            ?.let { d -> d to item.weightKg }
+            ?.let { date ->
+                Triple(
+                    date,
+                    item.weightKg,
+                    item.weightLbs?.toDouble() // DB 的 178.0 會變成 178.0
+                )
+            }
     }.sortedBy { it.first }
 
     if (sorted.isEmpty()) {
         return WeightChartData(
-            yLabels = emptyList(),
-            xLabels = emptyList(),
-            points = emptyList(),
-            dates = emptyList(),
-            weightsKg = emptyList(),
-            axisDates = emptyList(),
-            axisX = emptyList()
+            yLabels    = emptyList(),
+            xLabels    = emptyList(),
+            points     = emptyList(),
+            dates      = emptyList(),
+            weightsKg  = emptyList(),
+            weightsLbs = emptyList(),   // ★ 這邊也要
+            axisDates  = emptyList(),
+            axisX      = emptyList()
         )
     }
 
-    val datesSorted   = sorted.map { it.first }
-    val weightsSorted = sorted.map { it.second }
+    val datesSorted: List<LocalDate> = sorted.map { it.first }
+    val weightsKg:   List<Double>    = sorted.map { it.second }
+    val weightsLbs:  List<Double?>   = sorted.map { it.third }
 
     // 全時段第一筆（後端算好的）> 沒有就用目前 slice 第一筆
-    val startKg = startWeightAllTimeKg ?: weightsSorted.first()
+    val startKg = startWeightAllTimeKg ?: weightsKg.first()
 
     // 區間內實際 min / max
-    val dataMin = weightsSorted.minOrNull()!!
-    val dataMax = weightsSorted.maxOrNull()!!
+    val dataMin = weightsKg.minOrNull()!!
+    val dataMax = weightsKg.maxOrNull()!!
 
     val effGoal    = goalKg    ?: currentKg ?: startKg
     val effCurrent = currentKg ?: startKg
@@ -753,26 +764,25 @@ private fun buildWeightChartData(
     val axisDates = buildXAxisDates(allDates, maxLabels = X_TICK_COUNT)
     val xLabels   = axisDates.map { axisDateFormatter.format(it) }
 
-    // ★ 共同的時間座標基準（所有點 / X 軸刻度都用這一組）
+    // 共同時間座標基準
     val firstDay = allDates.first().toEpochDay()
     val lastDay  = allDates.last().toEpochDay()
     val daySpan  = (lastDay - firstDay).coerceAtLeast(1L)
 
-    // 5) 折線上的所有資料點 → 正規化
+    // 5) 折線資料點 → 正規化
     val points: List<ChartPointNormalized> =
         if (datesSorted.size == 1) {
-            // ★ 只有一筆資料：X 固定在最左邊 (0f)，日期顯示在左邊時會對齊
-            val onlyKg = weightsSorted.first()
+            val onlyKg = weightsKg.first()
             val clamped = onlyKg.coerceIn(bottomKg, topKg)
             val y = (((topKg - clamped) / span).toFloat()).coerceIn(0f, 1f)
             listOf(
                 ChartPointNormalized(
-                    x = 0f,   // ← 0f = 最左側
+                    x = 0f,
                     y = y
                 )
             )
         } else {
-            datesSorted.zip(weightsSorted).map { (date, wKg) ->
+            datesSorted.zip(weightsKg).map { (date, wKg) ->
                 val x = ((date.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
                     .coerceIn(0f, 1f)
                 val clamped = wKg.coerceIn(bottomKg, topKg)
@@ -781,10 +791,9 @@ private fun buildWeightChartData(
             }
         }
 
-    // ★ 6) X 軸刻度的位置 (0f..1f) — 之後畫 label / 對齊垂直線都用這個
+    // 6) X 軸刻度位置
     val axisX: List<Float> =
         if (axisDates.size == 1) {
-            // 只有一個刻度 → 也放在最左側
             listOf(0f)
         } else {
             axisDates.map { d ->
@@ -798,7 +807,8 @@ private fun buildWeightChartData(
         xLabels   = xLabels,
         points    = points,
         dates     = datesSorted,
-        weightsKg = weightsSorted,
+        weightsKg = weightsKg,
+        weightsLbs = weightsLbs,    // ★ 在這裡塞進去
         axisDates = axisDates,
         axisX     = axisX
     )
@@ -892,28 +902,25 @@ private fun formatAxisWeightLabel(
 /**
  * Tooltip：顯示當日體重 + 日期（黑底氣泡）
  */
-// ❶ 確保切換單位時重組
 @Composable
 private fun WeightTooltip(
     weightKg: Double,
+    weightLbs: Double?,
     unit: UserProfileStore.WeightUnit,
     date: LocalDate,
     modifier: Modifier = Modifier
 ) {
-    key(unit) {
-        val weightText = formatWeightCard(
-            kg = weightKg,
-            unit = unit,
-            // ✅ 這裡固定用 false：KG / LBS 都顯示到小數點一位
-            lbsAsInt = false
+    key(unit, weightLbs) {
+        val weightText = formatTooltipWeight(
+            weightKg = weightKg,
+            weightLbs = weightLbs,
+            unit = unit
         )
         val dateText = tooltipDateFormatter.format(date)
 
         Box(
             modifier = modifier
-                // ★ 寬度縮小一點：160 → 140
                 .width(98.dp)
-                // ★ 透明度增加：0.92 → 0.85（更輕）
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFF111114).copy(alpha = 0.85f))
                 .padding(horizontal = 10.dp, vertical = 10.dp)
@@ -1327,6 +1334,7 @@ private fun GoalProgressChart(
 
                 WeightTooltip(
                     weightKg = chartData.weightsKg[idx],
+                    weightLbs = chartData.weightsLbs.getOrNull(idx), // ★ 這裡會是 178.0
                     unit = unit,
                     date = chartData.dates[idx],
                     modifier = Modifier
@@ -1436,7 +1444,7 @@ private fun GoalProgressChart(
                                 val baseTx = centerX - size.width / 2f
 
                                 val isFirst = index == accepted.first()
-                                val isLast  = index == accepted.last()
+                                val isLast = index == accepted.last()
 
                                 translationX = when {
                                     // ⭐ 第一個：至少往右一小段，避免貼住左邊界
@@ -1451,6 +1459,7 @@ private fun GoalProgressChart(
                                     isLast -> {
                                         (baseTx - lastLabelShiftPx).coerceAtLeast(0f)
                                     }
+
                                     else -> baseTx
                                 }
                             }
@@ -1518,7 +1527,13 @@ fun HistoryRow(item: WeightItemDto, unit: UserProfileStore.WeightUnit) {
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(formatWeight(item.weightKg, unit))
+                Text(
+                    text = formatWeightFromDb(
+                        kg  = item.weightKg,
+                        lbs = item.weightLbs,   // ★ 直接吃 DB 欄位
+                        unit = unit
+                    )
+                )
                 Text(item.logDate, color = Color.Gray)
             }
         }
@@ -1593,6 +1608,26 @@ fun formatWeightFromDb(
         UserProfileStore.WeightUnit.LBS -> {
             // LBS 模式：只看 DB 的 lbs，沒有就顯示破折號
             lbs?.let { String.format("%.1f lbs", it) } ?: "—"
+        }
+    }
+}
+
+/**
+ * Tooltip 專用：一筆資料點的體重顯示
+ */
+fun formatTooltipWeight(
+    weightKg: Double,
+    weightLbs: Double?,
+    unit: UserProfileStore.WeightUnit
+): String {
+    return when (unit) {
+        UserProfileStore.WeightUnit.KG -> {
+            String.format("%.1f kg", weightKg)
+        }
+        UserProfileStore.WeightUnit.LBS -> {
+            // 這裡也一樣：先用 DB 的 lbs
+            val lbs = weightLbs ?: kgToLbs1(weightKg)
+            String.format("%.1f lbs", lbs)
         }
     }
 }
