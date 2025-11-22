@@ -9,9 +9,10 @@ interface WeightApi {
     @Multipart
     @POST("/api/v1/weights")
     suspend fun logWeight(
-        @Part("weightKg") weightKg: RequestBody,
-        @Part("logDate") logDate: RequestBody?,      // "YYYY-MM-DD"
-        @Part photo: MultipartBody.Part?             // 圖片可選
+        @Part("weightKg")  weightKg: RequestBody?,   // ★ 改成 nullable
+        @Part("weightLbs") weightLbs: RequestBody?,  // ★ 新增
+        @Part("logDate")   logDate: RequestBody?,    // "YYYY-MM-DD"
+        @Part              photo: MultipartBody.Part?
     ): WeightItemDto
 
     @GET("/api/v1/weights/history")
@@ -25,18 +26,17 @@ interface WeightApi {
 data class WeightItemDto(
     val logDate: String,
     val weightKg: Double,
-    val weightLbs: Int? = null,
+    val weightLbs: Double? = null,   // ★ 若不想顯示小數，也可以維持 Int?，但 CURRENT 建議 Double
     val photoUrl: String? = null
 )
 
 @Serializable
 data class SummaryDto(
     val goalKg: Double? = null,
-    val goalLbs: Int? = null,
+    val goalLbs: Double? = null,
     val currentKg: Double? = null,
-    val currentLbs: Int? = null,
-    val firstWeightKgAllTimeKg: Double? = null,   // ★ 新增欄位
+    val currentLbs: Double? = null,  // ★ 改成 Double?
+    val firstWeightKgAllTimeKg: Double? = null,
     val achievedPercent: Double = 0.0,
     val series: List<WeightItemDto> = emptyList()
 )
-

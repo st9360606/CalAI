@@ -8,15 +8,14 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -45,16 +44,18 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.calai.app.R
 import com.calai.app.data.profile.repo.UserProfileStore
-import com.calai.app.data.profile.repo.roundKg1
+import com.calai.app.data.profile.repo.kgToLbs1
+import com.calai.app.data.profile.repo.lbsToKg1
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import java.io.File
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.Month
 import java.time.Year
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.floor
 
 /* =========================================================
  * 外層 wrapper：負責找 ActivityResultRegistryOwner 並塞進 Local
@@ -133,11 +134,11 @@ private fun RecordWeightScreenContent(
     val LBS_INT_MIN = LBS_TENTHS_MIN / 10
     val LBS_INT_MAX = LBS_TENTHS_MAX / 10
 
-    // 2) 日期狀態（預設今天）＋顯示格式 (19/11/2025)
+    // 2) 日期狀態（預設今天）＋顯示格式 (2025/11/21)
     val today = remember { LocalDate.now() }
     var selectedDate by rememberSaveable { mutableStateOf(today) }
     val dateFormatterDisplay = remember {
-        DateTimeFormatter.ofPattern("yyyy/MM/dd")   // ★ 改成 2025/11/21 格式
+        DateTimeFormatter.ofPattern("yyyy/MM/dd")
     }
     var showDateSheet by remember { mutableStateOf(false) }
 
@@ -145,7 +146,7 @@ private fun RecordWeightScreenContent(
     var useMetric by rememberSaveable(ui.unit) {
         mutableStateOf(
             when (ui.unit) {
-                UserProfileStore.WeightUnit.KG  -> true
+                UserProfileStore.WeightUnit.KG -> true
                 UserProfileStore.WeightUnit.LBS -> false
             }
         )
@@ -240,27 +241,49 @@ private fun RecordWeightScreenContent(
             Box {
                 Button(
                     onClick = {
-                        // 1) 體重取到小數點一位，再夾在合理範圍內
-                        val kgToSave = roundKg1(valueKg)
-                            .coerceIn(KG_MIN.toFloat(), KG_MAX.toFloat())
+                        // 1) 依目前 UI 單位計算要送到後端的 kg & lbs
+                        val (kgToSave, lbsToSave) = if (useMetric) {
+                            // === KG 模式 ===
+                            // ★ 關鍵：用 BigDecimal.valueOf 做一位小數四捨五入，
+                            //   確保「使用者看到的 78.2」就是送 78.2 到後端。
+                            val kgClamped = valueKg
+                                .coerceIn(KG_MIN, KG_MAX)
+                            val kgRounded = roundToOneDecimal(kgClamped)
+                            val lbs = kgToLbs1(kgRounded)  // 轉給後端用的 lbs（可有可無）
+
+                            kgRounded to lbs
+                        } else {
+                            // === LBS 模式 ===
+                            val rawLbs = (valueLbsTenths
+                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)) / 10.0
+
+                            // ★ 同樣用 BigDecimal 做一位小數四捨五入，
+                            //   確保 173.0 / 173.4 這種都精準落在一位小數。
+                            val lbsRounded = roundToOneDecimal(rawLbs)
+
+                            val kg = lbsToKg1(lbsRounded)
+                                .coerceIn(KG_MIN, KG_MAX)
+
+                            kg to lbsRounded
+                        }
 
                         // 2) 如有選圖片，先把 Uri 複製成暫存 File（給 MultipartBody 用）
                         val photoFile = uriStringToCacheFile(context, photoUriString)
 
-                        // 3) 呼叫 ViewModel：會 upsert history + timeseries
+                        // 3) 呼叫 ViewModel：會 upsert history + timeseries + user_profiles
                         vm.save(
-                            weightKg = kgToSave.toDouble(),
-                            date = selectedDate,   // 傳入使用者選的日期
-                            photo = photoFile      // 可能是 null
+                            weightKg = kgToSave,
+                            weightLbs = lbsToSave,
+                            date = selectedDate,
+                            photo = photoFile
                         )
-
                         onSaved()
                     },
                     enabled = valueKg > 0.0 && !ui.saving,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp) // ★ 往下靠近底部
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
                     shape = RoundedCornerShape(28.dp),
@@ -345,7 +368,7 @@ private fun RecordWeightScreenContent(
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 20.dp)   // ★ 往右移一點（數字整個偏右）
+                            .padding(start = 20.dp)
                     )
                     Text(
                         ".",
@@ -393,8 +416,7 @@ private fun RecordWeightScreenContent(
                                 .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
                             valueLbsTenths = newTenths
                             val newLbs = newTenths / 10.0
-                            val newKg =
-                                com.calai.app.data.profile.repo.lbsToKg1(newLbs)
+                            val newKg = lbsToKg1(newLbs)
                             valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
                         },
                         rowHeight = rowHeight,
@@ -403,7 +425,7 @@ private fun RecordWeightScreenContent(
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 20.dp)   // ★ 往右移一點（數字整個偏右）
+                            .padding(start = 30.dp)
                     )
                     Text(
                         ".",
@@ -419,8 +441,7 @@ private fun RecordWeightScreenContent(
                                 .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
                             valueLbsTenths = newTenths
                             val newLbs = newTenths / 10.0
-                            val newKg =
-                                com.calai.app.data.profile.repo.lbsToKg1(newLbs)
+                            val newKg = lbsToKg1(newLbs)
                             valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
                         },
                         rowHeight = rowHeight,
@@ -436,16 +457,18 @@ private fun RecordWeightScreenContent(
                 }
             }
 
-            Spacer(Modifier.height(18.dp))   // ★ 原本 22.dp → 縮小，讓說明文字往上靠一點
+            Spacer(Modifier.height(18.dp))
 
             Box(
                 Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "This weight will be recorded for ${selectedDate.format(dateFormatterDisplay)}.",
+                    text = "This weight will be recorded for ${
+                        selectedDate.format(dateFormatterDisplay)
+                    }.",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp          // ★ 字體加大（原本 bodySmall 約 12sp）
+                        fontSize = 12.sp
                     ),
                     color = Color(0xFF9AA3AE),
                     textAlign = TextAlign.Center,
@@ -471,19 +494,19 @@ private fun DateHeader(
         Surface(
             onClick = onClick,
             shape = RoundedCornerShape(999.dp),
-            color = Color(0xFFF5F5F5),      // ★ 改成 F5F5F5
+            color = Color(0xFFF5F5F5),
             shadowElevation = 0.dp,
         ) {
             Row(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 10.dp), // ★ 稍微加大 padding
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Outlined.CalendarMonth,
                     contentDescription = "Select date",
-                    tint = Color.Black,          // ★ Icon 改黑色
-                    modifier = Modifier.size(26.dp)   // ★ Icon 稍微加大
+                    tint = Color.Black,
+                    modifier = Modifier.size(22.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -506,11 +529,11 @@ private fun WeightUnitSegmentedRecord(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(22.dp),     // ★ 稍微小一點
-        color = Color(0xFFE2E5EA),   // ★ 灰色加深一階
+        shape = RoundedCornerShape(22.dp),
+        color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.55f)              // ★ 0.58f → 0.50f，比較精緻
-            .heightIn(min = 40.dp)   // ★ 原本 45.dp → 短一點
+            .fillMaxWidth(0.55f)
+            .heightIn(min = 40.dp)
     ) {
         Row(Modifier.padding(4.dp)) {
             SegItemRecord(
@@ -520,7 +543,7 @@ private fun WeightUnitSegmentedRecord(
                 selectedColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .height(40.dp)   // ★ 原本 45.dp
+                    .height(40.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItemRecord(
@@ -530,7 +553,7 @@ private fun WeightUnitSegmentedRecord(
                 selectedColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .height(40.dp)   // ★ 原本 45.dp
+                    .height(40.dp)
             )
         }
     }
@@ -545,7 +568,7 @@ private fun SegItemRecord(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val fSize = 18.sp          // ★ 原本 22.sp → 小一點
+    val fSize = 18.sp
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(corner),
@@ -554,7 +577,7 @@ private fun SegItemRecord(
     ) {
         Box(
             modifier = Modifier
-                .defaultMinSize(minHeight = 40.dp)  // ★ 原本 48.dp
+                .defaultMinSize(minHeight = 40.dp)
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
@@ -571,7 +594,6 @@ private fun SegItemRecord(
     }
 }
 
-
 /* ---------------------------- 數字輪盤（含 label） ---------------------------- */
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -585,10 +607,10 @@ private fun NumberWheelRecord(
     TextSize: TextUnit,
     sideAlpha: Float,
     modifier: Modifier = Modifier,
-    label: (Int) -> String = { it.toString() } // 可自訂顯示文字（給月份用）
+    label: (Int) -> String = { it.toString() }
 ) {
-    val VISIBLE_COUNT = 5        // ★ 只顯示 3 列
-    val MID = VISIBLE_COUNT / 2  // = 1
+    val VISIBLE_COUNT = 5
+    val MID = VISIBLE_COUNT / 2
     val items = remember(range) { range.toList() }
     val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
@@ -715,12 +737,11 @@ private fun WeighingDateSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFFF5F5F5)   // ★ 整個 SHEET 背景改成 #F5F5F5
+        containerColor = Color(0xFFF5F5F5)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // ★ 把整塊內容往上挪：top 從 24.dp 改成 12.dp
                 .padding(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -798,7 +819,7 @@ private fun WeighingDateSheet(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(50.dp),                     // ★ 按鈕高度拉高
+                        .height(50.dp),
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
@@ -813,9 +834,9 @@ private fun WeighingDateSheet(
                         .weight(1f)
                         .height(50.dp),
                     shape = RoundedCornerShape(999.dp),
-                    border = BorderStroke(1.dp, Color(0xFFE5E5E5)),   // ★ 邊框：淺灰
+                    border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color(0xFFEBE7F0),            // ★ 背景：0xFFE5E5E5 淺灰
+                        containerColor = Color(0xFFEBE7F0),
                         contentColor = Color(0xFF111114)
                     )
                 ) {
@@ -848,8 +869,8 @@ private fun PhotoPickerBlock(
     ) {
         Box(
             modifier = Modifier
-                .size(144.dp)   // ★ 原本 168.dp → 小一點
-                .clip(RoundedCornerShape(24.dp)) // 稍微小一點的圓角
+                .size(144.dp)
+                .clip(RoundedCornerShape(24.dp))
                 .background(Color(0xFF111114).copy(alpha = 0.06f))
                 .clickable(onClick = onPickPhoto),
             contentAlignment = Alignment.Center
@@ -866,19 +887,19 @@ private fun PhotoPickerBlock(
                     painter = painterResource(id = R.drawable.weight_image),
                     contentDescription = "Add weight photo",
                     tint = Color(0xFF9AA3AE),
-                    modifier = Modifier.size(44.dp)   // ★ 原本 54.dp → 小一點
+                    modifier = Modifier.size(44.dp)
                 )
             }
         }
-        Spacer(Modifier.height(12.dp))              // ★ 原本 10.dp → 8.dp
+        Spacer(Modifier.height(12.dp))
         Text(
             text = when {
                 !cameraAvailable -> "Camera not available"
-                uri == null     -> "Take a photo"
-                else            -> "Retake photo"
+                uri == null -> "Take a photo"
+                else -> "Retake photo"
             },
-            color = if (cameraAvailable) Color.Black else Color(0xFF9AA3AE), // ★ 綠色→黑色
-            fontSize = 14.sp,                      // 稍微小一點
+            color = if (cameraAvailable) Color.Black else Color(0xFF9AA3AE),
+            fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold
         )
     }
@@ -917,28 +938,21 @@ private fun bitmapToCacheFile(
 
 /* ---------------------------- 換算工具 ---------------------------- */
 
-// 正式換算常數
-private const val KG_TO_LB = 2.2046226218   // 1 kg = 2.2046226218 lbs
-private const val LB_TO_KG = 0.45359237     // 1 lb = 0.45359237 kg
-
-/** 無條件捨去到小數點後一位（假設 value >= 0） */
-private fun floor1(value: Double): Double =
-    floor(value * 10.0) / 10.0
-
-/** kg -> lbs，無條件捨去到小數點後一位，例如 70 kg -> 154.3 lbs */
-fun kgToLbs1(kg: Double): Double =
-    floor1(kg * KG_TO_LB)
-
-/** lbs -> kg，無條件捨去到小數點後一位，例如 110 lbs -> 49.8 kg */
-fun lbsToKg1(lbs: Double): Double =
-    floor1(lbs * LB_TO_KG)
-
 /**
  * 給 RecordWeight 使用的 0.1 lbs 刻度（Int = 實際磅數 * 10）。
  * 例如 70 kg -> 154.3 lbs -> 傳回 1543。
  */
 private fun kgToLbsTenthsRecord(kg: Double): Int =
     (kgToLbs1(kg) * 10.0).toInt()
+
+/**
+ * 一位小數四捨五入的共用函式。
+ * 使用 BigDecimal.valueOf(...)，避免浮點誤差導致 78.2 → 78.1。
+ */
+private fun roundToOneDecimal(value: Double): Double =
+    BigDecimal.valueOf(value)
+        .setScale(1, RoundingMode.HALF_UP)
+        .toDouble()
 
 /* ---------------------------- Context 尋找 ActivityResultRegistryOwner ---------------------------- */
 

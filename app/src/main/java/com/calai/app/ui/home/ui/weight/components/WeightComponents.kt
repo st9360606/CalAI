@@ -63,6 +63,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
+import com.calai.app.data.profile.repo.kgToLbs1
 
 private const val X_TICK_COUNT = 5
 
@@ -79,16 +80,19 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     val stripeColor = Color.White.copy(alpha = 0.35f)
     val fillColor   = Color(0xFFFF8A33).copy(alpha = 0.85f)
 
-    val unit = ui.unit
-    val currentKg = ui.current ?: ui.profileWeightKg
-    val goalKg    = ui.profileTargetWeightKg ?: ui.goal
+    val unit  = ui.unit
 
-    // ★ 1) TO TARGET：LBS 改成顯示到小數點後一位 → lbsAsInt = false
+    val currentKg  = ui.current ?: ui.profileWeightKg
+    val currentLbs = ui.currentLbs ?: ui.profileWeightLbs   // ★ NEW fallback
+    val goalKg  = ui.profileTargetWeightKg ?: ui.goal
+    val goalLbs = ui.goalLbs ?: ui.profileTargetWeightLbs   // ★ NEW fallback
+
+    // TO TARGET 依然用 kg 計算差值
     val gainedText = formatDeltaGoalMinusCurrent(
         goalKg = goalKg,
         currentKg = currentKg,
         unit = unit,
-        lbsAsInt = false      // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
+        lbsAsInt = false
     )
 
     val pr = computeWeightProgress(
@@ -99,16 +103,17 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     )
     val progress = pr.fraction
 
-    // ★ 2) edgeLeft / edgeRight：LBS 改成顯示到小數點後一位 → lbsAsInt = false
-    val edgeLeft  = formatWeightCard(
-        currentKg,
-        unit,
-        lbsAsInt = false      // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
+    // 如果你在 UiState 已經加了 goalLbs（建議）
+    val edgeLeft = formatWeightFromDb(
+        kg  = currentKg,
+        lbs = currentLbs,
+        unit = unit
     )
-    val edgeRight = formatWeightCard(
-        goalKg,
-        unit,
-        lbsAsInt = false      // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
+
+    val edgeRight = formatWeightFromDb(
+        kg  = goalKg,
+        lbs = goalLbs,
+        unit = unit
     )
 
     Card(
@@ -150,6 +155,7 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
                 }
 
                 // 右欄：CURRENT WEIGHT
+                // 右欄：CURRENT WEIGHT
                 Column(
                     modifier = Modifier
                         .weight(1f),
@@ -161,13 +167,15 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(Modifier.height(12.dp))
+
+                    val currentText = formatWeightFromDb(
+                        kg  = currentKg,
+                        lbs = currentLbs,
+                        unit = unit
+                    )
+
                     Text(
-                        // ★ 3) CURRENT WEIGHT：LBS 也顯示到小數點一位 → lbsAsInt = false
-                        text = formatWeightCard(
-                            currentKg,
-                            unit,
-                            lbsAsInt = false   // 原本是 (unit == UserProfileStore.WeightUnit.LBS)
-                        ),
+                        text = currentText,
                         color = big,
                         fontSize = 27.sp,
                         fontWeight = FontWeight.Bold
@@ -329,7 +337,9 @@ fun HatchedProgressBar(
 // 共用格式化
 // ----------------------------------------------------------
 
-private fun kgToLbs(kg: Double): Double = kg * 2.20462262
+// ----------------------------------------------------------
+// 共用格式化（所有 lbs 一律走 kgToLbs1，共用轉換邏輯）
+// ----------------------------------------------------------
 
 fun formatWeightCard(
     kg: Double?,
@@ -338,13 +348,16 @@ fun formatWeightCard(
 ): String {
     if (kg == null) return "—"
     return if (unit == UserProfileStore.WeightUnit.KG) {
+        // KG 模式：顯示到小數點一位
         String.format("%.1f kg", kg)
     } else {
-        val lbs = kgToLbs(kg)
+        // LBS 模式：一律走共用的 kgToLbs1，確保跟 Record / 後端一致
+        val lbs = kgToLbs1(kg)
         if (lbsAsInt) {
-            val rounded = kotlin.math.round(lbs).toInt()
-            String.format("%d lbs", rounded)
+            // 只要整數：TO TARGET / axis label 等場合你想顯示 176 lbs 這種
+            String.format("%d lbs", lbs.toInt())
         } else {
+            // 顯示到小數點一位：如 CURRENT WEIGHT、TO TARGET 主數字
             String.format("%.1f lbs", lbs)
         }
     }
@@ -359,13 +372,20 @@ fun formatDeltaGoalMinusCurrent(
     if (goalKg == null || currentKg == null) return "—"
     val diffKg = goalKg - currentKg
     val sign = if (diffKg >= 0) "+" else "−"
+    val absKg = kotlin.math.abs(diffKg)
+
     return if (unit == UserProfileStore.WeightUnit.KG) {
-        String.format("%s%.1f kg", sign, abs(diffKg))
+        // KG：差多少 kg，顯示到小數點一位
+        String.format("%s%.1f kg", sign, absKg)
     } else {
-        val lbs = kgToLbs(abs(diffKg))
-        val v = if (lbsAsInt) kotlin.math.round(lbs).toInt().toString()
-        else String.format("%.1f", lbs)
-        "$sign$v lbs"
+        // LBS：差多少 lbs，一律透過 kgToLbs1
+        val lbs = kgToLbs1(absKg)
+        val core = if (lbsAsInt) {
+            lbs.toInt().toString()
+        } else {
+            String.format("%.1f", lbs)
+        }
+        "$sign$core lbs"
     }
 }
 
@@ -374,16 +394,20 @@ fun formatWeight(kg: Double?, unit: UserProfileStore.WeightUnit): String {
     return if (unit == UserProfileStore.WeightUnit.KG) {
         String.format("%.1f kg", kg)
     } else {
-        String.format("%.1f lb", kg * 2.20462262)
+        // 歷史列表也共用同一套 lbs 算法
+        val lbs = kgToLbs1(kg)
+        String.format("%.1f lbs", lbs)
     }
 }
 
 fun formatDelta(deltaKg: Double, unit: UserProfileStore.WeightUnit): String {
     val sign = if (deltaKg >= 0) "+" else "−"
+    val absKg = kotlin.math.abs(deltaKg)
     return if (unit == UserProfileStore.WeightUnit.KG) {
-        String.format("%s%.1f kg", sign, abs(deltaKg))
+        String.format("%s%.1f kg", sign, absKg)
     } else {
-        String.format("%s%.1f lb", sign, abs(deltaKg) * 2.20462262)
+        val lbs = kgToLbs1(absKg)
+        String.format("%s%.1f lbs", sign, lbs)
     }
 }
 
@@ -1461,4 +1485,36 @@ private fun buildCatmullRomPath(
     }
 
     return path
+}
+
+
+fun formatWeightFromDb(
+    kg: Double?,
+    lbs: Double?,
+    unit: UserProfileStore.WeightUnit
+): String {
+    // 兩個都沒有就直接顯示破折號
+    if (kg == null && lbs == null) return "—"
+
+    return when (unit) {
+        UserProfileStore.WeightUnit.KG -> {
+            // KG 模式：只看 DB 的 kg
+            if (kg != null) {
+                String.format("%.1f kg", kg)
+            } else {
+                "—"
+            }
+        }
+        UserProfileStore.WeightUnit.LBS -> {
+            when {
+                // LBS 模式：優先吃 DB 的 lbs
+                lbs != null -> String.format("%.1f lbs", lbs)
+
+                // 沒有 lbs（舊資料）才退回用 kg 換算
+                kg != null -> String.format("%.1f lbs", kgToLbs1(kg))
+
+                else -> "—"
+            }
+        }
+    }
 }

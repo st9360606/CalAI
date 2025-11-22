@@ -17,19 +17,27 @@ import kotlin.math.roundToInt
 class WeightRepository @Inject constructor(
     private val api: WeightApi
 ) {
-    suspend fun log(weightKg: Double, logDate: String?, photoFile: File?): WeightItemDto =
-        withContext(Dispatchers.IO) {
-            val w = weightKg.toString().toRequestBody(MultipartBody.FORM)
-            val d = logDate?.toRequestBody(MultipartBody.FORM)
-            val part = photoFile?.let {
-                MultipartBody.Part.createFormData(
-                    name = "photo",
-                    filename = it.name,
-                    body = it.asRequestBody()
-                )
-            }
-            api.logWeight(w, d, part)
+
+    suspend fun log(
+        weightKg: Double,
+        weightLbs: Double,
+        logDate: String?,
+        photoFile: File?
+    ): WeightItemDto = withContext(Dispatchers.IO) {
+        val wKg: RequestBody  = weightKg.toString().toRequestBody(MultipartBody.FORM)
+        val wLbs: RequestBody = weightLbs.toString().toRequestBody(MultipartBody.FORM)
+        val d: RequestBody?   = logDate?.toString()?.toRequestBody(MultipartBody.FORM)
+
+        val part = photoFile?.let {
+            MultipartBody.Part.createFormData(
+                name = "photo",
+                filename = it.name,
+                body = it.asRequestBody()
+            )
         }
+
+        api.logWeight(wKg, wLbs, d, part)
+    }
 
     suspend fun recent7() = withContext(Dispatchers.IO) { api.recent7() }
     suspend fun summary(range: String) = withContext(Dispatchers.IO) { api.summary(range) }
