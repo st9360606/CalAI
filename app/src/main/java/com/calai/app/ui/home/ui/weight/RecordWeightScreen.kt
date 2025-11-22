@@ -222,6 +222,7 @@ private fun RecordWeightScreenContent(
     WeighingDateSheet(
         visible = showDateSheet,
         currentDate = selectedDate,
+        maxDate = today,              // ★ 加這行
         onDismiss = { showDateSheet = false },
         onConfirm = { newDate ->
             selectedDate = newDate
@@ -705,18 +706,26 @@ private fun NumberWheelRecord(
 private fun WeighingDateSheet(
     visible: Boolean,
     currentDate: LocalDate,
-    onDismiss: () -> Unit,
-    onConfirm: (LocalDate) -> Unit
+    maxDate: LocalDate,                // ★ 上限日期（用戶當地今天）
+    onDismiss: () -> Unit,             // ★ 只有 Cancel 會呼叫
+    onConfirm: (LocalDate) -> Unit     // ★ 更新日期，但不關閉 Sheet
 ) {
     if (!visible) return
 
     val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
+        skipPartiallyExpanded = true,
+        // ★ 阻擋任何往 Hidden 的狀態切換 → 無法靠滑動把 Sheet 關掉
+        confirmValueChange = { target ->
+            target != SheetValue.Hidden
+        }
     )
 
-    // 年份範圍：從 current - 5 年到 current + 1 年
-    val yearRange = remember(currentDate) {
-        (currentDate.year - 5)..(currentDate.year + 1)
+    // ★ 今天：所有上限都以「maxDate（用戶當地今天）」為準
+    val today = remember(maxDate) { maxDate }
+
+    // 年份範圍：從 today - 5 年到 today（不能超過今天那一年）
+    val yearRange = remember(today) {
+        (today.year - 5)..today.year
     }
 
     var year by rememberSaveable(currentDate) { mutableStateOf(currentDate.year) }
@@ -729,19 +738,53 @@ private fun WeighingDateSheet(
         }
     }
 
+    // ★ 根據 year / today 決定「月份可選範圍」
+    val monthRange: IntRange = remember(year, today) {
+        if (year >= today.year) {
+            // 今年或超過今年 → 最多只能到本月
+            1..today.monthValue
+        } else {
+            // 過去年份 → 1..12 都可以
+            1..12
+        }
+    }
+
+    // ★ 根據 year / month / today 決定「日期可選範圍」
+    val dayRange: IntRange = remember(year, month, today) {
+        val maxDayOfMonth = Month.of(month).length(Year.of(year).isLeap)
+        val maxDay = if (year == today.year && month == today.monthValue) {
+            // 今年本月 → 最多只能到今天
+            kotlin.math.min(maxDayOfMonth, today.dayOfMonth)
+        } else {
+            maxDayOfMonth
+        }
+        1..maxDay
+    }
+
+    // ★ clampDay 也一併考慮「不能超過今天」
     fun clampDay(y: Int, m: Int, d: Int): Int {
-        val maxDay = Month.of(m).length(Year.of(y).isLeap)
+        val maxDayOfMonth = Month.of(m).length(Year.of(y).isLeap)
+        val maxDay = if (y == today.year && m == today.monthValue) {
+            kotlin.math.min(maxDayOfMonth, today.dayOfMonth)
+        } else {
+            maxDayOfMonth
+        }
         return d.coerceIn(1, maxDay)
     }
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        // ★ 不處理外部 dismiss：滑動 / 點外面 / 返回鍵都不會關
+        onDismissRequest = {
+            // 故意留空，只有 Cancel 會真的關
+        },
         sheetState = sheetState,
         containerColor = Color(0xFFF5F5F5)
     ) {
+        // ★ 提高最小高度，讓 Sheet 看起來更高、更穩
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = 420.dp)  // 可再依實機調整 400 ~ 460.dp
                 .padding(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -760,16 +803,17 @@ private fun WeighingDateSheet(
 
             Spacer(Modifier.height(18.dp))
 
-            val rowHeight = 40.dp
+            // ★ 把 rowHeight 拉大，滑動區域變高，不容易滑出 Sheet
+            val rowHeight = 52.dp
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Day
+                // Day：依 dayRange 限制
                 NumberWheelRecord(
-                    range = 1..31,
+                    range = dayRange,
                     value = day,
                     onValueChange = { day = it },
                     rowHeight = rowHeight,
@@ -779,9 +823,9 @@ private fun WeighingDateSheet(
                     modifier = Modifier.width(70.dp)
                 )
                 Spacer(Modifier.width(12.dp))
-                // Month
+                // Month：依 monthRange 限制
                 NumberWheelRecord(
-                    range = 1..12,
+                    range = monthRange,
                     value = month,
                     onValueChange = { month = it },
                     rowHeight = rowHeight,
@@ -792,7 +836,7 @@ private fun WeighingDateSheet(
                     label = { idx -> months[idx - 1] }
                 )
                 Spacer(Modifier.width(12.dp))
-                // Year
+                // Year：最多到今天那一年
                 NumberWheelRecord(
                     range = yearRange,
                     value = year,
@@ -811,11 +855,20 @@ private fun WeighingDateSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // ★ Save：只回傳日期，不關閉 Sheet
                 Button(
                     onClick = {
-                        val safeDay = clampDay(year, month, day)
-                        val result = LocalDate.of(year, month, safeDay)
-                        onConfirm(result)
+                        val safeYear = year.coerceIn(yearRange)
+                        val safeMonth = if (safeYear == today.year) {
+                            month.coerceIn(1, today.monthValue)
+                        } else {
+                            month.coerceIn(1, 12)
+                        }
+                        val safeDay = clampDay(safeYear, safeMonth, day)
+                        val raw = LocalDate.of(safeYear, safeMonth, safeDay)
+                        val finalDate = if (raw.isAfter(today)) today else raw
+
+                        onConfirm(finalDate)  // ★ 外層只更新 selectedDate，不關閉 Sheet
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -828,15 +881,19 @@ private fun WeighingDateSheet(
                 ) {
                     Text("Save", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 }
+
+                // ★ Cancel：唯一會關閉 Sheet 的入口
                 OutlinedButton(
-                    onClick = onDismiss,
+                    onClick = {
+                        onDismiss()          // 外層把 visible = false
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp),
                     shape = RoundedCornerShape(999.dp),
                     border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color(0xFFEBE7F0),
+                        containerColor = Color(0xFFE1E4EA), // 穩定灰色，不吃動態色
                         contentColor = Color(0xFF111114)
                     )
                 ) {
@@ -847,7 +904,6 @@ private fun WeighingDateSheet(
                     )
                 }
             }
-
             Spacer(Modifier.height(8.dp))
         }
     }

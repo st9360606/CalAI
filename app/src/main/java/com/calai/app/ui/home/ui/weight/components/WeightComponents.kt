@@ -82,19 +82,22 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
 
     val unit = ui.unit
 
-    // --- CURRENT：一樣 DB 優先，Profile 當最後備胎 ---
+    // ---------- CURRENT WEIGHT：timeseries / summary 優先，最後才 profile ----------
+    // ui.current / ui.currentLbs 由 WeightViewModel 事先算好：
+    // - 先看 weight_timeseries
+    // - 再看 summary.current*
+    // - 都沒有才 fallback user_profiles（profileWeight*）
     val currentKg  = ui.current ?: ui.profileWeightKg
     val currentLbs = ui.currentLbs ?: ui.profileWeightLbs
 
-    // --- DB 回來的目標體重（Summary / DB）---
-    val dbGoalKg  = ui.goal       // SummaryDto.goalKg
-    val dbGoalLbs = ui.goalLbs    // SummaryDto.goalLbs
+    // ---------- 目標體重：Summary（DB）優先，沒有才用 profile 目標 ----------
+    val dbGoalKg  = ui.goal      // SummaryDto.goalKg -> DB target_weight_kg
+    val dbGoalLbs = ui.goalLbs   // SummaryDto.goalLbs -> DB target_weight_lbs
 
-    // --- 給 TO TARGET / Progress 用的「有效目標」：DB > Profile（避免 null）---
-    val goalKg  = dbGoalKg ?: ui.profileTargetWeightKg
-    val goalLbs = dbGoalLbs ?: ui.profileTargetWeightLbs
+    val goalKg  = ui.profileTargetWeightKg
+    val goalLbs =  ui.profileTargetWeightLbs
 
-    // TO TARGET 依然用 kg 計算差值
+    // TO TARGET：還是用 kg 為基準算差值（顯示時再依單位轉）
     val gainedText = formatDeltaGoalMinusCurrent(
         goalKg = goalKg,
         currentKg = currentKg,
@@ -102,6 +105,7 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
         lbsAsInt = false
     )
 
+    // 進度：依目前 range 的 timeseries 算
     val pr = computeWeightProgress(
         timeseries      = ui.series,
         currentKg       = currentKg,
@@ -110,14 +114,15 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     )
     val progress = pr.fraction
 
-    // 如果你在 UiState 已經加了 goalLbs（建議）
+    // ---------- edgeLeft：只拿 user_profiles table 的原始體重 ----------
+    // 這裡完全不看 timeseries / summary，只看 Profile 的 weight_kg / weight_lbs
     val edgeLeft = formatWeightFromDb(
-        kg  = currentKg,
-        lbs = currentLbs,
+        kg  = ui.profileWeightKg,
+        lbs = ui.profileWeightLbs,
         unit = unit
     )
 
-    // ★ 右邊永遠吃 DB（Summary）值
+    // ---------- edgeRight：只拿 DB 目標體重（Summary / user_profiles.target_*） ----------
     val edgeRight = formatWeightFromDb(
         kg  = dbGoalKg,
         lbs = dbGoalLbs,
@@ -1580,28 +1585,15 @@ fun formatWeightFromDb(
     lbs: Double?,
     unit: UserProfileStore.WeightUnit
 ): String {
-    // 兩個都沒有就直接顯示破折號
-    if (kg == null && lbs == null) return "—"
-
     return when (unit) {
         UserProfileStore.WeightUnit.KG -> {
-            // KG 模式：只看 DB 的 kg
-            if (kg != null) {
-                String.format("%.1f kg", kg)
-            } else {
-                "—"
-            }
+            // KG 模式：只看 DB 的 kg，沒有就顯示破折號
+            kg?.let { String.format("%.1f kg", it) } ?: "—"
         }
         UserProfileStore.WeightUnit.LBS -> {
-            when {
-                // LBS 模式：優先吃 DB 的 lbs
-                lbs != null -> String.format("%.1f lbs", lbs)
-
-                // 沒有 lbs（舊資料）才退回用 kg 換算
-                kg != null -> String.format("%.1f lbs", kgToLbs1(kg))
-
-                else -> "—"
-            }
+            // LBS 模式：只看 DB 的 lbs，沒有就顯示破折號
+            lbs?.let { String.format("%.1f lbs", it) } ?: "—"
         }
     }
 }
+
