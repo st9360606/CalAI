@@ -123,11 +123,11 @@ class WeightViewModel @Inject constructor(
             Log.d("WeightVM", "summary.currentKg=${s.currentKg}, currentLbs=${s.currentLbs}")
             Log.d("WeightVM", "latest history: kg=${latest?.weightKg}, lbs=${latest?.weightLbs}")
 
-            // 目標體重：profile 優先，沒有才用 summary.goalKg
+            // 目標體重：**DB（Summary）優先**，沒有才 fallback 到本機快照
             val effectiveGoalKg =
-                snapshot.profileTargetWeightKg ?: s.goalKg
+                s.goalKg ?: snapshot.profileTargetWeightKg
             val effectiveGoalLbs =
-                snapshot.profileTargetWeightLbs ?: s.goalLbs
+                s.goalLbs ?: snapshot.profileTargetWeightLbs
 
             // ★ current：history → summary → profile
             val effectiveCurrentKg =

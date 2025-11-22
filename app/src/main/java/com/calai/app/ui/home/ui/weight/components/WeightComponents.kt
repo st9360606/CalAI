@@ -80,12 +80,19 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     val stripeColor = Color.White.copy(alpha = 0.35f)
     val fillColor   = Color(0xFFFF8A33).copy(alpha = 0.85f)
 
-    val unit  = ui.unit
+    val unit = ui.unit
 
+    // --- CURRENT：一樣 DB 優先，Profile 當最後備胎 ---
     val currentKg  = ui.current ?: ui.profileWeightKg
-    val currentLbs = ui.currentLbs ?: ui.profileWeightLbs   // ★ NEW fallback
-    val goalKg  = ui.profileTargetWeightKg ?: ui.goal
-    val goalLbs = ui.goalLbs ?: ui.profileTargetWeightLbs   // ★ NEW fallback
+    val currentLbs = ui.currentLbs ?: ui.profileWeightLbs
+
+    // --- DB 回來的目標體重（Summary / DB）---
+    val dbGoalKg  = ui.goal       // SummaryDto.goalKg
+    val dbGoalLbs = ui.goalLbs    // SummaryDto.goalLbs
+
+    // --- 給 TO TARGET / Progress 用的「有效目標」：DB > Profile（避免 null）---
+    val goalKg  = dbGoalKg ?: ui.profileTargetWeightKg
+    val goalLbs = dbGoalLbs ?: ui.profileTargetWeightLbs
 
     // TO TARGET 依然用 kg 計算差值
     val gainedText = formatDeltaGoalMinusCurrent(
@@ -110,9 +117,10 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
         unit = unit
     )
 
+    // ★ 右邊永遠吃 DB（Summary）值
     val edgeRight = formatWeightFromDb(
-        kg  = goalKg,
-        lbs = goalLbs,
+        kg  = dbGoalKg,
+        lbs = dbGoalLbs,
         unit = unit
     )
 
@@ -497,7 +505,7 @@ fun WeightChartCard(
 ) {
     val unit          = ui.unit
     val currentKg     = ui.current ?: ui.profileWeightKg
-    val goalKg        = ui.profileTargetWeightKg ?: ui.goal
+    val goalKg        = ui.goal ?: ui.profileTargetWeightKg
     val profileWeight = ui.profileWeightKg
 
     val progressFraction = computeWeightProgress(
