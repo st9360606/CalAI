@@ -133,14 +133,6 @@ class WeightViewModel @Inject constructor(
                 series = summary.series,
                 today = today
             )
-
-            Log.d(
-                "WeightVM",
-                "refresh range=$range, series.size=${summary.series.size}, " +
-                        "currentFromSeries=${currentFromSeries?.logDate}:" +
-                        "${currentFromSeries?.weightKg}/${currentFromSeries?.weightLbs}"
-            )
-
             // 2) 目標體重：Summary > Profile snapshot
             val effectiveGoalKg =
                 summary.goalKg ?: snapshot.profileTargetWeightKg
