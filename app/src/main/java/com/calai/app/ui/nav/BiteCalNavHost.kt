@@ -215,7 +215,6 @@ fun BiteCalNavHost(
                 onSuccess = {
                     scope.launch {
                         // ★ 先印一個 flow log，確定有進來
-                        Log.d("WeightFlow", "EmailCode onSuccess, uploadLocal=$uploadLocal")
                         val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
                             if (uploadLocal) {
@@ -224,7 +223,6 @@ fun BiteCalNavHost(
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
-                                Log.d("WeightFlow", "uploadLocal branch: upsertFromLocal() done")
                                 Routes.HOME
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）

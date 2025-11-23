@@ -96,17 +96,13 @@ class WeightViewModel @Inject constructor(
     fun initIfNeeded() {
         if (initialized) return
         initialized = true
-
         viewModelScope.launch {
             // 先試著補 baseline（失敗不擋流程）
             runCatching {
-                Log.d("WeightVM", "calling ensureBaseline()")
                 repo.ensureBaseline()
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                Log.e("WeightVM", "ensureBaseline() failed", e)
             }
-
             // 再照你原本邏輯 refresh()
             refresh()
         }
