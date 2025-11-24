@@ -193,6 +193,7 @@ class WeightViewModel @Inject constructor(
         date: LocalDate?,
         photo: File?
     ) = viewModelScope.launch {
+        // 一進來：清掉舊錯誤、標記 saving 中
         _ui.update { it.copy(saving = true, error = null) }
 
         runCatching {
@@ -225,7 +226,7 @@ class WeightViewModel @Inject constructor(
 
                     val newCurrentKg =
                         latest?.weightKg
-                            ?: old.current      // 可能是之前算好的 current
+                            ?: old.current
                             ?: old.profileWeightKg
 
                     val newCurrentLbs =
@@ -234,26 +235,39 @@ class WeightViewModel @Inject constructor(
                             ?: old.profileWeightLbs
 
                     old.copy(
-                        current = newCurrentKg,
+                        current    = newCurrentKg,
                         currentLbs = newCurrentLbs,
-                        series = mergedSeries,
-                        history7 = mergedHistory7,
-                        error = null
+                        series     = mergedSeries,
+                        history7   = mergedHistory7,
+                        error      = null,              // ✅ 清掉錯誤
+                        // 這裡先不動 toastMessage，後面再統一設
                     )
                 }
 
                 // 再跟後端 summary 對齊（achievedPercent / firstWeightAllTimeKg 等）
                 refresh()
 
-                _ui.update { it.copy(toastMessage = "Saved successfully") }
+                // ✅ 成功：讓 WeightScreen 顯示 SuccessTopToast("Saved successfully")
+                _ui.update {
+                    it.copy(
+                        toastMessage = "Saved successfully",
+                        error = null
+                    )
+                }
             }
             .onFailure { e ->
                 if (e is CancellationException) return@onFailure
+
+                // ✅ 失敗：讓 WeightScreen 顯示 ErrorTopToast("Save failed")
                 _ui.update { st ->
-                    st.copy(error = e.message ?: "Save failed")
+                    st.copy(
+                        error = "Save failed",
+                        toastMessage = null
+                    )
                 }
             }
             .also {
+                // ✅ 不論成功失敗都結束 saving 狀態
                 _ui.update { it.copy(saving = false) }
             }
     }
@@ -262,9 +276,12 @@ class WeightViewModel @Inject constructor(
         _ui.update { it.copy(toastMessage = null) }
     }
 
+    fun clearError() {
+        _ui.update { it.copy(error = null) }
+    }
+
     /**
      * 從 weight_timeseries（前端 = SummaryDto.series）中挑出「CURRENT WEIGHT」：
-     *
      * 規則：
      * 1. 只看 log_date <= today 的紀錄（未來日期一律忽略）。
      * 2. 在這些紀錄中選擇 log_date 最大的一筆（等同「有當天就當天，否則用過去最新」）。
@@ -303,15 +320,29 @@ class WeightViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             val res = profileRepo.updateTargetWeight(value, unit)
-            res.onSuccess {
-                // 後端已同步 user_profiles.target_weight_kg / target_weight_lbs
-                // 這裡再 refresh 一次 Weight 資料（summary + series）
-                runCatching { refresh() }
-
-                onResult(Result.success(Unit))
-            }.onFailure { e ->
-                onResult(Result.failure(e))
-            }
+            res
+                .onSuccess {
+                    // 後端已同步 user_profiles.target_weight_kg / target_weight_lbs
+                    runCatching { refresh() }
+                    // ★ 成功：讓 WeightScreen 顯示 SuccessTopToast("Saved successfully")
+                    _ui.update {
+                        it.copy(
+                            toastMessage = "Target weight updated !",
+                            error = null
+                        )
+                    }
+                    onResult(Result.success(Unit))
+                }
+                .onFailure { e ->
+                    // ★ 失敗：讓 WeightScreen 顯示 ErrorTopToast("Save failed")
+                    _ui.update {
+                        it.copy(
+                            error = "Save failed",
+                            toastMessage = null
+                        )
+                    }
+                    onResult(Result.failure(e))
+                }
         }
     }
 

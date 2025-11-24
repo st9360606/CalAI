@@ -25,18 +25,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * 頂部置中的白色膠囊成功提示（綠色勾勾）。
- * - 文字更大更粗、icon 更大
- * - 白底膠囊更寬更高（設定最小寬/高）
+ * 頂部置中的白色膠囊成功提示（綠色勾勾），可透過參數調整尺寸。
  * ※ 2 秒後請於呼叫端自行 clear。
  */
 @Composable
 fun SuccessTopToast(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    // 🔧 在這裡控制膠囊尺寸（預設已經是「中小型」）
+    minWidth: Dp = 240.dp,
+    minHeight: Dp = 30.dp
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
@@ -48,20 +50,23 @@ fun SuccessTopToast(
     ) {
         Surface(
             modifier = Modifier
-                .widthIn(min = 300.dp)   // ✅ 更寬
-                .heightIn(min = 48.dp),  // ✅ 更高
+                .widthIn(min = minWidth)   // ⬅️ 用參數
+                .heightIn(min = minHeight),// ⬅️ 用參數
             shape = MaterialTheme.shapes.large, // 膠囊
             color = Color.White,
             shadowElevation = 8.dp,
             tonalElevation = 0.dp
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp), // 內距加大
+                modifier = Modifier.padding(
+                    horizontal = 16.dp,
+                    vertical = 10.dp
+                ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(24.dp) // ✅ 綠圓更大
+                        .size(24.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF84CC16)),
                     contentAlignment = Alignment.Center
@@ -70,10 +75,10 @@ fun SuccessTopToast(
                         imageVector = Icons.Filled.Check,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp) // ✅ 勾勾更大
+                        modifier = Modifier.size(16.dp)
                     )
                 }
-                Spacer(Modifier.size(10.dp)) // 與文字間距加大
+                Spacer(Modifier.size(10.dp))
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyLarge.copy( // ✅ 文字更大

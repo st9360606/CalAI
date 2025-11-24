@@ -376,7 +376,9 @@ fun HomeScreen(
             if (canShowToast && toastMsg != null) {
                 SuccessTopToast(
                     message = toastMsg,
-                    modifier = Modifier.align(Alignment.TopCenter)
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    minWidth = 240.dp,
+                    minHeight = 30.dp
                 )
                 LaunchedEffect(toastMsg) {
                     delay(2000)

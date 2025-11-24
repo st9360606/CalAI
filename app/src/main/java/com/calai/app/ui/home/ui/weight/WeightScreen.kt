@@ -3,7 +3,6 @@ package com.calai.app.ui.home.ui.weight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,17 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.app.ui.home.ui.components.ErrorTopToast
+import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.weight.components.FilterTabs
 import com.calai.app.ui.home.ui.weight.components.HistoryRow
 import com.calai.app.ui.home.ui.weight.components.SegmentedButtons
@@ -46,10 +43,11 @@ import com.calai.app.ui.home.ui.weight.components.SummaryCards
 import com.calai.app.ui.home.ui.weight.components.WeightChartCard
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-    fun WeightScreen(
+fun WeightScreen(
     vm: WeightViewModel,
     onLogClick: () -> Unit,
     onEditTargetWeight: () -> Unit,
@@ -59,96 +57,142 @@ import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 
     LaunchedEffect(Unit) { vm.initIfNeeded() }
 
-    Scaffold(
-        containerColor = Color(0xFFF5F5F5),
-        topBar = {
-            WeightTopBar(
-                title = "Weight",
-                onBack = onBack
-            )
-        },
-        bottomBar = {
-            BottomLogWeightBar(
-                onLogClick = onLogClick
-            )
-        }
-    ) { inner ->
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
-        ) {
-            LazyColumn(
+    // 先把這兩個值抽出來，方便下面共用 / 當作 LaunchedEffect key
+    val error = ui.error
+    val toast = ui.toastMessage
+
+    // ★ 最外層 Box：用來疊 Scaffold + Top Toast
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // ===== 主要內容：Scaffold =====
+        Scaffold(
+            containerColor = Color(0xFFF5F5F5),
+            topBar = {
+                WeightTopBar(
+                    title = "Weight",
+                    onBack = onBack
+                )
+            },
+            bottomBar = {
+                BottomLogWeightBar(
+                    onLogClick = onLogClick
+                )
+            }
+        ) { inner ->
+            Box(
                 modifier = Modifier
                     .padding(inner)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    top = 6.dp,
-                    end = 16.dp,
-                    bottom = 96.dp // ★ 為底部固定按鈕預留空間
-                ),
-                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .background(Color(0xFFF5F5F5))
             ) {
-                // Overview + Unit switch
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        top = 6.dp,
+                        end = 16.dp,
+                        bottom = 96.dp // ★ 為底部固定按鈕預留空間
+                    ),
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                ) {
+                    // Overview + Unit switch
+                    item {
+                        androidx.compose.foundation.layout.Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Overview",
+                                style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                            SegmentedButtons(
+                                selected = ui.unit,
+                                onSelect = { vm.setUnit(it) },
+                                width = 108.dp,
+                                height = 36.dp,
+                                pillExtraWidth = 6.dp,
+                                labelPadding = 6.dp
+                            )
+                        }
+                    }
+
+                    // Summary cards
+                    item { SummaryCards(ui = ui) }
+
+                    // Filter tabs
+                    item {
+                        FilterTabs(
+                            selected = ui.range,
+                            onSelect = { vm.setRange(it) }
+                        )
+                    }
+
+                    // Chart card
+                    item {
+                        WeightChartCard(
+                            ui = ui,
+                            startWeightAllTimeKg = ui.firstWeightAllTimeKg,
+                            onEditTargetWeight = onEditTargetWeight
+                        )
+                    }
+
+                    // History title
+                    item {
                         Text(
-                            text = "Overview",
+                            text = "History",
                             style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(start = 8.dp)
                         )
-                        SegmentedButtons(
-                            selected = ui.unit,
-                            onSelect = { vm.setUnit(it) },
-                            width = 108.dp,
-                            height = 36.dp,
-                            pillExtraWidth = 6.dp,
-                            labelPadding = 6.dp
-                        )
+                    }
+
+                    // History items
+                    items(ui.history7) { item ->
+                        HistoryRow(item, ui.unit)
                     }
                 }
-                // Summary cards
-                item { SummaryCards(ui = ui) }
-
-                // Filter tabs
-                item {
-                    FilterTabs(
-                        selected = ui.range,
-                        onSelect = { vm.setRange(it) }
-                    )
-                }
-                // Chart card
-                item {
-                    WeightChartCard(
-                        ui = ui,
-                        startWeightAllTimeKg = ui.firstWeightAllTimeKg,
-                        onEditTargetWeight = onEditTargetWeight
-                    )
-                }
-                // History title
-                item {
-                    Text(
-                        text = "History",
-                        style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-                // History items
-                items(ui.history7) { item ->
-                    HistoryRow(item, ui.unit)
-                }
             }
+        }
+
+        // ===== Top Toast 疊加層：固定在畫面頂部 =====
+        when {
+            error != null -> {
+                ErrorTopToast(
+                    message = error,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+
+            toast != null -> {
+                SuccessTopToast(
+                    message = toast,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    minWidth = 150.dp,
+                    minHeight = 30.dp
+                )
+            }
+        }
+    }
+
+    // ===== 狀態清除：2 秒後自動清掉 error / toast =====
+    LaunchedEffect(error) {
+        if (error != null) {
+            delay(2000)
+            vm.clearError()
+        }
+    }
+
+    LaunchedEffect(toast) {
+        if (toast != null) {
+            delay(2000)
+            vm.clearToast()
         }
     }
 }
@@ -175,7 +219,7 @@ private fun BottomLogWeightBar(
         Button(
             onClick = onLogClick,
             modifier = Modifier
-                .width(158.dp)      // 你調過的寬度，覺得 OK 就維持
+                .width(158.dp)
                 .height(52.dp),
             shape = RoundedCornerShape(999.dp),
             colors = ButtonDefaults.buttonColors(

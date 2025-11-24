@@ -3,7 +3,22 @@ package com.calai.app.ui.home.ui.weight
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -16,8 +31,18 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,9 +52,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.saveable.rememberSaveable
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.kgToLbs1
 import com.calai.app.data.profile.repo.lbsToKg1
@@ -154,10 +176,14 @@ fun EditTargetWeightScreen(
                                     value = valueToSave,
                                     unit = unitToSave
                                 ) { result ->
-                                    isSaving = false
                                     result
-                                        .onSuccess { onSaved() }
+                                        .onSuccess {
+                                            // ✅ 成功：直接關閉畫面（保持 isSaving = true），避免按鈕先閃回正常再跳頁
+                                            onSaved()
+                                        }
                                         .onFailure { e ->
+                                            // ✅ 失敗才恢復 isSaving，讓使用者可以重試
+                                            isSaving = false
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(
                                                     message = e.message
@@ -223,7 +249,6 @@ fun EditTargetWeightScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
-            // 上方不要再顯示文字，改留一點空白
             Spacer(Modifier.height(80.dp))
 
             // --- 單位 Segmented：和 RecordWeightScreen 一樣的膠囊切換 ---
@@ -365,7 +390,6 @@ fun EditTargetWeightScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            // ★ 將兩句說明文字搬到這裡（原本 "This target weight..." 的位置）
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -391,8 +415,6 @@ fun EditTargetWeightScreen(
                     )
                 }
             }
-
-            // 底部留白讓內容不要貼到按鈕
             Spacer(Modifier.height(40.dp))
         }
     }

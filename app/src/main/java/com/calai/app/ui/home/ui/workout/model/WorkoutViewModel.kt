@@ -172,7 +172,7 @@ class WorkoutViewModel @Inject constructor(
             todayStore.setFromServer(logResp.today)
             _ui.value = _ui.value.copy(
                 saving = false,
-                toastMessage = "Workout saved successfully!",
+                toastMessage = "Workout saved successfully !",
                 estimateResult = null,
                 textInput = "",
                 navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
@@ -203,7 +203,7 @@ class WorkoutViewModel @Inject constructor(
             todayStore.setFromServer(logResp.today)
             _ui.value = _ui.value.copy(
                 saving = false,
-                toastMessage = "Workout saved successfully!",
+                toastMessage = "Workout saved successfully !",
                 showDurationPickerFor = null,
                 navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
             )
