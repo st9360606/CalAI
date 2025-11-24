@@ -11,6 +11,10 @@ interface ProfileApi {
 
     @PUT("/api/v1/users/me/profile")
     suspend fun upsertMyProfile(@Body body: UpsertProfileRequest): UserProfileDto
+
+    // ★ 新增：更新目標體重（只接受 value + unit）
+    @PUT("/api/v1/users/me/profile/target-weight")
+    suspend fun updateTargetWeight(@Body body: UpdateTargetWeightRequest): UserProfileDto
 }
 
 @Serializable
@@ -45,4 +49,10 @@ data class UpsertProfileRequest(
     val targetWeightLbs: Double?,      // ★
     val referralSource: String?,
     val locale: String?
+)
+
+@Serializable
+data class UpdateTargetWeightRequest(
+    val value: Double, // 使用者輸入數值（KG 或 LBS）
+    val unit: String   // "KG" or "LBS"
 )

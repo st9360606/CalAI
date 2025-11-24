@@ -1,6 +1,7 @@
 package com.calai.app.data.profile.repo
 
 import com.calai.app.data.profile.api.ProfileApi
+import com.calai.app.data.profile.api.UpdateTargetWeightRequest
 import com.calai.app.data.profile.api.UpsertProfileRequest
 import com.calai.app.data.profile.api.UserProfileDto
 import retrofit2.HttpException
@@ -145,5 +146,30 @@ class ProfileRepository @Inject constructor(
             locale = newLocale
         )
         api.upsertMyProfile(req)
+    }
+
+    /**
+     * 更新目標體重：
+     * - unit 由前端決定（KG / LBS）
+     * - value 先在 client 做一次「無條件捨去到小數第 1 位」，再給後端
+     *   （後端仍會再 clamp + floor，一致更安全）
+     */
+    suspend fun updateTargetWeight(
+        value: Double,
+        unit: UserProfileStore.WeightUnit
+    ): Result<UserProfileDto> = runCatching {
+        val trimmed = round1Floor(value)   // e.g. 73.04 → 73.0, 152.09 → 152.0
+        val body = UpdateTargetWeightRequest(
+            value = trimmed,
+            unit = unit.name               // "KG" or "LBS"
+        )
+        val resp = api.updateTargetWeight(body)
+
+        // 同步回本機 DataStore（快照用）
+        runCatching {
+            resp.targetWeightKg?.let { store.setTargetWeightKg(it.toFloat()) }
+            resp.targetWeightLbs?.let { store.setTargetWeightLbs(it.toFloat()) }
+        }
+        resp
     }
 }

@@ -82,20 +82,12 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
 
     val unit = ui.unit
 
-    // ---------- CURRENT WEIGHT：timeseries / summary 優先，最後才 profile ----------
-    // ui.current / ui.currentLbs 由 WeightViewModel 事先算好：
-    // - 先看 weight_timeseries
-    // - 再看 summary.current*
-    // - 都沒有才 fallback user_profiles（profileWeight*）
     val currentKg  = ui.current ?: ui.profileWeightKg
     val currentLbs = ui.currentLbs ?: ui.profileWeightLbs
 
-    // ---------- 目標體重：Summary（DB）優先，沒有才用 profile 目標 ----------
-    val dbGoalKg  = ui.goal      // SummaryDto.goalKg -> DB target_weight_kg
-    val dbGoalLbs = ui.goalLbs   // SummaryDto.goalLbs -> DB target_weight_lbs
-
-    val goalKg  = ui.profileTargetWeightKg
-    val goalLbs =  ui.profileTargetWeightLbs
+    // ---------- 目標體重：一律用 DB user_profiles（SummaryDto.goal*） ----------
+    val goalKg  = ui.goal      // ★ DB target_weight_kg
+    val goalLbs = ui.goalLbs   // ★ DB target_weight_lbs
 
     // TO TARGET：還是用 kg 為基準算差值（顯示時再依單位轉）
     val gainedText = formatDeltaGoalMinusCurrent(
@@ -124,8 +116,8 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
 
     // ---------- edgeRight：只拿 DB 目標體重（Summary / user_profiles.target_*） ----------
     val edgeRight = formatWeightFromDb(
-        kg  = dbGoalKg,
-        lbs = dbGoalLbs,
+        kg  = goalKg,
+        lbs = goalLbs,
         unit = unit
     )
 
@@ -508,12 +500,13 @@ fun FilterTabs(
 @Composable
 fun WeightChartCard(
     ui: WeightViewModel.UiState,
-    startWeightAllTimeKg: Double? = null
+    startWeightAllTimeKg: Double? = null,
+    onEditTargetWeight: () -> Unit       // ★ 新增
 ) {
     val unit          = ui.unit
     val currentKg     = ui.current ?: ui.profileWeightKg
-    val goalKg        = ui.goal ?: ui.profileTargetWeightKg
-    val profileWeight = ui.profileWeightKg
+    val goalKg        = ui.goal              // ★ 只用 DB user_profiles.target_weight_kg
+    val profileWeight = ui.profileWeightKg   // 起點仍然用 DB 的 current weight
 
     val progressFraction = computeWeightProgress(
         timeseries       = ui.series,
@@ -550,7 +543,10 @@ fun WeightChartCard(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF111114)
                 )
-                GoalProgressBadge(progressPercent = progressPercent)
+                GoalProgressBadge(
+                    progressPercent = progressPercent,
+                    onClick = onEditTargetWeight
+                )
             }
 
             Spacer(Modifier.height(12.dp))
@@ -578,7 +574,8 @@ fun WeightChartCard(
 @Composable
 private fun GoalProgressBadge(
     progressPercent: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit         // ★ 新增 callback
 ) {
     Row(
         modifier = modifier
@@ -589,6 +586,7 @@ private fun GoalProgressBadge(
                 color = Color(0xFFE2E5EA),
                 shape = RoundedCornerShape(999.dp)
             )
+            .clickable { onClick() }    // ★ 讓整個膠囊可以點
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

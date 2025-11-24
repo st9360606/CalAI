@@ -41,6 +41,7 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
+import com.calai.app.ui.home.ui.weight.EditTargetWeightScreen
 import com.calai.app.ui.home.ui.weight.RecordWeightScreen
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutHistoryScreen
@@ -87,6 +88,7 @@ object Routes {
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
+    const val EDIT_TARGET_WEIGHT = "edit_target_weight"
 }
 
 private tailrec fun Context.findActivity(): Activity? =
@@ -704,6 +706,12 @@ fun BiteCalNavHost(
                         restoreState = true
                     }
                 },
+                onEditTargetWeight = {
+                    nav.navigate(Routes.EDIT_TARGET_WEIGHT) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 onBack = { nav.popBackStack() }
             )
         }
@@ -746,6 +754,22 @@ fun BiteCalNavHost(
             }
         }
 
+        composable(Routes.EDIT_TARGET_WEIGHT) { backStackEntry ->
+            val ctx = LocalContext.current
+            val activity = (ctx.findActivity() ?: hostActivity)
+
+            // ★ 跟 WEIGHT / RECORD_WEIGHT 一樣，共用 HOME 的 WeightViewModel
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val vm: WeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+            EditTargetWeightScreen(
+                vm = vm,
+                onCancel = { nav.popBackStack() },
+                onSaved = { nav.popBackStack() }   // vm.updateTargetWeight 內已 refresh
+            )
+        }
 
 
 

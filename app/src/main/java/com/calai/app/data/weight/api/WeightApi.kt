@@ -39,7 +39,7 @@ data class SummaryDto(
     val goalLbs: Double? = null,
     val currentKg: Double? = null,
     val currentLbs: Double? = null,  // ★ 改成 Double?
-    val firstWeightKgAllTimeKg: Double? = null,
+    val firstWeightKgAllTime: Double? = null,
     val profileWeightKg: Double? = null,
     val profileWeightLbs: Double? = null,
     val achievedPercent: Double = 0.0,

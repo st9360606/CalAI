@@ -1,0 +1,591 @@
+package com.calai.app.ui.home.ui.weight
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.profile.repo.kgToLbs1
+import com.calai.app.data.profile.repo.lbsToKg1
+import com.calai.app.ui.home.ui.weight.components.WeightTopBar
+import com.calai.app.ui.home.ui.weight.model.WeightViewModel
+import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
+import kotlin.math.abs
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun EditTargetWeightScreen(
+    vm: WeightViewModel,
+    onCancel: () -> Unit,
+    onSaved: () -> Unit
+) {
+    val ui by vm.ui.collectAsState()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // === 和 RecordWeightScreen 對齊的限制 ===
+    val KG_MIN = 20.0
+    val KG_MAX = 800.0
+    val LBS_TENTHS_MIN = kgToLbsTenthsForTarget(KG_MIN)
+    val LBS_TENTHS_MAX = kgToLbsTenthsForTarget(KG_MAX)
+    val LBS_INT_MIN = LBS_TENTHS_MIN / 10
+    val LBS_INT_MAX = LBS_TENTHS_MAX / 10
+
+    // 目前 Profile 的顯示單位（預設跟 WeightScreen 一樣）
+    val profileUnit = ui.unit
+
+    // --- 先決定「基準 kg 值」：優先用 kg 欄位，沒有才從 lbs 換算 ---
+    val baseKg: Double = remember(ui) {
+        val kgCandidate =
+            ui.goal
+                ?: ui.profileTargetWeightKg
+                ?: ui.current
+                ?: ui.profileWeightKg
+
+        val lbsCandidate =
+            ui.goalLbs
+                ?: ui.profileTargetWeightLbs
+                ?: ui.currentLbs
+                ?: ui.profileWeightLbs
+
+        val fromKg = kgCandidate
+        val fromLbs = lbsCandidate?.let { lbsToKg1(it) }
+
+        (fromKg ?: fromLbs ?: 70.0)
+            .coerceIn(KG_MIN, KG_MAX)
+    }
+
+    val baseLbsTenths: Int = remember(baseKg) {
+        kgToLbsTenthsForTarget(baseKg)
+            .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+    }
+
+    // 是否用公制（kg）顯示，預設跟 Profile 一致
+    var useMetric by rememberSaveable(profileUnit) {
+        mutableStateOf(profileUnit == UserProfileStore.WeightUnit.KG)
+    }
+
+    // 目前編輯中的 kg / lbs（內部維護兩套，切單位時可無縫切換）
+    var valueKg by remember(baseKg) { mutableStateOf(baseKg) }
+    var valueLbsTenths by remember(baseLbsTenths) { mutableStateOf(baseLbsTenths) }
+
+    // 對應輪盤目前應該停在哪個格子（整數位 / 小數位）
+    val kgTenths = (valueKg * 10.0).toInt()
+        .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+    val kgIntSel = kgTenths / 10
+    val kgDecSel = kgTenths % 10
+
+    val lbsTenthsClamped = valueLbsTenths
+        .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+    val lbsIntSel = lbsTenthsClamped / 10
+    val lbsDecSel = lbsTenthsClamped % 10
+
+    var isSaving by remember { mutableStateOf(false) }
+
+    Scaffold(
+        containerColor = Color(0xFFF5F5F5),
+        topBar = {
+            WeightTopBar(
+                title = "Edit target weight",
+                onBack = onCancel
+            )
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // === Save（上面）：樣式對齊 RecordWeightScreen 的 Save ===
+                    Button(
+                        onClick = {
+                            if (isSaving) return@Button
+                            isSaving = true
+
+                            val (valueToSave, unitToSave) =
+                                if (useMetric) {
+                                    val kgClamped = valueKg.coerceIn(KG_MIN, KG_MAX)
+                                    val kgRounded = roundToOneDecimalForTarget(kgClamped)
+                                    kgRounded to UserProfileStore.WeightUnit.KG
+                                } else {
+                                    val rawLbs = (valueLbsTenths
+                                        .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)) / 10.0
+                                    val lbsRounded = roundToOneDecimalForTarget(rawLbs)
+                                    lbsRounded to UserProfileStore.WeightUnit.LBS
+                                }
+
+                            scope.launch {
+                                vm.updateTargetWeight(
+                                    value = valueToSave,
+                                    unit = unitToSave
+                                ) { result ->
+                                    isSaving = false
+                                    result
+                                        .onSuccess { onSaved() }
+                                        .onFailure { e ->
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(
+                                                    message = e.message
+                                                        ?: "Failed to update target weight"
+                                                )
+                                            }
+                                        }
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),   // 跟 RecordWeightScreen Save 一樣
+                        enabled = !isSaving,
+                        shape = RoundedCornerShape(28.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Black,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                        } else {
+                            Text(
+                                text = "Save",
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    // === Cancel（下面）：灰底，寬高與 Save 一樣 ===
+                    OutlinedButton(
+                        onClick = { if (!isSaving) onCancel() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        enabled = !isSaving,
+                        shape = RoundedCornerShape(28.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color(0xFFE1E4EA),
+                            contentColor = Color(0xFF111114)
+                        )
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            // 上方不要再顯示文字，改留一點空白
+            Spacer(Modifier.height(80.dp))
+
+            // --- 單位 Segmented：和 RecordWeightScreen 一樣的膠囊切換 ---
+            WeightUnitSegmentedForTarget(
+                useMetric = useMetric,
+                onChange = { useMetric = it },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // --- KG / LBS 輪盤：和 RecordWeightScreen 一樣 ---
+            val wheelRowHeight = 56.dp
+
+            if (useMetric) {
+                // KG 模式
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NumberWheelForTarget(
+                        range = KG_MIN.toInt()..KG_MAX.toInt(),
+                        value = kgIntSel,
+                        onValueChange = { newInt ->
+                            val newTenths = (newInt * 10 + kgDecSel)
+                                .coerceIn(
+                                    (KG_MIN * 10).toInt(),
+                                    (KG_MAX * 10).toInt()
+                                )
+                            val newKg = newTenths / 10.0
+                            valueKg = newKg
+                            valueLbsTenths = kgToLbsTenthsForTarget(newKg)
+                        },
+                        rowHeight = wheelRowHeight,
+                        centerTextSize = 30.sp,
+                        textSize = 26.sp,
+                        sideAlpha = 0.35f,
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 25.dp)
+                    )
+                    Text(
+                        text = ".",
+                        fontSize = 34.sp,
+                        modifier = Modifier.padding(horizontal = 6.dp)
+                    )
+                    NumberWheelForTarget(
+                        range = 0..9,
+                        value = kgDecSel,
+                        onValueChange = { newDec ->
+                            val newTenths = (kgIntSel * 10 + newDec)
+                                .coerceIn(
+                                    (KG_MIN * 10).toInt(),
+                                    (KG_MAX * 10).toInt()
+                                )
+                            val newKg = newTenths / 10.0
+                            valueKg = newKg
+                            valueLbsTenths = kgToLbsTenthsForTarget(newKg)
+                        },
+                        rowHeight = wheelRowHeight,
+                        centerTextSize = 30.sp,
+                        textSize = 26.sp,
+                        sideAlpha = 0.35f,
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(start = 2.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "kg",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            } else {
+                // LBS 模式
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NumberWheelForTarget(
+                        range = LBS_INT_MIN..LBS_INT_MAX,
+                        value = lbsIntSel,
+                        onValueChange = { newInt ->
+                            val newTenths = (newInt * 10 + lbsDecSel)
+                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                            valueLbsTenths = newTenths
+                            val newLbs = newTenths / 10.0
+                            val newKg = lbsToKg1(newLbs)
+                            valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
+                        },
+                        rowHeight = wheelRowHeight,
+                        centerTextSize = 30.sp,
+                        textSize = 26.sp,
+                        sideAlpha = 0.35f,
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 30.dp)
+                    )
+                    Text(
+                        text = ".",
+                        fontSize = 34.sp,
+                        modifier = Modifier.padding(horizontal = 6.dp)
+                    )
+                    NumberWheelForTarget(
+                        range = 0..9,
+                        value = lbsDecSel,
+                        onValueChange = { newDec ->
+                            val intPart = lbsIntSel
+                            val newTenths = (intPart * 10 + newDec)
+                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                            valueLbsTenths = newTenths
+                            val newLbs = newTenths / 10.0
+                            val newKg = lbsToKg1(newLbs)
+                            valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
+                        },
+                        rowHeight = wheelRowHeight,
+                        centerTextSize = 30.sp,
+                        textSize = 26.sp,
+                        sideAlpha = 0.35f,
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(start = 5.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "lbs",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            // ★ 將兩句說明文字搬到這裡（原本 "This target weight..." 的位置）
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                ) {
+                    Text(
+                        text = "Set your target weight",
+                        fontSize = 12.sp,
+                        color = Color(0xFF9AA3AE),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "We will use this target to calculate your progress.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF9AA3AE),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // 底部留白讓內容不要貼到按鈕
+            Spacer(Modifier.height(40.dp))
+        }
+    }
+}
+
+/* ---------------------------- Segmented：和 RecordWeightScreen 一樣 ---------------------------- */
+
+@Composable
+private fun WeightUnitSegmentedForTarget(
+    useMetric: Boolean,
+    onChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFFE2E5EA),
+        modifier = modifier
+            .fillMaxWidth(0.60f)
+            .heightIn(min = 40.dp)
+    ) {
+        Row(Modifier.padding(6.dp)) {
+            SegItemForTarget(
+                text = "lbs",
+                selected = !useMetric,
+                onClick = { onChange(false) },
+                selectedColor = Color.Black,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+            )
+            Spacer(Modifier.width(6.dp))
+            SegItemForTarget(
+                text = "kg",
+                selected = useMetric,
+                onClick = { onChange(true) },
+                selectedColor = Color.Black,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SegItemForTarget(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    selectedColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val corner = 22.dp
+    val fSize = 20.sp
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(corner),
+        color = if (selected) selectedColor else Color.Transparent,
+        modifier = modifier
+    ) {
+        Box(
+            modifier = Modifier
+                .defaultMinSize(minHeight = 40.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                fontSize = fSize,
+                fontWeight = FontWeight.SemiBold,
+                color = if (selected) Color.White else Color(0xFF333333),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+/* ---------------------------- 數字輪盤：和 RecordWeightScreen 一樣邏輯 ---------------------------- */
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun NumberWheelForTarget(
+    range: IntRange,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    rowHeight: Dp,
+    centerTextSize: TextUnit,
+    textSize: TextUnit,
+    sideAlpha: Float,
+    modifier: Modifier = Modifier,
+    label: (Int) -> String = { it.toString() }
+) {
+    val VISIBLE_COUNT = 5
+    val MID = VISIBLE_COUNT / 2
+    val items = remember(range) { range.toList() }
+    val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
+
+    val state = rememberLazyListState()
+    val fling = androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior(
+        lazyListState = state
+    )
+
+    var initialized by remember(range) { mutableStateOf(false) }
+    LaunchedEffect(range, value) {
+        if (!initialized) {
+            state.scrollToItem(selectedIdx)
+            initialized = true
+        }
+    }
+
+    val centerIndex by remember {
+        derivedStateOf {
+            val li = state.layoutInfo
+            if (li.visibleItemsInfo.isEmpty()) return@derivedStateOf selectedIdx
+            val viewportCenter = (li.viewportStartOffset + li.viewportEndOffset) / 2
+            li.visibleItemsInfo.minByOrNull { info ->
+                abs((info.offset + info.size / 2) - viewportCenter)
+            }?.index ?: selectedIdx
+        }
+    }
+
+    LaunchedEffect(centerIndex, initialized) {
+        if (initialized) onValueChange(items[centerIndex])
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(rowHeight * VISIBLE_COUNT)
+    ) {
+        LazyColumn(
+            state = state,
+            flingBehavior = fling,
+            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            itemsIndexed(items) { index, num ->
+                val isCenter = index == centerIndex
+                val alpha = if (isCenter) 1f else sideAlpha
+                val size = if (isCenter) centerTextSize else textSize
+                val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
+
+                Row(
+                    modifier = Modifier
+                        .height(rowHeight)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = label(num),
+                        fontSize = size,
+                        fontWeight = weight,
+                        color = Color.Black.copy(alpha = alpha),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        val lineColor = Color(0x11000000)
+        val half = rowHeight / 2
+        val lineThickness = 1.dp
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .offset(y = -half)
+                .fillMaxWidth()
+                .height(lineThickness)
+                .background(lineColor)
+        )
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .offset(y = half - lineThickness)
+                .fillMaxWidth()
+                .height(lineThickness)
+                .background(lineColor)
+        )
+    }
+}
+
+/* ---------------------------- 共用換算工具（Edit Target 用） ---------------------------- */
+
+/** 給 EditTarget 使用的 0.1 lbs 刻度（Int = 實際磅數 * 10） */
+private fun kgToLbsTenthsForTarget(kg: Double): Int =
+    (kgToLbs1(kg) * 10.0).toInt()
+
+/** 一位小數四捨五入，避免浮點誤差 */
+private fun roundToOneDecimalForTarget(value: Double): Double =
+    BigDecimal.valueOf(value)
+        .setScale(1, RoundingMode.HALF_UP)
+        .toDouble()

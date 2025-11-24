@@ -52,6 +52,7 @@ import com.calai.app.ui.home.ui.weight.model.WeightViewModel
     fun WeightScreen(
     vm: WeightViewModel,
     onLogClick: () -> Unit,
+    onEditTargetWeight: () -> Unit,
     onBack: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
@@ -128,7 +129,8 @@ import com.calai.app.ui.home.ui.weight.model.WeightViewModel
                 item {
                     WeightChartCard(
                         ui = ui,
-                        startWeightAllTimeKg = ui.firstWeightAllTimeKg
+                        startWeightAllTimeKg = ui.firstWeightAllTimeKg,
+                        onEditTargetWeight = onEditTargetWeight
                     )
                 }
                 // History title

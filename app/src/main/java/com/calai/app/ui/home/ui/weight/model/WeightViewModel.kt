@@ -3,6 +3,7 @@ package com.calai.app.ui.home.ui.weight.model
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.calai.app.data.profile.repo.ProfileRepository
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.weight.api.WeightItemDto
 import com.calai.app.data.weight.repo.WeightRepository
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class WeightViewModel @Inject constructor(
     private val repo: WeightRepository,
-    private val store: UserProfileStore
+    private val store: UserProfileStore,
+    private val profileRepo: ProfileRepository
 ) : ViewModel() {
 
     data class UiState(
@@ -27,11 +29,8 @@ class WeightViewModel @Inject constructor(
         // --- 以 kg 為主的欄位 ---
         val goal: Double? = null,       // kg
         val current: Double? = null,    // kg
-
-        // --- DB / API 回來的 lbs ---
         val goalLbs: Double? = null,
         val currentLbs: Double? = null,
-
         // --- Profile（本機快照），用來當最後一層 fallback ---
         val profileWeightKg: Double? = null,
         val profileWeightLbs: Double? = null,           // ★ 新增
@@ -134,10 +133,8 @@ class WeightViewModel @Inject constructor(
                 today = today
             )
             // 2) 目標體重：Summary > Profile snapshot
-            val effectiveGoalKg =
-                summary.goalKg ?: snapshot.profileTargetWeightKg
-            val effectiveGoalLbs =
-                summary.goalLbs ?: snapshot.profileTargetWeightLbs
+            val effectiveGoalKg  = summary.goalKg
+            val effectiveGoalLbs = summary.goalLbs
 
             // 3) CURRENT WEIGHT：
             //    1) weight_timeseries（today or latest past）
@@ -153,6 +150,15 @@ class WeightViewModel @Inject constructor(
                     ?: summary.currentLbs
                     ?: snapshot.profileWeightLbs
 
+            Log.d(
+                "WeightVM",
+                "summary range=$range " +
+                        "goalKg=${summary.goalKg}, goalLbs=${summary.goalLbs}, " +
+                        "currentKg=${summary.currentKg}, currentLbs=${summary.currentLbs}, " +
+                        "profileWeightKg=${summary.profileWeightKg}, profileWeightLbs=${summary.profileWeightLbs}, " +
+                        "currentFromSeriesKg=${currentFromSeries?.weightKg}, currentFromSeriesLbs=${currentFromSeries?.weightLbs}"
+            )
+
             _ui.update { state ->
                 state.copy(
                     goal       = effectiveGoalKg,
@@ -166,7 +172,7 @@ class WeightViewModel @Inject constructor(
 
                     // ⬇️ 這個欄位名稱要跟你的 SummaryDto 一致
                     // 如果你的 data class 是 firstWeightKgAllTime，就改那個名字
-                    firstWeightAllTimeKg = summary.firstWeightKgAllTimeKg,
+                    firstWeightAllTimeKg = summary.firstWeightKgAllTime,
                     // ★ 新增：優先拿後端 Summary，沒有才保留原本 DataStore 的值
                     profileWeightKg  = summary.profileWeightKg ?: state.profileWeightKg,
                     profileWeightLbs = summary.profileWeightLbs ?: state.profileWeightLbs,
@@ -282,6 +288,31 @@ class WeightViewModel @Inject constructor(
         if (notFuture.isEmpty()) return null
 
         return notFuture.maxByOrNull { it.first }?.second
+    }
+
+    /**
+     * 更新目標體重：
+     * - value: 依 ui.unit 的數值（kg 或 lbs）
+     * - unit : 當下 UI 選擇的 WeightUnit
+     * - onResult: 成功/失敗 callback，讓 UI 可以顯示錯誤或關閉頁面
+     */
+    fun updateTargetWeight(
+        value: Double,
+        unit: UserProfileStore.WeightUnit,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        viewModelScope.launch {
+            val res = profileRepo.updateTargetWeight(value, unit)
+            res.onSuccess {
+                // 後端已同步 user_profiles.target_weight_kg / target_weight_lbs
+                // 這裡再 refresh 一次 Weight 資料（summary + series）
+                runCatching { refresh() }
+
+                onResult(Result.success(Unit))
+            }.onFailure { e ->
+                onResult(Result.failure(e))
+            }
+        }
     }
 
 }
