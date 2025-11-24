@@ -250,7 +250,7 @@ class WeightViewModel @Inject constructor(
                 // ✅ 成功：讓 WeightScreen 顯示 SuccessTopToast("Saved successfully")
                 _ui.update {
                     it.copy(
-                        toastMessage = "Saved successfully",
+                        toastMessage = "Saved successfully !",
                         error = null
                     )
                 }

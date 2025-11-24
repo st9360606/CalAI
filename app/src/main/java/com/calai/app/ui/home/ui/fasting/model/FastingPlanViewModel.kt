@@ -21,7 +21,8 @@ data class FastingUiState(
     val selected: FastingPlan = FastingPlan.P16_8,
     val start: LocalTime = LocalTime.of(9, 0),
     val end: LocalTime = LocalTime.of(17, 0),
-    val enabled: Boolean = false
+    val enabled: Boolean = false,
+    val toastMessage: String? = null
 )
 
 @HiltViewModel
@@ -47,10 +48,18 @@ class FastingPlanViewModel @Inject constructor(
     }
 
     private fun applyDto(dto: FastingPlanDto) {
+        val old = _state.value
         val plan = FastingPlan.of(dto.planCode)
         val start = LocalTime.parse(dto.startTime)
         val end = LocalTime.parse(dto.endTime)
-        _state.value = FastingUiState(false, plan, start, end, dto.enabled)
+
+        _state.value = old.copy(
+            loading = false,
+            selected = plan,
+            start = start,
+            end = end,
+            enabled = dto.enabled
+        )
     }
 
     fun onPlanSelected(plan: FastingPlan) {
@@ -117,7 +126,7 @@ class FastingPlanViewModel @Inject constructor(
         reconcileEnabledWithPermission()
     }
 
-    fun persistAndReschedule() = viewModelScope.launch {
+    fun persistAndReschedule(showToast: Boolean = false) = viewModelScope.launch {
         try {
             val s = _state.value
             // upsert（Server 回填 end/enabled）
@@ -137,7 +146,18 @@ class FastingPlanViewModel @Inject constructor(
             } catch (_: Throwable) {
                 // 忽略裝置層異常（無權限/廠商限制），不讓 UI 崩潰
             }
+
+            if (showToast) {
+                _state.value = _state.value.copy(
+                    toastMessage = "Saved successfully !",
+                )
+            }
         } catch (_: Throwable) {
+            if (showToast) {
+                _state.value = _state.value.copy(
+                    toastMessage = "Save failed"
+                )
+            }
             // 網路/Server 失敗也不讓 UI 崩潰
         }
     }
@@ -178,5 +198,9 @@ class FastingPlanViewModel @Inject constructor(
                 )
             } catch (_: Throwable) { }
         }
+    }
+
+    fun clearToast() {
+        _state.value = _state.value.copy(toastMessage = null)
     }
 }

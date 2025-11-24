@@ -150,7 +150,7 @@ fun FastingPlansScreen(
                     Button(
                         onClick = {
                             onBack()
-                            vm.persistAndReschedule()
+                            vm.persistAndReschedule(showToast = true)  // ★ 要求這次儲存時顯示 toast
                         },
                         modifier = Modifier
                             .align(Alignment.Center)
