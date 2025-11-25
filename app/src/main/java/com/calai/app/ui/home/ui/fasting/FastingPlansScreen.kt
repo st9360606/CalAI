@@ -4,11 +4,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -36,7 +35,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -44,13 +42,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,14 +68,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -87,6 +83,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 
+private val Black = Color(0xFF111114)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FastingPlansScreen(
@@ -121,12 +118,16 @@ fun FastingPlansScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .height(48.dp)
+                    ) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(28.dp) // 箭頭放大
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.height(28.dp)
                         )
                     }
                 },
@@ -140,34 +141,36 @@ fun FastingPlansScreen(
             )
         },
         bottomBar = {
-            Surface(color = Color.Transparent) {
+            Surface(color = Color.White) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
-                        .padding(bottom = 37.dp)
                 ) {
                     Button(
                         onClick = {
                             onBack()
-                            vm.persistAndReschedule(showToast = true)  // ★ 要求這次儲存時顯示 toast
+                            vm.persistAndReschedule(showToast = true)
                         },
                         modifier = Modifier
-                            .align(Alignment.Center)
-                            .fillMaxWidth(0.9f)
-                            .height(60.dp),
+                            .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .align(Alignment.Center),
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF000000),
-                            contentColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(8.dp)
+                            containerColor = Black,
+                            contentColor = Color.White,
+                            disabledContainerColor = Black,
+                            disabledContentColor = Color.White
+                        )
                     ) {
                         Text(
                             text = stringResource(R.string.fasting_plan_save),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 19.sp
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
                             )
                         )
                     }
@@ -202,19 +205,26 @@ fun FastingPlansScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .padding(start = 10.dp), // 🔹 整體往右一點
-                horizontalAlignment = Alignment.Start
+                    .padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally     // ⭐ 整組以中間為基準
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)                            // ⭐ 標題列寬度
+                        .clickable {                                   // 👉 點標題列也開 Picker
+                            showCupertinoPicker = true
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center         // ⭐ 字 + icon 置中
+                ) {
                     Text(
                         text = "start time",
-                        style = MaterialTheme.typography.titleLarge.copy( // 改用 titleLarge
+                        style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,                             // 額外指定大小
+                            fontSize = 18.sp,
                             color = Color.Black
                         ),
-                        modifier = Modifier.padding(start = 24.dp)
+                        modifier = Modifier.padding(start = 18.dp)     // ✅ 只有文字往右 18.dp
                     )
                     Spacer(Modifier.width(4.dp))
                     Icon(
@@ -230,14 +240,24 @@ fun FastingPlansScreen(
                 OutlinedButton(
                     onClick = { showCupertinoPicker = true },
                     shape = MaterialTheme.shapes.large,
-                    border = BorderStroke(1.dp, Color(0xFFB8B8B8)), // ✅ 外框略深
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                    border = BorderStroke(1.dp, Color(0xFFB8B8B8)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black),
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)
+                        .height(48.dp)
                 ) {
-                    Text(
-                        text = format12hEn(state.start),
-                        fontSize = 21.sp,
-                        style = MaterialTheme.typography.titleLarge.copy(color = Color.Black.copy(alpha = 0.8f))
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = format12hEn(state.start),
+                            fontSize = 21.sp,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = Color.Black.copy(alpha = 0.8f)
+                            )
+                        )
+                    }
                 }
             }
 
@@ -247,9 +267,8 @@ fun FastingPlansScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .padding(start = 10.dp), // 🔹 整體往右一點
-                horizontalAlignment = Alignment.Start
+                    .padding(vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally     // ⭐ 一樣置中
             ) {
                 Text(
                     text = "end time",
@@ -258,24 +277,37 @@ fun FastingPlansScreen(
                         fontSize = 18.sp,
                         color = Color.Black
                     ),
-                    modifier = Modifier.padding(start = 24.dp)
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f),                           // ⭐ 寬度 = 50%
+                    textAlign = TextAlign.Center                       // ⭐ 在這塊寬度中置中
                 )
+
                 Spacer(Modifier.height(6.dp))
+
                 OutlinedButton(
-                    onClick = {},
-                    enabled = false,
+                    onClick = {},                                      // 🚫 不可點
+                    enabled = false,                                   // 🚫 灰掉
                     shape = MaterialTheme.shapes.large,
-                    border = BorderStroke(1.dp, Color(0xFFE0E0E0)), // ✅ 淺灰外框
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                    border = BorderStroke(1.dp, Color(0xFFB8B8B8)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black),
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)                            // ⭐ 跟上面 Row 同寬、更小
+                        .height(48.dp)                                 // ⭐ 高度也略縮小
                 ) {
-                    Text(
-                        text = format12hEn(state.end),
-                        fontSize = 21.sp,
-                        style = MaterialTheme.typography.titleLarge.copy(color = Color.Black.copy(alpha = 0.6f))
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center            // ⭐ 文字絕對置中
+                    ) {
+                        Text(
+                            text = format12hEn(state.end),
+                            fontSize = 21.sp,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = Color.Black.copy(alpha = 0.6f)
+                            )
+                        )
+                    }
                 }
             }
-
             Spacer(Modifier.height(80.dp))
         }
     }
@@ -535,55 +567,79 @@ private fun from12h(hour12: Int, minute: Int, isAm: Boolean): LocalTime {
     return LocalTime.of(h, minute)
 }
 private fun format12hEn(t: LocalTime): String {
-    val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
-    return t.format(formatter)
+    val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
+    return t.format(formatter)   // → 01:05 AM, 08:30 PM ...
 }
 
-/* ==============================
-   iOS 風格轉盤（灰底在數字下面，固定純灰）
-   ============================== */
-
-private val BTN_CANCEL_BG = Color(0xFFF2F2F7)
-private val BTN_CANCEL_TEXT = Color(0xFF1C1C1E)
-private val BTN_OK_BG = Color(0xFF111111)
-private val BTN_OK_TEXT = Color(0xFFFFFFFF)
 private val IOS_TEXT = Color(0xFF1C1C1E)
 private val IOS_TEXT_FADED = Color(0xFF8E8E93)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CupertinoWheelTimePickerDialog(
     initial: LocalTime,
     onDismiss: () -> Unit,
     onConfirm: (LocalTime) -> Unit
 ) {
+    // 初始值：轉成 12h + AM/PM
     val (initHour12, initMinute, initIsAm) = remember(initial) { to12hTuple(initial) }
-    var hour by remember { mutableStateOf(initHour12) }
-    var minute by remember { mutableStateOf(initMinute) }
-    var isAm by remember { mutableStateOf(initIsAm) }
+    var hour by rememberSaveable(initial) { mutableStateOf(initHour12) }
+    var minute by rememberSaveable(initial) { mutableStateOf(initMinute) }
+    var isAm by rememberSaveable(initial) { mutableStateOf(initIsAm) }
 
-    val screenW = LocalConfiguration.current.screenWidthDp.dp
-    val dialogMax = (screenW * 0.96f).coerceAtMost(600.dp) // ★ 幾乎全寬（手機）
+    // 跟 WeighingDateSheet 一樣：禁止滑動關閉，只能靠 Cancel 關
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { target ->
+            target != SheetValue.Hidden   // 不允許進到 Hidden
+        }
+    )
 
-    AlertDialog(
-        modifier = Modifier.fillMaxWidth(),
-        onDismissRequest = onDismiss,
-        confirmButton = {},
-        dismissButton = {},
-        containerColor = Color.White,
-        tonalElevation = 0.dp,
-        shape = RoundedCornerShape(24.dp),
-        text = {
-            Column(
+    ModalBottomSheet(
+        // 不處理外部 dismiss：滑動 / 點外面 / 返回鍵都不會關，只能靠 Cancel
+        onDismissRequest = { /* 故意留空，讓 Cancel 成為唯一出口 */ },
+        sheetState = sheetState,
+        containerColor = Color(0xFFF5F5F5)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 520.dp) // ⬆️ 比原本 420.dp 再高一點
+                .padding(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // ===== Title / Subtitle =====
+            Text(
+                text = "Set your fasting start time",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF111114),
                 modifier = Modifier
-                    .background(Color.White)
-                    .widthIn(min = 0.dp, max = dialogMax),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = "We'll remind you at this time each day when your eating window starts.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF6B7280),
+                modifier = Modifier
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(22.dp))
+
+            // ===== 轉盤本體 =====
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                // 你的轉盤本體（略） ---------------------
                 Box(
                     modifier = Modifier
                         .width(300.dp)
-                        .height(220.dp),
+                        .height(260.dp),          // ⬆️ 原本 220.dp，轉盤再大一點
                     contentAlignment = Alignment.Center
                 ) {
                     SelectionBandBehind()
@@ -592,105 +648,95 @@ private fun CupertinoWheelTimePickerDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
+                        // Hour 01..12（無限循環，帶前導 0）
                         WheelColumn(
-                            values = (1..12).map { it.toString() },
+                            values = (1..12).map { "%02d".format(it) },   // 👈 改這行：01, 02, ..., 12
                             startIndex = hour - 1,
-                            columnWidth = 84.dp,
-                            onSnapped = { hour = it + 1 },
+                            columnWidth = 96.dp,
+                            onSnapped = { index ->
+                                hour = index + 1                           // 內部仍然用 1..12，不受顯示格式影響
+                            },
                             infinite = true,
-                            selectedFontSize = 24.sp,
-                            unselectedFontSize = 16.sp
+                            selectedFontSize = 26.sp,
+                            unselectedFontSize = 19.sp
                         )
                         Spacer(Modifier.width(8.dp))
+
+                        // Minute 00..59（無限循環）
                         WheelColumn(
                             values = (0..59).map { "%02d".format(it) },
                             startIndex = minute,
-                            columnWidth = 84.dp,
+                            columnWidth = 96.dp,
                             onSnapped = { minute = it },
                             infinite = true,
-                            selectedFontSize = 24.sp,
-                            unselectedFontSize = 16.sp
+                            selectedFontSize = 26.sp,
+                            unselectedFontSize = 19.sp
                         )
                         Spacer(Modifier.width(8.dp))
+
+                        // AM / PM（非無限）
                         WheelColumn(
                             values = listOf("AM", "PM"),
                             startIndex = if (isAm) 0 else 1,
-                            columnWidth = 84.dp,
-                            onSnapped = { isAm = it == 0 },
+                            columnWidth = 96.dp,
+                            onSnapped = { isAm = (it == 0) },
                             infinite = false,
-                            selectedFontSize = 20.sp,
-                            unselectedFontSize = 14.sp,
+                            selectedFontSize = 22.sp,
+                            unselectedFontSize = 16.sp,
                             selectedFontWeight = FontWeight.SemiBold,
-                            unselectedFontWeight = FontWeight.Medium // AM/PM 辨識稍好
+                            unselectedFontWeight = FontWeight.Medium
                         )
                     }
                 }
-                // --------------------------------------
+            }
 
-                Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(30.dp))
 
-                // ★ 置中 + 等寬 + 吃滿寬度的按鈕列（統一用 weight）
-                Row(
+            // ===== Save / Cancel：改成上下排列 =====
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Save：在上面
+                Button(
+                    onClick = {
+                        val picked = from12h(hour, minute, isAm)
+                        onConfirm(picked)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .height(55.dp),
+                    shape = RoundedCornerShape(999.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        Button(
-                            onClick = onDismiss,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .testTag("btn_cancel"),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = BTN_CANCEL_BG,
-                                contentColor = BTN_CANCEL_TEXT
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-                        ) {
-                            Text(
-                                text = "CANCEL",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Clip,
-                                style = TextStyle(lineBreak = LineBreak.Simple)
-                            )
-                        }
-                    }
+                    Text("Save", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
 
-                    Box(modifier = Modifier.weight(1f)) {
-                        Button(
-                            onClick = { onConfirm(from12h(hour, minute, isAm)) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .testTag("btn_ok"),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = BTN_OK_BG,
-                                contentColor = BTN_OK_TEXT
-                            )
-                        ) {
-                            Text(
-                                text = "OK",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Clip,
-                                style = TextStyle(lineBreak = LineBreak.Simple)
-                            )
-                        }
-                    }
+                // Cancel：在下面
+                OutlinedButton(
+                    onClick = { onDismiss() },   // 👈 唯一真正會關閉 Sheet 的動作
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp),
+                    shape = RoundedCornerShape(999.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color(0xFFE1E4EA),
+                        contentColor = Color(0xFF111114)
+                    )
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
+
+            Spacer(Modifier.height(8.dp))
         }
-    )
+    }
 }

@@ -286,7 +286,7 @@ private fun RecordWeightScreenContent(
                         .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
-                        .height(64.dp),
+                        .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
@@ -295,8 +295,10 @@ private fun RecordWeightScreenContent(
                 ) {
                     Text(
                         text = "Save",
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.2.sp
+                        )
                     )
                 }
             }
@@ -784,7 +786,7 @@ private fun WeighingDateSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 420.dp)  // 可再依實機調整 400 ~ 460.dp
+                .heightIn(min = 520.dp)  // ⬆️ 比原本 420 再高一階
                 .padding(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -818,7 +820,7 @@ private fun WeighingDateSheet(
                     onValueChange = { day = it },
                     rowHeight = rowHeight,
                     centerTextSize = 22.sp,
-                    TextSize = 22.sp,
+                    TextSize = 17.sp,
                     sideAlpha = 0.35f,
                     modifier = Modifier.width(70.dp)
                 )
@@ -830,7 +832,7 @@ private fun WeighingDateSheet(
                     onValueChange = { month = it },
                     rowHeight = rowHeight,
                     centerTextSize = 22.sp,
-                    TextSize = 22.sp,
+                    TextSize = 17.sp,
                     sideAlpha = 0.35f,
                     modifier = Modifier.width(130.dp),
                     label = { idx -> months[idx - 1] }
@@ -843,19 +845,18 @@ private fun WeighingDateSheet(
                     onValueChange = { year = it },
                     rowHeight = rowHeight,
                     centerTextSize = 22.sp,
-                    TextSize = 22.sp,
+                    TextSize = 17.sp,
                     sideAlpha = 0.35f,
                     modifier = Modifier.width(90.dp)
                 )
             }
+            Spacer(Modifier.height(30.dp))
 
-            Spacer(Modifier.height(26.dp))
-
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // ★ Save：只回傳日期，不關閉 Sheet
+                // ★ Save：在上面，只回傳日期，不關閉 Sheet
                 Button(
                     onClick = {
                         val safeYear = year.coerceIn(yearRange)
@@ -871,35 +872,35 @@ private fun WeighingDateSheet(
                         onConfirm(finalDate)  // ★ 外層只更新 selectedDate，不關閉 Sheet
                     },
                     modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp),
+                        .fillMaxWidth()
+                        .height(55.dp),
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Save", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Save", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
 
-                // ★ Cancel：唯一會關閉 Sheet 的入口
+                // ★ Cancel：在下面，唯一會關閉 Sheet 的入口
                 OutlinedButton(
                     onClick = {
                         onDismiss()          // 外層把 visible = false
                     },
                     modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp),
+                        .fillMaxWidth()
+                        .height(55.dp),
                     shape = RoundedCornerShape(999.dp),
                     border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color(0xFFE1E4EA), // 穩定灰色，不吃動態色
+                        containerColor = Color(0xFFE1E4EA),
                         contentColor = Color(0xFF111114)
                     )
                 ) {
                     Text(
                         text = "Cancel",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }

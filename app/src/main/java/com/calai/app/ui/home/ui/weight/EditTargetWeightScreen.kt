@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -196,7 +197,7 @@ fun EditTargetWeightScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(60.dp),   // 跟 RecordWeightScreen Save 一樣
+                            .height(56.dp),   // 跟 RecordWeightScreen Save 一樣
                         enabled = !isSaving,
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -213,31 +214,12 @@ fun EditTargetWeightScreen(
                         } else {
                             Text(
                                 text = "Save",
-                                fontSize = 19.sp,
-                                fontWeight = FontWeight.SemiBold
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 0.2.sp
+                                )
                             )
                         }
-                    }
-
-                    // === Cancel（下面）：灰底，寬高與 Save 一樣 ===
-                    OutlinedButton(
-                        onClick = { if (!isSaving) onCancel() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(60.dp),
-                        enabled = !isSaving,
-                        shape = RoundedCornerShape(28.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color(0xFFE1E4EA),
-                            contentColor = Color(0xFF111114)
-                        )
-                    ) {
-                        Text(
-                            text = "Cancel",
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
                     }
                 }
             }
