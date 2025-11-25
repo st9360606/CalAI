@@ -96,6 +96,14 @@ import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -227,14 +235,7 @@ fun HomeScreen(
     }
     Scaffold(
         containerColor = Color.Transparent,   // ★ 讓下方漸層透出
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onOpenCamera,
-                containerColor = Color(0xFF111114),
-                contentColor = Color.White,
-                shape = CircleShape
-            ) { Icon(Icons.Default.Add, contentDescription = "cam") }
-        },
+        floatingActionButton = { ScanFab(onClick = onOpenCamera) },
         bottomBar = {
             BottomBar(
                 current = HomeTab.Home,
@@ -269,11 +270,14 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Avatar(s.avatarUrl, size = 48.dp, startPadding = 6.dp)  // 放大＋往右一些
-                IconButton(onClick = onOpenAlarm) {
+                IconButton(
+                    onClick = onOpenAlarm,
+                    modifier = Modifier.padding(end = 4.dp)   // 👈 往左移一點（離右邊邊界遠一點）
+                ) {
                     Icon(
-                        painter = painterResource(R.drawable.home_notification), // ← 換成你的 drawable
+                        painter = painterResource(R.drawable.home_notification),
                         contentDescription = "alarm",
-                        modifier = Modifier.size(28.dp)                     // ← 再大一點
+                        modifier = Modifier.size(32.dp)       // 👈 比原本 28.dp 再大一點
                     )
                 }
             }
@@ -711,4 +715,153 @@ fun computeHomeWeightProgress(
 
     // clamp 到 0~1，避免超過目標或資料錯誤
     return raw.coerceIn(0f, 1f)
+}
+
+@Composable
+fun ScanCameraIcon(
+    modifier: Modifier = Modifier,
+
+    // ✅ 參考圖：框大概是按鈕內徑的 ~0.74
+    frameRatio: Float = 0.74f,
+
+    // 四角「延伸長度」：越大越發散
+    cornerLenRatio: Float = 0.70f,
+
+    // ✅ 關鍵：四角弧度（0~1），半徑 = cornerLen * cornerRoundness
+    cornerRoundness: Float = 0.72f,
+
+    // 框線寬（參考圖是細線）
+    frameStrokeWidth: Dp = 2.2.dp,
+
+    // ✅ 參考圖框線偏灰：用白色 + alpha 做出淡灰
+    frameAlpha: Float = 0.55f,
+
+    // ＋號大小與線寬（你說要更大一點）
+    plusSizeRatio: Float = 0.62f,
+    plusStrokeWidth: Dp = 1.0.dp,
+
+    // 顏色：背景你是黑，所以框/加號是白系
+    color: Color = Color.White
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val d = minOf(w, h)
+
+        // === 框尺寸 ===
+        val frameSize = d * frameRatio
+        val left = (w - frameSize) / 2f
+        val top = (h - frameSize) / 2f
+        val right = left + frameSize
+        val bottom = top + frameSize
+
+        val cornerLen = frameSize * cornerLenRatio
+        val radius = (cornerLen * cornerRoundness).coerceIn(0f, cornerLen)
+
+        val frameStroke = Stroke(
+            width = frameStrokeWidth.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        val frameColor = color.copy(alpha = frameAlpha)
+
+        fun drawCornerPath(path: Path) {
+            drawPath(
+                path = path,
+                color = frameColor,
+                style = frameStroke
+            )
+        }
+
+        // ===== 左上（水平 -> 圓弧 -> 垂直）=====
+        drawCornerPath(
+            Path().apply {
+                moveTo(left + cornerLen, top)
+                lineTo(left + radius, top)
+                quadraticBezierTo(left, top, left, top + radius)  // ✅ 大圓弧
+                lineTo(left, top + cornerLen)
+            }
+        )
+
+        // ===== 右上 =====
+        drawCornerPath(
+            Path().apply {
+                moveTo(right - cornerLen, top)
+                lineTo(right - radius, top)
+                quadraticBezierTo(right, top, right, top + radius)
+                lineTo(right, top + cornerLen)
+            }
+        )
+
+        // ===== 左下 =====
+        drawCornerPath(
+            Path().apply {
+                moveTo(left, bottom - cornerLen)
+                lineTo(left, bottom - radius)
+                quadraticBezierTo(left, bottom, left + radius, bottom)
+                lineTo(left + cornerLen, bottom)
+            }
+        )
+
+        // ===== 右下 =====
+        drawCornerPath(
+            Path().apply {
+                moveTo(right - cornerLen, bottom)
+                lineTo(right - radius, bottom)
+                quadraticBezierTo(right, bottom, right, bottom - radius)
+                lineTo(right, bottom - cornerLen)
+            }
+        )
+
+        // ===== 中間 ＋ =====
+        val cx = w / 2f
+        val cy = h / 2f
+        val plusLen = frameSize * plusSizeRatio
+        val plusStrokePx = plusStrokeWidth.toPx()
+
+        // 橫線
+        drawLine(
+            color = color,
+            start = Offset(cx - plusLen / 2f, cy),
+            end = Offset(cx + plusLen / 2f, cy),
+            strokeWidth = plusStrokePx,
+            cap = StrokeCap.Round
+        )
+        // 直線
+        drawLine(
+            color = color,
+            start = Offset(cx, cy - plusLen / 2f),
+            end = Offset(cx, cy + plusLen / 2f),
+            strokeWidth = plusStrokePx,
+            cap = StrokeCap.Round
+        )
+    }
+}
+@Composable
+fun ScanFab(onClick: () -> Unit) {
+    FloatingActionButton(
+        onClick = onClick,
+        shape = CircleShape,
+        containerColor = Color(0xFF111114), // 黑底
+        contentColor = Color.White,
+        elevation = FloatingActionButtonDefaults.elevation(
+            defaultElevation = 6.dp,
+            pressedElevation = 8.dp
+        ),
+        modifier = Modifier
+            .size(68.dp)
+            .offset(x = 6.dp, y = 6.dp)   // ✅ 往右 + 往下
+    ) {
+        // 參考圖內部 icon 大概佔 FAB 的一半多一點
+        ScanCameraIcon(
+            modifier = Modifier.size(45.dp),
+            frameRatio = 0.74f,
+            cornerLenRatio = 0.28f,
+            cornerRoundness = 0.6f,
+            frameStrokeWidth = 1.6.dp,
+            frameAlpha = 0.55f,
+            plusSizeRatio = 0.49f,     // 你要更大就加這個
+            plusStrokeWidth = 2.0.dp
+        )
+    }
 }
