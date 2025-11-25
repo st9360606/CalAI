@@ -578,8 +578,7 @@ private fun TwoPagePager(
     }
 }
 
-// 1. HomeTab：改成 Workout / Daily
-enum class HomeTab { Home, Progress, Workout, Daily, Personal }
+enum class HomeTab { Home, Progress, Workout, Fasting, Personal }
 
 // 2. BottomBar：文字與點擊目標更新成 Workout / Daily
 @Composable
@@ -587,12 +586,9 @@ private fun BottomBar(
     current: HomeTab,
     onOpenTab: (HomeTab) -> Unit
 ) {
-    // ✔️ 改為更中性的淺灰白
     val barSurface = Color(0xFFF5F5F5)
-
     val selected = Color(0xFF111114)
     val unselected = Color(0xFF9CA3AF)
-
     Column(
         modifier = Modifier.background(barSurface)
     ) {
@@ -653,9 +649,9 @@ private fun BottomBar(
             )
 
             NavigationBarItem(
-                selected = current == HomeTab.Daily,
-                onClick = { onOpenTab(HomeTab.Daily) },
-                label = { Text("Daily") },
+                selected = current == HomeTab.Fasting,
+                onClick = { onOpenTab(HomeTab.Fasting) },
+                label = { Text("Fasting") },
                 icon = { Icon(Icons.Filled.AccessTime, null) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = selected,

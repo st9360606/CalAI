@@ -251,7 +251,7 @@ fun FastingPlansScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = format12hEn(state.start),
+                            text = format24h(state.start),
                             fontSize = 21.sp,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 color = Color.Black.copy(alpha = 0.8f)
@@ -299,7 +299,7 @@ fun FastingPlansScreen(
                         contentAlignment = Alignment.Center            // ⭐ 文字絕對置中
                     ) {
                         Text(
-                            text = format12hEn(state.end),
+                            text = format24h(state.end),
                             fontSize = 21.sp,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 color = Color.Black.copy(alpha = 0.6f)
@@ -566,9 +566,10 @@ private fun from12h(hour12: Int, minute: Int, isAm: Boolean): LocalTime {
     }
     return LocalTime.of(h, minute)
 }
-private fun format12hEn(t: LocalTime): String {
-    val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH)
-    return t.format(formatter)   // → 01:05 AM, 08:30 PM ...
+private fun format24h(t: LocalTime): String {
+    // 固定 24 小時顯示：00:00 ~ 23:59
+    val formatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
+    return t.format(formatter)
 }
 
 private val IOS_TEXT = Color(0xFF1C1C1E)
@@ -581,30 +582,25 @@ private fun CupertinoWheelTimePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalTime) -> Unit
 ) {
-    // 初始值：轉成 12h + AM/PM
-    val (initHour12, initMinute, initIsAm) = remember(initial) { to12hTuple(initial) }
-    var hour by rememberSaveable(initial) { mutableStateOf(initHour12) }
-    var minute by rememberSaveable(initial) { mutableStateOf(initMinute) }
-    var isAm by rememberSaveable(initial) { mutableStateOf(initIsAm) }
+    // ✅ 24h 初始值
+    var hour by rememberSaveable(initial) { mutableStateOf(initial.hour) }     // 0..23
+    var minute by rememberSaveable(initial) { mutableStateOf(initial.minute) } // 0..59
 
-    // 跟 WeighingDateSheet 一樣：禁止滑動關閉，只能靠 Cancel 關
+    // ✅ 禁止滑動/點外面關閉：只能 Cancel
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
-        confirmValueChange = { target ->
-            target != SheetValue.Hidden   // 不允許進到 Hidden
-        }
+        confirmValueChange = { target -> target != SheetValue.Hidden }
     )
 
     ModalBottomSheet(
-        // 不處理外部 dismiss：滑動 / 點外面 / 返回鍵都不會關，只能靠 Cancel
-        onDismissRequest = { /* 故意留空，讓 Cancel 成為唯一出口 */ },
+        onDismissRequest = { /* 故意留空：只能按 Cancel */ },
         sheetState = sheetState,
         containerColor = Color(0xFFF5F5F5)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 520.dp) // ⬆️ 比原本 420.dp 再高一點
+                .heightIn(min = 520.dp)
                 .padding(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -630,61 +626,56 @@ private fun CupertinoWheelTimePickerDialog(
 
             Spacer(Modifier.height(22.dp))
 
-            // ===== 轉盤本體 =====
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .width(300.dp)
-                        .height(260.dp),          // ⬆️ 原本 220.dp，轉盤再大一點
+                        .height(260.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     SelectionBandBehind()
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        // Hour 01..12（無限循環，帶前導 0）
+                        // ✅ Hour 00..23（無限循環）
                         WheelColumn(
-                            values = (1..12).map { "%02d".format(it) },   // 👈 改這行：01, 02, ..., 12
-                            startIndex = hour - 1,
-                            columnWidth = 96.dp,
-                            onSnapped = { index ->
-                                hour = index + 1                           // 內部仍然用 1..12，不受顯示格式影響
-                            },
+                            values = (0..23).map { "%02d".format(it) },
+                            startIndex = hour,                 // 0..23
+                            columnWidth = 120.dp,
+                            onSnapped = { idx -> hour = idx }, // idx 0..23
                             infinite = true,
                             selectedFontSize = 26.sp,
                             unselectedFontSize = 19.sp
                         )
-                        Spacer(Modifier.width(8.dp))
 
-                        // Minute 00..59（無限循環）
+                        // ✅ 中間放「:」
+                        Box(
+                            modifier = Modifier.width(22.dp), // 想更寬就調 20~28.dp
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = ":",
+                                fontSize = 26.sp, // 建議跟 selectedFontSize 一樣
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF1C1C1E)
+                            )
+                        }
+
+                        // ✅ Minute 00..59（無限循環）
                         WheelColumn(
                             values = (0..59).map { "%02d".format(it) },
                             startIndex = minute,
-                            columnWidth = 96.dp,
-                            onSnapped = { minute = it },
+                            columnWidth = 120.dp,
+                            onSnapped = { idx -> minute = idx },
                             infinite = true,
                             selectedFontSize = 26.sp,
                             unselectedFontSize = 19.sp
-                        )
-                        Spacer(Modifier.width(8.dp))
-
-                        // AM / PM（非無限）
-                        WheelColumn(
-                            values = listOf("AM", "PM"),
-                            startIndex = if (isAm) 0 else 1,
-                            columnWidth = 96.dp,
-                            onSnapped = { isAm = (it == 0) },
-                            infinite = false,
-                            selectedFontSize = 22.sp,
-                            unselectedFontSize = 16.sp,
-                            selectedFontWeight = FontWeight.SemiBold,
-                            unselectedFontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -692,16 +683,13 @@ private fun CupertinoWheelTimePickerDialog(
 
             Spacer(Modifier.height(30.dp))
 
-            // ===== Save / Cancel：改成上下排列 =====
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Save：在上面
                 Button(
                     onClick = {
-                        val picked = from12h(hour, minute, isAm)
-                        onConfirm(picked)
+                        onConfirm(LocalTime.of(hour, minute)) // ✅ 24h 回傳
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -711,13 +699,10 @@ private fun CupertinoWheelTimePickerDialog(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
-                ) {
-                    Text("Save", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                }
+                ) { androidx.compose.material3.Text("Save", fontSize = 16.sp) }
 
-                // Cancel：在下面
                 OutlinedButton(
-                    onClick = { onDismiss() },   // 👈 唯一真正會關閉 Sheet 的動作
+                    onClick = { onDismiss() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(55.dp),
@@ -727,13 +712,7 @@ private fun CupertinoWheelTimePickerDialog(
                         containerColor = Color(0xFFE1E4EA),
                         contentColor = Color(0xFF111114)
                     )
-                ) {
-                    Text(
-                        text = "Cancel",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                ) { androidx.compose.material3.Text("Cancel", fontSize = 16.sp) }
             }
 
             Spacer(Modifier.height(8.dp))

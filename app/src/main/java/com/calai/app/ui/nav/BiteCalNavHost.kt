@@ -552,34 +552,26 @@ fun BiteCalNavHost(
 
         composable(Routes.HOME) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-
             val vm: HomeViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-
             val fastingVm: FastingPlanViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-
             val waterVm: WaterViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-
-            // 與 Home 共用的 Workout VM（維持原本共享當天數據）
             val workoutVm: WorkoutViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-
-            // ★ 新增：與 HOME 綁同一個 backStackEntry 的 WeightViewModel
             val weightVm: WeightViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-
             HomeScreen(
                 vm = vm,
                 waterVm = waterVm,
@@ -598,8 +590,6 @@ fun BiteCalNavHost(
                         restoreState = true
                     }
                 },
-
-                // ★ 這裡改成：點 Workout 分頁 → 跳到 ActivityHistoryScreen
                 onOpenTab = { tab ->
                     when (tab) {
                         HomeTab.Home -> Unit
@@ -608,11 +598,10 @@ fun BiteCalNavHost(
                             restoreState = true
                         }
                         HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) {
-                            // 保留 HOME 在 back stack，返回鍵回首頁
                             launchSingleTop = true
                             restoreState = true
                         }
-                        HomeTab.Daily -> nav.navigate(Routes.DAILY) {
+                        HomeTab.Fasting -> nav.navigate(Routes.FASTING) {
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -622,23 +611,19 @@ fun BiteCalNavHost(
                         }
                     }
                 },
-
                 onOpenFastingPlans = {
                     nav.navigate(Routes.FASTING) {
                         launchSingleTop = true
                         restoreState = true
                     }
                 },
-
-                // 仍保留：從首頁卡片「查看更多」到完整歷史列表
                 onOpenActivityHistory = {
                     nav.navigate(Routes.WORKOUT_HISTORY) {
                         launchSingleTop = true
                         restoreState = true
                     }
                 },
-                // ====== ★ Weight 相關 ======
-                onOpenWeight = {                      // 整張卡 → 進 Weight 主畫面（維持原行為）
+                onOpenWeight = {
                     nav.navigate(Routes.WEIGHT) {
                         launchSingleTop = true
                         restoreState = true
