@@ -91,9 +91,11 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     val goalLbs = ui.goalLbs   // ★ DB target_weight_lbs
 
     // TO TARGET：還是用 kg 為基準算差值（顯示時再依單位轉）
-    val gainedText = formatDeltaGoalMinusCurrent(
+    val gainedText = formatDeltaGoalMinusCurrentFromDb(
         goalKg = goalKg,
+        goalLbs = goalLbs,
         currentKg = currentKg,
+        currentLbs = currentLbs,
         unit = unit,
         lbsAsInt = false
     )
@@ -1784,6 +1786,52 @@ private fun buildCatmullRomPath(
     return path
 }
 
+/**
+ * TO TARGET 專用（修正版）：
+ * - KG 模式：用 goalKg - currentKg
+ * - LBS 模式：優先用 DB 的 goalLbs - currentLbs（避免 kg→lbs 誤差）
+ *   若 lbs 任何一個為 null，才 fallback 用 kg 差值轉 lbs
+ */
+fun formatDeltaGoalMinusCurrentFromDb(
+    goalKg: Double?,
+    goalLbs: Double?,
+    currentKg: Double?,
+    currentLbs: Double?,
+    unit: UserProfileStore.WeightUnit,
+    lbsAsInt: Boolean
+): String {
+    return when (unit) {
+        UserProfileStore.WeightUnit.KG -> {
+            if (goalKg == null || currentKg == null) return "—"
+            val diffKg = goalKg - currentKg
+            val sign = if (diffKg >= 0) "+" else "−"
+            val absKg = abs(diffKg)
+            String.format(Locale.US, "%s%.1f kg", sign, absKg)
+        }
+
+        UserProfileStore.WeightUnit.LBS -> {
+            val diffLbs: Double? =
+                if (goalLbs != null && currentLbs != null) {
+                    goalLbs - currentLbs // ✅ 核心：直接用 DB lbs 算
+                } else if (goalKg != null && currentKg != null) {
+                    kgToLbs1(goalKg - currentKg) // fallback（避免崩）
+                } else null
+
+            if (diffLbs == null) return "—"
+
+            val sign = if (diffLbs >= 0) "+" else "−"
+            val absLbs = abs(diffLbs)
+
+            val core = if (lbsAsInt) {
+                absLbs.toInt().toString()
+            } else {
+                String.format(Locale.US, "%.1f", absLbs)
+            }
+
+            "$sign$core lbs"
+        }
+    }
+}
 
 fun formatWeightFromDb(
     kg: Double?,
