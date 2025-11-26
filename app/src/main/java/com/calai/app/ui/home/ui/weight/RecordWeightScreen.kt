@@ -941,7 +941,7 @@ private fun PhotoPickerBlock(
                 )
             } else {
                 Icon(
-                    painter = painterResource(id = R.drawable.weight_image),
+                    painter = painterResource(id = R.drawable.weight_image_2),
                     contentDescription = "Add weight photo",
                     tint = Color(0xFF9AA3AE),
                     modifier = Modifier.size(44.dp)

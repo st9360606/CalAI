@@ -52,7 +52,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import kotlin.math.roundToInt
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -69,6 +68,7 @@ import kotlin.math.max
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.text.style.TextAlign
 
 private const val X_TICK_COUNT = 5
 
@@ -1196,7 +1196,10 @@ private fun GoalProgressChart(
                                         drawPath(
                                             path = lp,
                                             color = Color(0xFF111114),
-                                            style = Stroke(width = baseStroke, cap = StrokeCap.Round)
+                                            style = Stroke(
+                                                width = baseStroke,
+                                                cap = StrokeCap.Round
+                                            )
                                         )
                                     }
 
@@ -1229,7 +1232,10 @@ private fun GoalProgressChart(
                                             drawPath(
                                                 path = linePathAll,
                                                 color = highlightGreen,
-                                                style = Stroke(width = baseStroke, cap = StrokeCap.Round)
+                                                style = Stroke(
+                                                    width = baseStroke,
+                                                    cap = StrokeCap.Round
+                                                )
                                             )
                                         }
 
@@ -1486,7 +1492,6 @@ fun HistoryRow(
     val mainText = Color(0xFF111114)
     val subText = Color.Black.copy(alpha = 0.45f)
 
-    // 日期（走系統 Locale）
     val dateText = runCatching {
         val d = LocalDate.parse(item.logDate)
         DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
@@ -1501,9 +1506,7 @@ fun HistoryRow(
     )
 
     val delta = computeDelta(current = item, previous = previous, unit = unit)
-
     val (trend, deltaColor) = classifyTrendAndColor(delta)
-
     val deltaText = delta?.let { formatSigned1(it, unit) } ?: "—"
 
     val (chipText, chipBg, chipFg) = when (trend) {
@@ -1515,7 +1518,7 @@ fun HistoryRow(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 96.dp)              // ★ Row 高度變大
+            .heightIn(min = 85.dp)
             .border(1.dp, border, shape),
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -1523,92 +1526,60 @@ fun HistoryRow(
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
-            // 左側圖片（變大）
+            // 左側圖片
             val imageShape = RoundedCornerShape(14.dp)
             if (item.photoUrl != null) {
                 AsyncImage(
                     model = item.photoUrl,
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(58.dp)           // ★ Image 變大
-                        .clip(imageShape),
+                    modifier = Modifier.size(58.dp).clip(imageShape),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Image(
                     painter = painterResource(R.drawable.weight_image),
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(58.dp)           // ★ Image 變大
-                        .clip(imageShape),
+                    modifier = Modifier.size(58.dp).clip(imageShape),
                     contentScale = ContentScale.Crop
                 )
             }
 
             Spacer(Modifier.width(12.dp))
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
+            // ✅ 一層就好：左欄(WEIGHT+DATE) + 右欄(CHANGE+CHIP)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 上排：WEIGHT / CHANGE
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                // 左：WEIGHT + 日期（你要的 dateText 放這裡）
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            text = "WEIGHT",
-                            fontSize = 11.sp,
-                            letterSpacing = 0.6.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = label,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                    Text(
+                        text = "WEIGHT",
+                        fontSize = 11.sp,
+                        letterSpacing = 0.6.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
 
-                        // ★ 當前體重數字往下移一點點
-                        Text(
-                            text = weightText,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = mainText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.offset(y = 2.dp)
-                        )
-                    }
+                    Text(
+                        text = weightText,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = mainText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.offset(y = 5.dp)
+                    )
 
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(Modifier.height(8.dp))
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "CHANGE",
-                            fontSize = 11.sp,
-                            letterSpacing = 0.6.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = label
-                        )
-                        Text(
-                            text = deltaText,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = deltaColor     // ★ 正紅負綠持平藍
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(8.dp)) // ★ 修正：不要用 padding 當 Spacer
-
-                // 下排：日期 + 趨勢 chip
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
                     Text(
                         text = dateText,
                         fontSize = 12.sp,
@@ -1616,15 +1587,63 @@ fun HistoryRow(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-
-                    MiniChip(
-                        text = chipText,
-                        bg = chipBg,
-                        fg = chipFg
-                    )
                 }
+
+                Spacer(Modifier.width(12.dp))
+
+                // 右：CHANGE + Δ + chip（不再放 dateText）
+                RightMetaColumn(
+                    labelColor = label,
+                    deltaColor = deltaColor,
+                    deltaText = deltaText,
+                    chipText = chipText,
+                    chipBg = chipBg,
+                    chipFg = chipFg
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun RightMetaColumn(
+    labelColor: Color,
+    deltaColor: Color,
+    deltaText: String,
+    chipText: String,
+    chipBg: Color,
+    chipFg: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.widthIn(min = 88.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Text(
+            text = "CHANGE",
+            fontSize = 11.sp,
+            letterSpacing = 0.6.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = labelColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = deltaText,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = deltaColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.offset(y = 5.dp)
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        MiniChip(text = chipText, bg = chipBg, fg = chipFg)
     }
 }
 
