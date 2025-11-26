@@ -31,11 +31,12 @@ class WeightViewModel @Inject constructor(
         val current: Double? = null,    // kg
         val goalLbs: Double? = null,
         val currentLbs: Double? = null,
+
         // --- Profile（本機快照），用來當最後一層 fallback ---
         val profileWeightKg: Double? = null,
-        val profileWeightLbs: Double? = null,           // ★ 新增
+        val profileWeightLbs: Double? = null,
         val profileTargetWeightKg: Double? = null,
-        val profileTargetWeightLbs: Double? = null,     // ★ 新增
+        val profileTargetWeightLbs: Double? = null,
 
         val achievedPercent: Double = 0.0,
         val series: List<WeightItemDto> = emptyList(),
@@ -50,6 +51,20 @@ class WeightViewModel @Inject constructor(
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
     private var initialized = false
+
+    // =========================
+    // ★ FIX：history7 排序穩定化（新→舊）
+    // =========================
+    private fun parseDateOrMin(s: String): LocalDate =
+        runCatching { LocalDate.parse(s) }.getOrElse { LocalDate.MIN }
+
+    private fun sortHistoryDescStable(list: List<WeightItemDto>): List<WeightItemDto> {
+        // 1) 用 LocalDate 排序（避免字串/空值/例外）
+        // 2) 最後 toList()：保證是新 instance，避免 Compose/remember 因為引用或結構相同而不重算
+        return list
+            .sortedWith(compareByDescending<WeightItemDto> { parseDateOrMin(it.logDate) })
+            .toList()
+    }
 
     init {
         // ① 啟動：只讀一次目前偏好（若為 null，UI 繼續顯示預設 LBS），不做任何寫入
@@ -74,7 +89,7 @@ class WeightViewModel @Inject constructor(
             store.weightKgFlow.distinctUntilChanged()
                 .collect { w -> _ui.update { it.copy(profileWeightKg = w?.toDouble()) } }
         }
-        // ★ 監聽 lbs
+        // 監聽 lbs
         viewModelScope.launch {
             store.weightLbsFlow.distinctUntilChanged()
                 .collect { w -> _ui.update { it.copy(profileWeightLbs = w?.toDouble()) } }
@@ -84,12 +99,11 @@ class WeightViewModel @Inject constructor(
             store.targetWeightKgFlow.distinctUntilChanged()
                 .collect { t -> _ui.update { it.copy(profileTargetWeightKg = t?.toDouble()) } }
         }
-        // ★ 監聽 target lbs
+        // 監聽 target lbs
         viewModelScope.launch {
             store.targetWeightLbsFlow.distinctUntilChanged()
                 .collect { t -> _ui.update { it.copy(profileTargetWeightLbs = t?.toDouble()) } }
         }
-
     }
 
     fun initIfNeeded() {
@@ -97,11 +111,9 @@ class WeightViewModel @Inject constructor(
         initialized = true
         viewModelScope.launch {
             // 先試著補 baseline（失敗不擋流程）
-            runCatching {
-                repo.ensureBaseline()
-            }.onFailure { e ->
-                if (e is CancellationException) throw e
-            }
+            runCatching { repo.ensureBaseline() }
+                .onFailure { e -> if (e is CancellationException) throw e }
+
             // 再照你原本邏輯 refresh()
             refresh()
         }
@@ -114,7 +126,8 @@ class WeightViewModel @Inject constructor(
     }
 
     fun setRange(r: String) {
-        _ui.update { it.copy(range = r) }; refresh()
+        _ui.update { it.copy(range = r) }
+        refresh()
     }
 
     fun refresh() = viewModelScope.launch {
@@ -123,7 +136,10 @@ class WeightViewModel @Inject constructor(
 
             // 後端 summary + 最近 7 筆歷史
             val summary = repo.summary(range)
-            val history = repo.recent7()
+
+            // ★ FIX：recent7 回來後先做「穩定排序 新→舊」，並確保 new list instance
+            val history = sortHistoryDescStable(repo.recent7()).take(7)
+
             val snapshot = _ui.value
             val today = LocalDate.now()
 
@@ -132,8 +148,9 @@ class WeightViewModel @Inject constructor(
                 series = summary.series,
                 today = today
             )
-            // 2) 目標體重：Summary > Profile snapshot
-            val effectiveGoalKg  = summary.goalKg
+
+            // 2) 目標體重：Summary
+            val effectiveGoalKg = summary.goalKg
             val effectiveGoalLbs = summary.goalLbs
 
             // 3) CURRENT WEIGHT：
@@ -161,29 +178,27 @@ class WeightViewModel @Inject constructor(
 
             _ui.update { state ->
                 state.copy(
-                    goal       = effectiveGoalKg,
-                    goalLbs    = effectiveGoalLbs,
-                    current    = effectiveCurrentKg,
+                    goal = effectiveGoalKg,
+                    goalLbs = effectiveGoalLbs,
+                    current = effectiveCurrentKg,
                     currentLbs = effectiveCurrentLbs,
 
                     achievedPercent = summary.achievedPercent,
-                    series           = summary.series,          // weight_timeseries
-                    history7         = history,
+                    series = summary.series,          // weight_timeseries
+                    history7 = history,               // ★ FIX：這裡現在永遠是「新→舊」穩定排序
 
                     // ⬇️ 這個欄位名稱要跟你的 SummaryDto 一致
-                    // 如果你的 data class 是 firstWeightKgAllTime，就改那個名字
                     firstWeightAllTimeKg = summary.firstWeightKgAllTime,
+
                     // ★ 新增：優先拿後端 Summary，沒有才保留原本 DataStore 的值
-                    profileWeightKg  = summary.profileWeightKg ?: state.profileWeightKg,
+                    profileWeightKg = summary.profileWeightKg ?: state.profileWeightKg,
                     profileWeightLbs = summary.profileWeightLbs ?: state.profileWeightLbs,
                     error = null
                 )
             }
         }.onFailure { e ->
             if (e is CancellationException) return@onFailure
-            _ui.update { st ->
-                st.copy(error = e.message ?: "Unknown error")
-            }
+            _ui.update { st -> st.copy(error = e.message ?: "Unknown error") }
         }
     }
 
@@ -209,13 +224,13 @@ class WeightViewModel @Inject constructor(
                     // 1) 先合併 timeseries
                     val mergedSeries = (old.series + saved)
                         .distinctBy { it.logDate }
-                        .sortedBy { it.logDate }
+                        .sortedBy { it.logDate } // ISO yyyy-MM-dd 可用字串排序（你的既有邏輯保留）
 
                     // 2) 合併最近 7 筆歷史（畫列表用）
-                    val mergedHistory7 = (old.history7 + saved)
-                        .distinctBy { it.logDate }
-                        .sortedByDescending { it.logDate }
-                        .take(7)
+                    // ★ FIX：一律用同一套 LocalDate 排序（新→舊）+ toList()，杜絕順序飄移
+                    val mergedHistory7 = sortHistoryDescStable(
+                        (old.history7 + saved).distinctBy { it.logDate }
+                    ).take(7)
 
                     // 3) 使用同一套「CURRENT WEIGHT 選取規則」
                     val today = LocalDate.now()
@@ -235,19 +250,18 @@ class WeightViewModel @Inject constructor(
                             ?: old.profileWeightLbs
 
                     old.copy(
-                        current    = newCurrentKg,
+                        current = newCurrentKg,
                         currentLbs = newCurrentLbs,
-                        series     = mergedSeries,
-                        history7   = mergedHistory7,
-                        error      = null,              // ✅ 清掉錯誤
-                        // 這裡先不動 toastMessage，後面再統一設
+                        series = mergedSeries,
+                        history7 = mergedHistory7,  // ★ FIX：穩定排序後再塞回去
+                        error = null
                     )
                 }
 
                 // 再跟後端 summary 對齊（achievedPercent / firstWeightAllTimeKg 等）
                 refresh()
 
-                // ✅ 成功：讓 WeightScreen 顯示 SuccessTopToast("Saved successfully")
+                // 成功 toast
                 _ui.update {
                     it.copy(
                         toastMessage = "Saved successfully !",
@@ -257,8 +271,6 @@ class WeightViewModel @Inject constructor(
             }
             .onFailure { e ->
                 if (e is CancellationException) return@onFailure
-
-                // ✅ 失敗：讓 WeightScreen 顯示 ErrorTopToast("Save failed")
                 _ui.update { st ->
                     st.copy(
                         error = "Save failed",
@@ -267,7 +279,6 @@ class WeightViewModel @Inject constructor(
                 }
             }
             .also {
-                // ✅ 不論成功失敗都結束 saving 狀態
                 _ui.update { it.copy(saving = false) }
             }
     }
@@ -311,7 +322,6 @@ class WeightViewModel @Inject constructor(
      * 更新目標體重：
      * - value: 依 ui.unit 的數值（kg 或 lbs）
      * - unit : 當下 UI 選擇的 WeightUnit
-     * - onResult: 成功/失敗 callback，讓 UI 可以顯示錯誤或關閉頁面
      */
     fun updateTargetWeight(
         value: Double,
@@ -322,9 +332,7 @@ class WeightViewModel @Inject constructor(
             val res = profileRepo.updateTargetWeight(value, unit)
             res
                 .onSuccess {
-                    // 後端已同步 user_profiles.target_weight_kg / target_weight_lbs
                     runCatching { refresh() }
-                    // ★ 成功：讓 WeightScreen 顯示 SuccessTopToast("Saved successfully")
                     _ui.update {
                         it.copy(
                             toastMessage = "Target weight updated !",
@@ -334,7 +342,6 @@ class WeightViewModel @Inject constructor(
                     onResult(Result.success(Unit))
                 }
                 .onFailure { e ->
-                    // ★ 失敗：讓 WeightScreen 顯示 ErrorTopToast("Save failed")
                     _ui.update {
                         it.copy(
                             error = "Save failed",
@@ -345,5 +352,4 @@ class WeightViewModel @Inject constructor(
                 }
         }
     }
-
 }

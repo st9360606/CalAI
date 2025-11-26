@@ -1,8 +1,10 @@
 package com.calai.app.ui.home.ui.weight
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -21,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +47,8 @@ import com.calai.app.ui.home.ui.weight.components.WeightChartCard
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.remember
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +66,11 @@ fun WeightScreen(
     val error = ui.error
     val toast = ui.toastMessage
 
+    val historySorted = remember(ui.history7) {
+        ui.history7.sortedByDescending { dto ->
+            runCatching { LocalDate.parse(dto.logDate) }.getOrNull() ?: LocalDate.MIN
+        }
+    }
     // ★ 最外層 Box：用來疊 Scaffold + Top Toast
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -93,18 +103,18 @@ fun WeightScreen(
                         end = 16.dp,
                         bottom = 96.dp // ★ 為底部固定按鈕預留空間
                     ),
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Overview + Unit switch
                     item {
-                        androidx.compose.foundation.layout.Row(
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Overview",
-                                style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -145,7 +155,7 @@ fun WeightScreen(
                     item {
                         Text(
                             text = "History",
-                            style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -154,8 +164,13 @@ fun WeightScreen(
                     }
 
                     // History items
-                    items(ui.history7) { item ->
-                        HistoryRow(item, ui.unit)
+                    itemsIndexed(historySorted) { index, item ->
+                        val previous = historySorted.getOrNull(index + 1) // 因為是「新→舊」排序，下一個就是上一筆
+                        HistoryRow(
+                            item = item,
+                            unit = ui.unit,
+                            previous = previous
+                        )
                     }
                 }
             }

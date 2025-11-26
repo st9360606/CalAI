@@ -64,6 +64,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
 import com.calai.app.data.profile.repo.kgToLbs1
+import java.time.format.FormatStyle
 
 private const val X_TICK_COUNT = 5
 
@@ -1500,41 +1501,232 @@ fun MotivationBanner(
     }
 }
 
+private enum class TrendTag { LOSS, GAIN, STABLE }
+
 @Composable
-fun HistoryRow(item: WeightItemDto, unit: UserProfileStore.WeightUnit) {
-    Card {
+fun HistoryRow(
+    item: WeightItemDto,
+    unit: UserProfileStore.WeightUnit,
+    previous: WeightItemDto?,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(18.dp)
+    val border = Color(0xFFE2E5EA)
+    val label = Color.Black.copy(alpha = 0.55f)
+    val mainText = Color(0xFF111114)
+    val subText = Color.Black.copy(alpha = 0.45f)
+
+    // 日期（走系統 Locale）
+    val dateText = runCatching {
+        val d = LocalDate.parse(item.logDate)
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+            .withLocale(Locale.getDefault())
+            .format(d)
+    }.getOrElse { item.logDate }
+
+    val weightText = formatWeightFromDb(
+        kg = item.weightKg,
+        lbs = item.weightLbs,
+        unit = unit
+    )
+
+    val delta = computeDelta(current = item, previous = previous, unit = unit)
+
+    val (trend, deltaColor) = classifyTrendAndColor(delta)
+
+    val deltaText = delta?.let { formatSigned1(it, unit) } ?: "—"
+
+    val (chipText, chipBg, chipFg) = when (trend) {
+        TrendTag.LOSS -> Triple("LOSS", Color(0xFFEFF9F4), Color(0xFF12823B))
+        TrendTag.GAIN -> Triple("GAIN", Color(0xFFFEE2E2), Color(0xFFEF4444))
+        TrendTag.STABLE -> Triple("STABLE", Color(0xFFDBEAFE), Color(0xFF3B82F6))
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 96.dp)              // ★ Row 高度變大
+            .border(1.dp, border, shape),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
         Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // 左側圖片（變大）
+            val imageShape = RoundedCornerShape(14.dp)
             if (item.photoUrl != null) {
                 AsyncImage(
                     model = item.photoUrl,
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier
+                        .size(58.dp)           // ★ Image 變大
+                        .clip(imageShape),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Image(
                     painter = painterResource(R.drawable.weight_image),
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier
+                        .size(58.dp)           // ★ Image 變大
+                        .clip(imageShape),
+                    contentScale = ContentScale.Crop
                 )
             }
+
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = formatWeightFromDb(
-                        kg  = item.weightKg,
-                        lbs = item.weightLbs,   // ★ 直接吃 DB 欄位
-                        unit = unit
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                // 上排：WEIGHT / CHANGE
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = "WEIGHT",
+                            fontSize = 11.sp,
+                            letterSpacing = 0.6.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = label,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        // ★ 當前體重數字往下移一點點
+                        Text(
+                            text = weightText,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = mainText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.offset(y = 2.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "CHANGE",
+                            fontSize = 11.sp,
+                            letterSpacing = 0.6.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = label
+                        )
+                        Text(
+                            text = deltaText,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = deltaColor     // ★ 正紅負綠持平藍
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp)) // ★ 修正：不要用 padding 當 Spacer
+
+                // 下排：日期 + 趨勢 chip
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = dateText,
+                        fontSize = 12.sp,
+                        color = subText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                )
-                Text(item.logDate, color = Color.Gray)
+
+                    MiniChip(
+                        text = chipText,
+                        bg = chipBg,
+                        fg = chipFg
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun MiniChip(
+    text: String,
+    bg: Color,
+    fg: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bg)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = fg
+        )
+    }
+}
+
+/**
+ * delta 的單位：
+ * - KG：用 kg 差
+ * - LBS：優先用 DB lbs 差（兩邊都有），否則用 kg 差轉 lbs
+ */
+private fun computeDelta(
+    current: WeightItemDto,
+    previous: WeightItemDto?,
+    unit: UserProfileStore.WeightUnit
+): Double? {
+    if (previous == null) return null
+
+    return when (unit) {
+        UserProfileStore.WeightUnit.KG -> current.weightKg - previous.weightKg
+        UserProfileStore.WeightUnit.LBS -> {
+            val c = current.weightLbs
+            val p = previous.weightLbs
+            if (c != null && p != null) c - p else kgToLbs1(current.weightKg - previous.weightKg)
+        }
+    }
+}
+
+private fun formatSigned1(value: Double, unit: UserProfileStore.WeightUnit): String {
+    val sign = when {
+        value >  1e-6 -> "+"
+        value < -1e-6 -> "−"
+        else -> ""
+    }
+    val absV = abs(value)
+    val unitText = if (unit == UserProfileStore.WeightUnit.KG) "kg" else "lbs"
+    return String.format("%s%.1f %s", sign, absV, unitText)
+}
+
+/**
+ * 規則：
+ * - 正：紅 + GAIN
+ * - 負：綠 + LOSS
+ * - 0：藍 + STABLE
+ */
+private fun classifyTrendAndColor(delta: Double?): Pair<TrendTag, Color> {
+    if (delta == null) return TrendTag.STABLE to Color.Black.copy(alpha = 0.45f)
+
+    return when {
+        delta >  1e-6 -> TrendTag.GAIN to Color(0xFFEF4444)  // red-500
+        delta < -1e-6 -> TrendTag.LOSS to Color(0xFF22C55E)  // green-500
+        else -> TrendTag.STABLE to Color(0xFF3B82F6)         // blue-500
     }
 }
 
