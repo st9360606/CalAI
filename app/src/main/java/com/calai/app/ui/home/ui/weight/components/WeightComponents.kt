@@ -56,15 +56,18 @@ import kotlin.math.roundToInt
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextStyle
 import com.calai.app.data.profile.repo.kgToLbs1
 import java.time.format.FormatStyle
+import kotlin.math.max
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.rememberTextMeasurer
 
 private const val X_TICK_COUNT = 5
 
@@ -842,51 +845,33 @@ private fun buildYAxisLabels(
     return final.map { kg -> formatAxisWeightLabel(kg, unit) }
 }
 
-/** X 軸：最多 maxLabels 個日期，最左最右一定是目前 range 內的最舊 / 最新日期 */
+/** X 軸：從 minDate~maxDate 等分 maxLabels 個刻度（不依賴資料分佈） */
 private fun buildXAxisDates(
     dates: List<LocalDate>,
     maxLabels: Int
 ): List<LocalDate> {
-    if (dates.isEmpty()) return emptyList()
+    if (dates.isEmpty() || maxLabels <= 0) return emptyList()
 
-    // 1) 先去重 + 排序，取得這個 range 內的真實最小 / 最大日期
     val sortedDistinct = dates.distinct().sorted()
-    val count = sortedDistinct.size
+    val minDate = sortedDistinct.first()
+    val maxDate = sortedDistinct.last()
 
-    // 資料少於等於 maxLabels：全部拿來畫，最左 = 最舊，最右 = 最新
-    if (count <= maxLabels) return sortedDistinct
+    if (maxLabels == 1) return listOf(maxDate)
 
-    val minDate = sortedDistinct.first()   // 這個周期內最舊的創建日期
-    val maxDate = sortedDistinct.last()    // 這個周期內最新的創建日期
+    val spanDays = (maxDate.toEpochDay() - minDate.toEpochDay()).coerceAtLeast(0L)
 
-    val result = mutableListOf<LocalDate>()
-    result += minDate                      // ★ 第 1 刻度：鎖死在最舊日期
-
-    // 2) 中間刻度：在 [minDate, maxDate] 中平均取樣 index
-    //    例如 maxLabels = 4 時：slot = 1, 2 → 大約 1/3, 2/3 處
-    if (maxLabels > 2) {
-        val slotCount = maxLabels - 1      // min 與 max 之間切成幾段
-        val step = (count - 1).toFloat() / slotCount.toFloat()
-
-        for (slot in 1 until maxLabels - 1) {
-            // 理想中的 index
-            val rawIndex = (slot * step).roundToInt()
-
-            // 避免又取到 0 或最後一個 → 強制夾在 [1, count-2]
-            val index = rawIndex.coerceIn(1, count - 2)
-
-            val d = sortedDistinct[index]
-            if (d !in result) {
-                result += d
-            }
-        }
+    // ✅ 範圍太短：直接每天列出（<= maxLabels 個，不會重複）
+    // 例：只有 11/24~11/26，硬切 5 份只會得到重複日期，反而難看。
+    if (spanDays <= (maxLabels - 1).toLong()) {
+        return (0L..spanDays).map { d -> minDate.plusDays(d) }
     }
 
-    result += maxDate                      // ★ 最後一個刻度：鎖死在最新日期
-
-    // 不強求一定要剛好 maxLabels 個，重點是：第一個 = minDate、最後一個 = maxDate
-    // 以及所有日期都在 [minDate, maxDate] 之內。
-    return result
+    // ✅ 範圍夠長：平均取樣 maxLabels 個日期，首尾必定是 min/max
+    val lastIndex = maxLabels - 1
+    return (0..lastIndex).map { i ->
+        val offset = (i.toLong() * spanDays) / lastIndex.toLong()
+        minDate.plusDays(offset)
+    }.distinct()
 }
 
 private fun formatAxisWeightLabel(
@@ -972,10 +957,21 @@ private fun GoalProgressChart(
     var activeIndex by remember(chartData.points.size) {
         mutableStateOf<Int?>(null)
     }
+
+    // ✅ 新增：固定用的 index
+    var pinnedIndex by remember(chartData.points.size) { mutableStateOf<Int?>(null) }
+
     // ★ 修正 2：如果你希望切換 kg/lbs 時順便把 tooltip 收掉，就用 LaunchedEffect 重設 value
+    // 切換單位：我建議 pinned/active 都清掉（避免顯示跳動）
     LaunchedEffect(unit) {
         activeIndex = null
+        pinnedIndex = null
     }
+
+    // 小工具：目前應顯示哪個 index
+    val shownIndex: Int? = activeIndex ?: pinnedIndex
+
+
     // ★ 圖表實際寬高（px）
     var chartWidthPx by remember { mutableStateOf(0f) }
     var chartHeightPx by remember { mutableStateOf(0f) }
@@ -992,27 +988,16 @@ private fun GoalProgressChart(
     val topPaddingPx = with(density) { topPaddingDp.toPx() }
     val bottomPaddingPx = with(density) { bottomPaddingDp.toPx() }
 
-    // ★ 將手指 x 座標轉成「第幾個資料點」
-    fun updateActiveIndex(rawX: Float) {
-        val pointCount = chartData.points.size
-        if (pointCount == 0 || chartWidthPx <= 0f) return
-
-        if (pointCount == 1) {
-            activeIndex = 0
-            return
-        }
-
-        val minX = startPaddingPx
-        val maxX = chartWidthPx - endPaddingPx
-        val effectiveWidth = (maxX - minX).coerceAtLeast(1f)
-
-        val clamped = rawX.coerceIn(minX, maxX)
-        val t = (clamped - minX) / effectiveWidth   // 0f..1f
-        val segments = pointCount - 1
-        val idx = (t * segments.toFloat()).roundToInt().coerceIn(0, segments)
-
-        activeIndex = idx
+    val pointCentersPx = remember(chartData.points, chartWidthPx, startPaddingPx, endPaddingPx) {
+        buildPointCentersPx(
+            pointsXNorm = chartData.points.map { it.x },
+            chartWidthPx = chartWidthPx,
+            startPaddingPx = startPaddingPx,
+            endPaddingPx = endPaddingPx
+        )
     }
+
+    fun pickIndex(rawX: Float): Int? = nearestIndexByX(pointCentersPx, rawX)
 
     Column(modifier = modifier) {
         Box(
@@ -1025,18 +1010,57 @@ private fun GoalProgressChart(
                     chartHeightPx = it.height.toFloat()
                 }
                 // ★ 低階手勢：一碰就生效，然後可以拖曳
-                .pointerInput(chartData.points.size) {
+                .pointerInput(chartData.points.size, chartWidthPx) {
                     awaitEachGesture {
-                        // ❶ TAP：第一次觸碰立即生效
                         val down = awaitFirstDown(requireUnconsumed = false)
-                        updateActiveIndex(down.position.x)
+                        val touchSlop = viewConfiguration.touchSlop
 
-                        // ❷ DRAG：持續更新
-                        drag(down.id) { change ->
-                            updateActiveIndex(change.position.x)
-                            change.consume()
+                        val downX = down.position.x
+                        val downY = down.position.y
+
+                        val downIdx = pickIndex(downX) ?: return@awaitEachGesture
+
+                        // 一碰就顯示（scrub/tooltip 立即出現）
+                        activeIndex = downIdx
+
+                        var dragging = false
+                        var cancelledByVertical = false
+
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: continue
+
+                            // ✅ 相容所有版本：UP 或 CANCEL 最終都會讓 pressed = false
+                            if (!change.pressed) {
+                                break
+                            }
+
+                            val dx = change.position.x - downX
+                            val dy = change.position.y - downY
+
+                            if (!dragging) {
+                                val touchSlop = viewConfiguration.touchSlop
+                                val dist2 = dx * dx + dy * dy
+                                if (dist2 >= touchSlop * touchSlop) {
+                                    if (kotlin.math.abs(dx) >= kotlin.math.abs(dy)) {
+                                        dragging = true
+                                    } else {
+                                        cancelledByVertical = true
+                                        break
+                                    }
+                                }
+                            }
+
+                            if (dragging) {
+                                pickIndex(change.position.x)?.let { activeIndex = it }
+                                change.consume()
+                            }
                         }
-                        // ❸ UP：放開就清除 tooltip
+                        if (!cancelledByVertical && !dragging) {
+                            // Tap：切換 pin / unpin
+                            pinnedIndex = if (pinnedIndex == downIdx) null else downIdx
+                        }
+                        // 手離開：active 永遠收掉；顯示與否交給 pinnedIndex
                         activeIndex = null
                     }
                 }
@@ -1110,7 +1134,7 @@ private fun GoalProgressChart(
                         )
 
                         // 是否正在被按壓
-                        val isActive = (activeIndex != null && activeIndex == 0)
+                        val isActive = (shownIndex == 0)
 
                         // 2) 橫向基線：未按壓 = 黑色；按壓 = 綠色
                         drawLine(
@@ -1125,7 +1149,7 @@ private fun GoalProgressChart(
                             // ★ 按壓時再加「垂直綠線 + 綠色圓點 + 光暈」
                             val circleOuter = 5.dp.toPx()   // 主綠圓半徑
                             val circleInner = 3.dp.toPx()   // 白心半徑
-                            val circleHalo  = 8.dp.toPx()   // 淡綠光暈半徑
+                            val circleHalo = 8.dp.toPx()   // 淡綠光暈半徑
 
                             // 垂直綠線（蓋過原本的粗直線）
                             drawLine(
@@ -1191,17 +1215,17 @@ private fun GoalProgressChart(
                             style = Stroke(width = baseStroke, cap = StrokeCap.Round)
                         )
 
-                        val idx = activeIndex
+                        val idx = shownIndex
                         if (idx != null && idx in xsAll.indices) {
                             val xSel = xsAll[idx]
                             val ySel = ysAll[idx]
 
                             val circleOuter = 5.dp.toPx()   // 主綠圓半徑
                             val circleInner = 3.dp.toPx()   // 白心半徑
-                            val circleHalo  = 8.dp.toPx()   // 淡綠光暈半徑
+                            val circleHalo = 8.dp.toPx()   // 淡綠光暈半徑
 
                             // **補償值**：用於左 / 右半段 clip，不動線段分割邏輯
-                            val leftClip  = -halfStroke - 2f
+                            val leftClip = -halfStroke - 2f
                             val rightClip = w + halfStroke + 2f
 
                             // 左半段綠色覆蓋
@@ -1216,9 +1240,9 @@ private fun GoalProgressChart(
                                 drawPath(
                                     path = areaPathAll,
                                     brush = Brush.verticalGradient(
-                                        0f    to highlightGreen.copy(alpha = 0.24f),
+                                        0f to highlightGreen.copy(alpha = 0.24f),
                                         0.55f to highlightGreen.copy(alpha = 0.16f),
-                                        1f    to Color.Transparent
+                                        1f to Color.Transparent
                                     )
                                 )
                                 drawPath(
@@ -1240,9 +1264,9 @@ private fun GoalProgressChart(
                                 drawPath(
                                     path = areaPathAll,
                                     brush = Brush.verticalGradient(
-                                        0f    to Color(0xFF111114).copy(alpha = 0.16f),
+                                        0f to Color(0xFF111114).copy(alpha = 0.16f),
                                         0.55f to Color(0xFF111114).copy(alpha = 0.10f),
-                                        1f    to Color.Transparent
+                                        1f to Color.Transparent
                                     )
                                 )
                             }
@@ -1293,7 +1317,7 @@ private fun GoalProgressChart(
             }
 
             // Tooltip 疊在上面（放在綠圓的上方）
-            val idx = activeIndex
+            val idx = shownIndex
             if (
                 idx != null &&
                 idx in chartData.dates.indices &&
@@ -1351,15 +1375,20 @@ private fun GoalProgressChart(
         Spacer(Modifier.height(6.dp))
 
         // 只有當「資料點日期剛好存在於 axisDates」時，才加粗對應的 xLabel
-        val selectedLabelIndex: Int? = activeIndex?.let { pi ->
-            if (pi !in chartData.dates.indices) {
-                null
-            } else {
-                val targetDate = chartData.dates[pi]
-                chartData.axisDates.indexOfFirst { it == targetDate }
-                    .takeIf { it >= 0 }
+        val selectedLabelIndex: Int? = shownIndex
+            ?.takeIf { it in chartData.dates.indices }
+            ?.let { pi ->
+                val target = chartData.dates[pi]
+                if (chartData.axisDates.isEmpty()) return@let null
+
+                chartData.axisDates.withIndex()
+                    .minByOrNull { (_, d) -> kotlin.math.abs(d.toEpochDay() - target.toEpochDay()) }
+                    ?.index
             }
-        }
+
+
+        // 在 GoalProgressChart 裡面（靠近畫 X 軸 labels 的地方），先準備 TextMeasurer
+        val textMeasurer = rememberTextMeasurer()
 
         Box(
             modifier = Modifier
@@ -1367,102 +1396,94 @@ private fun GoalProgressChart(
                 .padding(start = startPaddingDp, end = endPaddingDp)
                 .height(24.dp)
         ) {
-            if (chartWidthPx > 0f && chartData.xLabels.isNotEmpty()) {
-                // Canvas 內部實際寬度（扣掉左右 padding）
+            if (chartWidthPx > 0f && chartData.axisDates.isNotEmpty()) {
+
                 val innerWidthPx =
                     (chartWidthPx - startPaddingPx - endPaddingPx).coerceAtLeast(1f)
 
-                // 每個刻度在 X 軸上的實際像素位置
-                val positions = chartData.axisX.map { it * innerWidthPx }
+                // 每個刻度中心點（0..innerWidthPx）
+                val centersPx: List<Float> = chartData.axisX.map { it * innerWidthPx }
 
-                // 根據目前 range（日期跨度）調整「最小間距」
-                val daySpan: Long = if (chartData.dates.size >= 2) {
-                    chartData.dates.last().toEpochDay() - chartData.dates.first().toEpochDay()
-                } else 0L
+                // ✅ 這個才是「文字框之間」應該用的 gap：小很多（不然永遠擠不出 4 個）
+                val baseMinGapPx = with(density) { 8.dp.toPx() }
 
-                val minSpacingDp = when {
-                    daySpan >= 365L -> 60.dp   // ~ 1 年以上
-                    daySpan >= 180L -> 52.dp   // 半年以上
-                    daySpan >= 90L  -> 44.dp   // 3 個月以上
-                    else            -> 36.dp   // < 3 個月
+                // 邊緣內縮（避免貼邊）
+                val edgePaddingPx = with(density) { 4.dp.toPx() }
+
+                // 至少想看到 4 個（若本來就不到 4 個，就顯示全部）
+                val desiredMinCount = minOf(4, chartData.axisDates.size)
+
+                // 用「最寬情況」去量（SemiBold）=> 防止選中時變粗導致撞
+                val measureStyle = TextStyle(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                // 日期格式降級（越後面越短，越容易塞 4 個）
+                val formatters = listOf(
+                    DateTimeFormatter.ofPattern("MMM dd", Locale.ENGLISH), // Nov 26
+                    DateTimeFormatter.ofPattern("MM/dd", Locale.ENGLISH),  // 11/26
+                    DateTimeFormatter.ofPattern("M/d", Locale.ENGLISH)     // 11/6
+                )
+
+                // 這兩個會被挑到「最好的那組」
+                var bestLabels: List<String> = emptyList()
+                var bestPlaced: List<XLabelPlaced> = emptyList()
+
+                for (fmt in formatters) {
+                    val labels = chartData.axisDates.map { fmt.format(it) }
+
+                    val specs: List<XLabelSpec> = labels.indices.map { i ->
+                        val wPx = textMeasurer
+                            .measure(text = AnnotatedString(labels[i]), style = measureStyle)
+                            .size.width.toFloat()
+
+                        XLabelSpec(
+                            index = i,
+                            centerPx = centersPx.getOrElse(i) { 0f },
+                            widthPx = wPx
+                        )
+                    }
+
+                    // ✅ 核心：用「至少 4 個」的策略去放
+                    val placed = placeXAxisLabelsAtLeast(
+                        specs = specs,
+                        innerWidthPx = innerWidthPx,
+                        edgePaddingPx = edgePaddingPx,
+                        baseMinGapPx = baseMinGapPx,
+                        desiredMinCount = desiredMinCount,
+                        keepEnds = true
+                    )
+
+                    // 先記錄目前最佳（以數量為主）
+                    if (placed.size > bestPlaced.size) {
+                        bestPlaced = placed
+                        bestLabels = labels
+                    }
+
+                    // 一旦達到至少 4 個，就用這組（不必再降級格式）
+                    if (placed.size >= desiredMinCount) {
+                        bestPlaced = placed
+                        bestLabels = labels
+                        break
+                    }
                 }
-                val minSpacingPx = with(density) { minSpacingDp.toPx() }
 
-                // ⭐ 新增：第一個 label 至少往右 4.dp（你可以改成 6.dp 看起來會更鬆）
-                val firstLabelMinTranslatePx = with(density) { 4.dp.toPx() }
-                // ⭐ 新增：最後一個 label 往左挪一點，例如 4.dp
-                val lastLabelShiftPx = with(density) { 15.dp.toPx() }
-                // 根據 spacing 決定要顯示哪些 label（一定保留第一個與最後一個）
-                val lastIndex = positions.lastIndex
-                val accepted = mutableListOf<Int>()
+                // 畫出 labels
+                bestPlaced.forEach { p ->
+                    val label = bestLabels.getOrNull(p.index) ?: return@forEach
+                    val selected = (selectedLabelIndex == p.index)
 
-                for (i in positions.indices) {
-                    val cx = positions[i]
-                    if (i == 0) {
-                        // 最左邊永遠保留
-                        accepted += i
-                        continue
-                    }
-                    if (i == lastIndex) {
-                        // 最右邊永遠保留；若跟前一個太近，就先把前一個刪掉
-                        if (accepted.isNotEmpty()) {
-                            val prevIdx = accepted.last()
-                            val prevX = positions[prevIdx]
-                            if (cx - prevX < minSpacingPx && accepted.size >= 2) {
-                                accepted.removeAt(accepted.lastIndex)
-                            }
-                        }
-                        accepted += i
-                        continue
-                    }
-                    // 中間的刻度：距離上一個 accepted 足夠才保留
-                    val prevIdx = accepted.lastOrNull()
-                    if (prevIdx == null) {
-                        accepted += i
-                    } else {
-                        val prevX = positions[prevIdx]
-                        if (cx - prevX >= minSpacingPx) {
-                            accepted += i
-                        }
-                    }
-                }
-                // 實際畫出被接受的 label
-                accepted.forEach { index ->
-                    val label = chartData.xLabels.getOrNull(index) ?: return@forEach
-                    val centerX = positions[index]
-                    val selected = (selectedLabelIndex == index)
                     Text(
                         text = label,
                         fontSize = 12.sp,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (selected)
-                            Color(0xFF111114)
-                        else
-                            Color.Black.copy(alpha = 0.60f),
+                        color = if (selected) Color(0xFF111114) else Color.Black.copy(alpha = 0.60f),
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .graphicsLayer {
-                                val baseTx = centerX - size.width / 2f
-
-                                val isFirst = index == accepted.first()
-                                val isLast = index == accepted.last()
-
-                                translationX = when {
-                                    // ⭐ 第一個：至少往右一小段，避免貼住左邊界
-                                    isFirst -> {
-                                        if (baseTx < firstLabelMinTranslatePx) {
-                                            firstLabelMinTranslatePx
-                                        } else {
-                                            baseTx
-                                        }
-                                    }
-                                    // ⭐ 最後一個：往左挪一點，並且不要小於 0（避免跑出畫面）
-                                    isLast -> {
-                                        (baseTx - lastLabelShiftPx).coerceAtLeast(0f)
-                                    }
-
-                                    else -> baseTx
-                                }
+                                // leftPx 是「在 inner content」中的 left（px）
+                                translationX = p.leftPx
                             }
                     )
                 }
@@ -1870,3 +1891,150 @@ fun formatTooltipWeight(
     }
 }
 
+data class XLabelSpec(
+    val index: Int,
+    val centerPx: Float,
+    val widthPx: Float
+)
+
+data class XLabelPlaced(
+    val index: Int,
+    val leftPx: Float,
+    val widthPx: Float
+) {
+    val rightPx: Float get() = leftPx + widthPx
+}
+
+/**
+ * 依「不重疊」規則放置 X 軸 labels（px）
+ * - 盡量多放
+ * - 一定保留第一個、最後一個（keepEnds=true）
+ * - 若最後一個會撞到前一個，會回頭移除前一個直到不撞（保第一個）
+ */
+fun placeXAxisLabels(
+    specs: List<XLabelSpec>,
+    innerWidthPx: Float,
+    edgePaddingPx: Float,
+    minGapPx: Float,
+    keepEnds: Boolean = true
+): List<XLabelPlaced> {
+    if (specs.isEmpty() || innerWidthPx <= 0f) return emptyList()
+    if (specs.size == 1) {
+        val s = specs.first()
+        val left = clampLeft(s.centerPx - s.widthPx / 2f, s.widthPx, innerWidthPx, edgePaddingPx)
+        return listOf(XLabelPlaced(s.index, left, s.widthPx))
+    }
+
+    val sorted = specs.sortedBy { it.centerPx }
+    val first = sorted.first()
+    val last = sorted.last()
+
+    fun placedOf(s: XLabelSpec): XLabelPlaced {
+        val rawLeft = s.centerPx - s.widthPx / 2f
+        val left = clampLeft(rawLeft, s.widthPx, innerWidthPx, edgePaddingPx)
+        return XLabelPlaced(s.index, left, max(0f, s.widthPx))
+    }
+
+    val result = mutableListOf<XLabelPlaced>()
+
+    // 先放第一個
+    result += placedOf(first)
+
+    // 中間：由左到右，能放就放
+    for (i in 1 until sorted.lastIndex) {
+        val p = placedOf(sorted[i])
+        val prev = result.lastOrNull()
+        if (prev == null || p.leftPx >= prev.rightPx + minGapPx) {
+            result += p
+        }
+    }
+
+    // 最後一個：強制放（若撞到前一個，就移除前一個直到不撞；但保留第一個）
+    val lastPlaced = placedOf(last)
+
+    if (keepEnds) {
+        while (result.isNotEmpty()) {
+            val prev = result.last()
+            val overlaps = lastPlaced.leftPx < prev.rightPx + minGapPx
+            if (!overlaps) break
+            if (result.size == 1) break // 只剩第一個就不能刪了
+            result.removeAt(result.lastIndex)
+        }
+        // 若最後還是跟第一個撞（極窄），這時至少保留最後一個（避免末端日期消失）
+        val onlyFirst = result.size == 1
+        if (onlyFirst) {
+            val firstPlaced = result.first()
+            val overlaps = lastPlaced.leftPx < firstPlaced.rightPx + minGapPx
+            if (overlaps) {
+                // 超窄：改成只留「最後」
+                return listOf(lastPlaced)
+            }
+        }
+        result += lastPlaced
+        return dedupByIndexKeepOrder(result)
+    } else {
+        // 不強制首尾的版本（目前你用不到）
+        val prev = result.lastOrNull()
+        if (prev == null || lastPlaced.leftPx >= prev.rightPx + minGapPx) {
+            result += lastPlaced
+        }
+        return dedupByIndexKeepOrder(result)
+    }
+}
+
+private fun clampLeft(
+    rawLeft: Float,
+    widthPx: Float,
+    innerWidthPx: Float,
+    edgePaddingPx: Float
+): Float {
+    val maxLeft = (innerWidthPx - edgePaddingPx - widthPx).coerceAtLeast(edgePaddingPx)
+    return rawLeft.coerceIn(edgePaddingPx, maxLeft)
+}
+
+private fun dedupByIndexKeepOrder(list: List<XLabelPlaced>): List<XLabelPlaced> {
+    val seen = HashSet<Int>(list.size)
+    val out = ArrayList<XLabelPlaced>(list.size)
+    for (x in list) {
+        if (seen.add(x.index)) out.add(x)
+    }
+    return out
+}
+private val GAP_MULTIPLIERS = floatArrayOf(
+    1.00f, 0.85f, 0.70f, 0.55f, 0.40f, 0.25f
+)
+
+/**
+ * 目標：盡量達到至少 desiredMinCount 個 label（同時 keepEnds 規則不變）
+ * 做法：逐步降低 minGapPx，找到第一個能達標的；若都不行就回傳「最多的那次」。
+ *
+ * 注意：這裡的 minGapPx 是「文字框」之間的 gap，不是刻度中心距。
+ */
+internal fun placeXAxisLabelsAtLeast(
+    specs: List<XLabelSpec>,
+    innerWidthPx: Float,
+    edgePaddingPx: Float,
+    baseMinGapPx: Float,
+    desiredMinCount: Int,
+    keepEnds: Boolean = true
+): List<XLabelPlaced> {
+    if (specs.isEmpty() || innerWidthPx <= 0f) return emptyList()
+
+    var best: List<XLabelPlaced> = emptyList()
+
+    for (m in GAP_MULTIPLIERS) {
+        val gap = max(0f, baseMinGapPx * m)
+        val placed = placeXAxisLabels(
+            specs = specs,
+            innerWidthPx = innerWidthPx,
+            edgePaddingPx = edgePaddingPx,
+            minGapPx = gap,
+            keepEnds = keepEnds
+        )
+
+        if (placed.size > best.size) best = placed
+        if (placed.size >= desiredMinCount) return placed
+    }
+
+    return best
+}
