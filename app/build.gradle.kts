@@ -2,7 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)        // ✅ 留這個就好
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
@@ -25,6 +25,13 @@ android {
 
         // 預設 app 顯示名稱（不覆蓋多語字串）
         manifestPlaceholders["appLabel"] = "BiteCal"
+
+        /**
+         * ✅ 重要：提供預設值，避免「沒有選到 flavor」或 IDE 索引時找不到欄位
+         * 你的程式可以逐步從 BASE_URL 過渡到 API_BASE_URL
+         */
+        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
     }
 
     // ── 讀取 keystore.properties（兩個常見路徑；找不到就跳過簽章） ──
@@ -76,6 +83,9 @@ android {
                 file("proguard-rules.pro")
             )
             manifestPlaceholders["appLabel"] = "BiteCal"
+
+            // （可選）release 也能再覆蓋一次，但通常用 flavor 控就夠
+            // buildConfigField("String", "API_BASE_URL", "\"https://api.yourdomain.com\"")
         }
         getByName("debug") {
             isMinifyEnabled = false
@@ -84,35 +94,54 @@ android {
         }
     }
 
-    // ── 環境切分（dev / prod） ──────────────────────────────
+    // ── 環境切分（dev / prod / devWifi / devUsb） ──────────────────────────────
     flavorDimensions += "env"
     productFlavors {
+
         create("dev") {
             dimension = "env"
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-//            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")   //模擬器
+            //buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")   //模擬器
+            // ✅ 你原本用的（尾巴有 /）
             buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"") //同WIFI
+            // ✅ 新增給你現在要用的（尾巴不要 /，方便你 concat path）
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
+
         create("devWifi") {
             dimension = "env"
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
-            buildConfigField("String","BASE_URL","\"http://172.20.10.9:8080/\"")
+
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+
             manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
+
         create("devUsb") {
             dimension = "env"
             applicationIdSuffix = ".devusb"
             versionNameSuffix = "-devusb"
-            buildConfigField("String","BASE_URL","\"http://127.0.0.1:8080/\"")
+
+            // ⚠️ 提醒：真機用 127.0.0.1 會指向「手機自己」不是電腦
+            // 如果你是 adb reverse 8080:8080 才能用這個
+            buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:8080\"")
+
             manifestPlaceholders["appLabel"] = "BiteCal (devUsb)"
         }
+
         create("prod") {
             dimension = "env"
             // TODO: 之後換正式域名
+
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
     }
@@ -125,7 +154,7 @@ android {
 
     buildFeatures {
         compose = true
-        buildConfig = true
+        buildConfig = true // ✅ 你已經有，保留
     }
 }
 
@@ -216,7 +245,6 @@ kapt {
 }
 
 configurations.configureEach {
-    // 固定 javapoet 版本（避免相依拉錯）
     resolutionStrategy.force("com.squareup:javapoet:1.13.0")
     resolutionStrategy.eachDependency {
         if (requested.group == "com.squareup" && requested.name == "javapoet") {

@@ -69,6 +69,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.text.style.TextAlign
+import com.calai.app.BuildConfig
 
 private const val X_TICK_COUNT = 5
 
@@ -1515,6 +1516,16 @@ fun HistoryRow(
         TrendTag.STABLE -> Triple("STABLE", Color(0xFFDBEAFE), Color(0xFF3B82F6))
     }
 
+    fun toAbsoluteUrl(maybePath: String?): String? {
+        if (maybePath.isNullOrBlank()) return null
+        // 已經是 http 開頭就直接回傳
+        if (maybePath.startsWith("http://") || maybePath.startsWith("https://")) return maybePath
+        // DB 是 /static/xxx 這種 → 補上 baseUrl
+        return BuildConfig.API_BASE_URL.trimEnd('/') + maybePath
+    }
+
+    val imgUrl = toAbsoluteUrl(item.photoUrl)
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -1532,7 +1543,7 @@ fun HistoryRow(
             val imageShape = RoundedCornerShape(14.dp)
             if (item.photoUrl != null) {
                 AsyncImage(
-                    model = item.photoUrl,
+                    model = imgUrl,
                     contentDescription = null,
                     modifier = Modifier.size(58.dp).clip(imageShape),
                     contentScale = ContentScale.Crop

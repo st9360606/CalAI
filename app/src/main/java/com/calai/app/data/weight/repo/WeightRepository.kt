@@ -13,11 +13,22 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.roundToInt
+import okhttp3.MediaType.Companion.toMediaType
 
 @Singleton
 class WeightRepository @Inject constructor(
     private val api: WeightApi
 ) {
+
+    private fun guessImageMime(file: File): String {
+        return when (file.extension.lowercase()) {
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "heic" -> "image/heic"
+            "heif" -> "image/heif"
+            else -> "application/octet-stream"
+        }
+    }
 
     suspend fun log(
         weightKg: Double,
@@ -27,13 +38,16 @@ class WeightRepository @Inject constructor(
     ): WeightItemDto = withContext(Dispatchers.IO) {
         val wKg: RequestBody  = weightKg.toString().toRequestBody(MultipartBody.FORM)
         val wLbs: RequestBody = weightLbs.toString().toRequestBody(MultipartBody.FORM)
-        val d: RequestBody?   = logDate?.toString()?.toRequestBody(MultipartBody.FORM)
+        val d: RequestBody?   = logDate?.toRequestBody(MultipartBody.FORM)
 
-        val part = photoFile?.let {
+        val part = photoFile?.let { f ->
+            val mime = guessImageMime(f).toMediaType()
+            Log.d("WeightRepo", "upload photo name=${f.name} mime=$mime size=${f.length()}")
+
             MultipartBody.Part.createFormData(
                 name = "photo",
-                filename = it.name,
-                body = it.asRequestBody()
+                filename = f.name,                     // 例如 weight_camera_xxx.jpg
+                body = f.asRequestBody(mime)           // ✅ 指定 image/jpeg
             )
         }
 
