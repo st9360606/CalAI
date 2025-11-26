@@ -952,31 +952,24 @@ private fun GoalProgressChart(
         profileWeightKg = profileWeightKg,
         startWeightAllTimeKg = startWeightAllTimeKg
     )
-    // ★ 修正 1：只用 points.size 當 key，不再包含 unit
-    //   避免切換單位時，產生新的 MutableState 物件，導致 pointerInput 還在改「舊的那顆」。
-    var activeIndex by remember(chartData.points.size) {
-        mutableStateOf<Int?>(null)
-    }
 
-    // ✅ 新增：固定用的 index
+    // ★ 只用 points.size 當 key（避免 unit 切換造成 state 舊引用）
+    var activeIndex by remember(chartData.points.size) { mutableStateOf<Int?>(null) }
     var pinnedIndex by remember(chartData.points.size) { mutableStateOf<Int?>(null) }
 
-    // ★ 修正 2：如果你希望切換 kg/lbs 時順便把 tooltip 收掉，就用 LaunchedEffect 重設 value
-    // 切換單位：我建議 pinned/active 都清掉（避免顯示跳動）
+    // 單位切換：清掉（避免跳動）
     LaunchedEffect(unit) {
         activeIndex = null
         pinnedIndex = null
     }
 
-    // 小工具：目前應顯示哪個 index
+    // ✅ 顯示優先序：手指/拖曳中的 active > pinned
     val shownIndex: Int? = activeIndex ?: pinnedIndex
-
 
     // ★ 圖表實際寬高（px）
     var chartWidthPx by remember { mutableStateOf(0f) }
     var chartHeightPx by remember { mutableStateOf(0f) }
 
-    // ★ 跟左右 / 上下 padding 對齊（Canvas 內部）
     val density = LocalDensity.current
     val startPaddingDp = 40.dp
     val endPaddingDp = 6.dp
@@ -988,6 +981,7 @@ private fun GoalProgressChart(
     val topPaddingPx = with(density) { topPaddingDp.toPx() }
     val bottomPaddingPx = with(density) { bottomPaddingDp.toPx() }
 
+    // ✅ 每個資料點在 Box 座標系的中心 X（px）
     val pointCentersPx = remember(chartData.points, chartWidthPx, startPaddingPx, endPaddingPx) {
         buildPointCentersPx(
             pointsXNorm = chartData.points.map { it.x },
@@ -999,49 +993,51 @@ private fun GoalProgressChart(
 
     fun pickIndex(rawX: Float): Int? = nearestIndexByX(pointCentersPx, rawX)
 
+    // ✅ 小優化：只在 index 真的變化時才觸發 recomposition
+    fun setActive(idx: Int) {
+        if (activeIndex != idx) activeIndex = idx
+    }
+
     Column(modifier = modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                // 取得 Box 實際寬高，用來換算 touch / tooltip 位置
                 .onSizeChanged {
                     chartWidthPx = it.width.toFloat()
                     chartHeightPx = it.height.toFloat()
                 }
-                // ★ 低階手勢：一碰就生效，然後可以拖曳
                 .pointerInput(chartData.points.size, chartWidthPx) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
-                        val touchSlop = viewConfiguration.touchSlop
 
                         val downX = down.position.x
                         val downY = down.position.y
 
                         val downIdx = pickIndex(downX) ?: return@awaitEachGesture
 
-                        // 一碰就顯示（scrub/tooltip 立即出現）
-                        activeIndex = downIdx
+                        // ✅ 一碰就顯示
+                        setActive(downIdx)
 
                         var dragging = false
                         var cancelledByVertical = false
 
+                        val slop = viewConfiguration.touchSlop
+
                         while (true) {
                             val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull { it.id == down.id } ?: continue
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
 
-                            // ✅ 相容所有版本：UP 或 CANCEL 最終都會讓 pressed = false
-                            if (!change.pressed) {
-                                break
-                            }
+                            // UP / CANCEL
+                            if (!change.pressed) break
 
                             val dx = change.position.x - downX
                             val dy = change.position.y - downY
 
+                            // 決定方向：超過 slop 才判定
                             if (!dragging) {
-                                val touchSlop = viewConfiguration.touchSlop
                                 val dist2 = dx * dx + dy * dy
-                                if (dist2 >= touchSlop * touchSlop) {
+                                if (dist2 >= slop * slop) {
                                     if (kotlin.math.abs(dx) >= kotlin.math.abs(dy)) {
                                         dragging = true
                                     } else {
@@ -1052,14 +1048,24 @@ private fun GoalProgressChart(
                             }
 
                             if (dragging) {
-                                pickIndex(change.position.x)?.let { activeIndex = it }
-                                change.consume()
+                                pickIndex(change.position.x)?.let { idx ->
+                                    setActive(idx)
+                                }
+                                change.consume() // 只在水平拖曳 consume
                             }
                         }
+
+                        // ✅ Tap：切換 pin / unpin
                         if (!cancelledByVertical && !dragging) {
-                            // Tap：切換 pin / unpin
                             pinnedIndex = if (pinnedIndex == downIdx) null else downIdx
                         }
+
+                        // ✅ FIX：若已經有 pinned，且使用者水平拖曳過
+                        // 放手時把 pinned 更新到最後一個 active（不會跳回舊 pinned）
+                        if (!cancelledByVertical && dragging && pinnedIndex != null) {
+                            pinnedIndex = activeIndex ?: pinnedIndex
+                        }
+
                         // 手離開：active 永遠收掉；顯示與否交給 pinnedIndex
                         activeIndex = null
                     }
@@ -1079,15 +1085,11 @@ private fun GoalProgressChart(
                 val h = size.height
                 val r = 0f
 
-                // ❷ 定義整個繪圖區圓角裁切（避免任何筆畫超出邊界）
                 val clipRound = CornerRadius(r, r)
                 val rrClip = androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h, clipRound)
                 val clipPath = Path().apply { addRoundRect(rrClip) }
 
-                withTransform({
-                    clipPath(clipPath)   // **所有繪製都在圓角區域內**
-                }) {
-                    // 背景
+                withTransform({ clipPath(clipPath) }) {
                     drawRoundRect(
                         brush = Brush.verticalGradient(
                             0f to Color(0xFFF4F4F5),
@@ -1097,7 +1099,6 @@ private fun GoalProgressChart(
                         size = size
                     )
 
-                    // 水平網格
                     val gridCount = 4
                     repeat(gridCount + 1) { i ->
                         val y = h * (i / gridCount.toFloat())
@@ -1111,19 +1112,14 @@ private fun GoalProgressChart(
 
                     val allPoints = chartData.points
                     if (allPoints.isEmpty()) {
-                        // 沒資料：只留背景 + 網格
+                        // no-op
                     } else if (allPoints.size == 1) {
-                        // ★ 只有一筆資料：黑色橫線（未按）、漸層、按下變綠線
                         val highlightGreen = Color(0xFF22C55E)
                         val baseStroke = 2.1.dp.toPx()
 
-                        val xsAll = allPoints.map { it.x * w }
-                        val ysAll = allPoints.map { it.y * h }
+                        val xSingle = allPoints[0].x * w
+                        val ySingle = allPoints[0].y * h
 
-                        val xSingle = xsAll[0]
-                        val ySingle = ysAll[0]
-
-                        // 1) 橫線以下的漸層區域
                         drawRect(
                             brush = Brush.verticalGradient(
                                 0f to Color(0xFF111114).copy(alpha = 0.15f),
@@ -1133,10 +1129,8 @@ private fun GoalProgressChart(
                             size = Size(w, h - ySingle)
                         )
 
-                        // 是否正在被按壓
                         val isActive = (shownIndex == 0)
 
-                        // 2) 橫向基線：未按壓 = 黑色；按壓 = 綠色
                         drawLine(
                             color = if (isActive) highlightGreen else Color(0xFF111114),
                             start = Offset(0f, ySingle),
@@ -1146,12 +1140,10 @@ private fun GoalProgressChart(
                         )
 
                         if (isActive) {
-                            // ★ 按壓時再加「垂直綠線 + 綠色圓點 + 光暈」
-                            val circleOuter = 5.dp.toPx()   // 主綠圓半徑
-                            val circleInner = 3.dp.toPx()   // 白心半徑
-                            val circleHalo = 8.dp.toPx()   // 淡綠光暈半徑
+                            val circleOuter = 5.dp.toPx()
+                            val circleInner = 3.dp.toPx()
+                            val circleHalo = 8.dp.toPx()
 
-                            // 垂直綠線（蓋過原本的粗直線）
                             drawLine(
                                 color = Green.copy(alpha = 0.45f),
                                 start = Offset(xSingle, 0f),
@@ -1159,21 +1151,16 @@ private fun GoalProgressChart(
                                 strokeWidth = 1.5.dp.toPx()
                             )
 
-                            // 光暈
                             drawCircle(
                                 color = Green.copy(alpha = 0.28f),
                                 radius = circleHalo,
                                 center = Offset(xSingle, ySingle)
                             )
-
-                            // 綠色實心圓
                             drawCircle(
                                 color = highlightGreen,
                                 radius = circleOuter,
                                 center = Offset(xSingle, ySingle)
                             )
-
-                            // 中心白點
                             drawCircle(
                                 color = Color.White,
                                 radius = circleInner,
@@ -1181,16 +1168,13 @@ private fun GoalProgressChart(
                             )
                         }
                     } else {
-                        // ★ 兩筆以上：保持原本 Catmull-Rom + 綠色高亮行為
                         val highlightGreen = Color(0xFF22C55E)
-                        // 基礎線條粗細
                         val baseStroke = 2.1.dp.toPx()
                         val halfStroke = baseStroke / 2f
 
                         val xsAll = allPoints.map { it.x * w }
                         val ysAll = allPoints.map { it.y * h }
 
-                        // ★ 曲線通過每個資料點
                         val linePathAll = buildCatmullRomPath(xsAll, ysAll)
                         val areaPathAll = Path().apply {
                             addPath(linePathAll)
@@ -1199,7 +1183,6 @@ private fun GoalProgressChart(
                             close()
                         }
 
-                        // 底部灰色漸層
                         drawPath(
                             path = areaPathAll,
                             brush = Brush.verticalGradient(
@@ -1208,7 +1191,6 @@ private fun GoalProgressChart(
                             )
                         )
 
-                        // 黑色基線
                         drawPath(
                             path = linePathAll,
                             color = Color(0xFF111114),
@@ -1220,15 +1202,13 @@ private fun GoalProgressChart(
                             val xSel = xsAll[idx]
                             val ySel = ysAll[idx]
 
-                            val circleOuter = 5.dp.toPx()   // 主綠圓半徑
-                            val circleInner = 3.dp.toPx()   // 白心半徑
-                            val circleHalo = 8.dp.toPx()   // 淡綠光暈半徑
+                            val circleOuter = 5.dp.toPx()
+                            val circleInner = 3.dp.toPx()
+                            val circleHalo = 8.dp.toPx()
 
-                            // **補償值**：用於左 / 右半段 clip，不動線段分割邏輯
                             val leftClip = -halfStroke - 2f
                             val rightClip = w + halfStroke + 2f
 
-                            // 左半段綠色覆蓋
                             withTransform({
                                 clipRect(
                                     left = leftClip,
@@ -1252,7 +1232,6 @@ private fun GoalProgressChart(
                                 )
                             }
 
-                            // 右半段灰底
                             withTransform({
                                 clipRect(
                                     left = xSel - halfStroke,
@@ -1271,7 +1250,6 @@ private fun GoalProgressChart(
                                 )
                             }
 
-                            // 垂直綠線
                             drawLine(
                                 color = Green.copy(alpha = 0.45f),
                                 start = Offset(xSel, 0f),
@@ -1279,7 +1257,6 @@ private fun GoalProgressChart(
                                 strokeWidth = 1.5.dp.toPx()
                             )
 
-                            // 光暈 + 綠圓 + 白心
                             drawCircle(
                                 color = Green.copy(alpha = 0.28f),
                                 radius = circleHalo,
@@ -1299,6 +1276,7 @@ private fun GoalProgressChart(
                     }
                 }
             }
+
             // Y 軸標籤
             Column(
                 modifier = Modifier
@@ -1316,7 +1294,7 @@ private fun GoalProgressChart(
                 }
             }
 
-            // Tooltip 疊在上面（放在綠圓的上方）
+            // Tooltip（用 shownIndex）
             val idx = shownIndex
             if (
                 idx != null &&
@@ -1329,37 +1307,27 @@ private fun GoalProgressChart(
                 val innerWidthPx = chartWidthPx - startPaddingPx - endPaddingPx
                 val innerHeightPx = chartHeightPx - topPaddingPx - bottomPaddingPx
 
-                // 與綠圓同一組半徑
                 val circleOuterPx = with(density) { 5.dp.toPx() }
 
-                // 先算出未保護的 X（在 Canvas 內部座標）
                 val baseXInner = pointNorm.x * innerWidthPx
-
-                // 安全 X（避免被圓角或 tooltip 邊界吃掉）
                 val xSafeInner = baseXInner.coerceIn(circleOuterPx, innerWidthPx - circleOuterPx)
 
-                // 真正的中心 X / Y（含 padding）
                 val centerX = startPaddingPx + xSafeInner
                 val centerY = topPaddingPx + pointNorm.y * innerHeightPx
 
-                // Tooltip 寬度
-                val tooltipWidthPx = with(density) { 98.dp.toPx() }  // 跟 WeightTooltip 的 width 對齊
-
-                // ❶ 以圓點為中心
+                val tooltipWidthPx = with(density) { 98.dp.toPx() }
                 var tx = centerX - tooltipWidthPx / 2f
 
-                // ❷ 邊界保護：左右各保留 8dp padding
                 val paddingPx = with(density) { 8.dp.toPx() }
                 val minX = paddingPx
                 val maxX = chartWidthPx - tooltipWidthPx - paddingPx
                 tx = tx.coerceIn(minX, maxX)
 
-                // ❸ 垂直位置：圓點上方 52dp（比原本 56dp 稍微貼近）
                 val ty = centerY - with(density) { 52.dp.toPx() }
 
                 WeightTooltip(
                     weightKg = chartData.weightsKg[idx],
-                    weightLbs = chartData.weightsLbs.getOrNull(idx), // ★ 這裡會是 178.0
+                    weightLbs = chartData.weightsLbs.getOrNull(idx),
                     unit = unit,
                     date = chartData.dates[idx],
                     modifier = Modifier
@@ -1374,20 +1342,17 @@ private fun GoalProgressChart(
 
         Spacer(Modifier.height(6.dp))
 
-        // 只有當「資料點日期剛好存在於 axisDates」時，才加粗對應的 xLabel
+        // X 軸粗體選中：用 shownIndex
         val selectedLabelIndex: Int? = shownIndex
             ?.takeIf { it in chartData.dates.indices }
             ?.let { pi ->
                 val target = chartData.dates[pi]
                 if (chartData.axisDates.isEmpty()) return@let null
-
                 chartData.axisDates.withIndex()
                     .minByOrNull { (_, d) -> kotlin.math.abs(d.toEpochDay() - target.toEpochDay()) }
                     ?.index
             }
 
-
-        // 在 GoalProgressChart 裡面（靠近畫 X 軸 labels 的地方），先準備 TextMeasurer
         val textMeasurer = rememberTextMeasurer()
 
         Box(
@@ -1401,32 +1366,23 @@ private fun GoalProgressChart(
                 val innerWidthPx =
                     (chartWidthPx - startPaddingPx - endPaddingPx).coerceAtLeast(1f)
 
-                // 每個刻度中心點（0..innerWidthPx）
                 val centersPx: List<Float> = chartData.axisX.map { it * innerWidthPx }
 
-                // ✅ 這個才是「文字框之間」應該用的 gap：小很多（不然永遠擠不出 4 個）
                 val baseMinGapPx = with(density) { 8.dp.toPx() }
-
-                // 邊緣內縮（避免貼邊）
                 val edgePaddingPx = with(density) { 4.dp.toPx() }
-
-                // 至少想看到 4 個（若本來就不到 4 個，就顯示全部）
                 val desiredMinCount = minOf(4, chartData.axisDates.size)
 
-                // 用「最寬情況」去量（SemiBold）=> 防止選中時變粗導致撞
                 val measureStyle = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
 
-                // 日期格式降級（越後面越短，越容易塞 4 個）
                 val formatters = listOf(
-                    DateTimeFormatter.ofPattern("MMM dd", Locale.ENGLISH), // Nov 26
-                    DateTimeFormatter.ofPattern("MM/dd", Locale.ENGLISH),  // 11/26
-                    DateTimeFormatter.ofPattern("M/d", Locale.ENGLISH)     // 11/6
+                    DateTimeFormatter.ofPattern("MMM dd", Locale.ENGLISH),
+                    DateTimeFormatter.ofPattern("MM/dd", Locale.ENGLISH),
+                    DateTimeFormatter.ofPattern("M/d", Locale.ENGLISH)
                 )
 
-                // 這兩個會被挑到「最好的那組」
                 var bestLabels: List<String> = emptyList()
                 var bestPlaced: List<XLabelPlaced> = emptyList()
 
@@ -1445,7 +1401,6 @@ private fun GoalProgressChart(
                         )
                     }
 
-                    // ✅ 核心：用「至少 4 個」的策略去放
                     val placed = placeXAxisLabelsAtLeast(
                         specs = specs,
                         innerWidthPx = innerWidthPx,
@@ -1455,13 +1410,10 @@ private fun GoalProgressChart(
                         keepEnds = true
                     )
 
-                    // 先記錄目前最佳（以數量為主）
                     if (placed.size > bestPlaced.size) {
                         bestPlaced = placed
                         bestLabels = labels
                     }
-
-                    // 一旦達到至少 4 個，就用這組（不必再降級格式）
                     if (placed.size >= desiredMinCount) {
                         bestPlaced = placed
                         bestLabels = labels
@@ -1469,7 +1421,6 @@ private fun GoalProgressChart(
                     }
                 }
 
-                // 畫出 labels
                 bestPlaced.forEach { p ->
                     val label = bestLabels.getOrNull(p.index) ?: return@forEach
                     val selected = (selectedLabelIndex == p.index)
@@ -1481,10 +1432,7 @@ private fun GoalProgressChart(
                         color = if (selected) Color(0xFF111114) else Color.Black.copy(alpha = 0.60f),
                         modifier = Modifier
                             .align(Alignment.CenterStart)
-                            .graphicsLayer {
-                                // leftPx 是「在 inner content」中的 left（px）
-                                translationX = p.leftPx
-                            }
+                            .graphicsLayer { translationX = p.leftPx }
                     )
                 }
             }
