@@ -68,6 +68,7 @@ import java.time.format.FormatStyle
 import kotlin.math.max
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.draw.drawWithCache
 
 private const val X_TICK_COUNT = 5
 
@@ -930,7 +931,7 @@ private fun WeightTooltip(
 }
 
 /**
- * 折線圖本體
+ * 折線圖本體（drawWithCache 快取版）
  */
 @Composable
 private fun GoalProgressChart(
@@ -953,20 +954,16 @@ private fun GoalProgressChart(
         startWeightAllTimeKg = startWeightAllTimeKg
     )
 
-    // ★ 只用 points.size 當 key（避免 unit 切換造成 state 舊引用）
     var activeIndex by remember(chartData.points.size) { mutableStateOf<Int?>(null) }
     var pinnedIndex by remember(chartData.points.size) { mutableStateOf<Int?>(null) }
 
-    // 單位切換：清掉（避免跳動）
     LaunchedEffect(unit) {
         activeIndex = null
         pinnedIndex = null
     }
 
-    // ✅ 顯示優先序：手指/拖曳中的 active > pinned
     val shownIndex: Int? = activeIndex ?: pinnedIndex
 
-    // ★ 圖表實際寬高（px）
     var chartWidthPx by remember { mutableStateOf(0f) }
     var chartHeightPx by remember { mutableStateOf(0f) }
 
@@ -981,7 +978,6 @@ private fun GoalProgressChart(
     val topPaddingPx = with(density) { topPaddingDp.toPx() }
     val bottomPaddingPx = with(density) { bottomPaddingDp.toPx() }
 
-    // ✅ 每個資料點在 Box 座標系的中心 X（px）
     val pointCentersPx = remember(chartData.points, chartWidthPx, startPaddingPx, endPaddingPx) {
         buildPointCentersPx(
             pointsXNorm = chartData.points.map { it.x },
@@ -993,7 +989,6 @@ private fun GoalProgressChart(
 
     fun pickIndex(rawX: Float): Int? = nearestIndexByX(pointCentersPx, rawX)
 
-    // ✅ 小優化：只在 index 真的變化時才觸發 recomposition
     fun setActive(idx: Int) {
         if (activeIndex != idx) activeIndex = idx
     }
@@ -1010,31 +1005,25 @@ private fun GoalProgressChart(
                 .pointerInput(chartData.points.size, chartWidthPx) {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false)
-
                         val downX = down.position.x
                         val downY = down.position.y
 
                         val downIdx = pickIndex(downX) ?: return@awaitEachGesture
-
-                        // ✅ 一碰就顯示
                         setActive(downIdx)
 
                         var dragging = false
                         var cancelledByVertical = false
-
                         val slop = viewConfiguration.touchSlop
 
                         while (true) {
                             val event = awaitPointerEvent()
                             val change = event.changes.firstOrNull { it.id == down.id } ?: break
 
-                            // UP / CANCEL
                             if (!change.pressed) break
 
                             val dx = change.position.x - downX
                             val dy = change.position.y - downY
 
-                            // 決定方向：超過 slop 才判定
                             if (!dragging) {
                                 val dist2 = dx * dx + dy * dy
                                 if (dist2 >= slop * slop) {
@@ -1048,30 +1037,25 @@ private fun GoalProgressChart(
                             }
 
                             if (dragging) {
-                                pickIndex(change.position.x)?.let { idx ->
-                                    setActive(idx)
-                                }
-                                change.consume() // 只在水平拖曳 consume
+                                pickIndex(change.position.x)?.let { idx -> setActive(idx) }
+                                change.consume()
                             }
                         }
 
-                        // ✅ Tap：切換 pin / unpin
                         if (!cancelledByVertical && !dragging) {
                             pinnedIndex = if (pinnedIndex == downIdx) null else downIdx
                         }
 
-                        // ✅ FIX：若已經有 pinned，且使用者水平拖曳過
-                        // 放手時把 pinned 更新到最後一個 active（不會跳回舊 pinned）
                         if (!cancelledByVertical && dragging && pinnedIndex != null) {
                             pinnedIndex = activeIndex ?: pinnedIndex
                         }
 
-                        // 手離開：active 永遠收掉；顯示與否交給 pinnedIndex
                         activeIndex = null
                     }
                 }
         ) {
-            Canvas(
+            // ✅ drawWithCache：Path/Brush/計算全部快取；拖曳只重畫 overlay
+            Box(
                 modifier = Modifier
                     .matchParentSize()
                     .padding(
@@ -1080,202 +1064,218 @@ private fun GoalProgressChart(
                         top = topPaddingDp,
                         bottom = bottomPaddingDp
                     )
-            ) {
-                val w = size.width
-                val h = size.height
-                val r = 0f
+                    .drawWithCache {
+                        val w = size.width
+                        val h = size.height
+                        val r = 0f
 
-                val clipRound = CornerRadius(r, r)
-                val rrClip = androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h, clipRound)
-                val clipPath = Path().apply { addRoundRect(rrClip) }
+                        val clipRound = CornerRadius(r, r)
+                        val rrClip = RoundRect(0f, 0f, w, h, clipRound)
+                        val clipPath = Path().apply { addRoundRect(rrClip) }
 
-                withTransform({ clipPath(clipPath) }) {
-                    drawRoundRect(
-                        brush = Brush.verticalGradient(
+                        val gridCount = 4
+                        val gridYs = (0..gridCount).map { i -> h * (i / gridCount.toFloat()) }
+
+                        // Brushes（快取）
+                        val bgBrush = Brush.verticalGradient(
                             0f to Color(0xFFF4F4F5),
                             1f to Color(0xFFFFFFFF)
-                        ),
-                        cornerRadius = clipRound,
-                        size = size
-                    )
-
-                    val gridCount = 4
-                    repeat(gridCount + 1) { i ->
-                        val y = h * (i / gridCount.toFloat())
-                        drawLine(
-                            color = Color(0xFFE5E7EB),
-                            start = Offset(0f, y),
-                            end = Offset(w, y),
-                            strokeWidth = 1.dp.toPx()
                         )
-                    }
-
-                    val allPoints = chartData.points
-                    if (allPoints.isEmpty()) {
-                        // no-op
-                    } else if (allPoints.size == 1) {
-                        val highlightGreen = Color(0xFF22C55E)
-                        val baseStroke = 2.1.dp.toPx()
-
-                        val xSingle = allPoints[0].x * w
-                        val ySingle = allPoints[0].y * h
-
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                0f to Color(0xFF111114).copy(alpha = 0.15f),
-                                1f to Color.Transparent
-                            ),
-                            topLeft = Offset(0f, ySingle),
-                            size = Size(w, h - ySingle)
+                        val baseAreaBrush = Brush.verticalGradient(
+                            0f to Color(0xFF111114).copy(alpha = 0.15f),
+                            1f to Color.Transparent
+                        )
+                        val rightAreaBrush = Brush.verticalGradient(
+                            0f to Color(0xFF111114).copy(alpha = 0.16f),
+                            0.55f to Color(0xFF111114).copy(alpha = 0.10f),
+                            1f to Color.Transparent
                         )
 
-                        val isActive = (shownIndex == 0)
-
-                        drawLine(
-                            color = if (isActive) highlightGreen else Color(0xFF111114),
-                            start = Offset(0f, ySingle),
-                            end = Offset(w, ySingle),
-                            strokeWidth = baseStroke,
-                            cap = StrokeCap.Round
-                        )
-
-                        if (isActive) {
-                            val circleOuter = 5.dp.toPx()
-                            val circleInner = 3.dp.toPx()
-                            val circleHalo = 8.dp.toPx()
-
-                            drawLine(
-                                color = Green.copy(alpha = 0.45f),
-                                start = Offset(xSingle, 0f),
-                                end = Offset(xSingle, h),
-                                strokeWidth = 1.5.dp.toPx()
-                            )
-
-                            drawCircle(
-                                color = Green.copy(alpha = 0.28f),
-                                radius = circleHalo,
-                                center = Offset(xSingle, ySingle)
-                            )
-                            drawCircle(
-                                color = highlightGreen,
-                                radius = circleOuter,
-                                center = Offset(xSingle, ySingle)
-                            )
-                            drawCircle(
-                                color = Color.White,
-                                radius = circleInner,
-                                center = Offset(xSingle, ySingle)
-                            )
-                        }
-                    } else {
                         val highlightGreen = Color(0xFF22C55E)
                         val baseStroke = 2.1.dp.toPx()
                         val halfStroke = baseStroke / 2f
 
+                        val vLineStroke = 1.5.dp.toPx()
+                        val gridStroke = 1.dp.toPx()
+
+                        val circleOuter = 5.dp.toPx()
+                        val circleInner = 3.dp.toPx()
+                        val circleHalo = 8.dp.toPx()
+
+                        // Points（快取）
+                        val allPoints = chartData.points
                         val xsAll = allPoints.map { it.x * w }
                         val ysAll = allPoints.map { it.y * h }
 
-                        val linePathAll = buildCatmullRomPath(xsAll, ysAll)
-                        val areaPathAll = Path().apply {
-                            addPath(linePathAll)
-                            lineTo(xsAll.last(), h)
-                            lineTo(xsAll.first(), h)
-                            close()
-                        }
+                        // Paths（快取）
+                        val linePathAll: Path? =
+                            if (allPoints.size >= 2) buildCatmullRomPath(xsAll, ysAll) else null
 
-                        drawPath(
-                            path = areaPathAll,
-                            brush = Brush.verticalGradient(
-                                0f to Color(0xFF111114).copy(alpha = 0.15f),
-                                1f to Color.Transparent
-                            )
-                        )
+                        val areaPathAll: Path? =
+                            if (linePathAll != null) {
+                                Path().apply {
+                                    addPath(linePathAll)
+                                    lineTo(xsAll.last(), h)
+                                    lineTo(xsAll.first(), h)
+                                    close()
+                                }
+                            } else null
 
-                        drawPath(
-                            path = linePathAll,
-                            color = Color(0xFF111114),
-                            style = Stroke(width = baseStroke, cap = StrokeCap.Round)
-                        )
-
-                        val idx = shownIndex
-                        if (idx != null && idx in xsAll.indices) {
-                            val xSel = xsAll[idx]
-                            val ySel = ysAll[idx]
-
-                            val circleOuter = 5.dp.toPx()
-                            val circleInner = 3.dp.toPx()
-                            val circleHalo = 8.dp.toPx()
-
-                            val leftClip = -halfStroke - 2f
-                            val rightClip = w + halfStroke + 2f
-
-                            withTransform({
-                                clipRect(
-                                    left = leftClip,
-                                    top = 0f,
-                                    right = xSel + halfStroke,
-                                    bottom = h
+                        onDrawBehind {
+                            withTransform({ clipPath(clipPath) }) {
+                                // 背景
+                                drawRoundRect(
+                                    brush = bgBrush,
+                                    cornerRadius = clipRound,
+                                    size = size
                                 )
-                            }) {
-                                drawPath(
-                                    path = areaPathAll,
-                                    brush = Brush.verticalGradient(
-                                        0f to highlightGreen.copy(alpha = 0.24f),
-                                        0.55f to highlightGreen.copy(alpha = 0.16f),
-                                        1f to Color.Transparent
+
+                                // 網格
+                                for (y in gridYs) {
+                                    drawLine(
+                                        color = Color(0xFFE5E7EB),
+                                        start = Offset(0f, y),
+                                        end = Offset(w, y),
+                                        strokeWidth = gridStroke
                                     )
-                                )
-                                drawPath(
-                                    path = linePathAll,
-                                    color = highlightGreen,
-                                    style = Stroke(width = baseStroke, cap = StrokeCap.Round)
-                                )
-                            }
+                                }
 
-                            withTransform({
-                                clipRect(
-                                    left = xSel - halfStroke,
-                                    top = 0f,
-                                    right = rightClip,
-                                    bottom = h
-                                )
-                            }) {
-                                drawPath(
-                                    path = areaPathAll,
-                                    brush = Brush.verticalGradient(
-                                        0f to Color(0xFF111114).copy(alpha = 0.16f),
-                                        0.55f to Color(0xFF111114).copy(alpha = 0.10f),
-                                        1f to Color.Transparent
+                                if (allPoints.isEmpty()) return@withTransform
+
+                                // ====== Base layer（不依賴 shownIndex，快取） ======
+                                if (allPoints.size == 1) {
+                                    val xSingle = xsAll[0]
+                                    val ySingle = ysAll[0]
+
+                                    // 灰底漸層
+                                    drawRect(
+                                        brush = baseAreaBrush,
+                                        topLeft = Offset(0f, ySingle),
+                                        size = Size(w, h - ySingle)
                                     )
-                                )
+
+                                    // 基線：未按黑、按下綠（這段依賴 shownIndex，但只是 draw，不會重算 Path）
+                                    val isActive = (shownIndex == 0)
+                                    drawLine(
+                                        color = if (isActive) highlightGreen else Color(0xFF111114),
+                                        start = Offset(0f, ySingle),
+                                        end = Offset(w, ySingle),
+                                        strokeWidth = baseStroke,
+                                        cap = StrokeCap.Round
+                                    )
+
+                                    if (isActive) {
+                                        drawLine(
+                                            color = Green.copy(alpha = 0.45f),
+                                            start = Offset(xSingle, 0f),
+                                            end = Offset(xSingle, h),
+                                            strokeWidth = vLineStroke
+                                        )
+                                        drawCircle(
+                                            color = Green.copy(alpha = 0.28f),
+                                            radius = circleHalo,
+                                            center = Offset(xSingle, ySingle)
+                                        )
+                                        drawCircle(
+                                            color = highlightGreen,
+                                            radius = circleOuter,
+                                            center = Offset(xSingle, ySingle)
+                                        )
+                                        drawCircle(
+                                            color = Color.White,
+                                            radius = circleInner,
+                                            center = Offset(xSingle, ySingle)
+                                        )
+                                    }
+                                } else {
+                                    // 灰底漸層 + 黑線
+                                    areaPathAll?.let { ap ->
+                                        drawPath(path = ap, brush = baseAreaBrush)
+                                    }
+                                    linePathAll?.let { lp ->
+                                        drawPath(
+                                            path = lp,
+                                            color = Color(0xFF111114),
+                                            style = Stroke(width = baseStroke, cap = StrokeCap.Round)
+                                        )
+                                    }
+
+                                    // ====== Overlay（只依賴 shownIndex） ======
+                                    val idx = shownIndex
+                                    if (idx != null && idx in xsAll.indices && linePathAll != null && areaPathAll != null) {
+                                        val xSel = xsAll[idx]
+                                        val ySel = ysAll[idx]
+
+                                        val leftClip = -halfStroke - 2f
+                                        val rightClip = w + halfStroke + 2f
+
+                                        // 左半段綠色覆蓋
+                                        withTransform({
+                                            clipRect(
+                                                left = leftClip,
+                                                top = 0f,
+                                                right = xSel + halfStroke,
+                                                bottom = h
+                                            )
+                                        }) {
+                                            drawPath(
+                                                path = areaPathAll,
+                                                brush = Brush.verticalGradient(
+                                                    0f to highlightGreen.copy(alpha = 0.24f),
+                                                    0.55f to highlightGreen.copy(alpha = 0.16f),
+                                                    1f to Color.Transparent
+                                                )
+                                            )
+                                            drawPath(
+                                                path = linePathAll,
+                                                color = highlightGreen,
+                                                style = Stroke(width = baseStroke, cap = StrokeCap.Round)
+                                            )
+                                        }
+
+                                        // 右半段灰底（維持你原本的視覺）
+                                        withTransform({
+                                            clipRect(
+                                                left = xSel - halfStroke,
+                                                top = 0f,
+                                                right = rightClip,
+                                                bottom = h
+                                            )
+                                        }) {
+                                            drawPath(
+                                                path = areaPathAll,
+                                                brush = rightAreaBrush
+                                            )
+                                        }
+
+                                        // 垂直綠線 + 圓點
+                                        drawLine(
+                                            color = Green.copy(alpha = 0.45f),
+                                            start = Offset(xSel, 0f),
+                                            end = Offset(xSel, h),
+                                            strokeWidth = vLineStroke
+                                        )
+                                        drawCircle(
+                                            color = Green.copy(alpha = 0.28f),
+                                            radius = circleHalo,
+                                            center = Offset(xSel, ySel)
+                                        )
+                                        drawCircle(
+                                            color = Green,
+                                            radius = circleOuter,
+                                            center = Offset(xSel, ySel)
+                                        )
+                                        drawCircle(
+                                            color = Color.White,
+                                            radius = circleInner,
+                                            center = Offset(xSel, ySel)
+                                        )
+                                    }
+                                }
                             }
-
-                            drawLine(
-                                color = Green.copy(alpha = 0.45f),
-                                start = Offset(xSel, 0f),
-                                end = Offset(xSel, h),
-                                strokeWidth = 1.5.dp.toPx()
-                            )
-
-                            drawCircle(
-                                color = Green.copy(alpha = 0.28f),
-                                radius = circleHalo,
-                                center = Offset(xSel, ySel)
-                            )
-                            drawCircle(
-                                color = Green,
-                                radius = circleOuter,
-                                center = Offset(xSel, ySel)
-                            )
-                            drawCircle(
-                                color = Color.White,
-                                radius = circleInner,
-                                center = Offset(xSel, ySel)
-                            )
                         }
                     }
-                }
-            }
+            )
 
             // Y 軸標籤
             Column(
@@ -1294,7 +1294,7 @@ private fun GoalProgressChart(
                 }
             }
 
-            // Tooltip（用 shownIndex）
+            // Tooltip
             val idx = shownIndex
             if (
                 idx != null &&
@@ -1342,7 +1342,6 @@ private fun GoalProgressChart(
 
         Spacer(Modifier.height(6.dp))
 
-        // X 軸粗體選中：用 shownIndex
         val selectedLabelIndex: Int? = shownIndex
             ?.takeIf { it in chartData.dates.indices }
             ?.let { pi ->
