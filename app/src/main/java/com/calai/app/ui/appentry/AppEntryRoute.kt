@@ -1,19 +1,33 @@
 package com.calai.app.ui.appentry
 
 import android.os.SystemClock
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -21,8 +35,8 @@ import com.calai.app.R
 import com.calai.app.di.AppEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -31,56 +45,97 @@ fun AppEntryRoute(
     onGoLanding: () -> Unit,
     onGoHome: () -> Unit
 ) {
-    val appCtx = LocalContext.current.applicationContext
-    val ep = remember(appCtx) { EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java) }
+    val context = LocalContext.current
+    val appCtx = context.applicationContext
+
+    val ep = remember(appCtx) {
+        EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java)
+    }
     val profileRepo = remember(ep) { ep.profileRepository() }
     val store = remember(ep) { ep.userProfileStore() }
     val auth = remember(ep) { ep.authRepository() }
 
+    // ✅ 只導頁一次（防止重組/前景回來造成二次 navigate）
+    var navigated by rememberSaveable { mutableStateOf(false) }
+
+    // ✅ 動畫：淡入 + 縮放
+    val alphaAnim = remember { Animatable(0f) }
+    val scaleAnim = remember { Animatable(0.8f) }
+
+    // （可選）提示用：注意 showSnackbar 會 suspend，所以要 launch 不要擋住導頁
     val snack = remember { SnackbarHostState() }
 
+    // ✅（可選）系統列顏色：更建議放 Activity.onCreate，但放這裡也行
     LaunchedEffect(Unit) {
-        // 最短顯示時間（可依需求 800~1500ms）
-        val MIN_SHOW_MS = 1500L
+        (context as? ComponentActivity)?.enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(Color.White.toArgb(), Color.White.toArgb()),
+            navigationBarStyle = SystemBarStyle.light(Color.White.toArgb(), Color.White.toArgb())
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        // A) 動畫並行（不阻塞）
+        launch {
+            alphaAnim.animateTo(1f, tween(durationMillis = 450))
+        }
+        launch {
+            scaleAnim.animateTo(1f, tween(durationMillis = 650, easing = FastOutSlowInEasing))
+        }
+
+        // B) Entry 判斷
+        val MIN_SHOW_MS = 1100L
         val start = SystemClock.uptimeMillis()
 
-        // 1) 讀本機快取與登入狀態（快）
-        val (signedIn, hasLocalProfile) = withContext(Dispatchers.IO) {
+        // 1) 讀登入狀態 + 本機快取（快）
+        val (signedIn, localProfileExists) = withContext(Dispatchers.IO) {
             val s = runCatching { auth.isSignedIn() }.getOrElse { false }
             val h = runCatching { store.hasServerProfile() }.getOrElse { false }
             s to h
         }
 
-        // 2) 背景校驗伺服器存在性（限制 800ms，不阻塞導頁）
-        // ⛔ 僅在「已登入」時才打 API，避免未登入時觸發 TokenAuthenticator/SessionBus.expired 導致被帶去登入頁
-        val existsDeferred = if (signedIn) {
-            async(Dispatchers.IO) {
-                withTimeoutOrNull(800) {
-                    runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
+        // 2) 只有在「已登入但本機快取不存在」時，才短暫等待 server 結果來避免誤導至 Landing
+        val shouldCheckServer = signedIn && !localProfileExists
+
+        val serverProfileExists: Boolean? = if (shouldCheckServer) {
+            withContext(Dispatchers.IO) {
+                withTimeoutOrNull(1500) {
+                    runCatching { profileRepo.existsOnServer() }.getOrNull()
                 }
             }
-        } else {
-            // 未登入：不打 API，直接回傳 null（第 5 步就不會寫入/導頁）
-            async { null }
+        } else null
+
+        // 3) 若 server 有結果就回寫快取（不導頁）
+        if (serverProfileExists != null) {
+            withContext(Dispatchers.IO) {
+                runCatching { store.setHasServerProfile(serverProfileExists) }
+            }
+        } else if (shouldCheckServer) {
+            // 可選：網路慢提示（不阻塞）
+            launch {
+                runCatching {
+                    snack.showSnackbar(
+                        message = "Network slow. Using cached status.",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
         }
 
-        // 3) 確保畫面至少顯示 MIN_SHOW_MS
+        // 4) 最終判斷：server 優先，否則 fallback 本機
+        val finalProfileExists = serverProfileExists ?: localProfileExists
+
+        // 5) 最短顯示時間
         val elapsed = SystemClock.uptimeMillis() - start
         if (elapsed < MIN_SHOW_MS) delay(MIN_SHOW_MS - elapsed)
 
-        // 4) 一次性導頁（不再二次導頁，避免閃屏）
-        if (signedIn && hasLocalProfile) onGoHome() else onGoLanding()
-
-        // 5) 背景結果回寫快取（不導頁）
-        existsDeferred.await()?.let { exists ->
-            withContext(Dispatchers.IO) {
-                runCatching { store.setHasServerProfile(exists) }
-            }
-            // 若想修正導頁邏輯，可在此依需要再導頁；預設為不導頁以避免畫面抖動。
+        // 6) 導頁（只做一次）
+        if (!navigated) {
+            navigated = true
+            if (signedIn && finalProfileExists) onGoHome() else onGoLanding()
         }
     }
 
-    // ✅ 介面：白底＋置中 App 圖標（取代任何轉圈）
+    // UI
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -90,9 +145,17 @@ fun AppEntryRoute(
         Image(
             painter = painterResource(id = R.drawable.ic_focus_spoon_foreground),
             contentDescription = null,
-            modifier = Modifier.size(160.dp)
+            modifier = Modifier
+                .size(160.dp)
+                .scale(scaleAnim.value)
+                .alpha(alphaAnim.value)
         )
-    }
 
-    SnackbarHost(hostState = snack)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            SnackbarHost(hostState = snack)
+        }
+    }
 }
