@@ -104,6 +104,12 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -254,11 +260,55 @@ fun HomeScreen(
     ) { inner ->
         val s = ui.summary ?: return@Scaffold
 
+        val scrollState = rememberScrollState()
+
+// ✅ Pager 水平滑動時，暫停外層垂直捲動，避免搶手勢
+        var verticalScrollEnabled by remember { mutableStateOf(true) }
+
+        val pagerGestureLockModifier = Modifier.pointerInput(Unit) {
+            val slop = viewConfiguration.touchSlop
+
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+
+                verticalScrollEnabled = true
+                var decided: Boolean? = null   // null=未決定; true=水平; false=垂直
+                var accX = 0f
+                var accY = 0f
+
+                while (true) {
+                    val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                    if (!change.pressed) break
+
+                    val dx = change.position.x - change.previousPosition.x
+                    val dy = change.position.y - change.previousPosition.y
+
+                    if (decided == null) {
+                        accX += dx
+                        accY += dy
+
+                        val dist = sqrt((accX * accX + accY * accY).toDouble()).toFloat()
+                        if (dist > slop) {
+                            val isHorizontal = abs(accX) > abs(accY)
+                            decided = isHorizontal
+
+                            // ✅ 水平：關掉外層 vertical scroll（Pager 會變超好滑）
+                            verticalScrollEnabled = !isHorizontal
+                        }
+                    }
+                }
+
+                // 手指放開，恢復垂直捲動
+                verticalScrollEnabled = true
+            }
+        }
+
         Column(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState, enabled = verticalScrollEnabled)
                 .padding(horizontal = 20.dp)
         ) {
             // ===== Top bar: avatar + bell
@@ -335,7 +385,8 @@ fun HomeScreen(
                 waterState = waterState,
                 onWaterPlus = { waterVm.adjust(+1) },
                 onWaterMinus = { waterVm.adjust(-1) },
-                onToggleUnit = { waterVm.toggleUnit() } // ← 這裡原本是 onWaterSettings
+                onToggleUnit = { waterVm.toggleUnit() },
+                modifier = pagerGestureLockModifier
             )
 
             Spacer(Modifier.height(5.dp))
@@ -483,7 +534,8 @@ private fun TwoPagePager(
     waterState: WaterUiState,
     onWaterPlus: () -> Unit,
     onWaterMinus: () -> Unit,
-    onToggleUnit: () -> Unit
+    onToggleUnit: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
@@ -504,14 +556,14 @@ private fun TwoPagePager(
     val wfH = baseHeight + bottomSwapClamped
 
     Column {
-
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(pageHeight),
-            // ★ 新增頁面間距，視覺上讓兩個頁面更分開
-            pageSpacing = 38.dp   // 可依實際觀感微調 (建議 24~36.dp)
+                .height(pageHeight)
+                .then(modifier),
+            pageSpacing = 38.dp,
+            beyondViewportPageCount = 1
         ) { page ->
             // ★ 外層留白 + 陰影強化分頁感
             Box(modifier = Modifier.fillMaxSize())
