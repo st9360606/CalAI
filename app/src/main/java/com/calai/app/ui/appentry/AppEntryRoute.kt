@@ -76,14 +76,14 @@ fun AppEntryRoute(
     LaunchedEffect(Unit) {
         // A) 動畫並行（不阻塞）
         launch {
-            alphaAnim.animateTo(1f, tween(durationMillis = 450))
+            alphaAnim.animateTo(1f, tween(durationMillis = 400))
         }
         launch {
-            scaleAnim.animateTo(1f, tween(durationMillis = 650, easing = FastOutSlowInEasing))
+            scaleAnim.animateTo(1f, tween(durationMillis = 800, easing = FastOutSlowInEasing))
         }
 
         // B) Entry 判斷
-        val MIN_SHOW_MS = 1100L
+        val MIN_SHOW_MS = 600L
         val start = SystemClock.uptimeMillis()
 
         // 1) 讀登入狀態 + 本機快取（快）

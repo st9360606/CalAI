@@ -536,7 +536,6 @@ fun BiteCalNavHost(
 
                     onGoogle = {
                         showSheet.value = false
-                        scope.launch { snackbarHostState.showSnackbar(ctx.getString(R.string.msg_login_success)) }
                     },
                     onEmail = {
                         showSheet.value = false

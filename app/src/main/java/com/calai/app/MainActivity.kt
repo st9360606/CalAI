@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
-import com.calai.app.ui.BiteCalApp
 import com.calai.app.data.profile.repo.UserProfileStore
 
 @AndroidEntryPoint

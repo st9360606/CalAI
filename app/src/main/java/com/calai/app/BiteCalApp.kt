@@ -1,4 +1,4 @@
-package com.calai.app.ui
+package com.calai.app
 
 import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatDelegate
