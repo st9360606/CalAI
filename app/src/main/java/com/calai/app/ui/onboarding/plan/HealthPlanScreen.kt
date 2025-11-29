@@ -116,12 +116,20 @@ fun HealthPlanScreen(
 
     val scroll = rememberScrollState()
 
+    // ✅ 防連點：避免快速連點導致重複導航/重複存檔
+    var starting by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         containerColor = Color.White,
         bottomBar = {
             Box {
                 Button(
-                    onClick = onStart,
+                    onClick = {
+                        if (starting) return@Button
+                        starting = true
+                        onStart()
+                    },
+                    enabled = !starting,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
@@ -131,9 +139,19 @@ fun HealthPlanScreen(
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
-                        contentColor = Color.White
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.Black.copy(alpha = 0.65f),
+                        disabledContentColor = Color.White
                     )
                 ) {
+                    if (starting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Spacer(Modifier.width(10.dp))
+                    }
                     Text(
                         text = stringResource(R.string.plan_cta_start),
                         fontSize = 19.sp,

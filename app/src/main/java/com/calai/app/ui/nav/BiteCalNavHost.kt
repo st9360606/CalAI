@@ -162,7 +162,19 @@ fun BiteCalNavHost(
 
     val store = remember(ep) { ep.userProfileStore() }
 
+    // ✅ NEW: HealthPlanRepository（用來 flush pending）
+    val healthPlanRepo = remember(ep) { ep.healthPlanRepository() }
+
     val localeController = LocalLocaleController.current
+
+    // ✅ NEW: 只要登入狀態變成 true，就保險 flush 一次（不影響流程，best-effort）
+    LaunchedEffect(isSignedIn) {
+        if (isSignedIn == true) {
+            withContext(Dispatchers.IO) {
+                runCatching { healthPlanRepo.flushPendingBestEffort() }
+            }
+        }
+    }
 
     // Token 逾期：帶到 Gate，成功後回 HOME
     LaunchedEffect(Unit) {
@@ -266,12 +278,16 @@ fun BiteCalNavHost(
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
+                                // ✅ NEW: 登入成功後補送 pending health plan
+                                runCatching { healthPlanRepo.flushPendingBestEffort() }
                                 Routes.HOME
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
                                 if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(currentTag) }
                                 runCatching { store.setHasServerProfile(true) }
+                                // ✅ NEW: 登入成功後補送 pending health plan
+                                runCatching { healthPlanRepo.flushPendingBestEffort() }
                                 Routes.HOME
                             } else {
                                 // 首次登入且不是從 ROUTE_PLAN 來：照流程從 Gender 開始
@@ -487,32 +503,43 @@ fun BiteCalNavHost(
         composable(Routes.ROUTE_PLAN) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: HealthPlanViewModel = viewModel(
-                    viewModelStoreOwner = backStackEntry,
-                    factory = HiltViewModelFactory(activity, backStackEntry)
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            // ✅ 在 Composable 區塊建立 scope，而不是在 onStart 裡
             val routeScope = rememberCoroutineScope()
-            HealthPlanScreen(vm = vm, onStart = {
-                val target = Routes.HOME
-                if (isSignedIn == true) {
-                    // ✅ 這裡使用上面建立好的 scope
+
+            HealthPlanScreen(
+                vm = vm,
+                onStart = {
+                    val target = Routes.HOME
+
                     routeScope.launch {
+                        // ✅ 先存 health plan（best-effort：未登入/失敗會 pending）
                         withContext(Dispatchers.IO) {
-                            runCatching { profileRepo.upsertFromLocal() }
-                            runCatching { store.setHasServerProfile(true) }
-                            runCatching { weightRepo.ensureBaseline() }  // ⭐ 新增：告訴後端「如果這是新用戶，就幫我建 baseline 體重」
+                            runCatching { vm.savePlanBestEffort(source = "ONBOARDING") }
                         }
-                        nav.navigate(target) {
-                            popUpTo(0) { inclusive = true }
-                            launchSingleTop = true
-                            restoreState = false
+
+                        if (isSignedIn == true) {
+                            // ✅ 已登入：補 upsert + baseline + flush，再進 HOME
+                            withContext(Dispatchers.IO) {
+                                runCatching { profileRepo.upsertFromLocal() }
+                                runCatching { store.setHasServerProfile(true) }
+                                runCatching { weightRepo.ensureBaseline() }
+                                runCatching { healthPlanRepo.flushPendingBestEffort() }
+                            }
+
+                            nav.navigate(target) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        } else {
+                            // ✅ 未登入：先存 pending（上面已做），再進 Gate 自動彈 Sheet
+                            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true&uploadLocal=true")
                         }
                     }
-                } else {
-                    // 未登入：★ 改 auto=true → 進 Gate 時自動彈出 SignInSheet（唯一修改）
-                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true&uploadLocal=true")
                 }
-            })
+            )
         }
 
         // Gate：支援 auto + uploadLocal，且可禁止 Skip
@@ -576,6 +603,11 @@ fun BiteCalNavHost(
 
                     onGoogle = {
                         showSheet.value = false
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                runCatching { healthPlanRepo.flushPendingBestEffort() }
+                            }
+                        }
                     },
                     onEmail = {
                         showSheet.value = false
