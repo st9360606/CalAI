@@ -155,12 +155,6 @@
     <string name="plan_bmi_label_obesity">Obesity</string>
     <string name="plan_bmi_classified_as">classified as %1$s</string>
 
-    <string name="plan_bmi_tick_18">18</string>
-    <string name="plan_bmi_tick_25">25</string>
-    <string name="plan_bmi_tick_30">30</string>
-    <string name="plan_bmi_tick_35">35</string>
-    <string name="plan_bmi_tick_40">40</string>
-
     <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
     <string name="plan_cta_start">Let\'s Get Started !</string>
 

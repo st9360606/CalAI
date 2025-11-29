@@ -78,6 +78,7 @@ import com.calai.app.data.profile.repo.kgToLbs1 // ★ 共用轉換工具
 import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
+import androidx.compose.ui.graphics.lerp
 
 // === Colors（保持你的設定） ===
 val PrimaryGreen = Color(0xFF59B34C)
@@ -459,7 +460,12 @@ private fun BmiCard(
         BmiClass.Obesity -> R.string.plan_bmi_label_obesity
     }
     val baseLabel = stringResource(labelRes)
-    val tone = bmiClassColor(klass)
+    // 文字顏色：跟彩條同位置一致（你要的效果）
+    val valueTone = BmiScale.colorAt(bmi)
+
+    // 分類顏色：語意用（膠囊用這個比較合理）
+    val klassTone = BmiPalette.colorOf(klass)
+
 
     // 依 BMI 顯示「Obesity class I/II/III」
     val obesityStage = HealthCalc.obesityClass(bmi)
@@ -495,21 +501,21 @@ private fun BmiCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 val bmiText = remember(bmi) { String.format(Locale.getDefault(), "%.1f", bmi) }
-                Text(bmiText, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = tone)
+                Text(bmiText, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = valueTone)
                 // 用 displayLabel（可能含 class）
-                Text(displayLabel, color = tone, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text(displayLabel, color = valueTone, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
             }
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(999.dp))
-                    .background(tone.copy(alpha = 0.15f))
+                    .background(klassTone.copy(alpha = 0.15f))
                     .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 // 「You are classified as %1$s」→ 帶入同一組文字
                 val lower = displayLabel.lowercase(Locale.getDefault())
                 Text(
                     text = stringResource(R.string.plan_bmi_classified_as, lower),
-                    color = tone,
+                    color = klassTone,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -522,27 +528,18 @@ private fun BmiCard(
                 .fillMaxWidth()
                 .height(10.dp)
                 .clip(RoundedCornerShape(999.dp))
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            Color(0xFF60A5FA), // under
-                            Color(0xFF69BC8E), // normal
-                            Color(0xFFF9AE30), // over
-                            Color(0xFFE83E56)  // obese
-                        )
-                    )
-                )
+                .background(BmiScale.brush())
         )
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            listOf(
-                stringResource(R.string.plan_bmi_tick_18),
-                stringResource(R.string.plan_bmi_tick_25),
-                stringResource(R.string.plan_bmi_tick_30),
-                stringResource(R.string.plan_bmi_tick_35),
-                stringResource(R.string.plan_bmi_tick_40)
-            ).forEach { m ->
-                Text(m, color = NeutralText, fontSize = 12.sp)
+        Row(modifier = Modifier.fillMaxWidth()) {
+            listOf("15", "20", "25", "30", "35").forEach { m ->
+                Text(
+                    text = m,
+                    color = NeutralText,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }
@@ -567,14 +564,6 @@ private fun BmiCard(
         bookIconRes = R.drawable.ic_book,
         onSeeMore = { /* TODO */ }
     )
-}
-
-@Composable
-private fun bmiClassColor(klass: BmiClass): Color = when (klass) {
-    BmiClass.Underweight -> Color(0xFF60A5FA)
-    BmiClass.Normal -> BmiGood
-    BmiClass.Overweight -> Color(0xFFF59E0B)
-    BmiClass.Obesity -> Color(0xFFEF4444)
 }
 
 // === 「How to reach your goals」整段區塊 ===
@@ -868,3 +857,63 @@ private fun lbsDiffFloor1(currKg: Float, targetKg: Float): Float {
     val diff = targetLbs - currLbs
     return ((diff * 10f).toInt() / 10f)
 }
+
+
+object BmiPalette {
+    // ✅ 這四個顏色要「同時」供：BMI數字/label/膠囊/進度條 使用
+    val Under = Color(0xFF60A5FA)
+    val Normal = Color(0xFF69BC8E)
+    val Over = Color(0xFFF9AE30)
+    val Obese = Color(0xFFE83E56)
+
+    fun colorOf(klass: BmiClass): Color = when (klass) {
+        BmiClass.Underweight -> Under
+        BmiClass.Normal -> Normal
+        BmiClass.Overweight -> Over
+        BmiClass.Obesity -> Obese
+    }
+
+    val GradientColors: List<Color> = listOf(Under, Normal, Over, Obese)
+}
+
+private object BmiScale {
+    // ✅ 新刻度範圍
+    private const val MIN = 15f
+    private const val MAX = 35f
+
+    // ✅ 以刻度當 stop：15/20/25/30/35
+    private val stops: List<Pair<Float, Color>> = listOf(
+        15f to Color(0xFF60A5FA), // 15: blue
+        20f to Color(0xFF69BC8E), // 20: green
+        25f to Color(0xFFF9AE30), // 25: yellow/orange
+        30f to Color(0xFFE87A3C), // 30: orange
+        35f to Color(0xFFE83E56)  // 35: red
+    )
+
+    /** 給彩條用：位置對齊刻度的 Gradient */
+    fun brush(): Brush {
+        val colorStops = stops
+            .map { (value, color) ->
+                val p = ((value - MIN) / (MAX - MIN)).coerceIn(0f, 1f)
+                p to color
+            }
+            .toTypedArray()
+
+        return Brush.horizontalGradient(colorStops = colorStops)
+    }
+
+    /** 給 BMI 數字用：在同一套 stops 內插值取色 */
+    fun colorAt(bmi: Double): Color {
+        val v = bmi.toFloat().coerceIn(MIN, MAX)
+
+        val idx = stops.indexOfLast { it.first <= v }.coerceAtLeast(0)
+        if (idx >= stops.lastIndex) return stops.last().second
+
+        val (aV, aC) = stops[idx]
+        val (bV, bC) = stops[idx + 1]
+
+        val t = ((v - aV) / (bV - aV)).coerceIn(0f, 1f)
+        return lerp(aC, bC, t)
+    }
+}
+
