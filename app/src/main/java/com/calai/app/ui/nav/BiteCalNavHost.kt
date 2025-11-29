@@ -4,7 +4,9 @@ package com.calai.app.ui.nav
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.net.Uri
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.foundation.layout.padding
@@ -16,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.HiltViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,6 +41,7 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.personal.PersonalScreen
+import com.calai.app.ui.home.ui.personal.model.PersonalViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.weight.EditTargetWeightScreen
 import com.calai.app.ui.home.ui.weight.RecordWeightScreen
@@ -53,6 +57,26 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
 import com.calai.app.ui.home.ui.weight.WeightScreen
+import com.calai.app.ui.onboarding.age.AgeSelectionScreen
+import com.calai.app.ui.onboarding.age.AgeSelectionViewModel
+import com.calai.app.ui.onboarding.exercise.ExerciseFrequencyScreen
+import com.calai.app.ui.onboarding.exercise.ExerciseFrequencyViewModel
+import com.calai.app.ui.onboarding.gender.GenderKey
+import com.calai.app.ui.onboarding.gender.GenderSelectionScreen
+import com.calai.app.ui.onboarding.gender.GenderSelectionViewModel
+import com.calai.app.ui.onboarding.goal.GoalSelectionScreen
+import com.calai.app.ui.onboarding.goal.GoalSelectionViewModel
+import com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen
+import com.calai.app.ui.onboarding.height.HeightSelectionScreen
+import com.calai.app.ui.onboarding.height.HeightSelectionViewModel
+import com.calai.app.ui.onboarding.plan.HealthPlanScreen
+import com.calai.app.ui.onboarding.plan.HealthPlanViewModel
+import com.calai.app.ui.onboarding.progress.ComputationProgressScreen
+import com.calai.app.ui.onboarding.progress.ComputationProgressViewModel
+import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
+import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
+import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
+import com.calai.app.ui.onboarding.weight.WeightSelectionViewModel
 
 object Routes {
     const val LANDING = "landing"
@@ -88,6 +112,25 @@ object Routes {
     const val RECORD_WEIGHT = "record_weight"
     const val EDIT_TARGET_WEIGHT = "edit_target_weight"
 }
+private fun NavController.GoHome() {
+    // 1) back stack 裡有 HOME → 直接 pop 回 HOME
+    val popped = popBackStack(Routes.HOME, inclusive = false)
+    if (popped) return
+
+    // 2) back stack 沒 HOME（極少數）→ 直接導回 HOME，並清乾淨
+    navigate(Routes.HOME) {
+        popUpTo(0) { inclusive = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
+private fun toHttpUriOrNull(raw: String?): Uri? {
+    val s = raw?.trim().orEmpty()
+    if (s.isBlank()) return null
+    val uri = runCatching { Uri.parse(s) }.getOrNull() ?: return null
+    return uri.takeIf { it.scheme == "http" || it.scheme == "https" }
+}
 
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
@@ -96,7 +139,7 @@ private tailrec fun Context.findActivity(): Activity? =
         else -> null
     }
 
-private fun androidx.navigation.NavController.safePopBackStack(): Boolean =
+private fun NavController.safePopBackStack(): Boolean =
     previousBackStackEntry != null && popBackStack()
 
 @Composable
@@ -250,14 +293,14 @@ fun BiteCalNavHost(
         // ===== Onboarding：性別 → ... → Plan =====
         composable(Routes.ONBOARD_GENDER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.gender.GenderSelectionViewModel = viewModel(
+            val vm: GenderSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.gender.GenderSelectionScreen(
+            GenderSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { _: com.calai.app.ui.onboarding.gender.GenderKey ->
+                onNext = { _: GenderKey ->
                     nav.navigate(Routes.ONBOARD_REFERRAL) { launchSingleTop = true }
                 }
             )
@@ -265,11 +308,11 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_REFERRAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel = viewModel(
+            val vm: ReferralSourceViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen(
+            ReferralSourceScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_AGE) { launchSingleTop = true } }
@@ -278,11 +321,11 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_AGE) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.age.AgeSelectionViewModel = viewModel(
+            val vm: AgeSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.age.AgeSelectionScreen(
+            AgeSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_HEIGHT) { launchSingleTop = true } }
@@ -291,11 +334,11 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_HEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.height.HeightSelectionViewModel = viewModel(
+            val vm: HeightSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.height.HeightSelectionScreen(
+            HeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_WEIGHT) { launchSingleTop = true } }
@@ -304,11 +347,11 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.weight.WeightSelectionViewModel = viewModel(
+            val vm: WeightSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.weight.WeightSelectionScreen(
+            WeightSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_EXERCISE_FREQ) { launchSingleTop = true } }
@@ -317,11 +360,11 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_EXERCISE_FREQ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.exercise.ExerciseFrequencyViewModel = viewModel(
+            val vm: ExerciseFrequencyViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.exercise.ExerciseFrequencyScreen(
+            ExerciseFrequencyScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_GOAL) { launchSingleTop = true } }
@@ -330,11 +373,11 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_GOAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.goal.GoalSelectionViewModel = viewModel(
+            val vm: GoalSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.goal.GoalSelectionScreen(
+            GoalSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
@@ -386,7 +429,7 @@ fun BiteCalNavHost(
             if (activity != null) {
                 // ★ 關鍵：在 route 外層提供 Owner，確保 rememberLauncherForActivityResult 有可用的 registry
                 CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
-                    com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen(
+                    HealthConnectIntroScreen(
                         onBack = { nav.safePopBackStack() },
                         onSkip = {
                             nav.navigate(Routes.PLAN_PROGRESS) {
@@ -404,7 +447,7 @@ fun BiteCalNavHost(
                 }
             } else {
                 // 拿不到 owner（極少數情況，例如 Preview）→ 畫面照常，按「繼續」會直接 onSkip，不會閃退
-                com.calai.app.ui.onboarding.healthconnect.HealthConnectIntroScreen(
+                HealthConnectIntroScreen(
                     onBack = { nav.safePopBackStack() },
                     onSkip = {
                         nav.navigate(Routes.PLAN_PROGRESS) {
@@ -425,11 +468,11 @@ fun BiteCalNavHost(
         // 運算進度頁
         composable(Routes.PLAN_PROGRESS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.progress.ComputationProgressViewModel = viewModel(
+            val vm: ComputationProgressViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            com.calai.app.ui.onboarding.progress.ComputationProgressScreen(
+            ComputationProgressScreen(
                 vm = vm,
                 onDone = {
                     nav.navigate(Routes.ROUTE_PLAN) {
@@ -443,14 +486,13 @@ fun BiteCalNavHost(
         // ROUTE_PLAN：未登入 → Gate(禁止 Skip)；已登入 → 先 upsert 再進 HOME
         composable(Routes.ROUTE_PLAN) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: com.calai.app.ui.onboarding.plan.HealthPlanViewModel =
-                androidx.lifecycle.viewmodel.compose.viewModel(
+            val vm: HealthPlanViewModel = viewModel(
                     viewModelStoreOwner = backStackEntry,
                     factory = HiltViewModelFactory(activity, backStackEntry)
-                )
+            )
             // ✅ 在 Composable 區塊建立 scope，而不是在 onStart 裡
             val routeScope = rememberCoroutineScope()
-            com.calai.app.ui.onboarding.plan.HealthPlanScreen(vm = vm, onStart = {
+            HealthPlanScreen(vm = vm, onStart = {
                 val target = Routes.HOME
                 if (isSignedIn == true) {
                     // ✅ 這裡使用上面建立好的 scope
@@ -640,31 +682,35 @@ fun BiteCalNavHost(
         composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
             val fastingVm: FastingPlanViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-            FastingPlansScreen(vm = fastingVm, onBack = { nav.popBackStack() })
+            val GoHome = remember(nav) { { nav.GoHome() } }
+            // ✅ 系統返回鍵也回 HOME
+            BackHandler { GoHome() }
+            FastingPlansScreen(
+                vm = fastingVm,
+                onBack = GoHome // ✅ UI 返回也回 HOME
+            )
         }
 
         composable(Routes.WORKOUT_HISTORY) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
 
-            // 取得與 HOME 相同的 VM（共享 today 狀態）
-            val homeBackStackEntry = remember(backStackEntry) {
-                nav.getBackStackEntry(Routes.HOME)
-            }
             val workoutVm: WorkoutViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            // ✅ 確保從 BottomBar 直接進來也會載入 presets/today
             LaunchedEffect(Unit) { workoutVm.init() }
-
+            val GoHome = remember(nav) { { nav.GoHome() } }
+            // ✅ 系統返回鍵也回 HOME
+            BackHandler { GoHome() }
             WorkoutHistoryScreen(
                 vm = workoutVm,
-                onBack = { nav.popBackStack() }
+                onBack = GoHome
             )
         }
 
@@ -762,32 +808,45 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
             val homeUi by homeVm.ui.collectAsState()
-            val avatar = homeUi.summary?.avatarUrl
+            val pUi by personalVm.ui.collectAsState()
+
+            // ✅ 1) UsersApi 的 pictureUrl 優先
+            val avatarFromUsersApi = remember(pUi.pictureUrl) {
+                toHttpUriOrNull(pUi.pictureUrl)
+            }
+
+            // ✅ 2) 沒有才 fallback 你原本 summary 的 avatar
+            val avatar = avatarFromUsersApi ?: homeUi.summary?.avatarUrl
+
+            // ✅ 3) UsersApi 的 name
+            val nameText = pUi.name?.takeIf { it.isNotBlank() } ?: "—"
+
+            // ✅ 4) age 先用 ProfileApi 回來的（你目前就是這樣）
+            val ageText = pUi.profile?.age?.let { "${it} years old" } ?: "—"
 
             PersonalScreen(
                 avatarUrl = avatar,
-                profileName = "kurt",          // TODO: 接真實 user name（例如從 profile/store）
-                ageText = "24 years old",      // TODO: 接真實年齡
+                profileName = nameText,
+                ageText = ageText,
                 currentTab = HomeTab.Personal,
-                onOpenCamera = {
-                    nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true }
-                },
+                onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
                 onOpenTab = { tab ->
                     when (tab) {
-                        HomeTab.Home -> Unit.also { nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true } }
+                        HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
                         HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
                         HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
                         HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
                         HomeTab.Personal -> Unit
                     }
                 },
-                onOpenGoalAndCurrentWeight = {
-                    nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
-                },
-                onOpenWeightHistory = {
-                    nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
-                }
+                onOpenGoalAndCurrentWeight = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
+                onOpenWeightHistory = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } }
             )
         }
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }

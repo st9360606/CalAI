@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -62,6 +63,7 @@ import com.calai.app.ui.home.HomeTab
 import com.calai.app.ui.home.components.LightHomeBackground
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.ui.components.MainBottomBar
 import com.calai.app.ui.home.ui.components.ScanFab
 
@@ -98,7 +100,7 @@ fun PersonalScreen(
         floatingActionButton = { ScanFab(onClick = onOpenCamera) },
         bottomBar = { MainBottomBar(current = currentTab, onOpenTab = onOpenTab) }
     ) { inner ->
-        SettingsContent(
+        PersonalContent(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize(),
@@ -121,7 +123,7 @@ fun PersonalScreen(
 }
 
 @Composable
-private fun SettingsContent(
+private fun PersonalContent(
     modifier: Modifier = Modifier,
     avatarUrl: Uri?,
     profileName: String,
@@ -147,9 +149,11 @@ private fun SettingsContent(
             .padding(top = 14.dp, bottom = 120.dp) // ✅ 底部多留，避免被 FAB 擋到
     ) {
         Text(
-            text = "Settings",
-            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(vertical = 10.dp)
+            text = "Personal",
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier
+                .offset(x = 7.dp, y = (-6).dp)  // ✅ 右、上
+                .padding(vertical = 10.dp)
         )
 
         ProfileCard(
@@ -232,10 +236,31 @@ private fun ProfileCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             ProfileAvatar(url = avatarUrl)
-            Spacer(Modifier.size(12.dp))
-            Column {
-                Text(text = name, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold))
-                Text(text = subtitle, style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFF9CA3AF)))
+
+            // ✅ 1) 讓名字/年齡整體往右一點：把間距加大
+            Spacer(Modifier.size(16.dp)) // 原本 12.dp
+
+            Column(
+                modifier = Modifier
+                    .padding(start = 2.dp)
+                    .offset(y = (-1).dp) // ✅ 名字+年齡整組往上 1dp（想更明顯就 -2.dp）
+            ) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF404A58),
+                        fontSize = 18.sp,     // ✅ 你要的「用 size 控制」
+                        lineHeight = 22.sp    // ✅ 順便控制行高，排版更穩
+                    )
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF1F2937)
+                    )
+                )
             }
         }
     }
@@ -257,7 +282,7 @@ private fun ProfileAvatar(url: Uri?) {
     } else {
         val req = remember(url) {
             ImageRequest.Builder(ctx)
-                .data(url)
+                .data(url ?: R.drawable.profile) // ✅ url=null 直接用預設圖
                 .crossfade(false)
                 .allowHardware(true)
                 .build()

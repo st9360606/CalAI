@@ -31,7 +31,10 @@ data class UserProfileDto(
     val targetWeightKg: Double? = null,
     val targetWeightLbs: Double? = null, // ★ Int? -> Double?
     val referralSource: String? = null,
-    val locale: String? = null
+    val locale: String? = null,
+    val timezone: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 )
 
 @Serializable

@@ -172,4 +172,38 @@ class ProfileRepository @Inject constructor(
         }
         resp
     }
+
+    suspend fun syncServerProfileToStore(): Boolean {
+        val p: UserProfileDto = getServerProfileOrNull() ?: return false
+
+        runCatching {
+            p.gender?.let { store.setGender(it) }
+            p.age?.let { store.setAge(it) }
+            p.locale?.let { store.setLocaleTag(it) }
+            p.referralSource?.let { store.setReferralSource(it) }
+            p.goal?.let { store.setGoal(it) }
+
+            // height：有 feet/inches 就視為英制，否則用 cm
+            if (p.heightFeet != null && p.heightInches != null) {
+                store.setHeightUnit(UserProfileStore.HeightUnit.FT_IN)
+                store.setHeightImperial(p.heightFeet, p.heightInches)
+                p.heightCm?.let { store.setHeightCm(roundCm1(it)) }
+            } else {
+                p.heightCm?.let {
+                    store.setHeightUnit(UserProfileStore.HeightUnit.CM)
+                    store.setHeightCm(roundCm1(it))
+                    store.clearHeightImperial()
+                }
+            }
+
+            // weight：兩制都寫入數值，但不要動 weightUnit/targetWeightUnit（偏好留在本機）
+            p.weightKg?.let { store.setWeightKg(roundKg1(it)) }
+            p.weightLbs?.let { store.setWeightLbs(roundLbs1(it)) }
+
+            p.targetWeightKg?.let { store.setTargetWeightKg(roundKg1(it)) }
+            p.targetWeightLbs?.let { store.setTargetWeightLbs(roundLbs1(it)) }
+        }
+
+        return true
+    }
 }
