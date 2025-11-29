@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,13 +31,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +60,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -84,6 +86,8 @@ import com.calai.app.ui.home.components.PanelHeights
 import com.calai.app.ui.home.components.StepsWorkoutRowModern
 import com.calai.app.ui.home.components.WeightFastingRowModern
 import com.calai.app.ui.home.model.HomeViewModel
+import com.calai.app.ui.home.ui.components.MainBottomBar
+import com.calai.app.ui.home.ui.components.ScanFab
 import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
@@ -96,21 +100,11 @@ import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.offset
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.abs
 import kotlin.math.sqrt
 
+
+enum class HomeTab { Home, Progress, Workout, Fasting, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -243,7 +237,7 @@ fun HomeScreen(
         containerColor = Color.Transparent,   // ★ 讓下方漸層透出
         floatingActionButton = { ScanFab(onClick = onOpenCamera) },
         bottomBar = {
-            BottomBar(
+            MainBottomBar(
                 current = HomeTab.Home,
                 onOpenTab = { tab ->
                     when (tab) {
@@ -255,7 +249,6 @@ fun HomeScreen(
                     }
                 }
             )
-
         }
     ) { inner ->
         val s = ui.summary ?: return@Scaffold
@@ -630,108 +623,6 @@ private fun TwoPagePager(
     }
 }
 
-enum class HomeTab { Home, Progress, Workout, Fasting, Personal }
-
-// 2. BottomBar：文字與點擊目標更新成 Workout / Daily
-@Composable
-private fun BottomBar(
-    current: HomeTab,
-    onOpenTab: (HomeTab) -> Unit
-) {
-    val barSurface = Color(0xFFF5F5F5)
-    val selected = Color(0xFF111114)
-    val unselected = Color(0xFF9CA3AF)
-    Column(
-        modifier = Modifier.background(barSurface)
-    ) {
-        // ❌ 移除這一行就不會有灰色分隔線了
-        // HorizontalDivider(
-        //     modifier = Modifier.fillMaxWidth(),
-        //     color = Color(0xFFE5E7EB),
-        //     thickness = 1.dp
-        // )
-
-        NavigationBar(
-            modifier = Modifier
-                .padding(horizontal = 8.dp), // 左右不留空
-            containerColor = barSurface,
-            contentColor = selected,
-            tonalElevation = 0.dp
-        ) {
-            NavigationBarItem(
-                selected = current == HomeTab.Home,
-                onClick = { onOpenTab(HomeTab.Home) },
-                label = { Text("Home") },
-                icon = { Icon(Icons.Filled.Home, null) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = selected,
-                    selectedTextColor = selected,
-                    unselectedIconColor = unselected,
-                    unselectedTextColor = unselected,
-                    indicatorColor = Color.Transparent
-                )
-            )
-
-            NavigationBarItem(
-                selected = current == HomeTab.Progress,
-                onClick = { onOpenTab(HomeTab.Progress) },
-                label = { Text("Progress") },
-                icon = { Icon(Icons.Filled.BarChart, null) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = selected,
-                    selectedTextColor = selected,
-                    unselectedIconColor = unselected,
-                    unselectedTextColor = unselected,
-                    indicatorColor = Color.Transparent
-                )
-            )
-
-            NavigationBarItem(
-                selected = current == HomeTab.Workout,
-                onClick = { onOpenTab(HomeTab.Workout) },
-                label = { Text("Workout") },
-                icon = { Icon(Icons.Filled.Edit, null) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = selected,
-                    selectedTextColor = selected,
-                    unselectedIconColor = unselected,
-                    unselectedTextColor = unselected,
-                    indicatorColor = Color.Transparent
-                )
-            )
-
-            NavigationBarItem(
-                selected = current == HomeTab.Fasting,
-                onClick = { onOpenTab(HomeTab.Fasting) },
-                label = { Text("Fasting") },
-                icon = { Icon(Icons.Filled.AccessTime, null) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = selected,
-                    selectedTextColor = selected,
-                    unselectedIconColor = unselected,
-                    unselectedTextColor = unselected,
-                    indicatorColor = Color.Transparent
-                )
-            )
-
-            NavigationBarItem(
-                selected = current == HomeTab.Personal,
-                onClick = { onOpenTab(HomeTab.Personal) },
-                label = { Text("Personal") },
-                icon = { Icon(Icons.Filled.Person, null) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = selected,
-                    selectedTextColor = selected,
-                    unselectedIconColor = unselected,
-                    unselectedTextColor = unselected,
-                    indicatorColor = Color.Transparent
-                )
-            )
-        }
-    }
-}
-
-
 private fun openAppNotificationSettings(ctx: Context) {
     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
         // 新舊 API 都照顧到
@@ -763,153 +654,4 @@ fun computeHomeWeightProgress(
 
     // clamp 到 0~1，避免超過目標或資料錯誤
     return raw.coerceIn(0f, 1f)
-}
-
-@Composable
-fun ScanCameraIcon(
-    modifier: Modifier = Modifier,
-
-    // ✅ 參考圖：框大概是按鈕內徑的 ~0.74
-    frameRatio: Float = 0.74f,
-
-    // 四角「延伸長度」：越大越發散
-    cornerLenRatio: Float = 0.70f,
-
-    // ✅ 關鍵：四角弧度（0~1），半徑 = cornerLen * cornerRoundness
-    cornerRoundness: Float = 0.72f,
-
-    // 框線寬（參考圖是細線）
-    frameStrokeWidth: Dp = 2.2.dp,
-
-    // ✅ 參考圖框線偏灰：用白色 + alpha 做出淡灰
-    frameAlpha: Float = 0.55f,
-
-    // ＋號大小與線寬（你說要更大一點）
-    plusSizeRatio: Float = 0.62f,
-    plusStrokeWidth: Dp = 1.0.dp,
-
-    // 顏色：背景你是黑，所以框/加號是白系
-    color: Color = Color.White
-) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val d = minOf(w, h)
-
-        // === 框尺寸 ===
-        val frameSize = d * frameRatio
-        val left = (w - frameSize) / 2f
-        val top = (h - frameSize) / 2f
-        val right = left + frameSize
-        val bottom = top + frameSize
-
-        val cornerLen = frameSize * cornerLenRatio
-        val radius = (cornerLen * cornerRoundness).coerceIn(0f, cornerLen)
-
-        val frameStroke = Stroke(
-            width = frameStrokeWidth.toPx(),
-            cap = StrokeCap.Round
-        )
-
-        val frameColor = color.copy(alpha = frameAlpha)
-
-        fun drawCornerPath(path: Path) {
-            drawPath(
-                path = path,
-                color = frameColor,
-                style = frameStroke
-            )
-        }
-
-        // ===== 左上（水平 -> 圓弧 -> 垂直）=====
-        drawCornerPath(
-            Path().apply {
-                moveTo(left + cornerLen, top)
-                lineTo(left + radius, top)
-                quadraticBezierTo(left, top, left, top + radius)  // ✅ 大圓弧
-                lineTo(left, top + cornerLen)
-            }
-        )
-
-        // ===== 右上 =====
-        drawCornerPath(
-            Path().apply {
-                moveTo(right - cornerLen, top)
-                lineTo(right - radius, top)
-                quadraticBezierTo(right, top, right, top + radius)
-                lineTo(right, top + cornerLen)
-            }
-        )
-
-        // ===== 左下 =====
-        drawCornerPath(
-            Path().apply {
-                moveTo(left, bottom - cornerLen)
-                lineTo(left, bottom - radius)
-                quadraticBezierTo(left, bottom, left + radius, bottom)
-                lineTo(left + cornerLen, bottom)
-            }
-        )
-
-        // ===== 右下 =====
-        drawCornerPath(
-            Path().apply {
-                moveTo(right - cornerLen, bottom)
-                lineTo(right - radius, bottom)
-                quadraticBezierTo(right, bottom, right, bottom - radius)
-                lineTo(right, bottom - cornerLen)
-            }
-        )
-
-        // ===== 中間 ＋ =====
-        val cx = w / 2f
-        val cy = h / 2f
-        val plusLen = frameSize * plusSizeRatio
-        val plusStrokePx = plusStrokeWidth.toPx()
-
-        // 橫線
-        drawLine(
-            color = color,
-            start = Offset(cx - plusLen / 2f, cy),
-            end = Offset(cx + plusLen / 2f, cy),
-            strokeWidth = plusStrokePx,
-            cap = StrokeCap.Round
-        )
-        // 直線
-        drawLine(
-            color = color,
-            start = Offset(cx, cy - plusLen / 2f),
-            end = Offset(cx, cy + plusLen / 2f),
-            strokeWidth = plusStrokePx,
-            cap = StrokeCap.Round
-        )
-    }
-}
-@Composable
-fun ScanFab(onClick: () -> Unit) {
-    FloatingActionButton(
-        onClick = onClick,
-        shape = CircleShape,
-        containerColor = Color(0xFF111114), // 黑底
-        contentColor = Color.White,
-        elevation = FloatingActionButtonDefaults.elevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 8.dp
-        ),
-        modifier = Modifier
-            .size(68.dp)
-            .offset(x = 6.dp, y = 6.dp)   // ✅ 往右 + 往下
-    ) {
-        // 參考圖內部 icon 大概佔 FAB 的一半多一點
-        ScanCameraIcon(
-            modifier = Modifier.size(45.dp),
-            frameRatio = 0.74f,
-            cornerLenRatio = 0.28f,
-            cornerRoundness = 0.6f,
-            frameStrokeWidth = 1.6.dp,
-            frameAlpha = 0.55f,
-            plusSizeRatio = 0.49f,     // 你要更大就加這個
-            plusStrokeWidth = 2.0.dp
-        )
-    }
 }

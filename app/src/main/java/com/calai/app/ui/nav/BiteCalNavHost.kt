@@ -4,7 +4,6 @@ package com.calai.app.ui.nav
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistryOwner
@@ -22,9 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.calai.app.R
 import com.calai.app.data.auth.net.SessionBus
-import com.calai.app.data.weight.repo.WeightRepository
 import com.calai.app.di.AppEntryPoint
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.LanguageSessionFlag
@@ -40,6 +37,7 @@ import com.calai.app.ui.home.HomeTab
 import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.app.ui.home.ui.personal.PersonalScreen
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.weight.EditTargetWeightScreen
 import com.calai.app.ui.home.ui.weight.RecordWeightScreen
@@ -755,9 +753,43 @@ fun BiteCalNavHost(
             )
         }
 
+        composable(Routes.PERSONAL) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
 
+            val homeVm: HomeViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
 
-        composable(Routes.PERSONAL) { SimplePlaceholder("Personal") }
+            val homeUi by homeVm.ui.collectAsState()
+            val avatar = homeUi.summary?.avatarUrl
+
+            PersonalScreen(
+                avatarUrl = avatar,
+                profileName = "kurt",          // TODO: 接真實 user name（例如從 profile/store）
+                ageText = "24 years old",      // TODO: 接真實年齡
+                currentTab = HomeTab.Personal,
+                onOpenCamera = {
+                    nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true }
+                },
+                onOpenTab = { tab ->
+                    when (tab) {
+                        HomeTab.Home -> Unit.also { nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true } }
+                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Personal -> Unit
+                    }
+                },
+                onOpenGoalAndCurrentWeight = {
+                    nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                },
+                onOpenWeightHistory = {
+                    nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                }
+            )
+        }
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 
