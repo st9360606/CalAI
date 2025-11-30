@@ -242,41 +242,34 @@ private fun RecordWeightScreenContent(
             Box {
                 Button(
                     onClick = {
+                        // ✅ 0) 把「使用者這次用的單位」寫回 DataStore，WeightScreen 才會跟著變
+                        val unitUsed = if (useMetric) {
+                            UserProfileStore.WeightUnit.KG
+                        } else {
+                            UserProfileStore.WeightUnit.LBS
+                        }
+
                         // 1) 依目前 UI 單位計算要送到後端的 kg & lbs
                         val (kgToSave, lbsToSave) = if (useMetric) {
-                            // === KG 模式 ===
-                            // ★ 關鍵：用 BigDecimal.valueOf 做一位小數四捨五入，
-                            //   確保「使用者看到的 78.2」就是送 78.2 到後端。
-                            val kgClamped = valueKg
-                                .coerceIn(KG_MIN, KG_MAX)
+                            val kgClamped = valueKg.coerceIn(KG_MIN, KG_MAX)
                             val kgRounded = roundToOneDecimal(kgClamped)
-                            val lbs = kgToLbs1(kgRounded)  // 轉給後端用的 lbs（可有可無）
-
+                            val lbs = kgToLbs1(kgRounded)
                             kgRounded to lbs
                         } else {
-                            // === LBS 模式 ===
-                            val rawLbs = (valueLbsTenths
-                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)) / 10.0
-
-                            // ★ 同樣用 BigDecimal 做一位小數四捨五入，
-                            //   確保 173.0 / 173.4 這種都精準落在一位小數。
+                            val rawLbs = (valueLbsTenths.coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)) / 10.0
                             val lbsRounded = roundToOneDecimal(rawLbs)
-
-                            val kg = lbsToKg1(lbsRounded)
-                                .coerceIn(KG_MIN, KG_MAX)
-
+                            val kg = lbsToKg1(lbsRounded).coerceIn(KG_MIN, KG_MAX)
                             kg to lbsRounded
                         }
 
-                        // 2) 如有選圖片，先把 Uri 複製成暫存 File（給 MultipartBody 用）
                         val photoFile = uriStringToCacheFile(context, photoUriString)
 
-                        // 3) 呼叫 ViewModel：會 upsert history + timeseries + user_profiles
                         vm.save(
                             weightKg = kgToSave,
                             weightLbs = lbsToSave,
                             date = selectedDate,
-                            photo = photoFile
+                            photo = photoFile,
+                            unitUsedToPersist = unitUsed  // ✅ 只有成功才會寫回
                         )
                         onSaved()
                     },
