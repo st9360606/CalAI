@@ -118,6 +118,7 @@ class ProfileRepository @Inject constructor(
             goal = p.goal,
             targetWeightKg = targetKgToSend,
             targetWeightLbs = targetLbsToSend,
+            dailyStepGoal = p.dailyStepGoal,
             referralSource = p.referralSource,
             locale = localeTag
         )
@@ -142,6 +143,7 @@ class ProfileRepository @Inject constructor(
             goal = cur.goal,
             targetWeightKg = cur.targetWeightKg,
             targetWeightLbs = cur.targetWeightLbs,
+            dailyStepGoal = cur.dailyStepGoal,
             referralSource = cur.referralSource,
             locale = newLocale
         )
@@ -182,7 +184,7 @@ class ProfileRepository @Inject constructor(
             p.locale?.let { store.setLocaleTag(it) }
             p.referralSource?.let { store.setReferralSource(it) }
             p.goal?.let { store.setGoal(it) }
-
+            p.dailyStepGoal?.let { store.setDailyStepGoal(it) } // ✅ NEW（你需在 store 加 setter）
             // height：有 feet/inches 就視為英制，否則用 cm
             if (p.heightFeet != null && p.heightInches != null) {
                 store.setHeightUnit(UserProfileStore.HeightUnit.FT_IN)

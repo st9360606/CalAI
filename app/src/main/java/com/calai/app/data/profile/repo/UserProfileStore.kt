@@ -52,6 +52,12 @@ class UserProfileStore @Inject constructor(
         val WATER_GOAL_ML = intPreferencesKey("water_goal_ml")
         val WATER_TODAY_DATE = stringPreferencesKey("water_today_date")
         val WATER_TODAY_ML = intPreferencesKey("water_today_ml")
+        val DAILY_STEP_GOAL = intPreferencesKey("daily_step_goal")
+    }
+
+    private companion object {
+        const val DEFAULT_DAILY_STEP_GOAL = 10000
+        const val MAX_DAILY_STEP_GOAL = 200000
     }
 
     private val dateFmt: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -291,6 +297,26 @@ class UserProfileStore @Inject constructor(
         }
     }
 
+    // ======= 每日步數目標 =======  UI 用：永遠有值（沒設定就顯示 10000）
+    val dailyStepGoalFlow: Flow<Int> =
+        context.userProfileDataStore.data.map { p ->
+            p[Keys.DAILY_STEP_GOAL] ?: DEFAULT_DAILY_STEP_GOAL
+        }
+
+    // 上傳用：保留 raw nullable，避免不小心覆蓋 server 已設定值
+    suspend fun dailyStepGoalRaw(): Int? =
+        context.userProfileDataStore.data.map { it[Keys.DAILY_STEP_GOAL] }.first()
+
+    suspend fun setDailyStepGoal(v: Int) {
+        context.userProfileDataStore.edit { p ->
+            p[Keys.DAILY_STEP_GOAL] = v.coerceIn(0, MAX_DAILY_STEP_GOAL)
+        }
+    }
+
+    suspend fun clearDailyStepGoal() {
+        context.userProfileDataStore.edit { it.remove(Keys.DAILY_STEP_GOAL) }
+    }
+
     // ======= 快照（登入後上傳 & 冷啟檢查） =======
     data class LocalProfileSnapshot(
         val gender: String?,
@@ -308,6 +334,7 @@ class UserProfileStore @Inject constructor(
         val targetWeightLbs: Float?,
         val exerciseFreqPerWeek: Int?,
         val goal: String?,
+        val dailyStepGoal: Int?,
         val locale: String?,
         val fastingPlan: String?,
         val waterGoalMl: Int?,
@@ -334,7 +361,8 @@ class UserProfileStore @Inject constructor(
             goal = p[Keys.GOAL],
             locale = p[Keys.LOCALE_TAG],
             fastingPlan = p[Keys.FASTING_PLAN],
-            waterGoalMl = p[Keys.WATER_GOAL_ML]
+            waterGoalMl = p[Keys.WATER_GOAL_ML],
+            dailyStepGoal = p[Keys.DAILY_STEP_GOAL] // ✅ NEW
         )
     }
 
@@ -355,6 +383,7 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.TARGET_WEIGHT_LBS)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)
+            p.remove(Keys.DAILY_STEP_GOAL) // ✅ 建議加
             // 不清 LOCALE_TAG、HAS_SERVER_PROFILE、FASTING_PLAN、WATER_*
         }
     }

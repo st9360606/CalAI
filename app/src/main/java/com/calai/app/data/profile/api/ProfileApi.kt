@@ -30,6 +30,7 @@ data class UserProfileDto(
     val goal: String? = null,
     val targetWeightKg: Double? = null,
     val targetWeightLbs: Double? = null, // ★ Int? -> Double?
+    val dailyStepGoal: Int? = null,          // ✅ NEW
     val referralSource: String? = null,
     val locale: String? = null,
     val timezone: String? = null,
@@ -50,6 +51,7 @@ data class UpsertProfileRequest(
     val goal: String?,
     val targetWeightKg: Double?,
     val targetWeightLbs: Double?,      // ★
+    val dailyStepGoal: Int?,                 // ✅ NEW
     val referralSource: String?,
     val locale: String?
 )

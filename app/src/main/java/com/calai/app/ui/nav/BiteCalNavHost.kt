@@ -41,6 +41,7 @@ import com.calai.app.ui.home.model.HomeViewModel
 import com.calai.app.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.personal.PersonalScreen
+import com.calai.app.ui.home.ui.personal.details.PersonalDetailsScreen
 import com.calai.app.ui.home.ui.personal.model.PersonalViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.weight.EditTargetWeightScreen
@@ -77,6 +78,14 @@ import com.calai.app.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.app.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.app.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.app.ui.onboarding.weight.WeightSelectionViewModel
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import kotlinx.coroutines.delay
+import com.calai.app.ui.home.ui.components.SuccessTopToast
+import com.calai.app.ui.home.ui.components.ErrorTopToast
+import com.calai.app.ui.home.ui.components.SuccessTopToast
 
 object Routes {
     const val LANDING = "landing"
@@ -111,6 +120,7 @@ object Routes {
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
     const val EDIT_TARGET_WEIGHT = "edit_target_weight"
+    const val PERSONAL_DETAILS = "personal_details"
 }
 private fun NavController.GoHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
@@ -878,8 +888,74 @@ fun BiteCalNavHost(
                     }
                 },
                 onOpenGoalAndCurrentWeight = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
-                onOpenWeightHistory = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } }
+                onOpenWeightHistory = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
+                onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
             )
+        }
+
+        composable(Routes.PERSONAL_DETAILS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val weightVm: WeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            LaunchedEffect(Unit) { weightVm.initIfNeeded() }
+
+            val pUi by personalVm.ui.collectAsState()
+            val wUi by weightVm.ui.collectAsState()
+
+            Box(Modifier.fillMaxSize()) {
+
+                PersonalDetailsScreen(
+                    profile = pUi.profile,
+                    unit = wUi.unit,
+                    goalKgFromWeightVm = wUi.goal,
+                    goalLbsFromWeightVm = wUi.goalLbs,
+                    currentKgFromTimeseries = wUi.current,
+                    currentLbsFromTimeseries = wUi.currentLbs,
+                    onBack = { nav.popBackStack() },
+                    onChangeGoal = { nav.navigate(Routes.EDIT_TARGET_WEIGHT) },
+                    onEditCurrentWeight = { nav.navigate(Routes.RECORD_WEIGHT) }
+                )
+
+                // ✅ 優先顯示 error（避免成功/失敗同時跳）
+                val errorMsg = wUi.error?.takeIf { it.isNotBlank() }
+                val successMsg = wUi.toastMessage?.takeIf { it.isNotBlank() }
+
+                when {
+                    errorMsg != null -> {
+                        ErrorTopToast(
+                            message = errorMsg,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                        LaunchedEffect(errorMsg) {
+                            delay(2_000)
+                            weightVm.clearError()
+                        }
+                    }
+
+                    successMsg != null -> {
+                        SuccessTopToast(
+                            message = successMsg,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            minWidth = 150.dp,
+                            minHeight = 30.dp
+                        )
+                        LaunchedEffect(successMsg) {
+                            delay(2_000)
+                            weightVm.clearToast()
+                        }
+                    }
+                }
+            }
         }
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
