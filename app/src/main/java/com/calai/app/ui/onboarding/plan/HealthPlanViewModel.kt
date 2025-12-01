@@ -29,12 +29,12 @@ data class HealthPlanUiState(
 
     // 原本就有的欄位（保留）
     val weightUnit: UserProfileStore.WeightUnit? = null,
-    val targetWeightKg: Float? = null,
-    val targetWeightUnit: UserProfileStore.WeightUnit? = null,
+    val goalWeightKg: Float? = null,
+    val goalWeightUnit: UserProfileStore.WeightUnit? = null,
 
     // ★ 新增：給 UI 顯示用（已依 displayUnit 轉成 kg 或 lbs）
     val weightDisplay: Float? = null,
-    val targetWeightDisplay: Float? = null,
+    val goalWeightDisplay: Float? = null,
     val displayUnit: UserProfileStore.WeightUnit? = null,
 
     // ✅ 新增：存後端用
@@ -94,19 +94,19 @@ class HealthPlanViewModel @Inject constructor(
                 .combine(store.weightLbsFlow) { combined, weightLbs ->
                     combined.copy(weightLbs = weightLbs)
                 }
-                .combine(store.targetWeightKgFlow) { combined, targetKg ->
-                    combined.copy(targetWeightKg = targetKg)
+                .combine(store.goalWeightKgFlow) { combined, goalKg ->
+                    combined.copy(goalWeightKg = goalKg)
                 }
-                .combine(store.targetWeightLbsFlow) { combined, targetLbs ->
-                    combined.copy(targetWeightLbs = targetLbs)
+                .combine(store.goalWeightLbsFlow) { combined, goalLbs ->
+                    combined.copy(goalWeightLbs = goalLbs)
                 }
-                .combine(store.targetWeightUnitFlow) { combined, targetUnit ->
-                    combined.copy(targetWeightUnit = targetUnit)
+                .combine(store.goalWeightUnitFlow) { combined, goalUnit ->
+                    combined.copy(goalWeightUnit = goalUnit)
                 }
                 .collect { c ->
                     // === 決定顯示單位 ===
                     val unit = c.weightUnit ?: UserProfileStore.WeightUnit.KG
-                    val displayUnit = unit // 目前直接沿用，可依需求改成「若 current null 就看 targetUnit」
+                    val displayUnit = unit // 目前直接沿用，可依需求改成「若 current null 就看 goalUnit」
 
                     // === 目前體重顯示值（已依 displayUnit 換算） ===
                     val weightDisplay: Float? = when (displayUnit) {
@@ -124,16 +124,16 @@ class HealthPlanViewModel @Inject constructor(
                     }
 
                     // === 目標體重顯示值（已依 displayUnit 換算） ===
-                    val targetDisplay: Float? = when (displayUnit) {
+                    val goalDisplay: Float? = when (displayUnit) {
                         UserProfileStore.WeightUnit.LBS ->
-                            c.targetWeightLbs
-                                ?: c.targetWeightKg?.let { kg ->
+                            c.goalWeightLbs
+                                ?: c.goalWeightKg?.let { kg ->
                                     kgToLbs1(kg.toDouble()).toFloat()
                                 }
 
                         UserProfileStore.WeightUnit.KG ->
-                            c.targetWeightKg
-                                ?: c.targetWeightLbs?.let { lbs ->
+                            c.goalWeightKg
+                                ?: c.goalWeightLbs?.let { lbs ->
                                     lbsToKg1(lbs.toDouble()).toFloat()
                                 }
                     }
@@ -146,10 +146,10 @@ class HealthPlanViewModel @Inject constructor(
                         inputs = c.inputs,
                         plan = plan,
                         weightUnit = unit,
-                        targetWeightKg = c.targetWeightKg,
-                        targetWeightUnit = c.targetWeightUnit,
+                        goalWeightKg = c.goalWeightKg,
+                        goalWeightUnit = c.goalWeightUnit,
                         weightDisplay = weightDisplay,
-                        targetWeightDisplay = targetDisplay,
+                        goalWeightDisplay = goalDisplay,
                         displayUnit = displayUnit
                     )
                 }
@@ -187,7 +187,7 @@ class HealthPlanViewModel @Inject constructor(
             age = inputs.age,
             heightCm = inputs.heightCm.toDouble(),
             weightKg = inputs.weightKg.toDouble(),
-            targetWeightKg = snapshot.targetWeightKg?.toDouble(),
+            goalWeightKg = snapshot.goalWeightKg?.toDouble(),
             unitPreference = unitPref,
             workoutsPerWeek = inputs.workoutsPerWeek,
             kcal = plan.kcal,
@@ -205,8 +205,8 @@ class HealthPlanViewModel @Inject constructor(
 /**
  * 用來把所有相關 Flow 串起來的中繼資料結構。
  * - weightKg / weightLbs：目前體重（兩種單位）
- * - targetWeightKg / targetWeightLbs：目標體重（兩種單位）
- * - weightUnit / targetWeightUnit：使用者偏好的單位
+ * - goalWeightKg / goalWeightLbs：目標體重（兩種單位）
+ * - weightUnit / goalWeightUnit：使用者偏好的單位
  */
 private data class CombinedInputs(
     val inputs: HealthInputs,
@@ -215,7 +215,7 @@ private data class CombinedInputs(
     val weightKg: Float?,
 
     val weightLbs: Float? = null,
-    val targetWeightKg: Float? = null,
-    val targetWeightLbs: Float? = null,
-    val targetWeightUnit: UserProfileStore.WeightUnit? = null
+    val goalWeightKg: Float? = null,
+    val goalWeightLbs: Float? = null,
+    val goalWeightUnit: UserProfileStore.WeightUnit? = null
 )

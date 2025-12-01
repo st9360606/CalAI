@@ -92,10 +92,10 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
     val currentLbs = ui.currentLbs ?: ui.profileWeightLbs
 
     // ---------- 目標體重：一律用 DB user_profiles（SummaryDto.goal*） ----------
-    val goalKg  = ui.goal      // ★ DB target_weight_kg
-    val goalLbs = ui.goalLbs   // ★ DB target_weight_lbs
+    val goalKg  = ui.goal      // ★ DB goal_weight_kg
+    val goalLbs = ui.goalLbs   // ★ DB goal_weight_lbs
 
-    // TO TARGET：還是用 kg 為基準算差值（顯示時再依單位轉）
+    // TO GOAL WEIGHT：還是用 kg 為基準算差值（顯示時再依單位轉）
     val gainedText = formatDeltaGoalMinusCurrentFromDb(
         goalKg = goalKg,
         goalLbs = goalLbs,
@@ -122,7 +122,7 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
         unit = unit
     )
 
-    // ---------- edgeRight：只拿 DB 目標體重（Summary / user_profiles.target_*） ----------
+    // ---------- edgeRight：只拿 DB 目標體重（Summary / user_profiles.goal*） ----------
     val edgeRight = formatWeightFromDb(
         kg  = goalKg,
         lbs = goalLbs,
@@ -146,7 +146,7 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 左欄：TO TARGET
+                // 左欄：TO GOAL WEIGHT
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -154,7 +154,7 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
                     horizontalAlignment = Alignment.Start
                 ) {
                     UpperLabel(
-                        text = "TO TARGET",
+                        text = "TO GOAL WEIGHT",
                         color = label,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -369,10 +369,10 @@ fun formatWeightCard(
         // LBS 模式：一律走共用的 kgToLbs1，確保跟 Record / 後端一致
         val lbs = kgToLbs1(kg)
         if (lbsAsInt) {
-            // 只要整數：TO TARGET / axis label 等場合你想顯示 176 lbs 這種
+            // 只要整數：TO GOAL WEIGHT / axis label 等場合你想顯示 176 lbs 這種
             String.format("%d lbs", lbs.toInt())
         } else {
-            // 顯示到小數點一位：如 CURRENT WEIGHT、TO TARGET 主數字
+            // 顯示到小數點一位：如 CURRENT WEIGHT、TO GOAL WEIGHT 主數字
             String.format("%.1f lbs", lbs)
         }
     }
@@ -509,11 +509,11 @@ fun FilterTabs(
 fun WeightChartCard(
     ui: WeightViewModel.UiState,
     startWeightAllTimeKg: Double? = null,
-    onEditTargetWeight: () -> Unit       // ★ 新增
+    onEditGoalWeight: () -> Unit       // ★ 新增
 ) {
     val unit          = ui.unit
     val currentKg     = ui.current ?: ui.profileWeightKg
-    val goalKg        = ui.goal              // ★ 只用 DB user_profiles.target_weight_kg
+    val goalKg        = ui.goal              // ★ 只用 DB user_profiles.goal_weight_kg
     val profileWeight = ui.profileWeightKg   // 起點仍然用 DB 的 current weight
 
     val progressFraction = computeWeightProgress(
@@ -553,7 +553,7 @@ fun WeightChartCard(
                 )
                 GoalProgressBadge(
                     progressPercent = progressPercent,
-                    onClick = onEditTargetWeight
+                    onClick = onEditGoalWeight
                 )
             }
 
@@ -1352,10 +1352,10 @@ private fun GoalProgressChart(
         val selectedLabelIndex: Int? = shownIndex
             ?.takeIf { it in chartData.dates.indices }
             ?.let { pi ->
-                val target = chartData.dates[pi]
+                val goal = chartData.dates[pi]
                 if (chartData.axisDates.isEmpty()) return@let null
                 chartData.axisDates.withIndex()
-                    .minByOrNull { (_, d) -> kotlin.math.abs(d.toEpochDay() - target.toEpochDay()) }
+                    .minByOrNull { (_, d) -> kotlin.math.abs(d.toEpochDay() - goal.toEpochDay()) }
                     ?.index
             }
 
@@ -1785,7 +1785,7 @@ private fun buildCatmullRomPath(
 }
 
 /**
- * TO TARGET 專用（修正版）：
+ * TO GOAL 專用（修正版）：
  * - KG 模式：用 goalKg - currentKg
  * - LBS 模式：優先用 DB 的 goalLbs - currentLbs（避免 kg→lbs 誤差）
  *   若 lbs 任何一個為 null，才 fallback 用 kg 差值轉 lbs

@@ -44,19 +44,16 @@ import com.calai.app.ui.home.ui.personal.PersonalScreen
 import com.calai.app.ui.home.ui.personal.details.PersonalDetailsScreen
 import com.calai.app.ui.home.ui.personal.model.PersonalViewModel
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
-import com.calai.app.ui.home.ui.weight.EditTargetWeightScreen
 import com.calai.app.ui.home.ui.weight.RecordWeightScreen
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutHistoryScreen
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.app.ui.landing.LandingScreen
 import com.calai.app.ui.onboarding.notifications.NotificationPermissionScreen
-import com.calai.app.ui.onboarding.targetweight.WeightTargetScreen
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.calai.app.ui.onboarding.targetweight.WeightTargetViewModel
 import com.calai.app.ui.home.ui.weight.WeightScreen
 import com.calai.app.ui.onboarding.age.AgeSelectionScreen
 import com.calai.app.ui.onboarding.age.AgeSelectionViewModel
@@ -86,6 +83,9 @@ import kotlinx.coroutines.delay
 import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.components.ErrorTopToast
 import com.calai.app.ui.home.ui.components.SuccessTopToast
+import com.calai.app.ui.home.ui.weight.EditGoalWeightScreen
+import com.calai.app.ui.onboarding.goalweight.WeightGoalScreen
+import com.calai.app.ui.onboarding.goalweight.WeightGoalViewModel
 
 object Routes {
     const val LANDING = "landing"
@@ -98,7 +98,7 @@ object Routes {
     const val ONBOARD_AGE = "onboard_age"
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
-    const val ONBOARD_TARGET_WEIGHT = "onboard_target_weight"
+    const val ONBOARD_GOAL_WEIGHT = "onboard_goal_weight"
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
     const val ONBOARD_NOTIF = "onboard_notif"
@@ -119,7 +119,7 @@ object Routes {
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
-    const val EDIT_TARGET_WEIGHT = "edit_target_weight"
+    const val EDIT_GOAL_WEIGHT = "edit_goal_weight"
     const val PERSONAL_DETAILS = "personal_details"
 }
 private fun NavController.GoHome() {
@@ -406,17 +406,17 @@ fun BiteCalNavHost(
             GoalSelectionScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
-                onNext = { nav.navigate(Routes.ONBOARD_TARGET_WEIGHT) { launchSingleTop = true } }
+                onNext = { nav.navigate(Routes.ONBOARD_GOAL_WEIGHT) { launchSingleTop = true } }
             )
         }
 
-        composable(Routes.ONBOARD_TARGET_WEIGHT) { backStackEntry ->
+        composable(Routes.ONBOARD_GOAL_WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: WeightTargetViewModel = viewModel(
+            val vm: WeightGoalViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            WeightTargetScreen(
+            WeightGoalScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_NOTIF) { launchSingleTop = true } }
@@ -521,7 +521,7 @@ fun BiteCalNavHost(
             HealthPlanScreen(
                 vm = vm,
                 onStart = {
-                    val target = Routes.HOME
+                    val goal = Routes.HOME
 
                     routeScope.launch {
                         // ✅ 先存 health plan（best-effort：未登入/失敗會 pending）
@@ -538,14 +538,14 @@ fun BiteCalNavHost(
                                 runCatching { healthPlanRepo.flushPendingBestEffort() }
                             }
 
-                            nav.navigate(target) {
+                            nav.navigate(goal) {
                                 popUpTo(0) { inclusive = true }
                                 launchSingleTop = true
                                 restoreState = false
                             }
                         } else {
                             // ✅ 未登入：先存 pending（上面已做），再進 Gate 自動彈 Sheet
-                            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$target&auto=true&uploadLocal=true")
+                            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$goal&auto=true&uploadLocal=true")
                         }
                     }
                 }
@@ -776,8 +776,8 @@ fun BiteCalNavHost(
                         restoreState = true
                     }
                 },
-                onEditTargetWeight = {
-                    nav.navigate(Routes.EDIT_TARGET_WEIGHT) {
+                onEditGoalWeight = {
+                    nav.navigate(Routes.EDIT_GOAL_WEIGHT) {
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -824,7 +824,7 @@ fun BiteCalNavHost(
             }
         }
 
-        composable(Routes.EDIT_TARGET_WEIGHT) { backStackEntry ->
+        composable(Routes.EDIT_GOAL_WEIGHT) { backStackEntry ->
             val ctx = LocalContext.current
             val activity = (ctx.findActivity() ?: hostActivity)
 
@@ -834,10 +834,10 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-            EditTargetWeightScreen(
+            EditGoalWeightScreen(
                 vm = vm,
                 onCancel = { nav.popBackStack() },
-                onSaved = { nav.popBackStack() }   // vm.updateTargetWeight 內已 refresh
+                onSaved = { nav.popBackStack() }   // vm.updateGoalWeight 內已 refresh
             )
         }
 
@@ -922,7 +922,7 @@ fun BiteCalNavHost(
                     currentKgFromTimeseries = wUi.current,
                     currentLbsFromTimeseries = wUi.currentLbs,
                     onBack = { nav.popBackStack() },
-                    onChangeGoal = { nav.navigate(Routes.EDIT_TARGET_WEIGHT) },
+                    onChangeGoal = { nav.navigate(Routes.EDIT_GOAL_WEIGHT) },
                     onEditCurrentWeight = { nav.navigate(Routes.RECORD_WEIGHT) }
                 )
 

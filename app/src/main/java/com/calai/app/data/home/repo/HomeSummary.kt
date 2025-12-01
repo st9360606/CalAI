@@ -18,7 +18,7 @@ data class HomeSummary(
     val waterGoalMl: Int,
     val waterTodayMl: Int,
     /**
-     * Δ = current - target
+     * Δ = current - goal
      * - 正數：目前比目標重 → 還需要「減重」的量
      * - 負數：目前比目標輕 → 已超過目標，理論上可以「增重」到目標
      */

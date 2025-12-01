@@ -135,9 +135,9 @@ fun PersonalDetailsScreen(
             ) {
                 // ===== Goal Weight Card =====
                 val (goalMain, goalSub) = formatWeightBothLines(
-                    // ✅ 改成：WeightVM goal > profile target > —
-                    kg = goalKgFromWeightVm ?: profile?.targetWeightKg,
-                    lbs = goalLbsFromWeightVm ?: profile?.targetWeightLbs,
+                    // ✅ 改成：WeightVM goal > profile goal > —
+                    kg = goalKgFromWeightVm ?: profile?.goalWeightKg,
+                    lbs = goalLbsFromWeightVm ?: profile?.goalWeightLbs,
                     unit = unit
                 )
 

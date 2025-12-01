@@ -78,11 +78,11 @@ fun ScrollingNumberWheel(
                 .coerceIn(0, dataList.lastIndex)
 
             // 我們希望 firstVisible = centerIndex - 2
-            val targetFirstVisible = (centerIndex - centerOffset)
+            val goalFirstVisible = (centerIndex - centerOffset)
                 .coerceIn(0, dataList.lastIndex)
 
             scope.launch {
-                listState.animateScrollToItem(targetFirstVisible)
+                listState.animateScrollToItem(goalFirstVisible)
             }
 
             val newValue = dataList.getOrNull(centerIndex)

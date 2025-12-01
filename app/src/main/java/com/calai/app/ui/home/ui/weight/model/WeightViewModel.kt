@@ -45,8 +45,8 @@ class WeightViewModel @Inject constructor(
         // --- Profile（本機快照），用來當最後一層 fallback ---
         val profileWeightKg: Double? = null,
         val profileWeightLbs: Double? = null,
-        val profileTargetWeightKg: Double? = null,
-        val profileTargetWeightLbs: Double? = null,
+        val profileGoalWeightKg: Double? = null,
+        val profileGoalWeightLbs: Double? = null,
 
         val achievedPercent: Double = 0.0,
         val series: List<WeightItemDto> = emptyList(),
@@ -89,7 +89,7 @@ class WeightViewModel @Inject constructor(
                 }
         }
 
-        // 其他 flows 你原本那些照舊（kg/lbs/target...）
+        // 其他 flows 你原本那些照舊（kg/lbs/goal...）
         viewModelScope.launch {
             store.weightKgFlow.distinctUntilChanged()
                 .collect { w -> _ui.update { it.copy(profileWeightKg = w?.toDouble()) } }
@@ -99,12 +99,12 @@ class WeightViewModel @Inject constructor(
                 .collect { w -> _ui.update { it.copy(profileWeightLbs = w?.toDouble()) } }
         }
         viewModelScope.launch {
-            store.targetWeightKgFlow.distinctUntilChanged()
-                .collect { t -> _ui.update { it.copy(profileTargetWeightKg = t?.toDouble()) } }
+            store.goalWeightKgFlow.distinctUntilChanged()
+                .collect { t -> _ui.update { it.copy(profileGoalWeightKg = t?.toDouble()) } }
         }
         viewModelScope.launch {
-            store.targetWeightLbsFlow.distinctUntilChanged()
-                .collect { t -> _ui.update { it.copy(profileTargetWeightLbs = t?.toDouble()) } }
+            store.goalWeightLbsFlow.distinctUntilChanged()
+                .collect { t -> _ui.update { it.copy(profileGoalWeightLbs = t?.toDouble()) } }
         }
     }
 
@@ -279,13 +279,13 @@ class WeightViewModel @Inject constructor(
     /**
      * 更新目標體重（成功才切單位）
      */
-    fun updateTargetWeight(
+    fun updateGoalWeight(
         value: Double,
         unit: UserProfileStore.WeightUnit,
         onResult: (Result<Unit>) -> Unit
     ) {
         viewModelScope.launch {
-            val res = profileRepo.updateTargetWeight(value, unit)
+            val res = profileRepo.updateGoalWeight(value, unit)
             res.onSuccess {
                 // ✅ 成功才 commit 單位（避免失敗也切）
                 commitUnitAfterSuccess(unit)
@@ -293,7 +293,7 @@ class WeightViewModel @Inject constructor(
                 runCatching { refresh() }
                 _ui.update {
                     it.copy(
-                        toastMessage = "Target weight updated !",
+                        toastMessage = "Goal weight updated !",
                         error = null
                     )
                 }

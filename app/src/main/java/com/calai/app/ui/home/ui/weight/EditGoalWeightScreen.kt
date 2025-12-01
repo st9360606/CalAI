@@ -1,6 +1,5 @@
 package com.calai.app.ui.home.ui.weight
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,7 +27,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -65,7 +63,7 @@ import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun EditTargetWeightScreen(
+fun EditGoalWeightScreen(
     vm: WeightViewModel,
     onCancel: () -> Unit,
     onSaved: () -> Unit
@@ -77,8 +75,8 @@ fun EditTargetWeightScreen(
     // === 和 RecordWeightScreen 對齊的限制 ===
     val KG_MIN = 20.0
     val KG_MAX = 800.0
-    val LBS_TENTHS_MIN = kgToLbsTenthsForTarget(KG_MIN)
-    val LBS_TENTHS_MAX = kgToLbsTenthsForTarget(KG_MAX)
+    val LBS_TENTHS_MIN = kgToLbsTenthsForGoal(KG_MIN)
+    val LBS_TENTHS_MAX = kgToLbsTenthsForGoal(KG_MAX)
     val LBS_INT_MIN = LBS_TENTHS_MIN / 10
     val LBS_INT_MAX = LBS_TENTHS_MAX / 10
 
@@ -89,13 +87,13 @@ fun EditTargetWeightScreen(
     val baseKg: Double = remember(ui) {
         val kgCandidate =
             ui.goal
-                ?: ui.profileTargetWeightKg
+                ?: ui.profileGoalWeightKg
                 ?: ui.current
                 ?: ui.profileWeightKg
 
         val lbsCandidate =
             ui.goalLbs
-                ?: ui.profileTargetWeightLbs
+                ?: ui.profileGoalWeightLbs
                 ?: ui.currentLbs
                 ?: ui.profileWeightLbs
 
@@ -107,7 +105,7 @@ fun EditTargetWeightScreen(
     }
 
     val baseLbsTenths: Int = remember(baseKg) {
-        kgToLbsTenthsForTarget(baseKg)
+        kgToLbsTenthsForGoal(baseKg)
             .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
     }
 
@@ -137,7 +135,7 @@ fun EditTargetWeightScreen(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             WeightTopBar(
-                title = "Edit target weight",
+                title = "Edit goal weight",
                 onBack = onCancel
             )
         },
@@ -163,17 +161,17 @@ fun EditTargetWeightScreen(
                             val (valueToSave, unitToSave) =
                                 if (useMetric) {
                                     val kgClamped = valueKg.coerceIn(KG_MIN, KG_MAX)
-                                    val kgRounded = roundToOneDecimalForTarget(kgClamped)
+                                    val kgRounded = roundToOneDecimalForGoal(kgClamped)
                                     kgRounded to UserProfileStore.WeightUnit.KG
                                 } else {
                                     val rawLbs = (valueLbsTenths
                                         .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)) / 10.0
-                                    val lbsRounded = roundToOneDecimalForTarget(rawLbs)
+                                    val lbsRounded = roundToOneDecimalForGoal(rawLbs)
                                     lbsRounded to UserProfileStore.WeightUnit.LBS
                                 }
 
                             scope.launch {
-                                vm.updateTargetWeight(
+                                vm.updateGoalWeight(
                                     value = valueToSave,
                                     unit = unitToSave
                                 ) { result ->
@@ -188,7 +186,7 @@ fun EditTargetWeightScreen(
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(
                                                     message = e.message
-                                                        ?: "Failed to update target weight"
+                                                        ?: "Failed to update goal weight"
                                                 )
                                             }
                                         }
@@ -234,7 +232,7 @@ fun EditTargetWeightScreen(
             Spacer(Modifier.height(80.dp))
 
             // --- 單位 Segmented：和 RecordWeightScreen 一樣的膠囊切換 ---
-            WeightUnitSegmentedForTarget(
+            WeightUnitSegmentedForGoal(
                 useMetric = useMetric,
                 onChange = { useMetric = it },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -254,7 +252,7 @@ fun EditTargetWeightScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NumberWheelForTarget(
+                    NumberWheelForGoal(
                         range = KG_MIN.toInt()..KG_MAX.toInt(),
                         value = kgIntSel,
                         onValueChange = { newInt ->
@@ -265,7 +263,7 @@ fun EditTargetWeightScreen(
                                 )
                             val newKg = newTenths / 10.0
                             valueKg = newKg
-                            valueLbsTenths = kgToLbsTenthsForTarget(newKg)
+                            valueLbsTenths = kgToLbsTenthsForGoal(newKg)
                         },
                         rowHeight = wheelRowHeight,
                         centerTextSize = 30.sp,
@@ -280,7 +278,7 @@ fun EditTargetWeightScreen(
                         fontSize = 34.sp,
                         modifier = Modifier.padding(horizontal = 6.dp)
                     )
-                    NumberWheelForTarget(
+                    NumberWheelForGoal(
                         range = 0..9,
                         value = kgDecSel,
                         onValueChange = { newDec ->
@@ -291,7 +289,7 @@ fun EditTargetWeightScreen(
                                 )
                             val newKg = newTenths / 10.0
                             valueKg = newKg
-                            valueLbsTenths = kgToLbsTenthsForTarget(newKg)
+                            valueLbsTenths = kgToLbsTenthsForGoal(newKg)
                         },
                         rowHeight = wheelRowHeight,
                         centerTextSize = 30.sp,
@@ -317,7 +315,7 @@ fun EditTargetWeightScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NumberWheelForTarget(
+                    NumberWheelForGoal(
                         range = LBS_INT_MIN..LBS_INT_MAX,
                         value = lbsIntSel,
                         onValueChange = { newInt ->
@@ -341,7 +339,7 @@ fun EditTargetWeightScreen(
                         fontSize = 34.sp,
                         modifier = Modifier.padding(horizontal = 6.dp)
                     )
-                    NumberWheelForTarget(
+                    NumberWheelForGoal(
                         range = 0..9,
                         value = lbsDecSel,
                         onValueChange = { newDec ->
@@ -381,7 +379,7 @@ fun EditTargetWeightScreen(
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(
-                        text = "Set your target weight",
+                        text = "Set your goal weight",
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -389,7 +387,7 @@ fun EditTargetWeightScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "We will use this target to calculate your progress.",
+                        text = "We will use this goal to calculate your progress.",
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -405,7 +403,7 @@ fun EditTargetWeightScreen(
 /* ---------------------------- Segmented：和 RecordWeightScreen 一樣 ---------------------------- */
 
 @Composable
-private fun WeightUnitSegmentedForTarget(
+private fun WeightUnitSegmentedForGoal(
     useMetric: Boolean,
     onChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -418,7 +416,7 @@ private fun WeightUnitSegmentedForTarget(
             .heightIn(min = 40.dp)
     ) {
         Row(Modifier.padding(6.dp)) {
-            SegItemForTarget(
+            SegItemForGoal(
                 text = "lbs",
                 selected = !useMetric,
                 onClick = { onChange(false) },
@@ -428,7 +426,7 @@ private fun WeightUnitSegmentedForTarget(
                     .height(40.dp)
             )
             Spacer(Modifier.width(6.dp))
-            SegItemForTarget(
+            SegItemForGoal(
                 text = "kg",
                 selected = useMetric,
                 onClick = { onChange(true) },
@@ -442,7 +440,7 @@ private fun WeightUnitSegmentedForTarget(
 }
 
 @Composable
-private fun SegItemForTarget(
+private fun SegItemForGoal(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -480,7 +478,7 @@ private fun SegItemForTarget(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun NumberWheelForTarget(
+private fun NumberWheelForGoal(
     range: IntRange,
     value: Int,
     onValueChange: (Int) -> Unit,
@@ -582,14 +580,14 @@ private fun NumberWheelForTarget(
     }
 }
 
-/* ---------------------------- 共用換算工具（Edit Target 用） ---------------------------- */
+/* ---------------------------- 共用換算工具（Edit Goal 用） ---------------------------- */
 
-/** 給 EditTarget 使用的 0.1 lbs 刻度（Int = 實際磅數 * 10） */
-private fun kgToLbsTenthsForTarget(kg: Double): Int =
+/** 給 EditGoal 使用的 0.1 lbs 刻度（Int = 實際磅數 * 10） */
+private fun kgToLbsTenthsForGoal(kg: Double): Int =
     (kgToLbs1(kg) * 10.0).toInt()
 
 /** 一位小數四捨五入，避免浮點誤差 */
-private fun roundToOneDecimalForTarget(value: Double): Double =
+private fun roundToOneDecimalForGoal(value: Double): Double =
     BigDecimal.valueOf(value)
         .setScale(1, RoundingMode.HALF_UP)
         .toDouble()

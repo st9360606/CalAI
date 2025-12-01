@@ -83,12 +83,12 @@ fun LandingSlideshow(
                     if (width > 0) {
                         val isLeft = offset.x < width / 2f
                         scope.launch {
-                            val target = if (isLeft) {
+                            val goal = if (isLeft) {
                                 (pagerState.currentPage - 1 + safeSlides.size) % safeSlides.size
                             } else {
                                 (pagerState.currentPage + 1) % safeSlides.size
                             }
-                            pagerState.animateScrollToPage(target)
+                            pagerState.animateScrollToPage(goal)
                         }
                     }
                 }
@@ -142,9 +142,9 @@ private fun SlideIndicator(
     ) {
         repeat(pageCount) { index ->
             val isActive = index == currentPage
-            val targetAlpha = if (isActive) 1f else 0.35f
+            val goalAlpha = if (isActive) 1f else 0.35f
             val alpha by animateFloatAsState(
-                targetValue = targetAlpha,
+                targetValue = goalAlpha,
                 animationSpec = tween(durationMillis = 220, easing = LinearEasing),
                 label = "dotAlpha"
             )

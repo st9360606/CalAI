@@ -37,10 +37,10 @@ class UserProfileStore @Inject constructor(
         val WEIGHT_UNIT = stringPreferencesKey("weight_unit")
         val WEIGHT_LBS = floatPreferencesKey("weight_lbs")
 
-        // Target Weight (metric + imperial)
-        val TARGET_WEIGHT = floatPreferencesKey("target_weight_kg")
-        val TARGET_WEIGHT_UNIT = stringPreferencesKey("target_weight_unit")
-        val TARGET_WEIGHT_LBS = floatPreferencesKey("target_weight_lbs")
+        // Goal Weight (metric + imperial)
+        val GOAL_WEIGHT = floatPreferencesKey("goal_weight_kg")
+        val GOAL_WEIGHT_UNIT = stringPreferencesKey("goal_weight_unit")
+        val GOAL_WEIGHT_LBS = floatPreferencesKey("goal_weight_lbs")
 
         val EXERCISE_FREQ_PER_WEEK = intPreferencesKey("exercise_freq_per_week")
         val GOAL = stringPreferencesKey("goal")
@@ -167,34 +167,34 @@ class UserProfileStore @Inject constructor(
     }
 
     // ======= 目標體重（kg + lbs） =======
-    val targetWeightKgFlow: Flow<Float?> =
-        context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT] }
+    val goalWeightKgFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.GOAL_WEIGHT] }
 
-    suspend fun setTargetWeightKg(kg: Float) {
-        context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT] = kg }
+    suspend fun setGoalWeightKg(kg: Float) {
+        context.userProfileDataStore.edit { it[Keys.GOAL_WEIGHT] = kg }
     }
 
-    val targetWeightUnitFlow: Flow<WeightUnit?> =
+    val goalWeightUnitFlow: Flow<WeightUnit?> =
         context.userProfileDataStore.data.map { p ->
-            p[Keys.TARGET_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
+            p[Keys.GOAL_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() }
         }
 
-    suspend fun setTargetWeightUnit(unit: WeightUnit) {
-        context.userProfileDataStore.edit { it[Keys.TARGET_WEIGHT_UNIT] = unit.name }
+    suspend fun setGoalWeightUnit(unit: WeightUnit) {
+        context.userProfileDataStore.edit { it[Keys.GOAL_WEIGHT_UNIT] = unit.name }
     }
 
     // ======= 目標體重 LBS =======
-    val targetWeightLbsFlow: Flow<Float?> =
-        context.userProfileDataStore.data.map { it[Keys.TARGET_WEIGHT_LBS] }
+    val goalWeightLbsFlow: Flow<Float?> =
+        context.userProfileDataStore.data.map { it[Keys.GOAL_WEIGHT_LBS] }
 
-    suspend fun setTargetWeightLbs(lbs: Float) {
+    suspend fun setGoalWeightLbs(lbs: Float) {
         context.userProfileDataStore.edit {
-            it[Keys.TARGET_WEIGHT_LBS] = clampLbsForStore(lbs)
+            it[Keys.GOAL_WEIGHT_LBS] = clampLbsForStore(lbs)
         }
     }
 
-    suspend fun clearTargetWeightLbs() {
-        context.userProfileDataStore.edit { it.remove(Keys.TARGET_WEIGHT_LBS) }
+    suspend fun clearGoalWeightLbs() {
+        context.userProfileDataStore.edit { it.remove(Keys.GOAL_WEIGHT_LBS) }
     }
 
     // ======= 鍛鍊頻率 =======
@@ -329,9 +329,9 @@ class UserProfileStore @Inject constructor(
         val weightKg: Float?,
         val weightUnit: WeightUnit?,
         val weightLbs: Float?,
-        val targetWeightKg: Float?,
-        val targetWeightUnit: WeightUnit?,
-        val targetWeightLbs: Float?,
+        val goalWeightKg: Float?,
+        val goalWeightUnit: WeightUnit?,
+        val goalWeightLbs: Float?,
         val exerciseFreqPerWeek: Int?,
         val goal: String?,
         val dailyStepGoal: Int?,
@@ -354,9 +354,9 @@ class UserProfileStore @Inject constructor(
             weightKg = p[Keys.WEIGHT],
             weightUnit = p[Keys.WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() },
             weightLbs = p[Keys.WEIGHT_LBS],
-            targetWeightKg = p[Keys.TARGET_WEIGHT],
-            targetWeightUnit = p[Keys.TARGET_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() },
-            targetWeightLbs = p[Keys.TARGET_WEIGHT_LBS],
+            goalWeightKg = p[Keys.GOAL_WEIGHT],
+            goalWeightUnit = p[Keys.GOAL_WEIGHT_UNIT]?.let { runCatching { WeightUnit.valueOf(it) }.getOrNull() },
+            goalWeightLbs = p[Keys.GOAL_WEIGHT_LBS],
             exerciseFreqPerWeek = p[Keys.EXERCISE_FREQ_PER_WEEK],
             goal = p[Keys.GOAL],
             locale = p[Keys.LOCALE_TAG],
@@ -378,9 +378,9 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.WEIGHT)
             // p.remove(Keys.WEIGHT_UNIT)
             p.remove(Keys.WEIGHT_LBS)
-            p.remove(Keys.TARGET_WEIGHT)
-            // p.remove(Keys.TARGET_WEIGHT_UNIT)
-            p.remove(Keys.TARGET_WEIGHT_LBS)
+            p.remove(Keys.GOAL_WEIGHT)
+            // p.remove(Keys.GOAL_WEIGHT_UNIT)
+            p.remove(Keys.GOAL_WEIGHT_LBS)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)
             p.remove(Keys.DAILY_STEP_GOAL) // ✅ 建議加

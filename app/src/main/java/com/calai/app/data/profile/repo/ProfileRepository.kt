@@ -1,7 +1,7 @@
 package com.calai.app.data.profile.repo
 
 import com.calai.app.data.profile.api.ProfileApi
-import com.calai.app.data.profile.api.UpdateTargetWeightRequest
+import com.calai.app.data.profile.api.UpdateGoalWeightRequest
 import com.calai.app.data.profile.api.UpsertProfileRequest
 import com.calai.app.data.profile.api.UserProfileDto
 import retrofit2.HttpException
@@ -84,15 +84,15 @@ class ProfileRepository @Inject constructor(
                 null to null
         }
 
-        // 原始 current / target 體重
+        // 原始 current / goal 體重
         val rawWeightKg:   Double? = p.weightKg?.toDouble()
         val rawWeightLbs:  Double? = p.weightLbs?.toDouble()
-        val rawTargetKg:   Double? = p.targetWeightKg?.toDouble()
-        val rawTargetLbs:  Double? = p.targetWeightLbs?.toDouble()
+        val rawGoalKg:   Double? = p.goalWeightKg?.toDouble()
+        val rawGoalLbs:  Double? = p.goalWeightLbs?.toDouble()
 
         // 使用者偏好的主單位
         val weightUnit = p.weightUnit ?: UserProfileStore.WeightUnit.KG
-        val targetWeightUnit = p.targetWeightUnit ?: weightUnit
+        val goalWeightUnit = p.goalWeightUnit ?: weightUnit
 
         // --- current：只送主單位 ---
         val (weightKgToSend, weightLbsToSend) = when (weightUnit) {
@@ -100,10 +100,10 @@ class ProfileRepository @Inject constructor(
             UserProfileStore.WeightUnit.LBS -> null         to rawWeightLbs
         }
 
-        // --- target：只送主單位 ---
-        val (targetKgToSend, targetLbsToSend) = when (targetWeightUnit) {
-            UserProfileStore.WeightUnit.KG  -> rawTargetKg  to null
-            UserProfileStore.WeightUnit.LBS -> null         to rawTargetLbs
+        // --- goal：只送主單位 ---
+        val (goalKgToSend, goalLbsToSend) = when (goalWeightUnit) {
+            UserProfileStore.WeightUnit.KG  -> rawGoalKg  to null
+            UserProfileStore.WeightUnit.LBS -> null         to rawGoalLbs
         }
 
         val req = UpsertProfileRequest(
@@ -116,8 +116,8 @@ class ProfileRepository @Inject constructor(
             weightLbs = weightLbsToSend,
             exerciseLevel = toExerciseLevel(p.exerciseFreqPerWeek),
             goal = p.goal,
-            targetWeightKg = targetKgToSend,
-            targetWeightLbs = targetLbsToSend,
+            goalWeightKg = goalKgToSend,
+            goalWeightLbs = goalLbsToSend,
             dailyStepGoal = p.dailyStepGoal,
             referralSource = p.referralSource,
             locale = localeTag
@@ -141,8 +141,8 @@ class ProfileRepository @Inject constructor(
             weightLbs = cur.weightLbs,
             exerciseLevel = cur.exerciseLevel,
             goal = cur.goal,
-            targetWeightKg = cur.targetWeightKg,
-            targetWeightLbs = cur.targetWeightLbs,
+            goalWeightKg = cur.goalWeightKg,
+            goalWeightLbs = cur.goalWeightLbs,
             dailyStepGoal = cur.dailyStepGoal,
             referralSource = cur.referralSource,
             locale = newLocale
@@ -156,21 +156,21 @@ class ProfileRepository @Inject constructor(
      * - value 先在 client 做一次「無條件捨去到小數第 1 位」，再給後端
      *   （後端仍會再 clamp + floor，一致更安全）
      */
-    suspend fun updateTargetWeight(
+    suspend fun updateGoalWeight(
         value: Double,
         unit: UserProfileStore.WeightUnit
     ): Result<UserProfileDto> = runCatching {
         val trimmed = round1Floor(value)   // e.g. 73.04 → 73.0, 152.09 → 152.0
-        val body = UpdateTargetWeightRequest(
+        val body = UpdateGoalWeightRequest(
             value = trimmed,
             unit = unit.name               // "KG" or "LBS"
         )
-        val resp = api.updateTargetWeight(body)
+        val resp = api.updateGoalWeight(body)
 
         // 同步回本機 DataStore（快照用）
         runCatching {
-            resp.targetWeightKg?.let { store.setTargetWeightKg(it.toFloat()) }
-            resp.targetWeightLbs?.let { store.setTargetWeightLbs(it.toFloat()) }
+            resp.goalWeightKg?.let { store.setGoalWeightKg(it.toFloat()) }
+            resp.goalWeightLbs?.let { store.setGoalWeightLbs(it.toFloat()) }
         }
         resp
     }
@@ -198,12 +198,12 @@ class ProfileRepository @Inject constructor(
                 }
             }
 
-            // weight：兩制都寫入數值，但不要動 weightUnit/targetWeightUnit（偏好留在本機）
+            // weight：兩制都寫入數值，但不要動 weightUnit/goalWeightUnit（偏好留在本機）
             p.weightKg?.let { store.setWeightKg(roundKg1(it)) }
             p.weightLbs?.let { store.setWeightLbs(roundLbs1(it)) }
 
-            p.targetWeightKg?.let { store.setTargetWeightKg(roundKg1(it)) }
-            p.targetWeightLbs?.let { store.setTargetWeightLbs(roundLbs1(it)) }
+            p.goalWeightKg?.let { store.setGoalWeightKg(roundKg1(it)) }
+            p.goalWeightLbs?.let { store.setGoalWeightLbs(roundLbs1(it)) }
         }
 
         return true

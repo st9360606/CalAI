@@ -40,8 +40,8 @@ fun WorkoutAddButton(
     iconSizeDp: Dp = 24.dp    // ✅ 白色「＋」加大
 ) {
     val scope = rememberCoroutineScope()
-    var flashAlphaTarget by remember { mutableFloatStateOf(0f) }
-    val animatedAlpha by animateFloatAsState(targetValue = flashAlphaTarget, label = "workoutAddFlash")
+    var flashAlphaGoal by remember { mutableFloatStateOf(0f) }
+    val animatedAlpha by animateFloatAsState(targetValue = flashAlphaGoal, label = "workoutAddFlash")
     val noRipple = remember { MutableInteractionSource() }
 
     Box(
@@ -49,9 +49,9 @@ fun WorkoutAddButton(
             .size(outerSizeDp)
             .clickable(interactionSource = noRipple, indication = null) {
                 scope.launch {
-                    flashAlphaTarget = 0.4f
+                    flashAlphaGoal = 0.4f
                     delay(120)
-                    flashAlphaTarget = 0f
+                    flashAlphaGoal = 0f
                 }
                 onClick()
             },

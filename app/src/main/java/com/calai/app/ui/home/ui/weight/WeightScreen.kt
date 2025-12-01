@@ -55,7 +55,7 @@ import java.time.LocalDate
 fun WeightScreen(
     vm: WeightViewModel,
     onLogClick: () -> Unit,
-    onEditTargetWeight: () -> Unit,
+    onEditGoalWeight: () -> Unit,
     onBack: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
@@ -147,7 +147,7 @@ fun WeightScreen(
                         WeightChartCard(
                             ui = ui,
                             startWeightAllTimeKg = ui.firstWeightAllTimeKg,
-                            onEditTargetWeight = onEditTargetWeight
+                            onEditGoalWeight = onEditGoalWeight
                         )
                     }
 

@@ -83,7 +83,7 @@
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_weight_hint">這將用於校準你的自訂計畫。</string>
     <string name="onboard_weight_zero_error">請輸入大於 0 的體重</string>
-    <string name="onboard_target_weight_title">你的目標體重是多少？</string>
+    <string name="onboard_goal_weight_title">你的目標體重是多少？</string>
 
     <!-- exercise -->
     <string name="onboard_ex_freq_title">你平均每週運動幾次？</string>

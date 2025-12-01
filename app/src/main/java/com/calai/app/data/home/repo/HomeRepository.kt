@@ -40,7 +40,7 @@ class HomeRepository @Inject constructor(
     private fun isValidAge(v: Int?) = v != null && v in 10..150
     private fun isValidHeight(v: Double?) = v != null && v in 80.0..350.0
     private fun isValidWeight(v: Double?) = v != null && v in 20.0..800.0
-    private fun isValidTargetWeight(v: Double?) = v != null && v in 20.0..800.0
+    private fun isValidGoalWeight(v: Double?) = v != null && v in 20.0..800.0
 
     private fun levelToBucket(level: String?): Int? = when (level?.lowercase()) {
         "sedentary"                  -> 0
@@ -74,7 +74,7 @@ class HomeRepository @Inject constructor(
         val heightCm = p.heightCm?.takeIf { isValidHeight(it) } ?: error("height missing/invalid")
         val weightKg = p.weightKg?.takeIf { isValidWeight(it) } ?: error("weight missing/invalid")
 
-        val targetWeightKg = p.targetWeightKg?.takeIf { isValidTargetWeight(it) } // 可為空
+        val goalWeightKg = p.goalWeightKg?.takeIf { isValidGoalWeight(it) } // 可為空
         val workouts = levelToBucket(p.exerciseLevel) ?: 0
         val goalKey = p.goal
 
@@ -99,9 +99,9 @@ class HomeRepository @Inject constructor(
         val waterGoal = defaultWaterGoalMl(weightKg)
         val waterNow = runCatching { store.waterTodayFlow.first() }.getOrDefault(0)
 
-        // 6) 體重差：依「使用者當前選擇的單位」計算 Δ = target - current
+        // 6) 體重差：依「使用者當前選擇的單位」計算 Δ = goal - current
         val weightUnitPref = local.weightUnit ?: UserProfileStore.WeightUnit.KG
-        val targetWeightUnitPref = local.targetWeightUnit ?: weightUnitPref
+        val goalWeightUnitPref = local.goalWeightUnit ?: weightUnitPref
 
         // ---- 先決定 current 的「精確 kg」 ----
         val currentKgBase: Double = when (weightUnitPref) {
@@ -122,22 +122,22 @@ class HomeRepository @Inject constructor(
             }
         }
 
-        // ---- 再決定 target 的「精確 kg」（可能為 null） ----
-        val targetKgBase: Double? = when (targetWeightUnitPref) {
+        // ---- 再決定 goal 的「精確 kg」（可能為 null） ----
+        val goalKgBase: Double? = when (goalWeightUnitPref) {
             UserProfileStore.WeightUnit.KG -> {
-                local.targetWeightKg?.toDouble()
-                    ?: p.targetWeightKg
-                    ?: p.targetWeightLbs?.times(KG_PER_LB)
+                local.goalWeightKg?.toDouble()
+                    ?: p.goalWeightKg
+                    ?: p.goalWeightLbs?.times(KG_PER_LB)
             }
             UserProfileStore.WeightUnit.LBS -> {
-                val lbs: Double? = local.targetWeightLbs?.toDouble()
-                    ?: p.targetWeightLbs
-                    ?: p.targetWeightKg?.times(LBS_PER_KG)
+                val lbs: Double? = local.goalWeightLbs?.toDouble()
+                    ?: p.goalWeightLbs
+                    ?: p.goalWeightKg?.times(LBS_PER_KG)
                 lbs?.times(KG_PER_LB)
             }
         }
 
-        val diffKgRaw = (targetKgBase?.minus(currentKgBase)) ?: 0.0
+        val diffKgRaw = (goalKgBase?.minus(currentKgBase)) ?: 0.0
 
         val (weightDiffSigned, weightDiffUnit) =
             if (weightUnitPref == UserProfileStore.WeightUnit.KG) {
@@ -160,7 +160,7 @@ class HomeRepository @Inject constructor(
         runCatching {
             store.setHeightCm(heightCm.toFloat())
             store.setWeightKg(weightKg.toFloat())
-            targetWeightKg?.let { store.setTargetWeightKg(it.toFloat()) }
+            goalWeightKg?.let { store.setGoalWeightKg(it.toFloat()) }
             levelToBucket(p.exerciseLevel)?.let { store.setExerciseFreqPerWeek(it) }
         }
 

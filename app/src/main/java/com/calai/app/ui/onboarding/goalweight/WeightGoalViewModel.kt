@@ -1,4 +1,4 @@
-package com.calai.app.ui.onboarding.targetweight
+package com.calai.app.ui.onboarding.goalweight
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,26 +12,26 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class WeightTargetViewModel @Inject constructor(
+class WeightGoalViewModel @Inject constructor(
     private val usr: UserProfileStore
 ) : ViewModel() {
 
-    val weightKgState = usr.targetWeightKgFlow
+    val weightKgState = usr.goalWeightKgFlow
         .map { it ?: 65.0f }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 65.0f)
 
-    val weightUnitState = usr.targetWeightUnitFlow
+    val weightUnitState = usr.goalWeightUnitFlow
         .map { it ?: WeightUnit.KG }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WeightUnit.KG)
 
     // 新增：目標體重 lbs 狀態（null → 0f，視為沒設定）
-    val weightLbsState = usr.targetWeightLbsFlow
+    val weightLbsState = usr.goalWeightLbsFlow
         .map { it ?: 0f }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
 
-    fun saveWeightKg(kg: Float) = viewModelScope.launch { usr.setTargetWeightKg(kg) }
-    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch { usr.setTargetWeightUnit(u) }
+    fun saveWeightKg(kg: Float) = viewModelScope.launch { usr.setGoalWeightKg(kg) }
+    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch { usr.setGoalWeightUnit(u) }
 
-    fun saveTargetWeightLbs(lbs: Float) = viewModelScope.launch { usr.setTargetWeightLbs(lbs) }
-    fun clearTargetWeightLbs() = viewModelScope.launch { usr.clearTargetWeightLbs() }
+    fun saveGoalWeightLbs(lbs: Float) = viewModelScope.launch { usr.setGoalWeightLbs(lbs) }
+    fun clearGoalWeightLbs() = viewModelScope.launch { usr.clearGoalWeightLbs() }
 }

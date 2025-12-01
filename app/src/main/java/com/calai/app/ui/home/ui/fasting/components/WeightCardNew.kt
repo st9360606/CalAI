@@ -202,11 +202,11 @@ private fun WeightAddButton(
     val scope = rememberCoroutineScope()
 
     // 0f ~ 0.4f 控制閃光強度
-    var flashAlphaTarget by remember { mutableFloatStateOf(0f) }
+    var flashAlphaGoal by remember { mutableFloatStateOf(0f) }
 
     // 用動畫淡出閃光
     val animatedAlpha by animateFloatAsState(
-        targetValue = flashAlphaTarget,
+        targetValue = flashAlphaGoal,
         label = "weightAddFlash"
     )
 
@@ -221,9 +221,9 @@ private fun WeightAddButton(
                 indication = null
             ) {
                 scope.launch {
-                    flashAlphaTarget = 0.4f
+                    flashAlphaGoal = 0.4f
                     delay(120)
-                    flashAlphaTarget = 0f
+                    flashAlphaGoal = 0f
                 }
                 onClick()
             },

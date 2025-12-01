@@ -23,7 +23,7 @@ data class SaveHealthPlanRequest(
     val age: Int? = null,
     val heightCm: Double? = null,
     val weightKg: Double? = null,
-    val targetWeightKg: Double? = null,
+    val goalWeightKg: Double? = null,
     val unitPreference: String = "KG",
     val workoutsPerWeek: Int? = null,
 

@@ -481,7 +481,6 @@ fun WeightFastingRowModern(
     planOverride: String? = null,
     fastingEnabled: Boolean = false,
     onToggle: (Boolean) -> Unit = {},
-    // ★ 新增：Weight 卡上的主文字（= TO TARGET）
     weightPrimary: String,
     weightProgress: Float,
     onOpenWeight: () -> Unit,

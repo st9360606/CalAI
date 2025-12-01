@@ -59,8 +59,8 @@ fun UnitSwitchLabeled(
     // 位置：左=padding；右=padding+(innerWidth - pillWidth)
     val baseLeftX = padding
     val baseRightX = padding + (innerWidth - pillWidth)
-    val targetX = if (checked.xor(isRtl)) baseRightX else baseLeftX
-    val pillX by animateDpAsState(targetValue = targetX, label = "pillX")
+    val goalX = if (checked.xor(isRtl)) baseRightX else baseLeftX
+    val pillX by animateDpAsState(targetValue = goalX, label = "pillX")
 
     val stateText = if (checked) rightLabel else leftLabel
 

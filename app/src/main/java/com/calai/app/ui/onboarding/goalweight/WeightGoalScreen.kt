@@ -1,4 +1,4 @@
-package com.calai.app.ui.onboarding.targetweight
+package com.calai.app.ui.onboarding.goalweight
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -65,8 +65,8 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun WeightTargetScreen(
-    vm: WeightTargetViewModel,
+fun WeightGoalScreen(
+    vm: WeightGoalViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit,
     rowHeight: Dp = 56.dp,
@@ -87,7 +87,7 @@ fun WeightTargetScreen(
     val LBS_INT_MIN = LBS_TENTHS_MIN / 10
     val LBS_INT_MAX = LBS_TENTHS_MAX / 10
 
-    // 初始顯示單位：優先用已儲存的 targetWeightUnit；預設 LBS
+    // 初始顯示單位：優先用已儲存的 goalWeightUnit；預設 LBS
     var useMetric by rememberSaveable {
         mutableStateOf(
             when (savedUnit) {
@@ -99,7 +99,7 @@ fun WeightTargetScreen(
     }
 
     // === 初始化 kg / lbs（kg 計算、lbsTenths 記錄原始 lbs） ===
-    data class TargetInitial(val kg: Double, val lbsTenths: Int)
+    data class GoalInitial(val kg: Double, val lbsTenths: Int)
 
     val initial = remember(weightKg, weightLbs) {
         val hasLbs = weightLbs > 0f
@@ -114,14 +114,14 @@ fun WeightTargetScreen(
                 lbsToKg1(lbsVal)
             }.coerceIn(KG_MIN, KG_MAX)
 
-            TargetInitial(kgVal, lbsTenths)
+            GoalInitial(kgVal, lbsTenths)
         } else {
             val kgValBase = if (weightKg > 0f) weightKg.toDouble() else 65.0
             val kgVal = kgValBase.coerceIn(KG_MIN, KG_MAX)
             val lbsTenths = kgToLbsTenths(kgVal)
                 .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
 
-            TargetInitial(kgVal, lbsTenths)
+            GoalInitial(kgVal, lbsTenths)
         }
     }
 
@@ -185,13 +185,13 @@ fun WeightTargetScreen(
 
                         if (useMetric) {
                             vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
-                            vm.clearTargetWeightLbs()
+                            vm.clearGoalWeightLbs()
                         } else {
                             vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
                             val lbsToSave =
                                 (valueLbsTenths
                                     .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX) / 10.0).toFloat()
-                            vm.saveTargetWeightLbs(lbsToSave)
+                            vm.saveGoalWeightLbs(lbsToSave)
                         }
                         onNext()
                     },
@@ -231,7 +231,7 @@ fun WeightTargetScreen(
             )
 
             Text(
-                text = stringResource(R.string.onboard_target_weight_title),
+                text = stringResource(R.string.onboard_goal_weight_title),
                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,

@@ -65,11 +65,11 @@ private fun RoundActionButton(
     val scope = rememberCoroutineScope()
 
     // 控制閃光的目標亮度
-    var flashAlphaTarget by remember { mutableFloatStateOf(0f) }
+    var flashAlphaGoal by remember { mutableFloatStateOf(0f) }
 
     // 用動畫平滑淡出
     val animatedAlpha by animateFloatAsState(
-        targetValue = flashAlphaTarget,
+        targetValue = flashAlphaGoal,
         label = "pressFlashAlphaAnim"
     )
 
@@ -84,9 +84,9 @@ private fun RoundActionButton(
             ) {
                 scope.launch {
                     // 亮一下深灰圈（比按鈕大）
-                    flashAlphaTarget = 0.4f
+                    flashAlphaGoal = 0.4f
                     delay(120)
-                    flashAlphaTarget = 0f
+                    flashAlphaGoal = 0f
                 }
                 onClick()
             },

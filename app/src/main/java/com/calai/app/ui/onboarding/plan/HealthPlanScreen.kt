@@ -111,8 +111,8 @@ fun HealthPlanScreen(
     val plan = ui.plan
     val inputs = ui.inputs
     val weightUnit = ui.weightUnit
-    val targetWeightKg = ui.targetWeightKg
-    val targetWeightUnit = ui.targetWeightUnit ?: weightUnit
+    val goalWeightKg = ui.goalWeightKg
+    val goalWeightUnit = ui.goalWeightUnit ?: weightUnit
 
     val scroll = rememberScrollState()
 
@@ -202,12 +202,12 @@ fun HealthPlanScreen(
             }
 
             Spacer(Modifier.height(16.dp))
-            // 第二排：Water / Current Weight / Target Δ
+            // 第二排：Water / Current Weight / Goal Δ
             HydrationAndWeightRings(
                 weightKg = inputs.weightKg,
                 displayUnit = ui.displayUnit ?: weightUnit ?: UserProfileStore.WeightUnit.KG,
                 displayWeight = ui.weightDisplay,
-                displayTarget = ui.targetWeightDisplay
+                displayGoal = ui.goalWeightDisplay
             )
 
             Spacer(Modifier.height(18.dp))
@@ -338,13 +338,13 @@ private fun MacrosRings(plan: MacroPlan) {
     }
 }
 
-/** 第二排：Water / Current Weight / Target Δ */
+/** 第二排：Water / Current Weight / Goal Δ */
 @Composable
 private fun HydrationAndWeightRings(
     weightKg: Float,                              // 計算用 kg（HealthInputs）
     displayUnit: UserProfileStore.WeightUnit,     // 顯示用單位
     displayWeight: Float?,                        // 顯示用 current
-    displayTarget: Float?                         // 顯示用 target
+    displayGoal: Float?                         // 顯示用 goal
 ) {
     // 1) 水量：還是以 kg 算
     val waterMl = (35f * weightKg).roundToInt()
@@ -367,10 +367,10 @@ private fun HydrationAndWeightRings(
 
     // 3) delta 顯示：直接用「顯示用的數字」算
     val (deltaText, deltaProgress) =
-        if (displayTarget == null || displayWeight == null) {
+        if (displayGoal == null || displayWeight == null) {
             "—" to 0f
         } else {
-            val diff = delta1(displayTarget, displayWeight)  // target - current
+            val diff = delta1(displayGoal, displayWeight)  // goal - current
             val unitStr = if (displayUnit == UserProfileStore.WeightUnit.LBS) "lbs" else "kg"
             val abs = kotlin.math.abs(diff)
             val full = if (displayUnit == UserProfileStore.WeightUnit.LBS) 44f else 20f
@@ -406,8 +406,8 @@ private fun HydrationAndWeightRings(
 }
 
 // ★ 工具：用「x10 再整數」確保 0.1 精度的差值
-private fun delta1(target: Float, current: Float): Float {
-    val t10 = (target * 10f).roundToInt()
+private fun delta1(goal: Float, current: Float): Float {
+    val t10 = (goal * 10f).roundToInt()
     val c10 = (current * 10f).roundToInt()
     val diff10 = t10 - c10
     return diff10 / 10f
@@ -869,10 +869,10 @@ private fun kgToLbsFloor1(v: Float): Float =
     kgToLbs1(v.toDouble()).toFloat()
 
 // Δ（目標 - 現在），結果一律無條件捨去到 0.1 lbs
-private fun lbsDiffFloor1(currKg: Float, targetKg: Float): Float {
+private fun lbsDiffFloor1(currKg: Float, goalKg: Float): Float {
     val currLbs = kgToLbsFloor1(currKg)
-    val targetLbs = kgToLbsFloor1(targetKg)
-    val diff = targetLbs - currLbs
+    val goalLbs = kgToLbsFloor1(goalKg)
+    val diff = goalLbs - currLbs
     return ((diff * 10f).toInt() / 10f)
 }
 

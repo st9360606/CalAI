@@ -510,9 +510,9 @@ private fun WheelColumn(
 
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
-            val target = centerListIndex
-            listState.animateScrollToItem(target, 0)
-            onSnapped(normalize(target))
+            val goal = centerListIndex
+            listState.animateScrollToItem(goal, 0)
+            onSnapped(normalize(goal))
         }
     }
 
@@ -589,7 +589,7 @@ private fun CupertinoWheelTimePickerDialog(
     // ✅ 禁止滑動/點外面關閉：只能 Cancel
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
-        confirmValueChange = { target -> target != SheetValue.Hidden }
+        confirmValueChange = { goal -> goal != SheetValue.Hidden }
     )
 
     ModalBottomSheet(

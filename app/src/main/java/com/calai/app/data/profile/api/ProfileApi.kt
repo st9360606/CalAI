@@ -13,8 +13,8 @@ interface ProfileApi {
     suspend fun upsertMyProfile(@Body body: UpsertProfileRequest): UserProfileDto
 
     // ★ 新增：更新目標體重（只接受 value + unit）
-    @PUT("/api/v1/users/me/profile/target-weight")
-    suspend fun updateTargetWeight(@Body body: UpdateTargetWeightRequest): UserProfileDto
+    @PUT("/api/v1/users/me/profile/goal-weight")
+    suspend fun updateGoalWeight(@Body body: UpdateGoalWeightRequest): UserProfileDto
 }
 
 @Serializable
@@ -25,12 +25,12 @@ data class UserProfileDto(
     val heightFeet: Int? = null,
     val heightInches: Int? = null,
     val weightKg: Double? = null,
-    val weightLbs: Double? = null,      // ★ Int? -> Double?
+    val weightLbs: Double? = null,
     val exerciseLevel: String? = null,
     val goal: String? = null,
-    val targetWeightKg: Double? = null,
-    val targetWeightLbs: Double? = null, // ★ Int? -> Double?
-    val dailyStepGoal: Int? = null,          // ✅ NEW
+    val goalWeightKg: Double? = null,
+    val goalWeightLbs: Double? = null,
+    val dailyStepGoal: Int? = null,
     val referralSource: String? = null,
     val locale: String? = null,
     val timezone: String? = null,
@@ -49,15 +49,15 @@ data class UpsertProfileRequest(
     val weightLbs: Double?,            // ★
     val exerciseLevel: String?,
     val goal: String?,
-    val targetWeightKg: Double?,
-    val targetWeightLbs: Double?,      // ★
+    val goalWeightKg: Double?,
+    val goalWeightLbs: Double?,      // ★
     val dailyStepGoal: Int?,                 // ✅ NEW
     val referralSource: String?,
     val locale: String?
 )
 
 @Serializable
-data class UpdateTargetWeightRequest(
+data class UpdateGoalWeightRequest(
     val value: Double, // 使用者輸入數值（KG 或 LBS）
     val unit: String   // "KG" or "LBS"
 )

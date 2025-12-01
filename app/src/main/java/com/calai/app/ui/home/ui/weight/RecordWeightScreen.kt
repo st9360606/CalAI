@@ -710,8 +710,8 @@ private fun WeighingDateSheet(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         // ★ 阻擋任何往 Hidden 的狀態切換 → 無法靠滑動把 Sheet 關掉
-        confirmValueChange = { target ->
-            target != SheetValue.Hidden
+        confirmValueChange = { goal ->
+            goal != SheetValue.Hidden
         }
     )
 

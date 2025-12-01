@@ -83,7 +83,7 @@
     <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_weight_hint">This will be used to calibrate your custom plan.</string>
     <string name="onboard_weight_zero_error">Please enter a weight greater than 0</string>
-    <string name="onboard_target_weight_title">What is your goal weight?</string>
+    <string name="onboard_goal_weight_title">What is your goal weight?</string>
 
     <!-- exercise -->
     <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
@@ -125,7 +125,7 @@
     <string name="progress_title_percent">%1$d%%</string>
     <string name="progress_title_heading">We\'re building your daily plan</string>
     <string name="progress_phase_1">Estimating your metabolic age…</string>
-    <string name="progress_phase_2">Crunching nutrition targets…</string>
+    <string name="progress_phase_2">Crunching nutrition goals…</string>
     <string name="progress_phase_3">Building daily recommendations…</string>
     <string name="progress_phase_4">Finalizing results…</string>
 
@@ -139,7 +139,7 @@
     <!-- plan -->
     <string name="plan_title_congrats">Awesome!</string>
     <string name="plan_subtitle_ready">Your personal health plan is ready.</string>
-    <string name="plan_edit_anytime">Daily intake has been customized according to your target.</string>
+    <string name="plan_edit_anytime">Daily intake has been customized according to your goal.</string>
 
     <string name="plan_macros_carbs">Carbs</string>
     <string name="plan_macros_proteins">Protein</string>

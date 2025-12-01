@@ -130,7 +130,7 @@ fun HomeScreen(
     // 首次進入 Home 就載入 DB（含 enabled/plan/time）
     LaunchedEffect(Unit) { fastingVm.load() }
 
-    // === Weight UI（為了拿跟 SummaryCards 相同的 TO TARGET） ===
+    // === Weight UI（為了拿跟 SummaryCards 相同的 TO GOAL） ===
     val weightUi by weightVm.ui.collectAsState()
 
     // 確保 Weight summary 有被拉一次
@@ -138,10 +138,10 @@ fun HomeScreen(
         weightVm.initIfNeeded()
     }
 
-    // === Weight UI（為了拿跟 SummaryCards 相同的 TO TARGET） ===
+    // === Weight UI（為了拿跟 SummaryCards 相同的 TO GOAL） ===
     val weightUnit = weightUi.unit
     val effectiveCurrentKg = weightUi.current ?: weightUi.profileWeightKg
-    val effectiveGoalKg = weightUi.profileTargetWeightKg ?: weightUi.goal
+    val effectiveGoalKg = weightUi.profileGoalWeightKg ?: weightUi.goal
 
     // ★ 修改這裡：固定用小數點一位（KG 本來就一位；LBS 原本是整數）
     val weightPrimaryText = formatDeltaGoalMinusCurrent(
@@ -151,10 +151,10 @@ fun HomeScreen(
         lbsAsInt = (weightUnit == UserProfileStore.WeightUnit.LBS)          // ← 原本是 (weightUnit == UserProfileStore.WeightUnit.LBS)
     )
 
-    // ✅ 新：Home WeightCardNew 進度 = (latest - start)/(target - start)
+    // ✅ 新：Home WeightCardNew 進度 = (latest - start)/(goal - start)
     val weightProgress: Float = computeHomeWeightProgress(
         profileWeightKg = weightUi.profileWeightKg,                 // start = user_profiles.weight_kg
-        targetWeightKg = weightUi.profileTargetWeightKg ?: weightUi.goal, // target
+        goalWeightKg = weightUi.profileGoalWeightKg ?: weightUi.goal, // goal
         latestWeightKg = weightUi.current                          // latest = 最新 timeseries
     )
 
@@ -369,7 +369,6 @@ fun HomeScreen(
                 fastingEndText = endText,
                 fastingEnabled = fastingUi.enabled,
                 onToggleFasting = onToggleFasting,
-                // ★ 新增：直接傳 SummaryCards 的 TO TARGET 字串
                 weightPrimary = weightPrimaryText,
                 weightProgress = weightProgress,
                 onOpenWeight = onOpenWeight,
@@ -511,19 +510,15 @@ private fun TwoPagePager(
     baseHeight: Dp = PanelHeights.Metric,
     verticalGap: Dp = 10.dp,
     onOpenFastingPlans: () -> Unit = {},
-    // Fasting 卡片資料
     planOverride: String? = null,
     fastingStartText: String? = null,
     fastingEndText: String? = null,
     fastingEnabled: Boolean = false,
     onToggleFasting: (Boolean) -> Unit = {},
-    // ★ 新增：直接吃 Weight 畫面算好的 TO TARGET 文案
     weightPrimary: String,
     weightProgress: Float,
-    // ★ 新增：Weight 導航事件
     onOpenWeight: () -> Unit,
     onQuickLogWeight: () -> Unit,
-    // ★ 新增：喝水卡需要的資料與 callback
     waterState: WaterUiState,
     onWaterPlus: () -> Unit,
     onWaterMinus: () -> Unit,
@@ -635,21 +630,21 @@ private fun openAppNotificationSettings(ctx: Context) {
 
 fun computeHomeWeightProgress(
     profileWeightKg: Double?,     // user_profiles.weight_kg（起始）
-    targetWeightKg: Double?,      // user_profiles.target_weight_kg（目標）
+    goalWeightKg: Double?,      // user_profiles.goal_weight_kg（目標）
     latestWeightKg: Double?       // weight_timeseries 最新一筆 weight_kg
 ): Float {
     // 情境3：沒有 timeseries → 最新體重 = null → 進度 0%
     if (latestWeightKg == null) return 0f
-    if (profileWeightKg == null || targetWeightKg == null) return 0f
+    if (profileWeightKg == null || goalWeightKg == null) return 0f
 
     val start = profileWeightKg
-    val target = targetWeightKg
+    val goal = goalWeightKg
     val latest = latestWeightKg
 
-    val denominator = target - start
+    val denominator = goal - start
     if (denominator == 0.0) return 0f      // 起始 = 目標 → 避免除以 0
 
-    // ✅ 已完成比例： (latest - start) / (target - start)
+    // ✅ 已完成比例： (latest - start) / (goal - start)
     val raw = ((latest - start) / denominator).toFloat()
 
     // clamp 到 0~1，避免超過目標或資料錯誤

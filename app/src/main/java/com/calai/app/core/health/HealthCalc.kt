@@ -96,9 +96,9 @@ object HealthCalc {
     fun macroPlanBySplit(
         inputs: HealthInputs,
         split: MacroSplit,
-        targetKcal: Int? = null
+        goalKcal: Int? = null
     ): MacroPlan {
-        val kcal = max(1000, (targetKcal ?: tdee(inputs).roundToInt()))
+        val kcal = max(1000, (goalKcal ?: tdee(inputs).roundToInt()))
         val norm = split.normalized()
 
         val proteinG = ((kcal * norm.proteinPct) / 4.0f).roundToInt()
