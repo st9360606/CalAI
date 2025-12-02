@@ -8,11 +8,11 @@ import com.calai.app.data.profile.repo.ProfileRepository
 import com.calai.app.data.users.repo.UsersRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,15 +34,14 @@ class PersonalViewModel @Inject constructor(
 
     init { refresh() }
 
+    /** 原本全量刷新：Users(me) + Profile */
     fun refresh() = viewModelScope.launch {
         _ui.update { it.copy(loading = true, error = null) }
 
         try {
-            // ✅ 關鍵：supervisorScope 讓其中一個 async 爆掉不會連坐另一個
             val (me, profile) = supervisorScope {
-                val meDeferred = async { usersRepo.meOrNull() }  // 你這個本來就安全
+                val meDeferred = async { usersRepo.meOrNull() }
                 val profileDeferred = async {
-                    // ★ 就算你的 getServerProfileOrNull 其實「會丟例外」，也不會炸掉 app
                     runCatching { profileRepo.getServerProfileOrNull() }.getOrNull()
                 }
                 meDeferred.await() to profileDeferred.await()
@@ -68,5 +67,33 @@ class PersonalViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * ✅ NEW：只刷新 Profile（PersonalDetails 修改身高/年齡/性別…用這個）
+     * - 不動 name/picture（避免 UI 抖動）
+     * - loading 只表現在同一顆 state（你要不要用 loading overlay 自行決定）
+     */
+    fun refreshProfileOnly() = viewModelScope.launch {
+        // 你如果不想畫面出現 loading，就把這行拿掉
+        _ui.update { it.copy(loading = true, error = null) }
+
+        val profile = runCatching { profileRepo.getServerProfileOrNull() }.getOrNull()
+
+        _ui.update { cur ->
+            cur.copy(
+                loading = false,
+                profile = profile ?: cur.profile, // 取不到就保留舊的
+                error = null
+            )
+        }
+    }
+
+    /**
+     * ✅ NEW（可選）：用「本機 DataStore 快照」先讓 UI 立即更新
+     * 適合：EditHeight 按下 Continue -> 已存本機，但網路同步還沒回來 / 失敗
+     */
+    fun applyLocalProfileSnapshot(snapshot: UserProfileDto) {
+        _ui.update { it.copy(profile = snapshot) }
     }
 }

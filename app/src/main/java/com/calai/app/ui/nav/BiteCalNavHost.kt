@@ -83,6 +83,8 @@ import kotlinx.coroutines.delay
 import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.components.ErrorTopToast
 import com.calai.app.ui.home.ui.components.SuccessTopToast
+import com.calai.app.ui.home.ui.personal.details.EditHeightScreen
+import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
 import com.calai.app.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.app.ui.onboarding.goalweight.WeightGoalScreen
 import com.calai.app.ui.onboarding.goalweight.WeightGoalViewModel
@@ -121,6 +123,7 @@ object Routes {
     const val RECORD_WEIGHT = "record_weight"
     const val EDIT_GOAL_WEIGHT = "edit_goal_weight"
     const val PERSONAL_DETAILS = "personal_details"
+    const val EDIT_HEIGHT = "edit_height"
 }
 private fun NavController.GoHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
@@ -824,23 +827,6 @@ fun BiteCalNavHost(
             }
         }
 
-        composable(Routes.EDIT_GOAL_WEIGHT) { backStackEntry ->
-            val ctx = LocalContext.current
-            val activity = (ctx.findActivity() ?: hostActivity)
-
-            // ★ 跟 WEIGHT / RECORD_WEIGHT 一樣，共用 HOME 的 WeightViewModel
-            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
-            val vm: WeightViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-            EditGoalWeightScreen(
-                vm = vm,
-                onCancel = { nav.popBackStack() },
-                onSaved = { nav.popBackStack() }   // vm.updateGoalWeight 內已 refresh
-            )
-        }
-
         composable(Routes.PERSONAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
@@ -923,7 +909,8 @@ fun BiteCalNavHost(
                     currentLbsFromTimeseries = wUi.currentLbs,
                     onBack = { nav.popBackStack() },
                     onChangeGoal = { nav.navigate(Routes.EDIT_GOAL_WEIGHT) },
-                    onEditCurrentWeight = { nav.navigate(Routes.RECORD_WEIGHT) }
+                    onEditCurrentWeight = { nav.navigate(Routes.RECORD_WEIGHT) },
+                    onEditHeight = { nav.navigate(Routes.EDIT_HEIGHT) }
                 )
 
                 // ✅ 優先顯示 error（避免成功/失敗同時跳）
@@ -956,6 +943,46 @@ fun BiteCalNavHost(
                     }
                 }
             }
+        }
+
+        composable(Routes.EDIT_GOAL_WEIGHT) { backStackEntry ->
+            val ctx = LocalContext.current
+            val activity = (ctx.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val vm: WeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+            EditGoalWeightScreen(
+                vm = vm,
+                onCancel = { nav.popBackStack() },
+                onSaved = { nav.popBackStack() }
+            )
+        }
+
+        composable(Routes.EDIT_HEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val vm: EditHeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditHeightScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    // ✅ 讓 PersonalDetails (profile 來自 server) 也能更新顯示
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
         }
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }

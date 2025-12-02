@@ -240,9 +240,6 @@ fun EditGoalWeightScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // --- KG / LBS 輪盤：和 RecordWeightScreen 一樣 ---
-            val wheelRowHeight = 56.dp
-
             if (useMetric) {
                 // KG 模式
                 Row(
@@ -265,7 +262,7 @@ fun EditGoalWeightScreen(
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenthsForGoal(newKg)
                         },
-                        rowHeight = wheelRowHeight,
+                        rowHeight = 56.dp,
                         centerTextSize = 30.sp,
                         textSize = 26.sp,
                         sideAlpha = 0.35f,
@@ -291,7 +288,7 @@ fun EditGoalWeightScreen(
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenthsForGoal(newKg)
                         },
-                        rowHeight = wheelRowHeight,
+                        rowHeight = 56.dp,
                         centerTextSize = 30.sp,
                         textSize = 26.sp,
                         sideAlpha = 0.35f,
@@ -326,7 +323,7 @@ fun EditGoalWeightScreen(
                             val newKg = lbsToKg1(newLbs)
                             valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
                         },
-                        rowHeight = wheelRowHeight,
+                        rowHeight = 56.dp,
                         centerTextSize = 30.sp,
                         textSize = 26.sp,
                         sideAlpha = 0.35f,
@@ -351,7 +348,7 @@ fun EditGoalWeightScreen(
                             val newKg = lbsToKg1(newLbs)
                             valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
                         },
-                        rowHeight = wheelRowHeight,
+                        rowHeight = 56.dp,
                         centerTextSize = 30.sp,
                         textSize = 26.sp,
                         sideAlpha = 0.35f,
