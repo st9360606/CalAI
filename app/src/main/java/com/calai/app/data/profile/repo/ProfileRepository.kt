@@ -208,4 +208,29 @@ class ProfileRepository @Inject constructor(
 
         return true
     }
+
+    suspend fun updateGenderOnly(newGender: String): Result<UserProfileDto> = runCatching {
+        val normalized = newGender.trim().lowercase(Locale.US) // "male" / "female" / "other"
+        val req = UpsertProfileRequest(
+            gender = normalized,
+            age = null,
+            heightCm = null,
+            heightFeet = null,
+            heightInches = null,
+            weightKg = null,
+            weightLbs = null,
+            exerciseLevel = null,
+            goal = null,
+            goalWeightKg = null,
+            goalWeightLbs = null,
+            dailyStepGoal = null,
+            referralSource = null,
+            locale = null
+        )
+        val resp = api.upsertMyProfile(req)
+        // 同步回本機（讓下次進來預設選項更準）
+        runCatching { resp.gender?.let { store.setGender(it) } }
+        resp
+    }
+
 }

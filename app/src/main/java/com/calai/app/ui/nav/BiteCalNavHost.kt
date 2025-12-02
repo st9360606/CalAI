@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/ui/nav/BiteCalNavHost.kt
 package com.calai.app.ui.nav
 
 import android.app.Activity
@@ -82,8 +81,12 @@ import androidx.compose.ui.Alignment
 import kotlinx.coroutines.delay
 import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.components.ErrorTopToast
-import com.calai.app.ui.home.ui.components.SuccessTopToast
+import com.calai.app.ui.home.ui.personal.details.EditAgeScreen
+import com.calai.app.ui.home.ui.personal.details.EditGenderScreen
 import com.calai.app.ui.home.ui.personal.details.EditHeightScreen
+import com.calai.app.ui.home.ui.personal.details.common.PersonalDetailsToastViewModel
+import com.calai.app.ui.home.ui.personal.details.model.EditAgeViewModel
+import com.calai.app.ui.home.ui.personal.details.model.EditGenderViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
 import com.calai.app.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.app.ui.nav.Routes.KEY_HEIGHT_SUCCESS_TOAST
@@ -126,6 +129,8 @@ object Routes {
     const val PERSONAL_DETAILS = "personal_details"
     const val EDIT_HEIGHT = "edit_height"
     const val KEY_HEIGHT_SUCCESS_TOAST = "height_success_toast"
+    const val EDIT_AGE = "edit_age"
+    const val EDIT_GENDER = "edit_gender"
 }
 private fun NavController.GoHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
@@ -895,14 +900,17 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            val heightSuccessMsg by remember(backStackEntry) {
-                backStackEntry.savedStateHandle.getStateFlow(KEY_HEIGHT_SUCCESS_TOAST, "")
-            }.collectAsState()
+            // ✅ NEW：共用 toast VM（Age/Height/其他 PersonalDetails 相關都走這個）
+            val toastVm:PersonalDetailsToastViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
 
             LaunchedEffect(Unit) { weightVm.initIfNeeded() }
 
             val pUi by personalVm.ui.collectAsState()
             val wUi by weightVm.ui.collectAsState()
+            val tUi by toastVm.ui.collectAsState()
 
             Box(Modifier.fillMaxSize()) {
 
@@ -916,54 +924,40 @@ fun BiteCalNavHost(
                     onBack = { nav.popBackStack() },
                     onChangeGoal = { nav.navigate(Routes.EDIT_GOAL_WEIGHT) },
                     onEditCurrentWeight = { nav.navigate(Routes.RECORD_WEIGHT) },
-                    onEditHeight = { nav.navigate(Routes.EDIT_HEIGHT) }
+                    onEditHeight = { nav.navigate(Routes.EDIT_HEIGHT) },
+                    onEditAge = { nav.navigate(Routes.EDIT_AGE) },
+                    onEditGender = { nav.navigate(Routes.EDIT_GENDER) },
                 )
 
                 // 優先顯示 error（避免成功/失敗同時跳）
-                val errorMsg = wUi.error?.takeIf { it.isNotBlank() }
-                val weightSuccessMsg = wUi.toastMessage?.takeIf { it.isNotBlank() }
-                val heightSuccess = heightSuccessMsg.takeIf { it.isNotBlank() }
+                val pdError = tUi.error?.takeIf { it.isNotBlank() }
+                val pdSuccess = tUi.success?.takeIf { it.isNotBlank() }
 
                 when {
-                    errorMsg != null -> {
+                    pdError != null -> {
                         ErrorTopToast(
-                            message = errorMsg,
+                            message = pdError,
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
-                        LaunchedEffect(errorMsg) {
+                        LaunchedEffect(pdError) {
                             delay(2_000)
-                            weightVm.clearError()
+                            toastVm.clearError()
                         }
                     }
 
-                    heightSuccess != null -> {
+                    pdSuccess != null -> {
                         SuccessTopToast(
-                            message = heightSuccess,
+                            message = pdSuccess,
                             modifier = Modifier.align(Alignment.TopCenter),
                             minWidth = 150.dp,
                             minHeight = 30.dp
                         )
-                        LaunchedEffect(heightSuccess) {
+                        LaunchedEffect(pdSuccess) {
                             delay(2_000)
-                            // 清掉 SavedStateHandle，避免回來一直重播
-                            backStackEntry.savedStateHandle[KEY_HEIGHT_SUCCESS_TOAST] = ""
-                        }
-                    }
-
-                    weightSuccessMsg != null -> {
-                        SuccessTopToast(
-                            message = weightSuccessMsg,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            minWidth = 150.dp,
-                            minHeight = 30.dp
-                        )
-                        LaunchedEffect(weightSuccessMsg) {
-                            delay(2_000)
-                            weightVm.clearToast()
+                            toastVm.clearSuccess()
                         }
                     }
                 }
-
             }
         }
 
@@ -991,6 +985,11 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
+            val toastVm: PersonalDetailsToastViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
             val vm: EditHeightViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
@@ -1000,17 +999,71 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {
-                    // 回到 PersonalDetails 後顯示 SuccessTopToast
-                    nav.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(KEY_HEIGHT_SUCCESS_TOAST, "Saved successfully!")
-
-                    // 讓 PersonalDetails (profile 來自 server) 也能更新顯示
+                    toastVm.showSuccess("Saved successfully!")
                     personalVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
             )
         }
+        composable(Routes.EDIT_AGE) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val toastVm: PersonalDetailsToastViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val vm: EditAgeViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditAgeScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    toastVm.showSuccess("Saved successfully!")
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
+        }
+        composable(Routes.EDIT_GENDER) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val toastVm: PersonalDetailsToastViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val vm: EditGenderViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditGenderScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    toastVm.showSuccess("Saved successfully!")
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
+        }
+
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 
