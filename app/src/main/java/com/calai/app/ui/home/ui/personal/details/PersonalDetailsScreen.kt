@@ -1,5 +1,6 @@
 package com.calai.app.ui.home.ui.personal.details
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,9 +15,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,8 +32,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,7 +50,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.calai.app.data.profile.api.UserProfileDto
 import com.calai.app.data.profile.repo.UserProfileStore
 import java.util.Locale
@@ -56,15 +64,10 @@ import kotlin.math.abs
 fun PersonalDetailsScreen(
     profile: UserProfileDto?,
     unit: UserProfileStore.WeightUnit,
-
     goalKgFromWeightVm: Double? = null,
     goalLbsFromWeightVm: Double? = null,
-
-    // ✅ 新增：由 WeightViewModel(=weight_timeseries) 來的 current
-    // 沒值時才 fallback 用 profile.weightKg/weightLbs
     currentKgFromTimeseries: Double? = null,
     currentLbsFromTimeseries: Double? = null,
-
     onBack: () -> Unit,
     onChangeGoal: () -> Unit,
     onEditCurrentWeight: () -> Unit = {},
@@ -78,23 +81,20 @@ fun PersonalDetailsScreen(
     val outline = Color(0xFFE5E7EB)
     val scroll = rememberScrollState()
     val contentMaxWidth = 520.dp
-
+    val titleSize = 14.sp
     Scaffold(
         containerColor = bg,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "Personal details",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = Color(0xFF111114)
-                        )
-                    }
+                    Text(
+                        text = "Personal details",
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF111114),
+                        textAlign = TextAlign.Center
+                    )
                 },
                 navigationIcon = {
                     IconButton(
@@ -112,7 +112,7 @@ fun PersonalDetailsScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = bg),
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = bg),
                 modifier = Modifier.statusBarsPadding()
             )
         },
@@ -134,8 +134,7 @@ fun PersonalDetailsScreen(
                     .navigationBarsPadding()
             ) {
                 // ===== Goal Weight Card =====
-                val (goalMain, goalSub) = formatWeightBothLines(
-                    // ✅ 改成：WeightVM goal > profile goal > —
+                val (goalMain, _) = formatWeightBothLines(
                     kg = goalKgFromWeightVm ?: profile?.goalWeightKg,
                     lbs = goalLbsFromWeightVm ?: profile?.goalWeightLbs,
                     unit = unit
@@ -145,41 +144,35 @@ fun PersonalDetailsScreen(
                     shape = cardShape,
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(0.dp),
+                    border = BorderStroke(1.dp, outline),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, outline, cardShape)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
                                 text = "Goal Weight",
-                                style = MaterialTheme.typography.titleSmall,
-                                color = Color(0xFF6B7280)
+                                fontSize = titleSize,
+                                fontWeight = FontWeight.Normal,
+                                color = Color(0xFF374151)
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 text = goalMain,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold),
                                 color = Color(0xFF111114)
                             )
-                            if (goalSub != null) {
-                                Spacer(Modifier.height(2.dp))
-                                Text(
-                                    text = goalSub,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF9CA3AF)
-                                )
-                            }
                         }
 
                         Button(
                             onClick = onChangeGoal,
-                            modifier = Modifier.height(32.dp),
+                            modifier = Modifier
+                                .height(28.dp)
+                                .width(93.dp), // ✅ 改小：88/84/80 自己調
                             shape = RoundedCornerShape(999.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF111114),
@@ -189,25 +182,24 @@ fun PersonalDetailsScreen(
                         ) {
                             Text(
                                 text = "Change Goal",
-                                style = MaterialTheme.typography.labelLarge
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
                     }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(18.dp))
 
                 // ===== List Card =====
                 Card(
                     shape = cardShape,
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(0.dp),
+                    border = BorderStroke(1.dp, outline),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, outline, cardShape)
                 ) {
-                    // ✅ Current Weight：優先用 WeightVM(=timeseries) current；沒有才 fallback profile
-                    val (curMain, curSub) = formatWeightBothLines(
+                    val (curMain, _) = formatWeightBothLines(
                         kg = currentKgFromTimeseries ?: profile?.weightKg,
                         lbs = currentLbsFromTimeseries ?: profile?.weightLbs,
                         unit = unit
@@ -216,40 +208,54 @@ fun PersonalDetailsScreen(
                     PersonalDetailsRow(
                         title = "Current Weight",
                         valueMain = curMain,
-                        valueSub = curSub,
+                        titleOffsetY = 4.dp,
+                        valueOffsetY = 4.dp,
+                        titleFontSize = titleSize,
                         onClick = onEditCurrentWeight
                     )
 
-                    Divider(color = outline, thickness = 1.dp)
+                    PersonalRowDivider(outline)
 
                     PersonalDetailsRow(
                         title = "Height",
+                        titleOffsetY = 1.dp,
+                        valueOffsetY = 1.dp,
+                        titleFontSize = titleSize,
                         valueMain = formatHeight(profile),
                         onClick = onEditHeight
                     )
 
-                    Divider(color = outline, thickness = 1.dp)
+                    PersonalRowDivider(outline)
 
                     PersonalDetailsRow(
                         title = "Age",
+                        titleOffsetY = 1.dp,
+                        valueOffsetY = 1.dp,
+                        titleFontSize = titleSize,
                         valueMain = profile?.age?.let { "$it years" } ?: "—",
                         onClick = onEditAge
                     )
 
-                    Divider(color = outline, thickness = 1.dp)
+                    PersonalRowDivider(outline)
 
                     PersonalDetailsRow(
                         title = "Gender",
+                        titleOffsetY = 1.dp,
+                        valueOffsetY = 1.dp,
+                        titleFontSize = titleSize,
                         valueMain = formatGender(profile?.gender),
                         onClick = onEditGender
                     )
 
-                    Divider(color = outline, thickness = 1.dp)
+                    PersonalRowDivider(outline)
 
                     val stepText = profile?.dailyStepGoal?.let { "${it} steps" } ?: "—"
                     PersonalDetailsRow(
                         title = "Daily Step Goal",
                         valueMain = stepText,
+                        titleOffsetY = (-2).dp,
+                        valueOffsetY = (-2).dp,
+                        titleFontSize = titleSize,
                         onClick = onEditDailyStepGoal
                     )
                 }
@@ -265,20 +271,26 @@ private fun PersonalDetailsRow(
     title: String,
     valueMain: String,
     valueSub: String? = null,
+    titleOffsetY: Dp = 0.dp,
+    valueOffsetY: Dp = 0.dp,
+    titleFontSize: TextUnit = 13.sp,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
-            color = Color(0xFF111114),
-            modifier = Modifier.weight(1f)
+            fontSize = titleFontSize,            // ✅ size 控制
+            fontWeight = FontWeight.Normal,
+            color = Color(0xFF374151),
+            modifier = Modifier
+                .weight(1f)
+                .offset(y = titleOffsetY)
         )
 
         Row(
@@ -289,7 +301,8 @@ private fun PersonalDetailsRow(
                 Text(
                     text = valueMain,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color(0xFF111114)
+                    color = Color(0xFF111114),
+                    modifier = Modifier.offset(y = valueOffsetY) // ✅ 新增
                 )
                 if (valueSub != null) {
                     Spacer(Modifier.height(2.dp))
@@ -341,27 +354,46 @@ private fun formatWeightBothLines(
 
     val main = when (unit) {
         UserProfileStore.WeightUnit.KG -> when {
-            kg != null -> "${formatSmartNumber(kg)} kg"
-            lbs != null -> "${formatSmartNumber(lbs)} lbs"
+            kg != null -> "${formatWeight1dp(kg)} kg"
+            lbs != null -> "${formatWeight1dp(lbs)} lbs"
             else -> "—"
         }
 
         UserProfileStore.WeightUnit.LBS -> when {
-            lbs != null -> "${formatSmartNumber(lbs)} lbs"
-            kg != null -> "${formatSmartNumber(kg)} kg"
+            lbs != null -> "${formatWeight1dp(lbs)} lbs"
+            kg != null -> "${formatWeight1dp(kg)} kg"
             else -> "—"
         }
     }
 
     val sub = when (unit) {
-        UserProfileStore.WeightUnit.KG -> lbs?.let { "${formatSmartNumber(it)} lbs" }
-        UserProfileStore.WeightUnit.LBS -> kg?.let { "${formatSmartNumber(it)} kg" }
+        UserProfileStore.WeightUnit.KG -> lbs?.let { "${formatWeight1dp(it)} lbs" }
+        UserProfileStore.WeightUnit.LBS -> kg?.let { "${formatWeight1dp(it)} kg" }
     }
 
     return main to sub
 }
 
+
 private fun formatSmartNumber(v: Double): String {
     val isInt = abs(v - v.toInt()) < 1e-9
     return if (isInt) v.toInt().toString() else String.format(Locale.US, "%.1f", v)
 }
+
+private fun formatWeight1dp(v: Double): String {
+    return String.format(Locale.US, "%.1f", v)
+}
+
+@Composable
+private fun PersonalRowDivider(color: Color) {
+    HorizontalDivider(
+        // ✅ 左邊對齊 row 的 16dp padding
+        // ✅ 右邊多留一段空間給「value + spacing + 鉛筆」，讓鉛筆下方沒有線
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 50.dp),
+        thickness = 1.dp,
+        color = color
+    )
+}
+

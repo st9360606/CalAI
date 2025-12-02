@@ -135,7 +135,7 @@ fun EditGoalWeightScreen(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             WeightTopBar(
-                title = "Edit goal weight",
+                title = "Edit Goal Weight",
                 onBack = onCancel
             )
         },
