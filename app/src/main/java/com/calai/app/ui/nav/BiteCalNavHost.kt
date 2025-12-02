@@ -86,6 +86,7 @@ import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.personal.details.EditHeightScreen
 import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
 import com.calai.app.ui.home.ui.weight.EditGoalWeightScreen
+import com.calai.app.ui.nav.Routes.KEY_HEIGHT_SUCCESS_TOAST
 import com.calai.app.ui.onboarding.goalweight.WeightGoalScreen
 import com.calai.app.ui.onboarding.goalweight.WeightGoalViewModel
 
@@ -124,6 +125,7 @@ object Routes {
     const val EDIT_GOAL_WEIGHT = "edit_goal_weight"
     const val PERSONAL_DETAILS = "personal_details"
     const val EDIT_HEIGHT = "edit_height"
+    const val KEY_HEIGHT_SUCCESS_TOAST = "height_success_toast"
 }
 private fun NavController.GoHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
@@ -893,6 +895,10 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
+            val heightSuccessMsg by remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow(KEY_HEIGHT_SUCCESS_TOAST, "")
+            }.collectAsState()
+
             LaunchedEffect(Unit) { weightVm.initIfNeeded() }
 
             val pUi by personalVm.ui.collectAsState()
@@ -913,9 +919,10 @@ fun BiteCalNavHost(
                     onEditHeight = { nav.navigate(Routes.EDIT_HEIGHT) }
                 )
 
-                // ✅ 優先顯示 error（避免成功/失敗同時跳）
+                // 優先顯示 error（避免成功/失敗同時跳）
                 val errorMsg = wUi.error?.takeIf { it.isNotBlank() }
-                val successMsg = wUi.toastMessage?.takeIf { it.isNotBlank() }
+                val weightSuccessMsg = wUi.toastMessage?.takeIf { it.isNotBlank() }
+                val heightSuccess = heightSuccessMsg.takeIf { it.isNotBlank() }
 
                 when {
                     errorMsg != null -> {
@@ -929,19 +936,34 @@ fun BiteCalNavHost(
                         }
                     }
 
-                    successMsg != null -> {
+                    heightSuccess != null -> {
                         SuccessTopToast(
-                            message = successMsg,
+                            message = heightSuccess,
                             modifier = Modifier.align(Alignment.TopCenter),
                             minWidth = 150.dp,
                             minHeight = 30.dp
                         )
-                        LaunchedEffect(successMsg) {
+                        LaunchedEffect(heightSuccess) {
+                            delay(2_000)
+                            // 清掉 SavedStateHandle，避免回來一直重播
+                            backStackEntry.savedStateHandle[KEY_HEIGHT_SUCCESS_TOAST] = ""
+                        }
+                    }
+
+                    weightSuccessMsg != null -> {
+                        SuccessTopToast(
+                            message = weightSuccessMsg,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            minWidth = 150.dp,
+                            minHeight = 30.dp
+                        )
+                        LaunchedEffect(weightSuccessMsg) {
                             delay(2_000)
                             weightVm.clearToast()
                         }
                     }
                 }
+
             }
         }
 
@@ -978,7 +1000,12 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {
-                    // ✅ 讓 PersonalDetails (profile 來自 server) 也能更新顯示
+                    // 回到 PersonalDetails 後顯示 SuccessTopToast
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(KEY_HEIGHT_SUCCESS_TOAST, "Saved successfully!")
+
+                    // 讓 PersonalDetails (profile 來自 server) 也能更新顯示
                     personalVm.refreshProfileOnly()
                     nav.popBackStack()
                 }

@@ -55,7 +55,8 @@ import com.calai.app.data.profile.repo.roundCm1
 import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import kotlin.math.abs
-
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -115,7 +116,7 @@ fun EditHeightScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),   // 跟 RecordWeightScreen Save 一樣
+                            .height(56.dp),
                         enabled = !ui.saving,
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -123,13 +124,21 @@ fun EditHeightScreen(
                             contentColor = Color.White
                         )
                     ) {
-                        Text(
-                            text = "Save",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium,
-                                letterSpacing = 0.2.sp
+                        if (ui.saving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
                             )
-                        )
+                        } else {
+                            Text(
+                                text = "Save",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 0.2.sp
+                                )
+                            )
+                        }
                     }
 
                 }
@@ -156,7 +165,6 @@ fun EditHeightScreen(
                     textAlign = TextAlign.Center
                 )
             }
-
             HeightUnitSegmentedSameAsGoal(
                 useMetric = useMetric,
                 onChange = { isMetric ->
@@ -231,7 +239,6 @@ fun EditHeightScreen(
                     )
                 }
             } else {
-                // ft/in 模式：只改字級參數即可（保持你原本 layout）
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -316,13 +323,13 @@ private fun HeightUnitSegmentedSameAsGoal(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(40.dp),          // ✅ 同 Goal
-        color = Color(0xFFE2E5EA),                  // ✅ 同 Goal
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.60f)                   // ✅ 同 Goal
-            .heightIn(min = 40.dp)                 // ✅ 同 Goal
+            .fillMaxWidth(0.60f)
+            .heightIn(min = 40.dp)
     ) {
-        Row(Modifier.padding(6.dp)) {              // ✅ 同 Goal
+        Row(Modifier.padding(6.dp)) {
             SegItemSameAsGoal(
                 text = "ft",
                 selected = !useMetric,
@@ -330,7 +337,7 @@ private fun HeightUnitSegmentedSameAsGoal(
                 selectedColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .height(40.dp)                 // ✅ 同 Goal
+                    .height(40.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItemSameAsGoal(
@@ -340,7 +347,7 @@ private fun HeightUnitSegmentedSameAsGoal(
                 selectedColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .height(40.dp)                 // ✅ 同 Goal
+                    .height(40.dp)
             )
         }
     }
@@ -382,49 +389,6 @@ private fun SegItemSameAsGoal(
     }
 }
 
-@Composable
-private fun SegItem(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    selectedColor: Color,
-    modifier: Modifier = Modifier
-) {
-    val corner = 22.dp
-    val minH = 48.dp
-    val hPad = 24.dp
-    val vPad = 10.dp
-    val fSize = 23.sp
-
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(corner),
-        color = if (selected) selectedColor else Color.Transparent,
-        modifier = modifier
-    ) {
-        Box(
-            modifier = Modifier
-                .defaultMinSize(minHeight = minH)
-                .fillMaxWidth()
-                .padding(horizontal = hPad, vertical = vPad),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                fontSize = fSize,
-                fontWeight = FontWeight.SemiBold,
-                color = if (selected) Color.White else Color(0xFF333333),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-}
-
-
-
-
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
@@ -433,7 +397,7 @@ private fun NumberWheel(
     onValueChange: (Int) -> Unit,
     rowHeight: Dp,
     centerTextSize: TextUnit,
-    textSize: TextUnit = 26.sp,          // ✅ 新增：非中心字級（對齊 EditGoalWeightScreen）
+    textSize: TextUnit = 26.sp,
     sideAlpha: Float,
     unitLabel: String? = null,
     modifier: Modifier = Modifier
@@ -486,10 +450,7 @@ private fun NumberWheel(
                 val alpha = if (isCenter) 1f else sideAlpha
                 val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
-
-                // ✅ unitLabel 字級也跟著縮（跟你原本比例一致）
                 val unitSize = if (isCenter) 20.sp else 18.sp
-
                 Row(
                     modifier = Modifier
                         .height(rowHeight)
@@ -516,7 +477,6 @@ private fun NumberWheel(
                 }
             }
         }
-
         // 中心框線（保留你原本的）
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2

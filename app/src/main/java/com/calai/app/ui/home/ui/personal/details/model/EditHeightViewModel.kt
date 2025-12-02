@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.util.Log
 
 @HiltViewModel
 class EditHeightViewModel @Inject constructor(
@@ -23,26 +24,27 @@ class EditHeightViewModel @Inject constructor(
 
     data class UiState(
         val saving: Boolean = false,
-        val error: String? = null
+        val error: String? = null,
+        val toastMessage: String? = null
     )
 
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui
 
-    // ✅ 這兩個讓畫面初始化用（跟你 onboarding HeightSelectionScreen 用法一致）
     val heightCmState: StateFlow<Float> =
         store.heightCmFlow
-            .map { it ?: 170f } // 沒值就給一個安全預設
+            .map { it ?: 170f }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 170f)
 
     val heightUnitState: StateFlow<UserProfileStore.HeightUnit> =
         store.heightUnitFlow
             .map { it ?: UserProfileStore.HeightUnit.CM }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserProfileStore.HeightUnit.CM)
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5_000),
+                UserProfileStore.HeightUnit.CM
+            )
 
-    /**
-     * ✅ Continue：1) 存本機 2) upsert 同步後端 3) 成功就 onSuccess()
-     */
     fun saveAndSyncHeight(
         useMetric: Boolean,
         cmVal: Double,
@@ -53,9 +55,8 @@ class EditHeightViewModel @Inject constructor(
         if (_ui.value.saving) return
 
         viewModelScope.launch {
-            _ui.update { it.copy(saving = true, error = null) }
+            _ui.update { it.copy(saving = true, error = null, toastMessage = null) }
 
-            // 1) 本機先存（cm 為 SSOT，一位小數 floor）
             val cmToSave = roundCm1(cmVal).toFloat()
             runCatching { store.setHeightCm(cmToSave) }
 
@@ -67,19 +68,34 @@ class EditHeightViewModel @Inject constructor(
                 runCatching { store.setHeightImperial(feet, inches) }
             }
 
-            // 2) 同步後端（沿用你既有 upsert 策略：只送本機有的欄位；server 端 non-null 才覆寫）
             val result = profileRepo.upsertFromLocal()
-
             result.onSuccess {
-                // 可選：用 server 回寫 store (避免 clamp 後不一致)
-                runCatching { profileRepo.syncServerProfileToStore() }
-                _ui.update { it.copy(saving = false, error = null) }
-                onSuccess()
-            }.onFailure { e ->
+                //先結束 loading、先讓 UI 回上一頁（體感速度會快很多）
                 _ui.update {
                     it.copy(
                         saving = false,
-                        error = "Network error. Saved locally, but failed to sync."
+                        error = null,
+                        toastMessage = "Saved successfully!"
+                    )
+                }
+                onSuccess()
+                // 把「回寫校正」放到背景做，不要卡住 UI
+                viewModelScope.launch {
+                    runCatching { profileRepo.syncServerProfileToStore() }
+                        .onFailure { e ->
+                            Log.w("EditHeightVM", "syncServerProfileToStore failed: ${e.message}", e)
+                        }
+                }
+
+            }.onFailure { e ->
+                val msg = e.message?.takeIf { it.isNotBlank() }
+                    ?: "Network error. Saved locally, but failed to sync."
+
+                _ui.update {
+                    it.copy(
+                        saving = false,
+                        error = msg,
+                        toastMessage = msg
                     )
                 }
             }

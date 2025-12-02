@@ -28,10 +28,10 @@ class WeightViewModel @Inject constructor(
 ) : ViewModel() {
 
     data class UiState(
-        /** ✅ 已提交（commit）的顯示單位：只會在「成功存檔」後才改變 */
+        /** 已提交（commit）的顯示單位：只會在「成功存檔」後才改變 */
         val unit: UserProfileStore.WeightUnit = UserProfileStore.WeightUnit.LBS,
 
-        /** ✅ 草稿單位：使用者切換時先放這裡，成功存檔後才 commit 到 unit */
+        /** 草稿單位：使用者切換時先放這裡，成功存檔後才 commit 到 unit */
         val pendingUnit: UserProfileStore.WeightUnit? = null,
 
         val range: String = "season",
@@ -55,11 +55,7 @@ class WeightViewModel @Inject constructor(
         val error: String? = null,
         val saving: Boolean = false,
         val toastMessage: String? = null
-    ) {
-        /** ✅ 給 UI 使用：如果正在編輯就用 pendingUnit，否則用 unit */
-        fun displayUnit(): UserProfileStore.WeightUnit = pendingUnit ?: unit
-    }
-
+    )
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
@@ -78,7 +74,7 @@ class WeightViewModel @Inject constructor(
     }
 
     init {
-        // ✅ Unit：DataStore 是唯一真相（永遠不會被「讀一次」覆蓋回去）
+        // Unit：DataStore 是唯一真相（永遠不會被「讀一次」覆蓋回去）
         viewModelScope.launch {
             store.weightUnitFlow
                 .map { it ?: UserProfileStore.WeightUnit.LBS }   // null -> 預設
@@ -119,7 +115,7 @@ class WeightViewModel @Inject constructor(
         }
     }
 
-    /** ✅ 使用者切單位：只寫入 DataStore；UI 會因 flow emit 自動更新 */
+    /** 使用者切單位：只寫入 DataStore；UI 會因 flow emit 自動更新 */
     fun setUnit(u: UserProfileStore.WeightUnit) = viewModelScope.launch {
         Log.d("WeightVM", "setUnit() called u=$u")
         runCatching { store.setWeightUnit(u) }
@@ -134,7 +130,7 @@ class WeightViewModel @Inject constructor(
         _ui.update { it.copy(pendingUnit = null) }
     }
 
-    /** ✅ 只有在「存檔成功」時才呼叫：commit 單位到 DataStore + 更新 ui.unit */
+    /** 只有在「存檔成功」時才呼叫：commit 單位到 DataStore + 更新 ui.unit */
     private suspend fun commitUnitAfterSuccess(u: UserProfileStore.WeightUnit) {
         // 先更新 UI（避免 UI 等 DataStore 回寫才變）
         _ui.update { it.copy(unit = u, pendingUnit = null) }
@@ -213,7 +209,7 @@ class WeightViewModel @Inject constructor(
     }
 
     /**
-     * ✅ 更穩版本：只有「存檔成功」後，才把本次使用的單位寫回 DataStore
+     * 更穩版本：只有「存檔成功」後，才把本次使用的單位寫回 DataStore
      */
     fun save(
         weightKg: Double,
@@ -232,14 +228,11 @@ class WeightViewModel @Inject constructor(
                 photoFile = photo
             )
         }.onSuccess { saved ->
-            // ✅ 只有成功才切單位（你要的穩定版）
+            //只有成功才切單位（你要的穩定版）
             if (unitUsedToPersist != null) {
                 Log.d("WeightVM", "save success -> persist unit = $unitUsedToPersist")
                 runCatching { store.setWeightUnit(unitUsedToPersist) }
             }
-
-            // 你原本 merge series/history + refresh + toast 的流程照舊即可
-            // ...
             refresh()
             _ui.update { it.copy(toastMessage = "Saved successfully !", saving = false, error = null) }
 
@@ -287,13 +280,13 @@ class WeightViewModel @Inject constructor(
         viewModelScope.launch {
             val res = profileRepo.updateGoalWeight(value, unit)
             res.onSuccess {
-                // ✅ 成功才 commit 單位（避免失敗也切）
+                //成功才 commit 單位（避免失敗也切）
                 commitUnitAfterSuccess(unit)
 
                 runCatching { refresh() }
                 _ui.update {
                     it.copy(
-                        toastMessage = "Goal weight updated !",
+                        toastMessage = "Goal Weight updated!",
                         error = null
                     )
                 }
