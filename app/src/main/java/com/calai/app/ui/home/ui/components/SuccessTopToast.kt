@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 fun SuccessTopToast(
     message: String,
     modifier: Modifier = Modifier,
-    // 🔧 在這裡控制膠囊尺寸（預設已經是「中小型」）
     minWidth: Dp = 240.dp,
     minHeight: Dp = 30.dp
 ) {
@@ -50,9 +49,9 @@ fun SuccessTopToast(
     ) {
         Surface(
             modifier = Modifier
-                .widthIn(min = minWidth)   // ⬅️ 用參數
-                .heightIn(min = minHeight),// ⬅️ 用參數
-            shape = MaterialTheme.shapes.large, // 膠囊
+                .widthIn(min = minWidth)
+                .heightIn(min = minHeight),
+            shape = MaterialTheme.shapes.large,
             color = Color.White,
             shadowElevation = 8.dp,
             tonalElevation = 0.dp
@@ -75,14 +74,14 @@ fun SuccessTopToast(
                         imageVector = Icons.Filled.Check,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
                 Spacer(Modifier.size(10.dp))
                 Text(
                     text = message,
-                    style = MaterialTheme.typography.bodyLarge.copy( // ✅ 文字更大
-                        fontWeight = FontWeight.SemiBold,            // ✅ 文字加粗
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF111114)
                     )
                 )
