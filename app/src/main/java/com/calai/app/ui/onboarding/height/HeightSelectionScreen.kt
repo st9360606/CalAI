@@ -271,7 +271,7 @@ fun HeightSelectionScreen(
                     )
                     Spacer(Modifier.width(11.dp))
                     NumberWheel(
-                        range = 0..12,
+                        range = 0..11,
                         value = inches,
                         onValueChange = { newIn ->
                             inches = newIn

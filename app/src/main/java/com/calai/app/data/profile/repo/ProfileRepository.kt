@@ -72,11 +72,11 @@ class ProfileRepository @Inject constructor(
             ?: Locale.getDefault().toLanguageTag()
 
         // ★ 身高 cm：保持 0.1 精度（無條件捨去）
-        val heightCm: Double? = p.heightCm
-            ?.toDouble()
-            ?.let { round1Floor(it) }
+        val heightCmToSend: Double? = when (p.heightUnit) {
+            UserProfileStore.HeightUnit.FT_IN -> null // ✅ ft/in 模式不送 cm
+            else -> p.heightCm?.toDouble()?.let { round1Floor(it) }
+        }
 
-        // 若是英制身高就一併送 feet/inches
         val (feet, inches) = when (p.heightUnit) {
             UserProfileStore.HeightUnit.FT_IN ->
                 p.heightFeet to p.heightInches
@@ -109,7 +109,7 @@ class ProfileRepository @Inject constructor(
         val req = UpsertProfileRequest(
             gender = p.gender,
             age = p.ageYears,
-            heightCm = heightCm,
+            heightCm = heightCmToSend,
             heightFeet = feet,
             heightInches = inches,
             weightKg = weightKgToSend,

@@ -37,7 +37,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +50,6 @@ import androidx.compose.ui.unit.sp
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.cmToFeetInches1
 import com.calai.app.data.profile.repo.feetInchesToCm1
-import com.calai.app.data.profile.repo.roundCm1
 import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import kotlin.math.abs
@@ -65,24 +63,33 @@ fun EditHeightScreen(
     onBack: () -> Unit,
     onSaved: () -> Unit,
 ) {
-    val heightCm by vm.heightCmState.collectAsState()
-    val savedUnit by vm.heightUnitState.collectAsState()
     val ui by vm.ui.collectAsState()
+    val init by vm.initialHeight.collectAsState()
 
-    var useMetric by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.HeightUnit.CM) }
+    LaunchedEffect(Unit) { vm.initIfNeeded() }
 
-    // ★ cm 為 SSOT（Double 一位小數）
+    // SSOT: cmVal（Double 一位小數）
     val CM_MIN = 80.0
     val CM_MAX = 350.0
 
-    var cmVal by rememberSaveable(heightCm) {
-        mutableStateOf(roundCm1(heightCm.toDouble()).toDouble())
-    }
+    // ✅ 不要用 rememberSaveable：避免回來時還原舊 seed
+    var seeded by remember { mutableStateOf(false) }
 
-    // ★ ft/in 初始值從 cm 推導
-    var feet by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).first) }
-    var inches by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).second) }
+    var useMetric by remember { mutableStateOf(true) }
+    var cmVal by remember { mutableStateOf(170.0) }
+    var feet by remember { mutableIntStateOf(5) }
+    var inches by remember { mutableIntStateOf(7) }
+
+    // ✅ 初始化完成後，seed 一次（DB 值優先）
+    LaunchedEffect(ui.initializing, init) {
+        if (!ui.initializing && !seeded) {
+            useMetric = (init.unit == UserProfileStore.HeightUnit.CM)
+            cmVal = init.cm.coerceIn(CM_MIN, CM_MAX)
+            feet = init.feet
+            inches = init.inches
+            seeded = true
+        }
+    }
 
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
@@ -168,9 +175,14 @@ fun EditHeightScreen(
             HeightUnitSegmentedSameAsGoal(
                 useMetric = useMetric,
                 onChange = { isMetric ->
-                    if (!isMetric) {
+                    if (isMetric) {
+                        // 切回 cm：用目前 ft/in 換算回 cm
+                        cmVal = feetInchesToCm1(feet, inches).coerceIn(CM_MIN, CM_MAX)
+                    } else {
+                        // 切到 ft/in：用目前 cm 推導
                         val (ft, inch) = cmToFeetInches1(cmVal)
-                        feet = ft; inches = inch
+                        feet = ft
+                        inches = inch
                     }
                     useMetric = isMetric
                 },
@@ -265,7 +277,7 @@ fun EditHeightScreen(
                     )
                     Spacer(Modifier.width(11.dp))
                     NumberWheel(
-                        range = 0..12,
+                        range = 0..11,
                         value = inches,
                         onValueChange = { newIn ->
                             inches = newIn
@@ -405,16 +417,22 @@ private fun NumberWheel(
     val VISIBLE_COUNT = 5
     val MID = VISIBLE_COUNT / 2
     val items = remember(range) { range.toList() }
+
+    // 外部 value 對應到 items 的 index
     val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
     val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(lazyListState = state)
 
-    var initialized by remember(range) { mutableStateOf(false) }
-    LaunchedEffect(range, value) {
-        if (!initialized) {
+    // ✅ 防止「程式對齊」期間又回寫 value 造成跳回去
+    var aligning by remember { mutableStateOf(true) }
+
+    // ✅ 外部 value 改變時，Wheel 要跟著對齊（不然一定停錯）
+    LaunchedEffect(selectedIdx) {
+        if (!state.isScrollInProgress) {
+            aligning = true
             state.scrollToItem(selectedIdx)
-            initialized = true
+            aligning = false
         }
     }
 
@@ -429,8 +447,12 @@ private fun NumberWheel(
         }
     }
 
-    LaunchedEffect(centerIndex, initialized) {
-        if (initialized) onValueChange(items[centerIndex])
+    // ✅ 使用者滑動時才回寫；程式對齊中不回寫，避免把 DB 值打回舊值
+    LaunchedEffect(centerIndex, aligning) {
+        if (!aligning) {
+            val newValue = items.getOrNull(centerIndex) ?: return@LaunchedEffect
+            if (newValue != value) onValueChange(newValue)
+        }
     }
 
     Box(
@@ -451,6 +473,7 @@ private fun NumberWheel(
                 val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
                 val unitSize = if (isCenter) 20.sp else 18.sp
+
                 Row(
                     modifier = Modifier
                         .height(rowHeight)
@@ -465,7 +488,9 @@ private fun NumberWheel(
                         color = Color.Black.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
-                    if (unitLabel != null) {
+
+                    // ✅ 建議只在中心顯示 unit（比較像你 Age 的版本）
+                    if (unitLabel != null && isCenter) {
                         Spacer(Modifier.width(4.dp))
                         Text(
                             text = unitLabel,
@@ -477,7 +502,8 @@ private fun NumberWheel(
                 }
             }
         }
-        // 中心框線（保留你原本的）
+
+        // center lines（保留你原本的）
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2
         val lineThickness = 1.dp
@@ -499,3 +525,4 @@ private fun NumberWheel(
         )
     }
 }
+
