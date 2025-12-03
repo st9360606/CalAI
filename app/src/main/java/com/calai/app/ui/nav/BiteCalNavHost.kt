@@ -883,8 +883,20 @@ fun BiteCalNavHost(
                         HomeTab.Personal -> Unit
                     }
                 },
-                onOpenGoalAndCurrentWeight = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
-                onOpenWeightHistory = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
+                // ✅ Goal & current weight → Personal Details
+                onOpenGoalAndCurrentWeight = {
+                    nav.navigate(Routes.PERSONAL_DETAILS) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                // ✅ Weight history → Weight
+                onOpenWeightHistory = {
+                    nav.navigate(Routes.WEIGHT) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
             )
         }
