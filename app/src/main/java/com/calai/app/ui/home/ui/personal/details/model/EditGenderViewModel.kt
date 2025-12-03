@@ -51,9 +51,9 @@ class EditGenderViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 val p = profileRepo.getServerProfileOrNull()
-                val g = p?.gender?.trim()?.lowercase(Locale.US)
-                if (!g.isNullOrBlank()) {
-                    store.setGender(g) // "male" / "female" / "other" -> 會推動 genderState 更新
+                val gRaw = p?.gender?.trim()
+                if (!gRaw.isNullOrBlank()) {
+                    store.setGender(gRaw)
                 }
             }.onFailure { e ->
                 Log.w("EditGenderVM", "refreshGenderFromServerIfNeeded failed: ${e.message}", e)
@@ -62,9 +62,9 @@ class EditGenderViewModel @Inject constructor(
     }
 
     private fun keyToServerValue(key: GenderKey): String = when (key) {
-        GenderKey.MALE -> "male"
-        GenderKey.FEMALE -> "female"
-        GenderKey.OTHER -> "other"
+        GenderKey.MALE -> "Male"
+        GenderKey.FEMALE -> "Female"
+        GenderKey.OTHER -> "Other"
     }
 
     fun saveAndSyncGender(

@@ -210,7 +210,7 @@ class ProfileRepository @Inject constructor(
     }
 
     suspend fun updateGenderOnly(newGender: String): Result<UserProfileDto> = runCatching {
-        val normalized = newGender.trim().lowercase(Locale.US) // "male" / "female" / "other"
+        val normalized = newGender.trim()
         val req = UpsertProfileRequest(
             gender = normalized,
             age = null,
@@ -230,6 +230,36 @@ class ProfileRepository @Inject constructor(
         val resp = api.upsertMyProfile(req)
         // 同步回本機（讓下次進來預設選項更準）
         runCatching { resp.gender?.let { store.setGender(it) } }
+        resp
+    }
+
+    /**
+     * ✅ 只更新 dailyStepGoal（沿用既有 upsert endpoint）
+     * 後端規則：非 null 才覆寫，所以其他欄位一律給 null，不會蓋掉資料。
+     */
+    suspend fun updateDailyStepGoalOnly(v: Int): Result<UserProfileDto> = runCatching {
+        val safe = v.coerceIn(0, 200000)
+        val req = UpsertProfileRequest(
+            gender = null,
+            age = null,
+            heightCm = null,
+            heightFeet = null,
+            heightInches = null,
+            weightKg = null,
+            weightLbs = null,
+            exerciseLevel = null,
+            goal = null,
+            goalWeightKg = null,
+            goalWeightLbs = null,
+            dailyStepGoal = safe,
+            referralSource = null,
+            locale = null
+        )
+        val resp = api.upsertMyProfile(req)
+        // ✅ 同步回本機（優先用伺服器回來的值）
+        runCatching {
+            store.setDailyStepGoal(resp.dailyStepGoal ?: safe)
+        }
         resp
     }
 
