@@ -481,6 +481,9 @@ private fun NumberWheel(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (unitLabel != null && isCenter) {
+                        Spacer(Modifier.width(16.dp))  // 想再靠右一點可以改成 10.dp、12.dp
+                    }
                     Text(
                         text = num.toString(),
                         fontSize = size,
