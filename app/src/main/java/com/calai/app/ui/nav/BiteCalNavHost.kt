@@ -799,21 +799,25 @@ fun BiteCalNavHost(
             )
         }
 
-        // === ★ WEIGHT 記錄頁（直接從 Home 開也能拿到同一顆 VM） ===
         composable(Routes.RECORD_WEIGHT) { backStackEntry ->
             val ctx = LocalContext.current
-
-            // 1) 優先用 LocalContext 找到真正的 Activity；找不到就用你傳進來的 hostActivity
             val activity = (ctx.findActivity() ?: hostActivity)
-
-            // 2) WeightViewModel 照舊：綁在 HOME 的 backStackEntry 上，共用同一顆 VM
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
             val vm: WeightViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            // 3) 嘗試把 Activity 轉成 ActivityResultRegistryOwner
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val toastVm: PersonalDetailsToastViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
             val owner: ActivityResultRegistryOwner? =
                 (activity as? ActivityResultRegistryOwner)
                     ?: (hostActivity as? ActivityResultRegistryOwner)
@@ -823,16 +827,24 @@ fun BiteCalNavHost(
                 CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
                     RecordWeightScreen(
                         vm = vm,
-                        onSaved = { nav.popBackStack() },    // 完成後返回
-                        onBack = { nav.popBackStack() }
+                        onBack = { nav.popBackStack() },
+                        onSaved = {
+                            toastVm.showSuccess("Saved successfully!")
+                            personalVm.refreshProfileOnly()
+                            nav.popBackStack()
+                        }
                     )
                 }
             } else {
                 // 極少數情況（例如 Preview 或特殊容器）拿不到 owner，就讓 RecordWeightScreen 走自己內建的降級路徑
                 RecordWeightScreen(
                     vm = vm,
-                    onSaved = { nav.popBackStack() },
-                    onBack = { nav.popBackStack() }
+                    onBack = { nav.popBackStack() },
+                    onSaved = {
+                        toastVm.showSuccess("Saved successfully!")
+                        personalVm.refreshProfileOnly()
+                        nav.popBackStack()
+                    }
                 )
             }
         }
@@ -985,17 +997,6 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-            EditGoalWeightScreen(
-                vm = vm,
-                onCancel = { nav.popBackStack() },
-                onSaved = { nav.popBackStack() }
-            )
-        }
-
-        composable(Routes.EDIT_HEIGHT) { backStackEntry ->
-            val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
-
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
@@ -1005,8 +1006,32 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
+            EditGoalWeightScreen(
+                vm = vm,
+                onCancel = { nav.popBackStack() },
+                onSaved = {
+                    toastVm.showSuccess("Saved successfully!")
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.EDIT_HEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
 
             val vm: EditHeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val toastVm: PersonalDetailsToastViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
@@ -1024,6 +1049,10 @@ fun BiteCalNavHost(
         composable(Routes.EDIT_AGE) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val vm: EditAgeViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
 
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
@@ -1031,11 +1060,6 @@ fun BiteCalNavHost(
             )
 
             val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
-            val vm: EditAgeViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
@@ -1053,6 +1077,10 @@ fun BiteCalNavHost(
         composable(Routes.EDIT_GENDER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val vm: EditGenderViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
 
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
@@ -1060,11 +1088,6 @@ fun BiteCalNavHost(
             )
 
             val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
-            val vm: EditGenderViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
@@ -1082,6 +1105,10 @@ fun BiteCalNavHost(
         composable(Routes.EDIT_DAILY_STEP_GOAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val vm: EditDailyStepGoalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
 
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
@@ -1089,11 +1116,6 @@ fun BiteCalNavHost(
             )
 
             val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
-            val vm: EditDailyStepGoalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )

@@ -286,7 +286,7 @@ class WeightViewModel @Inject constructor(
                 runCatching { refresh() }
                 _ui.update {
                     it.copy(
-                        toastMessage = "Goal Weight updated!",
+                        toastMessage = "Saved successfully!",
                         error = null
                     )
                 }
