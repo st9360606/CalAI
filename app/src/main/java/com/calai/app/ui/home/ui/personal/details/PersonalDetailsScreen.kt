@@ -81,7 +81,7 @@ fun PersonalDetailsScreen(
     val outline = Color(0xFFE5E7EB)
     val scroll = rememberScrollState()
     val contentMaxWidth = 520.dp
-    val titleSize = 14.sp
+    val titleSize = 15.sp
     Scaffold(
         containerColor = bg,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -285,7 +285,7 @@ private fun PersonalDetailsRow(
     ) {
         Text(
             text = title,
-            fontSize = titleFontSize,            // ✅ size 控制
+            fontSize = titleFontSize,
             fontWeight = FontWeight.Normal,
             color = Color(0xFF374151),
             modifier = Modifier
@@ -302,7 +302,7 @@ private fun PersonalDetailsRow(
                     text = valueMain,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFF111114),
-                    modifier = Modifier.offset(y = valueOffsetY) // ✅ 新增
+                    modifier = Modifier.offset(y = valueOffsetY)
                 )
                 if (valueSub != null) {
                     Spacer(Modifier.height(2.dp))
