@@ -52,6 +52,8 @@ class UserProfileStore @Inject constructor(
         val WATER_GOAL_ML = intPreferencesKey("water_goal_ml")
         val WATER_TODAY_DATE = stringPreferencesKey("water_today_date")
         val WATER_TODAY_ML = intPreferencesKey("water_today_ml")
+
+        // Daily Step Goal
         val DAILY_STEP_GOAL = intPreferencesKey("daily_step_goal")
     }
 
@@ -102,7 +104,6 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.data.map { it[Keys.HEIGHT] }
 
     suspend fun setHeightCm(cm: Float) {
-        // 一位小數已在呼叫端處理
         context.userProfileDataStore.edit { it[Keys.HEIGHT] = cm }
     }
 
@@ -297,24 +298,49 @@ class UserProfileStore @Inject constructor(
         }
     }
 
-    // ======= 每日步數目標 =======  UI 用：永遠有值（沒設定就顯示 10000）
+    // ======= 每日步數目標 =======
+    /**
+     * UI 用：永遠有值（沒設定就顯示 10000）
+     * 注意：這個「10000」是 UI 預設值，不代表 DB/Server 的真實值。
+     */
     val dailyStepGoalFlow: Flow<Int> =
         context.userProfileDataStore.data.map { p ->
             p[Keys.DAILY_STEP_GOAL] ?: DEFAULT_DAILY_STEP_GOAL
         }
 
-    // 上傳用：保留 raw nullable，避免不小心覆蓋 server 已設定值
+    /** 上傳/同步用：raw nullable（避免把 default 10000 當 정말已設定） */
     suspend fun dailyStepGoalRaw(): Int? =
         context.userProfileDataStore.data.map { it[Keys.DAILY_STEP_GOAL] }.first()
 
+    /** 本地寫入（包含 clamp） */
     suspend fun setDailyStepGoal(v: Int) {
         context.userProfileDataStore.edit { p ->
             p[Keys.DAILY_STEP_GOAL] = v.coerceIn(0, MAX_DAILY_STEP_GOAL)
         }
     }
 
+    /** 清除本地步數目標 */
     suspend fun clearDailyStepGoal() {
         context.userProfileDataStore.edit { it.remove(Keys.DAILY_STEP_GOAL) }
+    }
+
+    /**
+     * ✅ 建議：從 Server/DB 同步回寫時用這個
+     * - remote = null：代表 server 沒資料，不寫入（避免覆蓋你本地 onboarding/暫存）
+     */
+    suspend fun applyRemoteDailyStepGoal(remote: Int?) {
+        if (remote == null) return
+        setDailyStepGoal(remote)
+    }
+
+    /**
+     * ✅ 可選：只有在本地「完全沒存過」時，才用 remote 填進來
+     * 用在第一次登入同步很順手。
+     */
+    suspend fun ensureDailyStepGoalIfMissing(remote: Int?) {
+        if (remote == null) return
+        val cur = dailyStepGoalRaw()
+        if (cur == null) setDailyStepGoal(remote)
     }
 
     // ======= 快照（登入後上傳 & 冷啟檢查） =======
@@ -334,7 +360,7 @@ class UserProfileStore @Inject constructor(
         val goalWeightLbs: Float?,
         val exerciseFreqPerWeek: Int?,
         val goal: String?,
-        val dailyStepGoal: Int?,
+        val dailyStepGoal: Int?, // raw nullable
         val locale: String?,
         val fastingPlan: String?,
         val waterGoalMl: Int?,
@@ -362,7 +388,7 @@ class UserProfileStore @Inject constructor(
             locale = p[Keys.LOCALE_TAG],
             fastingPlan = p[Keys.FASTING_PLAN],
             waterGoalMl = p[Keys.WATER_GOAL_ML],
-            dailyStepGoal = p[Keys.DAILY_STEP_GOAL] // ✅ NEW
+            dailyStepGoal = p[Keys.DAILY_STEP_GOAL] // ✅ raw nullable
         )
     }
 
@@ -383,7 +409,10 @@ class UserProfileStore @Inject constructor(
             p.remove(Keys.GOAL_WEIGHT_LBS)
             p.remove(Keys.EXERCISE_FREQ_PER_WEEK)
             p.remove(Keys.GOAL)
-            p.remove(Keys.DAILY_STEP_GOAL) // ✅ 建議加
+
+            // ✅ 建議加：daily step goal 也清掉（你已經加了）
+            p.remove(Keys.DAILY_STEP_GOAL)
+
             // 不清 LOCALE_TAG、HAS_SERVER_PROFILE、FASTING_PLAN、WATER_*
         }
     }

@@ -82,10 +82,12 @@ import kotlinx.coroutines.delay
 import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.components.ErrorTopToast
 import com.calai.app.ui.home.ui.personal.details.EditAgeScreen
+import com.calai.app.ui.home.ui.personal.details.EditDailyStepGoalScreen
 import com.calai.app.ui.home.ui.personal.details.EditGenderScreen
 import com.calai.app.ui.home.ui.personal.details.EditHeightScreen
 import com.calai.app.ui.home.ui.personal.details.common.PersonalDetailsToastViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditAgeViewModel
+import com.calai.app.ui.home.ui.personal.details.model.EditDailyStepGoalViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditGenderViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
 import com.calai.app.ui.home.ui.weight.EditGoalWeightScreen
@@ -131,6 +133,7 @@ object Routes {
     const val KEY_HEIGHT_SUCCESS_TOAST = "height_success_toast"
     const val EDIT_AGE = "edit_age"
     const val EDIT_GENDER = "edit_gender"
+    const val EDIT_DAILY_STEP_GOAL = "edit_daily_step_goal"
 }
 private fun NavController.GoHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
@@ -927,6 +930,7 @@ fun BiteCalNavHost(
                     onEditHeight = { nav.navigate(Routes.EDIT_HEIGHT) },
                     onEditAge = { nav.navigate(Routes.EDIT_AGE) },
                     onEditGender = { nav.navigate(Routes.EDIT_GENDER) },
+                    onEditDailyStepGoal = { nav.navigate(Routes.EDIT_DAILY_STEP_GOAL) },
                 )
 
                 // 優先顯示 error（避免成功/失敗同時跳）
@@ -1054,6 +1058,35 @@ fun BiteCalNavHost(
             )
 
             EditGenderScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    toastVm.showSuccess("Saved successfully!")
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
+        }
+        composable(Routes.EDIT_DAILY_STEP_GOAL) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val toastVm: PersonalDetailsToastViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val vm: EditDailyStepGoalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditDailyStepGoalScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {

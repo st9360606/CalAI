@@ -100,15 +100,13 @@ fun PersonalDetailsScreen(
                     IconButton(
                         onClick = onBack,
                         modifier = Modifier
-                            .padding(start = 14.dp)
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFF0F2F5))
+                            .padding(start = 8.dp)
+                            .height(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "back",
-                            tint = Color(0xFF111114)
+                            contentDescription = "Back",
+                            modifier = Modifier.height(28.dp)
                         )
                     }
                 },

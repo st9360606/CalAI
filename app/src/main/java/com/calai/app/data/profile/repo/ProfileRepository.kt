@@ -263,4 +263,22 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    /**
+     * 只抓 dailyStepGoal（從 DB/Server）
+     * - 401/404：視為沒有資料，回 Success(null)
+     * - 其他 Http error：回 Failure
+     * - IOException：回 Failure（讓 ViewModel 決定要不要忽略）
+     */
+    suspend fun getDailyStepGoalFromServer(): Result<Int?> = try {
+        val p = api.getMyProfile()
+        Result.success(p.dailyStepGoal)
+    } catch (e: HttpException) {
+        when (e.code()) {
+            401, 404 -> Result.success(null)
+            else -> Result.failure(e)
+        }
+    } catch (e: IOException) {
+        Result.failure(e)
+    }
+
 }
