@@ -185,19 +185,9 @@ fun BiteCalNavHost(
 
     val store = remember(ep) { ep.userProfileStore() }
 
-    // ✅ NEW: HealthPlanRepository（用來 flush pending）
-    val healthPlanRepo = remember(ep) { ep.healthPlanRepository() }
+    val planMetricsRepo = remember(ep) { ep.planMetricsRepository() }
 
     val localeController = LocalLocaleController.current
-
-    // ✅ NEW: 只要登入狀態變成 true，就保險 flush 一次（不影響流程，best-effort）
-    LaunchedEffect(isSignedIn) {
-        if (isSignedIn == true) {
-            withContext(Dispatchers.IO) {
-                runCatching { healthPlanRepo.flushPendingBestEffort() }
-            }
-        }
-    }
 
     // Token 逾期：帶到 Gate，成功後回 HOME
     LaunchedEffect(Unit) {
@@ -301,16 +291,14 @@ fun BiteCalNavHost(
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
-                                // ✅ NEW: 登入成功後補送 pending health plan
-                                runCatching { healthPlanRepo.flushPendingBestEffort() }
+                                runCatching { planMetricsRepo.flushPendingIfAny() }
                                 Routes.HOME
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
                                 if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(currentTag) }
                                 runCatching { store.setHasServerProfile(true) }
-                                // ✅ NEW: 登入成功後補送 pending health plan
-                                runCatching { healthPlanRepo.flushPendingBestEffort() }
+                                runCatching { planMetricsRepo.flushPendingIfAny() }
                                 Routes.HOME
                             } else {
                                 // 首次登入且不是從 ROUTE_PLAN 來：照流程從 Gender 開始
@@ -539,7 +527,7 @@ fun BiteCalNavHost(
                     routeScope.launch {
                         // ✅ 先存 health plan（best-effort：未登入/失敗會 pending）
                         withContext(Dispatchers.IO) {
-                            runCatching { vm.savePlanBestEffort(source = "ONBOARDING") }
+                            runCatching { vm.savePlanMetricsBestEffortWithResult() }
                         }
 
                         if (isSignedIn == true) {
@@ -548,7 +536,7 @@ fun BiteCalNavHost(
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }
-                                runCatching { healthPlanRepo.flushPendingBestEffort() }
+                                runCatching { planMetricsRepo.flushPendingIfAny() }
                             }
 
                             nav.navigate(goal) {
@@ -628,7 +616,7 @@ fun BiteCalNavHost(
                         showSheet.value = false
                         scope.launch {
                             withContext(Dispatchers.IO) {
-                                runCatching { healthPlanRepo.flushPendingBestEffort() }
+                                runCatching { planMetricsRepo.flushPendingIfAny() }
                             }
                         }
                     },
@@ -666,6 +654,15 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+            // ✅ 登入變 true：先 flush pending，再刷新 Home card（只會跑一次：null → true）
+            LaunchedEffect(isSignedIn) {
+                if (isSignedIn == true) {
+                    withContext(Dispatchers.IO) {
+                        runCatching { planMetricsRepo.flushPendingIfAny() }
+                    }
+                    vm.refreshAfterLogin()
+                }
+            }
             HomeScreen(
                 vm = vm,
                 waterVm = waterVm,

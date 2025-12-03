@@ -15,6 +15,9 @@ interface ProfileApi {
     // ★ 新增：更新目標體重（只接受 value + unit）
     @PUT("/api/v1/users/me/profile/goal-weight")
     suspend fun updateGoalWeight(@Body body: UpdateGoalWeightRequest): UserProfileDto
+
+    @PUT("/api/v1/users/me/profile/plan-metrics")
+    suspend fun upsertPlanMetrics(@Body body: UpsertPlanMetricsRequest): UserProfileDto
 }
 
 @Serializable
@@ -60,4 +63,18 @@ data class UpsertProfileRequest(
 data class UpdateGoalWeightRequest(
     val value: Double, // 使用者輸入數值（KG 或 LBS）
     val unit: String   // "KG" or "LBS"
+)
+
+@Serializable
+data class UpsertPlanMetricsRequest(
+    val unitPreference: String,      // "KG"/"LBS"
+    val workoutsPerWeek: Int? = null,
+    val kcal: Int,
+    val carbsG: Int,
+    val proteinG: Int,
+    val fatG: Int,
+    val waterMl: Int,
+    val bmi: Double,
+    val bmiClass: String,
+    val calcVersion: String
 )

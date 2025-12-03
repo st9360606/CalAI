@@ -1,5 +1,6 @@
 package com.calai.app.ui.onboarding.plan
 
+import android.util.Log
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -42,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -79,6 +81,9 @@ import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.lerp
+import androidx.lifecycle.viewModelScope
+import com.calai.app.data.profile.repo.PlanMetricsRepository
+import kotlinx.coroutines.launch
 
 // === Colors（保持你的設定） ===
 val PrimaryGreen = Color(0xFF59B34C)
@@ -115,7 +120,7 @@ fun HealthPlanScreen(
     val goalWeightUnit = ui.goalWeightUnit ?: weightUnit
 
     val scroll = rememberScrollState()
-
+    val scope = rememberCoroutineScope()
     // ✅ 防連點：避免快速連點導致重複導航/重複存檔
     var starting by rememberSaveable { mutableStateOf(false) }
 
@@ -127,7 +132,9 @@ fun HealthPlanScreen(
                     onClick = {
                         if (starting) return@Button
                         starting = true
-                        onStart()
+                        scope.launch {
+                            onStart()
+                        }
                     },
                     enabled = !starting,
                     modifier = Modifier

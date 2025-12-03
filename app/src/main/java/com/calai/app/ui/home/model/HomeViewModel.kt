@@ -126,6 +126,14 @@ class HomeViewModel @Inject constructor(
     fun onRequestHealthPermissions() = viewModelScope.launch { refresh() }
 
     init { refresh() }
+
+    fun refreshAfterLogin() {
+        viewModelScope.launch {
+            // TODO: 重新拉 summary / profile / macros
+            // repo.refreshSummary()
+            // repo.refreshPlanMetrics()
+        }
+    }
 }
 
 /* -------------------- 私有工具 -------------------- */

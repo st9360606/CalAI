@@ -5,9 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.calai.app.core.health.HealthCalc
 import com.calai.app.core.health.HealthInputs
 import com.calai.app.core.health.MacroPlan
-import com.calai.app.core.health.toCalcGender // ★ 共用的性別對應：只有 "MALE" 算 Male，其餘視為 Female
-import com.calai.app.data.healthplan.api.SaveHealthPlanRequest
-import com.calai.app.data.healthplan.repo.HealthPlanRepository
+import com.calai.app.core.health.toCalcGender
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.kgToLbs1
 import com.calai.app.data.profile.repo.lbsToKg1
@@ -19,7 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import com.calai.app.core.health.Gender
+import com.calai.app.data.profile.api.UpsertPlanMetricsRequest
+import com.calai.app.data.profile.repo.PlanMetricsRepository
 import kotlin.math.roundToInt
 
 data class HealthPlanUiState(
@@ -37,14 +36,13 @@ data class HealthPlanUiState(
     val goalWeightDisplay: Float? = null,
     val displayUnit: UserProfileStore.WeightUnit? = null,
 
-    // ✅ 新增：存後端用
     val goalKey: String? = null
 )
 
 @HiltViewModel
 class HealthPlanViewModel @Inject constructor(
     private val store: UserProfileStore,
-    private val repo: HealthPlanRepository
+    private val planRepo: PlanMetricsRepository
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(HealthPlanUiState())
@@ -156,38 +154,15 @@ class HealthPlanViewModel @Inject constructor(
         }
     }
 
-    /**
-     * ✅ Start 先存再跳頁：失敗/未登入都不擋（會降級存 pending）
-     */
-    suspend fun savePlanBestEffort(source: String = "ONBOARDING") {
+    suspend fun savePlanMetricsBestEffortWithResult(): PlanMetricsRepository.SaveResult {
         val snapshot = ui.value
-        val inputs = snapshot.inputs ?: return
-        val plan = snapshot.plan ?: return
+        val inputs = snapshot.inputs ?: return PlanMetricsRepository.SaveResult.Failed(null, "inputs missing")
+        val plan = snapshot.plan ?: return PlanMetricsRepository.SaveResult.Failed(null, "plan missing")
 
-        // ✅ 關鍵：goalKey 用 snapshot → 不行就用 store 再撈一次
-        val goalKeySafe: String? =
-            snapshot.goalKey
-                ?: runCatching { store.goal() }.getOrNull()
-
-        val waterMl = (35f * inputs.weightKg).roundToInt()
         val unitPref = (snapshot.displayUnit ?: snapshot.weightUnit ?: UserProfileStore.WeightUnit.KG).name
+        val waterMl = (35f * inputs.weightKg).roundToInt()
 
-        val genderStr = when (inputs.gender) {
-            Gender.Male -> "MALE"
-            Gender.Female -> "FEMALE"
-        }
-
-        android.util.Log.d("HealthPlan", "savePlanBestEffort goalKeySafe=$goalKeySafe")
-
-        val req = SaveHealthPlanRequest(
-            source = source,
-            calcVersion = "healthcalc_v1",
-            goalKey = goalKeySafe, // ✅ 改這裡
-            gender = genderStr,
-            age = inputs.age,
-            heightCm = inputs.heightCm.toDouble(),
-            weightKg = inputs.weightKg.toDouble(),
-            goalWeightKg = snapshot.goalWeightKg?.toDouble(),
+        val req = UpsertPlanMetricsRequest(
             unitPreference = unitPref,
             workoutsPerWeek = inputs.workoutsPerWeek,
             kcal = plan.kcal,
@@ -196,9 +171,11 @@ class HealthPlanViewModel @Inject constructor(
             fatG = plan.fatGrams,
             waterMl = waterMl,
             bmi = plan.bmi,
-            bmiClass = plan.bmiClass.name
+            bmiClass = plan.bmiClass.name,
+            calcVersion = "healthcalc_v1"
         )
-        repo.upsertBestEffort(req)
+
+        return planRepo.upsertBestEffort(req)
     }
 }
 
