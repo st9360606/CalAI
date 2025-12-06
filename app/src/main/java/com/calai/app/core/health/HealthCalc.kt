@@ -73,11 +73,11 @@ object HealthCalc {
     fun tdee(inputs: HealthInputs): Double = bmr(inputs) * activityFactor(inputs.workoutsPerWeek)
 
     /**
-     * 依「目標」回傳預設比例：
-     * LOSE(減重)：  P30 / F30 / C40
-     * MAINTAIN(維持)：P25 / F30 / C45
-     * GAIN(增肌)：  P30 / F25 / C45
-     * HEALTHY_EATING(健康)：P20 / F30 / C50
+     * 依「目標」回傳預設比例（以程式碼為準）：
+     * LOSE：       P30 / F25 / C45
+     * MAINTAIN：   P25 / F30 / C45
+     * GAIN：       P30 / F25 / C45
+     * HEALTHY_EATING：P20 / F30 / C50
      * 其他 / null → 維持
      */
     fun splitForGoalKey(goalKey: String?): MacroSplit = when (goalKey) {

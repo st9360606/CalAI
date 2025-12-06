@@ -3,21 +3,26 @@ package com.calai.app.data.profile.api
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PUT
 
 interface ProfileApi {
     @GET("/api/v1/users/me/profile")
     suspend fun getMyProfile(): UserProfileDto
 
+    /**
+     * ✅ 新增 header：X-Profile-Source
+     * - ONBOARDING：後端允許重算宏量
+     * - null：一般更新，不重算宏量
+     */
     @PUT("/api/v1/users/me/profile")
-    suspend fun upsertMyProfile(@Body body: UpsertProfileRequest): UserProfileDto
+    suspend fun upsertMyProfile(
+        @Body body: UpsertProfileRequest,
+        @Header("X-Profile-Source") source: String? = null
+    ): UserProfileDto
 
-    // ★ 新增：更新目標體重（只接受 value + unit）
     @PUT("/api/v1/users/me/profile/goal-weight")
     suspend fun updateGoalWeight(@Body body: UpdateGoalWeightRequest): UserProfileDto
-
-    @PUT("/api/v1/users/me/profile/plan-metrics")
-    suspend fun upsertPlanMetrics(@Body body: UpsertPlanMetricsRequest): UserProfileDto
 }
 
 @Serializable
@@ -33,6 +38,8 @@ data class UserProfileDto(
     val goal: String? = null,
     val goalWeightKg: Double? = null,
     val goalWeightLbs: Double? = null,
+    val unitPreference: String? = null,
+    val workoutsPerWeek: Int? = null,
     val dailyStepGoal: Int? = null,
     val referralSource: String? = null,
     val locale: String? = null,
@@ -49,32 +56,20 @@ data class UpsertProfileRequest(
     val heightFeet: Int?,
     val heightInches: Int?,
     val weightKg: Double?,
-    val weightLbs: Double?,            // ★
+    val weightLbs: Double?,
     val exerciseLevel: String?,
     val goal: String?,
     val goalWeightKg: Double?,
-    val goalWeightLbs: Double?,      // ★
-    val dailyStepGoal: Int?,                 // ✅ NEW
+    val goalWeightLbs: Double?,
+    val dailyStepGoal: Int?,
     val referralSource: String?,
-    val locale: String?
+    val locale: String?,
+    val unitPreference: String? = null,
+    val workoutsPerWeek: Int? = null
 )
 
 @Serializable
 data class UpdateGoalWeightRequest(
-    val value: Double, // 使用者輸入數值（KG 或 LBS）
-    val unit: String   // "KG" or "LBS"
-)
-
-@Serializable
-data class UpsertPlanMetricsRequest(
-    val unitPreference: String,      // "KG"/"LBS"
-    val workoutsPerWeek: Int? = null,
-    val kcal: Int,
-    val carbsG: Int,
-    val proteinG: Int,
-    val fatG: Int,
-    val waterMl: Int,
-    val bmi: Double,
-    val bmiClass: String,
-    val calcVersion: String
+    val value: Double,
+    val unit: String
 )

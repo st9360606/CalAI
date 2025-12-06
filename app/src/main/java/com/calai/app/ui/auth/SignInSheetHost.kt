@@ -73,38 +73,26 @@ fun SignInSheetHost(
     val ep = remember(appCtx) { EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java) }
     val repo = remember(ep) { ep.authRepository() }
     val profileRepo = remember(ep) { ep.profileRepository() }
+    val weightRepo = remember(ep) { ep.weightRepository() }
     val store = remember(ep) { ep.userProfileStore() }
 
     var loading by remember { mutableStateOf(false) }
     val scope = remember(activity) { activity.lifecycleScope }
-
-    suspend fun goHome() = withContext(Dispatchers.Main) {
-        navController.navigate(Routes.HOME) {
-            popUpTo(0) { inclusive = true }
-            launchSingleTop = true
-            restoreState = false
-        }
-    }
-    suspend fun goGender() = withContext(Dispatchers.Main) {
-        navController.navigate(Routes.ONBOARD_GENDER) {
-            popUpTo(0) { inclusive = true }
-            launchSingleTop = true
-            restoreState = false
-        }
-    }
 
     // ★ 登入後導頁：若帶 uploadLocalOnLogin=true，無論 exists 與否都先 upsert 本機資料
     suspend fun afterLoginNavigateByServerProfile() = withContext(Dispatchers.IO) {
         val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
 
         if (uploadLocalOnLogin) {
-            // 這條代表從 ROUTE_PLAN 來：把剛在本機填完的 Onboarding 直接上傳合併
-            runCatching { store.setLocaleTag(localeTag) }       // 本機保持與當下語言一致
-            runCatching { profileRepo.upsertFromLocal() }       // ★ 關鍵：一定要 upsert
+            // ✅ 從 ROUTE_PLAN 來：把剛在本機填完的 Onboarding 直接上傳合併（要送 ONBOARDING header）
+            runCatching { store.setLocaleTag(localeTag) }
+            runCatching { profileRepo.upsertFromLocalForOnboarding() }  // ✅ 重大修正：改成 Onboarding 版本
             runCatching { store.setHasServerProfile(true) }
+            runCatching { weightRepo.ensureBaseline() }                 // ✅ 建議：跟你 Email flow 對齊
+
             withContext(Dispatchers.Main) {
-                navController.navigate(com.calai.app.ui.nav.Routes.HOME) {
-                    popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                navController.navigate(Routes.HOME) {
+                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
                 }
@@ -118,8 +106,8 @@ fun SignInSheetHost(
             if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(localeTag) }
             runCatching { store.setHasServerProfile(true) }
             withContext(Dispatchers.Main) {
-                navController.navigate(com.calai.app.ui.nav.Routes.HOME) {
-                    popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                navController.navigate(Routes.HOME) {
+                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
                 }
@@ -128,8 +116,8 @@ fun SignInSheetHost(
             // 首次登入但不是從 ROUTE_PLAN 來：正常走 Onboarding
             runCatching { store.setHasServerProfile(false) }
             withContext(Dispatchers.Main) {
-                navController.navigate(com.calai.app.ui.nav.Routes.ONBOARD_GENDER) {
-                    popUpTo(com.calai.app.ui.nav.Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                navController.navigate(Routes.ONBOARD_GENDER) {
+                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
                 }

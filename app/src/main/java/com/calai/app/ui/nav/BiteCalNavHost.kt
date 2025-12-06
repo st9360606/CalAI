@@ -289,7 +289,7 @@ fun BiteCalNavHost(
                             if (uploadLocal) {
                                 // ★ 從 ROUTE_PLAN 帶上來：一定 upsert 本機資料（不管 exists）
                                 runCatching { store.setLocaleTag(currentTag) }
-                                runCatching { profileRepo.upsertFromLocal() }
+                                runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
                                 Routes.HOME
@@ -525,7 +525,7 @@ fun BiteCalNavHost(
                         if (isSignedIn == true) {
                             // ✅ 已登入：補 upsert + baseline + flush，再進 HOME
                             withContext(Dispatchers.IO) {
-                                runCatching { profileRepo.upsertFromLocal() }
+                                runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }
                             }

@@ -15,7 +15,9 @@ class ProfileRepository @Inject constructor(
     private val api: ProfileApi,
     private val store: UserProfileStore
 ) {
-
+    private companion object {
+        const val PROFILE_SOURCE_ONBOARDING = "ONBOARDING"
+    }
     /** 試取雲端 Profile；若能取到，順便把本機 hasServerProfile 標成 true */
     suspend fun existsOnServer(): Boolean = try {
         api.getMyProfile()
@@ -78,32 +80,34 @@ class ProfileRepository @Inject constructor(
         }
 
         val (feet, inches) = when (p.heightUnit) {
-            UserProfileStore.HeightUnit.FT_IN ->
-                p.heightFeet to p.heightInches
-            else ->
-                null to null
+            UserProfileStore.HeightUnit.FT_IN -> p.heightFeet to p.heightInches
+            else -> null to null
         }
 
         // 原始 current / goal 體重
-        val rawWeightKg:   Double? = p.weightKg?.toDouble()
-        val rawWeightLbs:  Double? = p.weightLbs?.toDouble()
-        val rawGoalKg:   Double? = p.goalWeightKg?.toDouble()
-        val rawGoalLbs:  Double? = p.goalWeightLbs?.toDouble()
+        val rawWeightKg:  Double? = p.weightKg?.toDouble()
+        val rawWeightLbs: Double? = p.weightLbs?.toDouble()
+        val rawGoalKg:    Double? = p.goalWeightKg?.toDouble()
+        val rawGoalLbs:   Double? = p.goalWeightLbs?.toDouble()
 
         // 使用者偏好的主單位
         val weightUnit = p.weightUnit ?: UserProfileStore.WeightUnit.KG
         val goalWeightUnit = p.goalWeightUnit ?: weightUnit
 
+        // ✅ unitPreference / workoutsPerWeek（給後端 AUTO 計算）
+        val unitPrefToSend = (p.weightUnit ?: UserProfileStore.WeightUnit.KG).name
+        val workoutsToSend = p.exerciseFreqPerWeek?.coerceIn(0, 7)
+
         // --- current：只送主單位 ---
         val (weightKgToSend, weightLbsToSend) = when (weightUnit) {
-            UserProfileStore.WeightUnit.KG  -> rawWeightKg  to null
-            UserProfileStore.WeightUnit.LBS -> null         to rawWeightLbs
+            UserProfileStore.WeightUnit.KG  -> rawWeightKg to null
+            UserProfileStore.WeightUnit.LBS -> null to rawWeightLbs
         }
 
         // --- goal：只送主單位 ---
         val (goalKgToSend, goalLbsToSend) = when (goalWeightUnit) {
-            UserProfileStore.WeightUnit.KG  -> rawGoalKg  to null
-            UserProfileStore.WeightUnit.LBS -> null         to rawGoalLbs
+            UserProfileStore.WeightUnit.KG  -> rawGoalKg to null
+            UserProfileStore.WeightUnit.LBS -> null to rawGoalLbs
         }
 
         val req = UpsertProfileRequest(
@@ -114,41 +118,58 @@ class ProfileRepository @Inject constructor(
             heightInches = inches,
             weightKg = weightKgToSend,
             weightLbs = weightLbsToSend,
-            exerciseLevel = toExerciseLevel(p.exerciseFreqPerWeek),
+
+            // ✅ 改：用 clamped 的 workoutsToSend 來對映 exerciseLevel，避免 >7 或負數造成不一致
+            exerciseLevel = toExerciseLevel(workoutsToSend),
+
             goal = p.goal,
             goalWeightKg = goalKgToSend,
             goalWeightLbs = goalLbsToSend,
             dailyStepGoal = p.dailyStepGoal,
             referralSource = p.referralSource,
-            locale = localeTag
+            locale = localeTag,
+
+            unitPreference = unitPrefToSend,
+            workoutsPerWeek = workoutsToSend
         )
 
-        val resp = api.upsertMyProfile(req)
+        val resp = api.upsertMyProfile(req, source = null)
         runCatching { store.setHasServerProfile(true) }
         resp
     }
 
+    /**
+     * ✅ 給 NavHost / ViewModel 用：如果你外層用 runCatching，要能抓到失敗就用這個
+     * （因為 upsertFromLocal() 自己回傳 Result，外層 runCatching 可能抓不到 HttpException）
+     */
+    suspend fun upsertFromLocalOrThrow(): UserProfileDto =
+        upsertFromLocal().getOrThrow()
+
     /** 只更新 locale（語系切換時使用） */
     suspend fun updateLocaleOnly(newLocale: String): Result<UserProfileDto> = runCatching {
-        val cur = api.getMyProfile()
         val req = UpsertProfileRequest(
-            gender = cur.gender,
-            age = cur.age,
-            heightCm = cur.heightCm,
-            heightFeet = cur.heightFeet,
-            heightInches = cur.heightInches,
-            weightKg = cur.weightKg,
-            weightLbs = cur.weightLbs,
-            exerciseLevel = cur.exerciseLevel,
-            goal = cur.goal,
-            goalWeightKg = cur.goalWeightKg,
-            goalWeightLbs = cur.goalWeightLbs,
-            dailyStepGoal = cur.dailyStepGoal,
-            referralSource = cur.referralSource,
-            locale = newLocale
+            gender = null,
+            age = null,
+            heightCm = null,
+            heightFeet = null,
+            heightInches = null,
+            weightKg = null,
+            weightLbs = null,
+            exerciseLevel = null,
+            goal = null,
+            goalWeightKg = null,
+            goalWeightLbs = null,
+            dailyStepGoal = null,
+            referralSource = null,
+            locale = newLocale,
+            unitPreference = null,
+            workoutsPerWeek = null
         )
-        api.upsertMyProfile(req)
+        api.upsertMyProfile(req, source = null)
     }
+
+    suspend fun updateLocaleOnlyOrThrow(newLocale: String): UserProfileDto =
+        updateLocaleOnly(newLocale).getOrThrow()
 
     /**
      * 更新目標體重：
@@ -160,10 +181,10 @@ class ProfileRepository @Inject constructor(
         value: Double,
         unit: UserProfileStore.WeightUnit
     ): Result<UserProfileDto> = runCatching {
-        val trimmed = round1Floor(value)   // e.g. 73.04 → 73.0, 152.09 → 152.0
+        val trimmed = round1Floor(value)    // e.g. 73.04 → 73.0, 152.09 → 152.0
         val body = UpdateGoalWeightRequest(
             value = trimmed,
-            unit = unit.name               // "KG" or "LBS"
+            unit = unit.name                // "KG" or "LBS"
         )
         val resp = api.updateGoalWeight(body)
 
@@ -175,6 +196,9 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    suspend fun updateGoalWeightOrThrow(value: Double, unit: UserProfileStore.WeightUnit): UserProfileDto =
+        updateGoalWeight(value, unit).getOrThrow()
+
     suspend fun syncServerProfileToStore(): Boolean {
         val p: UserProfileDto = getServerProfileOrNull() ?: return false
 
@@ -185,6 +209,7 @@ class ProfileRepository @Inject constructor(
             p.referralSource?.let { store.setReferralSource(it) }
             p.goal?.let { store.setGoal(it) }
             p.dailyStepGoal?.let { store.setDailyStepGoal(it) } // ✅ NEW（你需在 store 加 setter）
+
             // height：有 feet/inches 就視為英制，否則用 cm
             if (p.heightFeet != null && p.heightInches != null) {
                 store.setHeightUnit(UserProfileStore.HeightUnit.FT_IN)
@@ -225,13 +250,18 @@ class ProfileRepository @Inject constructor(
             goalWeightLbs = null,
             dailyStepGoal = null,
             referralSource = null,
-            locale = null
+            locale = null,
+            unitPreference = null,
+            workoutsPerWeek = null
         )
-        val resp = api.upsertMyProfile(req)
+        val resp = api.upsertMyProfile(req, source = null)
         // 同步回本機（讓下次進來預設選項更準）
         runCatching { resp.gender?.let { store.setGender(it) } }
         resp
     }
+
+    suspend fun updateGenderOnlyOrThrow(newGender: String): UserProfileDto =
+        updateGenderOnly(newGender).getOrThrow()
 
     /**
      * ✅ 只更新 dailyStepGoal（沿用既有 upsert endpoint）
@@ -253,15 +283,17 @@ class ProfileRepository @Inject constructor(
             goalWeightLbs = null,
             dailyStepGoal = safe,
             referralSource = null,
-            locale = null
+            locale = null,
+            unitPreference = null,
+            workoutsPerWeek = null
         )
-        val resp = api.upsertMyProfile(req)
-        // ✅ 同步回本機（優先用伺服器回來的值）
-        runCatching {
-            store.setDailyStepGoal(resp.dailyStepGoal ?: safe)
-        }
+        val resp = api.upsertMyProfile(req, source = null)
+        runCatching { store.setDailyStepGoal(resp.dailyStepGoal ?: safe) }
         resp
     }
+
+    suspend fun updateDailyStepGoalOnlyOrThrow(v: Int): UserProfileDto =
+        updateDailyStepGoalOnly(v).getOrThrow()
 
     /**
      * 只抓 dailyStepGoal（從 DB/Server）
@@ -280,5 +312,75 @@ class ProfileRepository @Inject constructor(
     } catch (e: IOException) {
         Result.failure(e)
     }
+
+    /**
+     * ✅ Onboarding 專用：送 X-Profile-Source: ONBOARDING
+     * 後端才會允許重算 kcal / P / C / F（planMode=AUTO 時）。
+     */
+    suspend fun upsertFromLocalForOnboarding(): Result<UserProfileDto> = runCatching {
+        val p = store.snapshot()
+
+        val localeTag = p.locale?.takeIf { it.isNotBlank() }
+            ?: Locale.getDefault().toLanguageTag()
+
+        val heightCmToSend: Double? = when (p.heightUnit) {
+            UserProfileStore.HeightUnit.FT_IN -> null
+            else -> p.heightCm?.toDouble()?.let { round1Floor(it) }
+        }
+
+        val (feet, inches) = when (p.heightUnit) {
+            UserProfileStore.HeightUnit.FT_IN -> p.heightFeet to p.heightInches
+            else -> null to null
+        }
+
+        val rawWeightKg: Double? = p.weightKg?.toDouble()
+        val rawWeightLbs: Double? = p.weightLbs?.toDouble()
+        val rawGoalKg: Double? = p.goalWeightKg?.toDouble()
+        val rawGoalLbs: Double? = p.goalWeightLbs?.toDouble()
+
+        val weightUnit = p.weightUnit ?: UserProfileStore.WeightUnit.KG
+        val goalWeightUnit = p.goalWeightUnit ?: weightUnit
+
+        val unitPrefToSend = (p.weightUnit ?: UserProfileStore.WeightUnit.KG).name
+        val workoutsToSend = p.exerciseFreqPerWeek?.coerceIn(0, 7)
+
+        val (weightKgToSend, weightLbsToSend) = when (weightUnit) {
+            UserProfileStore.WeightUnit.KG  -> rawWeightKg to null
+            UserProfileStore.WeightUnit.LBS -> null to rawWeightLbs
+        }
+
+        val (goalKgToSend, goalLbsToSend) = when (goalWeightUnit) {
+            UserProfileStore.WeightUnit.KG  -> rawGoalKg to null
+            UserProfileStore.WeightUnit.LBS -> null to rawGoalLbs
+        }
+
+        val req = UpsertProfileRequest(
+            gender = p.gender,
+            age = p.ageYears,
+            heightCm = heightCmToSend,
+            heightFeet = feet,
+            heightInches = inches,
+            weightKg = weightKgToSend,
+            weightLbs = weightLbsToSend,
+            exerciseLevel = toExerciseLevel(workoutsToSend),
+            goal = p.goal,
+            goalWeightKg = goalKgToSend,
+            goalWeightLbs = goalLbsToSend,
+            dailyStepGoal = p.dailyStepGoal,
+            referralSource = p.referralSource,
+            locale = localeTag,
+            unitPreference = unitPrefToSend,
+            workoutsPerWeek = workoutsToSend
+        )
+
+        // ✅ 關鍵差異：帶 ONBOARDING header
+        val resp = api.upsertMyProfile(req, source = PROFILE_SOURCE_ONBOARDING)
+
+        runCatching { store.setHasServerProfile(true) }
+        resp
+    }
+
+    suspend fun upsertFromLocalForOnboardingOrThrow(): UserProfileDto =
+        upsertFromLocalForOnboarding().getOrThrow()
 
 }

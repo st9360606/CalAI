@@ -81,8 +81,6 @@ import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.lerp
-import androidx.lifecycle.viewModelScope
-import com.calai.app.data.profile.repo.PlanMetricsRepository
 import kotlinx.coroutines.launch
 
 // === Colors（保持你的設定） ===

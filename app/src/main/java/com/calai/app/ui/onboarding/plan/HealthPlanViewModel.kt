@@ -17,9 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import com.calai.app.data.profile.api.UpsertPlanMetricsRequest
-import com.calai.app.data.profile.repo.PlanMetricsRepository
-import kotlin.math.roundToInt
 
 data class HealthPlanUiState(
     val loading: Boolean = true,
@@ -41,8 +38,7 @@ data class HealthPlanUiState(
 
 @HiltViewModel
 class HealthPlanViewModel @Inject constructor(
-    private val store: UserProfileStore,
-    private val planRepo: PlanMetricsRepository
+    private val store: UserProfileStore
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(HealthPlanUiState())
@@ -154,29 +150,6 @@ class HealthPlanViewModel @Inject constructor(
         }
     }
 
-    suspend fun savePlanMetricsBestEffortWithResult(): PlanMetricsRepository.SaveResult {
-        val snapshot = ui.value
-        val inputs = snapshot.inputs ?: return PlanMetricsRepository.SaveResult.Failed(null, "inputs missing")
-        val plan = snapshot.plan ?: return PlanMetricsRepository.SaveResult.Failed(null, "plan missing")
-
-        val unitPref = (snapshot.displayUnit ?: snapshot.weightUnit ?: UserProfileStore.WeightUnit.KG).name
-        val waterMl = (35f * inputs.weightKg).roundToInt()
-
-        val req = UpsertPlanMetricsRequest(
-            unitPreference = unitPref,
-            workoutsPerWeek = inputs.workoutsPerWeek,
-            kcal = plan.kcal,
-            carbsG = plan.carbsGrams,
-            proteinG = plan.proteinGrams,
-            fatG = plan.fatGrams,
-            waterMl = waterMl,
-            bmi = plan.bmi,
-            bmiClass = plan.bmiClass.name,
-            calcVersion = "healthcalc_v1"
-        )
-
-        return planRepo.upsertBestEffort(req)
-    }
 }
 
 /**
