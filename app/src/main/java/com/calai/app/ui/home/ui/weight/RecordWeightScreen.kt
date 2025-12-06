@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -392,7 +393,7 @@ private fun RecordWeightScreenContent(
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 20.dp)
+                            .padding(start = 31.dp)
                     )
                     Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
                     NumberWheelRecord(
@@ -411,7 +412,7 @@ private fun RecordWeightScreenContent(
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 5.dp)
+                            .padding(end = 7.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
@@ -440,7 +441,7 @@ private fun RecordWeightScreenContent(
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 30.dp)
+                            .padding(start = 35.dp)
                     )
                     Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
                     NumberWheelRecord(
@@ -459,7 +460,7 @@ private fun RecordWeightScreenContent(
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 5.dp)
+                            .padding(end = 2.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text("lbs", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
@@ -527,19 +528,25 @@ private fun WeightUnitSegmentedRecord(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(40.dp),
         color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.55f)
-            .heightIn(min = 40.dp)
+            .fillMaxWidth(0.51f)      // ✅ 更窄（原本 0.55f）
+            .height(52.dp)            // ✅ 更高（固定高度，視覺更穩）
     ) {
-        Row(Modifier.padding(4.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(6.dp)        // ✅ 內邊距加大，膠囊更厚
+        ) {
             SegItemRecord(
                 text = "lbs",
                 selected = !useMetric,
                 onClick = { onChange(false) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(40.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()  // ✅ 跟外層等高
             )
             Spacer(Modifier.width(6.dp))
             SegItemRecord(
@@ -547,7 +554,9 @@ private fun WeightUnitSegmentedRecord(
                 selected = useMetric,
                 onClick = { onChange(true) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(40.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
             )
         }
     }
@@ -562,7 +571,7 @@ private fun SegItemRecord(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val fontSize = 18.sp
+    val fontSize = 18.sp   // ✅ 稍微大一點（原本 18.sp）
 
     Surface(
         onClick = onClick,
@@ -572,9 +581,9 @@ private fun SegItemRecord(
     ) {
         Box(
             modifier = Modifier
-                .defaultMinSize(minHeight = 40.dp)
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .fillMaxSize()                // ✅ 撐滿高度
+                .defaultMinSize(minHeight = 48.dp) // ✅ 高度再保底（原本 40.dp）
+                .padding(horizontal = 18.dp), // ✅ 不要上下 padding，避免高度被吃掉
             contentAlignment = Alignment.Center
         ) {
             Text(

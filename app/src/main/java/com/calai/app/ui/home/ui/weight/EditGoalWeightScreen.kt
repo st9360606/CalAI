@@ -244,12 +244,12 @@ fun EditGoalWeightScreen(
                             valueLbsTenths = kgToLbsTenthsForGoal(newKg)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 25.dp)
+                            .padding(start = 35.dp)
                     )
                     Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
                     NumberWheelForGoal(
@@ -263,14 +263,14 @@ fun EditGoalWeightScreen(
                             valueLbsTenths = kgToLbsTenthsForGoal(newKg)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 2.dp)
+                            .padding(end = 7.dp)
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(10.dp))
                     Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
@@ -291,12 +291,12 @@ fun EditGoalWeightScreen(
                             valueKg = lbsToKg1(newTenths / 10.0).coerceIn(KG_MIN, KG_MAX)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 30.dp)
+                            .padding(start = 35.dp)
                     )
                     Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
                     NumberWheelForGoal(
@@ -309,12 +309,12 @@ fun EditGoalWeightScreen(
                             valueKg = lbsToKg1(newTenths / 10.0).coerceIn(KG_MIN, KG_MAX)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 5.dp)
+                            .padding(end = 7.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text("lbs", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
@@ -363,7 +363,7 @@ private fun WeightUnitSegmentedForGoal(
         shape = RoundedCornerShape(40.dp),
         color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.60f)
+            .fillMaxWidth(0.55f)
             .heightIn(min = 40.dp)
     ) {
         Row(Modifier.padding(6.dp)) {
@@ -395,7 +395,7 @@ private fun SegItemForGoal(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val fSize = 20.sp
+    val fSize = 18.sp
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(corner),
