@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.ui.components.ErrorTopToast
-import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.weight.components.FilterTabs
 import com.calai.app.ui.home.ui.weight.components.HistoryRow
 import com.calai.app.ui.home.ui.weight.components.SegmentedButtons
@@ -47,7 +47,6 @@ import com.calai.app.ui.home.ui.weight.components.WeightChartCard
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.delay
-import androidx.compose.runtime.remember
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,22 +58,15 @@ fun WeightScreen(
     onBack: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
-
-    LaunchedEffect(Unit) { vm.initIfNeeded() }
-
-    // 先把這兩個值抽出來，方便下面共用 / 當作 LaunchedEffect key
     val error = ui.error
-    val toast = ui.toastMessage
 
     val historySorted = remember(ui.history7) {
         ui.history7.sortedByDescending { dto ->
             runCatching { LocalDate.parse(dto.logDate) }.getOrNull() ?: LocalDate.MIN
         }
     }
-    // ★ 最外層 Box：用來疊 Scaffold + Top Toast
-    Box(modifier = Modifier.fillMaxSize()) {
 
-        // ===== 主要內容：Scaffold =====
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = Color(0xFFF5F5F5),
             topBar = {
@@ -101,11 +93,10 @@ fun WeightScreen(
                         start = 16.dp,
                         top = 6.dp,
                         end = 16.dp,
-                        bottom = 96.dp // ★ 為底部固定按鈕預留空間
+                        bottom = 96.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Overview + Unit switch
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -131,10 +122,8 @@ fun WeightScreen(
                         }
                     }
 
-                    // Summary cards
                     item { SummaryCards(ui = ui) }
 
-                    // Filter tabs
                     item {
                         FilterTabs(
                             selected = ui.range,
@@ -142,7 +131,6 @@ fun WeightScreen(
                         )
                     }
 
-                    // Chart card
                     item {
                         WeightChartCard(
                             ui = ui,
@@ -151,7 +139,6 @@ fun WeightScreen(
                         )
                     }
 
-                    // History title
                     item {
                         Text(
                             text = "History",
@@ -163,9 +150,8 @@ fun WeightScreen(
                         )
                     }
 
-                    // History items
                     itemsIndexed(historySorted) { index, item ->
-                        val previous = historySorted.getOrNull(index + 1) // 因為是「新→舊」排序，下一個就是上一筆
+                        val previous = historySorted.getOrNull(index + 1)
                         HistoryRow(
                             item = item,
                             unit = ui.unit,
@@ -175,39 +161,17 @@ fun WeightScreen(
                 }
             }
         }
-
-        // ===== Top Toast 疊加層：固定在畫面頂部 =====
-        when {
-            error != null -> {
-                ErrorTopToast(
-                    message = error,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
-            }
-
-            toast != null -> {
-                SuccessTopToast(
-                    message = toast,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    minWidth = 150.dp,
-                    minHeight = 30.dp
-                )
-            }
+        if (error != null) {
+            ErrorTopToast(
+                message = error,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
     }
-
-    // ===== 狀態清除：2 秒後自動清掉 error / toast =====
     LaunchedEffect(error) {
         if (error != null) {
             delay(2000)
             vm.clearError()
-        }
-    }
-
-    LaunchedEffect(toast) {
-        if (toast != null) {
-            delay(2000)
-            vm.clearToast()
         }
     }
 }
@@ -220,14 +184,12 @@ private fun BottomLogWeightBar(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFFF5F5F5))
-            // 先吃掉系統 navigation bar 的安全區
             .windowInsetsPadding(WindowInsets.navigationBars)
-            // 再自己多加一點底部 padding，讓按鈕往上浮
             .padding(
                 start = 16.dp,
                 end = 16.dp,
                 top = 0.dp,
-                bottom = 16.dp      // ★ 核心：底部多留一點空間
+                bottom = 16.dp
             ),
         contentAlignment = Alignment.Center
     ) {

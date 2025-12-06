@@ -52,10 +52,11 @@ class WeightViewModel @Inject constructor(
         val series: List<WeightItemDto> = emptyList(),
         val history7: List<WeightItemDto> = emptyList(),
         val firstWeightAllTimeKg: Double? = null,
+
         val error: String? = null,
-        val saving: Boolean = false,
-        val toastMessage: String? = null
+        val saving: Boolean = false
     )
+
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
@@ -74,7 +75,7 @@ class WeightViewModel @Inject constructor(
     }
 
     init {
-        // Unit：DataStore 是唯一真相（永遠不會被「讀一次」覆蓋回去）
+        // Unit：DataStore 是唯一真相
         viewModelScope.launch {
             store.weightUnitFlow
                 .map { it ?: UserProfileStore.WeightUnit.LBS }   // null -> 預設
@@ -85,7 +86,6 @@ class WeightViewModel @Inject constructor(
                 }
         }
 
-        // 其他 flows 你原本那些照舊（kg/lbs/goal...）
         viewModelScope.launch {
             store.weightKgFlow.distinctUntilChanged()
                 .collect { w -> _ui.update { it.copy(profileWeightKg = w?.toDouble()) } }
@@ -132,12 +132,9 @@ class WeightViewModel @Inject constructor(
 
     /** 只有在「存檔成功」時才呼叫：commit 單位到 DataStore + 更新 ui.unit */
     private suspend fun commitUnitAfterSuccess(u: UserProfileStore.WeightUnit) {
-        // 先更新 UI（避免 UI 等 DataStore 回寫才變）
         _ui.update { it.copy(unit = u, pendingUnit = null) }
-        // 再落盤
         runCatching { store.setWeightUnit(u) }
             .onFailure { e ->
-                // 若落盤失敗：不要把流程打爆，但你會在 Log 看到
                 Log.w("WeightVM", "commitUnitAfterSuccess failed: ${e.message}", e)
             }
     }
@@ -210,16 +207,17 @@ class WeightViewModel @Inject constructor(
 
     /**
      * 更穩版本：只有「存檔成功」後，才把本次使用的單位寫回 DataStore
+     * ✅ 注意：成功提示 toast 不在 VM 處理（避免跨頁殘留）
      */
     fun save(
         weightKg: Double,
         weightLbs: Double,
         date: LocalDate?,
         photo: File?,
-        unitUsedToPersist: UserProfileStore.WeightUnit? = null
+        unitUsedToPersist: UserProfileStore.WeightUnit? = null,
+        onResult: (Result<Unit>) -> Unit // ✅ NEW
     ) = viewModelScope.launch {
         _ui.update { it.copy(saving = true, error = null) }
-
         runCatching {
             repo.log(
                 weightKg = weightKg,
@@ -227,23 +225,19 @@ class WeightViewModel @Inject constructor(
                 logDate = date?.toString(),
                 photoFile = photo
             )
-        }.onSuccess { saved ->
-            //只有成功才切單位（你要的穩定版）
+        }.onSuccess {
             if (unitUsedToPersist != null) {
                 Log.d("WeightVM", "save success -> persist unit = $unitUsedToPersist")
                 runCatching { store.setWeightUnit(unitUsedToPersist) }
             }
             refresh()
-            _ui.update { it.copy(toastMessage = "Saved successfully !", saving = false, error = null) }
-
+            _ui.update { it.copy(saving = false, error = null) }
+            onResult(Result.success(Unit))
         }.onFailure { e ->
-            if (e is CancellationException) return@onFailure
-            _ui.update { it.copy(error = "Save failed", toastMessage = null, saving = false) }
+            if (e is CancellationException) throw e
+            _ui.update { it.copy(error = "Save failed", saving = false) }
+            onResult(Result.failure(e))
         }
-    }
-
-    fun clearToast() {
-        _ui.update { it.copy(toastMessage = null) }
     }
 
     fun clearError() {
@@ -271,6 +265,7 @@ class WeightViewModel @Inject constructor(
 
     /**
      * 更新目標體重（成功才切單位）
+     * ✅ 注意：成功提示 toast 不在 VM 處理（避免跨頁殘留）
      */
     fun updateGoalWeight(
         value: Double,
@@ -280,24 +275,12 @@ class WeightViewModel @Inject constructor(
         viewModelScope.launch {
             val res = profileRepo.updateGoalWeight(value, unit)
             res.onSuccess {
-                //成功才 commit 單位（避免失敗也切）
                 commitUnitAfterSuccess(unit)
-
                 runCatching { refresh() }
-                _ui.update {
-                    it.copy(
-                        toastMessage = "Saved successfully!",
-                        error = null
-                    )
-                }
+                _ui.update { it.copy(error = null) }
                 onResult(Result.success(Unit))
             }.onFailure { e ->
-                _ui.update {
-                    it.copy(
-                        error = "Save failed",
-                        toastMessage = null
-                    )
-                }
+                _ui.update { it.copy(error = "Save failed") }
                 onResult(Result.failure(e))
             }
         }

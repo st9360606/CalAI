@@ -100,7 +100,6 @@ object Routes {
     const val SIGN_UP = "signup"
     const val SIGNIN_EMAIL_ENTER = "signin_email_enter"
     const val SIGNIN_EMAIL_CODE = "signin_email_code"
-    // Onboarding
     const val ONBOARD_GENDER = "onboard_gender"
     const val ONBOARD_REFERRAL = "onboard_referral"
     const val ONBOARD_AGE = "onboard_age"
@@ -116,7 +115,6 @@ object Routes {
     const val REQUIRE_SIGN_IN = "require_sign_in"
     const val HOME = "home"
     const val APP_ENTRY = "app_entry"
-    // 其他暫時頁
     const val PROGRESS = "progress"
     const val WORKOUT = "workout"
     const val DAILY = "daily"
@@ -134,6 +132,11 @@ object Routes {
     const val EDIT_AGE = "edit_age"
     const val EDIT_GENDER = "edit_gender"
     const val EDIT_DAILY_STEP_GOAL = "edit_daily_step_goal"
+}
+
+object NavResults {
+    const val SUCCESS_TOAST = "success_toast"
+    const val ERROR_TOAST = "error_toast"
 }
 private fun NavController.GoHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
@@ -184,8 +187,6 @@ fun BiteCalNavHost(
     val weightRepo  = remember(ep) { ep.weightRepository() }
 
     val store = remember(ep) { ep.userProfileStore() }
-
-    val planMetricsRepo = remember(ep) { ep.planMetricsRepository() }
 
     val localeController = LocalLocaleController.current
 
@@ -291,14 +292,12 @@ fun BiteCalNavHost(
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
-                                runCatching { planMetricsRepo.flushPendingIfAny() }
                                 Routes.HOME
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
                                 if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(currentTag) }
                                 runCatching { store.setHasServerProfile(true) }
-                                runCatching { planMetricsRepo.flushPendingIfAny() }
                                 Routes.HOME
                             } else {
                                 // 首次登入且不是從 ROUTE_PLAN 來：照流程從 Gender 開始
@@ -518,25 +517,17 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val routeScope = rememberCoroutineScope()
-
             HealthPlanScreen(
                 vm = vm,
                 onStart = {
                     val goal = Routes.HOME
-
                     routeScope.launch {
-                        // ✅ 先存 health plan（best-effort：未登入/失敗會 pending）
-                        withContext(Dispatchers.IO) {
-                            runCatching { vm.savePlanMetricsBestEffortWithResult() }
-                        }
-
                         if (isSignedIn == true) {
                             // ✅ 已登入：補 upsert + baseline + flush，再進 HOME
                             withContext(Dispatchers.IO) {
                                 runCatching { profileRepo.upsertFromLocal() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }
-                                runCatching { planMetricsRepo.flushPendingIfAny() }
                             }
 
                             nav.navigate(goal) {
@@ -614,11 +605,6 @@ fun BiteCalNavHost(
 
                     onGoogle = {
                         showSheet.value = false
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                runCatching { planMetricsRepo.flushPendingIfAny() }
-                            }
-                        }
                     },
                     onEmail = {
                         showSheet.value = false
@@ -634,6 +620,7 @@ fun BiteCalNavHost(
 
         composable(Routes.HOME) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
             val vm: HomeViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
@@ -654,79 +641,67 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            // ✅ 登入變 true：先 flush pending，再刷新 Home card（只會跑一次：null → true）
+
+            // ✅ 讓 HOME 也能顯示「上一頁回傳」的 toast（例如 QuickLogWeight 回來）
+            val successFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
+            }
+            val errorFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.ERROR_TOAST, null)
+            }
+            val navSuccess by successFlow.collectAsState(initial = null)
+            val navError by errorFlow.collectAsState(initial = null)
+
             LaunchedEffect(isSignedIn) {
-                if (isSignedIn == true) {
-                    withContext(Dispatchers.IO) {
-                        runCatching { planMetricsRepo.flushPendingIfAny() }
+                if (isSignedIn == true) vm.refreshAfterLogin()
+            }
+
+            Box(Modifier.fillMaxSize()) {
+                HomeScreen(
+                    vm = vm,
+                    waterVm = waterVm,
+                    workoutVm = workoutVm,
+                    fastingVm = fastingVm,
+                    weightVm = weightVm,
+                    onOpenAlarm = { nav.navigate(Routes.REMINDERS) { launchSingleTop = true; restoreState = true } },
+                    onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
+                    onOpenTab = { tab ->
+                        when (tab) {
+                            HomeTab.Home -> Unit
+                            HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Personal -> nav.navigate(Routes.PERSONAL) { launchSingleTop = true; restoreState = true }
+                        }
+                    },
+                    onOpenFastingPlans = { nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true } },
+                    onOpenActivityHistory = { nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true } },
+                    onOpenWeight = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
+                    onQuickLogWeight = { nav.navigate(Routes.RECORD_WEIGHT) { launchSingleTop = true; restoreState = true } }
+                )
+
+                when {
+                    !navError.isNullOrBlank() -> {
+                        ErrorTopToast(message = navError!!, modifier = Modifier.align(Alignment.TopCenter))
+                        LaunchedEffect(navError) {
+                            delay(2_000)
+                            backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
+                        }
                     }
-                    vm.refreshAfterLogin()
+                    !navSuccess.isNullOrBlank() -> {
+                        SuccessTopToast(
+                            message = navSuccess!!,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            minWidth = 150.dp,
+                            minHeight = 30.dp
+                        )
+                        LaunchedEffect(navSuccess) {
+                            delay(2_000)
+                            backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
+                        }
+                    }
                 }
             }
-            HomeScreen(
-                vm = vm,
-                waterVm = waterVm,
-                workoutVm = workoutVm,
-                fastingVm = fastingVm,
-                weightVm = weightVm,
-                onOpenAlarm = {
-                    nav.navigate(Routes.REMINDERS) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onOpenCamera = {
-                    nav.navigate(Routes.CAMERA) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onOpenTab = { tab ->
-                    when (tab) {
-                        HomeTab.Home -> Unit
-                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        HomeTab.Fasting -> nav.navigate(Routes.FASTING) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                },
-                onOpenFastingPlans = {
-                    nav.navigate(Routes.FASTING) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onOpenActivityHistory = {
-                    nav.navigate(Routes.WORKOUT_HISTORY) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onOpenWeight = {
-                    nav.navigate(Routes.WEIGHT) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onQuickLogWeight = {
-                    nav.navigate(Routes.RECORD_WEIGHT) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
-            )
         }
 
         composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
@@ -770,30 +745,53 @@ fun BiteCalNavHost(
         composable(Routes.WEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
             val vm: WeightViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
+
             // 視需求：初次進來做初始化
             LaunchedEffect(Unit) { vm.initIfNeeded() }
 
-            WeightScreen(
-                vm = vm,
-                // Weight 畫面底部「Log Weight」→ Record Weight
-                onLogClick = {
-                    nav.navigate(Routes.RECORD_WEIGHT) {
-                        launchSingleTop = true
-                        restoreState = true
+            // ✅ 接收上一頁（RecordWeight / EditGoalWeight）回傳的成功訊息：只顯示一次
+            val successToastFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
+            }
+            val successToast by successToastFlow.collectAsState(initial = null)
+
+            Box(modifier = Modifier.fillMaxSize()) {
+
+                WeightScreen(
+                    vm = vm,
+                    onLogClick = {
+                        nav.navigate(Routes.RECORD_WEIGHT) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onEditGoalWeight = {
+                        nav.navigate(Routes.EDIT_GOAL_WEIGHT) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onBack = { nav.popBackStack() }
+                )
+                if (!successToast.isNullOrBlank()) {
+                    SuccessTopToast(
+                        message = successToast!!,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        minWidth = 150.dp,
+                        minHeight = 30.dp
+                    )
+
+                    LaunchedEffect(successToast) {
+                        delay(2_000)
+                        backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null // ✅ 消費完清掉
                     }
-                },
-                onEditGoalWeight = {
-                    nav.navigate(Routes.EDIT_GOAL_WEIGHT) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onBack = { nav.popBackStack() }
-            )
+                }
+            }
         }
 
         composable(Routes.RECORD_WEIGHT) { backStackEntry ->
@@ -810,11 +808,6 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
             val owner: ActivityResultRegistryOwner? =
                 (activity as? ActivityResultRegistryOwner)
                     ?: (hostActivity as? ActivityResultRegistryOwner)
@@ -826,7 +819,10 @@ fun BiteCalNavHost(
                         vm = vm,
                         onBack = { nav.popBackStack() },
                         onSaved = {
-                            toastVm.showSuccess("Saved successfully!")
+                            // ✅ 只把結果交給「上一頁」顯示
+                            nav.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                             personalVm.refreshProfileOnly()
                             nav.popBackStack()
                         }
@@ -838,7 +834,9 @@ fun BiteCalNavHost(
                     vm = vm,
                     onBack = { nav.popBackStack() },
                     onSaved = {
-                        toastVm.showSuccess("Saved successfully!")
+                        nav.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                         personalVm.refreshProfileOnly()
                         nav.popBackStack()
                     }
@@ -923,18 +921,19 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            // ✅ NEW：共用 toast VM（Age/Height/其他 PersonalDetails 相關都走這個）
-            val toastVm:PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
             LaunchedEffect(Unit) { weightVm.initIfNeeded() }
 
             val pUi by personalVm.ui.collectAsState()
             val wUi by weightVm.ui.collectAsState()
-            val tUi by toastVm.ui.collectAsState()
+
+            val successFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
+            }
+            val errorFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.ERROR_TOAST, null)
+            }
+            val navSuccess by successFlow.collectAsState(initial = null)
+            val navError by errorFlow.collectAsState(initial = null)
 
             Box(Modifier.fillMaxSize()) {
 
@@ -953,33 +952,28 @@ fun BiteCalNavHost(
                     onEditGender = { nav.navigate(Routes.EDIT_GENDER) },
                     onEditDailyStepGoal = { nav.navigate(Routes.EDIT_DAILY_STEP_GOAL) },
                 )
-
-                // 優先顯示 error（避免成功/失敗同時跳）
-                val pdError = tUi.error?.takeIf { it.isNotBlank() }
-                val pdSuccess = tUi.success?.takeIf { it.isNotBlank() }
-
                 when {
-                    pdError != null -> {
+                    !navError.isNullOrBlank() -> {
                         ErrorTopToast(
-                            message = pdError,
+                            message = navError!!,
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
-                        LaunchedEffect(pdError) {
+                        LaunchedEffect(navError) {
                             delay(2_000)
-                            toastVm.clearError()
+                            backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
                         }
                     }
 
-                    pdSuccess != null -> {
+                    !navSuccess.isNullOrBlank() -> {
                         SuccessTopToast(
-                            message = pdSuccess,
+                            message = navSuccess!!,
                             modifier = Modifier.align(Alignment.TopCenter),
                             minWidth = 150.dp,
                             minHeight = 30.dp
                         )
-                        LaunchedEffect(pdSuccess) {
+                        LaunchedEffect(navSuccess) {
                             delay(2_000)
-                            toastVm.clearSuccess()
+                            backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
                         }
                     }
                 }
@@ -998,16 +992,13 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
             EditGoalWeightScreen(
                 vm = vm,
                 onCancel = { nav.popBackStack() },
                 onSaved = {
-                    toastVm.showSuccess("Saved successfully!")
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                     personalVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -1017,32 +1008,27 @@ fun BiteCalNavHost(
         composable(Routes.EDIT_HEIGHT) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
-
             val vm: EditHeightViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
             EditHeightScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {
-                    toastVm.showSuccess("Saved successfully!")
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                     personalVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
             )
         }
+
         composable(Routes.EDIT_AGE) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
@@ -1050,27 +1036,23 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
             EditAgeScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {
-                    toastVm.showSuccess("Saved successfully!")
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                     personalVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
             )
         }
+
         composable(Routes.EDIT_GENDER) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
@@ -1078,27 +1060,23 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
             EditGenderScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {
-                    toastVm.showSuccess("Saved successfully!")
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                     personalVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
             )
         }
+
         composable(Routes.EDIT_DAILY_STEP_GOAL) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
@@ -1106,22 +1084,17 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
             val personalVm: PersonalViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-
-            val toastVm: PersonalDetailsToastViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
             EditDailyStepGoalScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {
-                    toastVm.showSuccess("Saved successfully!")
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                     personalVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
