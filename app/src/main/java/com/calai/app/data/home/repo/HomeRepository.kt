@@ -1,10 +1,6 @@
 package com.calai.app.data.home.repo
 
 import android.net.Uri
-import com.calai.app.core.health.Gender
-import com.calai.app.core.health.HealthCalc
-import com.calai.app.core.health.HealthInputs
-import com.calai.app.core.health.toCalcGender
 import com.calai.app.data.health.HealthConnectRepository
 import com.calai.app.data.health.TodayActivity
 import com.calai.app.data.meals.repo.MealRepository
@@ -54,8 +50,17 @@ class HomeRepository @Inject constructor(
     private fun defaultWaterGoalMl(weightKg: Double?): Int =
         if (isValidWeight(weightKg)) (weightKg!!.times(35.0)).roundToInt() else 0
 
+    /** BMI label：以 DB 回傳 bmiClass 為主 */
+    private fun bmiLabelFromDb(bmiClass: String?): String = when (bmiClass?.trim()?.uppercase()) {
+        "UNDERWEIGHT" -> "Underweight"
+        "NORMAL"      -> "Normal"
+        "OVERWEIGHT"  -> "Overweight"
+        "OBESITY"     -> "Obesity"
+        else          -> "—"
+    }
+
     suspend fun loadSummaryFromServer(): Result<HomeSummary> = runCatching {
-        // 1) 以 Server 為事實來源
+        // 1) 以 Server/DB 為事實來源
         val p = profileApi.getMyProfile()
 
         // 2) 取本機快照（含體重單位、目標體重、斷食方案等）
@@ -68,34 +73,27 @@ class HomeRepository @Inject constructor(
             ?.takeIf { !it.isNullOrBlank() }
             ?.let { Uri.parse(it) }
 
-        // 4) 驗證與轉換（只使用 Server 值；缺失就丟錯）
-        val gender: Gender = toCalcGender(p.gender)
+        // 4) 驗證（保留你原本 gating 邏輯：缺失就丟錯）
         val age = p.age?.takeIf { isValidAge(it) } ?: error("age missing/invalid")
         val heightCm = p.heightCm?.takeIf { isValidHeight(it) } ?: error("height missing/invalid")
         val weightKg = p.weightKg?.takeIf { isValidWeight(it) } ?: error("weight missing/invalid")
 
         val goalWeightKg = p.goalWeightKg?.takeIf { isValidGoalWeight(it) } // 可為空
-        val workouts = levelToBucket(p.exerciseLevel) ?: 0
-        val goalKey = p.goal
 
-        val inputs = HealthInputs(
-            gender = gender,
-            age = age,
-            heightCm = heightCm.toFloat(),
-            weightKg = weightKg.toFloat(),
-            workoutsPerWeek = workouts
-        )
-        val split = HealthCalc.splitForGoalKey(goalKey)
-        val plan = HealthCalc.macroPlanBySplit(inputs, split)
+        // =========================================================
+        // ✅ 改動重點：Home 的宏量/卡路里以 DB(user_profiles) 為主
+        // - 不再用 HealthCalc 在 client 端重算
+        // =========================================================
+        val tdee = (p.kcal ?: 0).coerceAtLeast(0)
+        val proteinG = (p.proteinG ?: 0).coerceAtLeast(0)
+        val carbsG = (p.carbsG ?: 0).coerceAtLeast(0)
+        val fatG = (p.fatG ?: 0).coerceAtLeast(0)
 
-        val bmiLabel = when (plan.bmiClass) {
-            com.calai.app.core.health.BmiClass.Underweight -> "Underweight"
-            com.calai.app.core.health.BmiClass.Normal      -> "Normal"
-            com.calai.app.core.health.BmiClass.Overweight  -> "Overweight"
-            com.calai.app.core.health.BmiClass.Obesity     -> "Obesity"
-        }
+        // ✅ BMI 也以 DB 為主（後端已做 timeseries 最新優先）
+        val bmi = (p.bmi ?: 0.0)
+        val bmiLabel = bmiLabelFromDb(p.bmiClass)
 
-        // 5) 飲水目標與當日飲水
+        // 5) 飲水目標與當日飲水（先沿用你的既有規則）
         val waterGoal = defaultWaterGoalMl(weightKg)
         val waterNow = runCatching { store.waterTodayFlow.first() }.getOrDefault(0)
 
@@ -106,14 +104,12 @@ class HomeRepository @Inject constructor(
         // ---- 先決定 current 的「精確 kg」 ----
         val currentKgBase: Double = when (weightUnitPref) {
             UserProfileStore.WeightUnit.KG -> {
-                // 優先用本機 kg（使用者剛輸入），沒有再用 Server 的 kg，再不行用 Server 的 lbs 換算
                 local.weightKg?.toDouble()
                     ?: p.weightKg
                     ?: p.weightLbs?.times(KG_PER_LB)
                     ?: error("current weight missing for diff")
             }
             UserProfileStore.WeightUnit.LBS -> {
-                // 優先用本機 lbs，沒有再用 Server lbs，再不行用 Server kg 換算成 lbs
                 val lbs: Double = local.weightLbs?.toDouble()
                     ?: p.weightLbs
                     ?: p.weightKg?.times(LBS_PER_KG)
@@ -141,10 +137,8 @@ class HomeRepository @Inject constructor(
 
         val (weightDiffSigned, weightDiffUnit) =
             if (weightUnitPref == UserProfileStore.WeightUnit.KG) {
-                // 顯示 kg：直接對 kg 差值做 0.1 無條件捨去
                 floor1(diffKgRaw) to "kg"
             } else {
-                // 顯示 lbs：先把 kg 差值換成 lbs，再做 0.1 無條件捨去
                 floor1(diffKgRaw * LBS_PER_KG) to "lbs"
             }
 
@@ -164,13 +158,13 @@ class HomeRepository @Inject constructor(
             levelToBucket(p.exerciseLevel)?.let { store.setExerciseFreqPerWeek(it) }
         }
 
-        // 10) 組裝 HomeSummary
+        // 10) 組裝 HomeSummary（✅ 宏量/卡路里已改為 DB 為主）
         HomeSummary(
-            tdee = plan.kcal,
-            proteinG = plan.proteinGrams,
-            carbsG = plan.carbsGrams,
-            fatG = plan.fatGrams,
-            bmi = plan.bmi,
+            tdee = tdee,
+            proteinG = proteinG,
+            carbsG = carbsG,
+            fatG = fatG,
+            bmi = bmi,
             bmiLabel = bmiLabel,
             waterGoalMl = waterGoal,
             waterTodayMl = waterNow,

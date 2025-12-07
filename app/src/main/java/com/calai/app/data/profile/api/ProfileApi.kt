@@ -36,6 +36,8 @@ data class UserProfileDto(
     val weightLbs: Double? = null,
     val exerciseLevel: String? = null,
     val goal: String? = null,
+
+    // 你原本已經有的欄位
     val goalWeightKg: Double? = null,
     val goalWeightLbs: Double? = null,
     val unitPreference: String? = null,
@@ -44,6 +46,21 @@ data class UserProfileDto(
     val referralSource: String? = null,
     val locale: String? = null,
     val timezone: String? = null,
+
+    // ✅ 新增：以 DB user_profiles 為主的彙總欄位（Home 會用）
+    val kcal: Int? = null,
+    val carbsG: Int? = null,
+    val proteinG: Int? = null,
+    val fatG: Int? = null,
+
+    // （可選但建議一起接：你後端已經有）
+    val waterMl: Int? = null,
+    val waterMode: String? = null,   // "AUTO"/"MANUAL"
+    val bmi: Double? = null,
+    val bmiClass: String? = null,    // "NORMAL"/"OVERWEIGHT"/...
+    val planMode: String? = null,    // "AUTO"/"MANUAL"
+    val calcVersion: String? = null,
+
     val createdAt: String? = null,
     val updatedAt: String? = null
 )
