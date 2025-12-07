@@ -7,7 +7,6 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.annotation.DrawableRes
@@ -15,6 +14,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -43,7 +43,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -73,6 +72,7 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "HC-PERM"
 private const val HC_PROVIDER = "com.google.android.apps.healthdata"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthConnectIntroScreen(
@@ -82,9 +82,7 @@ fun HealthConnectIntroScreen(
     @DrawableRes centerImageRes: Int = R.drawable.health_connect_logo
 ) {
     val ctx = LocalContext.current
-    val activity = remember(ctx) { ctx.findActivity() as? ComponentActivity }
 
-    // ✅ 用 Set<String>，不要再 .toString()，HealthPermission.getReadPermission(...) 本來就回傳字串
     val requiredPermissions: Set<String> = remember {
         setOf(
             HealthPermission.getReadPermission(StepsRecord::class),
@@ -125,52 +123,67 @@ fun HealthConnectIntroScreen(
             val scope = rememberCoroutineScope()
             val client = remember { HealthConnectClient.getOrCreate(ctx) }
 
-            val launcher = rememberLauncherForActivityResult(
-                contract = PermissionController.createRequestPermissionResultContract()
-            ) { granted: Set<String> ->   // ✅ 這裡明確是 Set<String>
-                Log.d(TAG, "onActivityResult granted=${granted.joinToString()}")
-                if (granted.containsAll(requiredPermissions)) {
-                    onConnected()
-                } else {
-                    val missing = requiredPermissions - granted
-                    Log.d(TAG, "Not all permissions granted, missing=$missing")
-                    // 可在此顯示 Snackbar/提示，但先不改 UI
-                }
-            }
+            // ✅ 防呆：owner 為 null 時不要建立 launcher（避免某些容器/Preview 閃退）
+            val owner = LocalActivityResultRegistryOwner.current
 
-            HCBottomBar(
-                onPrimary = {
-                    scope.launch {
-                        // 1) 檢查 Health Connect 可用性（不同版 SDK 相容寫法）
-                        val status = runCatching { HealthConnectClient.getSdkStatus(ctx, HC_PROVIDER) }
-                            .getOrElse { HealthConnectClient.getSdkStatus(ctx) }
-                        Log.d(TAG, "getSdkStatus=$status")
-                        if (status == HealthConnectClient.SDK_UNAVAILABLE ||
-                            status == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
-                            openHealthConnectStore(ctx)
-                            return@launch
-                        }
+            if (owner != null) {
+                val launcher = rememberLauncherForActivityResult(
+                    contract = PermissionController.createRequestPermissionResultContract()
+                ) { granted: Set<String> ->
+                    Log.d(TAG, "onActivityResult granted=${granted.joinToString()}")
 
-                        // 2) 查目前已授權（Set<String>）
-                        val grantedNow: Set<String> = client.permissionController.getGrantedPermissions()
-                        Log.d(TAG, "granted(now)=${grantedNow.joinToString()}")
-                        Log.d(TAG, "required=${requiredPermissions.joinToString()}")
-
-                        val missing = requiredPermissions - grantedNow
-                        Log.d(TAG, "missingPerms=$missing")
-
-                        if (missing.isEmpty()) {
-                            Log.d(TAG, "All required permissions already granted → onConnected()")
-                            onConnected()
-                        } else {
-                            // 3) 只請求缺少的，提高成功率
-                            Log.d(TAG, "Requesting permissions via launcher: $missing")
-                            launcher.launch(missing)
-                        }
+                    if (granted.containsAll(requiredPermissions)) {
+                        onConnected()
+                    } else {
+                        val missing = requiredPermissions - granted
+                        Log.d(TAG, "Not all permissions granted, missing=$missing")
+                        // ✅ 重點：使用者拒絕/取消 → 直接讓他繼續下一步（不再卡住）
+                        onSkip()
                     }
-                },
-                onSkip = onSkip
-            )
+                }
+
+                HCBottomBar(
+                    onPrimary = {
+                        scope.launch {
+                            val status = runCatching { HealthConnectClient.getSdkStatus(ctx, HC_PROVIDER) }
+                                .getOrElse { HealthConnectClient.getSdkStatus(ctx) }
+                            Log.d(TAG, "getSdkStatus=$status")
+
+                            if (status == HealthConnectClient.SDK_UNAVAILABLE ||
+                                status == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED
+                            ) {
+                                openHealthConnectStore(ctx)
+                                return@launch
+                            }
+
+                            val grantedNow: Set<String> = client.permissionController.getGrantedPermissions()
+                            Log.d(TAG, "granted(now)=${grantedNow.joinToString()}")
+                            Log.d(TAG, "required=${requiredPermissions.joinToString()}")
+
+                            val missing = requiredPermissions - grantedNow
+                            Log.d(TAG, "missingPerms=$missing")
+
+                            if (missing.isEmpty()) {
+                                Log.d(TAG, "All required permissions already granted → onConnected()")
+                                onConnected()
+                            } else {
+                                Log.d(TAG, "Requesting permissions via launcher: $missing")
+                                launcher.launch(missing)
+                            }
+                        }
+                    },
+                    onSkip = onSkip
+                )
+            } else {
+                // ✅ 極少數：拿不到 registry owner（Preview/特殊容器）→ 直接提供可繼續路徑
+                HCBottomBar(
+                    onPrimary = {
+                        Log.d(TAG, "No ActivityResultRegistryOwner. Skip permission request.")
+                        onSkip()
+                    },
+                    onSkip = onSkip
+                )
+            }
         }
     ) { inner ->
         Column(
@@ -189,7 +202,6 @@ fun HealthConnectIntroScreen(
 
             Spacer(Modifier.height(108.dp))
 
-            // ===== Hero：白色圓角框 + 圖 + 下方綠勾 =====
             val cardCorner = 28.dp
             val cardHeight = 148.dp
             val cardWidthFraction = 0.42f
@@ -220,7 +232,7 @@ fun HealthConnectIntroScreen(
                 Box(cardModifier, contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(centerImageRes),
-                        contentDescription = "logo", // ← 使用字串資源
+                        contentDescription = "logo",
                         modifier = Modifier.size(135.dp),
                         contentScale = ContentScale.Fit
                     )
@@ -235,15 +247,18 @@ fun HealthConnectIntroScreen(
                         .background(Color(0xFF2BB673)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Canvas(modifier = Modifier
-                        .fillMaxSize()
-                        .padding((checkSize * 0.18f))) {
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding((checkSize * 0.18f))
+                    ) {
                         val w = size.width
                         val h = size.height
                         val p1 = Offset(w * 0.20f, h * 0.55f)
                         val p2 = Offset(w * 0.43f, h * 0.75f)
                         val p3 = Offset(w * 0.82f, h * 0.30f)
                         val strokePx = checkStroke.toPx()
+
                         drawLine(
                             color = Color.White,
                             start = p1, end = p2,
@@ -262,7 +277,6 @@ fun HealthConnectIntroScreen(
 
             Spacer(Modifier.height(6.dp))
 
-            // 標題＋內文（全部改用 stringResource）
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -271,7 +285,7 @@ fun HealthConnectIntroScreen(
                 val bodyWidthFraction = 0.72f
 
                 Text(
-                    text = stringResource(R.string.hc_connect_title_prefix), // 「連接到」
+                    text = stringResource(R.string.hc_connect_title_prefix),
                     modifier = Modifier.fillMaxWidth(titleWidthFraction),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 42.sp,
@@ -283,7 +297,7 @@ fun HealthConnectIntroScreen(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = stringResource(R.string.hc_connect_title_service), // 「Health Connect」
+                    text = stringResource(R.string.hc_connect_title_service),
                     modifier = Modifier.fillMaxWidth(titleWidthFraction),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 42.sp,
@@ -317,13 +331,17 @@ private fun HCBottomBar(
     onPrimary: () -> Unit,
     onSkip: () -> Unit,
 ) {
-    Box {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
         Button(
             onClick = onPrimary,
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
                 .fillMaxWidth()
                 .height(64.dp),
             shape = RoundedCornerShape(31.dp),
@@ -333,9 +351,19 @@ private fun HCBottomBar(
             )
         ) {
             Text(
-                text = stringResource(R.string.continue_text), // ← 使用既有「繼續」
+                text = stringResource(R.string.continue_text),
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        // ✅ 新增：讓使用者永遠能下一步
+        TextButton(onClick = onSkip) {
+            Text(
+                text = stringResource(R.string.skip_text),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF111114).copy(alpha = 0.65f)
             )
         }
     }
@@ -343,7 +371,6 @@ private fun HCBottomBar(
 
 /* ---------- 其他 ---------- */
 private fun openHealthConnectStore(ctx: Context) {
-    // 依官方：apps.healthdata + onboarding 參數
     val pkg = HC_PROVIDER
     val market = Uri.parse("market://details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding")
     val web = Uri.parse("https://play.google.com/store/apps/details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding")
