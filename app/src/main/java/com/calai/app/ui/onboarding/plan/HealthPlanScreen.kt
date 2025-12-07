@@ -81,6 +81,7 @@ import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.lerp
+import com.calai.app.core.health.Gender
 import kotlinx.coroutines.launch
 
 // === Colors（保持你的設定） ===
@@ -210,6 +211,7 @@ fun HealthPlanScreen(
             // 第二排：Water / Current Weight / Goal Δ
             HydrationAndWeightRings(
                 weightKg = inputs.weightKg,
+                gender = inputs.gender,
                 displayUnit = ui.displayUnit ?: weightUnit ?: UserProfileStore.WeightUnit.KG,
                 displayWeight = ui.weightDisplay,
                 displayGoal = ui.goalWeightDisplay
@@ -346,13 +348,16 @@ private fun MacrosRings(plan: MacroPlan) {
 /** 第二排：Water / Current Weight / Goal Δ */
 @Composable
 private fun HydrationAndWeightRings(
-    weightKg: Float,                              // 計算用 kg（HealthInputs）
-    displayUnit: UserProfileStore.WeightUnit,     // 顯示用單位
-    displayWeight: Float?,                        // 顯示用 current
-    displayGoal: Float?                         // 顯示用 goal
+    weightKg: Float,
+    gender: Gender, // ✅ 新增
+    displayUnit: UserProfileStore.WeightUnit,
+    displayWeight: Float?,
+    displayGoal: Float?
 ) {
-    // 1) 水量：還是以 kg 算
-    val waterMl = (35f * weightKg).roundToInt()
+    // ✅ 跟後端一致：round(kg*35) + 性別上限
+    val base = (35f * weightKg).roundToInt().coerceAtLeast(0)
+    val cap = if (gender == Gender.Male) 3700 else 2700
+    val waterMl = min(base, cap)
 
     // 2) current 顯示
     val (currText, currProgress) = when (displayUnit) {
