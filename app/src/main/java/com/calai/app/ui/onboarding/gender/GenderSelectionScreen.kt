@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/ui/onboarding/gender/GenderSelectionScreen.kt
 package com.calai.app.ui.onboarding.gender
 
 import androidx.compose.foundation.background
@@ -224,7 +223,8 @@ fun GenderSelectionScreen(
                 }
             },
             onDismiss = { showLang = false },
-            maxWidth = 320.dp
+            widthFraction = 0.92f,     // 92% 的螢幕寬
+            maxHeightFraction = 0.60f  // 60% 的螢幕高
         )
     }
 }

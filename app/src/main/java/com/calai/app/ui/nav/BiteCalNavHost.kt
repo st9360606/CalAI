@@ -239,7 +239,7 @@ fun BiteCalNavHost(
             )
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: EmailSignInViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+            val vm: EmailSignInViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
@@ -265,7 +265,7 @@ fun BiteCalNavHost(
             )
         ) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val vm: EmailSignInViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+            val vm: EmailSignInViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )

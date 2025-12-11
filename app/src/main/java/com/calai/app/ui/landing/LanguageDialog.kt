@@ -1,5 +1,4 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.calai.app.ui.landing
 
 import androidx.compose.foundation.BorderStroke
@@ -12,7 +11,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,8 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -30,7 +33,7 @@ import androidx.compose.ui.window.DialogProperties
 // 語言清單（BCP-47）
 data class LangItem(val label: String, val tag: String, val flag: String)
 
-// ✅ 已加入 it/nl/sv/da/nb/he/tr/pl/zh-HK/fil
+// ✅ 已加入 it/nl/sv/da/nb/he/tr/pl/zh-HK/fil + 其他
 val LANGS = listOf(
     LangItem("English", "en", "🇺🇸"),
     LangItem("Español", "es", "🇪🇸"),
@@ -48,7 +51,6 @@ val LANGS = listOf(
     LangItem("繁體中文", "zh-TW", "🇹🇼"),
     LangItem("简体中文", "zh-CN", "🇨🇳"),
 
-    // 先前新增
     LangItem("Italiano", "it", "🇮🇹"),
     LangItem("Nederlands", "nl", "🇳🇱"),
     LangItem("Svenska", "sv", "🇸🇪"),
@@ -60,7 +62,6 @@ val LANGS = listOf(
     LangItem("繁體中文", "zh-HK", "🇭🇰"),
     LangItem("Filipino", "fil", "🇵🇭"),
 
-    // 本次必補
     LangItem("Português (Brasil)", "pt-BR", "🇧🇷"),
     LangItem("Português (Portugal)", "pt-PT", "🇵🇹"),
     LangItem("Suomi", "fi", "🇫🇮"),
@@ -78,9 +79,9 @@ fun LanguageDialog(
     currentTag: String,
     onPick: (LangItem) -> Unit,
     onDismiss: () -> Unit,
-    langs: List<LangItem> = LANGS,
-    maxWidth: Dp = 320.dp,
-    maxHeightFraction: Float = 0.44f
+    lang: List<LangItem> = LANGS,
+    widthFraction: Float = 0.92f,     // ★ 用比例控制寬度
+    maxHeightFraction: Float = 0.60f  // 高度還是用比例
 ) {
     val screenH = LocalConfiguration.current.screenHeightDp.dp
     val maxHeight = screenH * maxHeightFraction
@@ -95,18 +96,18 @@ fun LanguageDialog(
     ) {
         Surface(
             modifier = Modifier
-                .padding(24.dp)
-                .widthIn(max = maxWidth)
-                .requiredHeightIn(max = maxHeight)
-                .fillMaxWidth(),
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+                // ★ 用 fillMaxWidth(widthFraction) 來決定寬度
+                .fillMaxWidth(widthFraction)
+                .requiredHeightIn(max = maxHeight),
             shape = RoundedCornerShape(22.dp),
-            color = Color(0xFFF7F6FB),
+            color = Color.White,
             tonalElevation = 0.dp,
             shadowElevation = 8.dp
         ) {
             Column(Modifier.padding(16.dp)) {
 
-                // 標題（置中）+ 右上關閉
+                // 標題置中 + 關閉按鈕
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -117,21 +118,23 @@ fun LanguageDialog(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF111114),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(end = 40.dp)
+                        modifier = Modifier.align(Alignment.Center),
+                        textAlign = TextAlign.Center
                     )
+
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .size(36.dp)
                             .align(Alignment.CenterEnd)
+                            .size(36.dp)
                     ) {
-                        Icon(Icons.Filled.Close, contentDescription = "Close")
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close"
+                        )
                     }
                 }
 
-                // 清單（卡片內可捲動）
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -139,8 +142,8 @@ fun LanguageDialog(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 8.dp)
                 ) {
-                    items(langs) { lang ->
-                        val selected = lang.tag.equals(currentTag, ignoreCase = true)
+                    items(lang) { langItem ->
+                        val selected = langItem.tag.equals(currentTag, ignoreCase = true)
                         val bg = if (selected) Color(0xFF111114) else Color.White
                         val fg = if (selected) Color.White else Color(0xFF111114)
                         val border = if (selected) Color.Transparent else Color(0xFFE5E5EA)
@@ -152,14 +155,14 @@ fun LanguageDialog(
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(bg)
                                 .border(BorderStroke(1.dp, border), RoundedCornerShape(16.dp))
-                                .clickable { onPick(lang) }
+                                .clickable { onPick(langItem) }
                                 .padding(horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = lang.flag, fontSize = 18.sp)
+                            Text(text = langItem.flag, fontSize = 18.sp)
                             Spacer(Modifier.width(10.dp))
                             Text(
-                                text = lang.label,
+                                text = langItem.label,
                                 color = fg,
                                 fontSize = 16.sp,
                                 maxLines = 1,

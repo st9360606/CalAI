@@ -13,17 +13,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,20 +50,23 @@ fun LandingScreen(
 
     // ===== 尺寸自適應 =====
     val titleSize = 32.sp
-    val titleLineHeight = 34.sp
+    val titleLineHeight = 42.sp
     val titleWidthFraction = 0.85f
-    val spaceVideoToTitle = 15.dp
-
-    val titleFont = remember {
-        FontFamily(
-            Font(R.font.montserrat_bold, weight = FontWeight.ExtraBold),
-            Font(R.font.notosanstc_bold, weight = FontWeight.Bold),
-            Font(R.font.notosanssc_bold, weight = FontWeight.Bold)
-        )
-    }
+    val spaceVideoToTitle = 14.dp
 
     val currentTag = composeLocale.tag.ifBlank { "en" }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
+
+    // ★ 根據語系決定 bottomOffset
+    val bottomOffset: Dp =
+        if (currentTag.equals("zh-TW", ignoreCase = true) ||
+            currentTag.equals("zh-CN", ignoreCase = true) ||
+            currentTag.equals("zh-HK", ignoreCase = true)
+        ) {
+            42.dp
+        } else {
+            54.dp
+        }
 
     val isRoot = navController.previousBackStackEntry == null
     BackHandler(enabled = isRoot) { /* stay */ }
@@ -92,7 +89,7 @@ fun LandingScreen(
                             .windowInsetsPadding(
                                 WindowInsets.displayCutout.union(WindowInsets.statusBars)
                             )
-                            .padding(top = 0.dp, end = 16.dp)
+                            .padding(top = 5.dp, end = 16.dp)
                             .offset(y = (-11).dp),
                         onClick = { if (!switching) showLang = true }
                     )
@@ -103,16 +100,12 @@ fun LandingScreen(
             LandingBottomBar(
                 onStart = onStart,
                 onLogin = onLogin,
-                titleFont = titleFont,
-                bottomOffset = 37.dp
+                bottomOffset = bottomOffset   // ★ 改用動態計算後的值
             )
         }
     ) { inner ->
         Column(
-            Modifier
-                .fillMaxSize()
-                .padding(inner)
-                .imePadding()
+            Modifier.fillMaxSize().padding(inner)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -155,9 +148,7 @@ fun LandingScreen(
             Spacer(Modifier.height(spaceVideoToTitle))
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 5.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
@@ -187,7 +178,8 @@ fun LandingScreen(
                     switching = false
                 },
                 onDismiss = { showLang = false },
-                maxWidth = 320.dp
+                widthFraction = 0.92f,     // 92% 的螢幕寬
+                maxHeightFraction = 0.60f  // 60% 的螢幕高
             )
         }
     }
@@ -197,7 +189,6 @@ fun LandingScreen(
 private fun LandingBottomBar(
     onStart: () -> Unit,
     onLogin: () -> Unit,
-    titleFont: FontFamily,
     bottomOffset: Dp,
 ) {
     Box(
@@ -208,46 +199,55 @@ private fun LandingBottomBar(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 20.dp, end = 20.dp, bottom = bottomOffset),
+                .padding(start = 16.dp, end = 12.dp, bottom = bottomOffset),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
                 onClick = onStart,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp),
-                shape = RoundedCornerShape(28.dp),
+                    .height(60.dp),
+                shape = RoundedCornerShape(999.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black,
                     contentColor = Color.White
                 )
             ) {
-                Text(
-                    text = stringResource(R.string.cta_get_started),
-                    fontSize = 19.sp,
-                    fontFamily = titleFont,
-                    fontWeight = FontWeight.Bold
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.cta_get_started),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(14.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = stringResource(R.string.cta_login_prefix),
-                    fontSize = 15.sp,
-                    fontFamily = titleFont,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF111114).copy(alpha = 0.72f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFF111114),
                     style = LocalTextStyle.current.copy(
                         platformStyle = PlatformTextStyle(includeFontPadding = false)
                     )
                 )
-                Spacer(Modifier.width(9.dp))
+
+                Spacer(Modifier.width(5.dp))
+
                 Text(
                     text = stringResource(R.string.cta_login),
                     fontSize = 17.sp,
-                    fontFamily = titleFont,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onLogin() },

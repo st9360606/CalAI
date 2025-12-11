@@ -2,7 +2,7 @@
     <string name="app_name">BiteCal｜卡路里相機（AI）：拍照計算卡路里與減脂記錄</string>
     <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
     <string name="cta_get_started">開始使用</string>
-    <string name="cta_login_prefix">已有帳號？</string>
+    <string name="cta_login_prefix">已擁有帳號？</string>
     <string name="cta_login">登入</string>
     <string name="choose_language">選擇語言</string>
 
