@@ -116,7 +116,6 @@ object Routes {
     const val HOME = "home"
     const val APP_ENTRY = "app_entry"
     const val PROGRESS = "progress"
-    const val WORKOUT = "workout"
     const val DAILY = "daily"
     const val FASTING = "fasting"
     const val PERSONAL = "personal"
@@ -674,7 +673,7 @@ fun BiteCalNavHost(
                         when (tab) {
                             HomeTab.Home -> Unit
                             HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Daily -> nav.navigate(Routes.DAILY) { launchSingleTop = true; restoreState = true }
                             HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
                             HomeTab.Personal -> nav.navigate(Routes.PERSONAL) { launchSingleTop = true; restoreState = true }
                         }
@@ -719,12 +718,35 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-            val GoHome = remember(nav) { { nav.GoHome() } }
-            // ✅ 系統返回鍵也回 HOME
-            BackHandler { GoHome() }
+
+            val goHome: () -> Unit = remember(nav) { { nav.GoHome() } }
+
+            // 底部導航列在 Fasting 畫面時的行為（先準備好，之後可共用到底部 Bar）
+            val onOpenTab: (HomeTab) -> Unit = remember(nav) {
+                { tab ->
+                    when (tab) {
+                        HomeTab.Home -> nav.GoHome()
+                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                        HomeTab.Daily -> nav.navigate(Routes.DAILY) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                        HomeTab.Fasting -> Unit // 已在本頁，什麼都不做
+                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                }
+            }
             FastingPlansScreen(
                 vm = fastingVm,
-                onBack = GoHome // ✅ UI 返回也回 HOME
+                onBack = goHome,
+                currentTab = HomeTab.Fasting,      // 保留 API，之後要把 BottomBar 搬進來會用到
+                onOpenTab = onOpenTab
             )
         }
 
@@ -890,7 +912,7 @@ fun BiteCalNavHost(
                     when (tab) {
                         HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
                         HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
-                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Daily -> nav.navigate(Routes.DAILY) { launchSingleTop = true; restoreState = true }
                         HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
                         HomeTab.Personal -> Unit
                     }

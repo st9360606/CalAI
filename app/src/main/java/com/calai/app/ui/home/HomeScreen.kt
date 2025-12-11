@@ -104,7 +104,7 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 
-enum class HomeTab { Home, Progress, Workout, Fasting, Personal }
+enum class HomeTab { Home, Progress, Daily, Fasting, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -241,10 +241,9 @@ fun HomeScreen(
                 current = HomeTab.Home,
                 onOpenTab = { tab ->
                     when (tab) {
-                        HomeTab.Workout -> {
-                            onOpenTab(HomeTab.Workout)
+                        HomeTab.Daily -> {                     // 👈 修改這裡
+                            onOpenTab(HomeTab.Daily)
                         }
-
                         else -> onOpenTab(tab)
                     }
                 }
