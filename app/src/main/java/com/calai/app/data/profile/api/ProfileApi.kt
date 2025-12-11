@@ -53,6 +53,10 @@ data class UserProfileDto(
     val proteinG: Int? = null,
     val fatG: Int? = null,
 
+    val fiberG: Int? = null,
+    val sugarG: Int? = null,
+    val sodiumMg: Int? = null,
+
     // （可選但建議一起接：你後端已經有）
     val waterMl: Int? = null,
     val waterMode: String? = null,   // "AUTO"/"MANUAL"

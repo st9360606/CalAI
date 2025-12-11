@@ -47,21 +47,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
+private enum class PrimaryAuthMethod {
+    Google,
+    Email
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequireSignInScreen(
     onBack: () -> Unit,
-    onGoogleClick: () -> Unit,   // 開啟 SignInSheetHost
+    onGoogleClick: () -> Unit,   // 開啟 SignInSheetHost（Google 起頭）
+    onEmailClick: () -> Unit,    // 開啟 SignInSheetHost（Email 起頭）
     onSkip: () -> Unit,
     snackbarHostState: SnackbarHostState,
-    // 可選：與 Onboarding 一致的進度條（null = 不顯示）
-    progressStepIndex: Int = 11,
+    progressStepIndex: Int = 11, // 可選：與 Onboarding 一致的進度條（null = 不顯示）
     progressTotalSteps: Int = 11,
-    // ★ 新增：中間 CTA 區塊的垂直位移（負值＝往上移）
-    ctaVerticalOffset: Dp = (-24).dp
+    ctaVerticalOffset: Dp = (-24).dp // ★ 新增：中間 CTA 區塊的垂直位移（負值＝往上移）
 ) {
     val ink = Color(0xFF111114)
+    var primaryAuth by remember { mutableStateOf(PrimaryAuthMethod.Google) }
     BackHandler { onBack() }
 
     Scaffold(
@@ -111,7 +120,7 @@ fun RequireSignInScreen(
 
             // 標題
             Text(
-                text = stringResource(R.string.auth_create_account_title),
+                text = stringResource(R.string.auth_sign_in_account_title),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 34.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -138,52 +147,177 @@ fun RequireSignInScreen(
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // --- Google 按鈕 ---
-                    Button(
-                        onClick = onGoogleClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(64.dp),
-                        shape = RoundedCornerShape(100.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = ink,
-                            contentColor = Color.White
-                        ),
-                        contentPadding = PaddingValues(horizontal = 20.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                    // --- Sign in with Google ---
+                    if (primaryAuth == PrimaryAuthMethod.Google) {
+                        // 主 CTA：黑底白字
+                        Button(
+                            onClick = {
+                                primaryAuth = PrimaryAuthMethod.Google
+                                onGoogleClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            shape = RoundedCornerShape(100.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ink,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 20.dp)
                         ) {
-                            // ★ 新增：白色圓底的 Google icon
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White),
-                                contentAlignment = Alignment.Center
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.google),
-                                    contentDescription = "Google",
-                                    tint = Color.Unspecified,
-                                    modifier = Modifier.size(22.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.google),
+                                        contentDescription = "Google",
+                                        tint = Color.Unspecified,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(R.string.auth_sign_in_with_google),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Center
                                 )
                             }
-                            Spacer(Modifier.width(12.dp))
-                            Text(
-                                text = stringResource(R.string.auth_sign_in_with_google),
-                                fontSize = 20.sp,                    // ★ 放大字體
-                                fontWeight = FontWeight.SemiBold,    // ★ 半粗
-                                textAlign = TextAlign.Center
+                        }
+                    } else {
+                        // 次要 CTA：Outlined（樣式類似 Skip）
+                        OutlinedButton(
+                            onClick = {
+                                primaryAuth = PrimaryAuthMethod.Google
+                                onGoogleClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            shape = RoundedCornerShape(100.dp),
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = ink
                             )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFF1F3F7)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.google),
+                                        contentDescription = "Google",
+                                        tint = Color.Unspecified,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(R.string.auth_sign_in_with_google),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
 
                     Spacer(Modifier.height(12.dp))
 
-                    // --- Skip 按鈕 ---
+                    // --- Sign in with Email ---
+                    if (primaryAuth == PrimaryAuthMethod.Email) {
+                        // 主 CTA：黑底白字
+                        Button(
+                            onClick = {
+                                primaryAuth = PrimaryAuthMethod.Email
+                                onEmailClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            shape = RoundedCornerShape(100.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ink,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 20.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Email,
+                                    contentDescription = "Email",
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(R.string.signin_with_email),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        // 次要 CTA：Outlined（初始狀態會走這裡，樣式類似 Skip）
+                        OutlinedButton(
+                            onClick = {
+                                primaryAuth = PrimaryAuthMethod.Email
+                                onEmailClick()
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            shape = RoundedCornerShape(100.dp),
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = ink
+                            )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Email,
+                                    contentDescription = "Email",
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(R.string.signin_with_email),
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    // --- Skip 按鈕（維持原本樣式） ---
                     OutlinedButton(
                         onClick = onSkip,
                         modifier = Modifier
@@ -194,8 +328,8 @@ fun RequireSignInScreen(
                         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             Text(
                                 text = stringResource(R.string.common_skip),
-                                fontSize = 20.sp,                   // ★ 放大字體
-                                fontWeight = FontWeight.SemiBold,   // ★ 半粗
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
                                 color = ink,
                                 textAlign = TextAlign.Center
                             )

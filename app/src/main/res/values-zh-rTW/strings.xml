@@ -172,8 +172,9 @@
     <string name="plan_sources_hide">隱藏來源</string>
 
     <!-- REQUIRE_SIGN_IN -->
-    <string name="auth_create_account_title">Create an account</string>
-    <string name="auth_sign_in_with_google">Sign in with Google</string>
+    <string name="auth_sign_in_account_title">登入帳戶</string>
+    <string name="auth_sign_in_with_google">使用 Google 登入</string>
+    <string name="auth_signin_with_email">通過電子郵件繼續</string>
     <string name="common_skip">Skip</string>
     <string name="msg_login_success">登入成功</string>
     <string name="msg_login_failed_generic">登入失敗，請再試一次</string>

@@ -567,7 +567,12 @@ fun BiteCalNavHost(
 
             RequireSignInScreen(
                 onBack = { nav.safePopBackStack() },
-                onGoogleClick = { showSheet.value = true },
+                onGoogleClick = {
+                    showSheet.value = true
+                },
+                onEmailClick = {
+                    showSheet.value = true
+                },
                 onSkip = {
                     if (uploadLocal) {
                         // 來自 ROUTE_PLAN：允許返回 ROUTE_PLAN（不登入先回規劃頁）

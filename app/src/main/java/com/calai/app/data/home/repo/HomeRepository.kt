@@ -88,13 +88,15 @@ class HomeRepository @Inject constructor(
         val proteinG = (p.proteinG ?: 0).coerceAtLeast(0)
         val carbsG = (p.carbsG ?: 0).coerceAtLeast(0)
         val fatG = (p.fatG ?: 0).coerceAtLeast(0)
-
+        val fiberG = (p.fiberG ?: 0).coerceAtLeast(0)
+        val sugarG = (p.sugarG ?: 0).coerceAtLeast(0)
+        val sodiumMg = (p.sodiumMg ?: 0).coerceAtLeast(0)
         // ✅ BMI 也以 DB 為主（後端已做 timeseries 最新優先）
         val bmi = (p.bmi ?: 0.0)
         val bmiLabel = bmiLabelFromDb(p.bmiClass)
 
         // 5) 飲水目標與當日飲水（先沿用你的既有規則）
-        val waterGoal = defaultWaterGoalMl(weightKg)
+        val waterGoal = (p.waterMl ?: 0).coerceAtLeast(0)
         val waterNow = runCatching { store.waterTodayFlow.first() }.getOrDefault(0)
 
         // 6) 體重差：依「使用者當前選擇的單位」計算 Δ = goal - current
@@ -164,6 +166,9 @@ class HomeRepository @Inject constructor(
             proteinG = proteinG,
             carbsG = carbsG,
             fatG = fatG,
+            fiberG = fiberG,
+            sugarG = sugarG,
+            sodiumMg = sodiumMg,
             bmi = bmi,
             bmiLabel = bmiLabel,
             waterGoalMl = waterGoal,

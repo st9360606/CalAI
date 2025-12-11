@@ -83,6 +83,10 @@ import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.lerp
 import com.calai.app.core.health.Gender
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 // === Colors（保持你的設定） ===
 val PrimaryGreen = Color(0xFF59B34C)
@@ -120,8 +124,23 @@ fun HealthPlanScreen(
 
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
-    // ✅ 防連點：避免快速連點導致重複導航/重複存檔
-    var starting by rememberSaveable { mutableStateOf(false) }
+// ✅ 防連點：避免快速連點導致重複導航/重複存檔
+    var starting by remember { mutableStateOf(false) }
+
+    // ✅ 關鍵：當這個 destination「重新回到前景」(ON_RESUME) 時，重置 loading 狀態
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // 從 Gate / 其他頁 pop 回來：允許再次按「開始使用」
+                starting = false
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -132,7 +151,8 @@ fun HealthPlanScreen(
                         if (starting) return@Button
                         starting = true
                         scope.launch {
-                            onStart()
+                            runCatching { onStart() }
+                            .onFailure { starting = false }
                         }
                     },
                     enabled = !starting,
