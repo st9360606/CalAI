@@ -3,12 +3,36 @@ package com.calai.app.ui.onboarding.gender
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +56,7 @@ import com.calai.app.ui.common.OnboardingProgress
 import com.calai.app.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
+import androidx.compose.foundation.layout.Row
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,8 +81,7 @@ fun GenderSelectionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -66,7 +90,7 @@ fun GenderSelectionScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -79,18 +103,25 @@ fun GenderSelectionScreen(
                         }
                     }
                 },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 1,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
                 actions = {
-                    // 與登入頁一致的語言膠囊
                     FlagChip(
                         flag = flagEmoji,
                         label = langLabel,
-                        modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            .windowInsetsPadding(
-                                WindowInsets.displayCutout.union(WindowInsets.statusBars)
-                            )
-                            .padding(top = 0.dp, end = 16.dp)
-                            .offset(y = (-11).dp),
+                        modifier = Modifier.offset(y = (-8).dp),
                         onClick = { if (!switching) showLang = true }
                     )
                 }
@@ -101,28 +132,37 @@ fun GenderSelectionScreen(
                 Button(
                     onClick = {
                         scope.launch {
-                            vm.saveSelectedGender()                            // 寫入 DataStore
-                            onNext(requireNotNull(state.selected))             // 保證非空再前進
+                            vm.saveSelectedGender()
+                            onNext(requireNotNull(state.selected)) // 保證非空再前進
                         }
                     },
-                    enabled = state.selected != null,                          // ← 沒選就不能按
+                    enabled = state.selected != null, // 沒選就不能按
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -131,18 +171,7 @@ fun GenderSelectionScreen(
             Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .imePadding()
         ) {
-            OnboardingProgress(
-                stepIndex = 1,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
-            Spacer(Modifier.height(6.dp))
-
             Text(
                 text = stringResource(R.string.onb_gender_title),
                 fontSize = 34.sp,
@@ -151,9 +180,11 @@ fun GenderSelectionScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 15.dp),
+                    .padding(horizontal = 18.dp),
                 textAlign = TextAlign.Center
             )
+
+            Spacer(Modifier.height(8.dp))
 
             Text(
                 text = stringResource(R.string.onb_gender_subtitle),
@@ -161,21 +192,19 @@ fun GenderSelectionScreen(
                     color = Color(0xFF9AA3AF),
                     lineHeight = 20.sp
                 ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(80.dp))
+            Spacer(Modifier.height(130.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val widthFraction = 0.88f
-                val optionHeight = 72.dp
-                val corner = 26.dp
+                val optionHeight = 70.dp
+                val corner = 999.dp
 
                 GenderOption(
                     text = stringResource(R.string.male_simple),
@@ -206,7 +235,6 @@ fun GenderSelectionScreen(
             }
         }
     }
-
     if (showLang) {
         LanguageDialog(
             title = stringResource(R.string.choose_language),
@@ -240,7 +268,7 @@ private fun GenderOption(
 ) {
     val shape = RoundedCornerShape(corner)
     val container = if (selected) Color(0xFF111114) else Color(0xFFF1F3F7)
-    val content = if (selected) Color.White else Color(0xFF111114)
+    val content = if (selected) Color.White else Color.Black
 
     val interaction = remember { MutableInteractionSource() }
 
@@ -260,8 +288,11 @@ private fun GenderOption(
         Text(
             text = text,
             color = content,
-            fontSize = 19.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 19.sp,
+                letterSpacing = 0.2.sp
+            ),
             textAlign = TextAlign.Center
         )
     }

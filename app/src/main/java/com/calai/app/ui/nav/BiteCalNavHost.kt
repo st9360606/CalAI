@@ -78,6 +78,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import com.calai.app.i18n.LanguageManager
 import kotlinx.coroutines.delay
 import com.calai.app.ui.home.ui.components.SuccessTopToast
 import com.calai.app.ui.home.ui.components.ErrorTopToast
@@ -85,19 +86,17 @@ import com.calai.app.ui.home.ui.personal.details.EditAgeScreen
 import com.calai.app.ui.home.ui.personal.details.EditDailyStepGoalScreen
 import com.calai.app.ui.home.ui.personal.details.EditGenderScreen
 import com.calai.app.ui.home.ui.personal.details.EditHeightScreen
-import com.calai.app.ui.home.ui.personal.details.common.PersonalDetailsToastViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditAgeViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditDailyStepGoalViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditGenderViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
 import com.calai.app.ui.home.ui.weight.EditGoalWeightScreen
-import com.calai.app.ui.nav.Routes.KEY_HEIGHT_SUCCESS_TOAST
 import com.calai.app.ui.onboarding.goalweight.WeightGoalScreen
 import com.calai.app.ui.onboarding.goalweight.WeightGoalViewModel
+import androidx.core.net.toUri
 
 object Routes {
     const val LANDING = "landing"
-    const val SIGN_UP = "signup"
     const val SIGNIN_EMAIL_ENTER = "signin_email_enter"
     const val SIGNIN_EMAIL_CODE = "signin_email_code"
     const val ONBOARD_GENDER = "onboard_gender"
@@ -127,7 +126,6 @@ object Routes {
     const val EDIT_GOAL_WEIGHT = "edit_goal_weight"
     const val PERSONAL_DETAILS = "personal_details"
     const val EDIT_HEIGHT = "edit_height"
-    const val KEY_HEIGHT_SUCCESS_TOAST = "height_success_toast"
     const val EDIT_AGE = "edit_age"
     const val EDIT_GENDER = "edit_gender"
     const val EDIT_DAILY_STEP_GOAL = "edit_daily_step_goal"
@@ -137,7 +135,7 @@ object NavResults {
     const val SUCCESS_TOAST = "success_toast"
     const val ERROR_TOAST = "error_toast"
 }
-private fun NavController.GoHome() {
+private fun NavController.goHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
     val popped = popBackStack(Routes.HOME, inclusive = false)
     if (popped) return
@@ -153,7 +151,7 @@ private fun NavController.GoHome() {
 private fun toHttpUriOrNull(raw: String?): Uri? {
     val s = raw?.trim().orEmpty()
     if (s.isBlank()) return null
-    val uri = runCatching { Uri.parse(s) }.getOrNull() ?: return null
+    val uri = runCatching { s.toUri() }.getOrNull() ?: return null
     return uri.takeIf { it.scheme == "http" || it.scheme == "https" }
 }
 
@@ -212,7 +210,6 @@ fun BiteCalNavHost(
             val localeControllerLocal = LocalLocaleController.current
 
             LandingScreen(
-                hostActivity = hostActivity,
                 navController = nav,
                 onStart = { nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true } },
                 onLogin = {
@@ -221,7 +218,7 @@ fun BiteCalNavHost(
                 },
                 onSetLocale = { tag ->
                     localeControllerLocal.set(tag)
-                    com.calai.app.i18n.LanguageManager.applyLanguage(tag)
+                    LanguageManager.applyLanguage(tag)
                     onSetLocale(tag)
                     scope.launch {
                         withContext(Dispatchers.IO) { runCatching { store.setLocaleTag(tag) } }
@@ -270,7 +267,6 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val email = backStackEntry.arguments?.getString("email") ?: ""
-            val redirect = backStackEntry.arguments?.getString("redirect") ?: Routes.HOME
             val uploadLocal = backStackEntry.arguments?.getBoolean("uploadLocal") ?: false
 
             val currentTag = localeController.tag.ifBlank { "en" }
@@ -427,7 +423,7 @@ fun BiteCalNavHost(
             val ctx = LocalContext.current
             // 1) 優先取當前 Activity；2) 退回用你外層傳入的 hostActivity
             val owner: ActivityResultRegistryOwner? =
-                (ctx.findActivity() as? ComponentActivity) ?: (hostActivity as? ComponentActivity)
+                (ctx.findActivity() as? ComponentActivity) ?: hostActivity
 
             if (owner != null) {
                 CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
@@ -448,30 +444,9 @@ fun BiteCalNavHost(
 
         composable(Routes.ONBOARD_HEALTH_CONNECT) { backStackEntry ->
             val ctx = LocalContext.current
-            val activity = (ctx.findActivity() as? ComponentActivity)
-                ?: (hostActivity as? ComponentActivity)  // 你專案裡已經有 hostActivity 的話，這行可留作備援
+            val activity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity  // 你專案裡已經有 hostActivity 的話，這行可留作備援
 
-            if (activity != null) {
-                // ★ 關鍵：在 route 外層提供 Owner，確保 rememberLauncherForActivityResult 有可用的 registry
-                CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
-                    HealthConnectIntroScreen(
-                        onBack = { nav.safePopBackStack() },
-                        onSkip = {
-                            nav.navigate(Routes.PLAN_PROGRESS) {
-                                popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        },
-                        onConnected = {
-                            nav.navigate(Routes.PLAN_PROGRESS) {
-                                popUpTo(Routes.ONBOARD_HEALTH_CONNECT) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-                }
-            } else {
-                // 拿不到 owner（極少數情況，例如 Preview）→ 畫面照常，按「繼續」會直接 onSkip，不會閃退
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
                 HealthConnectIntroScreen(
                     onBack = { nav.safePopBackStack() },
                     onSkip = {
@@ -558,7 +533,6 @@ fun BiteCalNavHost(
 
             val snackbarHostState = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
-            val ctx = LocalContext.current
             val localeKey = currentLocaleKey()
             val currentTag = localeController.tag.ifBlank { "en" }
 
@@ -719,13 +693,13 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            val goHome: () -> Unit = remember(nav) { { nav.GoHome() } }
+            val goHome: () -> Unit = remember(nav) { { nav.goHome() } }
 
             // 底部導航列在 Fasting 畫面時的行為（先準備好，之後可共用到底部 Bar）
             val onOpenTab: (HomeTab) -> Unit = remember(nav) {
                 { tab ->
                     when (tab) {
-                        HomeTab.Home -> nav.GoHome()
+                        HomeTab.Home -> nav.goHome()
                         HomeTab.Progress -> nav.navigate(Routes.PROGRESS) {
                             launchSingleTop = true
                             restoreState = true
@@ -759,12 +733,12 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
             LaunchedEffect(Unit) { workoutVm.init() }
-            val GoHome = remember(nav) { { nav.GoHome() } }
+            val goBackHome = remember(nav) { { nav.goHome() } }
             // ✅ 系統返回鍵也回 HOME
-            BackHandler { GoHome() }
+            BackHandler { goBackHome() }
             WorkoutHistoryScreen(
                 vm = workoutVm,
-                onBack = GoHome
+                onBack = goBackHome
             )
         }
 
@@ -900,7 +874,7 @@ fun BiteCalNavHost(
             val nameText = pUi.name?.takeIf { it.isNotBlank() } ?: "—"
 
             // ✅ 4) age 先用 ProfileApi 回來的（你目前就是這樣）
-            val ageText = pUi.profile?.age?.let { "${it} years old" } ?: "—"
+            val ageText = pUi.profile?.age?.let { "$it years old" } ?: "—"
 
             PersonalScreen(
                 avatarUrl = avatar,

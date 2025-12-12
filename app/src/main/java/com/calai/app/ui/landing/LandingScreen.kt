@@ -3,7 +3,6 @@ package com.calai.app.ui.landing
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,6 +26,7 @@ import com.calai.app.i18n.LanguageSessionFlag
 import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.common.FlagChip
+import com.calai.app.ui.landing.device.DeviceFrameIPhone
 
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
@@ -38,7 +38,6 @@ private tailrec fun Context.findActivity(): Activity? =
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(
-    hostActivity: ComponentActivity,
     navController: NavController,
     onStart: () -> Unit,
     onLogin: () -> Unit,
@@ -52,7 +51,7 @@ fun LandingScreen(
     val titleSize = 32.sp
     val titleLineHeight = 42.sp
     val titleWidthFraction = 0.85f
-    val spaceVideoToTitle = 14.dp
+    val spaceVideoToTitle = 16.dp
 
     val currentTag = composeLocale.tag.ifBlank { "en" }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
@@ -63,9 +62,9 @@ fun LandingScreen(
             currentTag.equals("zh-CN", ignoreCase = true) ||
             currentTag.equals("zh-HK", ignoreCase = true)
         ) {
-            42.dp
+            33.dp
         } else {
-            54.dp
+            45.dp //越大越近
         }
 
     val isRoot = navController.previousBackStackEntry == null
@@ -86,26 +85,31 @@ fun LandingScreen(
                         label = langLabel,
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .windowInsetsPadding(
-                                WindowInsets.displayCutout.union(WindowInsets.statusBars)
-                            )
-                            .padding(top = 5.dp, end = 16.dp)
-                            .offset(y = (-11).dp),
+                            .padding(end = 16.dp)
+                            .offset(y = (-8).dp),
                         onClick = { if (!switching) showLang = true }
                     )
                 }
             )
         },
         bottomBar = {
-            LandingBottomBar(
-                onStart = onStart,
-                onLogin = onLogin,
-                bottomOffset = bottomOffset   // ★ 改用動態計算後的值
-            )
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center   // ★ 讓 bottomBar 內容水平置中
+            ) {
+                LandingBottomBar(
+                    onStart = onStart,
+                    onLogin = onLogin,
+                    bottomOffset = bottomOffset   // ★ 用你動態算好的值
+                )
+            }
         }
     ) { inner ->
         Column(
-            Modifier.fillMaxSize().padding(inner)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -114,8 +118,8 @@ fun LandingScreen(
                 // 你自訂的 iPhone 外框
                 DeviceFrameIPhone(
                     modifier = Modifier
-                        .fillMaxWidth(0.75f)
-                        .aspectRatio(11f / 18.2f),
+                        .fillMaxWidth(0.67f)      // 讓整體窄一點，看起來更像真的手機
+                        .aspectRatio(10.5f / 19.5f),// ★ 改成更接近真實手機的比例（寬 : 高 = 9 : 19.5）
                     islandWidthFraction = 0.32f,
                     islandHeight = 18.dp,
                     cornerRadius = 40.dp,
@@ -129,7 +133,7 @@ fun LandingScreen(
                     contentBottomExtraPadding = 3.dp,
                     powerButtonLengthFraction = 0.10f,
                     volumeButtonsCenterBias = 0.20f,
-                    powerButtonCenterBias = 0.12f,
+                    powerButtonCenterBias = 0.20f,
                     showFrontCameraDot = true
                 ) {
                     LandingSlideshow(
@@ -161,7 +165,6 @@ fun LandingScreen(
                 )
             }
         }
-
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
@@ -199,14 +202,14 @@ private fun LandingBottomBar(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 16.dp, end = 12.dp, bottom = bottomOffset),
+                .padding(start = 16.dp, end = 16.dp, bottom = bottomOffset),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
                 onClick = onStart,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp),
+                    .height(64.dp),
                 shape = RoundedCornerShape(999.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black,
@@ -219,14 +222,17 @@ private fun LandingBottomBar(
                 ) {
                     Text(
                         text = stringResource(R.string.cta_get_started),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.2.sp
+                        ),
                         textAlign = TextAlign.Center
                     )
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -243,7 +249,7 @@ private fun LandingBottomBar(
                     )
                 )
 
-                Spacer(Modifier.width(5.dp))
+                Spacer(Modifier.width(3.dp))
 
                 Text(
                     text = stringResource(R.string.cta_login),

@@ -80,8 +80,8 @@ fun LanguageDialog(
     onPick: (LangItem) -> Unit,
     onDismiss: () -> Unit,
     lang: List<LangItem> = LANGS,
-    widthFraction: Float = 0.92f,     // ★ 用比例控制寬度
-    maxHeightFraction: Float = 0.60f  // 高度還是用比例
+    widthFraction: Float = 0.92f,     // 用比例控制寬度
+    maxHeightFraction: Float = 0.60f  // 高度用比例
 ) {
     val screenH = LocalConfiguration.current.screenHeightDp.dp
     val maxHeight = screenH * maxHeightFraction
@@ -97,7 +97,6 @@ fun LanguageDialog(
         Surface(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 24.dp)
-                // ★ 用 fillMaxWidth(widthFraction) 來決定寬度
                 .fillMaxWidth(widthFraction)
                 .requiredHeightIn(max = maxHeight),
             shape = RoundedCornerShape(22.dp),
@@ -115,7 +114,7 @@ fun LanguageDialog(
                 ) {
                     Text(
                         text = title,
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF111114),
                         modifier = Modifier.align(Alignment.Center),
@@ -134,6 +133,7 @@ fun LanguageDialog(
                         )
                     }
                 }
+                Spacer(Modifier.height(6.dp))
 
                 LazyColumn(
                     modifier = Modifier
@@ -151,7 +151,7 @@ fun LanguageDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp)
+                                .height(58.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(bg)
                                 .border(BorderStroke(1.dp, border), RoundedCornerShape(16.dp))

@@ -1,4 +1,4 @@
-package com.calai.app.ui.landing
+package com.calai.app.ui.landing.device
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -138,22 +138,22 @@ fun DeviceFrameIPhone(
 
                 // 左：音量鍵兩段
                 run {
-                    val L = screenHeight * volumeButtonLengthFraction
+                    val height = screenHeight * volumeButtonLengthFraction
                     val gap = screenHeight * 0.022f
                     val cy = screenTop + screenHeight / 2f - screenHeight * volumeButtonsCenterBias
                     val leftX = innerLeft + inset
                     // 上
                     drawRoundRect(
                         color = buttonColor,
-                        topLeft = Offset(leftX, cy - L - gap / 2f),
-                        size = Size(btnT, L),
+                        topLeft = Offset(leftX, cy - height - gap / 2f),
+                        size = Size(btnT, height),
                         cornerRadius = CornerRadius(btnT / 2f, btnT / 2f)
                     )
                     // 下
                     drawRoundRect(
                         color = buttonColor,
                         topLeft = Offset(leftX, cy + gap / 2f),
-                        size = Size(btnT, L),
+                        size = Size(btnT, height),
                         cornerRadius = CornerRadius(btnT / 2f, btnT / 2f)
                     )
                 }
