@@ -114,11 +114,8 @@ fun WeightSelectionScreen(
 
             Initial(kgVal, lbsTenths)
         } else {
-            val kgVal = when {
-                weightKg > 0f -> weightKg.toDouble()
-                else -> 65.0
-            }.coerceIn(KG_MIN, KG_MAX)
-
+            val kgValBase = if (weightKg > 0f) weightKg.toDouble() else 65.0
+            val kgVal = kgValBase.coerceIn(KG_MIN, KG_MAX)
             val lbsTenths = kgToLbsTenths(kgVal)
                 .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
 
@@ -248,8 +245,6 @@ fun WeightSelectionScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            // ★ 這裡不再畫 OnboardingProgress，避免重複
-
             Text(
                 text = stringResource(R.string.onboard_weight_title),
                 fontSize = 34.sp,
@@ -312,7 +307,7 @@ fun WeightSelectionScreen(
                         sideAlpha = 0.35f,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 22.dp)
+                            .padding(start = 23.dp)
                     )
                     Box(
                         modifier = Modifier.width(18.dp),
@@ -447,7 +442,9 @@ private fun WeightUnitSegmented(
                 selected = !useMetric,
                 onClick = { onChange(false) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(40.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItem(
@@ -455,7 +452,9 @@ private fun WeightUnitSegmented(
                 selected = useMetric,
                 onClick = { onChange(true) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(40.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
             )
         }
     }
