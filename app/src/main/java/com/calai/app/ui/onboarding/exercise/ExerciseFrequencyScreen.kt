@@ -6,7 +6,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -52,7 +52,7 @@ import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
 
 // 與推薦來源頁一致：item 寬度佔螢幕 90%
-private const val OPTION_WIDTH_FRACTION = 0.90f
+private const val OPTION_WIDTH_FRACTION = 0.86f
 
 private data class ExerciseUiOption(
     val value: Int,                 // 0 / 2 / 4 / 6 / 7
@@ -73,16 +73,15 @@ fun ExerciseFrequencyScreen(
     val options = listOf(
         ExerciseUiOption(0, R.drawable.working,        R.string.ex_freq_0_title,         R.string.ex_freq_0_sub),
         ExerciseUiOption(2, R.drawable.running,        R.string.ex_freq_1_3_title,       R.string.ex_freq_1_3_sub),
-        ExerciseUiOption(4, R.drawable.cycling,         R.string.ex_freq_3_5_title,       R.string.ex_freq_3_5_sub),
-        ExerciseUiOption(6, R.drawable.weight_lifting,  R.string.ex_freq_6_7_plus_title,  R.string.ex_freq_6_7_plus_sub),
-        ExerciseUiOption(7, R.drawable.muscle,          R.string.ex_freq_7_plus_title,    R.string.ex_freq_7_plus_sub)
+        ExerciseUiOption(4, R.drawable.cycling,        R.string.ex_freq_3_5_title,       R.string.ex_freq_3_5_sub),
+        ExerciseUiOption(6, R.drawable.weight_lifting, R.string.ex_freq_6_7_plus_title,  R.string.ex_freq_6_7_plus_sub),
+        ExerciseUiOption(7, R.drawable.muscle,         R.string.ex_freq_7_plus_title,    R.string.ex_freq_7_plus_sub)
     )
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -91,7 +90,7 @@ fun ExerciseFrequencyScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -102,6 +101,20 @@ fun ExerciseFrequencyScreen(
                                 tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 6,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -117,20 +130,29 @@ fun ExerciseFrequencyScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -140,16 +162,6 @@ fun ExerciseFrequencyScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            OnboardingProgress(
-                stepIndex = 6,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
-            Spacer(Modifier.height(6.dp))
-
             Text(
                 text = stringResource(id = R.string.onboard_ex_freq_title),
                 fontSize = 34.sp,
@@ -158,16 +170,15 @@ fun ExerciseFrequencyScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 15.dp),
+                    .padding(horizontal = 22.dp),
                 textAlign = TextAlign.Center
             )
 
-            // 內容清單：置中 + 縮窄寬度（與推薦來源頁一致）
+            Spacer(Modifier.height(16.dp))
+
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp) // ← 加這行
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(options, key = { it.value }) { opt ->
                     Box(
@@ -181,6 +192,7 @@ fun ExerciseFrequencyScreen(
                             modifier = Modifier.fillMaxWidth(OPTION_WIDTH_FRACTION)
                         )
                     }
+                    Spacer(Modifier.height(16.dp))
                 }
             }
         }
@@ -204,14 +216,14 @@ private fun ExerciseOptionItem(
     Row(
         modifier = modifier
             .height(80.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(bg)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 18.dp),
+            .padding(horizontal = 22.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 左側固定純白圓底 + 彩色圖示

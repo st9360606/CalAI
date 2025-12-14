@@ -86,7 +86,7 @@
     <string name="onboard_goal_weight_title">What is your goal weight?</string>
 
     <!-- exercise -->
-    <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
+    <string name="onboard_ex_freq_title">How often do you exercise each week ?</string>
     <string name="onboard_ex_freq_subtitle">This will help calibrate your personalized plan.</string>
     <string name="ex_freq_0_title">0</string>
     <string name="ex_freq_0_sub">Sedentary</string>

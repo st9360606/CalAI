@@ -50,7 +50,7 @@ fun HeightSelectionScreen(
     val CM_MAX = 350.0
 
     var cmVal by rememberSaveable(heightCm) {
-        mutableStateOf(roundCm1(heightCm.toDouble()).toDouble())
+        mutableDoubleStateOf(roundCm1(heightCm.toDouble()).toDouble())
     }
 
     // ★ ft/in 初始值從 cm 推導

@@ -43,7 +43,7 @@ import com.calai.app.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
 
 // 控制每個 item 佔用的寬度比例（置中）
-private const val OPTION_WIDTH_FRACTION = 0.88f
+private const val OPTION_WIDTH_FRACTION = 0.86f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -197,8 +197,8 @@ private fun ReferralOptionItem(
 
     Row(
         modifier = modifier
-            .height(64.dp)
-            .clip(RoundedCornerShape(999.dp))
+            .height(75.dp)
+            .clip(RoundedCornerShape(14.dp))
             .background(bg)
             .clickable(
                 interactionSource = interaction,
