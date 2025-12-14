@@ -217,7 +217,7 @@ fun EditHeightScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 33.dp)
+                            .padding(start = 35.dp)
                     )
 
                     Text(
@@ -240,7 +240,7 @@ fun EditHeightScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 2.dp)
+                            .padding(start = 5.dp)
                     )
 
                     Spacer(Modifier.width(8.dp))
@@ -273,7 +273,7 @@ fun EditHeightScreen(
                         unitLabel = "ft",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 33.dp)
+                            .padding(start = 22.dp)
                     )
                     Spacer(Modifier.width(11.dp))
                     NumberWheel(
@@ -291,7 +291,7 @@ fun EditHeightScreen(
                         unitLabel = "in",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(end = 8.dp)
+                            .padding(end = 22.dp)
                     )
                 }
             }
