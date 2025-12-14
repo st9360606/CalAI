@@ -216,7 +216,7 @@ fun HeightSelectionScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 18.dp)
+                            .padding(start = 27.dp)
                     )
 
                     Box(
@@ -244,7 +244,7 @@ fun HeightSelectionScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 22.dp)
+                            .padding(start = 13.dp)
                     )
 
                     Spacer(Modifier.width(8.dp))
@@ -279,7 +279,7 @@ fun HeightSelectionScreen(
                         unitLabel = "ft",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 12.dp)
+                            .padding(start = 20.dp)
                     )
 
                     Spacer(Modifier.width(11.dp))
@@ -299,7 +299,7 @@ fun HeightSelectionScreen(
                         unitLabel = "in",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(end = 10.dp)
+                            .padding(end = 19.dp)
                     )
                 }
             }
@@ -338,7 +338,7 @@ private fun UnitSegmented(
             shape = RoundedCornerShape(40.dp),
             color = Color(0xFFE2E5EA),
             modifier = Modifier
-                .fillMaxWidth(0.60f)
+                .fillMaxWidth(0.55f)
                 .heightIn(min = 40.dp)
         ) {
             Row(Modifier.padding(6.dp)) {
