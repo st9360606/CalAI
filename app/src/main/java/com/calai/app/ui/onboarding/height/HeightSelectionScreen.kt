@@ -27,22 +27,17 @@ import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.ui.common.OnboardingProgress
-
-// ← 調整這個數值即可讓「CM 單一滾輪」往右/往左偏移
-
-
 import androidx.compose.runtime.mutableIntStateOf
-import com.calai.app.data.profile.repo.roundCm1     // ★ 新增
+import com.calai.app.data.profile.repo.roundCm1
 import com.calai.app.data.profile.repo.cmToFeetInches1
 import com.calai.app.data.profile.repo.feetInchesToCm1
-private val CM_WHEEL_X_SHIFT = 24.dp
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HeightSelectionScreen(
     vm: HeightSelectionViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit,
-    rowHeight: Dp = 56.dp,
 ) {
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()
@@ -65,8 +60,7 @@ fun HeightSelectionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -75,7 +69,7 @@ fun HeightSelectionScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -86,6 +80,20 @@ fun HeightSelectionScreen(
                                 tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 4,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -108,20 +116,29 @@ fun HeightSelectionScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -131,24 +148,16 @@ fun HeightSelectionScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            OnboardingProgress(
-                stepIndex = 4,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
             Text(
                 text = stringResource(R.string.onboard_height_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
-                textAlign = TextAlign.Center,
+                color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 20.dp)
+                    .padding(horizontal = 18.dp),
+                textAlign = TextAlign.Center
             )
 
             Spacer(Modifier.height(8.dp))
@@ -164,7 +173,7 @@ fun HeightSelectionScreen(
                     .padding(horizontal = 24.dp),
                 textAlign = TextAlign.Center
             )
-
+            Spacer(Modifier.height(81.dp))
             // 切換單位：只更新顯示值；不改 cmVal
             UnitSegmented(
                 useMetric = useMetric,
@@ -176,9 +185,7 @@ fun HeightSelectionScreen(
                     }
                     useMetric = isMetric
                 },
-                modifier = Modifier
-                    .padding(top = 25.dp)
-                    .align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             if (useMetric) {
@@ -189,13 +196,12 @@ fun HeightSelectionScreen(
                 val cmDecSel = cmTenths % 10
 
                 Row(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 2.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 整數位滾輪
                     NumberWheel(
                         range = CM_MIN.toInt()..CM_MAX.toInt(),
                         value = cmIntSel,
@@ -203,27 +209,27 @@ fun HeightSelectionScreen(
                             val newCm = (newInt * 10 + cmDecSel) / 10.0
                             cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = null,
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 28.dp)
                     )
 
-                    // ★ 用固定寬度的 Box，讓小數點剛好在兩個滾輪中間
                     Box(
-                        modifier = Modifier
-                            .width(18.dp),        // 18dp 大概剛好，之後你可以微調
+                        modifier = Modifier.width(18.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = ".",
                             fontSize = 34.sp,
-                            fontWeight = FontWeight.SemiBold
+                            modifier = Modifier.padding(horizontal = 6.dp)
                         )
                     }
 
-                    // 小數位滾輪
                     NumberWheel(
                         range = 0..9,
                         value = cmDecSel,
@@ -231,15 +237,17 @@ fun HeightSelectionScreen(
                             val newCm = (cmIntSel * 10 + newDec) / 10.0
                             cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = null,
-                        modifier = Modifier.width(80.dp)
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(start = 10.dp)
                     )
 
-                    // ★ 調小間距，讓「cm」貼在小數位後面
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(8.dp))
 
                     Text(
                         text = "cm",
@@ -248,12 +256,12 @@ fun HeightSelectionScreen(
                     )
                 }
             } else {
-                // ===== FT / IN 保持兩輪，cm 由 ft/in 推導 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.Center
+                        .padding(top = 2.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
                         range = 4..9,
@@ -263,13 +271,18 @@ fun HeightSelectionScreen(
                             cmVal = feetInchesToCm1(newFeet, inches)
                                 .coerceIn(CM_MIN, CM_MAX)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = "ft",
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 22.dp)
                     )
+
                     Spacer(Modifier.width(11.dp))
+
                     NumberWheel(
                         range = 0..11,
                         value = inches,
@@ -278,17 +291,24 @@ fun HeightSelectionScreen(
                             cmVal = feetInchesToCm1(feet, newIn)
                                 .coerceIn(CM_MIN, CM_MAX)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = "in",
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(end = 22.dp)
                     )
                 }
             }
-            Spacer(Modifier.height(16.dp))
 
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Spacer(Modifier.height(18.dp))
+
+            Box(
+                Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
                     text = stringResource(R.string.onboard_weight_hint),
                     style = MaterialTheme.typography.bodySmall,
@@ -310,11 +330,11 @@ private fun UnitSegmented(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(26.dp),
-        color = Color(0xFFF1F3F7),
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.58f)
-            .heightIn(min = 45.dp)
+            .fillMaxWidth(0.60f)
+            .heightIn(min = 40.dp)
     ) {
         Row(Modifier.padding(6.dp)) {
             SegItem(
@@ -322,7 +342,9 @@ private fun UnitSegmented(
                 selected = !useMetric,
                 onClick = { onChange(false) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(45.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItem(
@@ -330,7 +352,9 @@ private fun UnitSegmented(
                 selected = useMetric,
                 onClick = { onChange(true) },
                 selectedColor = Color.Black,
-                modifier = Modifier.weight(1f).height(45.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
             )
         }
     }
@@ -345,10 +369,7 @@ private fun SegItem(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val minH = 48.dp
-    val hPad = 24.dp
-    val vPad = 10.dp
-    val fSize = 23.sp
+    val fSize = 20.sp
 
     Surface(
         onClick = onClick,
@@ -358,9 +379,9 @@ private fun SegItem(
     ) {
         Box(
             modifier = Modifier
-                .defaultMinSize(minHeight = minH)
+                .defaultMinSize(minHeight = 40.dp)
                 .fillMaxWidth()
-                .padding(horizontal = hPad, vertical = vPad),
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -384,6 +405,7 @@ private fun NumberWheel(
     onValueChange: (Int) -> Unit,
     rowHeight: Dp,
     centerTextSize: TextUnit,
+    textSize: TextUnit = 26.sp,
     sideAlpha: Float,
     unitLabel: String? = null,
     modifier: Modifier = Modifier
@@ -414,6 +436,7 @@ private fun NumberWheel(
             }?.index ?: selectedIdx
         }
     }
+
     LaunchedEffect(centerIndex, initialized) {
         if (initialized) onValueChange(items[centerIndex])
     }
@@ -433,7 +456,7 @@ private fun NumberWheel(
             itemsIndexed(items) { index, num ->
                 val isCenter = index == centerIndex
                 val alpha = if (isCenter) 1f else sideAlpha
-                val size = if (isCenter) centerTextSize else 28.sp
+                val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
                 val unitSize = if (isCenter) 20.sp else 18.sp
 
@@ -444,6 +467,9 @@ private fun NumberWheel(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (unitLabel != null && isCenter) {
+                        Spacer(Modifier.width(16.dp))  // 想再靠右一點可以改成 10.dp、12.dp
+                    }
                     Text(
                         text = num.toString(),
                         fontSize = size,
@@ -451,7 +477,7 @@ private fun NumberWheel(
                         color = Color.Black.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
-                    if (unitLabel != null) {
+                    if (unitLabel != null && isCenter) {
                         Spacer(Modifier.width(4.dp))
                         Text(
                             text = unitLabel,
@@ -463,7 +489,6 @@ private fun NumberWheel(
                 }
             }
         }
-
         // 中心框線：中心 ± 半格
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2
