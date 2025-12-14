@@ -174,7 +174,7 @@ fun ExerciseFrequencyScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(26.dp))
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
