@@ -217,14 +217,20 @@ fun EditHeightScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 35.dp)
+                            .padding(start = 30.dp)
                     )
 
-                    Text(
-                        text = ".",
-                        fontSize = 34.sp,
-                        modifier = Modifier.padding(horizontal = 6.dp)
-                    )
+                    // 小數點：用固定寬度 Box 來置中
+                    Box(
+                        modifier = Modifier.width(18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ".",
+                            fontSize = 34.sp,
+                            modifier = Modifier.offset(x = 5.dp)
+                        )
+                    }
 
                     NumberWheel(
                         range = 0..9,
@@ -240,7 +246,7 @@ fun EditHeightScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 5.dp)
+                            .padding(start = 8.dp)
                     )
 
                     Spacer(Modifier.width(8.dp))
@@ -334,33 +340,38 @@ private fun HeightUnitSegmentedSameAsGoal(
     onChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = RoundedCornerShape(40.dp),
-        color = Color(0xFFE2E5EA),
-        modifier = modifier
-            .fillMaxWidth(0.60f)
-            .heightIn(min = 40.dp)
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Row(Modifier.padding(6.dp)) {
-            SegItemSameAsGoal(
-                text = "ft",
-                selected = !useMetric,
-                onClick = { onChange(false) },
-                selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(40.dp)
-            )
-            Spacer(Modifier.width(6.dp))
-            SegItemSameAsGoal(
-                text = "cm",
-                selected = useMetric,
-                onClick = { onChange(true) },
-                selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(40.dp)
-            )
+        Surface(
+            shape = RoundedCornerShape(40.dp),
+            color = Color(0xFFE2E5EA),
+            modifier = Modifier
+                .fillMaxWidth(0.60f)
+                .heightIn(min = 40.dp)
+        ) {
+            Row(Modifier.padding(6.dp)) {
+                SegItemSameAsGoal(
+                    text = "ft",
+                    selected = !useMetric,
+                    onClick = { onChange(false) },
+                    selectedColor = Color.Black,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                SegItemSameAsGoal(
+                    text = "cm",
+                    selected = useMetric,
+                    onClick = { onChange(true) },
+                    selectedColor = Color.Black,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                )
+            }
         }
     }
 }

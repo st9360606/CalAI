@@ -216,7 +216,7 @@ fun HeightSelectionScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 28.dp)
+                            .padding(start = 18.dp)
                     )
 
                     Box(
@@ -226,7 +226,7 @@ fun HeightSelectionScreen(
                         Text(
                             text = ".",
                             fontSize = 34.sp,
-                            modifier = Modifier.padding(horizontal = 6.dp)
+                            modifier = Modifier.offset(x = 8.dp)
                         )
                     }
 
@@ -244,7 +244,7 @@ fun HeightSelectionScreen(
                         unitLabel = null,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 10.dp)
+                            .padding(start = 22.dp)
                     )
 
                     Spacer(Modifier.width(8.dp))
@@ -252,7 +252,8 @@ fun HeightSelectionScreen(
                     Text(
                         text = "cm",
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
                     )
                 }
             } else {
@@ -278,7 +279,7 @@ fun HeightSelectionScreen(
                         unitLabel = "ft",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 22.dp)
+                            .padding(start = 12.dp)
                     )
 
                     Spacer(Modifier.width(11.dp))
@@ -298,7 +299,7 @@ fun HeightSelectionScreen(
                         unitLabel = "in",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(end = 22.dp)
+                            .padding(end = 12.dp)
                     )
                 }
             }
@@ -329,33 +330,38 @@ private fun UnitSegmented(
     onChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = RoundedCornerShape(40.dp),
-        color = Color(0xFFE2E5EA),
-        modifier = modifier
-            .fillMaxWidth(0.60f)
-            .heightIn(min = 40.dp)
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Row(Modifier.padding(6.dp)) {
-            SegItem(
-                text = "ft",
-                selected = !useMetric,
-                onClick = { onChange(false) },
-                selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(40.dp)
-            )
-            Spacer(Modifier.width(6.dp))
-            SegItem(
-                text = "cm",
-                selected = useMetric,
-                onClick = { onChange(true) },
-                selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(40.dp)
-            )
+        Surface(
+            shape = RoundedCornerShape(40.dp),
+            color = Color(0xFFE2E5EA),
+            modifier = Modifier
+                .fillMaxWidth(0.60f)
+                .heightIn(min = 40.dp)
+        ) {
+            Row(Modifier.padding(6.dp)) {
+                SegItem(
+                    text = "ft",
+                    selected = !useMetric,
+                    onClick = { onChange(false) },
+                    selectedColor = Color.Black,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                SegItem(
+                    text = "cm",
+                    selected = useMetric,
+                    onClick = { onChange(true) },
+                    selectedColor = Color.Black,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp)
+                )
+            }
         }
     }
 }

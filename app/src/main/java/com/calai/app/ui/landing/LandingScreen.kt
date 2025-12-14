@@ -27,6 +27,7 @@ import com.calai.app.i18n.LocalLocaleController
 import com.calai.app.i18n.flagAndLabelFromTag
 import com.calai.app.ui.common.FlagChip
 import com.calai.app.ui.landing.device.DeviceFrameIPhone
+import androidx.compose.ui.platform.LocalContext
 
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
@@ -44,6 +45,7 @@ fun LandingScreen(
     onSetLocale: (String) -> Unit,
 ) {
     val composeLocale = LocalLocaleController.current
+    val context = LocalContext.current
     var showLang by rememberSaveable { mutableStateOf(false) }
     var switching by rememberSaveable { mutableStateOf(false) }
 
@@ -53,15 +55,16 @@ fun LandingScreen(
     val titleWidthFraction = 0.85f
     val spaceVideoToTitle = 16.dp
 
-    val currentTag = composeLocale.tag.ifBlank { "en" }
+    // 以系統語系當 fallback，不要硬塞 "en"
+    val systemTag = remember(context) {
+        context.resources.configuration.locales[0].toLanguageTag()
+    }
+    val currentTag = composeLocale.tag.ifBlank { systemTag }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
     // ★ 根據語系決定 bottomOffset
     val bottomOffset: Dp =
-        if (currentTag.equals("zh-TW", ignoreCase = true) ||
-            currentTag.equals("zh-CN", ignoreCase = true) ||
-            currentTag.equals("zh-HK", ignoreCase = true)
-        ) {
+        if (currentTag.startsWith("zh", ignoreCase = true)) {
             33.dp
         } else {
             45.dp //越大越近
