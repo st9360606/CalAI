@@ -41,6 +41,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -69,7 +71,6 @@ fun WeightSelectionScreen(
     vm: WeightSelectionViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit,
-    rowHeight: Dp = 56.dp,
 ) {
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()
@@ -91,7 +92,6 @@ fun WeightSelectionScreen(
             when (savedUnit) {
                 UserProfileStore.WeightUnit.KG -> true
                 UserProfileStore.WeightUnit.LBS -> false
-                else -> false
             }
         )
     }
@@ -128,12 +128,12 @@ fun WeightSelectionScreen(
 
     // valueKg：計算用 kg（0.1 精度）
     var valueKg by remember(weightKg, weightLbs) {
-        mutableStateOf(initial.kg)
+        mutableDoubleStateOf(initial.kg)
     }
 
     // valueLbsTenths：顯示用 lbs（0.1 精度，用 Int 表示）
     var valueLbsTenths by remember(weightKg, weightLbs) {
-        mutableStateOf(initial.lbsTenths)
+        mutableIntStateOf(initial.lbsTenths)
     }
 
     // --- kg wheel 選中值（整數＋小數） ---
@@ -151,8 +151,7 @@ fun WeightSelectionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -161,7 +160,7 @@ fun WeightSelectionScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -172,6 +171,20 @@ fun WeightSelectionScreen(
                                 tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 5,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -203,20 +216,29 @@ fun WeightSelectionScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -226,27 +248,21 @@ fun WeightSelectionScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            OnboardingProgress(
-                stepIndex = 5,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
+            // ★ 這裡不再畫 OnboardingProgress，避免重複
 
             Text(
                 text = stringResource(R.string.onboard_weight_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
-                textAlign = TextAlign.Center,
+                color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 20.dp)
+                    .padding(horizontal = 18.dp),
+                textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
             Text(
                 text = stringResource(R.string.onboard_weight_subtitle),
@@ -259,14 +275,14 @@ fun WeightSelectionScreen(
                     .padding(horizontal = 24.dp),
                 textAlign = TextAlign.Center
             )
-
+            Spacer(Modifier.height(20.dp))
             WeightUnitSegmented(
                 useMetric = useMetric,
                 onChange = { useMetric = it },
-                modifier = Modifier
-                    .padding(top = 25.dp)
-                    .align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
+
+            Spacer(Modifier.height(16.dp))
 
             if (useMetric) {
                 // ===== KG：整數位 + 小數位 =====
@@ -290,13 +306,24 @@ fun WeightSelectionScreen(
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenths(newKg)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 22.dp)
                     )
-                    Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
+                    Box(
+                        modifier = Modifier.width(18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ".",
+                            fontSize = 34.sp,
+                            modifier = Modifier.offset(x = 2.dp)
+                        )
+                    }
                     NumberWheel(
                         range = 0..9,
                         value = kgDecSel,
@@ -310,13 +337,15 @@ fun WeightSelectionScreen(
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenths(newKg)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
-                        modifier = Modifier.width(80.dp)
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(start = 6.dp)
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(10.dp))
                     Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
@@ -324,7 +353,7 @@ fun WeightSelectionScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 2.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -339,13 +368,24 @@ fun WeightSelectionScreen(
                             val newKg = lbsToKg1(newLbs)
                             valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 20.dp)
                     )
-                    Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
+                    Box(
+                        modifier = Modifier.width(18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ".",
+                            fontSize = 34.sp,
+                            modifier = Modifier.offset(x = 4.dp)
+                        )
+                    }
                     NumberWheel(
                         range = 0..9,
                         value = lbsDecSel,
@@ -358,11 +398,13 @@ fun WeightSelectionScreen(
                             val newKg = lbsToKg1(newLbs)
                             valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 40.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
-                        modifier = Modifier.width(80.dp)
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(start = 9.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text("lbs", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
@@ -393,11 +435,11 @@ private fun WeightUnitSegmented(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(26.dp),
-        color = Color(0xFFF1F3F7),
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.58f)
-            .heightIn(min = 45.dp)
+            .fillMaxWidth(0.55f)
+            .heightIn(min = 40.dp)
     ) {
         Row(Modifier.padding(6.dp)) {
             SegItem(
@@ -405,9 +447,7 @@ private fun WeightUnitSegmented(
                 selected = !useMetric,
                 onClick = { onChange(false) },
                 selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(45.dp)
+                modifier = Modifier.weight(1f).height(40.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItem(
@@ -415,9 +455,7 @@ private fun WeightUnitSegmented(
                 selected = useMetric,
                 onClick = { onChange(true) },
                 selectedColor = Color.Black,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(45.dp)
+                modifier = Modifier.weight(1f).height(40.dp)
             )
         }
     }
@@ -432,7 +470,7 @@ private fun SegItem(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val fSize = 22.sp
+    val fSize = 18.sp
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(corner),
@@ -441,9 +479,9 @@ private fun SegItem(
     ) {
         Box(
             modifier = Modifier
-                .defaultMinSize(minHeight = 48.dp)
+                .defaultMinSize(minHeight = 40.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 10.dp),
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -467,6 +505,7 @@ private fun NumberWheel(
     onValueChange: (Int) -> Unit,
     rowHeight: Dp,
     centerTextSize: TextUnit,
+    textSize: TextUnit,
     sideAlpha: Float,
     unitLabel: String? = null,
     modifier: Modifier = Modifier
@@ -516,7 +555,7 @@ private fun NumberWheel(
             itemsIndexed(items) { index, num ->
                 val isCenter = index == centerIndex
                 val alpha = if (isCenter) 1f else sideAlpha
-                val size = if (isCenter) centerTextSize else 28.sp
+                val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
                 val unitSize = if (isCenter) 20.sp else 18.sp
 
