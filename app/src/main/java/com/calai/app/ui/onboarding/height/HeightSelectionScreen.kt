@@ -299,7 +299,7 @@ fun HeightSelectionScreen(
                         unitLabel = "in",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(end = 12.dp)
+                            .padding(end = 10.dp)
                     )
                 }
             }
