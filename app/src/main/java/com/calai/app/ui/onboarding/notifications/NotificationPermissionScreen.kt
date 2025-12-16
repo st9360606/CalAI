@@ -6,14 +6,12 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -61,7 +59,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -79,7 +76,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toBitmap
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
 import android.util.Log
@@ -91,7 +87,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -273,7 +269,7 @@ fun NotificationPermissionScreen(
                         style = titleStyle
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
 
                     // 副標：與手機外框同寬（保持原樣）
                     Text(
@@ -401,8 +397,7 @@ private fun LockscreenPanel(
             Spacer(Modifier.height(clockOffsetTop))
             Text(
                 text = buildClockAnnotated(
-                    text = bigClock,
-                    colonShift = 0.07f
+                    text = bigClock
                 ),
                 fontSize = clockSizeSp.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -517,112 +512,162 @@ private fun BatteryGaugeHorizontal(
     }
 }
 
-/* -------------------- 單一卡片：iOS 通知樣式 -------------------- */
+/* -------------------- 單一卡片：iOS 通知樣式（對齊 & icon滿版版） -------------------- */
+private object NotifCardSpec {
+    val corner = 18.dp
+    val padH = 16.dp
+    val padV = 10.dp
+    val iconSize = 22.dp
+    val iconCorner = 11.dp
+    val iconInnerPad = 0.dp
+    const val ICONSCALE = 1.28f // 1.22~1.35 微調
+    val gapIconText = 10.dp
+    val gapMetaToContent = 5.dp
+    val metaFont = 11.sp
+    val metaLine = 12.sp
+    val metaLetterSpacing = 0.6.sp
+
+    val titleFont = 15.sp
+    val titleLine = 18.sp
+
+    val bodyFont = 12.sp
+    val bodyLine = 16.sp
+}
+
 @Composable
 private fun NotificationCardIOS(
-    @DrawableRes appIconRes: Int
+    @DrawableRes appIconRes: Int,
+    modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(22.dp)
-    val strokeColor = Color(0xFFD6DFEC) // 想再深可調 0xFFA5ADBA / 0xFF94A3B8
+    val metaColor = Color(0xFF748092)
+    val bodyColor = Color(0xFF667085)
+    val titleColor = Color(0xFF111114)
+
     Surface(
-        shape = shape,
+        shape = RoundedCornerShape(NotifCardSpec.corner),
         color = Color.White,
         tonalElevation = 0.dp,
         shadowElevation = 14.dp,
-        border = BorderStroke(0.dp, strokeColor),   // ← 用 Surface 的 border，圓角跟 shape 一致
-        modifier = Modifier
-            .fillMaxWidth(0.98f)
-            .height(90.dp)
+        modifier = modifier.fillMaxWidth(0.98f)
     ) {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                // ✅ icon 與文字都只吃這個 padH → 跟邊框距離一致
+                .padding(horizontal = NotifCardSpec.padH, vertical = NotifCardSpec.padV)
         ) {
-            AppIconRounded(resId = appIconRes, size = 38.dp, corner = 10.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
+            // ===== 上區塊：Icon + Meta（App 名 / 時間）=====
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = "CALORIE  COUNTER",
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    color = Color(0xFF8A96A8),
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.6.sp
+                AppIconIOSBadge(
+                    resId = appIconRes,
+                    size = NotifCardSpec.iconSize,
+                    corner = NotifCardSpec.iconCorner,
+                    contentPadding = NotifCardSpec.iconInnerPad, // ✅ 0.dp
+                    iconScale = NotifCardSpec.ICONSCALE          // ✅ 吃留白
                 )
+
+                Spacer(Modifier.width(NotifCardSpec.gapIconText))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "AI CALORIE COUNTER",
+                        fontSize = NotifCardSpec.metaFont,
+                        lineHeight = NotifCardSpec.metaLine,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = NotifCardSpec.metaLetterSpacing,
+                        color = metaColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(Modifier.width(10.dp))
+
+                    Text(
+                        text = "8:30 AM",
+                        fontSize = NotifCardSpec.metaFont,
+                        lineHeight = NotifCardSpec.metaLine,
+                        fontWeight = FontWeight.Medium,
+                        color = metaColor,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(NotifCardSpec.gapMetaToContent))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 3.dp)
+            ) {
+
                 Text(
                     text = stringResource(id = R.string.onb_notif_title_got_a_sec),
-                    fontSize = 17.sp,
-                    lineHeight = 20.sp,
+                    fontSize = NotifCardSpec.titleFont,
+                    lineHeight = NotifCardSpec.titleLine,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF111114)
+                    color = titleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
+                Spacer(Modifier.height(3.dp))
+
                 Text(
                     text = stringResource(id = R.string.onb_notif_subtitle_log_meal_goal),
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = Color(0xFF8A96A8),
+                    fontSize = NotifCardSpec.bodyFont,
+                    lineHeight = NotifCardSpec.bodyLine,
+                    color = bodyColor,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(2.dp))
             }
-
-            Spacer(Modifier.width(6.dp))
-            Text("8:30 AM", fontSize = 12.sp, color = Color(0xFF8A96A8))
         }
     }
 }
 
-/* -------------------- 圓角矩形 icon -------------------- */
 @Composable
-private fun AppIconRounded(
+private fun AppIconIOSBadge(
     @DrawableRes resId: Int,
     size: Dp,
-    corner: Dp = 10.dp,
-    borderColor: Color = Color(0x4D000000),
-    borderWidth: Dp = 0.5.dp,
-    bg: Color = Color.White
+    corner: Dp,
+    contentPadding: Dp,
+    iconScale: Float,
+    modifier: Modifier = Modifier
 ) {
-    val ctx = LocalContext.current
-    val density = LocalDensity.current
-    val innerPx = with(density) { (size - borderWidth * 2).coerceAtLeast(0.dp).toPx().toInt() }
-
-    val bitmap: Bitmap? = remember(resId, innerPx) {
-        runCatching {
-            val d = ContextCompat.getDrawable(ctx, resId) ?: return@runCatching null
-            d.toBitmap(innerPx, innerPx, Bitmap.Config.ARGB_8888)
-        }.getOrNull()
-    }
-
-    Box(
-        modifier = Modifier
-            .size(size)
-            .border(borderWidth, borderColor, RoundedCornerShape(corner))
-            .clip(RoundedCornerShape(corner))
-            .background(bg)
-            .padding(borderWidth),
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = modifier.size(size),
+        shape = RoundedCornerShape(corner),
+        color = Color(0xFF111114),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),// ✅ 0dp：icon 視覺上貼滿黑底
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = resId),
                 contentDescription = "App Icon",
+                tint = Color.White,
                 modifier = Modifier
                     .fillMaxSize()
+                    // ✅ scale：吃掉 drawable 本身留白
+                    .graphicsLayer {
+                        scaleX = iconScale
+                        scaleY = iconScale
+                    }
+                    // ✅ 防止 scale 後溢出尖角（維持黑底圓角一致）
                     .clip(RoundedCornerShape(corner))
-            )
-        } else {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(corner))
-                    .background(Color(0xFF111114))
             )
         }
     }
@@ -681,7 +726,6 @@ private fun NotifTitleWithEndImageInline(
             }
         )
     }
-
     Text(
         text = rich,
         inlineContent = inlineContent,
@@ -733,5 +777,3 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is ContextWrapper -> baseContext.findActivity()
     else -> null
 }
-
-
