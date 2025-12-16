@@ -1,6 +1,7 @@
 package com.calai.app.ui.onboarding.notifications
 
 import android.Manifest.permission.POST_NOTIFICATIONS
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -90,10 +91,21 @@ import android.util.Log
 import com.calai.app.BuildConfig
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.withStyle
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 // 若 OEM 攔截或無法再顯示權限彈窗，是否導向系統「App 的通知設定」頁
 private const val ENABLE_SETTINGS_FALLBACK = true
 private const val TAG_NOTIF = "NotifPerm"
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationPermissionScreen(
@@ -120,17 +132,16 @@ fun NotificationPermissionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114).copy(alpha = 0.85f)
+                    navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -138,9 +149,23 @@ fun NotificationPermissionScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color(0xFF111114).copy(alpha = 0.85f)
+                                tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 9,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -206,14 +231,6 @@ fun NotificationPermissionScreen(
                 .padding(inner)
                 .verticalScroll(rememberScrollState())
         ) {
-            OnboardingProgress(
-                stepIndex = 9,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
             Spacer(Modifier.height(20.dp))
 
             // ===== iOS 鎖屏風格 + 與外框同寬的標題/副標 =====
@@ -302,10 +319,10 @@ private fun NotifBottomBar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 75.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                 .fillMaxWidth()
                 .height(64.dp),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(999.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Black,
                 contentColor = Color.White
@@ -314,9 +331,37 @@ private fun NotifBottomBar(
             Text(
                 text = if (granted) s(R.string.continue_text, "Continue")
                 else s(R.string.allow_notifications_cta, "Allow Notifications"),
-                fontSize = 19.sp,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.2.sp
+                ),
+                textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+/**
+ * 只把時間字串中的 ':' 往上（或往下）移動一點。
+ *
+ * @param text e.g. "8:30"
+ * @param colonShift 以「字體大小(Em)」為基準的位移量；正值 = 往上，負值 = 往下
+ *                  建議大字：0.04f ~ 0.06f；小字：0.02f ~ 0.04f
+ */
+private fun buildClockAnnotated(
+    text: String,
+    colonShift: Float = 0.07f
+): AnnotatedString {
+    val shift = BaselineShift(colonShift)
+
+    return buildAnnotatedString {
+        text.forEach { ch ->
+            if (ch == ':') {
+                withStyle(SpanStyle(baselineShift = shift)) { append(ch) }
+            } else {
+                append(ch)
+            }
         }
     }
 }
@@ -328,14 +373,14 @@ private fun LockscreenPanel(
     bigClock: String = "8:30",
     clockAlpha: Float = 1f,
     clockSizeSp: Int = 124,
-    clockColor: Color = Color(0xFFD0D6DD),
+    clockColor: Color = Color(0xFFC3CEDF),
     clockOffsetTop: Dp = 0.dp,
     clockContentGap: Dp = 16.dp,
     corner: Dp = 28.dp,
-    frameBorderColor: Color = Color(0xFFD0D6DD),
-    frameBorderWidth: Dp = 6.dp,
+    frameBorderColor: Color = Color(0xFFD7E0EC),
+    frameBorderWidth: Dp = 2.dp,
     showStatusIcons: Boolean = true,
-    statusTint: Color = Color(0xFFD0D6DD),
+    statusTint: Color = Color(0xFFAAB7CC),
     batteryPercent: Int = 87,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -345,7 +390,7 @@ private fun LockscreenPanel(
             .clip(RoundedCornerShape(corner))
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFF6F7F9), Color(0xFFF0F2F5))
+                    listOf(Color(0xFFFAFCFF), Color(0xFFEEF3FA))
                 )
             )
     ) {
@@ -367,7 +412,10 @@ private fun LockscreenPanel(
         ) {
             Spacer(Modifier.height(clockOffsetTop))
             Text(
-                text = bigClock,
+                text = buildClockAnnotated(
+                    text = bigClock,
+                    colonShift = 0.07f
+                ),
                 fontSize = clockSizeSp.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = clockColor.copy(alpha = clockAlpha)
@@ -393,31 +441,90 @@ private fun StatusBarIcons(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Filled.SignalCellular4Bar,
-            contentDescription = "Cellular Signal",
-            tint = tint,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(Modifier.width(6.dp))
-        Icon(
             imageVector = Icons.Filled.Wifi,
             contentDescription = "Wi-Fi",
             tint = tint,
             modifier = Modifier.size(18.dp)
         )
-        Spacer(Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.Filled.BatteryFull,
-            contentDescription = "Battery",
-            tint = tint,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(2.dp))
+
+        Spacer(Modifier.width(6.dp))
+
         Text(
-            text = "${batteryPercent}%",
+            text = "${batteryPercent.coerceIn(0, 100)}%",
             fontSize = 12.sp,
             color = tint,
             fontWeight = FontWeight.Medium
+        )
+
+        Spacer(Modifier.width(6.dp))
+
+        // 橫向電池（自繪）
+        BatteryGaugeHorizontal(
+            percent = batteryPercent,
+            tint = tint
+        )
+    }
+}
+
+@Composable
+private fun BatteryGaugeHorizontal(
+    percent: Int,
+    tint: Color,
+    width: Dp = 26.dp,
+    height: Dp = 12.dp,
+    strokeWidth: Dp = 1.6.dp,
+    corner: Dp = 3.dp,
+    tipWidth: Dp = 2.dp,
+    tipGap: Dp = 1.dp
+) {
+    val p = percent.coerceIn(0, 100) / 100f
+
+    Canvas(
+        modifier = Modifier.size(width + tipWidth + tipGap, height)
+    ) {
+        val strokePx = strokeWidth.toPx()
+        val cornerPx = corner.toPx()
+        val tipW = tipWidth.toPx()
+        val gap = tipGap.toPx()
+
+        val bodyW = size.width - tipW - gap
+        val bodyH = size.height
+
+        // 電池外框
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(0f, 0f),
+            size = Size(bodyW, bodyH),
+            cornerRadius = CornerRadius(cornerPx, cornerPx),
+            style = Stroke(width = strokePx)
+        )
+
+        // 內部填充（依百分比）
+        val innerPad = strokePx * 1.3f
+        val fillMaxW = (bodyW - innerPad * 2).coerceAtLeast(0f)
+        val fillW = (fillMaxW * p).coerceAtLeast(0f)
+        val fillH = (bodyH - innerPad * 2).coerceAtLeast(0f)
+
+        if (fillW > 0.5f && fillH > 0.5f) {
+            drawRoundRect(
+                color = tint,
+                topLeft = Offset(innerPad, innerPad),
+                size = Size(fillW, fillH),
+                cornerRadius = CornerRadius(
+                    (cornerPx - innerPad).coerceAtLeast(0f),
+                    (cornerPx - innerPad).coerceAtLeast(0f)
+                )
+            )
+        }
+
+        // 電池「頭」
+        val tipH = bodyH * 0.55f
+        val tipY = (bodyH - tipH) / 2f
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(bodyW + gap, tipY),
+            size = Size(tipW, tipH),
+            cornerRadius = CornerRadius(tipW, tipW)
         )
     }
 }
@@ -428,7 +535,7 @@ private fun NotificationCardIOS(
     @DrawableRes appIconRes: Int
 ) {
     val shape = RoundedCornerShape(22.dp)
-    val strokeColor = Color(0xFFB8C0CC) // 想再深可調 0xFFA5ADBA / 0xFF94A3B8
+    val strokeColor = Color(0xFFD6DFEC) // 想再深可調 0xFFA5ADBA / 0xFF94A3B8
     Surface(
         shape = shape,
         color = Color.White,
@@ -447,30 +554,39 @@ private fun NotificationCardIOS(
         ) {
             AppIconRounded(resId = appIconRes, size = 38.dp, corner = 10.dp)
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = "CALORIE  COUNTER",
                     fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF),
-                    fontWeight = FontWeight.SemiBold
+                    lineHeight = 16.sp,
+                    color = Color(0xFF8A96A8),
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.6.sp
                 )
-                Spacer(Modifier.height(2.dp))
                 Text(
                     text = stringResource(id = R.string.onb_notif_title_got_a_sec),
                     fontSize = 17.sp,
+                    lineHeight = 20.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF111114)
                 )
-                Spacer(Modifier.height(2.dp))
                 Text(
                     text = stringResource(id = R.string.onb_notif_subtitle_log_meal_goal),
                     fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF),
-                    maxLines = 2
+                    lineHeight = 17.sp,
+                    color = Color(0xFF8A96A8),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+                Spacer(Modifier.height(2.dp))
             }
+
             Spacer(Modifier.width(6.dp))
-            Text("8:30 AM", fontSize = 12.sp, color = Color(0xFF9CA3AF))
+            Text("8:30 AM", fontSize = 12.sp, color = Color(0xFF8A96A8))
         }
     }
 }
@@ -645,3 +761,4 @@ private fun openAppNotifSettings(context: Context) {
         context.startActivity(intent)
     }
 }
+
