@@ -64,6 +64,26 @@ import com.calai.app.data.profile.repo.lbsToKg1
 import com.calai.app.data.profile.repo.roundKg1
 import com.calai.app.ui.common.OnboardingProgress
 import kotlin.math.roundToInt
+import java.util.Locale
+import com.calai.app.i18n.LocalLocaleController
+
+private fun isZhLanguageTag(tag: String): Boolean {
+    // tag 可能是 "zh", "zh-TW", "zh-Hant-TW"
+    return tag.lowercase(Locale.ROOT).startsWith("zh")
+}
+
+@Composable
+private fun currentLanguageTag(): String {
+    val composeLocale = LocalLocaleController.current
+    val tag = composeLocale.tag
+    return tag.ifBlank { Locale.getDefault().toLanguageTag() }
+}
+
+@Composable
+private fun currentIsZhByAppLocale(): Boolean {
+    val tag = currentLanguageTag()
+    return remember(tag) { isZhLanguageTag(tag) }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -144,6 +164,9 @@ fun WeightSelectionScreen(
         .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
     val lbsIntSel = lbsTenthsClamped / 10
     val lbsDecSel = lbsTenthsClamped % 10
+
+    val isZh = currentIsZhByAppLocale()
+    val subtitleToUnitSpacing = if (isZh) 60.dp else 20.dp
 
     Scaffold(
         containerColor = Color.White,
@@ -270,14 +293,14 @@ fun WeightSelectionScreen(
                     .padding(horizontal = 24.dp),
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(20.dp))
+
+            Spacer(Modifier.height(subtitleToUnitSpacing))
+
             WeightUnitSegmented(
                 useMetric = useMetric,
                 onChange = { useMetric = it },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-
-            Spacer(Modifier.height(16.dp))
 
             if (useMetric) {
                 // ===== KG：整數位 + 小數位 =====
