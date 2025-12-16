@@ -38,8 +38,6 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BatteryFull
-import androidx.compose.material.icons.filled.SignalCellular4Bar
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -84,9 +82,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
 import android.util.Log
 import com.calai.app.BuildConfig
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -102,8 +97,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 
-// 若 OEM 攔截或無法再顯示權限彈窗，是否導向系統「App 的通知設定」頁
-private const val ENABLE_SETTINGS_FALLBACK = true
 private const val TAG_NOTIF = "NotifPerm"
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,15 +112,10 @@ fun NotificationPermissionScreen(
     var granted by remember { mutableStateOf(isNotificationsEnabled(ctx)) }
     val hasManifestDecl by remember { mutableStateOf(isPermissionInManifest(ctx, POST_NOTIFICATIONS)) }
 
-    // ❶ 不再依賴 activity 是否為 null
-    val canUseLauncher = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && hasManifestDecl
-
-    // ❷ 除錯日誌（僅開發）
     if (BuildConfig.DEBUG) {
         Log.d(TAG_NOTIF, "sdk=${Build.VERSION.SDK_INT}, target=${ctx.applicationInfo.targetSdkVersion}, " +
                 "hasManifest=$hasManifestDecl, granted=$granted, activity=${activity != null}")
     }
-
 
     Scaffold(
         containerColor = Color.White,
@@ -746,19 +734,4 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     else -> null
 }
 
-private fun openAppNotifSettings(context: Context) {
-    try {
-        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(intent)
-    } catch (_: Exception) {
-        val intent = Intent(
-            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.fromParts("package", context.packageName, null)
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
-    }
-}
 
