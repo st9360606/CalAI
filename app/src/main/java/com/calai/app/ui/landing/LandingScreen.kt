@@ -3,10 +3,7 @@ package com.calai.app.ui.landing
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,31 +12,23 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.calai.app.R
-import com.calai.app.i18n.LanguageManager
-import com.calai.app.i18n.LanguageStore
+import com.calai.app.i18n.LanguageSessionFlag
 import com.calai.app.i18n.LocalLocaleController
-import com.calai.app.i18n.currentLocaleKey
 import com.calai.app.i18n.flagAndLabelFromTag
-import com.calai.app.ui.auth.SignInSheetHost
 import com.calai.app.ui.common.FlagChip
-import kotlinx.coroutines.launch
+import com.calai.app.ui.landing.device.DeviceFrameIPhone
+import androidx.compose.ui.platform.LocalContext
 
-// --- 安全往上溯源找 Activity（避免 Context 不是 Activity 的情況） ---
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -47,230 +36,233 @@ private tailrec fun Context.findActivity(): Activity? =
         else -> null
     }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(
-    hostActivity: ComponentActivity,
     navController: NavController,
     onStart: () -> Unit,
     onLogin: () -> Unit,
-    onSetLocale: (String) -> Unit
+    onSetLocale: (String) -> Unit,
 ) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val store = remember(context) { LanguageStore(context) }
     val composeLocale = LocalLocaleController.current
-
-    // ✅ 首次啟動或尚未選過語言時，預設成 EN
-    LaunchedEffect(Unit) {
-        if (composeLocale.tag.isBlank()) {
-            val def = "en"
-            composeLocale.set(def)               // Compose 層
-            LanguageManager.applyLanguage(def)   // 非 Compose 層
-            onSetLocale(def)                     // 外部回呼（若有需要）
-            store.save(def)                      // 記住下次打開仍為 EN
-        }
-    }
-
-    // ✅ 用 rememberSaveable 保存 UI 狀態
+    val context = LocalContext.current
     var showLang by rememberSaveable { mutableStateOf(false) }
     var switching by rememberSaveable { mutableStateOf(false) }
-    var showSignInSheet by rememberSaveable { mutableStateOf(false) }
 
-    // ===== 可調參數（已縮小影片框，放大語言膠囊）=====
-    val phoneTopPadding = 118.dp
-    val phoneWidthFraction = 0.81f
-    val phoneAspect = 11f / 16.5f
-    val phoneCorner = 28.dp
+    // ===== 尺寸自適應 =====
+    val titleSize = 32.sp
+    val titleLineHeight = 42.sp
+    val titleWidthFraction = 0.85f
+    val spaceVideoToTitle = 16.dp
 
-    val spaceVideoToTitle = 21.dp
-    val titleWidthFraction = 0.96f
-    val titleSize = 31.sp
-    val titleLineHeight = 31.sp
-
-    val ctaWidthFraction = 0.92f
-    val spaceTitleToCTA = 18.dp
-
-    // 統一字型
-    val titleFont = remember { FontFamily(Font(R.font.montserrat_bold)) }
-
-    // 語系（Compose 畫面語系）→ 旗幟＋短標籤（預設 EN）
-    val currentTag = composeLocale.tag.ifBlank { "en" }
+    // 以系統語系當 fallback，不要硬塞 "en"
+    val systemTag = remember(context) {
+        context.resources.configuration.locales[0].toLanguageTag()
+    }
+    val currentTag = composeLocale.tag.ifBlank { systemTag }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
-    // 根頁 Back 保護：在 Landing（沒有上一頁）時，按返回「不做事」
+    // ★ 根據語系決定 bottomOffset
+    val bottomOffset: Dp =
+        if (currentTag.startsWith("zh", ignoreCase = true)) {
+            33.dp
+        } else {
+            45.dp //越大越近
+        }
+
     val isRoot = navController.previousBackStackEntry == null
-    BackHandler(enabled = !showSignInSheet && isRoot) { /* stay */ }
-    // 面板開啟時按返回關面板
-    BackHandler(enabled = showSignInSheet) { showSignInSheet = false }
+    BackHandler(enabled = isRoot) { /* stay */ }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        // 右上：旗幟膠囊
-        FlagChip(
-            flag = flagEmoji,
-            label = langLabel,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-
-                .windowInsetsPadding(
-                    WindowInsets.displayCutout.union(WindowInsets.statusBars)
+    Scaffold(
+        containerColor = Color.White,
+        topBar = {
+            TopAppBar(
+                title = {},
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    navigationIconContentColor = Color(0xFF111114)
+                ),
+                actions = {
+                    FlagChip(
+                        flag = flagEmoji,
+                        label = langLabel,
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .padding(end = 16.dp)
+                            .offset(y = (-8).dp),
+                        onClick = { if (!switching) showLang = true }
+                    )
+                }
+            )
+        },
+        bottomBar = {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center   // ★ 讓 bottomBar 內容水平置中
+            ) {
+                LandingBottomBar(
+                    onStart = onStart,
+                    onLogin = onLogin,
+                    bottomOffset = bottomOffset   // ★ 用你動態算好的值
                 )
-                .padding(top = 0.dp, end = 20.dp)
-                .offset(y = (2).dp),
-        ) { if (!switching) showLang = true }
-
-        Column(Modifier.fillMaxSize()) {
-            Spacer(Modifier.height(phoneTopPadding))
-
-            // 影片
+            }
+        }
+    ) { inner ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                LandingVideo(
+                // 你自訂的 iPhone 外框
+                DeviceFrameIPhone(
                     modifier = Modifier
-                        .fillMaxWidth(phoneWidthFraction)
-                        .aspectRatio(phoneAspect)
-                        .clip(RoundedCornerShape(phoneCorner)),
-                    resId = R.raw.intro,
-                    posterResId = null,
-                    placeholderColor = Color.White
-                )
+                        .fillMaxWidth(0.67f)      // 讓整體窄一點，看起來更像真的手機
+                        .aspectRatio(10.5f / 19.5f),// ★ 改成更接近真實手機的比例（寬 : 高 = 9 : 19.5）
+                    islandWidthFraction = 0.32f,
+                    islandHeight = 18.dp,
+                    cornerRadius = 40.dp,
+                    islandTopOffset = 0.dp,
+                    islandStrokeWidth = 1.dp,
+                    islandStrokeAlpha = 0.20f,
+                    islandStrokeColor = Color.White,
+                    frontCameraDotAlignRight = true,
+                    frontCameraDotRightInset = 5.dp,
+                    contentTopExtraPadding = 10.dp,
+                    contentBottomExtraPadding = 3.dp,
+                    powerButtonLengthFraction = 0.10f,
+                    volumeButtonsCenterBias = 0.20f,
+                    powerButtonCenterBias = 0.20f,
+                    showFrontCameraDot = true
+                ) {
+                    LandingSlideshow(
+                        modifier = Modifier.fillMaxSize(),
+                        slides = listOf(
+                            SlideItem(R.drawable.meal_1, contentDescription = "img_1"),
+                            SlideItem(R.drawable.meal_2, contentDescription = "img_2"),
+                            SlideItem(R.drawable.meal_3, contentDescription = "img_3")
+                        ),
+                        autoPlay = true,
+                        autoPlayIntervalMs = 2800L
+                    )
+                }
             }
 
             Spacer(Modifier.height(spaceVideoToTitle))
 
-            // 標題
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = stringResource(R.string.landing_title),
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = titleSize,
                     lineHeight = titleLineHeight,
-                    fontFamily = titleFont,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF111114),
                     textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth(titleWidthFraction),
-                    style = LocalTextStyle.current.copy(
-                        platformStyle = PlatformTextStyle(includeFontPadding = false),
-                        lineHeightStyle = LineHeightStyle(
-                            alignment = LineHeightStyle.Alignment.Center,
-                            trim = LineHeightStyle.Trim.Both
-                        )
-                    )
                 )
             }
-
-            Spacer(Modifier.height(spaceTitleToCTA))
-
-            // CTA 與登入
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Button(
-                    onClick = onStart,
-                    modifier = Modifier
-                        .fillMaxWidth(ctaWidthFraction)
-                        .height(64.dp)
-                        .clip(RoundedCornerShape(28.dp)),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.cta_get_started),
-                        fontSize = 19.sp,
-                        fontFamily = titleFont,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(Modifier.height(18.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(R.string.cta_login_prefix),
-                        fontSize = 16.sp,
-                        fontFamily = titleFont,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF111114).copy(alpha = 0.72f),
-                        style = LocalTextStyle.current.copy(
-                            platformStyle = PlatformTextStyle(includeFontPadding = false)
-                        )
-                    )
-                    Spacer(Modifier.width(9.dp))
-                    Text(
-                        text = stringResource(R.string.cta_login),
-                        fontSize = 17.sp,
-                        fontFamily = titleFont,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { showSignInSheet = true },
-                        style = LocalTextStyle.current.copy(
-                            platformStyle = PlatformTextStyle(includeFontPadding = false)
-                        )
-                    )
-                }
-            }
         }
-
-        // ===== 語言對話框（預設 EN）=====
         if (showLang) {
             LanguageDialog(
                 title = stringResource(R.string.choose_language),
-                currentTag = composeLocale.tag.ifBlank { "en" },
+                currentTag = currentTag,
                 onPick = { picked ->
                     if (switching) return@LanguageDialog
                     switching = true
                     showLang = false
-                    scope.launch {
-                        composeLocale.set(picked.tag)
-                        LanguageManager.applyLanguage(picked.tag)
-                        onSetLocale(picked.tag)
-                        store.save(picked.tag)
-                        switching = false
+                    // ★ 若本次有改語言，打上 session 旗標
+                    if (!picked.tag.equals(currentTag, ignoreCase = true)) {
+                        LanguageSessionFlag.markChanged()
                     }
+                    onSetLocale(picked.tag)
+                    switching = false
                 },
                 onDismiss = { showLang = false },
-                maxWidth = 320.dp
+                widthFraction = 0.92f,     // 92% 的螢幕寬
+                maxHeightFraction = 0.60f  // 60% 的螢幕高
             )
         }
+    }
+}
 
-        // 登入底部面板
-        if (showSignInSheet) {
-            val localeKey = currentLocaleKey()
-            key(localeKey) {
-                SignInSheetHost(
-                    activity = hostActivity,
-                    navController = navController,
-                    // ✅ 預設 EN
-                    localeTag = composeLocale.tag.ifBlank { "en" },
-                    visible = true,
-                    onDismiss = { showSignInSheet = false },
-                    onGoogle = {
-                        showSignInSheet = false
-                        Toast.makeText(context, "登入成功", Toast.LENGTH_SHORT).show()
-                    },
-                    onApple = { showSignInSheet = false },
-                    onEmail = {
-                        showSignInSheet = false
-                        onLogin()
-                    },
-                    onShowError = { msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                    }
+@Composable
+private fun LandingBottomBar(
+    onStart: () -> Unit,
+    onLogin: () -> Unit,
+    bottomOffset: Dp,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+    ) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 16.dp, end = 16.dp, bottom = bottomOffset),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Button(
+                onClick = onStart,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp),
+                shape = RoundedCornerShape(999.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black,
+                    contentColor = Color.White
+                )
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.cta_get_started),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.2.sp
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.cta_login_prefix),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFF111114),
+                    style = LocalTextStyle.current.copy(
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
+                )
+
+                Spacer(Modifier.width(3.dp))
+
+                Text(
+                    text = stringResource(R.string.cta_login),
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable { onLogin() },
+                    style = LocalTextStyle.current.copy(
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    )
                 )
             }
         }

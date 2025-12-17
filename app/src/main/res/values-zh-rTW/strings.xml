@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">BiteCal｜卡路里相機（AI）：拍照計算卡路里與減脂記錄</string>
-    <string name="landing_title">拍一下，卡路里馬上知道</string>
+    <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
     <string name="cta_get_started">開始使用</string>
-    <string name="cta_login_prefix">已有帳號？</string>
+    <string name="cta_login_prefix">已擁有帳號？</string>
     <string name="cta_login">登入</string>
     <string name="choose_language">選擇語言</string>
 
@@ -14,7 +14,6 @@
     <string name="signin_terms">條款與條件</string>
     <string name="signin_and">和</string>
     <string name="signin_privacy">隱私政策</string>
-
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
 
@@ -26,12 +25,22 @@
     <string name="email_label">Email</string>
     <string name="continue_btn">繼續</string>
     <string name="sending">傳送中…</string>
-    <string name="verifying">驗證中…</string>
-    <string name="email_confirm_title">確認你的 Email</string>
-    <string name="email_confirm_desc">請輸入我們剛剛寄到\n%1$s 的 4 位數驗證碼</string>
+
+    <!-- Email OTP 畫面 -->
+    <string name="confirm_email_title">確認你的 Email</string>
+    <string name="confirm_email_hint">請輸入我們剛剛寄出的 4 位數驗證碼</string>
+
+    <!-- 重送 -->
     <string name="didnt_receive_code">沒有收到驗證碼？</string>
     <string name="resend">重新寄送</string>
-    <string name="resend_with_seconds">%1$d 秒後可重新寄送</string>
+    <string name="resend_countdown">%1$d 秒後可重新寄送</string>
+
+    <!-- 錯誤 -->
+    <string name="err_otp_invalid">驗證碼錯誤，請重新輸入</string>
+    <string name="err_otp_too_many_attempts">嘗試太頻繁，請稍後再試</string>
+    <string name="err_network_io">網路連線異常，請稍後再試</string>
+    <string name="err_server_unavailable">服務暫時無法使用，請稍後再試</string>
+    <string name="err_generic">發生錯誤，請稍後再試</string>
 
     <!-- Google -->
     <string name="err_google_id_token_empty">Google 回傳為空的 ID Token</string>
@@ -74,17 +83,21 @@
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_weight_hint">這將用於校準你的自訂計畫。</string>
     <string name="onboard_weight_zero_error">請輸入大於 0 的體重</string>
-    <string name="onboard_target_weight_title">你的目標體重是多少？</string>
+    <string name="onboard_goal_weight_title">你的目標體重是多少？</string>
 
     <!-- exercise -->
     <string name="onboard_ex_freq_title">你平均每週運動幾次？</string>
     <string name="onboard_ex_freq_subtitle">這將用於校準你的自訂計畫。</string>
-    <string name="ex_freq_0_2_title">0–2</string>
-    <string name="ex_freq_0_2_sub">輕度運動量</string>
+    <string name="ex_freq_0_title">0</string>
+    <string name="ex_freq_0_sub">靜態活動</string>
+    <string name="ex_freq_1_3_title">1–3</string>
+    <string name="ex_freq_1_3_sub">輕度運動量</string>
     <string name="ex_freq_3_5_title">3–5</string>
     <string name="ex_freq_3_5_sub">中度運動量</string>
-    <string name="ex_freq_6_plus_title">6+</string>
-    <string name="ex_freq_6_plus_sub">高強度運動量</string>
+    <string name="ex_freq_6_7_plus_title">6–7</string>
+    <string name="ex_freq_6_7_plus_sub">高度運動量</string>
+    <string name="ex_freq_7_plus_title">7+</string>
+    <string name="ex_freq_7_plus_sub">非常高度運動量</string>
 
     <!-- exercise -->
     <string name="onboard_goal_title">你的目標是什麼呢？</string>
@@ -96,10 +109,92 @@
 
     <!-- notifications -->
     <string name="allow_notifications_cta">允許通知</string>
-    <string name="notif_title">讓你每一餐都算數</string>
-    <string name="notif_subtitle">開啟通知，關鍵時刻叫你一聲，不怕偶爾失手！</string>
+    <string name="notif_title">每一餐都算數</string>
+    <string name="notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓每日的熱量與三大營養素更準確、進度更清晰。偶爾的放鬆或小失手很正常，有提醒就能更快回到你的計畫裡，把努力穩穩累積起來。</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
-    <string name="onb_notif_subtitle_log_meal_goal">快速記下剛吃的，讓每一餐都算數。</string>
+    <string name="onb_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
+    <string name="open_notification_settings">開啟通知設定</string>
+
+    <!-- HealthConnect -->
+    <string name="hc_connect_title_prefix">連接到</string>
+    <string name="hc_connect_title_service">Health Connect</string>
+    <string name="hc_connect_body">在 BiteCal AI 與健康應用間同步日常活動，取得更完整的紀錄與分析。</string>
+    <string name="skip_text">暫不</string>
+
+    <!-- progress -->
+    <string name="progress_title_percent">%1$d%%</string>
+    <string name="progress_title_heading">正在建立你的每日計畫</string>
+    <string name="progress_phase_1">正在估算你的代謝年齡…</string>
+    <string name="progress_phase_2">正在計算營養目標…</string>
+    <string name="progress_phase_3">正在建立每日建議…</string>
+    <string name="progress_phase_4">正在完成結果分析…</string>
+    <string name="progress_card_title">每日建議項目</string>
+    <string name="progress_item_calories">卡路里</string>
+    <string name="progress_item_carbs">碳水化合物</string>
+    <string name="progress_item_protein">蛋白質</string>
+    <string name="progress_item_fats">脂肪</string>
+    <string name="progress_item_health_score">健康指數</string>
+
+    <!-- plan -->
+    <string name="plan_title_congrats">太棒了！</string>
+    <string name="plan_subtitle_ready">你的個人健康計畫已完成！</string>
+    <string name="plan_edit_anytime">每日攝取量已根據你的目標進行客製化</string>
+
+    <string name="plan_macros_carbs">碳水化合物</string>
+    <string name="plan_macros_proteins">蛋白質</string>
+    <string name="plan_macros_fat">脂肪</string>
+
+    <string name="plan_unit_kcal_day">kcal / 天</string>
+    <string name="plan_unit_g">g</string>
+
+    <string name="plan_bmi_index">BMI 指數</string>
+    <string name="plan_bmi_label_underweight">體重過輕</string>
+    <string name="plan_bmi_label_normal">正常</string>
+    <string name="plan_bmi_label_overweight">過重</string>
+    <string name="plan_bmi_label_obesity">肥胖</string>
+    <string name="plan_bmi_classified_as">分類：%1$s</string>
+
+    <string name="plan_disclaimer">計算以可信學術研究為基礎。可至「個人檔案 &gt; 健康資訊來源」查看來源。</string>
+    <string name="plan_cta_start">開始使用</string>
+
+    <string name="plan_water_daily">每日飲水量</string>
+    <string name="plan_weight_current">目前體重</string>
+    <string name="plan_weight_delta">離目標體重</string>
+
+    <string name="plan_goals_title">如何達成你的目標</string>
+    <string name="plan_goal_card_health_scores">健康評分指引，讓習慣自動養成</string>
+    <string name="plan_goal_card_track_meals">一鍵紀錄餐點，持之以恆更簡單</string>
+    <string name="plan_goal_card_daily_calories">每日熱量清晰可見，進度永不偏航</string>
+    <string name="plan_goal_card_balance_macros">碳水×蛋白×脂肪，吃對才能更有效</string>
+
+    <string name="plan_sources_based_on">根據官方飲食指引，僅供參考非醫療建議。</string>
+    <string name="plan_sources_more">查看參考來源 ›</string>
+    <string name="plan_sources_hide">隱藏來源</string>
+
+    <!-- REQUIRE_SIGN_IN -->
+    <string name="auth_sign_in_account_title">登入帳戶</string>
+    <string name="auth_sign_in_with_google">使用 Google 登入</string>
+    <string name="auth_signin_with_email">通過電子郵件繼續</string>
+    <string name="common_skip">Skip</string>
+    <string name="msg_login_success">登入成功</string>
+    <string name="msg_login_failed_generic">登入失敗，請再試一次</string>
+
+    <string name="recently_uploaded">最近上傳</string>
 
 
+    <!-- res/values-zh-rTW/strings.xml -->
+    <string name="fasting_plan_title">禁食計畫</string>
+    <string name="fasting_plans">選擇禁食計畫</string>
+    <string name="choose_fasting_plan">選擇禁食計畫</string>
+    <string name="start_time">開始時間</string>
+    <string name="end_time">結束時間</string>
+    <string name="enable_reminders">開啟提醒</string>
+    <string name="fasting_plan_save">儲存</string>
+
+    <!-- Fasting notifications -->
+    <string name="fasting_window_started">進食時段開始</string>
+    <string name="fasting_window_started_body">僅供自我管理，非醫療建議。</string>
+    <string name="fasting_window_ended">進食時段結束</string>
+    <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
+    <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
 </resources>

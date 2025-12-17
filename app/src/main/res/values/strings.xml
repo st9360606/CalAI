@@ -2,7 +2,7 @@
     <string name="app_name">BiteCal: Calorie Camera</string>
     <string name="landing_title">Snap a photo, know the calories.</string>
     <string name="cta_get_started">Get Started</string>
-    <string name="cta_login_prefix">Already have an account?</string>
+    <string name="cta_login_prefix">Already have an account ?</string>
     <string name="cta_login">Sign In</string>
     <string name="choose_language">Choose language</string>
 
@@ -14,10 +14,8 @@
     <string name="signin_terms">Terms</string>
     <string name="signin_and">and</string>
     <string name="signin_privacy">Privacy Policy</string>
-
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
-
 
     <!-- common -->
     <string name="close">Close</string>
@@ -27,12 +25,22 @@
     <string name="email_label">Email</string>
     <string name="continue_btn">Continue</string>
     <string name="sending">Sending…</string>
-    <string name="verifying">Verifying…</string>
-    <string name="email_confirm_title">Confirm your email</string>
-    <string name="email_confirm_desc">Please enter the 4-digit code we\'ve just sent to\n%1$s</string>
+
+    <!-- Email OTP screen -->
+    <string name="confirm_email_title">Confirm your email</string>
+    <string name="confirm_email_hint">Please enter the 4-digit code we\'ve just sent to</string>
+
+    <!-- Resend -->
     <string name="didnt_receive_code">Didn’t receive the code?</string>
     <string name="resend">Resend</string>
-    <string name="resend_with_seconds">Resend (%1$d s)</string>
+    <string name="resend_countdown">Resend (%1$d s)</string>
+
+    <!-- Errors -->
+    <string name="err_otp_invalid">The code is incorrect. Please try again.</string>
+    <string name="err_otp_too_many_attempts">Too many attempts. Please try again later.</string>
+    <string name="err_network_io">Network error. Please try again.</string>
+    <string name="err_server_unavailable">Service is temporarily unavailable. Please try again later.</string>
+    <string name="err_generic">Something went wrong. Please try again.</string>
 
     <!-- Google -->
     <string name="err_google_id_token_empty">Google returned an empty ID token</string>
@@ -42,7 +50,6 @@
     <string name="err_google_no_account_hint">Tip: add a Google account in Settings → Accounts and try again</string>
     <string name="err_google_signin_failed">Google sign-in failed</string>
     <string name="err_google_not_completed_with_code">Sign-in wasn’t completed (code=%1$d). Please try again.</string>
-
 
     <!-- Onboarding: Gender -->
     <string name="onb_gender_title">Choose your Gender</string>
@@ -76,20 +83,24 @@
     <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_weight_hint">This will be used to calibrate your custom plan.</string>
     <string name="onboard_weight_zero_error">Please enter a weight greater than 0</string>
-    <string name="onboard_target_weight_title">What is your goal weight?</string>
+    <string name="onboard_goal_weight_title">What is your goal weight?</string>
 
     <!-- exercise -->
-    <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
+    <string name="onboard_ex_freq_title">How often do you exercise each week ?</string>
     <string name="onboard_ex_freq_subtitle">This will help calibrate your personalized plan.</string>
-    <string name="ex_freq_0_2_title">0–2</string>
-    <string name="ex_freq_0_2_sub">Light exercise</string>
+    <string name="ex_freq_0_title">0</string>
+    <string name="ex_freq_0_sub">Sedentary</string>
+    <string name="ex_freq_1_3_title">1–3</string>
+    <string name="ex_freq_1_3_sub">Light activity</string>
     <string name="ex_freq_3_5_title">3–5</string>
-    <string name="ex_freq_3_5_sub">Moderate exercise</string>
-    <string name="ex_freq_6_plus_title">6+</string>
-    <string name="ex_freq_6_plus_sub">High-intensity exercise</string>
+    <string name="ex_freq_3_5_sub">Moderate activity</string>
+    <string name="ex_freq_6_7_plus_title">6–7</string>
+    <string name="ex_freq_6_7_plus_sub">High activity</string>
+    <string name="ex_freq_7_plus_title">7+</string>
+    <string name="ex_freq_7_plus_sub">Very high activity</string>
 
     <!-- exercise -->
-    <string name="onboard_goal_title">What’s your goal?</string>
+    <string name="onboard_goal_title">What’s your goal ?</string>
     <string name="onboard_goal_subtitle">This helps us tailor your calorie plan.</string>
     <string name="goal_lose">Lose weight</string>
     <string name="goal_maintain">Maintain</string>
@@ -98,11 +109,99 @@
 
     <!-- notifications -->
     <string name="allow_notifications_cta">Allow Notifications</string>
-    <string name="notif_title">Make every meal count</string>
-    <string name="notif_subtitle">Enable notifications—we’ll nudge you at the right moments so the occasional slip doesn’t set you back !</string>
+    <string name="notif_title">Make every meal count !</string>
+    <string name="notif_subtitle">Enable notifications and we’ll gently remind you at the right times to log meals consistently—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
+    <string name="onb_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
+    <string name="onb_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
+    <string name="open_notification_settings">Open notification settings</string>
 
-    <string name="onb_notif_title_got_a_sec">Got 10 seconds ?</string>
-    <string name="onb_notif_subtitle_log_meal_goal">Log what you just had—make every meal count.</string>
+    <!-- HealthConnect -->
+    <string name="hc_connect_title_prefix">Connect to</string>
+    <string name="hc_connect_title_service">Health Connect</string>
+    <string name="hc_connect_body">Sync your daily activity between BiteCal AI and your health apps for more complete tracking and insights.</string>
+    <string name="skip_text">Not now</string>
+
+    <!-- progress -->
+    <string name="progress_title_percent">%1$d%%</string>
+    <string name="progress_title_heading">We\'re building your daily plan</string>
+    <string name="progress_phase_1">Estimating your metabolic age…</string>
+    <string name="progress_phase_2">Crunching nutrition goals…</string>
+    <string name="progress_phase_3">Building daily recommendations…</string>
+    <string name="progress_phase_4">Finalizing results…</string>
+
+    <string name="progress_card_title">Daily recommendation for</string>
+    <string name="progress_item_calories">Calories</string>
+    <string name="progress_item_carbs">Carbs</string>
+    <string name="progress_item_protein">Protein</string>
+    <string name="progress_item_fats">Fats</string>
+    <string name="progress_item_health_score">Health score</string>
+
+    <!-- plan -->
+    <string name="plan_title_congrats">Awesome!</string>
+    <string name="plan_subtitle_ready">Your personal health plan is ready.</string>
+    <string name="plan_edit_anytime">Daily intake has been customized according to your goal.</string>
+
+    <string name="plan_macros_carbs">Carbs</string>
+    <string name="plan_macros_proteins">Protein</string>
+    <string name="plan_macros_fat">Fats</string>
+
+    <string name="plan_unit_kcal_day">kcal / day</string>
+    <string name="plan_unit_g">g</string>
+
+    <string name="plan_bmi_index">BMI Index</string>
+    <string name="plan_bmi_label_underweight">Underweight</string>
+    <string name="plan_bmi_label_normal">Normal</string>
+    <string name="plan_bmi_label_overweight">Overweight</string>
+    <string name="plan_bmi_label_obesity">Obesity</string>
+    <string name="plan_bmi_classified_as">classified as %1$s</string>
+
+    <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
+    <string name="plan_cta_start">Let\'s Get Started !</string>
+
+    <string name="plan_water_daily">Daily Water</string>
+    <string name="plan_weight_current">Current Weight</string>
+    <string name="plan_weight_delta">To Goal Weight</string>
+
+    <string name="plan_goals_title">How to reach\nyour goals</string>
+    <string name="plan_goal_card_health_scores">Health scores guide you,so habits form naturally</string>
+    <string name="plan_goal_card_track_meals">Log meals in one tap,staying consistent is easy</string>
+    <string name="plan_goal_card_daily_calories">See daily calories clearly,and never lose track</string>
+    <string name="plan_goal_card_balance_macros">Carbs × Protein × Fat,smart balance, better results</string>
+
+    <string name="plan_sources_based_on">Based on official dietary guidelines,\nFor reference only, not medical advice.</string>
+    <string name="plan_sources_more">See all references ›</string>
+    <string name="plan_sources_hide">Hide sources</string>
+
+    <!-- REQUIRE_SIGN_IN -->
+    <string name="auth_sign_in_account_title">Sign in to your account</string>
+    <string name="auth_sign_in_with_google">Sign in with Google</string>
+    <string name="auth_signin_with_email">Continue with email</string>
+    <string name="common_skip">Skip</string>
+    <string name="msg_login_success">Sign-in successful</string>
+    <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
+
+
+
+
+    <string name="recently_uploaded">Recently uploaded</string>
+
+
+
+    <!-- res/values/strings.xml（節錄） -->
+    <string name="fasting_plan_title">Fasting Plan</string>
+    <string name="fasting_plans">Fasting Plans</string>
+    <string name="choose_fasting_plan">Choose fasting plan</string>
+    <string name="start_time">start time</string>
+    <string name="end_time">end time</string>
+    <string name="enable_reminders">Enable reminders</string>
+    <string name="fasting_plan_save">Save</string>
+
+    <!-- Fasting notifications -->
+    <string name="fasting_window_started">Eating window started</string>
+    <string name="fasting_window_started_body">This reminder is for self-management only and is not medical advice.</string>
+    <string name="fasting_window_ended">Eating window ended</string>
+    <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
+    <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
 
 
 </resources>

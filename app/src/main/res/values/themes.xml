@@ -19,6 +19,8 @@
         <!-- 系統列顏色 -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/app_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
     <!-- Android 12+ 系統 Splash（只放無文字圖） -->

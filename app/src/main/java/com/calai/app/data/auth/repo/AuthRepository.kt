@@ -18,6 +18,7 @@ class AuthRepository @Inject constructor(
         val resp = api.googleLogin(
             GoogleSignInExchangeRequest(idToken = idToken, clientId = clientId)
         )
+        // 你目前的 AuthResponse 若沒有 expiresIn / serverTime，可先用兩參數版本
         tokenStore.save(resp.accessToken, resp.refreshToken)
         return resp
     }
@@ -32,5 +33,20 @@ class AuthRepository @Inject constructor(
             )
         }
         tokenStore.clear()
+    }
+
+    /**
+     * 是否已登入：
+     * - access token 不為空
+     * - 且（如有設定）未過期（加 5 秒緩衝避免臨界點）
+     */
+    suspend fun isSignedIn(): Boolean {
+        val access = tokenStore.accessTokenFlow.firstOrNull()
+        if (access.isNullOrBlank()) return false
+
+        val expiresAtSec = tokenStore.accessExpiresAtFlow.firstOrNull()
+        val nowSec = System.currentTimeMillis() / 1000
+        // 若沒有記錄到期時間，就以「存在 access token」視為已登入
+        return expiresAtSec == null || expiresAtSec > (nowSec + 5)
     }
 }

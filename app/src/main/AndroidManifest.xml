@@ -4,6 +4,17 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 若要在開機/更新後重排程，需這個權限 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
+
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:targetApi="31" />
+
+    <!-- Android 14+ 平台健康權限（你要讀的資料對應三個） -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
 
     <application
         android:name="com.calai.app.BiteCal"
@@ -34,6 +45,54 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- ★★★ 將 Receiver 放在 application 裡 ★★★ -->
+        <receiver
+            android:name="com.calai.app.data.fasting.notifications.FastingReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="FASTING_START" />
+                <action android:name="FASTING_END" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="com.calai.app.data.fasting.notifications.RescheduleBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 提供 Health Connect 權限說明頁（被 HC 授權畫面呼叫） -->
+        <activity
+            android:name=".ui.onboarding.healthconnect.PermissionsRationaleActivity"
+            android:exported="true">
+            <intent-filter>
+                <!-- Health Connect 會檢查 App 是否能處理這個 action -->
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+
+        <!-- Android 14+：查看權限用途（由系統呼叫），目標仍是上面的說明頁 -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".ui.onboarding.healthconnect.PermissionsRationaleActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
+
+
     </application>
+
+    <queries>
+        <!-- ★ 讓 PackageManager 可見 Health Connect，避免誤判未安裝 -->
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
 
 </manifest>

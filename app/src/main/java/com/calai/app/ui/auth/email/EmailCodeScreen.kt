@@ -19,6 +19,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.app.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -50,23 +52,32 @@ fun EmailCodeScreen(
 
     // 進畫面稍等一下自動聚焦
     LaunchedEffect(ui?.email) {
-        delay(120)
-        focus.requestFocus()
+        delay(120); focus.requestFocus()
+    }
+    // 出錯自動回焦（ViewModel 已把 code 清空）
+    LaunchedEffect(ui?.error) {
+        if (ui?.error != null) { delay(80); focus.requestFocus() }
     }
 
     // ===== 本地倒數 fallback（與 VM 的 canResendInSec 取最大值）=====
     var localLeft by remember { mutableStateOf(0) }
-    // 每秒遞減（僅當 localLeft > 0）
     LaunchedEffect(localLeft) {
-        if (localLeft > 0) {
-            delay(1000)
-            localLeft -= 1
-        }
+        if (localLeft > 0) { delay(1000); localLeft -= 1 }
     }
     val vmLeft = ui?.canResendInSec ?: 0
     val left = max(vmLeft, localLeft)
     val canResend = left == 0
-    val resendLabel = if (canResend) "Resend" else "Resend (${left}s)"
+    val resendLabel = if (canResend) stringResource(R.string.resend) else stringResource(R.string.resend_countdown, left)
+
+    // 錯誤訊息用 stringResource 對應
+    val errorText: String? = when (ui?.error) {
+        EmailCodeError.INVALID_CODE -> stringResource(R.string.err_otp_invalid)
+        EmailCodeError.TOO_MANY_ATTEMPTS -> stringResource(R.string.err_otp_too_many_attempts)
+        EmailCodeError.NETWORK -> stringResource(R.string.err_network_io)
+        EmailCodeError.SERVER -> stringResource(R.string.err_server_unavailable)
+        EmailCodeError.UNKNOWN -> ui?.errorMsg ?: stringResource(R.string.err_generic)
+        null -> null
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -75,10 +86,7 @@ fun EmailCodeScreen(
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -99,7 +107,7 @@ fun EmailCodeScreen(
             Spacer(Modifier.height(12.dp))
 
             Text(
-                "Confirm your email",
+                stringResource(R.string.confirm_email_title),
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 lineHeight = 36.sp,
@@ -109,7 +117,7 @@ fun EmailCodeScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "Please enter the 4-digit code we've just sent to",
+                stringResource(R.string.confirm_email_hint),
                 style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
             )
             Text(
@@ -172,7 +180,7 @@ fun EmailCodeScreen(
                         }
                     }
                 },
-                textStyle = LocalTextStyle.current.copy(color = Color.Transparent) // 隱藏原輸入
+                textStyle = LocalTextStyle.current.copy(color = Color.Transparent)
             )
 
             // 輸入滿 4 碼就自動送驗
@@ -189,7 +197,7 @@ fun EmailCodeScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "Didn't receive the code?",
+                    stringResource(R.string.didnt_receive_code),
                     style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
                 )
                 Spacer(Modifier.width(6.dp))
@@ -197,15 +205,9 @@ fun EmailCodeScreen(
                 TextButton(
                     enabled = canResend,
                     onClick = {
-                        // 1) 立刻啟動本地 30 秒倒數（讓使用者有反饋）
                         localLeft = 30
-                        // 2) 呼叫 VM 發送（VM 裡可再啟動自己的 cooldown／打 API）
                         vm.resend()
-                        // 3) 稍微延遲再回焦到輸入（鍵盤保持開啟）
-                        scope.launch {
-                            delay(80)
-                            focus.requestFocus()
-                        }
+                        scope.launch { delay(80); focus.requestFocus() }
                     },
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                     colors = ButtonDefaults.textButtonColors(
@@ -227,16 +229,13 @@ fun EmailCodeScreen(
                         .padding(top = 20.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator(
-                        strokeWidth = 3.dp,
-                        color = Color.Black
-                    )
+                    CircularProgressIndicator(strokeWidth = 3.dp, color = Color.Black)
                 }
             }
 
-            AnimatedVisibility(visible = ui?.error != null) {
+            AnimatedVisibility(visible = errorText != null) {
                 Text(
-                    text = ui?.error ?: "",
+                    text = errorText ?: "",
                     color = Color(0xFFD32F2F),
                     modifier = Modifier.padding(top = 12.dp)
                 )

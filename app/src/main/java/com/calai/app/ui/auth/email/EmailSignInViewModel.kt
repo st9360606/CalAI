@@ -9,6 +9,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 import javax.inject.Inject
 
 private const val OTP_LEN = 4
@@ -21,12 +23,22 @@ data class EmailEnterUiState(
     val error: String? = null
 )
 
+/** 用 enum 表示錯誤種類，畫面再用 stringResource 對應文字 */
+enum class EmailCodeError {
+    INVALID_CODE,          // 驗證碼錯誤
+    TOO_MANY_ATTEMPTS,     // 嘗試太頻繁 / 429
+    NETWORK,               // 網路異常
+    SERVER,                // 伺服器錯誤（5xx 等）
+    UNKNOWN                // 其他
+}
+
 data class EmailCodeUiState(
     val email: String,
     val code: String = "",
     val canResendInSec: Int = RESEND_SEC,
     val loading: Boolean = false,
-    val error: String? = null
+    val error: EmailCodeError? = null,
+    val errorMsg: String? = null // UNKNOWN 時的備援訊息
 )
 
 @HiltViewModel
@@ -58,7 +70,6 @@ class EmailSignInViewModel @Inject constructor(
                 _enter.value = _enter.value.copy(loading = true, error = null)
                 if (repo.start(email)) {
                     _enter.value = _enter.value.copy(loading = false)
-                    // 這個 VM 實例若也用於 Code 畫面（同 backstack owner），就先初始化
                     _code.value = EmailCodeUiState(email = email, canResendInSec = RESEND_SEC)
                     startResendTimer(forceRestart = true)
                     onSent(email)
@@ -75,7 +86,7 @@ class EmailSignInViewModel @Inject constructor(
 
     fun onCodeChange(text: String) {
         val clean = text.filter { it.isDigit() }.take(OTP_LEN)
-        _code.value = _code.value?.copy(code = clean)
+        _code.value = _code.value?.copy(code = clean, error = null, errorMsg = null) // 輸入時清錯誤
     }
 
     fun verify(onSuccess: () -> Unit) {
@@ -83,12 +94,27 @@ class EmailSignInViewModel @Inject constructor(
         if (s.code.length != OTP_LEN) return
         viewModelScope.launch {
             try {
-                _code.value = s.copy(loading = true, error = null)
+                _code.value = s.copy(loading = true, error = null, errorMsg = null)
                 repo.verify(s.email, s.code)
                 _code.value = s.copy(loading = false)
                 onSuccess()
             } catch (t: Throwable) {
-                _code.value = s.copy(loading = false, error = t.message)
+                val (err, clear, detail) = when (t) {
+                    is HttpException -> when (t.code()) {
+                        400 -> Triple(EmailCodeError.INVALID_CODE, true, null)
+                        429 -> Triple(EmailCodeError.TOO_MANY_ATTEMPTS, false, null)
+                        in 500..599 -> Triple(EmailCodeError.SERVER, false, null)
+                        else -> Triple(EmailCodeError.UNKNOWN, false, "HTTP ${t.code()}")
+                    }
+                    is IOException -> Triple(EmailCodeError.NETWORK, false, null)
+                    else -> Triple(EmailCodeError.UNKNOWN, false, t.message)
+                }
+                _code.value = s.copy(
+                    loading = false,
+                    error = err,
+                    errorMsg = detail,
+                    code = if (clear) "" else s.code // 驗證碼錯誤要清空
+                )
             }
         }
     }
@@ -98,53 +124,38 @@ class EmailSignInViewModel @Inject constructor(
         if (s.canResendInSec > 0) return
         viewModelScope.launch {
             try {
-                _code.value = s.copy(loading = true, error = null, code = "")
+                _code.value = s.copy(loading = true, error = null, errorMsg = null, code = "")
                 if (repo.start(s.email)) {
-                    // 重寄成功 → 重設 30s 並重啟倒數
                     _code.value = s.copy(loading = false, canResendInSec = RESEND_SEC, code = "")
                     startResendTimer(forceRestart = true)
                 } else {
-                    _code.value = s.copy(loading = false, error = "Resend failed")
+                    _code.value = s.copy(loading = false, error = EmailCodeError.UNKNOWN, errorMsg = "Resend failed")
                 }
             } catch (t: Throwable) {
-                _code.value = s.copy(loading = false, error = t.message)
+                _code.value = s.copy(loading = false, error = EmailCodeError.UNKNOWN, errorMsg = t.message)
             }
         }
     }
 
-    /**
-     * 從 EmailCodeScreen 進來時會呼叫。
-     * 注意：EmailEnterScreen 與 EmailCodeScreen 用 **不同 backStackEntry** 取得的 VM，
-     * 所以這裡一定要 **同時初始化 state** 並 **啟動倒數**。
-     */
+    /** 由 Code 畫面呼叫，初始化並開始倒數 */
     fun prepareCode(email: String) {
         val trimmed = email.trim()
-        // 僅在尚未初始化時建立，避免重組一直重設
         if (_code.value == null && trimmed.isNotBlank()) {
             _code.value = EmailCodeUiState(email = trimmed, canResendInSec = RESEND_SEC)
-            startResendTimer(forceRestart = true) // ★ 關鍵：進畫面就開始倒數
+            startResendTimer(forceRestart = true)
         }
     }
 
-    /**
-     * 啟動/維持倒數計時：
-     * - 預設會沿用目前 `_code` 的 canResendInSec 值往下數；
-     * - forceRestart=true 會先取消舊 job 再重啟。
-     */
     private fun startResendTimer(forceRestart: Boolean = false) {
         if (forceRestart) timerJob?.cancel()
-        if (timerJob != null) return // 已在跑就不重複啟動
-
+        if (timerJob != null) return
         timerJob = viewModelScope.launch {
             while (true) {
                 delay(1000)
                 val cur = _code.value ?: break
                 val next = (cur.canResendInSec - 1).coerceAtLeast(0)
                 _code.value = cur.copy(canResendInSec = next)
-                if (next == 0) {
-                    // 數到 0 後就停
-                    break
-                }
+                if (next == 0) break
             }
             timerJob = null
         }

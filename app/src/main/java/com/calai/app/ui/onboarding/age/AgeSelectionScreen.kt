@@ -3,6 +3,7 @@ package com.calai.app.ui.onboarding.age
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -52,16 +52,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AgeSelectionScreen(
-    vm: AgeSelectionViewModel,      // ← 傳進 ViewModel
+    vm: AgeSelectionViewModel,
     onBack: () -> Unit,
-    onNext: () -> Unit,             // ← 只通知導頁，不再回傳年齡
+    onNext: () -> Unit,
     minAge: Int = 10,
-    maxAge: Int = 100
+    maxAge: Int = 150
 ) {
     // 從 DataStore 讀取已保存年齡作為初始值
     val persistedAge = vm.ageState.collectAsState().value
@@ -72,8 +73,7 @@ fun AgeSelectionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -82,7 +82,7 @@ fun AgeSelectionScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -94,37 +94,57 @@ fun AgeSelectionScreen(
                             )
                         }
                     }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 3,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             )
         },
         bottomBar = {
-            Box(
-            ) {
+            Box {
                 Button(
                     onClick = {
-                        vm.saveAge(selectedAge)  // ← 直接在畫面內保存
-                        onNext()                 // ← 再通知外層導頁
+                        vm.saveAge(selectedAge)
+                        onNext()
                     },
                     enabled = true,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        // 1) 讓 CTA 永遠避開系統導覽列（手勢列）
-                        .navigationBarsPadding() // 先避開手勢列
-                        // 2) 額外再往上推一點（你要的「再往上一點」）
-                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .navigationBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -133,28 +153,21 @@ fun AgeSelectionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .imePadding(),
         ) {
-            // ✅ 與性別頁相同位置與邊距的進度條
-            OnboardingProgress(
-                stepIndex = 3,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
             Text(
                 text = stringResource(R.string.onboard_age_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
+                color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 20.dp),
+                    .padding(horizontal = 18.dp),
                 textAlign = TextAlign.Center
             )
+
             Spacer(Modifier.height(8.dp))
+
             Text(
                 text = stringResource(R.string.onboard_age_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -167,17 +180,23 @@ fun AgeSelectionScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(40.dp))
-
-            AgeWheel(
-                minAge = minAge,
-                maxAge = maxAge,
-                value = selectedAge,
-                onValueChange = { selectedAge = it },
-                rowHeight = 56.dp,
-                centerTextSize = 40.sp,
-                sideAlpha = 0.35f
+            Spacer(Modifier.height(80.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AgeWheel(
+                    minAge = minAge,
+                    maxAge = maxAge,
+                    value = selectedAge,
+                    onValueChange = { selectedAge = it },
+                    rowHeight = 68.dp,
+                    centerTextSize = 38.sp,
+                    sideAlpha = 0.35f,
+                    modifier = Modifier.width(220.dp)
             )
+            }
         }
     }
 }
@@ -191,10 +210,11 @@ private fun AgeWheel(
     onValueChange: (Int) -> Unit,
     rowHeight: Dp,
     centerTextSize: TextUnit,
-    sideAlpha: Float
+    sideAlpha: Float,
+    modifier: Modifier = Modifier
 ) {
     val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2 // 2
+    val MID = VISIBLE_COUNT / 2
 
     val items = remember(minAge, maxAge) { (minAge..maxAge).toList() }
     val selectedIdx = remember(value) { (value - minAge).coerceIn(0, items.lastIndex) }
@@ -225,7 +245,7 @@ private fun AgeWheel(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(rowHeight * VISIBLE_COUNT)
     ) {
@@ -239,7 +259,7 @@ private fun AgeWheel(
             itemsIndexed(items) { index, age ->
                 val isCenter = index == centerIndex
                 val alpha = if (isCenter) 1f else sideAlpha
-                val size = if (isCenter) centerTextSize else 28.sp
+                val size = if (isCenter) centerTextSize else 26.sp
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
 
                 Box(
@@ -281,6 +301,3 @@ private fun AgeWheel(
         )
     }
 }
-
-
-

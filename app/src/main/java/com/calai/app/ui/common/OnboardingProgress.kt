@@ -37,13 +37,13 @@ fun OnboardingProgress(
 ) {
     val clampedTotal = totalSteps.coerceAtLeast(1)
     val clampedIndex = stepIndex.coerceIn(1, clampedTotal)
-    val target = clampedIndex / clampedTotal.toFloat()
+    val goal = clampedIndex / clampedTotal.toFloat()
 
-    // Material3 建議使用 lambda 版本；若你專案版本較舊，可改用 progress = target 的重載
+    // Material3 建議使用 lambda 版本；若你專案版本較舊，可改用 progress = goal 的重載
     val progressVal by if (animate) {
-        animateFloatAsState(targetValue = target, label = "onboarding-progress")
+        animateFloatAsState(targetValue = goal, label = "onboarding-progress")
     } else {
-        rememberUpdatedState(target)
+        rememberUpdatedState(goal)
     }
 
     LinearProgressIndicator(

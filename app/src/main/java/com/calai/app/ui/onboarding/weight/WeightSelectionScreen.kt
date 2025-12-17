@@ -41,6 +41,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -57,10 +59,31 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.profile.repo.lbsToKg1
+import com.calai.app.data.profile.repo.roundKg1
 import com.calai.app.ui.common.OnboardingProgress
-import kotlin.math.round
 import kotlin.math.roundToInt
+import java.util.Locale
+import com.calai.app.i18n.LocalLocaleController
+
+private fun isZhLanguageTag(tag: String): Boolean {
+    // tag 可能是 "zh", "zh-TW", "zh-Hant-TW"
+    return tag.lowercase(Locale.ROOT).startsWith("zh")
+}
+
+@Composable
+private fun currentLanguageTag(): String {
+    val composeLocale = LocalLocaleController.current
+    val tag = composeLocale.tag
+    return tag.ifBlank { Locale.getDefault().toLanguageTag() }
+}
+
+@Composable
+private fun currentIsZhByAppLocale(): Boolean {
+    val tag = currentLanguageTag()
+    return remember(tag) { isZhLanguageTag(tag) }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -68,38 +91,87 @@ fun WeightSelectionScreen(
     vm: WeightSelectionViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit,
-    rowHeight: Dp = 56.dp,
 ) {
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()
+    val weightLbs by vm.weightLbsState.collectAsState()
 
-    // ✅ 改成預設 LBS（false），一進畫面就顯示 143 lbs（= 65.0 kg）
-    var useMetric by rememberSaveable { mutableStateOf(false) }
-    // ⛔ 移除：不要再用 savedUnit 覆寫，否則會被切回 KG
-    // LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.WeightUnit.KG) }
+    // kg 範圍
+    val KG_MIN = 20.0
+    val KG_MAX = 800.0
 
-    // 以 kg 為 SSOT；若資料層給 0，預設 65.0kg（= 143lbs）
-    var valueKg by remember(weightKg) {
-        mutableStateOf(if (weightKg > 0f) weightKg.toDouble() else 65.0)
+    // lbs 範圍（由 kg 範圍換算）
+    val LBS_TENTHS_MIN = kgToLbsTenths(KG_MIN)
+    val LBS_TENTHS_MAX = kgToLbsTenths(KG_MAX)
+    val LBS_INT_MIN = LBS_TENTHS_MIN / 10
+    val LBS_INT_MAX = LBS_TENTHS_MAX / 10
+
+    // 初始顯示單位：優先用已儲存的 weightUnit；預設 LBS
+    var useMetric by rememberSaveable {
+        mutableStateOf(
+            when (savedUnit) {
+                UserProfileStore.WeightUnit.KG -> true
+                UserProfileStore.WeightUnit.LBS -> false
+            }
+        )
     }
 
-    // 可選範圍
-    val KG_INT_MIN = 20
-    val KG_INT_MAX = 300
-    val LBS_INT_MIN = kgToLbsInt(KG_INT_MIN.toDouble())   // 44
-    val LBS_INT_MAX = kgToLbsInt(KG_INT_MAX.toDouble())   // 660
+    // === 初始化 kg / lbs（kg 用於計算，lbsTenths 記錄使用者原始 lbs） ===
+    data class Initial(val kg: Double, val lbsTenths: Int)
 
-    // —— 目前選中項 —— //
-    val kgTenths = (valueKg * 10.0).roundToInt().coerceIn(KG_INT_MIN * 10, KG_INT_MAX * 10)
+    val initial = remember(weightKg, weightLbs) {
+        val hasLbs = weightLbs > 0f
+        if (hasLbs) {
+            val lbsVal = weightLbs.toDouble()
+            val lbsTenths = (lbsVal * 10.0).roundToInt()
+                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+
+            val kgVal = if (weightKg > 0f) {
+                weightKg.toDouble()
+            } else {
+                lbsToKg1(lbsVal)
+            }.coerceIn(KG_MIN, KG_MAX)
+
+            Initial(kgVal, lbsTenths)
+        } else {
+            val kgValBase = if (weightKg > 0f) weightKg.toDouble() else 65.0
+            val kgVal = kgValBase.coerceIn(KG_MIN, KG_MAX)
+            val lbsTenths = kgToLbsTenths(kgVal)
+                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+
+            Initial(kgVal, lbsTenths)
+        }
+    }
+
+    // valueKg：計算用 kg（0.1 精度）
+    var valueKg by remember(weightKg, weightLbs) {
+        mutableDoubleStateOf(initial.kg)
+    }
+
+    // valueLbsTenths：顯示用 lbs（0.1 精度，用 Int 表示）
+    var valueLbsTenths by remember(weightKg, weightLbs) {
+        mutableIntStateOf(initial.lbsTenths)
+    }
+
+    // --- kg wheel 選中值（整數＋小數） ---
+    val kgTenths = (valueKg * 10.0).toInt()
+        .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
     val kgIntSel = kgTenths / 10
     val kgDecSel = kgTenths % 10
-    val lbsIntSel = kgToLbsInt(valueKg).coerceIn(LBS_INT_MIN, LBS_INT_MAX)
+
+    // --- lbs wheel 選中值（整數＋小數），完全由 valueLbsTenths 控制 ---
+    val lbsTenthsClamped = valueLbsTenths
+        .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+    val lbsIntSel = lbsTenthsClamped / 10
+    val lbsDecSel = lbsTenthsClamped % 10
+
+    val isZh = currentIsZhByAppLocale()
+    val subtitleToUnitSpacing = if (isZh) 60.dp else 25.dp
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -108,7 +180,7 @@ fun WeightSelectionScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -120,6 +192,20 @@ fun WeightSelectionScreen(
                             )
                         }
                     }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 5,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             )
         },
@@ -127,31 +213,52 @@ fun WeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        vm.saveWeightKg(roundKg2(valueKg))
-                        vm.saveWeightUnit(
-                            if (useMetric) UserProfileStore.WeightUnit.KG
-                            else UserProfileStore.WeightUnit.LBS
-                        )
+                        // 先存 kg（0.1，無條件捨去）
+                        val kgToSave = roundKg1(valueKg)
+                            .coerceIn(KG_MIN.toFloat(), KG_MAX.toFloat())
+                        vm.saveWeightKg(kgToSave)
+
+                        if (useMetric) {
+                            // KG 模式：只存 kg，清掉 lbs
+                            vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
+                            vm.clearWeightLbs()
+                        } else {
+                            // LBS 模式：存 kg + 使用者原始 lbs（0.1 精度）
+                            vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
+                            val lbsToSave =
+                                (valueLbsTenths
+                                    .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX) / 10.0).toFloat()
+                            vm.saveWeightLbs(lbsToSave)
+                        }
                         onNext()
                     },
                     enabled = valueKg > 0.0,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -161,111 +268,161 @@ fun WeightSelectionScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            OnboardingProgress(
-                stepIndex = 5,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
             Text(
                 text = stringResource(R.string.onboard_weight_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
-                textAlign = TextAlign.Center,
+                color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 20.dp)
+                    .padding(horizontal = 18.dp),
+                textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
             Text(
                 text = stringResource(R.string.onboard_weight_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
+                    color = Color(0xFF9AA3AF),
+                    lineHeight = 20.sp
                 ),
-                color = Color(0xFFB6BDC6),
-                textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 6.dp)
+                    .padding(horizontal = 24.dp),
+                textAlign = TextAlign.Center
             )
+
+            Spacer(Modifier.height(subtitleToUnitSpacing))
 
             WeightUnitSegmented(
                 useMetric = useMetric,
                 onChange = { useMetric = it },
-                modifier = Modifier
-                    .padding(top = 12.dp)
-                    .align(Alignment.CenterHorizontally)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
-            Spacer(Modifier.height(12.dp))
-
             if (useMetric) {
-                // KG：整數位 + 小數位（0~9）
+                // ===== KG：整數位 + 小數位 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 14.dp),
+                        .padding(top = 2.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
-                        range = KG_INT_MIN..KG_INT_MAX,
+                        range = KG_MIN.toInt()..KG_MAX.toInt(),
                         value = kgIntSel,
                         onValueChange = { newInt ->
-                            val newKg = (newInt * 10 + kgDecSel) / 10.0
-                            valueKg = newKg.coerceIn(KG_INT_MIN.toDouble(), KG_INT_MAX.toDouble())
+                            val newTenths = (newInt * 10 + kgDecSel)
+                                .coerceIn(
+                                    (KG_MIN * 10).toInt(),
+                                    (KG_MAX * 10).toInt()
+                                )
+                            val newKg = newTenths / 10.0
+                            valueKg = newKg
+                            valueLbsTenths = kgToLbsTenths(newKg)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 42.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 23.dp)
                     )
-                    Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
+                    Box(
+                        modifier = Modifier.width(18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ".",
+                            fontSize = 34.sp,
+                            modifier = Modifier.offset(x = 2.dp)
+                        )
+                    }
                     NumberWheel(
                         range = 0..9,
                         value = kgDecSel,
                         onValueChange = { newDec ->
-                            val newKg = (kgIntSel * 10 + newDec) / 10.0
-                            valueKg = newKg.coerceIn(KG_INT_MIN.toDouble(), KG_INT_MAX.toDouble())
+                            val newTenths = (kgIntSel * 10 + newDec)
+                                .coerceIn(
+                                    (KG_MIN * 10).toInt(),
+                                    (KG_MAX * 10).toInt()
+                                )
+                            val newKg = newTenths / 10.0
+                            valueKg = newKg
+                            valueLbsTenths = kgToLbsTenths(newKg)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 42.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
-                        modifier = Modifier.width(80.dp)
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(start = 6.dp)
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(10.dp))
                     Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
-                // LBS：整數（無小數輪）— 進到畫面會顯示 143（來自 65kg）
+                // ===== LBS：整數位 + 小數位，完全以 valueLbsTenths 為主 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 38.dp),
+                        .padding(top = 2.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
                         range = LBS_INT_MIN..LBS_INT_MAX,
                         value = lbsIntSel,
-                        onValueChange = { newLbsInt ->
-                            val kgPref = lbsIntToKgPreferred(newLbsInt)
-                            valueKg = kgPref.coerceIn(KG_INT_MIN.toDouble(), KG_INT_MAX.toDouble())
+                        onValueChange = { newInt ->
+                            val newTenths = (newInt * 10 + lbsDecSel)
+                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                            valueLbsTenths = newTenths
+                            val newLbs = newTenths / 10.0
+                            val newKg = lbsToKg1(newLbs)
+                            valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
                         },
-                        rowHeight = rowHeight,
-                        centerTextSize = 42.sp,
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
-                        modifier = Modifier.width(160.dp)
+                        modifier = Modifier
+                            .width(120.dp)
+                            .padding(start = 20.dp)
+                    )
+                    Box(
+                        modifier = Modifier.width(18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = ".",
+                            fontSize = 34.sp,
+                            modifier = Modifier.offset(x = 4.dp)
+                        )
+                    }
+                    NumberWheel(
+                        range = 0..9,
+                        value = lbsDecSel,
+                        onValueChange = { newDec ->
+                            val intPart = lbsIntSel
+                            val newTenths = (intPart * 10 + newDec)
+                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                            valueLbsTenths = newTenths
+                            val newLbs = newTenths / 10.0
+                            val newKg = lbsToKg1(newLbs)
+                            valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
+                        },
+                        rowHeight = 60.dp,
+                        centerTextSize = 32.sp,
+                        textSize = 28.sp,
+                        sideAlpha = 0.35f,
+                        modifier = Modifier
+                            .width(80.dp)
+                            .padding(start = 9.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text("lbs", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
@@ -283,7 +440,6 @@ fun WeightSelectionScreen(
                     modifier = Modifier.fillMaxWidth(0.62f)
                 )
             }
-
             Spacer(Modifier.height(16.dp))
         }
     }
@@ -297,11 +453,11 @@ private fun WeightUnitSegmented(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(26.dp),
-        color = Color(0xFFF1F3F7),
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.58f)
-            .heightIn(min = 45.dp)
+            .fillMaxWidth(0.55f)
+            .heightIn(min = 40.dp)
     ) {
         Row(Modifier.padding(6.dp)) {
             SegItem(
@@ -311,7 +467,7 @@ private fun WeightUnitSegmented(
                 selectedColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .height(45.dp)
+                    .height(40.dp)
             )
             Spacer(Modifier.width(6.dp))
             SegItem(
@@ -321,7 +477,7 @@ private fun WeightUnitSegmented(
                 selectedColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .height(45.dp)
+                    .height(40.dp)
             )
         }
     }
@@ -336,7 +492,7 @@ private fun SegItem(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val fSize = 22.sp
+    val fSize = 18.sp
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(corner),
@@ -345,9 +501,9 @@ private fun SegItem(
     ) {
         Box(
             modifier = Modifier
-                .defaultMinSize(minHeight = 48.dp)
+                .defaultMinSize(minHeight = 40.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 10.dp),
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -371,6 +527,7 @@ private fun NumberWheel(
     onValueChange: (Int) -> Unit,
     rowHeight: Dp,
     centerTextSize: TextUnit,
+    textSize: TextUnit,
     sideAlpha: Float,
     unitLabel: String? = null,
     modifier: Modifier = Modifier
@@ -386,7 +543,7 @@ private fun NumberWheel(
     var initialized by remember(range) { mutableStateOf(false) }
     LaunchedEffect(range, value) {
         if (!initialized) {
-            state.scrollToItem(selectedIdx) // contentPadding 會把它放到正中
+            state.scrollToItem(selectedIdx)
             initialized = true
         }
     }
@@ -420,7 +577,7 @@ private fun NumberWheel(
             itemsIndexed(items) { index, num ->
                 val isCenter = index == centerIndex
                 val alpha = if (isCenter) 1f else sideAlpha
-                val size = if (isCenter) centerTextSize else 28.sp
+                val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
                 val unitSize = if (isCenter) 20.sp else 18.sp
 
@@ -451,7 +608,6 @@ private fun NumberWheel(
             }
         }
 
-        // 中心框線
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2
         val lineThickness = 1.dp
@@ -474,17 +630,8 @@ private fun NumberWheel(
     }
 }
 
-/* ---------------------------- 換算 & 取整邏輯 ---------------------------- */
+/* ---------------------------- 換算工具 ---------------------------- */
 
-// 以整數 lbs 為主：1 kg = 2.2 lbs，lbs 一律四捨五入為整數
-fun kgToLbsInt(v: Double): Int = round(v * 2.2).toInt()
-
-// 從整數 lbs 取得顯示用 kg：選擇「能 round 回同一個 lbs」的區間內最小 0.1kg
-fun lbsIntToKgPreferred(lbsInt: Int): Double {
-    val lowerBoundKg = (lbsInt - 0.5) / 2.2
-    return kotlin.math.ceil(lowerBoundKg * 10.0) / 10.0
-}
-
-// 存檔：公斤保留 2 位小數
-private fun roundKg2(v: Double): Float =
-    (kotlin.math.round(v * 100.0) / 100.0).toFloat()
+// 1 kg = 2.2 lbs；以「0.1 lbs」為刻度，無條件捨去
+private fun kgToLbsTenths(kg: Double): Int =
+    (kg * 2.2 * 10.0).toInt()

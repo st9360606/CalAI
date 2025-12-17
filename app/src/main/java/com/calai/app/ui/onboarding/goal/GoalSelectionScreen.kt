@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -56,8 +57,7 @@ fun GoalSelectionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -66,7 +66,7 @@ fun GoalSelectionScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -77,6 +77,20 @@ fun GoalSelectionScreen(
                                 tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 7,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -89,20 +103,29 @@ fun GoalSelectionScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -112,49 +135,42 @@ fun GoalSelectionScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            OnboardingProgress(
-                stepIndex = 8,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-            Spacer(Modifier.height(14.dp))
-
             Text(
                 text = stringResource(R.string.onboard_goal_title),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
+                fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
+                color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                textAlign = TextAlign.Start
+                    .padding(horizontal = 22.dp),
+                textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(6.dp))
+
+            Spacer(Modifier.height(8.dp))
+
             Text(
                 text = stringResource(R.string.onboard_goal_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
+                    color = Color(0xFF9AA3AF),
+                    lineHeight = 20.sp
                 ),
-                color = Color(0xFF8F98A3),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 24.dp),
+                textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(55.dp))
+            Spacer(Modifier.height(80.dp))
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val w = 0.88f
-                val h = 72.dp
-                val r = 26.dp
+                val w = 0.86f
+                val h = 80.dp
+                val r = 14.dp
 
                 GoalOption(
                     text = stringResource(R.string.goal_lose),
@@ -162,22 +178,22 @@ fun GoalSelectionScreen(
                     onClick = { vm.select(GoalKey.LOSE) },
                     widthFraction = w, height = h, corner = r
                 )
-                Spacer(Modifier.height(25.dp))
+                Spacer(Modifier.height(18.dp))
                 GoalOption(
                     text = stringResource(R.string.goal_maintain),
                     selected = state.selected == GoalKey.MAINTAIN,
                     onClick = { vm.select(GoalKey.MAINTAIN) },
                     widthFraction = w, height = h, corner = r
                 )
-                Spacer(Modifier.height(25.dp))
+                Spacer(Modifier.height(18.dp))
                 GoalOption(
                     text = stringResource(R.string.goal_gain),
                     selected = state.selected == GoalKey.GAIN,
                     onClick = { vm.select(GoalKey.GAIN) },
                     widthFraction = w, height = h, corner = r
                 )
-                Spacer(Modifier.height(25.dp))
-                // ★ 新增：健康飲食
+                Spacer(Modifier.height(18.dp))
+                // 健康飲食
                 GoalOption(
                     text = stringResource(R.string.goal_healthy_eating),
                     selected = state.selected == GoalKey.HEALTHY_EATING,
@@ -219,8 +235,11 @@ private fun GoalOption(
         Text(
             text = text,
             color = content,
-            fontSize = 19.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 19.sp,
+                letterSpacing = 0.2.sp
+            ),
             textAlign = TextAlign.Center
         )
     }

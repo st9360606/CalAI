@@ -1,17 +1,19 @@
 package com.calai.app.ui.onboarding.notifications
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,8 +38,6 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BatteryFull
-import androidx.compose.material.icons.filled.SignalCellular4Bar
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -51,39 +52,52 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.calai.app.BuildConfig
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
 
-private const val POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
+private const val TAG_NOTIF = "NotifPerm"
 
+/**
+ * ✅ 不使用 Manifest.permission.POST_NOTIFICATIONS（API 33 才有）
+ * 直接用字串避免 minSdk Lint 問題。
+ */
+private const val PERM_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationPermissionScreen(
@@ -94,28 +108,29 @@ fun NotificationPermissionScreen(
     val ctx = LocalContext.current
     val activity = remember(ctx) { ctx.findActivity() as? ComponentActivity }
 
-    var granted by remember { mutableStateOf(isNotificationsEnabled(ctx)) }
-    val hasManifestDecl by remember {
-        mutableStateOf(isPermissionInManifest(ctx, POST_NOTIFICATIONS))
+    if (BuildConfig.DEBUG) {
+        Log.d(
+            TAG_NOTIF,
+            "sdk=${Build.VERSION.SDK_INT}, target=${ctx.applicationInfo.targetSdkVersion}, " +
+                    "hasManifest=${isPermissionInManifest(ctx, PERM_POST_NOTIFICATIONS)}, " +
+                    "granted=${isNotificationsEnabled(ctx)}, activity=${activity != null}"
+        )
     }
-
-    val canUseLauncher = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            hasManifestDecl && activity != null
 
     Scaffold(
         containerColor = Color.White,
         topBar = {
             TopAppBar(
-                title = {},
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114).copy(alpha = 0.85f)
+                    navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -123,29 +138,79 @@ fun NotificationPermissionScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color(0xFF111114).copy(alpha = 0.85f)
+                                tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 9,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
         },
         bottomBar = {
-            if (canUseLauncher) {
-                CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity!!) {
-                    val launcher = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.RequestPermission()
-                    ) { ok ->
-                        granted = ok || isNotificationsEnabled(ctx)
-                        if (granted) onNext()
+            // ★ 在 Composable 這裡先取得所需變數，lambda 內只使用這些捕獲值
+            val bottomCtx = LocalContext.current
+            val lifecycleOwner = LocalLifecycleOwner.current
+            val bottomActivity = remember(bottomCtx) { bottomCtx.findActivity() as? ComponentActivity }
+
+            // 1) 依序嘗試從三個來源取得可用的 RegistryOwner
+            val ownerFromLocal = LocalActivityResultRegistryOwner.current
+            val ownerFromLifecycle = lifecycleOwner as? ActivityResultRegistryOwner
+            val effectiveOwner: ActivityResultRegistryOwner? =
+                ownerFromLocal ?: ownerFromLifecycle ?: bottomActivity
+
+            // 2) 僅在 33+、有宣告、尚未授權時需要彈窗
+            val shouldRequest =
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        isPermissionInManifest(bottomCtx, PERM_POST_NOTIFICATIONS) &&
+                        ContextCompat.checkSelfPermission(bottomCtx, PERM_POST_NOTIFICATIONS) !=
+                        PackageManager.PERMISSION_GRANTED
+
+            if (BuildConfig.DEBUG) {
+                Log.d(
+                    TAG_NOTIF,
+                    "shouldRequest=$shouldRequest, owner=${effectiveOwner != null}, " +
+                            "granted=${isNotificationsEnabled(bottomCtx)}, sdk=${Build.VERSION.SDK_INT}"
+                )
+            }
+
+            when {
+                shouldRequest && effectiveOwner != null -> {
+                    // 3) 只有在拿到 owner 時才提供並建立 launcher
+                    CompositionLocalProvider(LocalActivityResultRegistryOwner provides effectiveOwner) {
+                        val launcher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.RequestPermission()
+                        ) { _ ->
+                            // ★ 需求：允許或不允許 → 一律往下一頁，不開設定頁
+                            onNext()
+                        }
+
+                        NotifBottomBar(
+                            granted = isNotificationsEnabled(bottomCtx),
+                            onClick = { launcher.launch(PERM_POST_NOTIFICATIONS) }
+                        )
                     }
+                }
+
+                else -> {
+                    // 無 owner / 已授權 / <33 → 不建 launcher，直接往下一頁
                     NotifBottomBar(
-                        granted = granted,
-                        onClick = { if (granted) onNext() else launcher.launch(POST_NOTIFICATIONS) }
+                        granted = isNotificationsEnabled(bottomCtx),
+                        onClick = { onNext() }
                     )
                 }
-            } else {
-                NotifBottomBar(granted = granted, onClick = { onNext() })
             }
         }
     ) { inner ->
@@ -155,14 +220,6 @@ fun NotificationPermissionScreen(
                 .padding(inner)
                 .verticalScroll(rememberScrollState())
         ) {
-            OnboardingProgress(
-                stepIndex = 9,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
             Spacer(Modifier.height(20.dp))
 
             // ===== iOS 鎖屏風格 + 與外框同寬的標題/副標 =====
@@ -171,8 +228,8 @@ fun NotificationPermissionScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
-                val panelWidth = maxWidth * 0.88f
-                val panelHeight = (panelWidth * 1.27f).coerceIn(360.dp, 620.dp)
+                val panelWidth = maxWidth * 0.84f
+                val panelHeight = (panelWidth * 1.20f).coerceIn(360.dp, 620.dp)
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -184,7 +241,7 @@ fun NotificationPermissionScreen(
                             .height(panelHeight),
                         bigClock = "8:30",
                         clockAlpha = 1f,
-                        clockSizeSp = 124,
+                        clockSizeSp = 110,
                         clockOffsetTop = 18.dp,
                         clockContentGap = 22.dp
                     ) {
@@ -198,30 +255,28 @@ fun NotificationPermissionScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(20.dp))
 
                     val titleStyle = MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = 42.sp,          // 你的標題字級
+                        fontSize = 42.sp,
                         fontWeight = FontWeight.ExtraBold,
                         lineHeight = 45.sp
                     )
 
-                    // 用 Inline 版本，讓圖示跟著文字排版
                     NotifTitleWithEndImageInline(
-                        text = s(R.string.notif_title, "Make every meal count"),
-                        tailRes = R.drawable.notifications,         // 你的彩色鈴鐺
-                        modifier = Modifier.width(panelWidth),
-                        tailSizeSp = titleStyle.fontSize,       // ★ 圖示大小=標題字級 → 幾乎一樣大
-                        tailSpaceEm = 1.1f,                    // 與文字距離，想更緊可改 0.15f
+                        text = verifyTitle(R.string.notif_title, "Make every meal count"),
+                        tailRes = R.drawable.notifications,
+                        modifier = Modifier.fillMaxWidth(0.82f),
+                        tailSizeSp = titleStyle.fontSize,
+                        tailSpaceEm = 1.1f,
                         textAlign = TextAlign.Start,
                         style = titleStyle
                     )
 
-                    Spacer(Modifier.height(9.dp))
+                    Spacer(Modifier.height(2.dp))
 
-                    // 副標：與手機外框同寬（保持原樣）
                     Text(
-                        text = s(
+                        text = verifyTitle(
                             R.string.notif_subtitle,
                             "Enable notifications—we’ll nudge you at the right moments so the occasional slip doesn’t set you back!"
                         ),
@@ -230,7 +285,7 @@ fun NotificationPermissionScreen(
                             lineHeight = 22.sp
                         ),
                         color = Color(0xFF8F98A3),
-                        modifier = Modifier.width(panelWidth)
+                        modifier = Modifier.fillMaxWidth(0.80f),
                     )
                 }
             }
@@ -251,21 +306,42 @@ private fun NotifBottomBar(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                 .fillMaxWidth()
                 .height(64.dp),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(999.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Black,
                 contentColor = Color.White
             )
         ) {
             Text(
-                text = if (granted) s(R.string.continue_text, "Continue")
-                else s(R.string.allow_notifications_cta, "Allow Notifications"),
-                fontSize = 19.sp,
-                fontWeight = FontWeight.SemiBold
+                text = if (granted) verifyTitle(R.string.continue_text, "Continue")
+                else verifyTitle(R.string.allow_notifications_cta, "Allow Notifications"),
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.2.sp
+                ),
+                textAlign = TextAlign.Center
             )
+        }
+    }
+}
+
+/**
+ * 只把時間字串中的 ':' 往上（或往下）移動一點。
+ */
+private fun buildClockAnnotated(
+    text: String,
+    colonShift: Float = 0.07f
+): AnnotatedString {
+    val shift = BaselineShift(colonShift)
+    return buildAnnotatedString {
+        text.forEach { ch ->
+            if (ch == ':') {
+                withStyle(SpanStyle(baselineShift = shift)) { append(ch) }
+            } else append(ch)
         }
     }
 }
@@ -277,14 +353,14 @@ private fun LockscreenPanel(
     bigClock: String = "8:30",
     clockAlpha: Float = 1f,
     clockSizeSp: Int = 124,
-    clockColor: Color = Color(0xFFD0D6DD),
+    clockColor: Color = Color(0xFFC3CEDF),
     clockOffsetTop: Dp = 0.dp,
     clockContentGap: Dp = 16.dp,
     corner: Dp = 28.dp,
-    frameBorderColor: Color = Color(0xFFD0D6DD),
-    frameBorderWidth: Dp = 6.dp,
+    frameBorderColor: Color = Color(0xFFD7E0EC),
+    frameBorderWidth: Dp = 2.dp,
     showStatusIcons: Boolean = true,
-    statusTint: Color = Color(0xFFD0D6DD),
+    statusTint: Color = Color(0xFFAAB7CC),
     batteryPercent: Int = 87,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -294,7 +370,7 @@ private fun LockscreenPanel(
             .clip(RoundedCornerShape(corner))
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFFF6F7F9), Color(0xFFF0F2F5))
+                    listOf(Color(0xFFFAFCFF), Color(0xFFEEF3FA))
                 )
             )
     ) {
@@ -316,7 +392,7 @@ private fun LockscreenPanel(
         ) {
             Spacer(Modifier.height(clockOffsetTop))
             Text(
-                text = bigClock,
+                text = buildClockAnnotated(bigClock),
                 fontSize = clockSizeSp.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = clockColor.copy(alpha = clockAlpha)
@@ -342,148 +418,255 @@ private fun StatusBarIcons(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Filled.SignalCellular4Bar,
-            contentDescription = "Cellular Signal",
-            tint = tint,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(Modifier.width(6.dp))
-        Icon(
             imageVector = Icons.Filled.Wifi,
             contentDescription = "Wi-Fi",
             tint = tint,
             modifier = Modifier.size(18.dp)
         )
-        Spacer(Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.Filled.BatteryFull,
-            contentDescription = "Battery",
-            tint = tint,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(2.dp))
+
+        Spacer(Modifier.width(6.dp))
+
         Text(
-            text = "${batteryPercent}%",
+            text = "${batteryPercent.coerceIn(0, 100)}%",
             fontSize = 12.sp,
             color = tint,
             fontWeight = FontWeight.Medium
         )
+
+        Spacer(Modifier.width(6.dp))
+
+        BatteryGaugeHorizontal(
+            percent = batteryPercent,
+            tint = tint
+        )
     }
 }
 
-/* -------------------- 單一卡片：iOS 通知樣式 -------------------- */
+@Composable
+private fun BatteryGaugeHorizontal(
+    percent: Int,
+    tint: Color,
+    width: Dp = 26.dp,
+    height: Dp = 12.dp,
+    strokeWidth: Dp = 1.6.dp,
+    corner: Dp = 3.dp,
+    tipWidth: Dp = 2.dp,
+    tipGap: Dp = 1.dp
+) {
+    val p = percent.coerceIn(0, 100) / 100f
+
+    Canvas(
+        modifier = Modifier.size(width + tipWidth + tipGap, height)
+    ) {
+        val strokePx = strokeWidth.toPx()
+        val cornerPx = corner.toPx()
+        val tipW = tipWidth.toPx()
+        val gap = tipGap.toPx()
+
+        val bodyW = size.width - tipW - gap
+        val bodyH = size.height
+
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(0f, 0f),
+            size = Size(bodyW, bodyH),
+            cornerRadius = CornerRadius(cornerPx, cornerPx),
+            style = Stroke(width = strokePx)
+        )
+
+        val innerPad = strokePx * 1.3f
+        val fillMaxW = (bodyW - innerPad * 2).coerceAtLeast(0f)
+        val fillW = (fillMaxW * p).coerceAtLeast(0f)
+        val fillH = (bodyH - innerPad * 2).coerceAtLeast(0f)
+
+        if (fillW > 0.5f && fillH > 0.5f) {
+            drawRoundRect(
+                color = tint,
+                topLeft = Offset(innerPad, innerPad),
+                size = Size(fillW, fillH),
+                cornerRadius = CornerRadius(
+                    (cornerPx - innerPad).coerceAtLeast(0f),
+                    (cornerPx - innerPad).coerceAtLeast(0f)
+                )
+            )
+        }
+
+        val tipH = bodyH * 0.55f
+        val tipY = (bodyH - tipH) / 2f
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(bodyW + gap, tipY),
+            size = Size(tipW, tipH),
+            cornerRadius = CornerRadius(tipW, tipW)
+        )
+    }
+}
+
+/* -------------------- 單一卡片：iOS 通知樣式（對齊 & icon滿版版） -------------------- */
+private object NotifCardSpec {
+    val corner = 18.dp
+    val padH = 16.dp
+    val padV = 10.dp
+    val iconSize = 22.dp
+    val iconCorner = 11.dp
+    val iconInnerPad = 0.dp
+    const val ICONSCALE = 1.28f
+    val gapIconText = 10.dp
+    val gapMetaToContent = 5.dp
+    val metaFont = 11.sp
+    val metaLine = 12.sp
+    val metaLetterSpacing = 0.6.sp
+
+    val titleFont = 15.sp
+    val titleLine = 18.sp
+
+    val bodyFont = 12.sp
+    val bodyLine = 16.sp
+}
+
 @Composable
 private fun NotificationCardIOS(
-    @DrawableRes appIconRes: Int
+    @DrawableRes appIconRes: Int,
+    modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(22.dp)
-    val strokeColor = Color(0xFFB8C0CC) // 想再深可調 0xFFA5ADBA / 0xFF94A3B8
+    val metaColor = Color(0xFF748092)
+    val bodyColor = Color(0xFF667085)
+    val titleColor = Color(0xFF111114)
+
     Surface(
-        shape = shape,
+        shape = RoundedCornerShape(NotifCardSpec.corner),
         color = Color.White,
         tonalElevation = 0.dp,
         shadowElevation = 14.dp,
-        border = BorderStroke(0.dp, strokeColor),   // ← 用 Surface 的 border，圓角跟 shape 一致
-        modifier = Modifier
-            .fillMaxWidth(0.98f)
-            .height(90.dp)
+        modifier = modifier.fillMaxWidth(0.98f)
     ) {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = NotifCardSpec.padH, vertical = NotifCardSpec.padV)
         ) {
-            AppIconRounded(resId = appIconRes, size = 38.dp, corner = 10.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = "CALORIE  COUNTER",
-                    fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF),
-                    fontWeight = FontWeight.SemiBold
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AppIconIOSBadge(
+                    resId = appIconRes,
+                    size = NotifCardSpec.iconSize,
+                    corner = NotifCardSpec.iconCorner,
+                    contentPadding = NotifCardSpec.iconInnerPad,
+                    iconScale = NotifCardSpec.ICONSCALE
                 )
-                Spacer(Modifier.height(2.dp))
+
+                Spacer(Modifier.width(NotifCardSpec.gapIconText))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "AI CALORIE COUNTER",
+                        fontSize = NotifCardSpec.metaFont,
+                        lineHeight = NotifCardSpec.metaLine,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = NotifCardSpec.metaLetterSpacing,
+                        color = metaColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(Modifier.width(10.dp))
+
+                    Text(
+                        text = "8:30 AM",
+                        fontSize = NotifCardSpec.metaFont,
+                        lineHeight = NotifCardSpec.metaLine,
+                        fontWeight = FontWeight.Medium,
+                        color = metaColor,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(NotifCardSpec.gapMetaToContent))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 3.dp)
+            ) {
                 Text(
                     text = stringResource(id = R.string.onb_notif_title_got_a_sec),
-                    fontSize = 17.sp,
+                    fontSize = NotifCardSpec.titleFont,
+                    lineHeight = NotifCardSpec.titleLine,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF111114)
+                    color = titleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(2.dp))
+
+                Spacer(Modifier.height(3.dp))
+
                 Text(
                     text = stringResource(id = R.string.onb_notif_subtitle_log_meal_goal),
-                    fontSize = 12.sp,
-                    color = Color(0xFF9CA3AF),
-                    maxLines = 2
+                    fontSize = NotifCardSpec.bodyFont,
+                    lineHeight = NotifCardSpec.bodyLine,
+                    color = bodyColor,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(Modifier.width(6.dp))
-            Text("8:30 AM", fontSize = 12.sp, color = Color(0xFF9CA3AF))
         }
     }
 }
 
-/* -------------------- 圓角矩形 icon -------------------- */
 @Composable
-private fun AppIconRounded(
+private fun AppIconIOSBadge(
     @DrawableRes resId: Int,
     size: Dp,
-    corner: Dp = 10.dp,
-    borderColor: Color = Color(0x4D000000),
-    borderWidth: Dp = 0.5.dp,
-    bg: Color = Color.White
+    corner: Dp,
+    contentPadding: Dp,
+    iconScale: Float,
+    modifier: Modifier = Modifier
 ) {
-    val ctx = LocalContext.current
-    val density = LocalDensity.current
-    val innerPx = with(density) { (size - borderWidth * 2).coerceAtLeast(0.dp).toPx().toInt() }
-
-    val bitmap: Bitmap? = remember(resId, innerPx) {
-        runCatching {
-            val d = ContextCompat.getDrawable(ctx, resId) ?: return@runCatching null
-            d.toBitmap(innerPx, innerPx, Bitmap.Config.ARGB_8888)
-        }.getOrNull()
-    }
-
-    Box(
-        modifier = Modifier
-            .size(size)
-            .border(borderWidth, borderColor, RoundedCornerShape(corner))
-            .clip(RoundedCornerShape(corner))
-            .background(bg)
-            .padding(borderWidth),
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = modifier.size(size),
+        shape = RoundedCornerShape(corner),
+        color = Color(0xFF111114),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
-        if (bitmap != null) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = resId),
                 contentDescription = "App Icon",
+                tint = Color.White,
                 modifier = Modifier
                     .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = iconScale
+                        scaleY = iconScale
+                    }
                     .clip(RoundedCornerShape(corner))
-            )
-        } else {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(corner))
-                    .background(Color(0xFF111114))
             )
         }
     }
 }
 
-/* -------------------- Title + 尾端圖片（相容版，不用 InlineTextContent） -------------------- */
+/* -------------------- Title + 尾端圖片 -------------------- */
 @Composable
 private fun NotifTitleWithEndImageInline(
     text: String,
     @DrawableRes tailRes: Int,
     modifier: Modifier = Modifier,
-    // ★ 新增：用 dp 指定圖示大小（會換算成與 45dp 視覺一致的 sp）
     tailSizeDp: Dp? = null,
-    // 備用：用 sp 指定（若 tailSizeDp 提供，會優先用 dp）
     tailSizeSp: TextUnit = 24.sp,
-    tailSpaceEm: Float = 0.25f,           // 與文字間距（字寬倍數）
+    tailSpaceEm: Float = 0.25f,
     textAlign: TextAlign = TextAlign.Center,
     style: TextStyle = MaterialTheme.typography.headlineLarge.copy(
         fontSize = 42.sp,
@@ -493,8 +676,6 @@ private fun NotifTitleWithEndImageInline(
 ) {
     val inlineId = "title_tail_icon"
 
-    // 把 dp 轉成與 dp 視覺等效的 sp：sp_px = sp * density * fontScale
-    // 希望 sp_px == dp_px = dp * density -> sp = dp / fontScale
     val sizeSp: TextUnit = if (tailSizeDp != null) {
         (tailSizeDp.value / LocalDensity.current.fontScale).sp
     } else {
@@ -504,7 +685,6 @@ private fun NotifTitleWithEndImageInline(
     val rich = remember(text, tailSpaceEm) {
         buildAnnotatedString {
             append(text)
-            // 加些空白，避免文字緊貼圖示
             append(" ")
             appendInlineContent(inlineId, "[icon]")
         }
@@ -519,8 +699,11 @@ private fun NotifTitleWithEndImageInline(
                     placeholderVerticalAlign = PlaceholderVerticalAlign.Center
                 )
             ) {
-                // 不加 tint -> 保留原本色彩
-                Image(painter = painterResource(id = tailRes), contentDescription = null)
+                Image(
+                    painter = painterResource(id = tailRes),
+                    contentDescription = null,
+                    modifier = Modifier.offset(y = 3.dp)
+                )
             }
         )
     }
@@ -541,15 +724,14 @@ private fun NotifTitleWithEndImageInline(
 
 private fun isNotificationsEnabled(context: Context): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        ContextCompat.checkSelfPermission(
-            context,
-            POST_NOTIFICATIONS
-        ) == PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(context, PERM_POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
     } else {
         NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 }
 
+@Suppress("SameParameterValue")
 private fun isPermissionInManifest(context: Context, permission: String): Boolean = try {
     val pm = context.packageManager
     val pkg = context.packageName
@@ -568,7 +750,7 @@ private fun isPermissionInManifest(context: Context, permission: String): Boolea
 }
 
 @Composable
-private fun s(id: Int, fallback: String): String =
+private fun verifyTitle(id: Int, fallback: String): String =
     runCatching { stringResource(id) }.getOrElse { fallback }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {

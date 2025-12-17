@@ -9,19 +9,16 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
-import com.calai.app.ui.BiteCalApp
-import com.calai.app.data.auth.store.UserProfileStore
+import com.calai.app.data.profile.repo.UserProfileStore
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @Volatile private var splashUnlocked = false
-    private val fallbackMs = 350L
     private var fuseJob: Job? = null
 
     private fun logPoint(tag: String) {
@@ -48,11 +45,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        fuseJob = lifecycleScope.launch {
-            delay(fallbackMs)
-            unlockSplash("fallback-${fallbackMs}ms")
-        }
-
         setContent {
             FirstFrameUnlock {
                 unlockSplash("first-frame")
@@ -61,7 +53,6 @@ class MainActivity : ComponentActivity() {
             logPoint("setContent-enter")
             BiteCalApp(hostActivity = this)
         }
-
         logPoint("onCreate:end")
     }
 

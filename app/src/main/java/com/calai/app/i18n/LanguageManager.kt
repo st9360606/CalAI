@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/i18n/LanguageManager.kt
 package com.calai.app.i18n
 
 import androidx.appcompat.app.AppCompatDelegate
@@ -6,8 +5,7 @@ import androidx.core.os.LocaleListCompat
 import java.util.Locale
 
 object LanguageManager {
-
-    /** 將輸入標籤正規化為 Android 資源友善形式（zh-TW/zh-CN/en-US…） */
+    /** 將輸入標籤正規化為 Android 資源友善形式（zh-TW/zh-HK/zh-CN/en-US…） */
     private fun normalizeTag(raw: String?): String {
         val input = (raw ?: "").trim()
         if (input.isEmpty()) return "en-US"
@@ -20,15 +18,15 @@ object LanguageManager {
                 "-tw" in lower -> "zh-TW"
                 "-hk" in lower -> "zh-HK"
                 "-mo" in lower -> "zh-MO"
-                "-cn" in lower || "-sg" in lower -> "zh-CN"
+                "-cn" in lower || "-sg" in lower || "-hans" in lower -> "zh-CN"
+                "-hant" in lower -> "zh-TW"
                 else -> "zh-TW" // 只有 zh → 依你的市場預設台灣
             }
         }
 
-        // 英文慣例
         if (lower.startsWith("en")) return "en-US"
 
-        // 其他語言交給 Locale 正規化
+        // 其他語言交給 Locale 正規化（支援 he/fil/nb 等）
         val tag = Locale.forLanguageTag(input).toLanguageTag()
         return if (tag.isBlank()) "en-US" else tag
     }

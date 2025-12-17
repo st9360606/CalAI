@@ -11,7 +11,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,7 +43,7 @@ import com.calai.app.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
 
 // 控制每個 item 佔用的寬度比例（置中）
-private const val OPTION_WIDTH_FRACTION = 0.90f
+private const val OPTION_WIDTH_FRACTION = 0.86f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,8 +58,7 @@ fun ReferralSourceScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -59,7 +67,7 @@ fun ReferralSourceScreen(
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -70,6 +78,20 @@ fun ReferralSourceScreen(
                                 tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 2,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -87,20 +109,29 @@ fun ReferralSourceScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
                         .height(64.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.continue_text),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -110,16 +141,6 @@ fun ReferralSourceScreen(
                 .fillMaxSize()
                 .padding(inner)
         ) {
-            OnboardingProgress(
-                stepIndex = 2,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
-
-            Spacer(Modifier.height(6.dp))
-
             Text(
                 text = stringResource(id = R.string.onboard_referral_title),
                 fontSize = 34.sp,
@@ -128,20 +149,20 @@ fun ReferralSourceScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 15.dp),
+                    .padding(horizontal = 18.dp),
                 textAlign = TextAlign.Center
             )
 
+            Spacer(Modifier.height(16.dp))
+
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(
                     items = state.options,
                     key = { it.key }
                 ) { opt ->
-                    // 置中 + 縮窄寬度
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -150,11 +171,10 @@ fun ReferralSourceScreen(
                             option = opt,
                             selected = state.selected == opt.key,
                             onClick = { vm.select(opt.key) },
-                            modifier = Modifier
-                                .fillMaxWidth(OPTION_WIDTH_FRACTION)
+                            modifier = Modifier.fillMaxWidth(OPTION_WIDTH_FRACTION)
                         )
                     }
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(16.dp))
                 }
             }
         }
@@ -177,16 +197,16 @@ private fun ReferralOptionItem(
 
     Row(
         modifier = modifier
-            .height(72.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .height(75.dp)
+            .clip(RoundedCornerShape(14.dp))
             .background(bg)
             .clickable(
                 interactionSource = interaction,
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 18.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 24.dp, end = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
     ) {
         // 固定純白圓底
         Box(
@@ -213,7 +233,8 @@ private fun ReferralOptionItem(
             text = option.label,
             color = fg,
             fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
         )
     }
 }
