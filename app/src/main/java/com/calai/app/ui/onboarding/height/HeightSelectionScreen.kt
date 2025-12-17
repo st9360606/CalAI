@@ -173,7 +173,7 @@ fun HeightSelectionScreen(
                     .padding(horizontal = 24.dp),
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(65.dp))
             // 切換單位：只更新顯示值；不改 cmVal
             UnitSegmented(
                 useMetric = useMetric,
