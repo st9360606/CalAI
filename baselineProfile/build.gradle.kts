@@ -24,8 +24,8 @@ android {
 
     // JVM 統一，避免前面碰到的 1.8 / 21 不一致
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 }
 
@@ -41,5 +41,5 @@ dependencies {
 
 // ★ Kotlin Toolchain 統一 17
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
