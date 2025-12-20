@@ -110,7 +110,7 @@
     <!-- notifications -->
     <string name="allow_notifications_cta">允許通知</string>
     <string name="notif_title">每一餐都算數</string>
-    <string name="notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓每日的熱量與三大營養素更準確、進度更清晰。偶爾的放鬆或小失手很正常，有提醒就能更快回到你的計畫裡，把努力穩穩累積起來。</string>
+    <string name="notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓你的熱量、三大營養素與進度保持在正軌。偶爾忘記很正常；及時提醒能幫你更快回到節奏。</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
     <string name="open_notification_settings">開啟通知設定</string>

@@ -5,11 +5,9 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +15,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,6 +65,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
+import androidx.core.net.toUri
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
@@ -79,7 +79,6 @@ fun HealthConnectIntroScreen(
     onBack: () -> Unit,
     onSkip: () -> Unit,
     onConnected: () -> Unit,
-    @DrawableRes centerImageRes: Int = R.drawable.health_connect_logo
 ) {
     val ctx = LocalContext.current
 
@@ -95,16 +94,16 @@ fun HealthConnectIntroScreen(
         containerColor = Color.White,
         topBar = {
             TopAppBar(
-                title = {},
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114).copy(alpha = 0.85f)
+                    navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -112,9 +111,23 @@ fun HealthConnectIntroScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color(0xFF111114).copy(alpha = 0.85f)
+                                tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 10,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -137,7 +150,6 @@ fun HealthConnectIntroScreen(
                     } else {
                         val missing = requiredPermissions - granted
                         Log.d(TAG, "Not all permissions granted, missing=$missing")
-                        // ✅ 重點：使用者拒絕/取消 → 直接讓他繼續下一步（不再卡住）
                         onSkip()
                     }
                 }
@@ -192,15 +204,8 @@ fun HealthConnectIntroScreen(
                 .padding(inner)
                 .verticalScroll(rememberScrollState())
         ) {
-            OnboardingProgress(
-                stepIndex = 10,
-                totalSteps = 11,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
 
-            Spacer(Modifier.height(108.dp))
+            Spacer(Modifier.height(100.dp))
 
             val cardCorner = 28.dp
             val cardHeight = 148.dp
@@ -231,7 +236,7 @@ fun HealthConnectIntroScreen(
 
                 Box(cardModifier, contentAlignment = Alignment.Center) {
                     Image(
-                        painter = painterResource(centerImageRes),
+                        painter = painterResource(R.drawable.health_connect_logo),
                         contentDescription = "logo",
                         modifier = Modifier.size(135.dp),
                         contentScale = ContentScale.Fit
@@ -275,7 +280,7 @@ fun HealthConnectIntroScreen(
                 }
             }
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(16.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -335,7 +340,7 @@ private fun HCBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+            .padding(start = 20.dp, end = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -344,7 +349,7 @@ private fun HCBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp),
-            shape = RoundedCornerShape(31.dp),
+            shape = RoundedCornerShape(999.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Black,
                 contentColor = Color.White
@@ -352,8 +357,11 @@ private fun HCBottomBar(
         ) {
             Text(
                 text = stringResource(R.string.continue_text),
-                fontSize = 19.sp,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.2.sp
+                ),
             )
         }
 
@@ -361,8 +369,11 @@ private fun HCBottomBar(
         TextButton(onClick = onSkip) {
             Text(
                 text = stringResource(R.string.skip_text),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.2.sp
+                ),
                 color = Color(0xFF111114).copy(alpha = 0.65f)
             )
         }
@@ -372,8 +383,8 @@ private fun HCBottomBar(
 /* ---------- 其他 ---------- */
 private fun openHealthConnectStore(ctx: Context) {
     val pkg = HC_PROVIDER
-    val market = Uri.parse("market://details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding")
-    val web = Uri.parse("https://play.google.com/store/apps/details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding")
+    val market = "market://details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding".toUri()
+    val web = "https://play.google.com/store/apps/details?id=$pkg&url=healthconnect%3A%2F%2Fonboarding".toUri()
     try {
         ctx.startActivity(Intent(Intent.ACTION_VIEW, market).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (_: ActivityNotFoundException) {

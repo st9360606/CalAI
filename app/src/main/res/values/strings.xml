@@ -110,7 +110,7 @@
     <!-- notifications -->
     <string name="allow_notifications_cta">Allow Notifications</string>
     <string name="notif_title">Make every meal count !</string>
-    <string name="notif_subtitle">Enable notifications and we’ll gently remind you at the right times to log meals consistently—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
+    <string name="notif_subtitle">Enable notifications for gentle reminders to log meals—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
     <string name="onb_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
     <string name="onb_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
     <string name="open_notification_settings">Open notification settings</string>
