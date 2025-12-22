@@ -46,8 +46,8 @@ fun HeightSelectionScreen(
     LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.HeightUnit.CM) }
 
     // ★ cm 為 SSOT，Double 一位小數
-    val CM_MIN = 80.0
-    val CM_MAX = 350.0
+    val cmMin = 80.0
+    val cmMax = 350.0
 
     var cmVal by rememberSaveable(heightCm) {
         mutableDoubleStateOf(roundCm1(heightCm.toDouble()).toDouble())
@@ -146,7 +146,8 @@ fun HeightSelectionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.onboard_height_title),
@@ -170,7 +171,7 @@ fun HeightSelectionScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 48.dp),
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(65.dp))
@@ -191,7 +192,7 @@ fun HeightSelectionScreen(
             if (useMetric) {
                 // ===== CM：整數位 + 小數位 =====
                 val cmTenths = (cmVal * 10.0).toInt()
-                    .coerceIn((CM_MIN * 10).toInt(), (CM_MAX * 10).toInt())
+                    .coerceIn((cmMin  * 10).toInt(), (cmMax * 10).toInt())
                 val cmIntSel = cmTenths / 10
                 val cmDecSel = cmTenths % 10
 
@@ -203,11 +204,11 @@ fun HeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
-                        range = CM_MIN.toInt()..CM_MAX.toInt(),
+                        range = cmMin.toInt()..cmMax.toInt(),
                         value = cmIntSel,
                         onValueChange = { newInt ->
                             val newCm = (newInt * 10 + cmDecSel) / 10.0
-                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                            cmVal = newCm.coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -235,7 +236,7 @@ fun HeightSelectionScreen(
                         value = cmDecSel,
                         onValueChange = { newDec ->
                             val newCm = (cmIntSel * 10 + newDec) / 10.0
-                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                            cmVal = newCm.coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -270,7 +271,7 @@ fun HeightSelectionScreen(
                         onValueChange = { newFeet ->
                             feet = newFeet
                             cmVal = feetInchesToCm1(newFeet, inches)
-                                .coerceIn(CM_MIN, CM_MAX)
+                                .coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -290,7 +291,7 @@ fun HeightSelectionScreen(
                         onValueChange = { newIn ->
                             inches = newIn
                             cmVal = feetInchesToCm1(feet, newIn)
-                                .coerceIn(CM_MIN, CM_MAX)
+                                .coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -416,8 +417,8 @@ private fun NumberWheel(
     unitLabel: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2
+    val visibleCount = 5
+    val mid = visibleCount / 2
     val items = remember(range) { range.toList() }
     val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
@@ -450,12 +451,12 @@ private fun NumberWheel(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(rowHeight * VISIBLE_COUNT)
+            .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {

@@ -152,7 +152,8 @@ fun AgeSelectionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.onboard_age_title),
@@ -176,7 +177,7 @@ fun AgeSelectionScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 48.dp),
                 textAlign = TextAlign.Center
             )
 
@@ -213,15 +214,15 @@ private fun AgeWheel(
     sideAlpha: Float,
     modifier: Modifier = Modifier
 ) {
-    val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2
+    val visibleCount = 5
+    val mid = visibleCount / 2
 
     val items = remember(minAge, maxAge) { (minAge..maxAge).toList() }
     val selectedIdx = remember(value) { (value - minAge).coerceIn(0, items.lastIndex) }
 
     // 讓 selected 一開始出現在正中（僅影響初始）
     val firstForCenter = remember(selectedIdx, items) {
-        (selectedIdx - MID).coerceIn(0, (items.lastIndex - (VISIBLE_COUNT - 1)).coerceAtLeast(0))
+        (selectedIdx - mid).coerceIn(0, (items.lastIndex - (visibleCount - 1)).coerceAtLeast(0))
     }
 
     val state = rememberLazyListState(initialFirstVisibleItemIndex = firstForCenter)
@@ -247,12 +248,12 @@ private fun AgeWheel(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(rowHeight * VISIBLE_COUNT)
+            .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {

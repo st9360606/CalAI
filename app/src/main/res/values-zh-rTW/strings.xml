@@ -79,7 +79,7 @@
     <string name="onboard_height_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
 
     <!-- weight -->
-    <string name="onboard_weight_title">你的體重大約是多少？</string>
+    <string name="onboard_weight_title">你的當前體重是多少？</string>
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_weight_hint">這將用於校準你的自訂計畫。</string>
     <string name="onboard_weight_zero_error">請輸入大於 0 的體重</string>

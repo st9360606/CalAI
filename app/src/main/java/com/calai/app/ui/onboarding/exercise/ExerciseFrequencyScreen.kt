@@ -160,7 +160,8 @@ fun ExerciseFrequencyScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(id = R.string.onboard_ex_freq_title),

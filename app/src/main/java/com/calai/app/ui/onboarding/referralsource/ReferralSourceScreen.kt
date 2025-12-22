@@ -139,7 +139,8 @@ fun ReferralSourceScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(id = R.string.onboard_referral_title),

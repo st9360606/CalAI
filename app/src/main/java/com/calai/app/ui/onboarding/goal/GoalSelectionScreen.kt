@@ -133,7 +133,8 @@ fun GoalSelectionScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.onboard_goal_title),

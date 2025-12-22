@@ -170,7 +170,8 @@ fun GenderSelectionScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.onb_gender_title),

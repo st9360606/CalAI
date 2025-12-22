@@ -60,15 +60,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.profile.repo.UserProfileStore
-import com.calai.app.data.profile.repo.lbsToKg1
 import com.calai.app.data.profile.repo.roundKg1
 import com.calai.app.ui.common.OnboardingProgress
-import kotlin.math.roundToInt
 import java.util.Locale
+import kotlin.math.roundToInt
 import com.calai.app.i18n.LocalLocaleController
 
 private fun isZhLanguageTag(tag: String): Boolean {
-    // tag 可能是 "zh", "zh-TW", "zh-Hant-TW"
     return tag.lowercase(Locale.ROOT).startsWith("zh")
 }
 
@@ -96,72 +94,98 @@ fun WeightSelectionScreen(
     val savedUnit by vm.weightUnitState.collectAsState()
     val weightLbs by vm.weightLbsState.collectAsState()
 
+    // ✅ 是否有 user_profiles（由 VM / Store 提供）
+    // - true  => user_profiles 存在，使用 DB unit_preference
+    // - false => user_profiles 不存在，一律顯示 LBS
+    val hasProfile by vm.hasProfileState.collectAsState()
+
     // kg 範圍
-    val KG_MIN = 20.0
-    val KG_MAX = 800.0
+    val kgMin = 20.0
+    val kgMax = 800.0
 
     // lbs 範圍（由 kg 範圍換算）
-    val LBS_TENTHS_MIN = kgToLbsTenths(KG_MIN)
-    val LBS_TENTHS_MAX = kgToLbsTenths(KG_MAX)
-    val LBS_INT_MIN = LBS_TENTHS_MIN / 10
-    val LBS_INT_MAX = LBS_TENTHS_MAX / 10
+    val lbsTenthsMin = kgToLbsTenths(kgMin)
+    val lbsTenthsMax = kgToLbsTenths(kgMax)
+    val lbsIntMin = lbsTenthsMin / 10
+    val lbsIntMax = lbsTenthsMax / 10
 
-    // 初始顯示單位：優先用已儲存的 weightUnit；預設 LBS
-    var useMetric by rememberSaveable {
-        mutableStateOf(
-            when (savedUnit) {
-                UserProfileStore.WeightUnit.KG -> true
-                UserProfileStore.WeightUnit.LBS -> false
+    // ✅ 預設：LBS + 154.0（只在「user_profiles 不存在」時使用）
+    val defaultLbsTenths = 1540     // 154.0 lbs
+    val defaultKg = lbsTenthsToKgFloor1(defaultLbsTenths).coerceIn(kgMin, kgMax)
+
+    // ✅ 防止使用者手動切換後，被 flow 更新覆蓋
+    var didUserToggleUnit by rememberSaveable { mutableStateOf(false) }
+
+    // ✅ UI 顯示單位（false=LBS, true=KG）
+    // 先預設 LBS；若 hasProfile=true 且尚未手動切換，會被 LaunchedEffect 套用 DB unit_preference
+    var useMetric by rememberSaveable { mutableStateOf(false) }
+
+    // ✅ 初始顯示單位規則：
+    // - user_profiles 不存在 => 一律 LBS
+    // - user_profiles 存在   => 用 DB unit_preference (savedUnit)
+    LaunchedEffect(hasProfile, savedUnit) {
+        if (!didUserToggleUnit) {
+            useMetric = if (!hasProfile) {
+                false
+            } else {
+                savedUnit == UserProfileStore.WeightUnit.KG
             }
-        )
+        }
     }
 
     // === 初始化 kg / lbs（kg 用於計算，lbsTenths 記錄使用者原始 lbs） ===
     data class Initial(val kg: Double, val lbsTenths: Int)
 
-    val initial = remember(weightKg, weightLbs) {
+    val initial = remember(weightKg, weightLbs, hasProfile) {
         val hasLbs = weightLbs > 0f
+        val hasKg = weightKg > 0f
+
         if (hasLbs) {
+            // 有 lbs → 以 lbs 為主
             val lbsVal = weightLbs.toDouble()
             val lbsTenths = (lbsVal * 10.0).roundToInt()
-                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
-            val kgVal = if (weightKg > 0f) {
+            val kgVal = if (hasKg) {
                 weightKg.toDouble()
             } else {
-                lbsToKg1(lbsVal)
-            }.coerceIn(KG_MIN, KG_MAX)
+                lbsToKgPrecise(lbsVal)
+            }.coerceIn(kgMin, kgMax)
+
+            Initial(kgVal, lbsTenths)
+        } else if (hasKg) {
+            // 只有 kg → 由 kg 推 lbsTenths
+            val kgVal = weightKg.toDouble().coerceIn(kgMin, kgMax)
+            val lbsTenths = kgToLbsTenths(kgVal)
+                .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
             Initial(kgVal, lbsTenths)
         } else {
-            val kgValBase = if (weightKg > 0f) weightKg.toDouble() else 65.0
-            val kgVal = kgValBase.coerceIn(KG_MIN, KG_MAX)
-            val lbsTenths = kgToLbsTenths(kgVal)
-                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
-
-            Initial(kgVal, lbsTenths)
+            // ✅ 完全沒資料：
+            // - 若 user_profiles 不存在 => 預設 154.0 lbs
+            // - 若 user_profiles 存在但還沒拉到 weight（理論上不該發生，但保底也給 154.0 lbs）
+            Initial(defaultKg, defaultLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax))
         }
     }
 
-    // valueKg：計算用 kg（0.1 精度）
-    var valueKg by remember(weightKg, weightLbs) {
+    // valueKg：計算用 kg（可能有更多小數，用於最後 roundKg1 存檔）
+    var valueKg by remember(weightKg, weightLbs, hasProfile) {
         mutableDoubleStateOf(initial.kg)
     }
 
     // valueLbsTenths：顯示用 lbs（0.1 精度，用 Int 表示）
-    var valueLbsTenths by remember(weightKg, weightLbs) {
+    var valueLbsTenths by remember(weightKg, weightLbs, hasProfile) {
         mutableIntStateOf(initial.lbsTenths)
     }
 
     // --- kg wheel 選中值（整數＋小數） ---
-    val kgTenths = (valueKg * 10.0).toInt()
-        .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+    val kgTenths = (floor1(valueKg) * 10.0).toInt()
+        .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
     val kgIntSel = kgTenths / 10
     val kgDecSel = kgTenths % 10
 
-    // --- lbs wheel 選中值（整數＋小數），完全由 valueLbsTenths 控制 ---
-    val lbsTenthsClamped = valueLbsTenths
-        .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+    // --- lbs wheel 選中值（整數＋小數） ---
+    val lbsTenthsClamped = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
     val lbsIntSel = lbsTenthsClamped / 10
     val lbsDecSel = lbsTenthsClamped % 10
 
@@ -171,7 +195,8 @@ fun WeightSelectionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+            TopAppBar(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -213,21 +238,17 @@ fun WeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        // 先存 kg（0.1，無條件捨去）
                         val kgToSave = roundKg1(valueKg)
-                            .coerceIn(KG_MIN.toFloat(), KG_MAX.toFloat())
+                            .coerceIn(kgMin.toFloat(), kgMax.toFloat())
                         vm.saveWeightKg(kgToSave)
 
                         if (useMetric) {
-                            // KG 模式：只存 kg，清掉 lbs
                             vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
                             vm.clearWeightLbs()
                         } else {
-                            // LBS 模式：存 kg + 使用者原始 lbs（0.1 精度）
                             vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
                             val lbsToSave =
-                                (valueLbsTenths
-                                    .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX) / 10.0).toFloat()
+                                (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
                             vm.saveWeightLbs(lbsToSave)
                         }
                         onNext()
@@ -266,7 +287,8 @@ fun WeightSelectionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.onboard_weight_title),
@@ -275,8 +297,7 @@ fun WeightSelectionScreen(
                 lineHeight = 40.sp,
                 color = Color(0xFF111114),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                    .fillMaxWidth(0.9f),   // ✅ 給一點左右留白（你也可改 0.85f / 0.8f）
                 textAlign = TextAlign.Center
             )
 
@@ -289,8 +310,7 @@ fun WeightSelectionScreen(
                     lineHeight = 20.sp
                 ),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .fillMaxWidth(0.82f),  // ✅ 副標通常更窄比較好看
                 textAlign = TextAlign.Center
             )
 
@@ -298,12 +318,26 @@ fun WeightSelectionScreen(
 
             WeightUnitSegmented(
                 useMetric = useMetric,
-                onChange = { useMetric = it },
+                onChange = { newUseMetric ->
+                    didUserToggleUnit = true // ✅ 手動切換後，不再自動套用 DB
+
+                    if (newUseMetric) {
+                        // ✅ LBS → KG：無條件捨去到 0.1
+                        val tenths = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
+                        valueKg = lbsTenthsToKgFloor1(tenths).coerceIn(kgMin, kgMax)
+                        // 例：154.0 lbs -> 69.8 kg
+                    } else {
+                        // ✅ KG → LBS：無條件捨去到 0.1
+                        valueLbsTenths = kgToLbsTenths(floor1(valueKg))
+                            .coerceIn(lbsTenthsMin, lbsTenthsMax)
+                        // 例：70.0 kg -> 154.3 lbs
+                    }
+                    useMetric = newUseMetric
+                },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             if (useMetric) {
-                // ===== KG：整數位 + 小數位 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -312,17 +346,12 @@ fun WeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
-                        range = KG_MIN.toInt()..KG_MAX.toInt(),
+                        range = kgMin.toInt()..kgMax.toInt(),
                         value = kgIntSel,
                         onValueChange = { newInt ->
                             val newTenths = (newInt * 10 + kgDecSel)
-                                .coerceIn(
-                                    (KG_MIN * 10).toInt(),
-                                    (KG_MAX * 10).toInt()
-                                )
-                            val newKg = newTenths / 10.0
-                            valueKg = newKg
-                            valueLbsTenths = kgToLbsTenths(newKg)
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
+                            valueKg = newTenths / 10.0
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -332,28 +361,24 @@ fun WeightSelectionScreen(
                             .width(120.dp)
                             .padding(start = 23.dp)
                     )
+
                     Box(
-                        modifier = Modifier.width(18.dp),
+                        Modifier.width(18.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = ".",
                             fontSize = 34.sp,
-                            modifier = Modifier.offset(x = 2.dp)
-                        )
+                            modifier = Modifier.offset(x = 2.dp))
                     }
+
                     NumberWheel(
                         range = 0..9,
                         value = kgDecSel,
                         onValueChange = { newDec ->
                             val newTenths = (kgIntSel * 10 + newDec)
-                                .coerceIn(
-                                    (KG_MIN * 10).toInt(),
-                                    (KG_MAX * 10).toInt()
-                                )
-                            val newKg = newTenths / 10.0
-                            valueKg = newKg
-                            valueLbsTenths = kgToLbsTenths(newKg)
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
+                            valueKg = newTenths / 10.0
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -367,7 +392,6 @@ fun WeightSelectionScreen(
                     Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
-                // ===== LBS：整數位 + 小數位，完全以 valueLbsTenths 為主 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -376,15 +400,15 @@ fun WeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
-                        range = LBS_INT_MIN..LBS_INT_MAX,
+                        range = lbsIntMin..lbsIntMax,
                         value = lbsIntSel,
                         onValueChange = { newInt ->
                             val newTenths = (newInt * 10 + lbsDecSel)
-                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
                             valueLbsTenths = newTenths
+
                             val newLbs = newTenths / 10.0
-                            val newKg = lbsToKg1(newLbs)
-                            valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
+                            valueKg = lbsToKgPrecise(newLbs).coerceIn(kgMin, kgMax)
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -394,6 +418,7 @@ fun WeightSelectionScreen(
                             .width(120.dp)
                             .padding(start = 20.dp)
                     )
+
                     Box(
                         modifier = Modifier.width(18.dp),
                         contentAlignment = Alignment.Center
@@ -404,17 +429,17 @@ fun WeightSelectionScreen(
                             modifier = Modifier.offset(x = 4.dp)
                         )
                     }
+
                     NumberWheel(
                         range = 0..9,
                         value = lbsDecSel,
                         onValueChange = { newDec ->
-                            val intPart = lbsIntSel
-                            val newTenths = (intPart * 10 + newDec)
-                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                            val newTenths = (lbsIntSel * 10 + newDec)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
                             valueLbsTenths = newTenths
+
                             val newLbs = newTenths / 10.0
-                            val newKg = lbsToKg1(newLbs)
-                            valueKg = newKg.coerceIn(KG_MIN, KG_MAX)
+                            valueKg = lbsToKgPrecise(newLbs).coerceIn(kgMin, kgMax)
                         },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
@@ -493,6 +518,7 @@ private fun SegItem(
 ) {
     val corner = 22.dp
     val fSize = 18.sp
+
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(corner),
@@ -529,11 +555,12 @@ private fun NumberWheel(
     centerTextSize: TextUnit,
     textSize: TextUnit,
     sideAlpha: Float,
-    unitLabel: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,      // ✅ modifier 放第一個 optional
+    unitLabel: String? = null           // ✅ 其他 optional 往後放
 ) {
-    val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2
+    val visibleCount = 5
+    val mid = visibleCount / 2
+
     val items = remember(range) { range.toList() }
     val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
@@ -558,6 +585,7 @@ private fun NumberWheel(
             }?.index ?: selectedIdx
         }
     }
+
     LaunchedEffect(centerIndex, initialized) {
         if (initialized) onValueChange(items[centerIndex])
     }
@@ -565,12 +593,12 @@ private fun NumberWheel(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(rowHeight * VISIBLE_COUNT)
+            .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
@@ -611,6 +639,7 @@ private fun NumberWheel(
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2
         val lineThickness = 1.dp
+
         Box(
             Modifier
                 .align(Alignment.Center)
@@ -630,8 +659,22 @@ private fun NumberWheel(
     }
 }
 
-/* ---------------------------- 換算工具 ---------------------------- */
+/* ---------------------------- 換算工具（精準 + 無條件捨去到 0.1） ---------------------------- */
+private const val KG_PER_LB = 0.45359237
+private const val LBS_PER_KG = 1.0 / KG_PER_LB
+private const val EPS = 1e-9
 
-// 1 kg = 2.2 lbs；以「0.1 lbs」為刻度，無條件捨去
+// 無條件捨去到 0.1（避免浮點誤差導致 69.799999 -> 69.7）
+private fun floor1(v: Double): Double =
+    kotlin.math.floor((v + EPS) * 10.0) / 10.0
+
+private fun lbsToKgPrecise(lbs: Double): Double =
+    lbs * KG_PER_LB
+
+// 154.0 lbs -> 69.8 kg（floor 0.1）
+private fun lbsTenthsToKgFloor1(lbsTenths: Int): Double =
+    floor1((lbsTenths / 10.0) * KG_PER_LB)
+
+// 70.0 kg -> 154.3 lbs（floor 0.1） => 回傳 1543
 private fun kgToLbsTenths(kg: Double): Int =
-    (kg * 2.2 * 10.0).toInt()
+    ((kg * LBS_PER_KG + EPS) * 10.0).toInt()
