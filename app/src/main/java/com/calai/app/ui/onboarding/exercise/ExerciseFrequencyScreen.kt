@@ -56,7 +56,7 @@ private const val OPTION_WIDTH_FRACTION = 0.86f
 
 private data class ExerciseUiOption(
     val value: Int,                 // 0 / 2 / 4 / 6 / 7
-    @DrawableRes val iconRes: Int,
+    @field:DrawableRes val iconRes: Int,
     val titleRes: Int,
     val subRes: Int
 )

@@ -57,6 +57,7 @@ import com.calai.app.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,9 +76,9 @@ fun GenderSelectionScreen(
     val currentTag = composeLocale.tag.ifBlank { Locale.getDefault().toLanguageTag() }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
-    var showLang by remember { mutableStateOf(false) }
-    var switching by remember { mutableStateOf(false) }
-
+    var showLang by rememberSaveable { mutableStateOf(false) }
+    var switching by rememberSaveable { mutableStateOf(false) }
+    val closeLangDialog = remember { { showLang = false } }
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -243,7 +244,7 @@ fun GenderSelectionScreen(
             onPick = { picked ->
                 if (switching) return@LanguageDialog
                 switching = true
-                showLang = false
+                closeLangDialog()
                 scope.launch {
                     composeLocale.set(picked.tag)
                     LanguageManager.applyLanguage(picked.tag)
@@ -251,7 +252,7 @@ fun GenderSelectionScreen(
                     switching = false
                 }
             },
-            onDismiss = { showLang = false },
+            onDismiss = closeLangDialog,
             widthFraction = 0.92f,     // 92% 的螢幕寬
             maxHeightFraction = 0.60f  // 60% 的螢幕高
         )
