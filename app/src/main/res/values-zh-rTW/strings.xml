@@ -136,7 +136,7 @@
     <string name="progress_item_health_score">健康指數</string>
 
     <!-- plan -->
-    <string name="plan_title_congrats">恭喜！</string>
+    <string name="plan_title_congrats">恭喜!</string>
     <string name="plan_subtitle_ready">你的個人健康計畫已完成！</string>
     <string name="plan_edit_anytime">每日攝取量已根據您的目標進行客製化</string>
 

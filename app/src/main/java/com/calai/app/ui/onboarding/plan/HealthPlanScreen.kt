@@ -203,17 +203,12 @@ fun HealthPlanScreen(
         ) {
             Spacer(Modifier.height(3.dp))
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.plan_title_congrats),
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    textAlign = TextAlign.Center
-                )
-            }
+            Text(
+                text = stringResource(R.string.plan_title_congrats),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
 
             Spacer(Modifier.height(8.dp))
 
@@ -401,6 +396,7 @@ private fun HydrationAndWeightRings(
             val progress = min(lbs / 330f, 1f)
             text to progress
         }
+
         UserProfileStore.WeightUnit.KG -> {
             val kg = displayWeight ?: ((weightKg * 10f).toInt() / 10f)
             val text = String.format(Locale.getDefault(), "%.1f kg", kg)
@@ -554,8 +550,18 @@ private fun BmiCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 val bmiText = remember(bmi) { String.format(Locale.getDefault(), "%.1f", bmi) }
-                Text(bmiText, fontSize = 42.sp, fontWeight = FontWeight.ExtraBold, color = valueTone)
-                Text(displayLabel, color = valueTone, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    bmiText,
+                    fontSize = 42.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = valueTone
+                )
+                Text(
+                    displayLabel,
+                    color = valueTone,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
             Box(
                 modifier = Modifier
@@ -611,7 +617,9 @@ private fun BmiCard(
         trackMealsIconRes = R.drawable.ic_dish2,
         mealBalanceIconRes = R.drawable.ic_meal_balance,
         bookIconRes = R.drawable.ic_book,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 34.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 34.dp),
         onSeeMore = { /* TODO */ }
     )
 }
