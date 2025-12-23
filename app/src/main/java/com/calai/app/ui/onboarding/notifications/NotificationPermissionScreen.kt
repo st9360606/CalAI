@@ -1,6 +1,5 @@
 package com.calai.app.ui.onboarding.notifications
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -18,7 +17,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -97,7 +95,6 @@ private const val TAG_NOTIF = "NotifPerm"
  */
 private const val PERM_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationPermissionScreen(
@@ -160,18 +157,15 @@ fun NotificationPermissionScreen(
             )
         },
         bottomBar = {
-            // ★ 在 Composable 這裡先取得所需變數，lambda 內只使用這些捕獲值
             val bottomCtx = LocalContext.current
             val lifecycleOwner = LocalLifecycleOwner.current
             val bottomActivity = remember(bottomCtx) { bottomCtx.findActivity() as? ComponentActivity }
 
-            // 1) 依序嘗試從三個來源取得可用的 RegistryOwner
             val ownerFromLocal = LocalActivityResultRegistryOwner.current
             val ownerFromLifecycle = lifecycleOwner as? ActivityResultRegistryOwner
             val effectiveOwner: ActivityResultRegistryOwner? =
                 ownerFromLocal ?: ownerFromLifecycle ?: bottomActivity
 
-            // 2) 僅在 33+、有宣告、尚未授權時需要彈窗
             val shouldRequest =
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         isPermissionInManifest(bottomCtx, PERM_POST_NOTIFICATIONS) &&
@@ -188,12 +182,10 @@ fun NotificationPermissionScreen(
 
             when {
                 shouldRequest && effectiveOwner != null -> {
-                    // 3) 只有在拿到 owner 時才提供並建立 launcher
                     CompositionLocalProvider(LocalActivityResultRegistryOwner provides effectiveOwner) {
                         val launcher = rememberLauncherForActivityResult(
                             contract = ActivityResultContracts.RequestPermission()
                         ) { _ ->
-                            // ★ 需求：允許或不允許 → 一律往下一頁，不開設定頁
                             onNext()
                         }
 
@@ -205,7 +197,6 @@ fun NotificationPermissionScreen(
                 }
 
                 else -> {
-                    // 無 owner / 已授權 / <33 → 不建 launcher，直接往下一頁
                     NotifBottomBar(
                         granted = isNotificationsEnabled(bottomCtx),
                         onClick = { onNext() }
@@ -214,6 +205,14 @@ fun NotificationPermissionScreen(
             }
         }
     ) { inner ->
+        val config = androidx.compose.ui.platform.LocalConfiguration.current
+        val screenWidth = config.screenWidthDp.dp
+
+        // 你這裡固定左右 padding 20.dp，所以可用寬度約等於 screenWidth - 40.dp
+        val availableWidth = (screenWidth - 40.dp).coerceAtLeast(0.dp)
+        val panelWidth = availableWidth * 0.84f
+        val panelHeight = (panelWidth * 1.20f).coerceIn(360.dp, 620.dp)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -222,15 +221,13 @@ fun NotificationPermissionScreen(
         ) {
             Spacer(Modifier.height(20.dp))
 
-            // ===== iOS 鎖屏風格 + 與外框同寬的標題/副標 =====
-            BoxWithConstraints(
+            // ✅ 改成 Box + LocalConfiguration 計算，避免 BoxWithConstraints 的 UiComposable 問題
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.TopCenter
             ) {
-                val panelWidth = maxWidth * 0.84f
-                val panelHeight = (panelWidth * 1.20f).coerceIn(360.dp, 620.dp)
-
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -289,6 +286,7 @@ fun NotificationPermissionScreen(
                     )
                 }
             }
+
             Spacer(Modifier.height(16.dp))
         }
     }
