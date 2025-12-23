@@ -198,7 +198,8 @@ fun HealthPlanScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .verticalScroll(scroll)
+                .verticalScroll(scroll),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(3.dp))
 
@@ -621,11 +622,11 @@ fun GoalsHowToSection(
     @DrawableRes trackMealsIconRes: Int,
     @DrawableRes mealBalanceIconRes: Int,
     @DrawableRes bookIconRes: Int,
-    modifier: Modifier = Modifier,          // ✅ modifier 要是第一個「可選參數」
+    modifier: Modifier = Modifier,
     onSeeMore: () -> Unit = {}
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -639,13 +640,18 @@ fun GoalsHowToSection(
                 Text("🎯", fontSize = 40.sp)
             }
             Spacer(Modifier.height(10.dp))
-            Text(
-                text = stringResource(R.string.plan_goals_title),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                lineHeight = 34.sp,
-                textAlign = TextAlign.Center
-            )
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.plan_goals_title),
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    lineHeight = 34.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -809,7 +815,7 @@ fun ResearchSourcesBlock(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         SourcesHeader(
             bookIconRes = bookIconRes,
