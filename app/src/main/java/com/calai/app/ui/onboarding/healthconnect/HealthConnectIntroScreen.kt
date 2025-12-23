@@ -370,7 +370,7 @@ private fun HCBottomBar(
             Text(
                 text = stringResource(R.string.skip_text),
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.2.sp
                 ),

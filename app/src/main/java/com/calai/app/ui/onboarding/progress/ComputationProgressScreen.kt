@@ -52,13 +52,13 @@ fun ComputationProgressScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 往下推一點
-        Spacer(Modifier.height(160.dp))
+        Spacer(Modifier.height(150.dp))
 
         // ╭──────────────────── 圓形綠色進度條（含百分比） ────────────────────╮
         CircularProgressRing(
             percent = ui.percent,
-            diameter = 220.dp,       // 小一點
-            thickness = 14.dp,
+            diameter = 210.dp,       // 小一點
+            thickness = 13.dp,
             progressColor = Color(0xFF66D36E),
             trackColor = Color(0xFFE6E9EE),
             percentColor = Color(0xFF111114),
@@ -96,7 +96,7 @@ fun ComputationProgressScreen(
             },
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontSize = 16.sp,
-                color = Color(0xFF6B7280)
+                color = Color(0xFF222326)
             ),
             textAlign = TextAlign.Center
         )
@@ -181,7 +181,7 @@ private fun ProgressItem(label: String, checked: Boolean) {
                     val p2 = Offset(w * 0.42f, h * 0.75f)
                     val p3 = Offset(w * 0.80f, h * 0.28f)
 
-                    val stroke = 2.7.dp.toPx()   // ← 關鍵：DrawScope 的 Dp.toPx()
+                    val stroke = 2.0.dp.toPx()   // ← 關鍵：DrawScope 的 Dp.toPx()
 
                     drawLine(
                         color = Color.White,

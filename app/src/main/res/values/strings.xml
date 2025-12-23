@@ -137,9 +137,9 @@
     <string name="progress_item_health_score">Health score</string>
 
     <!-- plan -->
-    <string name="plan_title_congrats">Awesome!</string>
-    <string name="plan_subtitle_ready">Your personal health plan is ready.</string>
-    <string name="plan_edit_anytime">Daily intake has been customized according to your goal.</string>
+    <string name="plan_title_congrats">Congratulations!</string>
+    <string name="plan_subtitle_ready">Your personal health plan is ready!</string>
+    <string name="plan_edit_anytime">You can edit this anytime.</string>
 
     <string name="plan_macros_carbs">Carbs</string>
     <string name="plan_macros_proteins">Protein</string>

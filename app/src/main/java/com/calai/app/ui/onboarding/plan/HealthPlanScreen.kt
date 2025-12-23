@@ -34,6 +34,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -153,10 +154,13 @@ fun HealthPlanScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 59.dp)
+                        .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
                         .fillMaxWidth()
-                        .height(70.dp),
-                    shape = RoundedCornerShape(28.dp),
+                        .height(64.dp)
+                        .semantics {
+                            stateDescription = if (starting) "loading" else "idle"
+                        },
+                    shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White,
@@ -164,19 +168,28 @@ fun HealthPlanScreen(
                         disabledContentColor = Color.White
                     )
                 ) {
-                    if (starting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                        Spacer(Modifier.width(10.dp))
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (starting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.plan_cta_start),
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    letterSpacing = 0.2.sp
+                                ),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
-                    Text(
-                        text = stringResource(R.string.plan_cta_start),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
                 }
             }
         }
@@ -187,23 +200,33 @@ fun HealthPlanScreen(
                 .padding(inner)
                 .verticalScroll(scroll)
         ) {
+            Spacer(Modifier.height(3.dp))
+
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.plan_title_congrats),
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
 
-            Text(
-                text = stringResource(R.string.plan_title_congrats),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
+            Box(
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.plan_subtitle_ready),
-                color = NeutralText,
-                fontSize = 18.sp,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.plan_subtitle_ready),
+                    color = NeutralText,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
 
             Box(Modifier.offset(y = (-10).dp)) {
                 DonutMacros(
@@ -214,7 +237,7 @@ fun HealthPlanScreen(
                 )
             }
 
-            Box(Modifier.offset(y = (-20).dp)) {
+            Box(Modifier.offset(y = (-14).dp)) {
                 MacrosRings(plan)
             }
 
@@ -228,15 +251,15 @@ fun HealthPlanScreen(
                 displayGoal = ui.goalWeightDisplay
             )
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(20.dp))
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = stringResource(R.string.plan_edit_anytime),
-                    color = Color(0xFF9AA3AF),
-                    fontSize = 12.sp,
+                    color = NeutralText.copy(alpha = 0.85f),
+                    fontSize = 13.sp,
                     modifier = Modifier.fillMaxWidth(0.55f),
                     textAlign = TextAlign.Center
                 )
@@ -571,17 +594,18 @@ private fun BmiCard(
         }
     }
 
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(22.dp))
     Text(
         text = stringResource(R.string.plan_disclaimer),
         color = Color(0xFF9AA3AF),
         fontSize = 12.sp,
+        textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp)
+            .padding(horizontal = 48.dp) // 原本 32.dp → 改更大
     )
 
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(20.dp))
     GoalsHowToSection(
         trackMealsIconRes = R.drawable.ic_dish2,
         mealBalanceIconRes = R.drawable.ic_meal_balance,
