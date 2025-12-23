@@ -419,22 +419,11 @@ fun BiteCalNavHost(
         }
 
         // =====★ 調整這一段：在 route 外層提供 ActivityResultRegistryOwner ★=====
-        composable(Routes.ONBOARD_NOTIF) { backStackEntry ->
+        composable(Routes.ONBOARD_NOTIF) {
             val ctx = LocalContext.current
-            // 1) 優先取當前 Activity；2) 退回用你外層傳入的 hostActivity
-            val owner: ActivityResultRegistryOwner? =
-                (ctx.findActivity() as? ComponentActivity) ?: hostActivity
+            val owner: ActivityResultRegistryOwner = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
 
-            if (owner != null) {
-                CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
-                    NotificationPermissionScreen(
-                        onBack = { nav.safePopBackStack() },
-                        onNext = { nav.navigate(Routes.ONBOARD_HEALTH_CONNECT) { launchSingleTop = true } }
-                    )
-                }
-            } else {
-                // 極少數情境（例如 Preview 或特殊容器）取不到 owner：畫面照常顯示，
-                // 你的 NotificationPermissionScreen 會走「不建 launcher → 直接 onNext()」路徑，不會崩。
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
                 NotificationPermissionScreen(
                     onBack = { nav.safePopBackStack() },
                     onNext = { nav.navigate(Routes.ONBOARD_HEALTH_CONNECT) { launchSingleTop = true } }
@@ -442,9 +431,9 @@ fun BiteCalNavHost(
             }
         }
 
-        composable(Routes.ONBOARD_HEALTH_CONNECT) { backStackEntry ->
+        composable(Routes.ONBOARD_HEALTH_CONNECT) {
             val ctx = LocalContext.current
-            val activity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity  // 你專案裡已經有 hostActivity 的話，這行可留作備援
+            val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
 
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides activity) {
                 HealthConnectIntroScreen(
@@ -568,7 +557,7 @@ fun BiteCalNavHost(
                         }
                     }
                 },
-                snackbarHostState = snackbarHostState
+                snackBarHostState = snackbarHostState
             )
 
             key(localeKey) {

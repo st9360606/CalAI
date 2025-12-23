@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +35,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,47 +52,38 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.ui.common.OnboardingProgress
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 
-private enum class PrimaryAuthMethod {
-    Google,
-    Email
-}
+private enum class PrimaryAuthMethod { Google, Email }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequireSignInScreen(
     onBack: () -> Unit,
-    onGoogleClick: () -> Unit,   // 開啟 SignInSheetHost（Google 起頭）
-    onEmailClick: () -> Unit,    // 開啟 SignInSheetHost（Email 起頭）
+    onGoogleClick: () -> Unit,
+    onEmailClick: () -> Unit,
     onSkip: () -> Unit,
-    snackbarHostState: SnackbarHostState,
-    progressStepIndex: Int = 11, // 可選：與 Onboarding 一致的進度條（null = 不顯示）
-    progressTotalSteps: Int = 11,
-    ctaVerticalOffset: Dp = (-24).dp // ★ 新增：中間 CTA 區塊的垂直位移（負值＝往上移）
+    snackBarHostState: SnackbarHostState,
+    ctaVerticalOffset: Dp = (-24).dp
 ) {
     val ink = Color(0xFF111114)
     var primaryAuth by remember { mutableStateOf(PrimaryAuthMethod.Google) }
+
     BackHandler { onBack() }
 
     Scaffold(
         containerColor = Color.White,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
-            TopAppBar(
-                title = {},
+            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
-                    navigationIconContentColor = ink
+                    navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
-                                .size(39.dp)
+                                .size(46.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFFF1F3F7)),
                             contentAlignment = Alignment.Center
@@ -95,9 +91,23 @@ fun RequireSignInScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = ink
+                                tint = Color(0xFF111114)
                             )
                         }
+                    }
+                },
+                title = {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OnboardingProgress(
+                            stepIndex = 11,
+                            totalSteps = 11,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             )
@@ -106,19 +116,12 @@ fun RequireSignInScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(inner)
+                .padding(inner),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 進度條（可選）
-            OnboardingProgress(
-                stepIndex = progressStepIndex,
-                totalSteps = progressTotalSteps,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-            )
+
             Spacer(Modifier.height(6.dp))
 
-            // 標題
             Text(
                 text = stringResource(R.string.auth_sign_in_account_title),
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -133,7 +136,6 @@ fun RequireSignInScreen(
                     .fillMaxWidth()
             )
 
-            // 中間 CTA 區塊：預設置中，並往上微移
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -143,13 +145,12 @@ fun RequireSignInScreen(
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset(y = ctaVerticalOffset) // ★ 往上移一點
+                        .offset(y = ctaVerticalOffset)
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // --- Sign in with Google ---
+                    // --- Google ---
                     if (primaryAuth == PrimaryAuthMethod.Google) {
-                        // 主 CTA：黑底白字
                         Button(
                             onClick = {
                                 primaryAuth = PrimaryAuthMethod.Google
@@ -194,7 +195,6 @@ fun RequireSignInScreen(
                             }
                         }
                     } else {
-                        // 次要 CTA：Outlined（樣式類似 Skip）
                         OutlinedButton(
                             onClick = {
                                 primaryAuth = PrimaryAuthMethod.Google
@@ -205,9 +205,7 @@ fun RequireSignInScreen(
                                 .height(64.dp),
                             shape = RoundedCornerShape(100.dp),
                             contentPadding = PaddingValues(horizontal = 20.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = ink
-                            )
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = ink)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -241,9 +239,8 @@ fun RequireSignInScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // --- Sign in with Email ---
+                    // --- Email ---
                     if (primaryAuth == PrimaryAuthMethod.Email) {
-                        // 主 CTA：黑底白字
                         Button(
                             onClick = {
                                 primaryAuth = PrimaryAuthMethod.Email
@@ -279,7 +276,6 @@ fun RequireSignInScreen(
                             }
                         }
                     } else {
-                        // 次要 CTA：Outlined（初始狀態會走這裡，樣式類似 Skip）
                         OutlinedButton(
                             onClick = {
                                 primaryAuth = PrimaryAuthMethod.Email
@@ -290,9 +286,7 @@ fun RequireSignInScreen(
                                 .height(64.dp),
                             shape = RoundedCornerShape(100.dp),
                             contentPadding = PaddingValues(horizontal = 20.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = ink
-                            )
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = ink)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -317,7 +311,7 @@ fun RequireSignInScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // --- Skip 按鈕（維持原本樣式） ---
+                    // --- Skip ---
                     OutlinedButton(
                         onClick = onSkip,
                         modifier = Modifier
@@ -337,7 +331,6 @@ fun RequireSignInScreen(
                     }
                 }
             }
-
             Spacer(Modifier.navigationBarsPadding())
         }
     }
