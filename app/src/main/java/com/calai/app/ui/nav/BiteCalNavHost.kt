@@ -855,6 +855,16 @@ fun BiteCalNavHost(
             val homeUi by homeVm.ui.collectAsState()
             val pUi by personalVm.ui.collectAsState()
 
+            // ✅ 讓 PERSONAL 也能顯示「上一頁回傳」的 toast（例如 EditNutritionGoals 回來）
+            val successFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
+            }
+            val errorFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.ERROR_TOAST, null)
+            }
+            val navSuccess by successFlow.collectAsState(initial = null)
+            val navError by errorFlow.collectAsState(initial = null)
+
             // ✅ 1) UsersApi 的 pictureUrl 優先
             val avatarFromUsersApi = remember(pUi.pictureUrl) {
                 toHttpUriOrNull(pUi.pictureUrl)
@@ -866,47 +876,68 @@ fun BiteCalNavHost(
             // ✅ 3) UsersApi 的 name
             val nameText = pUi.name?.takeIf { it.isNotBlank() } ?: "—"
 
-            // ✅ 4) age 先用 ProfileApi 回來的（你目前就是這樣）
+            // ✅ 4) age 先用 ProfileApi 回來的
             val ageText = pUi.profile?.age?.let { "$it years old" } ?: "—"
 
-            PersonalScreen(
-                avatarUrl = avatar,
-                profileName = nameText,
-                ageText = ageText,
-                currentTab = HomeTab.Personal,
-                onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
-                onOpenTab = { tab ->
-                    when (tab) {
-                        HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
-                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
-                        HomeTab.Daily -> nav.navigate(Routes.DAILY) { launchSingleTop = true; restoreState = true }
-                        HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
-                        HomeTab.Personal -> Unit
+            Box(Modifier.fillMaxSize()) {
+                PersonalScreen(
+                    avatarUrl = avatar,
+                    profileName = nameText,
+                    ageText = ageText,
+                    currentTab = HomeTab.Personal,
+                    onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
+                    onOpenTab = { tab ->
+                        when (tab) {
+                            HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Daily -> nav.navigate(Routes.DAILY) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Personal -> Unit
+                        }
+                    },
+                    onOpenAdjustMacros = {
+                        nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    },
+                    onOpenGoalAndCurrentWeight = {
+                        nav.navigate(Routes.PERSONAL_DETAILS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onOpenWeightHistory = {
+                        nav.navigate(Routes.WEIGHT) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
+                )
+
+                when {
+                    !navError.isNullOrBlank() -> {
+                        ErrorTopToast(message = navError!!, modifier = Modifier.align(Alignment.TopCenter))
+                        LaunchedEffect(navError) {
+                            delay(2_000)
+                            backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
+                        }
                     }
-                },
-                // ✅ Adjust macronutrients → Edit nutrition goals
-                onOpenAdjustMacros = {
-                    nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
-                        launchSingleTop = true
-                        restoreState = false
+                    !navSuccess.isNullOrBlank() -> {
+                        SuccessTopToast(
+                            message = navSuccess!!,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            minWidth = 150.dp,
+                            minHeight = 30.dp
+                        )
+                        LaunchedEffect(navSuccess) {
+                            delay(2_000)
+                            backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
+                        }
                     }
-                },
-                // ✅ Goal & current weight → Personal Details
-                onOpenGoalAndCurrentWeight = {
-                    nav.navigate(Routes.PERSONAL_DETAILS) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                // ✅ Weight history → Weight
-                onOpenWeightHistory = {
-                    nav.navigate(Routes.WEIGHT) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
-            )
+                }
+            }
         }
 
         composable(Routes.PERSONAL_DETAILS) { backStackEntry ->
@@ -1111,9 +1142,21 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
             EditNutritionGoalsRoute(
                 onBack = { nav.popBackStack() },
                 onAutoGenerate = { nav.navigate(Routes.AUTO_GENERATE_GOALS) },
+                onSaved = {
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                },
                 vm = vm
             )
         }

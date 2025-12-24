@@ -84,12 +84,23 @@ import com.calai.app.ui.home.ui.personal.details.model.NutritionGoalsViewModel
 fun EditNutritionGoalsRoute(
     onBack: () -> Unit,
     onAutoGenerate: () -> Unit,
+    onSaved: () -> Unit, // ✅ 新增
     vm: NutritionGoalsViewModel
 ) {
     val ui by vm.ui.collectAsState()
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(Unit) { vm.loadIfNeeded() }
+
+    // ✅ 儲存成功 → 跟 EditDailyStepGoalScreen 一樣：回上一頁讓上一頁跳 toast
+    LaunchedEffect(Unit) {
+        vm.events.collect { e ->
+            if (e is NutritionGoalsViewModel.UiEvent.Saved) {
+                focusManager.clearFocus(force = true)
+                onSaved()
+            }
+        }
+    }
 
     val handleBack: () -> Unit = {
         focusManager.clearFocus(force = true)
@@ -283,7 +294,7 @@ private fun EditNutritionGoalsScreen(
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = if (ui.expandedMicros) "▴" else "▾",
-                    fontSize = 18.sp,
+                    fontSize = 22.sp,
                     color = Color(0xFF606A78),
                     fontWeight = FontWeight.Bold
                 )

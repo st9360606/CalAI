@@ -6,8 +6,10 @@ import com.calai.app.data.profile.api.NutritionGoalsManualRequest
 import com.calai.app.data.profile.api.UserProfileDto
 import com.calai.app.data.profile.repo.NutritionGoalsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,10 +49,6 @@ data class NutritionGoalsUiState(
 ) {
     enum class Field { KCAL, PROTEIN, CARBS, FAT, FIBER, SUGAR, SODIUM }
 
-    /**
-     * 只要草稿跟 original 不同就算 dirty
-     * - 草稿不合法也算 dirty（因為使用者確實改了）
-     */
     val isDirty: Boolean
         get() {
             val o = original ?: return false
@@ -65,10 +63,6 @@ data class NutritionGoalsUiState(
         private fun toIntOrNull(s: String): Int? =
             s.trim().takeIf { it.isNotEmpty() }?.toIntOrNull()
 
-        /**
-         * ✅ 核心：全部欄位必填 + 全部 > 0
-         * 回傳 fieldErrors（空 map 代表合法）
-         */
         fun validateAll(d: NutritionGoalsDraft): Map<Field, String> {
             val errors = linkedMapOf<Field, String>()
 
@@ -92,14 +86,10 @@ data class NutritionGoalsUiState(
             return errors
         }
 
-        /**
-         * ✅ 合法才產出；只要任一欄不合法就 null
-         */
         fun parseDraftOrNull(d: NutritionGoalsDraft): NutritionGoals? {
             val errs = validateAll(d)
             if (errs.isNotEmpty()) return null
 
-            // 已驗證非空且 >0，toInt() 安全
             return NutritionGoals(
                 kcal = d.kcal.trim().toInt(),
                 proteinG = d.proteinG.trim().toInt(),
@@ -130,8 +120,15 @@ class NutritionGoalsViewModel @Inject constructor(
     private val repo: NutritionGoalsRepository
 ) : ViewModel() {
 
+    sealed interface UiEvent {
+        data object Saved : UiEvent
+    }
+
     private val _ui = MutableStateFlow(NutritionGoalsUiState())
     val ui: StateFlow<NutritionGoalsUiState> = _ui
+
+    private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val events = _events.asSharedFlow()
 
     fun loadIfNeeded() {
         if (_ui.value.original != null || _ui.value.loading.not()) return
@@ -170,7 +167,7 @@ class NutritionGoalsViewModel @Inject constructor(
             state.copy(
                 draft = transform(state.draft),
                 error = null,
-                fieldErrors = state.fieldErrors - clearField // ✅ 使用者一改就清掉該欄位錯誤
+                fieldErrors = state.fieldErrors - clearField
             )
         }
     }
@@ -197,14 +194,12 @@ class NutritionGoalsViewModel @Inject constructor(
     fun done() {
         val o = _ui.value.original ?: return
 
-        // ✅ 1) 前端驗證：全部必填 + >0
         val fieldErrors = NutritionGoalsUiState.validateAll(_ui.value.draft)
         if (fieldErrors.isNotEmpty()) {
             _ui.update { it.copy(fieldErrors = fieldErrors, error = null) }
             return
         }
 
-        // ✅ 2) 轉成 domain（必定成功）
         val parsed = NutritionGoalsUiState.parseDraftOrNull(_ui.value.draft)
             ?: run {
                 _ui.update { it.copy(error = "Please check your inputs.", fieldErrors = fieldErrors) }
@@ -238,6 +233,8 @@ class NutritionGoalsViewModel @Inject constructor(
                         fieldErrors = emptyMap()
                     )
                 }
+                // ✅ 儲存成功事件（給畫面/導航用）
+                _events.tryEmit(UiEvent.Saved)
             }.onFailure { e ->
                 _ui.update { it.copy(saving = false, error = e.message ?: "Update failed") }
             }
@@ -245,9 +242,7 @@ class NutritionGoalsViewModel @Inject constructor(
     }
 }
 
-/**
- * ✅ 修正：你原本 toDraft() 內不小心把 fiberG 填成 fatG（我直接提供 fixed 版本避免你踩雷）
- */
+/** ✅ fixed 版 toDraft（你原本就有，用這個最安全） */
 private fun NutritionGoalsUiState.Companion.toDraftFixed(g: NutritionGoals): NutritionGoalsDraft {
     return NutritionGoalsDraft(
         kcal = g.kcal.toString(),
