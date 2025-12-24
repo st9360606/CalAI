@@ -20,12 +20,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Settings
@@ -34,7 +34,6 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -62,6 +61,7 @@ import com.calai.app.R
 import com.calai.app.ui.home.HomeTab
 import com.calai.app.ui.home.components.LightHomeBackground
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.ui.components.MainBottomBar
@@ -308,7 +308,7 @@ private fun InviteFriendsCard() {
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                androidx.compose.material3.Icon(Icons.Outlined.Group, contentDescription = null)
+                Icon(Icons.Outlined.Group, contentDescription = null)
                 Spacer(Modifier.size(10.dp))
                 Text(
                     text = "Invite friends",
@@ -374,7 +374,7 @@ private fun PreferencesCard() {
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            androidx.compose.material3.Icon(Icons.Outlined.Settings, contentDescription = null)
+            Icon(Icons.Outlined.Settings, contentDescription = null)
             Spacer(Modifier.size(10.dp))
             Text(
                 text = "Preferences",
@@ -589,7 +589,7 @@ private fun SettingsRow(
             .padding(horizontal = 14.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        androidx.compose.material3.Icon(icon, contentDescription = null)
+        Icon(icon, contentDescription = null)
         Spacer(Modifier.size(12.dp))
         Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
     }
@@ -597,17 +597,15 @@ private fun SettingsRow(
 
 @Composable
 private fun DividerThin() {
-    Divider(color = Color(0xFFE5E7EB), thickness = 1.dp)
+    HorizontalDivider(color = Color(0xFFE5E7EB), thickness = 1.dp)
 }
 
 @Composable
 private fun LogoutButton(onLogout: () -> Unit) {
     OutlinedButton(
         onClick = onLogout,
-
         // ✅ 想「完全沒外框」：直接 border = null 最乾淨
         border = null,
-
         // ✅ Material3：用 ButtonDefaults
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.White,
@@ -616,7 +614,7 @@ private fun LogoutButton(onLogout: () -> Unit) {
         shape = RoundedCornerShape(18.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Icon(Icons.Outlined.Logout, contentDescription = null)
+        Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
         Spacer(Modifier.size(10.dp))
         Text(
             "Logout",

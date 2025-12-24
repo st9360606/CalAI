@@ -23,6 +23,9 @@ interface ProfileApi {
 
     @PUT("/api/v1/users/me/profile/goal-weight")
     suspend fun updateGoalWeight(@Body body: UpdateGoalWeightRequest): UserProfileDto
+
+    @PUT("/api/v1/users/me/profile/nutrition-goals-manual")
+    suspend fun setManualNutritionGoals(@Body body: NutritionGoalsManualRequest)
 }
 
 @Serializable
@@ -93,4 +96,15 @@ data class UpsertProfileRequest(
 data class UpdateGoalWeightRequest(
     val value: Double,
     val unit: String
+)
+
+@Serializable
+data class NutritionGoalsManualRequest(
+    val kcal: Int,
+    val proteinG: Int,
+    val carbsG: Int,
+    val fatG: Int,
+    val fiberG: Int,
+    val sugarG: Int,
+    val sodiumMg: Int
 )

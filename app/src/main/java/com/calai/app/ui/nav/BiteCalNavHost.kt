@@ -94,6 +94,8 @@ import com.calai.app.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.app.ui.onboarding.goalweight.WeightGoalScreen
 import com.calai.app.ui.onboarding.goalweight.WeightGoalViewModel
 import androidx.core.net.toUri
+import com.calai.app.ui.home.ui.personal.details.EditNutritionGoalsRoute
+import com.calai.app.ui.home.ui.personal.details.model.NutritionGoalsViewModel
 
 object Routes {
     const val LANDING = "landing"
@@ -129,6 +131,8 @@ object Routes {
     const val EDIT_AGE = "edit_age"
     const val EDIT_GENDER = "edit_gender"
     const val EDIT_DAILY_STEP_GOAL = "edit_daily_step_goal"
+    const val EDIT_NUTRITION_GOALS = "edit_nutrition_goals"
+    const val AUTO_GENERATE_GOALS = "auto_generate_goals"
 }
 
 object NavResults {
@@ -880,6 +884,13 @@ fun BiteCalNavHost(
                         HomeTab.Personal -> Unit
                     }
                 },
+                // ✅ Adjust macronutrients → Edit nutrition goals
+                onOpenAdjustMacros = {
+                    nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                },
                 // ✅ Goal & current weight → Personal Details
                 onOpenGoalAndCurrentWeight = {
                     nav.navigate(Routes.PERSONAL_DETAILS) {
@@ -1090,6 +1101,30 @@ fun BiteCalNavHost(
                 }
             )
         }
+
+        composable(Routes.EDIT_NUTRITION_GOALS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val vm: NutritionGoalsViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditNutritionGoalsRoute(
+                onBack = { nav.popBackStack() },
+                onAutoGenerate = { nav.navigate(Routes.AUTO_GENERATE_GOALS) },
+                vm = vm
+            )
+        }
+
+        composable(Routes.AUTO_GENERATE_GOALS) {
+            // TODO: 你下一張畫面（先放空也 OK）
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Auto Generate Goals Screen (TODO)")
+            }
+        }
+
 
         composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
