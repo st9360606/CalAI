@@ -17,7 +17,7 @@ class WeightSelectionViewModel @Inject constructor(
 ) : ViewModel() {
 
     /**
-     * ✅ 你要的「是否有 user_profiles」：
+     * ✅ 是否有 user_profiles：
      * 用 DataStore 的 HAS_SERVER_PROFILE 當作是否存在 profile 的旗標。
      * - true  => user_profiles 存在（可用 unit_preference）
      * - false => user_profiles 不存在（初始一律顯示 LBS）
@@ -35,7 +35,6 @@ class WeightSelectionViewModel @Inject constructor(
 
     /**
      * ✅ 沒值時預設 LBS（更符合「沒 profile 一律顯示 LBS」的需求）
-     * 有 profile 時會由 Screen 用 hasProfileState + savedUnit 來決定。
      */
     val weightUnitState = usr.weightUnitFlow
         .map { it ?: WeightUnit.LBS }
@@ -46,6 +45,30 @@ class WeightSelectionViewModel @Inject constructor(
         .map { it ?: 0f }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
 
+    /**
+     * ✅ 關鍵：給 Continue 用（存完再跳頁）
+     * - kg 一律都存（SSOT）
+     * - useMetric=true  => unit=KG、清 lbs
+     * - useMetric=false => unit=LBS、存 lbs
+     */
+    suspend fun saveAll(
+        kgToSave: Float,
+        useMetric: Boolean,
+        lbsToSaveOrNull: Float?
+    ) {
+        usr.setWeightKg(kgToSave)
+
+        if (useMetric) {
+            usr.setWeightUnit(WeightUnit.KG)
+            usr.clearWeightLbs()
+        } else {
+            usr.setWeightUnit(WeightUnit.LBS)
+            // 你 UI 端已確保範圍/精度，這裡只負責寫入
+            usr.setWeightLbs(lbsToSaveOrNull ?: 0f)
+        }
+    }
+
+    // ====== 你原本的 API：保留（但不建議 Continue 用這些） ======
     fun saveWeightKg(kg: Float) = viewModelScope.launch { usr.setWeightKg(kg) }
     fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch { usr.setWeightUnit(u) }
 

@@ -45,6 +45,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,6 +66,12 @@ import com.calai.app.ui.common.OnboardingProgress
 import java.util.Locale
 import kotlin.math.roundToInt
 import com.calai.app.i18n.LocalLocaleController
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 
 private fun isZhLanguageTag(tag: String): Boolean {
     return tag.lowercase(Locale.ROOT).startsWith("zh")
@@ -170,14 +177,15 @@ fun WeightSelectionScreen(
         }
     }
 
-    // valueKg：計算用 kg（可能有更多小數，用於最後 roundKg1 存檔）
-    var valueKg by remember(weightKg, weightLbs, hasProfile) {
-        mutableDoubleStateOf(initial.kg)
-    }
+    var isSaving by rememberSaveable { mutableStateOf(false) }
+    var valueKg by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var valueLbsTenths by rememberSaveable { mutableIntStateOf(0) }
 
-    // valueLbsTenths：顯示用 lbs（0.1 精度，用 Int 表示）
-    var valueLbsTenths by remember(weightKg, weightLbs, hasProfile) {
-        mutableIntStateOf(initial.lbsTenths)
+    LaunchedEffect(initial.kg, initial.lbsTenths, isSaving) {
+        if (!isSaving) {
+            valueKg = initial.kg
+            valueLbsTenths = initial.lbsTenths
+        }
     }
 
     // --- kg wheel 選中值（整數＋小數） ---
@@ -193,6 +201,8 @@ fun WeightSelectionScreen(
 
     val isZh = currentIsZhByAppLocale()
     val subtitleToUnitSpacing = if (isZh) 60.dp else 25.dp
+
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         containerColor = Color.White,
@@ -240,20 +250,30 @@ fun WeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        val kgToSave = roundKg1(valueKg)
-                            .coerceIn(kgMin.toFloat(), kgMax.toFloat())
-                        vm.saveWeightKg(kgToSave)
+                        if (isSaving) return@Button
 
-                        if (useMetric) {
-                            vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
-                            vm.clearWeightLbs()
-                        } else {
-                            vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
-                            val lbsToSave =
-                                (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
-                            vm.saveWeightLbs(lbsToSave)
+                        scope.launch {
+                            isSaving = true
+                            try {
+                                val kgToSave = roundKg1(valueKg)
+                                    .coerceIn(kgMin.toFloat(), kgMax.toFloat())
+
+                                val lbsToSaveOrNull: Float? = if (!useMetric) {
+                                    (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
+                                } else null
+
+                                // ✅ 存完再跳頁（關鍵）
+                                vm.saveAll(
+                                    kgToSave = kgToSave,
+                                    useMetric = useMetric,
+                                    lbsToSaveOrNull = lbsToSaveOrNull
+                                )
+
+                                onNext()
+                            } finally {
+                                isSaving = false
+                            }
                         }
-                        onNext()
                     },
                     enabled = valueKg > 0.0,
                     modifier = Modifier
@@ -557,39 +577,53 @@ private fun NumberWheel(
     centerTextSize: TextUnit,
     textSize: TextUnit,
     sideAlpha: Float,
-    modifier: Modifier = Modifier,      // ✅ modifier 放第一個 optional
-    unitLabel: String? = null           // ✅ 其他 optional 往後放
+    modifier: Modifier = Modifier,
+    unitLabel: String? = null
 ) {
     val visibleCount = 5
     val mid = visibleCount / 2
 
-    val items = remember(range) { range.toList() }
-    val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
+    val values: List<Int> = remember(range) { range.toList() }
+    val count = values.size
+
+    val padded: List<Int?> = remember(range) {
+        List(mid) { null } + values.map { it as Int? } + List(mid) { null }
+    }
+
+    val selectedIdx = ((value - range.first).coerceIn(0, count - 1))
 
     val state = rememberLazyListState()
-    val fling = rememberSnapFlingBehavior(lazyListState = state)
+    val fling = rememberSnapFlingBehavior(
+        lazyListState = state,
+        snapPosition = SnapPosition.Center
+    )
 
-    var initialized by remember(range) { mutableStateOf(false) }
+    LaunchedEffect(range) {
+        state.scrollToItem(selectedIdx)
+    }
+
     LaunchedEffect(range, value) {
-        if (!initialized) {
-            state.scrollToItem(selectedIdx)
-            initialized = true
+        if (!state.isScrollInProgress) {
+            if (state.firstVisibleItemIndex != selectedIdx) {
+                state.scrollToItem(selectedIdx)
+            }
         }
     }
 
-    val centerIndex by remember {
+    val centerListIndex by remember {
         derivedStateOf {
-            val li = state.layoutInfo
-            if (li.visibleItemsInfo.isEmpty()) return@derivedStateOf selectedIdx
-            val viewportCenter = (li.viewportStartOffset + li.viewportEndOffset) / 2
-            li.visibleItemsInfo.minByOrNull { info ->
-                kotlin.math.abs((info.offset + info.size / 2) - viewportCenter)
-            }?.index ?: selectedIdx
+            (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
         }
     }
 
-    LaunchedEffect(centerIndex, initialized) {
-        if (initialized) onValueChange(items[centerIndex])
+    val latestOnValueChange by rememberUpdatedState(onValueChange)
+    LaunchedEffect(range) {
+        snapshotFlow {
+            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+        }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .collect { latestOnValueChange(it) }
     }
 
     Box(
@@ -600,12 +634,11 @@ private fun NumberWheel(
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            itemsIndexed(items) { index, num ->
-                val isCenter = index == centerIndex
+            itemsIndexed(padded) { index, numOrNull ->
+                val isCenter = index == centerListIndex
                 val alpha = if (isCenter) 1f else sideAlpha
                 val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
@@ -618,13 +651,19 @@ private fun NumberWheel(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (numOrNull == null) {
+                        Spacer(Modifier.height(rowHeight))
+                        return@Row
+                    }
+
                     Text(
-                        text = num.toString(),
+                        text = numOrNull.toString(),
                         fontSize = size,
                         fontWeight = weight,
                         color = Color.Black.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
+
                     if (unitLabel != null) {
                         Spacer(Modifier.width(4.dp))
                         Text(

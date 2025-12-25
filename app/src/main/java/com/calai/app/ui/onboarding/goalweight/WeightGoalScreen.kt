@@ -65,7 +65,11 @@ import com.calai.app.ui.common.OnboardingProgress
 import kotlin.math.roundToInt
 import java.util.Locale
 import com.calai.app.i18n.LocalLocaleController
-
+import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 
 private fun isZhLanguageTag(tag: String): Boolean {
     // tag 可能是 "zh", "zh-TW", "zh-Hant-TW"
@@ -170,12 +174,19 @@ fun WeightGoalScreen(
         }
     }
 
-    var valueKg by remember(weightKg, weightLbs) {
-        mutableDoubleStateOf(initial.kg)
-    }
+    // ✅ 提交中 freeze：避免按 Continue 時 Flow 回來導致 wheel 重設 + scrollToItem 跳一下
+    var isSubmitting by rememberSaveable { mutableStateOf(false) }
 
-    var valueLbsTenths by remember(weightKg, weightLbs) {
-        mutableIntStateOf(initial.lbsTenths)
+    // ✅ wheel 的 SSOT：用 saveable 本地狀態，不要用 remember(flowKey) 重新初始化
+    var valueKg by rememberSaveable { mutableDoubleStateOf(0.0) }
+    var valueLbsTenths by rememberSaveable { mutableIntStateOf(0) }
+
+    // ✅ 只在「非提交中」才從 Flow seed（Flow 初次載入/切帳號/回到頁面時需要）
+    LaunchedEffect(initial.kg, initial.lbsTenths, isSubmitting) {
+        if (!isSubmitting) {
+            valueKg = initial.kg
+            valueLbsTenths = initial.lbsTenths
+        }
     }
 
     // kg wheel 選中值
@@ -237,7 +248,9 @@ fun WeightGoalScreen(
             Box {
                 Button(
                     onClick = {
-                        // kg 一律 0.1 精度（無條件捨去）
+                        if (isSubmitting) return@Button
+                        isSubmitting = true
+
                         val kgToSave = roundKg1(valueKg)
                             .coerceIn(kgMin.toFloat(), kgMax.toFloat())
                         vm.saveWeightKg(kgToSave)
@@ -247,11 +260,10 @@ fun WeightGoalScreen(
                             vm.clearGoalWeightLbs()
                         } else {
                             vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
-                            val lbsToSave =
-                                (valueLbsTenths
-                                    .coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
+                            val lbsToSave = (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
                             vm.saveGoalWeightLbs(lbsToSave)
                         }
+
                         onNext()
                     },
                     enabled = valueKg > 0.0,
@@ -558,39 +570,56 @@ private fun NumberWheel(
     centerTextSize: TextUnit,
     textSize: TextUnit,
     sideAlpha: Float,
-    modifier: Modifier = Modifier,      // ✅ modifier 放第一個 optional
-    unitLabel: String? = null           // ✅ 其他 optional 往後放
+    modifier: Modifier = Modifier,
+    unitLabel: String? = null
 ) {
     val visibleCount = 5
     val mid = visibleCount / 2
 
-    val items = remember(range) { range.toList() }
-    val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
+    val values: List<Int> = remember(range) { range.toList() }
+    val count = values.size
+
+    // 上下補 mid 個空白 item，讓中心值 = firstVisible + mid，穩定不偏移
+    val padded: List<Int?> = remember(range) {
+        List(mid) { null } + values.map { it as Int? } + List(mid) { null }
+    }
+
+    val selectedIdx = (value - range.first).coerceIn(0, count - 1)
 
     val state = rememberLazyListState()
-    val fling = rememberSnapFlingBehavior(lazyListState = state)
+    val fling = rememberSnapFlingBehavior(
+        lazyListState = state,
+        snapPosition = SnapPosition.Center
+    )
 
-    var initialized by remember(range) { mutableStateOf(false) }
+    // 初次進入：把 selectedIdx 放到 firstVisible，中心就會落在 selected
+    LaunchedEffect(range) {
+        state.scrollToItem(selectedIdx)
+    }
+
+    // 外部 value 被程式更新時同步位置（避免跟使用者滑動打架）
     LaunchedEffect(range, value) {
-        if (!initialized) {
+        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
             state.scrollToItem(selectedIdx)
-            initialized = true
         }
     }
 
-    val centerIndex by remember {
+    val centerListIndex by remember {
         derivedStateOf {
-            val li = state.layoutInfo
-            if (li.visibleItemsInfo.isEmpty()) return@derivedStateOf selectedIdx
-            val viewportCenter = (li.viewportStartOffset + li.viewportEndOffset) / 2
-            li.visibleItemsInfo.minByOrNull { info ->
-                kotlin.math.abs((info.offset + info.size / 2) - viewportCenter)
-            }?.index ?: selectedIdx
+            (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
         }
     }
 
-    LaunchedEffect(centerIndex, initialized) {
-        if (initialized) onValueChange(items[centerIndex])
+    val latestOnValueChange by rememberUpdatedState(onValueChange)
+
+    // ✅ 核心：初次 layout 完成也會 emit，確保「不滑也同步到外層 state」
+    LaunchedEffect(range) {
+        snapshotFlow {
+            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+        }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .collect { latestOnValueChange(it) }
     }
 
     Box(
@@ -601,12 +630,11 @@ private fun NumberWheel(
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            itemsIndexed(items) { index, num ->
-                val isCenter = index == centerIndex
+            itemsIndexed(padded) { index, numOrNull ->
+                val isCenter = index == centerListIndex
                 val alpha = if (isCenter) 1f else sideAlpha
                 val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
@@ -619,13 +647,19 @@ private fun NumberWheel(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (numOrNull == null) {
+                        Spacer(Modifier.height(rowHeight))
+                        return@Row
+                    }
+
                     Text(
-                        text = num.toString(),
+                        text = numOrNull.toString(),
                         fontSize = size,
                         fontWeight = weight,
                         color = Color.Black.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
+
                     if (unitLabel != null) {
                         Spacer(Modifier.width(4.dp))
                         Text(

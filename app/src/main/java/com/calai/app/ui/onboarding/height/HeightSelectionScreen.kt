@@ -31,7 +31,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import com.calai.app.data.profile.repo.roundCm1
 import com.calai.app.data.profile.repo.cmToFeetInches1
 import com.calai.app.data.profile.repo.feetInchesToCm1
-
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HeightSelectionScreen(
@@ -58,7 +63,8 @@ fun HeightSelectionScreen(
     // ★ ft/in 初始值從 cm 推導
     var feet by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).first) }
     var inches by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).second) }
-
+    val scope = rememberCoroutineScope()
+    var isSaving by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -104,16 +110,27 @@ fun HeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        // ★ 一律存 cm（1 位小數）
-                        vm.saveHeightCm(roundCm1(cmVal))
-                        if (useMetric) {
-                            vm.saveHeightUnit(UserProfileStore.HeightUnit.CM)
-                            vm.clearHeightImperial()
-                        } else {
-                            vm.saveHeightUnit(UserProfileStore.HeightUnit.FT_IN)
-                            vm.saveHeightImperial(feet, inches)
+                        if (isSaving) return@Button
+
+                        scope.launch {
+                            isSaving = true
+                            try {
+                                // ✅ 一律存 cm（1 位小數）
+                                val cmToSave = roundCm1(cmVal)
+
+                                // ✅ 存完再跳頁（關鍵）
+                                vm.saveAll(
+                                    cm = cmToSave,
+                                    useMetric = useMetric,
+                                    feet = feet,
+                                    inches = inches
+                                )
+
+                                onNext()
+                            } finally {
+                                isSaving = false
+                            }
                         }
-                        onNext()
                     },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -421,33 +438,56 @@ private fun NumberWheel(
 ) {
     val visibleCount = 5
     val mid = visibleCount / 2
-    val items = remember(range) { range.toList() }
-    val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
+
+    // 真正可選的值
+    val values: List<Int> = remember(range) { range.toList() }
+    val count = values.size
+
+    // 用「上下補 mid 個空白 item」的方式做 Wheel，避免 contentPadding + layoutInfo 導致中心值偏移
+    val padded: List<Int?> = remember(range) {
+        List(mid) { null } + values.map { it as Int? } + List(mid) { null }
+    }
+
+    // 外部 value 對應到 values 的 index（0..count-1）
+    val selectedIdx = ((value - range.first).coerceIn(0, count - 1))
 
     val state = rememberLazyListState()
-    val fling = rememberSnapFlingBehavior(lazyListState = state)
+    val fling = rememberSnapFlingBehavior(
+        lazyListState = state,
+        snapPosition = SnapPosition.Center
+    )
 
-    var initialized by remember(range) { mutableStateOf(false) }
+    // 初次進入 / range 變更：把 selectedIdx 放到「第一個可見項」，
+    // 這樣 center = firstVisible + mid 就會剛好落在 selected value。
+    LaunchedEffect(range) {
+        state.scrollToItem(selectedIdx)
+    }
+
+    // 外部 value 如果被程式更新（例如 flow 回填），同步滾輪位置（不打架：使用者正在滑就不動它）
     LaunchedEffect(range, value) {
-        if (!initialized) {
-            state.scrollToItem(selectedIdx) // contentPadding 讓它位於中心
-            initialized = true
+        if (!state.isScrollInProgress) {
+            if (state.firstVisibleItemIndex != selectedIdx) {
+                state.scrollToItem(selectedIdx)
+            }
         }
     }
 
-    val centerIndex by remember {
+    val centerListIndex by remember {
         derivedStateOf {
-            val li = state.layoutInfo
-            if (li.visibleItemsInfo.isEmpty()) return@derivedStateOf selectedIdx
-            val viewportCenter = (li.viewportStartOffset + li.viewportEndOffset) / 2
-            li.visibleItemsInfo.minByOrNull { info ->
-                kotlin.math.abs((info.offset + info.size / 2) - viewportCenter)
-            }?.index ?: selectedIdx
+            (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
         }
     }
 
-    LaunchedEffect(centerIndex, initialized) {
-        if (initialized) onValueChange(items[centerIndex])
+    // ✅ 核心：用 snapshotFlow 監聽「中心值」，包含初次 layout 完成也會 emit，
+    // 讓外層 state 在「不滑」的情況也能被同步到畫面中心值。
+    val latestOnValueChange by rememberUpdatedState(onValueChange)
+    LaunchedEffect(range) {
+        snapshotFlow {
+            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+        }
+            .filterNotNull()
+            .distinctUntilChanged()
+            .collect { latestOnValueChange(it) }
     }
 
     Box(
@@ -458,12 +498,11 @@ private fun NumberWheel(
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            itemsIndexed(items) { index, num ->
-                val isCenter = index == centerIndex
+            itemsIndexed(padded) { index, numOrNull ->
+                val isCenter = index == centerListIndex
                 val alpha = if (isCenter) 1f else sideAlpha
                 val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
@@ -476,16 +515,25 @@ private fun NumberWheel(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (unitLabel != null && isCenter) {
-                        Spacer(Modifier.width(16.dp))  // 想再靠右一點可以改成 10.dp、12.dp
+                    // padding item：顯示空白
+                    if (numOrNull == null) {
+                        Spacer(Modifier.height(rowHeight))
+                        return@Row
                     }
+
+                    // 你的原本需求：單位只在「中心」顯示，並用 Spacer 微調對齊
+                    if (unitLabel != null && isCenter) {
+                        Spacer(Modifier.width(16.dp))
+                    }
+
                     Text(
-                        text = num.toString(),
+                        text = numOrNull.toString(),
                         fontSize = size,
                         fontWeight = weight,
                         color = Color.Black.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
+
                     if (unitLabel != null && isCenter) {
                         Spacer(Modifier.width(4.dp))
                         Text(
@@ -498,10 +546,12 @@ private fun NumberWheel(
                 }
             }
         }
-        // 中心框線：中心 ± 半格
+
+        // 中心框線：中心 ± 半格（沿用你的畫法）
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2
         val lineThickness = 1.dp
+
         Box(
             Modifier
                 .align(Alignment.Center)
@@ -520,3 +570,4 @@ private fun NumberWheel(
         )
     }
 }
+
