@@ -50,7 +50,10 @@ import com.calai.app.ui.common.OnboardingProgress
 fun GoalSelectionScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
-    vm: GoalSelectionViewModel = hiltViewModel()
+    vm: GoalSelectionViewModel = hiltViewModel(),
+    primaryButtonText: String = stringResource(R.string.continue_text),
+    stepIndex: Int = 7,
+    totalSteps: Int = 11,
 ) {
     val state by vm.uiState.collectAsState()
 
@@ -87,8 +90,8 @@ fun GoalSelectionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OnboardingProgress(
-                            stepIndex = 7,
-                            totalSteps = 11,
+                            stepIndex = stepIndex,
+                            totalSteps = totalSteps,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -117,7 +120,7 @@ fun GoalSelectionScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.continue_text),
+                            text = primaryButtonText,
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,

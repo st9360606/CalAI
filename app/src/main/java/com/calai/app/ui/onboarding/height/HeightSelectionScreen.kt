@@ -38,6 +38,8 @@ fun HeightSelectionScreen(
     vm: HeightSelectionViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit,
+    stepIndex: Int = 4,
+    totalSteps: Int = 11,
 ) {
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()
@@ -90,8 +92,8 @@ fun HeightSelectionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OnboardingProgress(
-                            stepIndex = 4,
-                            totalSteps = 11,
+                            stepIndex = stepIndex,
+                            totalSteps = totalSteps,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

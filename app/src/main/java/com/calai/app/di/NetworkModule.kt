@@ -8,6 +8,7 @@ import com.calai.app.data.auth.net.TokenAuthenticator
 import com.calai.app.data.fasting.api.FastingApi
 import com.calai.app.data.fasting.notifications.FastingAlarmScheduler
 import com.calai.app.data.fasting.repo.FastingRepository
+import com.calai.app.data.profile.api.AutoGoalsApi
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.users.api.UsersApi
 import com.calai.app.data.water.api.WaterApi
@@ -131,5 +132,10 @@ object NetworkModule {
     @Provides @Singleton
     fun provideWeightApi(@Named("apiRetrofit") retrofit: Retrofit): WeightApi =
         retrofit.create(WeightApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAutoGoalsApi(@Named("apiRetrofit") retrofit: Retrofit): AutoGoalsApi =
+        retrofit.create(AutoGoalsApi::class.java)
 
 }

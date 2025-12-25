@@ -96,11 +96,14 @@ import com.calai.app.ui.onboarding.goalweight.WeightGoalViewModel
 import androidx.core.net.toUri
 import com.calai.app.ui.home.ui.personal.details.EditNutritionGoalsRoute
 import com.calai.app.ui.home.ui.personal.details.model.NutritionGoalsViewModel
+import androidx.navigation.compose.navigation
+import com.calai.app.ui.home.ui.personal.details.AutoGenerateGoalsCalcScreen
+import com.calai.app.ui.home.ui.personal.details.model.AutoGenerateGoalsCalcViewModel
 
 object Routes {
     const val LANDING = "landing"
-    const val SIGNIN_EMAIL_ENTER = "signin_email_enter"
-    const val SIGNIN_EMAIL_CODE = "signin_email_code"
+    const val SIGN_IN_EMAIL_ENTER = "signin_email_enter"
+    const val SIGN_IN_EMAIL_CODE = "signin_email_code"
     const val ONBOARD_GENDER = "onboard_gender"
     const val ONBOARD_REFERRAL = "onboard_referral"
     const val ONBOARD_AGE = "onboard_age"
@@ -133,11 +136,17 @@ object Routes {
     const val EDIT_DAILY_STEP_GOAL = "edit_daily_step_goal"
     const val EDIT_NUTRITION_GOALS = "edit_nutrition_goals"
     const val AUTO_GENERATE_GOALS = "auto_generate_goals"
+    const val AUTO_GENERATE_EXERCISE_FREQUENCY = "auto_generate_exercise_frequency"
+    const val AUTO_GENERATE_HEIGHT = "auto_generate_height"
+    const val AUTO_GENERATE_WEIGHT = "auto_generate_weight"
+    const val AUTO_GENERATE_GOALS_CALC = "auto_generate_goals_calc"
+    const val AUTO_GENERATE_FLOW = "auto_generate_flow"
 }
 
 object NavResults {
     const val SUCCESS_TOAST = "success_toast"
     const val ERROR_TOAST = "error_toast"
+    const val AUTO_GEN_RELOAD = "auto_gen_reload"
 }
 private fun NavController.goHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
@@ -233,7 +242,7 @@ fun BiteCalNavHost(
 
         // ===== Email：輸入 Email（帶 redirect + uploadLocal）=====
         composable(
-            route = "${Routes.SIGNIN_EMAIL_ENTER}?redirect={redirect}&uploadLocal={uploadLocal}",
+            route = "${Routes.SIGN_IN_EMAIL_ENTER}?redirect={redirect}&uploadLocal={uploadLocal}",
             arguments = listOf(
                 navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME },
                 navArgument("uploadLocal") { type = NavType.BoolType; defaultValue = false }
@@ -251,14 +260,14 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onSent = { email ->
-                    nav.navigate("${Routes.SIGNIN_EMAIL_CODE}?email=$email&redirect=$redirect&uploadLocal=$uploadLocal")
+                    nav.navigate("${Routes.SIGN_IN_EMAIL_CODE}?email=$email&redirect=$redirect&uploadLocal=$uploadLocal")
                 }
             )
         }
 
         // ===== Email：輸入驗證碼畫面（帶 redirect + uploadLocal）=====
         composable(
-            route = "${Routes.SIGNIN_EMAIL_CODE}?email={email}&redirect={redirect}&uploadLocal={uploadLocal}",
+            route = "${Routes.SIGN_IN_EMAIL_CODE}?email={email}&redirect={redirect}&uploadLocal={uploadLocal}",
             arguments = listOf(
                 navArgument("email") { type = NavType.StringType; defaultValue = "" },
                 navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME },
@@ -579,7 +588,7 @@ fun BiteCalNavHost(
                     },
                     onEmail = {
                         showSheet.value = false
-                        nav.navigate("${Routes.SIGNIN_EMAIL_ENTER}?redirect=$redirect&uploadLocal=$uploadLocal")
+                        nav.navigate("${Routes.SIGN_IN_EMAIL_ENTER}?redirect=$redirect&uploadLocal=$uploadLocal")
                     },
                     onShowError = { msg ->
                         showSheet.value = false
@@ -1147,24 +1156,164 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            EditNutritionGoalsRoute(
-                onBack = { nav.popBackStack() },
-                onAutoGenerate = { nav.navigate(Routes.AUTO_GENERATE_GOALS) },
-                onSaved = {
-                    nav.previousBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
-                    personalVm.refreshProfileOnly()
-                    nav.popBackStack()
-                },
-                vm = vm
-            )
+            // ✅ AutoGenerate 回來要 reload
+            val reloadFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow(NavResults.AUTO_GEN_RELOAD, false)
+            }
+            val shouldReload by reloadFlow.collectAsState(initial = false)
+
+            LaunchedEffect(shouldReload) {
+                if (shouldReload) {
+                    vm.reload()
+                    backStackEntry.savedStateHandle[NavResults.AUTO_GEN_RELOAD] = false
+                }
+            }
+
+            // ✅ toast（跟你 HOME/PERSONAL 同套）
+            val successFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
+            }
+            val errorFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.ERROR_TOAST, null)
+            }
+            val navSuccess by successFlow.collectAsState(initial = null)
+            val navError by errorFlow.collectAsState(initial = null)
+
+            Box(Modifier.fillMaxSize()) {
+
+                EditNutritionGoalsRoute(
+                    onBack = { nav.popBackStack() },
+                    onAutoGenerate = { nav.navigate(Routes.AUTO_GENERATE_FLOW) }, // ✅ 改這裡
+                    onSaved = {
+                        nav.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        personalVm.refreshProfileOnly()
+                        nav.popBackStack()
+                    },
+                    vm = vm
+                )
+
+                when {
+                    !navError.isNullOrBlank() -> {
+                        ErrorTopToast(message = navError!!, modifier = Modifier.align(Alignment.TopCenter))
+                        LaunchedEffect(navError) {
+                            delay(2_000)
+                            backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
+                        }
+                    }
+                    !navSuccess.isNullOrBlank() -> {
+                        SuccessTopToast(
+                            message = navSuccess!!,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            minWidth = 150.dp,
+                            minHeight = 30.dp
+                        )
+                        LaunchedEffect(navSuccess) {
+                            delay(2_000)
+                            backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
+                        }
+                    }
+                }
+            }
         }
 
-        composable(Routes.AUTO_GENERATE_GOALS) {
-            // TODO: 你下一張畫面（先放空也 OK）
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Auto Generate Goals Screen (TODO)")
+
+        navigation(
+            route = Routes.AUTO_GENERATE_FLOW,
+            startDestination = Routes.AUTO_GENERATE_EXERCISE_FREQUENCY
+        ) {
+
+            composable(Routes.AUTO_GENERATE_EXERCISE_FREQUENCY) { backStackEntry ->
+                val activity = (LocalContext.current.findActivity() ?: hostActivity)
+                val vm: ExerciseFrequencyViewModel = viewModel(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = HiltViewModelFactory(activity, backStackEntry)
+                )
+
+                ExerciseFrequencyScreen(
+                    vm = vm,
+                    onBack = { nav.popBackStack() }, // 回 EditNutritionGoals
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_HEIGHT) },
+                    stepIndex = 1,
+                    totalSteps = 4,
+                )
+            }
+
+            composable(Routes.AUTO_GENERATE_HEIGHT) { backStackEntry ->
+                val activity = (LocalContext.current.findActivity() ?: hostActivity)
+                val vm: HeightSelectionViewModel = viewModel(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = HiltViewModelFactory(activity, backStackEntry)
+                )
+
+                HeightSelectionScreen(
+                    vm = vm,
+                    onBack = { nav.popBackStack() },
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_WEIGHT) },
+                    stepIndex = 2,
+                    totalSteps = 4,
+                )
+            }
+
+            composable(Routes.AUTO_GENERATE_WEIGHT) { backStackEntry ->
+                val activity = (LocalContext.current.findActivity() ?: hostActivity)
+                val vm: WeightSelectionViewModel = viewModel(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = HiltViewModelFactory(activity, backStackEntry)
+                )
+
+                WeightSelectionScreen(
+                    vm = vm,
+                    onBack = { nav.popBackStack() },
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_GOALS) },
+                    stepIndex = 3,
+                    totalSteps = 4,
+                )
+
+            }
+
+            composable(Routes.AUTO_GENERATE_GOALS) { backStackEntry ->
+                val activity = (LocalContext.current.findActivity() ?: hostActivity)
+                val vm: GoalSelectionViewModel = viewModel(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = HiltViewModelFactory(activity, backStackEntry)
+                )
+
+                GoalSelectionScreen(
+                    vm = vm,
+                    onBack = { nav.popBackStack() },
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_GOALS_CALC) },
+                    primaryButtonText = "Generate", // 建議換成 stringResource
+                    stepIndex = 4,
+                    totalSteps = 4,
+                )
+            }
+
+            composable(Routes.AUTO_GENERATE_GOALS_CALC) { backStackEntry ->
+                val activity = (LocalContext.current.findActivity() ?: hostActivity)
+                val vm: AutoGenerateGoalsCalcViewModel = viewModel(
+                    viewModelStoreOwner = backStackEntry,
+                    factory = HiltViewModelFactory(activity, backStackEntry)
+                )
+
+                AutoGenerateGoalsCalcScreen(
+                    vm = vm,
+                    onDone = { successMsg ->
+                        // ✅ 回到 EditNutritionGoals 並觸發 reload + toast
+                        val target = runCatching { nav.getBackStackEntry(Routes.EDIT_NUTRITION_GOALS) }.getOrNull()
+                        target?.savedStateHandle?.set(NavResults.AUTO_GEN_RELOAD, true)
+                        target?.savedStateHandle?.set(NavResults.SUCCESS_TOAST, successMsg)
+
+                        nav.popBackStack(Routes.EDIT_NUTRITION_GOALS, inclusive = false)
+                    },
+                    onFailToast = { errMsg ->
+                        val target = runCatching { nav.getBackStackEntry(Routes.EDIT_NUTRITION_GOALS) }.getOrNull()
+                        target?.savedStateHandle?.set(NavResults.ERROR_TOAST, errMsg)
+
+                        nav.popBackStack(Routes.EDIT_NUTRITION_GOALS, inclusive = false)
+                    }
+                )
             }
         }
 

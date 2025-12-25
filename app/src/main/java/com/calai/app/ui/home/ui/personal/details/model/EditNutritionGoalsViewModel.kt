@@ -130,6 +130,30 @@ class NutritionGoalsViewModel @Inject constructor(
     private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val events = _events.asSharedFlow()
 
+    /** ✅ 強制重新抓 profile（AutoGenerate 回來會用到） */
+    fun reload() {
+        viewModelScope.launch {
+            _ui.update { it.copy(loading = true, error = null, fieldErrors = emptyMap()) }
+
+            val p = repo.fetchProfileOrNull()
+            if (p == null) {
+                _ui.update { it.copy(loading = false, error = "Profile not found") }
+                return@launch
+            }
+
+            val g = NutritionGoalsUiState.fromProfile(p)
+            _ui.update {
+                it.copy(
+                    loading = false,
+                    original = g,
+                    draft = NutritionGoalsUiState.toDraftFixed(g),
+                    error = null,
+                    fieldErrors = emptyMap()
+                )
+            }
+        }
+    }
+
     fun loadIfNeeded() {
         if (_ui.value.original != null || _ui.value.loading.not()) return
 
@@ -242,7 +266,6 @@ class NutritionGoalsViewModel @Inject constructor(
     }
 }
 
-/** ✅ fixed 版 toDraft（你原本就有，用這個最安全） */
 private fun NutritionGoalsUiState.Companion.toDraftFixed(g: NutritionGoals): NutritionGoalsDraft {
     return NutritionGoalsDraft(
         kcal = g.kcal.toString(),

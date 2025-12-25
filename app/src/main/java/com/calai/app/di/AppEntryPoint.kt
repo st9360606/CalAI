@@ -3,6 +3,7 @@ package com.calai.app.di
 import com.calai.app.data.auth.repo.AuthRepository
 import com.calai.app.data.auth.repo.TokenStore
 import com.calai.app.data.auth.state.AuthState
+import com.calai.app.data.profile.repo.AutoGoalsRepository
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.ProfileRepository
 import com.calai.app.data.weight.repo.WeightRepository
@@ -20,6 +21,7 @@ interface AppEntryPoint {
     fun authState(): AuthState
     fun tokenStore(): TokenStore
     fun profileRepository(): ProfileRepository
-    fun userProfileStore(): UserProfileStore   // ✅ 新增
+    fun userProfileStore(): UserProfileStore
     fun weightRepository(): WeightRepository
+    fun autoGoalsRepository(): AutoGoalsRepository
 }

@@ -89,6 +89,8 @@ fun WeightSelectionScreen(
     vm: WeightSelectionViewModel,
     onBack: () -> Unit,
     onNext: () -> Unit,
+    stepIndex: Int = 5,
+    totalSteps: Int = 11,
 ) {
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()
@@ -226,8 +228,8 @@ fun WeightSelectionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OnboardingProgress(
-                            stepIndex = 5,
-                            totalSteps = 11,
+                            stepIndex = stepIndex,
+                            totalSteps = totalSteps,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

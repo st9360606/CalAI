@@ -66,7 +66,9 @@ private data class ExerciseUiOption(
 fun ExerciseFrequencyScreen(
     vm: ExerciseFrequencyViewModel,
     onBack: () -> Unit,
-    onNext: () -> Unit
+    onNext: () -> Unit,
+    stepIndex: Int = 6,
+    totalSteps: Int = 11,
 ) {
     val state by vm.uiState.collectAsState()
 
@@ -111,8 +113,8 @@ fun ExerciseFrequencyScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OnboardingProgress(
-                            stepIndex = 6,
-                            totalSteps = 11,
+                            stepIndex = stepIndex,
+                            totalSteps = totalSteps,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
