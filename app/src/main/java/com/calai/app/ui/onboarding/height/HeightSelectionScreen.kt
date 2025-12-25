@@ -2,6 +2,7 @@ package com.calai.app.ui.onboarding.height
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,17 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.profile.repo.UserProfileStore
-import com.calai.app.ui.common.OnboardingProgress
-import androidx.compose.runtime.mutableIntStateOf
-import com.calai.app.data.profile.repo.roundCm1
 import com.calai.app.data.profile.repo.cmToFeetInches1
 import com.calai.app.data.profile.repo.feetInchesToCm1
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.gestures.snapping.SnapPosition
-import androidx.compose.runtime.snapshotFlow
+import com.calai.app.data.profile.repo.roundCm1
+import com.calai.app.ui.common.OnboardingProgress
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HeightSelectionScreen(
@@ -49,26 +47,58 @@ fun HeightSelectionScreen(
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()
 
-    var useMetric by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(savedUnit) { useMetric = (savedUnit == UserProfileStore.HeightUnit.CM) }
-
-    // ★ cm 為 SSOT，Double 一位小數
+    // ====== 範圍（cm SSOT）======
     val cmMin = 80.0
     val cmMax = 350.0
 
-    var cmVal by rememberSaveable(heightCm) {
-        mutableDoubleStateOf(roundCm1(heightCm.toDouble()).toDouble())
+    // ft 範圍建議跟 cmMin/cmMax 對齊，避免切換單位被 clamp 造成跳值
+    val feetRange = remember(cmMin, cmMax) {
+        val ftMin = cmToFeetInches1(cmMin).first
+        val ftMax = cmToFeetInches1(cmMax).first
+        ftMin..ftMax
     }
 
-    // ★ ft/in 初始值從 cm 推導
-    var feet by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).first) }
-    var inches by rememberSaveable(heightCm) { mutableIntStateOf(cmToFeetInches1(cmVal).second) }
+    // ====== 儲存中旗標（freeze seed / freeze unit sync）======
     val scope = rememberCoroutineScope()
     var isSaving by rememberSaveable { mutableStateOf(false) }
+
+    // ====== 使用者是否真的有操作（用 wheel 的 isScrollInProgress 判斷）======
+    var didUserEdit by rememberSaveable { mutableStateOf(false) }
+    var didUserToggleUnit by rememberSaveable { mutableStateOf(false) }
+
+    // ====== 單位顯示（不綁 flow 當 key；且儲存中不更新；使用者手動切換後不覆蓋）======
+    var useMetric by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(savedUnit, isSaving) {
+        if (!isSaving && !didUserToggleUnit) {
+            useMetric = (savedUnit == UserProfileStore.HeightUnit.CM)
+        }
+    }
+
+    // ====== 從 flow 計算「應 seed 的初始值」======
+    val initialCm = remember(heightCm, cmMin, cmMax) {
+        roundCm1(heightCm.toDouble()).toDouble().coerceIn(cmMin, cmMax)
+    }
+    val initialFtIn = remember(initialCm) { cmToFeetInches1(initialCm) }
+
+    // ✅ 本地 wheel 狀態：不要用 rememberSaveable(heightCm) 當 key（會導致 Continue 抖動）
+    var cmVal by rememberSaveable { mutableDoubleStateOf(initialCm) }
+    var feet by rememberSaveable { mutableIntStateOf(initialFtIn.first) }
+    var inches by rememberSaveable { mutableIntStateOf(initialFtIn.second) }
+
+    // ✅ 只有「非儲存中」且「使用者尚未滑動」才讓 flow 回填（避免 Continue 時跳一下）
+    LaunchedEffect(initialCm, isSaving) {
+        if (!isSaving && !didUserEdit) {
+            cmVal = initialCm
+            feet = initialFtIn.first
+            inches = initialFtIn.second
+        }
+    }
+
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+            TopAppBar(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -193,15 +223,19 @@ fun HeightSelectionScreen(
                     .padding(horizontal = 48.dp),
                 textAlign = TextAlign.Center
             )
+
             Spacer(Modifier.height(65.dp))
-            // 切換單位：只更新顯示值；不改 cmVal
+
             UnitSegmented(
                 useMetric = useMetric,
                 onChange = { isMetric ->
+                    didUserToggleUnit = true
+
                     if (!isMetric) {
-                        // cm → ft/in
+                        // cm → ft/in（切到英制時，顯示值從 cmVal 推導）
                         val (ft, inch) = cmToFeetInches1(cmVal)
-                        feet = ft; inches = inch
+                        feet = ft
+                        inches = inch
                     }
                     useMetric = isMetric
                 },
@@ -211,7 +245,7 @@ fun HeightSelectionScreen(
             if (useMetric) {
                 // ===== CM：整數位 + 小數位 =====
                 val cmTenths = (cmVal * 10.0).toInt()
-                    .coerceIn((cmMin  * 10).toInt(), (cmMax * 10).toInt())
+                    .coerceIn((cmMin * 10).toInt(), (cmMax * 10).toInt())
                 val cmIntSel = cmTenths / 10
                 val cmDecSel = cmTenths % 10
 
@@ -229,11 +263,13 @@ fun HeightSelectionScreen(
                             val newCm = (newInt * 10 + cmDecSel) / 10.0
                             cmVal = newCm.coerceIn(cmMin, cmMax)
                         },
+                        onUserScroll = { didUserEdit = true },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
                         textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = null,
+                        userScrollEnabled = !isSaving,
                         modifier = Modifier
                             .width(120.dp)
                             .padding(start = 27.dp)
@@ -257,11 +293,13 @@ fun HeightSelectionScreen(
                             val newCm = (cmIntSel * 10 + newDec) / 10.0
                             cmVal = newCm.coerceIn(cmMin, cmMax)
                         },
+                        onUserScroll = { didUserEdit = true },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
                         textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = null,
+                        userScrollEnabled = !isSaving,
                         modifier = Modifier
                             .width(80.dp)
                             .padding(start = 13.dp)
@@ -277,6 +315,7 @@ fun HeightSelectionScreen(
                     )
                 }
             } else {
+                // ===== FT/IN =====
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -285,18 +324,20 @@ fun HeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
-                        range = 4..9,
-                        value = feet,
+                        range = feetRange,
+                        value = feet.coerceIn(feetRange.first, feetRange.last),
                         onValueChange = { newFeet ->
                             feet = newFeet
                             cmVal = feetInchesToCm1(newFeet, inches)
                                 .coerceIn(cmMin, cmMax)
                         },
+                        onUserScroll = { didUserEdit = true },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
                         textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = "ft",
+                        userScrollEnabled = !isSaving,
                         modifier = Modifier
                             .width(120.dp)
                             .padding(start = 20.dp)
@@ -306,17 +347,19 @@ fun HeightSelectionScreen(
 
                     NumberWheel(
                         range = 0..11,
-                        value = inches,
+                        value = inches.coerceIn(0, 11),
                         onValueChange = { newIn ->
                             inches = newIn
                             cmVal = feetInchesToCm1(feet, newIn)
                                 .coerceIn(cmMin, cmMax)
                         },
+                        onUserScroll = { didUserEdit = true },
                         rowHeight = 60.dp,
                         centerTextSize = 32.sp,
                         textSize = 28.sp,
                         sideAlpha = 0.35f,
                         unitLabel = "in",
+                        userScrollEnabled = !isSaving,
                         modifier = Modifier
                             .width(120.dp)
                             .padding(end = 19.dp)
@@ -338,6 +381,7 @@ fun HeightSelectionScreen(
                     modifier = Modifier.fillMaxWidth(0.62f)
                 )
             }
+
             Spacer(Modifier.height(16.dp))
         }
     }
@@ -422,7 +466,10 @@ private fun SegItem(
     }
 }
 
-/** 通用數字滾輪（首次精準置中 + 抑制首次回呼） */
+/**
+ * 通用數字滾輪（中心對齊 + 初次也會 emit）
+ * - onUserScroll：只有真的開始滑動時才回呼（用來設 didUserEdit=true）
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
@@ -434,21 +481,20 @@ private fun NumberWheel(
     textSize: TextUnit = 26.sp,
     sideAlpha: Float,
     unitLabel: String? = null,
+    userScrollEnabled: Boolean = true,
+    onUserScroll: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val visibleCount = 5
     val mid = visibleCount / 2
 
-    // 真正可選的值
     val values: List<Int> = remember(range) { range.toList() }
     val count = values.size
 
-    // 用「上下補 mid 個空白 item」的方式做 Wheel，避免 contentPadding + layoutInfo 導致中心值偏移
     val padded: List<Int?> = remember(range) {
         List(mid) { null } + values.map { it as Int? } + List(mid) { null }
     }
 
-    // 外部 value 對應到 values 的 index（0..count-1）
     val selectedIdx = ((value - range.first).coerceIn(0, count - 1))
 
     val state = rememberLazyListState()
@@ -457,18 +503,15 @@ private fun NumberWheel(
         snapPosition = SnapPosition.Center
     )
 
-    // 初次進入 / range 變更：把 selectedIdx 放到「第一個可見項」，
-    // 這樣 center = firstVisible + mid 就會剛好落在 selected value。
+    // 初次 / range 變更：定位
     LaunchedEffect(range) {
         state.scrollToItem(selectedIdx)
     }
 
-    // 外部 value 如果被程式更新（例如 flow 回填），同步滾輪位置（不打架：使用者正在滑就不動它）
+    // 外部 value 被程式更新：同步位置（使用者正在滑就不動）
     LaunchedEffect(range, value) {
-        if (!state.isScrollInProgress) {
-            if (state.firstVisibleItemIndex != selectedIdx) {
-                state.scrollToItem(selectedIdx)
-            }
+        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
+            state.scrollToItem(selectedIdx)
         }
     }
 
@@ -478,9 +521,21 @@ private fun NumberWheel(
         }
     }
 
-    // ✅ 核心：用 snapshotFlow 監聽「中心值」，包含初次 layout 完成也會 emit，
-    // 讓外層 state 在「不滑」的情況也能被同步到畫面中心值。
     val latestOnValueChange by rememberUpdatedState(onValueChange)
+    val latestOnUserScroll by rememberUpdatedState(onUserScroll)
+
+    // ✅ 只有真的開始「手勢滑動」才回呼，避免初次 layout emit 被誤判成 user edit
+    LaunchedEffect(range) {
+        if (onUserScroll != null) {
+            snapshotFlow { state.isScrollInProgress }
+                .distinctUntilChanged()
+                .collect { inProgress ->
+                    if (inProgress) latestOnUserScroll?.invoke()
+                }
+        }
+    }
+
+    // ✅ 中心值變化（包含初次 layout）
     LaunchedEffect(range) {
         snapshotFlow {
             padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
@@ -499,6 +554,7 @@ private fun NumberWheel(
             state = state,
             flingBehavior = fling,
             horizontalAlignment = Alignment.CenterHorizontally,
+            userScrollEnabled = userScrollEnabled,
             modifier = Modifier.fillMaxSize()
         ) {
             itemsIndexed(padded) { index, numOrNull ->
@@ -515,16 +571,13 @@ private fun NumberWheel(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // padding item：顯示空白
                     if (numOrNull == null) {
                         Spacer(Modifier.height(rowHeight))
                         return@Row
                     }
 
-                    // 你的原本需求：單位只在「中心」顯示，並用 Spacer 微調對齊
-                    if (unitLabel != null && isCenter) {
-                        Spacer(Modifier.width(16.dp))
-                    }
+                    // 單位只在中心顯示（沿用你的設計）
+                    if (unitLabel != null && isCenter) Spacer(Modifier.width(16.dp))
 
                     Text(
                         text = numOrNull.toString(),
@@ -547,7 +600,6 @@ private fun NumberWheel(
             }
         }
 
-        // 中心框線：中心 ± 半格（沿用你的畫法）
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2
         val lineThickness = 1.dp
@@ -570,4 +622,3 @@ private fun NumberWheel(
         )
     }
 }
-
