@@ -962,7 +962,10 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
-            LaunchedEffect(Unit) { weightVm.initIfNeeded() }
+            LaunchedEffect(Unit) {
+                personalVm.refreshProfileOnly()
+                weightVm.initIfNeeded()
+            }
 
             val pUi by personalVm.ui.collectAsState()
             val wUi by weightVm.ui.collectAsState()
@@ -1156,7 +1159,12 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            // ✅ AutoGenerate 回來要 reload
+            // ✅ NEW：同 HOME scope 拿 WeightViewModel（這樣 PersonalDetails 也會吃到同一份狀態）
+            val weightVm: WeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
             val reloadFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow(NavResults.AUTO_GEN_RELOAD, false)
             }
@@ -1165,6 +1173,8 @@ fun BiteCalNavHost(
             LaunchedEffect(shouldReload) {
                 if (shouldReload) {
                     vm.reload()
+                    personalVm.refreshProfileOnly()
+                    weightVm.initIfNeeded()
                     backStackEntry.savedStateHandle[NavResults.AUTO_GEN_RELOAD] = false
                 }
             }

@@ -1,10 +1,12 @@
 package com.calai.app.data.weight.repo
 
 import android.util.Log
+import com.calai.app.data.common.RepoInvalidationBus
 import com.calai.app.data.weight.api.WeightApi
 import com.calai.app.data.weight.api.WeightItemDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -13,11 +15,11 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.roundToInt
-import okhttp3.MediaType.Companion.toMediaType
 
 @Singleton
 class WeightRepository @Inject constructor(
-    private val api: WeightApi
+    private val api: WeightApi,
+    private val bus: RepoInvalidationBus
 ) {
 
     private fun guessImageMime(file: File): String {
@@ -46,20 +48,26 @@ class WeightRepository @Inject constructor(
 
             MultipartBody.Part.createFormData(
                 name = "photo",
-                filename = f.name,                     // 例如 weight_camera_xxx.jpg
-                body = f.asRequestBody(mime)           // ✅ 指定 image/jpeg
+                filename = f.name,
+                body = f.asRequestBody(mime)
             )
         }
 
-        api.logWeight(wKg, wLbs, d, part)
+        val resp = api.logWeight(wKg, wLbs, d, part)
+        bus.invalidateWeight()// ✅ 寫入成功 -> invalidate（失敗會 throw，不會走到這行）
+        resp
     }
 
     suspend fun recent7() = withContext(Dispatchers.IO) { api.recent7() }
     suspend fun summary(range: String) = withContext(Dispatchers.IO) { api.summary(range) }
 
     suspend fun ensureBaseline() {
-        Log.d("WeightRepo", "ensureBaseline() called")   // ★ 先看這行有沒有出現
+        Log.d("WeightRepo", "ensureBaseline() called")
         runCatching { api.ensureBaseline() }
+            .onSuccess {
+                // ✅ baseline 成功 -> invalidate（讓 current/timeseries 重新抓）
+                bus.invalidateWeight()
+            }
             .onFailure { e ->
                 Log.e("WeightRepo", "ensureBaseline failed", e)
             }

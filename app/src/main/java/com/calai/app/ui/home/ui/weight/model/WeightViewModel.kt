@@ -3,8 +3,10 @@ package com.calai.app.ui.home.ui.weight.model
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.calai.app.data.common.RepoInvalidationBus
 import com.calai.app.data.profile.repo.ProfileRepository
 import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.util.ThrottledRefresher
 import com.calai.app.data.weight.api.WeightItemDto
 import com.calai.app.data.weight.repo.WeightRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -24,7 +27,8 @@ import javax.inject.Inject
 class WeightViewModel @Inject constructor(
     private val repo: WeightRepository,
     private val store: UserProfileStore,
-    private val profileRepo: ProfileRepository
+    private val profileRepo: ProfileRepository,
+    private val bus: RepoInvalidationBus
 ) : ViewModel() {
 
     data class UiState(
@@ -60,7 +64,11 @@ class WeightViewModel @Inject constructor(
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
-    private var initialized = false
+    // baseline 只做一次
+    private var baselineEnsured = false
+
+    // ✅ 節流：10 秒內重複進頁/重複呼叫 initIfNeeded() 不重打 API
+    private val refreshGate = ThrottledRefresher(minIntervalMs = 5_000L)
 
     // =========================
     // ★ FIX：history7 排序穩定化（新→舊）
@@ -102,15 +110,39 @@ class WeightViewModel @Inject constructor(
             store.goalWeightLbsFlow.distinctUntilChanged()
                 .collect { t -> _ui.update { it.copy(profileGoalWeightLbs = t?.toDouble()) } }
         }
+
+        // ✅ 任何 repo 寫入成功（profile/weight）都會 emit invalidate -> force refresh（不受節流影響）
+        viewModelScope.launch {
+            merge(bus.weight, bus.profile).collect {
+                refreshGate.invalidate()
+                refreshThrottled(force = true)
+            }
+        }
     }
 
+    /**
+     * 入口：畫面進來常呼叫這個
+     * ✅ 節流版：10 秒內重進頁不重打
+     */
     fun initIfNeeded() {
-        if (initialized) return
-        initialized = true
-        viewModelScope.launch {
-            runCatching { repo.ensureBaseline() }
-                .onFailure { e -> if (e is CancellationException) throw e }
+        refreshThrottled(force = false)
+    }
 
+    /**
+     * ✅ 節流 + baseline + refresh
+     * - force=false：受節流保護
+     * - force=true：一定刷新（例如寫入成功後）
+     */
+    fun refreshThrottled(force: Boolean) {
+        refreshGate.launch(viewModelScope, force = force) {
+            // baseline 只做一次
+            if (!baselineEnsured) {
+                baselineEnsured = true
+                runCatching { repo.ensureBaseline() }
+                    .onFailure { e -> if (e is CancellationException) throw e }
+            }
+            // ✅ 注意：refresh() 本身是 launch 版（會再開 coroutine）
+            // 這裡維持你原本寫法，最少改動。
             refresh()
         }
     }
@@ -125,11 +157,6 @@ class WeightViewModel @Inject constructor(
             }
     }
 
-    /** 使用者按取消：丟棄草稿單位 */
-    fun discardPendingUnit() {
-        _ui.update { it.copy(pendingUnit = null) }
-    }
-
     /** 只有在「存檔成功」時才呼叫：commit 單位到 DataStore + 更新 ui.unit */
     private suspend fun commitUnitAfterSuccess(u: UserProfileStore.WeightUnit) {
         _ui.update { it.copy(unit = u, pendingUnit = null) }
@@ -141,7 +168,8 @@ class WeightViewModel @Inject constructor(
 
     fun setRange(r: String) {
         _ui.update { it.copy(range = r) }
-        refresh()
+        // ✅ 使用者主動切 range：直接強制刷新（不節流）
+        refreshThrottled(force = true)
     }
 
     fun refresh() = viewModelScope.launch {
@@ -215,7 +243,7 @@ class WeightViewModel @Inject constructor(
         date: LocalDate?,
         photo: File?,
         unitUsedToPersist: UserProfileStore.WeightUnit? = null,
-        onResult: (Result<Unit>) -> Unit // ✅ NEW
+        onResult: (Result<Unit>) -> Unit
     ) = viewModelScope.launch {
         _ui.update { it.copy(saving = true, error = null) }
         runCatching {
@@ -230,7 +258,10 @@ class WeightViewModel @Inject constructor(
                 Log.d("WeightVM", "save success -> persist unit = $unitUsedToPersist")
                 runCatching { store.setWeightUnit(unitUsedToPersist) }
             }
-            refresh()
+
+            // ✅ 寫入成功：強制刷新（不節流）
+            refreshThrottled(force = true)
+
             _ui.update { it.copy(saving = false, error = null) }
             onResult(Result.success(Unit))
         }.onFailure { e ->
@@ -276,7 +307,10 @@ class WeightViewModel @Inject constructor(
             val res = profileRepo.updateGoalWeight(value, unit)
             res.onSuccess {
                 commitUnitAfterSuccess(unit)
-                runCatching { refresh() }
+
+                // ✅ profile 寫入成功：強制刷新（不節流）
+                refreshThrottled(force = true)
+
                 _ui.update { it.copy(error = null) }
                 onResult(Result.success(Unit))
             }.onFailure { e ->

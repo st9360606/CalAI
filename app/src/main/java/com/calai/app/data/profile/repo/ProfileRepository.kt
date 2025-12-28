@@ -1,5 +1,6 @@
 package com.calai.app.data.profile.repo
 
+import com.calai.app.data.common.RepoInvalidationBus
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.profile.api.UpdateGoalWeightRequest
 import com.calai.app.data.profile.api.UpsertProfileRequest
@@ -13,11 +14,13 @@ import javax.inject.Singleton
 @Singleton
 class ProfileRepository @Inject constructor(
     private val api: ProfileApi,
-    private val store: UserProfileStore
+    private val store: UserProfileStore,
+    private val bus: RepoInvalidationBus
 ) {
     private companion object {
         const val PROFILE_SOURCE_ONBOARDING = "ONBOARDING"
     }
+
     /** 試取雲端 Profile；若能取到，順便把本機 hasServerProfile 標成 true */
     suspend fun existsOnServer(): Boolean = try {
         api.getMyProfile()
@@ -26,7 +29,7 @@ class ProfileRepository @Inject constructor(
     } catch (e: HttpException) {
         when (e.code()) {
             401, 404 -> false
-            else     -> throw e
+            else -> throw e
         }
     } catch (e: IOException) {
         throw e
@@ -38,7 +41,7 @@ class ProfileRepository @Inject constructor(
     } catch (e: HttpException) {
         when (e.code()) {
             401, 404 -> null
-            else     -> throw e
+            else -> throw e
         }
     } catch (e: IOException) {
         null
@@ -49,17 +52,20 @@ class ProfileRepository @Inject constructor(
         val p = getServerProfileOrNull() ?: return false
         val tag = p.locale?.takeIf { it.isNotBlank() } ?: return false
         runCatching { store.setLocaleTag(tag) }
+
+        // ✅ store 寫入後也發出 profile invalidation（讓 UI 有機會強制 refresh）
+        bus.invalidateProfile()
         return true
     }
 
     /** 同時支援 raw 次數(0..7+) 與 bucket(0/2/4/6/7) 的對映 */
     private fun toExerciseLevel(freqOrBucket: Int?): String? = when (freqOrBucket) {
-        null                  -> null
-        in Int.MIN_VALUE..0   -> "sedentary"    // 0 或更小
-        in 1..3               -> "light"        // 1–3（含 bucket=2）
-        in 4..5               -> "moderate"     // 4–5（含 bucket=4）
-        6                     -> "active"       // 6（含 bucket=6）
-        else                  -> "very_active"  // 7 以上（含 bucket=7）
+        null -> null
+        in Int.MIN_VALUE..0 -> "sedentary"   // 0 或更小
+        in 1..3 -> "light"                  // 1–3（含 bucket=2）
+        in 4..5 -> "moderate"               // 4–5（含 bucket=4）
+        6 -> "active"                       // 6（含 bucket=6）
+        else -> "very_active"               // 7 以上（含 bucket=7）
     }
 
     /**
@@ -85,10 +91,10 @@ class ProfileRepository @Inject constructor(
         }
 
         // 原始 current / goal 體重
-        val rawWeightKg:  Double? = p.weightKg?.toDouble()
+        val rawWeightKg: Double? = p.weightKg?.toDouble()
         val rawWeightLbs: Double? = p.weightLbs?.toDouble()
-        val rawGoalKg:    Double? = p.goalWeightKg?.toDouble()
-        val rawGoalLbs:   Double? = p.goalWeightLbs?.toDouble()
+        val rawGoalKg: Double? = p.goalWeightKg?.toDouble()
+        val rawGoalLbs: Double? = p.goalWeightLbs?.toDouble()
 
         // 使用者偏好的主單位
         val weightUnit = p.weightUnit ?: UserProfileStore.WeightUnit.KG
@@ -100,13 +106,13 @@ class ProfileRepository @Inject constructor(
 
         // --- current：只送主單位 ---
         val (weightKgToSend, weightLbsToSend) = when (weightUnit) {
-            UserProfileStore.WeightUnit.KG  -> rawWeightKg to null
+            UserProfileStore.WeightUnit.KG -> rawWeightKg to null
             UserProfileStore.WeightUnit.LBS -> null to rawWeightLbs
         }
 
         // --- goal：只送主單位 ---
         val (goalKgToSend, goalLbsToSend) = when (goalWeightUnit) {
-            UserProfileStore.WeightUnit.KG  -> rawGoalKg to null
+            UserProfileStore.WeightUnit.KG -> rawGoalKg to null
             UserProfileStore.WeightUnit.LBS -> null to rawGoalLbs
         }
 
@@ -118,23 +124,23 @@ class ProfileRepository @Inject constructor(
             heightInches = inches,
             weightKg = weightKgToSend,
             weightLbs = weightLbsToSend,
-
-            // ✅ 改：用 clamped 的 workoutsToSend 來對映 exerciseLevel，避免 >7 或負數造成不一致
             exerciseLevel = toExerciseLevel(workoutsToSend),
-
             goal = p.goal,
             goalWeightKg = goalKgToSend,
             goalWeightLbs = goalLbsToSend,
             dailyStepGoal = p.dailyStepGoal,
             referralSource = p.referralSource,
             locale = localeTag,
-
             unitPreference = unitPrefToSend,
             workoutsPerWeek = workoutsToSend
         )
 
         val resp = api.upsertMyProfile(req, source = null)
         runCatching { store.setHasServerProfile(true) }
+
+        // ✅ 寫入成功 -> invalidate
+        bus.invalidateProfile()
+
         resp
     }
 
@@ -165,7 +171,12 @@ class ProfileRepository @Inject constructor(
             unitPreference = null,
             workoutsPerWeek = null
         )
-        api.upsertMyProfile(req, source = null)
+        val resp = api.upsertMyProfile(req, source = null)
+
+        // ✅ 寫入成功 -> invalidate
+        bus.invalidateProfile()
+
+        resp
     }
 
     suspend fun updateLocaleOnlyOrThrow(newLocale: String): UserProfileDto =
@@ -181,10 +192,10 @@ class ProfileRepository @Inject constructor(
         value: Double,
         unit: UserProfileStore.WeightUnit
     ): Result<UserProfileDto> = runCatching {
-        val trimmed = round1Floor(value)    // e.g. 73.04 → 73.0, 152.09 → 152.0
+        val trimmed = round1Floor(value)
         val body = UpdateGoalWeightRequest(
             value = trimmed,
-            unit = unit.name                // "KG" or "LBS"
+            unit = unit.name // "KG" or "LBS"
         )
         val resp = api.updateGoalWeight(body)
 
@@ -193,12 +204,22 @@ class ProfileRepository @Inject constructor(
             resp.goalWeightKg?.let { store.setGoalWeightKg(it.toFloat()) }
             resp.goalWeightLbs?.let { store.setGoalWeightLbs(it.toFloat()) }
         }
+
+        // ✅ 寫入成功 -> invalidate
+        bus.invalidateProfile()
+
         resp
     }
 
-    suspend fun updateGoalWeightOrThrow(value: Double, unit: UserProfileStore.WeightUnit): UserProfileDto =
-        updateGoalWeight(value, unit).getOrThrow()
+    suspend fun updateGoalWeightOrThrow(
+        value: Double,
+        unit: UserProfileStore.WeightUnit
+    ): UserProfileDto = updateGoalWeight(value, unit).getOrThrow()
 
+    /**
+     * 下載 server profile 並寫入本機 store（只同步數值，不改偏好）
+     * ✅ 寫入 store 後也 invalidate，讓 UI 視需要強制刷新。
+     */
     suspend fun syncServerProfileToStore(): Boolean {
         val p: UserProfileDto = getServerProfileOrNull() ?: return false
 
@@ -208,7 +229,7 @@ class ProfileRepository @Inject constructor(
             p.locale?.let { store.setLocaleTag(it) }
             p.referralSource?.let { store.setReferralSource(it) }
             p.goal?.let { store.setGoal(it) }
-            p.dailyStepGoal?.let { store.setDailyStepGoal(it) } // ✅ NEW（你需在 store 加 setter）
+            p.dailyStepGoal?.let { store.setDailyStepGoal(it) }
 
             // height：有 feet/inches 就視為英制，否則用 cm
             if (p.heightFeet != null && p.heightInches != null) {
@@ -226,10 +247,12 @@ class ProfileRepository @Inject constructor(
             // weight：兩制都寫入數值，但不要動 weightUnit/goalWeightUnit（偏好留在本機）
             p.weightKg?.let { store.setWeightKg(roundKg1(it)) }
             p.weightLbs?.let { store.setWeightLbs(roundLbs1(it)) }
-
             p.goalWeightKg?.let { store.setGoalWeightKg(roundKg1(it)) }
             p.goalWeightLbs?.let { store.setGoalWeightLbs(roundLbs1(it)) }
         }
+
+        // ✅ 寫入 store 完 -> invalidate（讓依賴 profile 的 VM 可 force refresh）
+        bus.invalidateProfile()
 
         return true
     }
@@ -255,8 +278,13 @@ class ProfileRepository @Inject constructor(
             workoutsPerWeek = null
         )
         val resp = api.upsertMyProfile(req, source = null)
+
         // 同步回本機（讓下次進來預設選項更準）
         runCatching { resp.gender?.let { store.setGender(it) } }
+
+        // ✅ 寫入成功 -> invalidate
+        bus.invalidateProfile()
+
         resp
     }
 
@@ -289,6 +317,10 @@ class ProfileRepository @Inject constructor(
         )
         val resp = api.upsertMyProfile(req, source = null)
         runCatching { store.setDailyStepGoal(resp.dailyStepGoal ?: safe) }
+
+        // ✅ 寫入成功 -> invalidate
+        bus.invalidateProfile()
+
         resp
     }
 
@@ -345,12 +377,12 @@ class ProfileRepository @Inject constructor(
         val workoutsToSend = p.exerciseFreqPerWeek?.coerceIn(0, 7)
 
         val (weightKgToSend, weightLbsToSend) = when (weightUnit) {
-            UserProfileStore.WeightUnit.KG  -> rawWeightKg to null
+            UserProfileStore.WeightUnit.KG -> rawWeightKg to null
             UserProfileStore.WeightUnit.LBS -> null to rawWeightLbs
         }
 
         val (goalKgToSend, goalLbsToSend) = when (goalWeightUnit) {
-            UserProfileStore.WeightUnit.KG  -> rawGoalKg to null
+            UserProfileStore.WeightUnit.KG -> rawGoalKg to null
             UserProfileStore.WeightUnit.LBS -> null to rawGoalLbs
         }
 
@@ -377,10 +409,13 @@ class ProfileRepository @Inject constructor(
         val resp = api.upsertMyProfile(req, source = PROFILE_SOURCE_ONBOARDING)
 
         runCatching { store.setHasServerProfile(true) }
+
+        // ✅ 寫入成功 -> invalidate
+        bus.invalidateProfile()
+
         resp
     }
 
     suspend fun upsertFromLocalForOnboardingOrThrow(): UserProfileDto =
         upsertFromLocalForOnboarding().getOrThrow()
-
 }
