@@ -1165,17 +1165,16 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            val reloadFlow = remember(backStackEntry) {
-                backStackEntry.savedStateHandle.getStateFlow(NavResults.AUTO_GEN_RELOAD, false)
-            }
-            val shouldReload by reloadFlow.collectAsState(initial = false)
-
-            LaunchedEffect(shouldReload) {
+            // ✅ 一次性消費：進入此 composable 時檢查一次，有就執行並立刻清掉
+            LaunchedEffect(backStackEntry) {
+                val handle = backStackEntry.savedStateHandle
+                val shouldReload = handle.get<Boolean>(NavResults.AUTO_GEN_RELOAD) == true
                 if (shouldReload) {
+                    // 立刻清掉，避免重組/回來時又被觸發
+                    handle.remove<Boolean>(NavResults.AUTO_GEN_RELOAD)
                     vm.reload()
                     personalVm.refreshProfileOnly()
                     weightVm.initIfNeeded()
-                    backStackEntry.savedStateHandle[NavResults.AUTO_GEN_RELOAD] = false
                 }
             }
 
@@ -1310,18 +1309,30 @@ fun BiteCalNavHost(
                 AutoGenerateGoalsCalcScreen(
                     vm = vm,
                     onDone = { successMsg ->
-                        // ✅ 回到 EditNutritionGoals 並觸發 reload + toast
                         val target = runCatching { nav.getBackStackEntry(Routes.EDIT_NUTRITION_GOALS) }.getOrNull()
                         target?.savedStateHandle?.set(NavResults.AUTO_GEN_RELOAD, true)
                         target?.savedStateHandle?.set(NavResults.SUCCESS_TOAST, successMsg)
 
-                        nav.popBackStack(Routes.EDIT_NUTRITION_GOALS, inclusive = false)
+                        val popped = nav.popBackStack(Routes.EDIT_NUTRITION_GOALS, inclusive = false)
+                        if (!popped) {
+                            // fallback：不在 back stack（極少數）就直接 navigate 回去
+                            nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
                     },
                     onFailToast = { errMsg ->
                         val target = runCatching { nav.getBackStackEntry(Routes.EDIT_NUTRITION_GOALS) }.getOrNull()
                         target?.savedStateHandle?.set(NavResults.ERROR_TOAST, errMsg)
 
-                        nav.popBackStack(Routes.EDIT_NUTRITION_GOALS, inclusive = false)
+                        val popped = nav.popBackStack(Routes.EDIT_NUTRITION_GOALS, inclusive = false)
+                        if (!popped) {
+                            nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
                     }
                 )
             }

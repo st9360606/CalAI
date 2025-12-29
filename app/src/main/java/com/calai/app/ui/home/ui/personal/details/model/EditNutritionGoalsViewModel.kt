@@ -135,7 +135,18 @@ class NutritionGoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _ui.update { it.copy(loading = true, error = null, fieldErrors = emptyMap()) }
 
-            val p = repo.fetchProfileOrNull()
+            val p = runCatching { repo.fetchProfileOrNull() }
+                .getOrElse { e ->
+                    _ui.update {
+                        it.copy(
+                            loading = false,
+                            error = e.message?.takeIf { it.isNotBlank() } ?: "Load failed",
+                            fieldErrors = emptyMap()
+                        )
+                    }
+                    return@launch
+                }
+
             if (p == null) {
                 _ui.update { it.copy(loading = false, error = "Profile not found") }
                 return@launch
@@ -160,7 +171,18 @@ class NutritionGoalsViewModel @Inject constructor(
         viewModelScope.launch {
             _ui.update { it.copy(loading = true, error = null, fieldErrors = emptyMap()) }
 
-            val p = repo.fetchProfileOrNull()
+            val p = runCatching { repo.fetchProfileOrNull() }
+                .getOrElse { e ->
+                    _ui.update {
+                        it.copy(
+                            loading = false,
+                            error = e.message?.takeIf { it.isNotBlank() } ?: "Load failed",
+                            fieldErrors = emptyMap()
+                        )
+                    }
+                    return@launch
+                }
+
             if (p == null) {
                 _ui.update { it.copy(loading = false, error = "Profile not found") }
                 return@launch

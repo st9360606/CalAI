@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.calai.app.ui.home.ui.personal.details.model.AutoGenEvent
 import com.calai.app.ui.home.ui.personal.details.model.AutoGenerateGoalsCalcViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun AutoGenerateGoalsCalcScreen(
@@ -17,14 +18,10 @@ fun AutoGenerateGoalsCalcScreen(
     onFailToast: (String) -> Unit,
     vm: AutoGenerateGoalsCalcViewModel = hiltViewModel()
 ) {
-    // 進頁就做 commit（只會做一次）
-    LaunchedEffect(Unit) {
+    // 進頁就 commit + collect（合併成一個 effect，少掉重複）
+    LaunchedEffect(vm) {
         vm.startCommitOnce()
-    }
-
-    // 監聽結果
-    LaunchedEffect(Unit) {
-        vm.events.collect { ev ->
+        vm.events.collectLatest { ev ->
             when (ev) {
                 is AutoGenEvent.Success -> onDone(ev.message)
                 is AutoGenEvent.Error -> onFailToast(ev.message)
@@ -32,7 +29,6 @@ fun AutoGenerateGoalsCalcScreen(
         }
     }
 
-    // UI：loading
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
     }
