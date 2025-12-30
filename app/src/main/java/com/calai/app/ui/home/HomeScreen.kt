@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -76,6 +77,7 @@ import com.calai.app.R
 import com.calai.app.data.fasting.notifications.NotificationPermission
 import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.app.data.profile.repo.kgToLbs1
 import com.calai.app.ui.home.components.CalendarStrip
 import com.calai.app.ui.home.components.CaloriesCardModern
 import com.calai.app.ui.home.components.LightHomeBackground
@@ -94,13 +96,17 @@ import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
 import com.calai.app.ui.home.ui.weight.components.formatDeltaGoalMinusCurrent
+import com.calai.app.ui.home.ui.weight.components.formatDeltaGoalMinusCurrentFromDb
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutTrackerHost
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.sqrt
 
 
@@ -138,24 +144,50 @@ fun HomeScreen(
         weightVm.initIfNeeded()
     }
 
-    // === Weight UI（為了拿跟 SummaryCards 相同的 TO GOAL） ===
     val weightUnit = weightUi.unit
-    val effectiveCurrentKg = weightUi.current ?: weightUi.profileWeightKg
-    val effectiveGoalKg = weightUi.profileGoalWeightKg ?: weightUi.goal
 
-    // ★ 修改這裡：固定用小數點一位（KG 本來就一位；LBS 原本是整數）
-    val weightPrimaryText = formatDeltaGoalMinusCurrent(
-        goalKg = effectiveGoalKg,
-        currentKg = effectiveCurrentKg,
+    // current：kg/lbs 都準備好（LBS 顯示與差值用 lbs；progress 仍用 kg）
+    val currentKg  = weightUi.current ?: weightUi.profileWeightKg
+    val currentLbs = weightUi.currentLbs ?: weightUi.profileWeightLbs
+
+    // goal：Home 建議一律用 DB 真值（SummaryCards 也這樣做）
+    val goalKg  = weightUi.goal      // DB goal_weight_kg
+    val goalLbs = weightUi.goalLbs   // DB goal_weight_lbs
+
+    val weightPrimaryTextRaw = formatDeltaGoalMinusCurrentFromDb(
+        goalKg = goalKg,
+        goalLbs = goalLbs,
+        currentKg = currentKg,
+        currentLbs = currentLbs,
         unit = weightUnit,
-        lbsAsInt = (weightUnit == UserProfileStore.WeightUnit.LBS)          // ← 原本是 (weightUnit == UserProfileStore.WeightUnit.LBS)
+        lbsAsInt = false // 保持原本邏輯，最後再統一 floor
     )
+    val weightPrimaryText = roundFirstNumberToIntText(weightPrimaryTextRaw)
 
-    // ✅ 新：Home WeightCardNew 進度 = (latest - start)/(goal - start)
+    // （可選）把 debug log 改成同時印 kg/lbs，才不會誤判
+    LaunchedEffect(weightUnit, currentKg, currentLbs, goalKg, goalLbs) {
+        Log.d(
+            "weightDebug",
+            String.format(
+                Locale.US,
+                "unit=%s currentKg=%.3f currentLbs=%s goalKg=%s goalLbs=%s",
+                weightUnit,
+                (currentKg ?: Double.NaN),
+                (currentLbs?.let { String.format(Locale.US, "%.3f", it) } ?: "null"),
+                (goalKg?.let { String.format(Locale.US, "%.3f", it) } ?: "null"),
+                (goalLbs?.let { String.format(Locale.US, "%.3f", it) } ?: "null"),
+            )
+        )
+    }
+
     val weightProgress: Float = computeHomeWeightProgress(
-        profileWeightKg = weightUi.profileWeightKg,                 // start = user_profiles.weight_kg
-        goalWeightKg = weightUi.profileGoalWeightKg ?: weightUi.goal, // goal
-        latestWeightKg = weightUi.current                          // latest = 最新 timeseries
+        unit = weightUnit,
+        profileWeightKg = weightUi.profileWeightKg,
+        profileWeightLbs = weightUi.profileWeightLbs,
+        goalWeightKg = goalKg,                 // ✅ 你上面已經定義：DB goal_weight_kg
+        goalWeightLbs = goalLbs,               // ✅ 你上面已經定義：DB goal_weight_lbs
+        latestWeightKg = weightUi.current,     // 最新 timeseries kg
+        latestWeightLbs = weightUi.currentLbs  // ✅ 最新 timeseries lbs（DB）
     )
 
     // ★ 新增：監聽 Workout VM 狀態（為了一次性導航）
@@ -628,24 +660,74 @@ private fun openAppNotificationSettings(ctx: Context) {
 }
 
 fun computeHomeWeightProgress(
+    unit: UserProfileStore.WeightUnit,
     profileWeightKg: Double?,     // user_profiles.weight_kg（起始）
-    goalWeightKg: Double?,      // user_profiles.goal_weight_kg（目標）
-    latestWeightKg: Double?       // weight_timeseries 最新一筆 weight_kg
+    profileWeightLbs: Double?,    // user_profiles.weight_lbs（起始）
+    goalWeightKg: Double?,        // user_profiles.goal_weight_kg（目標）
+    goalWeightLbs: Double?,       // user_profiles.goal_weight_lbs（目標）
+    latestWeightKg: Double?,      // weight_timeseries 最新一筆 weight_kg
+    latestWeightLbs: Double?      // weight_timeseries 最新一筆 weight_lbs
 ): Float {
-    // 情境3：沒有 timeseries → 最新體重 = null → 進度 0%
-    if (latestWeightKg == null) return 0f
-    if (profileWeightKg == null || goalWeightKg == null) return 0f
 
-    val start = profileWeightKg
-    val goal = goalWeightKg
-    val latest = latestWeightKg
+    fun compute(start: Double?, goal: Double?, latest: Double?): Float {
+        if (latest == null) return 0f
+        if (start == null || goal == null) return 0f
 
-    val denominator = goal - start
-    if (denominator == 0.0) return 0f      // 起始 = 目標 → 避免除以 0
+        val denominator = goal - start
+        if (denominator == 0.0) return 0f
 
-    // ✅ 已完成比例： (latest - start) / (goal - start)
-    val raw = ((latest - start) / denominator).toFloat()
+        // 原始比例
+        val raw = ((latest - start) / denominator).toFloat()
 
-    // clamp 到 0~1，避免超過目標或資料錯誤
-    return raw.coerceIn(0f, 1f)
+        // 先 clamp 0~1
+        val clamped = raw.coerceIn(0f, 1f)
+
+        // ✅ 轉成百分比後「無條件捨去」到整數%，再轉回 0~1
+        val percentInt = floor((clamped * 100f).toDouble()).toInt() // 0..100
+        return percentInt / 100f
+    }
+
+    return when (unit) {
+        UserProfileStore.WeightUnit.KG -> {
+            compute(
+                start = profileWeightKg,
+                goal = goalWeightKg,
+                latest = latestWeightKg
+            )
+        }
+
+        UserProfileStore.WeightUnit.LBS -> {
+            val start = profileWeightLbs ?: profileWeightKg?.let { kgToLbs1(it) }
+            val goal = goalWeightLbs ?: goalWeightKg?.let { kgToLbs1(it) }
+            val latest = latestWeightLbs ?: latestWeightKg?.let { kgToLbs1(it) }
+            compute(start = start, goal = goal, latest = latest)
+        }
+    }
 }
+
+private fun roundFirstNumberToIntText(input: String): String {
+    // 支援：+ - Unicode minus(−) en-dash(–) em-dash(—)，以及 12.3 / 12,3
+    val regex = Regex("""[+\-−–—]?\d+(?:[.,]\d+)?""")
+    val m = regex.find(input) ?: return input
+
+    val raw = m.value
+
+    // 先把各種「負號」統一成 '-'
+    val normalized = raw
+        .replace('−', '-')
+        .replace('–', '-')
+        .replace('—', '-')
+        .replace(',', '.') // 支援歐洲小數逗號
+
+    val bd = normalized.toBigDecimalOrNull() ?: return input
+
+    // ✅ 四捨五入到整數（HALF_UP）
+    val roundedInt = bd.setScale(0, RoundingMode.HALF_UP).toInt()
+
+    // 保留正號（如果原字串有 '+' 而且結果 > 0）
+    val keepPlus = raw.startsWith('+') && roundedInt > 0
+    val replaced = (if (keepPlus) "+$roundedInt" else roundedInt.toString())
+
+    return input.replaceRange(m.range, replaced)
+}
+
