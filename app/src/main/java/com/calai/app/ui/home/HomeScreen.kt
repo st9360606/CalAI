@@ -97,8 +97,6 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
-
-
 enum class HomeTab { Home, Progress, Daily, Fasting, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
