@@ -2,11 +2,11 @@ package com.calai.app.ui.onboarding.goalweight
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -45,8 +45,11 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,18 +64,15 @@ import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.roundKg1
-import com.calai.app.ui.common.OnboardingProgress
-import kotlin.math.roundToInt
-import java.util.Locale
 import com.calai.app.i18n.LocalLocaleController
-import androidx.compose.foundation.gestures.snapping.SnapPosition
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
+import com.calai.app.ui.common.OnboardingProgress
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
+import java.util.Locale
+import kotlin.math.roundToInt
 
 private fun isZhLanguageTag(tag: String): Boolean {
-    // tag 可能是 "zh", "zh-TW", "zh-Hant-TW"
     return tag.lowercase(Locale.ROOT).startsWith("zh")
 }
 
@@ -101,8 +101,6 @@ fun WeightGoalScreen(
     val weightLbs by vm.weightLbsState.collectAsState()
 
     // ✅ 是否有 user_profiles（由 VM / Store 提供）
-    // - true  => user_profiles 存在，使用 DB unit_preference
-    // - false => user_profiles 不存在，一律顯示 LBS
     val hasProfile by vm.hasProfileState.collectAsState()
 
     // kg 範圍
@@ -115,34 +113,38 @@ fun WeightGoalScreen(
     val lbsIntMin = lbsTenthsMin / 10
     val lbsIntMax = lbsTenthsMax / 10
 
-    // ✅ 預設：LBS + 154.0（只在「user_profiles 不存在」時使用）
-    val defaultLbsTenths = 1540     // 154.0 lbs
+    // ✅ 預設：154.0 lbs
+    val defaultLbsTenths = 1540 // 154.0 lbs
     val defaultKg = lbsTenthsToKgFloor1(defaultLbsTenths).coerceIn(kgMin, kgMax)
 
     // ✅ 防止使用者手動切換後，被 flow 更新覆蓋
     var didUserToggleUnit by rememberSaveable { mutableStateOf(false) }
 
     // ✅ UI 顯示單位（false=LBS, true=KG）
-    // 先預設 LBS；若 hasProfile=true 且尚未手動切換，會被 LaunchedEffect 套用 DB unit_preference
     var useMetric by rememberSaveable { mutableStateOf(false) }
 
-    // ✅ 初始顯示單位規則：
-    // - user_profiles 不存在 => 一律 LBS
-    // - user_profiles 存在   => 用 DB unit_preference (savedUnit)
-    LaunchedEffect(hasProfile, savedUnit) {
+    // ✅ 跟 WeightSelectionScreen 一樣：沒 weight 就先強制顯示 LBS（154.0 lbs）
+    val hasAnyWeight = (weightKg > 0f) || (weightLbs > 0f)
+
+    LaunchedEffect(hasProfile, savedUnit, hasAnyWeight) {
         if (!didUserToggleUnit) {
-            useMetric = if (!hasProfile) {
-                false
-            } else {
-                savedUnit == UserProfileStore.WeightUnit.KG
+            useMetric = when {
+                // ✅ 沒 weight：先強制 LBS
+                !hasAnyWeight -> false
+
+                // ✅ 沒 profile：一律 LBS
+                !hasProfile -> false
+
+                // ✅ 有 weight + 有 profile：才套 DB unit_preference
+                else -> savedUnit == UserProfileStore.WeightUnit.KG
             }
         }
     }
 
-    // === 初始化 kg / lbs（kg 計算、lbsTenths 記錄原始 lbs） ===
-    data class GoalInitial(val kg: Double, val lbsTenths: Int)
+    // === 初始化 kg / lbs（kg 用於計算，lbsTenths 記錄使用者原始 lbs） ===
+    data class Initial(val kg: Double, val lbsTenths: Int)
 
-    val initial = remember(weightKg, weightLbs, hasProfile) {
+    val initial = remember(weightKg, weightLbs) {
         val hasLbs = weightLbs > 0f
         val hasKg = weightKg > 0f
 
@@ -158,44 +160,44 @@ fun WeightGoalScreen(
                 lbsToKgPrecise(lbsVal)
             }.coerceIn(kgMin, kgMax)
 
-            GoalInitial(kgVal, lbsTenths)
+            Initial(kgVal, lbsTenths)
+
         } else if (hasKg) {
             // 只有 kg → 由 kg 推 lbsTenths
             val kgVal = weightKg.toDouble().coerceIn(kgMin, kgMax)
             val lbsTenths = kgToLbsTenths(kgVal)
                 .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
-            GoalInitial(kgVal, lbsTenths)
+            Initial(kgVal, lbsTenths)
+
         } else {
-            // ✅ 完全沒資料：
-            // - 若 user_profiles 不存在 => 預設 154.0 lbs
-            // - 若 user_profiles 存在但還沒拉到 weight（理論上不該發生，但保底也給 154.0 lbs）
-            GoalInitial(defaultKg, defaultLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax))
+            // ✅ 完全沒資料：預設 154.0 lbs
+            Initial(defaultKg, defaultLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax))
         }
     }
 
-    // ✅ 提交中 freeze：避免按 Continue 時 Flow 回來導致 wheel 重設 + scrollToItem 跳一下
-    var isSubmitting by rememberSaveable { mutableStateOf(false) }
+    // ✅ 提交中 freeze：避免 Continue 時 Flow 回來導致 wheel 重設 + scrollToItem 跳一下
+    var isSaving by rememberSaveable { mutableStateOf(false) }
 
-    // ✅ wheel 的 SSOT：用 saveable 本地狀態，不要用 remember(flowKey) 重新初始化
-    var valueKg by rememberSaveable { mutableDoubleStateOf(0.0) }
-    var valueLbsTenths by rememberSaveable { mutableIntStateOf(0) }
+    // ✅ wheel 的 SSOT：用 saveable 本地狀態
+    var valueKg by rememberSaveable { mutableDoubleStateOf(initial.kg) }
+    var valueLbsTenths by rememberSaveable { mutableIntStateOf(initial.lbsTenths) }
 
-    // ✅ 只在「非提交中」才從 Flow seed（Flow 初次載入/切帳號/回到頁面時需要）
-    LaunchedEffect(initial.kg, initial.lbsTenths, isSubmitting) {
-        if (!isSubmitting) {
+    // ✅ 只在「非提交中」才從 Flow seed
+    LaunchedEffect(initial.kg, initial.lbsTenths, isSaving) {
+        if (!isSaving) {
             valueKg = initial.kg
             valueLbsTenths = initial.lbsTenths
         }
     }
 
-    // kg wheel 選中值
+    // --- kg wheel 選中值（整數＋小數） ---
     val kgTenths = (floor1(valueKg) * 10.0).toInt()
         .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
     val kgIntSel = kgTenths / 10
     val kgDecSel = kgTenths % 10
 
-    // lbs wheel 選中值
+    // --- lbs wheel 選中值（整數＋小數） ---
     val lbsTenthsClamped = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
     val lbsIntSel = lbsTenthsClamped / 10
     val lbsDecSel = lbsTenthsClamped % 10
@@ -203,10 +205,13 @@ fun WeightGoalScreen(
     val isZh = currentIsZhByAppLocale()
     val subtitleToUnitSpacing = if (isZh) 60.dp else 25.dp
 
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+            TopAppBar(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     navigationIconContentColor = Color(0xFF111114)
@@ -248,23 +253,36 @@ fun WeightGoalScreen(
             Box {
                 Button(
                     onClick = {
-                        if (isSubmitting) return@Button
-                        isSubmitting = true
+                        if (isSaving) return@Button
 
-                        val kgToSave = roundKg1(valueKg)
-                            .coerceIn(kgMin.toFloat(), kgMax.toFloat())
-                        vm.saveWeightKg(kgToSave)
+                        scope.launch {
+                            isSaving = true
+                            try {
+                                val kgToSave = roundKg1(valueKg)
+                                    .coerceIn(kgMin.toFloat(), kgMax.toFloat())
 
-                        if (useMetric) {
-                            vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
-                            vm.clearGoalWeightLbs()
-                        } else {
-                            vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
-                            val lbsToSave = (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
-                            vm.saveGoalWeightLbs(lbsToSave)
+                                val lbsToSaveOrNull: Float? = if (!useMetric) {
+                                    (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
+                                } else null
+
+                                // ✅ 你的 VM 目前是分開存：照原本行為，但用跟 WeightSelectionScreen 一樣的提交節奏
+                                vm.saveWeightKg(kgToSave)
+
+                                if (useMetric) {
+                                    vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
+                                    vm.clearGoalWeightLbs()
+                                } else {
+                                    vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
+                                    if (lbsToSaveOrNull != null) {
+                                        vm.saveGoalWeightLbs(lbsToSaveOrNull)
+                                    }
+                                }
+
+                                onNext()
+                            } finally {
+                                isSaving = false
+                            }
                         }
-
-                        onNext()
                     },
                     enabled = valueKg > 0.0,
                     modifier = Modifier
@@ -309,8 +327,7 @@ fun WeightGoalScreen(
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
                 color = Color(0xFF111114),
-                modifier = Modifier
-                    .fillMaxWidth(0.9f),   // ✅ 給一點左右留白（你也可改 0.85f / 0.8f）
+                modifier = Modifier.fillMaxWidth(0.9f),
                 textAlign = TextAlign.Center
             )
 
@@ -322,8 +339,7 @@ fun WeightGoalScreen(
                     color = Color(0xFF9AA3AF),
                     lineHeight = 20.sp
                 ),
-                modifier = Modifier
-                    .fillMaxWidth(0.82f),  // ✅ 副標通常更窄比較好看
+                modifier = Modifier.fillMaxWidth(0.82f),
                 textAlign = TextAlign.Center
             )
 
@@ -332,18 +348,16 @@ fun WeightGoalScreen(
             WeightUnitSegmented(
                 useMetric = useMetric,
                 onChange = { newUseMetric ->
-                    didUserToggleUnit = true // ✅ 手動切換後，不再自動套用 DB
+                    didUserToggleUnit = true
 
                     if (newUseMetric) {
                         // ✅ LBS → KG：無條件捨去到 0.1
                         val tenths = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
                         valueKg = lbsTenthsToKgFloor1(tenths).coerceIn(kgMin, kgMax)
-                        // 例：154.0 lbs -> 69.8 kg
                     } else {
                         // ✅ KG → LBS：無條件捨去到 0.1
                         valueLbsTenths = kgToLbsTenths(floor1(valueKg))
                             .coerceIn(lbsTenthsMin, lbsTenthsMax)
-                        // 例：70.0 kg -> 154.3 lbs
                     }
                     useMetric = newUseMetric
                 },
@@ -351,7 +365,6 @@ fun WeightGoalScreen(
             )
 
             if (useMetric) {
-                // ===== KG：整數位 + 小數位 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -375,8 +388,9 @@ fun WeightGoalScreen(
                             .width(120.dp)
                             .padding(start = 23.dp)
                     )
+
                     Box(
-                        modifier = Modifier.width(18.dp),
+                        Modifier.width(18.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -385,6 +399,7 @@ fun WeightGoalScreen(
                             modifier = Modifier.offset(x = 2.dp)
                         )
                     }
+
                     NumberWheel(
                         range = 0..9,
                         value = kgDecSel,
@@ -401,11 +416,11 @@ fun WeightGoalScreen(
                             .width(80.dp)
                             .padding(start = 6.dp)
                     )
+
                     Spacer(Modifier.width(10.dp))
                     Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
-                // ===== LBS：整數位 + 小數位，完全以 valueLbsTenths 為主 =====
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -432,7 +447,6 @@ fun WeightGoalScreen(
                             .width(120.dp)
                             .padding(start = 20.dp)
                     )
-
 
                     Box(
                         modifier = Modifier.width(18.dp),
@@ -559,7 +573,7 @@ private fun SegItem(
     }
 }
 
-/** 通用數字滾輪（初始化置中 + 抑制首次回呼） */
+/** 通用數字滾輪（初始化置中 + 程式定位不回呼 + 只在使用者滑動結束回呼） */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
@@ -579,7 +593,6 @@ private fun NumberWheel(
     val values: List<Int> = remember(range) { range.toList() }
     val count = values.size
 
-    // 上下補 mid 個空白 item，讓中心值 = firstVisible + mid，穩定不偏移
     val padded: List<Int?> = remember(range) {
         List(mid) { null } + values.map { it as Int? } + List(mid) { null }
     }
@@ -592,18 +605,6 @@ private fun NumberWheel(
         snapPosition = SnapPosition.Center
     )
 
-    // 初次進入：把 selectedIdx 放到 firstVisible，中心就會落在 selected
-    LaunchedEffect(range) {
-        state.scrollToItem(selectedIdx)
-    }
-
-    // 外部 value 被程式更新時同步位置（避免跟使用者滑動打架）
-    LaunchedEffect(range, value) {
-        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
-            state.scrollToItem(selectedIdx)
-        }
-    }
-
     val centerListIndex by remember {
         derivedStateOf {
             (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
@@ -612,14 +613,42 @@ private fun NumberWheel(
 
     val latestOnValueChange by rememberUpdatedState(onValueChange)
 
-    // ✅ 核心：初次 layout 完成也會 emit，確保「不滑也同步到外層 state」
+    // ✅ 忽略「程式定位」造成的 idle 回呼
+    var ignoreNextIdleCallback by remember { mutableStateOf(true) }
+
+    // 初始化定位：程式 scrollToItem
     LaunchedEffect(range) {
-        snapshotFlow {
-            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+        ignoreNextIdleCallback = true
+        state.scrollToItem(selectedIdx)
+    }
+
+    // 外部 value 改變：程式定位（不回呼）
+    LaunchedEffect(range, value) {
+        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
+            ignoreNextIdleCallback = true
+            state.scrollToItem(selectedIdx)
         }
-            .filterNotNull()
+    }
+
+    // ✅ 只在「使用者滑動結束」那一刻回呼（true -> false）
+    LaunchedEffect(range) {
+        snapshotFlow { state.isScrollInProgress }
             .distinctUntilChanged()
-            .collect { latestOnValueChange(it) }
+            .filter { inProgress -> !inProgress } // 只要 idle
+            .collect {
+                if (ignoreNextIdleCallback) {
+                    ignoreNextIdleCallback = false
+                    return@collect
+                }
+
+                val centerValue = padded.getOrNull(
+                    (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
+                )
+
+                if (centerValue != null) {
+                    latestOnValueChange(centerValue)
+                }
+            }
     }
 
     Box(

@@ -6,7 +6,6 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -132,12 +131,19 @@ fun WeightSelectionScreen(
     // ✅ 初始顯示單位規則：
     // - user_profiles 不存在 => 一律 LBS
     // - user_profiles 存在   => 用 DB unit_preference (savedUnit)
-    LaunchedEffect(hasProfile, savedUnit) {
+    val hasAnyWeight = (weightKg > 0f) || (weightLbs > 0f)
+
+    LaunchedEffect(hasProfile, savedUnit, hasAnyWeight) {
         if (!didUserToggleUnit) {
-            useMetric = if (!hasProfile) {
-                false
-            } else {
-                savedUnit == UserProfileStore.WeightUnit.KG
+            useMetric = when {
+                // ✅ 沒 weight：先強制用 LBS（你要的：一進來就是 154.0 lbs）
+                !hasAnyWeight -> false
+
+                // ✅ 沒 profile：一律 LBS
+                !hasProfile -> false
+
+                // ✅ 有 weight + 有 profile：才套 DB unit_preference
+                else -> savedUnit == UserProfileStore.WeightUnit.KG
             }
         }
     }
@@ -145,12 +151,11 @@ fun WeightSelectionScreen(
     // === 初始化 kg / lbs（kg 用於計算，lbsTenths 記錄使用者原始 lbs） ===
     data class Initial(val kg: Double, val lbsTenths: Int)
 
-    val initial = remember(weightKg, weightLbs, hasProfile) {
+    val initial = remember(weightKg, weightLbs) {
         val hasLbs = weightLbs > 0f
         val hasKg = weightKg > 0f
 
         if (hasLbs) {
-            // 有 lbs → 以 lbs 為主
             val lbsVal = weightLbs.toDouble()
             val lbsTenths = (lbsVal * 10.0).roundToInt()
                 .coerceIn(lbsTenthsMin, lbsTenthsMax)
@@ -162,24 +167,23 @@ fun WeightSelectionScreen(
             }.coerceIn(kgMin, kgMax)
 
             Initial(kgVal, lbsTenths)
+
         } else if (hasKg) {
-            // 只有 kg → 由 kg 推 lbsTenths
             val kgVal = weightKg.toDouble().coerceIn(kgMin, kgMax)
             val lbsTenths = kgToLbsTenths(kgVal)
                 .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
             Initial(kgVal, lbsTenths)
+
         } else {
-            // ✅ 完全沒資料：
-            // - 若 user_profiles 不存在 => 預設 154.0 lbs
-            // - 若 user_profiles 存在但還沒拉到 weight（理論上不該發生，但保底也給 154.0 lbs）
+            // ✅ 完全沒資料：一律預設 154.0 lbs
             Initial(defaultKg, defaultLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax))
         }
     }
 
     var isSaving by rememberSaveable { mutableStateOf(false) }
-    var valueKg by rememberSaveable { mutableDoubleStateOf(0.0) }
-    var valueLbsTenths by rememberSaveable { mutableIntStateOf(0) }
+    var valueKg by rememberSaveable { mutableDoubleStateOf(initial.kg) }
+    var valueLbsTenths by rememberSaveable { mutableIntStateOf(initial.lbsTenths) }
 
     LaunchedEffect(initial.kg, initial.lbsTenths, isSaving) {
         if (!isSaving) {
@@ -566,7 +570,7 @@ private fun SegItem(
     }
 }
 
-/** 通用數字滾輪（初始化置中 + 抑制首次回呼） */
+/** 通用數字滾輪（程式定位不回呼 + 使用者滑動停止才回呼） */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
@@ -590,25 +594,13 @@ private fun NumberWheel(
         List(mid) { null } + values.map { it as Int? } + List(mid) { null }
     }
 
-    val selectedIdx = ((value - range.first).coerceIn(0, count - 1))
+    val selectedIdx = (value - range.first).coerceIn(0, count - 1)
 
     val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(
         lazyListState = state,
         snapPosition = SnapPosition.Center
     )
-
-    LaunchedEffect(range) {
-        state.scrollToItem(selectedIdx)
-    }
-
-    LaunchedEffect(range, value) {
-        if (!state.isScrollInProgress) {
-            if (state.firstVisibleItemIndex != selectedIdx) {
-                state.scrollToItem(selectedIdx)
-            }
-        }
-    }
 
     val centerListIndex by remember {
         derivedStateOf {
@@ -617,13 +609,39 @@ private fun NumberWheel(
     }
 
     val latestOnValueChange by rememberUpdatedState(onValueChange)
+
+    // ✅ 忽略下一次「中心值變動」回呼：用來擋程式 scrollToItem 造成的回呼
+    var ignoreNextCenterCallback by remember { mutableStateOf(true) }
+
+    // ✅ 初始化定位（程式定位要忽略回呼）
+    LaunchedEffect(range) {
+        ignoreNextCenterCallback = true
+        state.scrollToItem(selectedIdx)
+    }
+
+    // ✅ 外部 value 改變（例如切換單位、initial 更新）：程式定位要忽略回呼
+    LaunchedEffect(range, value) {
+        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
+            ignoreNextCenterCallback = true
+            state.scrollToItem(selectedIdx)
+        }
+    }
+
+    // ✅ 只在「停止滑動」那一刻才會得到 centerValue（滑動中回傳 null）
     LaunchedEffect(range) {
         snapshotFlow {
-            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+            if (state.isScrollInProgress) null
+            else padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
         }
             .filterNotNull()
             .distinctUntilChanged()
-            .collect { latestOnValueChange(it) }
+            .collect { centerValue ->
+                if (ignoreNextCenterCallback) {
+                    ignoreNextCenterCallback = false
+                    return@collect
+                }
+                latestOnValueChange(centerValue)
+            }
     }
 
     Box(
