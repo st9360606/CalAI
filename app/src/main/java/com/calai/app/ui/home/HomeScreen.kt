@@ -12,7 +12,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -30,19 +29,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
@@ -95,7 +85,6 @@ import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState
 import com.calai.app.ui.home.ui.water.model.WaterViewModel
-import com.calai.app.ui.home.ui.weight.components.formatDeltaGoalMinusCurrent
 import com.calai.app.ui.home.ui.weight.components.formatDeltaGoalMinusCurrentFromDb
 import com.calai.app.ui.home.ui.weight.model.WeightViewModel
 import com.calai.app.ui.home.ui.workout.WorkoutTrackerHost
