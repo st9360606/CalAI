@@ -204,4 +204,12 @@
     <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
 
 
+
+    <!-- Fasting notifications 通知內容 -->
+    <string name="fasting_start_title">Today’s %1$s starts 🍽️</string>
+    <string name="fasting_start_body">Your eating window is open (%1$s–%2$s). If you eat, remember to log it.</string>
+    <string name="fasting_endsoon_title">Eating window ends soon ⏰</string>
+    <string name="fasting_endsoon_body">1 hour left (until %1$s). If you have a last meal, take it slow and log it.</string>
+
+
 </resources>

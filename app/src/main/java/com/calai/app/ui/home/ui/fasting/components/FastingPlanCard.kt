@@ -25,31 +25,31 @@ import com.calai.app.ui.home.components.GreenSwitch
 
 @Composable
 fun FastingPlanCard(
-    planTitle: String = "Fasting Plan",        // TODO: stringResource
     planName: String,
-    startLabel: String = "start time",         // TODO: stringResource
-    startText: String? = null,
-    endLabel: String = "end time",             // TODO: stringResource
-    endText: String? = null,
     enabled: Boolean,
     onToggle: (Boolean) -> Unit,
     onClick: () -> Unit,
     cardHeight: Dp,
     modifier: Modifier = Modifier,
+    // ===== 可選（有預設值）=====
+    planTitle: String = "Fasting Plan",        // TODO: stringResource
+    startLabel: String = "start time",         // TODO: stringResource
+    startText: String? = null,
+    endLabel: String = "end time",             // TODO: stringResource
+    endText: String? = null,
 
-    // ===== 計畫名稱調整（保留你已有的能力） =====
     planNameTextStyle: TextStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
     planNameFontSize: TextUnit? = null,
     planNameYOffset: Dp = 0.dp,
 
-    // ===== Switch 尺寸（保留） =====
+    // ===== Switch 尺寸 =====
     switchWidth: Dp = 52.dp,
     switchHeight: Dp = 28.dp,
 
-    // ===== 黑底標題條參數（新） =====
-    topBarHeight: Dp = 26.dp,                                       // ★ 固定高度，視覺更薄
-    topBarTextStyle: TextStyle = MaterialTheme.typography.titleSmall,// 可換 labelMedium 讓更薄
-    topBarPaddingH: Dp = 16.dp                                      // 左右內距
+    // ===== 黑底標題條 =====
+    topBarHeight: Dp = 26.dp,
+    topBarTextStyle: TextStyle = MaterialTheme.typography.titleSmall,
+    topBarPaddingH: Dp = 16.dp                                 // 左右內距
 ) {
     Card(
         modifier = modifier

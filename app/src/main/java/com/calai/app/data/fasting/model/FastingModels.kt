@@ -8,10 +8,13 @@ enum class FastingPlan(val code: String, val eatingHours: Int) {
     P12_12("12:12", 12),
     P18_6("18:6", 6);
 
-    // ★ 新增：禁食時數（24h 制）
     val fastingHours: Int get() = 24 - eatingHours
 
     companion object {
-        fun of(code: String) = entries.first { it.code == code }
+        fun of(code: String): FastingPlan = entries.first { it.code == code }
+
+        // ✅ 不讓背景 worker 因為未知 code 直接崩
+        fun ofOrDefault(code: String, fallback: FastingPlan = P16_8): FastingPlan =
+            entries.firstOrNull { it.code == code } ?: fallback
     }
 }

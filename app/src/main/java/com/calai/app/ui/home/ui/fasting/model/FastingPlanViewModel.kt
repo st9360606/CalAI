@@ -1,6 +1,7 @@
 package com.calai.app.ui.home.ui.fasting.model
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.app.data.fasting.api.FastingPlanDto
@@ -12,7 +13,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
@@ -24,7 +29,7 @@ data class FastingUiState(
     val enabled: Boolean = false,
     val toastMessage: String? = null
 )
-
+private const val TAG = "FastingVM"
 @HiltViewModel
 class FastingPlanViewModel @Inject constructor(
     private val repo: FastingRepository,
@@ -38,13 +43,19 @@ class FastingPlanViewModel @Inject constructor(
     // 當使用者嘗試開啟但尚未授權通知時，暫存「待啟用」意圖
     private var pendingEnable = false
 
+    private val hm: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault())
+
     fun load() = viewModelScope.launch {
-        val dto = repo.loadOrCreateDefault()
-        applyDto(dto)
-        // ⛳ 進入頁面就做「權限與雲端狀態」一致性校正
-        reconcileEnabledWithPermission()
-        // 若裝置有權限且 DB=enabled，重裝後鬧鐘會被清空 → 這裡自動補排程
-        maybeRescheduleIfEnabled()
+        try {
+            val dto = repo.ensureDefaultIfMissing()
+            applyDto(dto)
+
+            reconcileEnabledWithPermission()
+            maybeRescheduleIfEnabled()
+        } catch (t: Throwable) {
+            Log.e(TAG, "load() failed", t)
+            _state.value = _state.value.copy(loading = false)
+        }
     }
 
     private fun applyDto(dto: FastingPlanDto) {
@@ -126,39 +137,35 @@ class FastingPlanViewModel @Inject constructor(
         reconcileEnabledWithPermission()
     }
 
+    /**
+     * ✅ 儲存到後端後：
+     * - enabled=false → cancel
+     * - enabled=true  → 取 nextTriggers(UTC) 後排兩個通知：
+     *   1) nextStartUtc
+     *   2) nextEndUtc - 60min (endSoon)
+     */
     fun persistAndReschedule(showToast: Boolean = false) = viewModelScope.launch {
         try {
             val s = _state.value
-            // upsert（Server 回填 end/enabled）
+            Log.d(TAG, "persistAndReschedule() start enabled=${s.enabled} plan=${s.selected.code} start=${s.start.format(hm)}")
+
             val saved = repo.save(s.selected.code, s.start, s.enabled)
             applyDto(saved)
 
-            // 重新排程（防禦性包 try-catch）
             try {
-                scheduler.cancel()
-                if (_state.value.enabled) {
-                    val tr = repo.nextTriggers(_state.value.selected, _state.value.start)
-                    scheduler.schedule(
-                        java.time.Instant.parse(tr.nextStartUtc),
-                        java.time.Instant.parse(tr.nextEndUtc)
-                    )
-                }
-            } catch (_: Throwable) {
-                // 忽略裝置層異常（無權限/廠商限制），不讓 UI 崩潰
+                scheduleOrCancelUsingSaved(saved)
+            } catch (t: Throwable) {
+                Log.e(TAG, "scheduleOrCancelUsingSaved() failed", t)
             }
 
             if (showToast) {
-                _state.value = _state.value.copy(
-                    toastMessage = "Saved successfully !",
-                )
+                _state.value = _state.value.copy(toastMessage = "Saved successfully !")
             }
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
+            Log.e(TAG, "persistAndReschedule() failed", t)
             if (showToast) {
-                _state.value = _state.value.copy(
-                    toastMessage = "Save failed"
-                )
+                _state.value = _state.value.copy(toastMessage = "Save failed")
             }
-            // 網路/Server 失敗也不讓 UI 崩潰
         }
     }
 
@@ -168,36 +175,88 @@ class FastingPlanViewModel @Inject constructor(
 
     /**
      * 當 DB=enabled 但裝置無通知權限 → 自動關閉並回寫 DB=0，且取消排程。
-     * 當 DB=disabled 或裝置已有權限 → 不動作。
      */
     private fun reconcileEnabledWithPermission() = viewModelScope.launch {
         val s = _state.value
         if (s.enabled && !isNotifGranted()) {
-            // 本地關閉
+            Log.w(TAG, "reconcile: enabled=1 but permission not granted -> force disable")
             _state.value = s.copy(enabled = false)
-            // 回寫 DB=0
+
             try {
                 val saved = repo.save(s.selected.code, s.start, false)
                 applyDto(saved.copy(enabled = false))
-            } catch (_: Throwable) { /* 忽略寫回錯誤 */ }
-            // 取消鬧鐘
-            try { scheduler.cancel() } catch (_: Throwable) { }
+            } catch (t: Throwable) {
+                Log.e(TAG, "reconcile write-back failed", t)
+            }
+
+            try { scheduler.cancel() } catch (t: Throwable) { Log.e(TAG, "cancel failed", t) }
         }
     }
 
-    // 若開著（DB=1）且裝置有權限，進入時補排程（重裝後鬧鐘會被清掉）
+    /**
+     * 若開著（DB=1）且裝置有權限，進入時補排程（重裝後鬧鐘會被清掉）
+     *
+     * ✅ 注意：不要先 cancel 再拿 triggers，避免網路失敗把排程清掉。
+     * 這裡先算好 triggers 再 schedule。
+     */
     private fun maybeRescheduleIfEnabled() = viewModelScope.launch {
         val s = _state.value
         if (s.enabled && isNotifGranted()) {
             try {
-                scheduler.cancel()
                 val tr = repo.nextTriggers(s.selected, s.start)
+                val nextStart = Instant.parse(tr.nextStartUtc)
+                val nextEnd = Instant.parse(tr.nextEndUtc)
+                val endSoon = nextEnd.minus(Duration.ofHours(1))
+
+                Log.d(TAG, "maybeReschedule nextStart=$nextStart nextEnd=$nextEnd endSoon=$endSoon")
+
                 scheduler.schedule(
-                    java.time.Instant.parse(tr.nextStartUtc),
-                    java.time.Instant.parse(tr.nextEndUtc)
+                    startUtc = nextStart,
+                    endSoonUtc = endSoon,
+                    planCode = s.selected.code,
+                    startTime = s.start.format(hm),
+                    endTime = s.end.format(hm)
                 )
-            } catch (_: Throwable) { }
+            } catch (t: Throwable) {
+                Log.e(TAG, "maybeRescheduleIfEnabled failed", t)
+            }
+        } else {
+            Log.d(TAG, "maybeReschedule skip enabled=${s.enabled} granted=${isNotifGranted()}")
         }
+    }
+
+    /**
+     * 實際排程/取消邏輯（以後端回填的 dto 為準）
+     */
+    private suspend fun scheduleOrCancelUsingSaved(saved: FastingPlanDto) {
+        if (!isNotifGranted()) {
+            Log.w(TAG, "scheduleOrCancel: permission not granted -> cancel")
+            scheduler.cancel()
+            return
+        }
+        if (!saved.enabled) {
+            Log.d(TAG, "scheduleOrCancel: enabled=false -> cancel")
+            scheduler.cancel()
+            return
+        }
+
+        val plan = FastingPlan.of(saved.planCode)
+        val startLocal = LocalTime.parse(saved.startTime)
+
+        val tr = repo.nextTriggers(plan, startLocal)
+        val nextStart = Instant.parse(tr.nextStartUtc)
+        val nextEnd = Instant.parse(tr.nextEndUtc)
+        val endSoon = nextEnd.minus(Duration.ofHours(1))
+
+        Log.d(TAG, "scheduleOrCancel: nextStart=$nextStart nextEnd=$nextEnd endSoon=$endSoon")
+
+        scheduler.schedule(
+            startUtc = nextStart,
+            endSoonUtc = endSoon,
+            planCode = saved.planCode,
+            startTime = saved.startTime,
+            endTime = saved.endTime
+        )
     }
 
     fun clearToast() {

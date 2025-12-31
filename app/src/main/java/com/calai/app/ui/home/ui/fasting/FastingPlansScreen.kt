@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -82,6 +84,7 @@ import com.calai.app.data.fasting.model.FastingPlan
 import com.calai.app.ui.home.HomeTab
 import com.calai.app.ui.home.ui.components.MainBottomBar
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -89,8 +92,7 @@ import kotlin.math.abs
 
 private val Black = Color(0xFF111114)
 
-@Suppress("UNUSED_PARAMETER")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FastingPlansScreen(
     vm: FastingPlanViewModel,
@@ -103,15 +105,14 @@ fun FastingPlansScreen(
 
     var showCupertinoPicker by rememberSaveable { mutableStateOf(false) }
 
-    // ➜ Back 行為：
-    // - 若時間 Picker 開著：先關掉 Picker
-    // - 否則：返回上一頁（回 HOME）
+    // ✅ 新增：避免 Save 連點 & 讓按鈕顯示 loading
+    var saving by rememberSaveable { mutableStateOf(false) }
+
+    // ✅ 新增：UI scope，讓我們能 await ViewModel 的 job
+    val uiScope = rememberCoroutineScope()
+
     BackHandler(enabled = true) {
-        if (showCupertinoPicker) {
-            showCupertinoPicker = false
-        } else {
-            onBack()
-        }
+        if (showCupertinoPicker) showCupertinoPicker = false else onBack()
     }
 
     if (showCupertinoPicker) {
@@ -304,30 +305,39 @@ fun FastingPlansScreen(
 
             // === SAVE 按鈕（跟內容一起捲動） ===
             Button(
+                enabled = !saving,
                 onClick = {
-                    onBack()
-                    vm.persistAndReschedule(showToast = true)
+                    if (saving) return@Button
+                    saving = true
+
+                    uiScope.launch {
+                        // ✅ 關鍵：等 VM 的 persist job 完成，才返回
+                        val job = vm.persistAndReschedule(showToast = true)
+                        job.join()
+
+                        saving = false
+                        onBack()
+                    }
                 },
                 modifier = Modifier
-                    .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp)
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Black,
                     contentColor = Color.White,
-                    disabledContainerColor = Black,
+                    disabledContainerColor = Black.copy(alpha = 0.5f),
                     disabledContentColor = Color.White
                 )
             ) {
-                Text(
-                    text = stringResource(R.string.fasting_plan_save),
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Medium,
-                        letterSpacing = 0.2.sp
+                if (saving) {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp),
+                        color = Color.White
                     )
-                )
+                    Spacer(Modifier.width(10.dp))
+                }
+                Text(text = stringResource(R.string.fasting_plan_save))
             }
 
             Spacer(Modifier.height(16.dp))

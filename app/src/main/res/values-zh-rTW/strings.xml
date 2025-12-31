@@ -197,4 +197,14 @@
     <string name="fasting_window_ended">進食時段結束</string>
     <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
     <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
+
+
+
+    <!-- Fasting notifications 通知內容 -->
+    <string name="fasting_start_title">今天的 %1$s 開跑 🍽️</string>
+    <string name="fasting_start_body">你的進食窗已開啟（%1$s–%2$s）。有吃東西記得順手記錄。</string>
+    <string name="fasting_endsoon_title">進食窗快結束了 ⏰</string>
+    <string name="fasting_endsoon_body">還有 1 小時就結束（到 %1$s）。如果還有最後一餐，記得慢慢吃、順手記錄。</string>
+
+
 </resources>

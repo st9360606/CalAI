@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import javax.inject.Inject
-
+import java.time.Duration
+import java.time.Instant
 data class FastingCardUi(
     val loading: Boolean = true,
     val planCode: String = "16:8",
@@ -34,7 +35,7 @@ class HomeFastingCardViewModel @Inject constructor(
     val ui = _ui.asStateFlow()
 
     fun load() = viewModelScope.launch {
-        val dto = repo.loadOrCreateDefault() // 404 則建立預設
+        val dto = repo.ensureDefaultIfMissing()
         applyDto(dto)                        // 後端結構見：FastingPlanDto。
         // planCode / startTime / endTime / enabled / timeZone 皆由後端回填。:contentReference[oaicite:2]{index=2}
     }
@@ -71,15 +72,29 @@ class HomeFastingCardViewModel @Inject constructor(
     }
 
     private suspend fun rescheduleIfNeeded() {
-        scheduler.cancel()
         val s = _ui.value
-        if (!s.enabled) return
+        // ✅ 關閉就取消
+        if (!s.enabled) {
+            scheduler.cancel()
+            return
+        }
+
         val plan = FastingPlan.of(s.planCode)
         val startLocal = LocalTime.parse(s.startText)
-        val tr = repo.nextTriggers(plan, startLocal) // 後端用 UTC 計算下一次開始/結束。:contentReference[oaicite:3]{index=3}
+        val tr = repo.nextTriggers(plan, startLocal) // 後端回傳 nextStartUtc / nextEndUtc
+        val nextStart = Instant.parse(tr.nextStartUtc)
+        val nextEnd = Instant.parse(tr.nextEndUtc)
+
+        // ✅ endSoon = end - 60min（DST 安全）
+        val endSoon = nextEnd.minus(Duration.ofHours(1))
+
+        // ✅ 直接覆蓋排程（不用先 cancel；同 PendingIntent 會覆蓋）
         scheduler.schedule(
-            java.time.Instant.parse(tr.nextStartUtc),
-            java.time.Instant.parse(tr.nextEndUtc)
+            startUtc = nextStart,
+            endSoonUtc = endSoon,
+            planCode = s.planCode,
+            startTime = s.startText,
+            endTime = s.endText
         )
     }
 

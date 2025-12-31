@@ -52,13 +52,14 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="FASTING_START" />
-                <action android:name="FASTING_END" />
+                <action android:name="FASTING_END_SOON" />
             </intent-filter>
         </receiver>
 
+        <!-- exported="false"：只有系統或你自己 App（同 UID）能觸發（外部 App 不能隨便叫） -->
         <receiver
             android:name="com.calai.app.data.fasting.notifications.RescheduleBootReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />

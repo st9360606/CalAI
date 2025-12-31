@@ -1,15 +1,14 @@
 package com.calai.app.data.fasting.repo
 
-
 import com.calai.app.data.fasting.api.FastingApi
 import com.calai.app.data.fasting.api.FastingPlanDto
 import com.calai.app.data.fasting.api.NextTriggersResp
 import com.calai.app.data.fasting.api.UpsertFastingPlanReq
 import com.calai.app.data.fasting.model.FastingPlan
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.time.ZoneId
 import retrofit2.HttpException
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class FastingRepository(
     private val api: FastingApi,
@@ -17,23 +16,33 @@ class FastingRepository(
 ) {
     private val fmt = DateTimeFormatter.ofPattern("HH:mm")
 
-    suspend fun loadOrCreateDefault(): FastingPlanDto {
+    /**
+     * 只讀：不存在才回 null（404），其他 HTTP 錯誤直接丟出
+     */
+    suspend fun getMineOrNull(): FastingPlanDto? {
         val resp = api.getMine()
-        if (resp.isSuccessful) return requireNotNull(resp.body())
-
-        // ★ 404 與 5xx 都 fallback 到 upsert 預設（避免首次 500 造成崩潰）
-        if (resp.code() == 404 || resp.code() in 500..599) {
-            val tz = zoneIdProvider().id
-            return api.upsert(
-                UpsertFastingPlanReq(
-                    planCode = "16:8",
-                    startTime = "09:00",
-                    enabled = false,
-                    timeZone = tz
-                )
-            )
-        }
+        if (resp.isSuccessful) return resp.body()
+        if (resp.code() == 404) return null
         throw HttpException(resp)
+    }
+
+    /**
+     * 只在「真的不存在(404)」才建立預設
+     * ✅ 不要在 5xx 時寫回預設，避免覆蓋用戶設定
+     */
+    suspend fun ensureDefaultIfMissing(): FastingPlanDto {
+        val exist = getMineOrNull()
+        if (exist != null) return exist
+
+        val tz = zoneIdProvider().id
+        return api.upsert(
+            UpsertFastingPlanReq(
+                planCode = "16:8",
+                startTime = "09:00",
+                enabled = false,
+                timeZone = tz
+            )
+        )
     }
 
     suspend fun save(planCode: String, start: LocalTime, enabled: Boolean): FastingPlanDto {
@@ -56,7 +65,4 @@ class FastingRepository(
             timeZone = tz
         )
     }
-
-
 }
-
