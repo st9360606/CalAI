@@ -23,7 +23,6 @@ import com.calai.app.ui.home.HomeTab
 
 /**
  * 共用 BottomBar：Home / Progress / Weight / Fasting / Workout
- * Personal 入口保留給右上角 user button（不放在 bottom bar）
  */
 @Composable
 fun MainBottomBar(
@@ -31,19 +30,17 @@ fun MainBottomBar(
     onOpenTab: (HomeTab) -> Unit
 ) {
     val barSurface = Color(0xFFF5F5F5)
-    val selected = Color(0xFF111114)
-    val unselected = Color(0xFF9CA3AF)
+    val selected = Color(0xFF111114)     // ✅ 選中：全黑
+    val unselected = Color(0xFF9CA3AF)   // 未選中：灰
 
     Column(
         modifier = Modifier
             .background(barSurface)
-            // 🔑 關鍵：確保整條導覽列在系統導航列上方，不會被遮住
             .navigationBarsPadding()
     ) {
         NavigationBar(
             modifier = Modifier.padding(horizontal = 8.dp),
             containerColor = barSurface,
-            contentColor = selected,
             tonalElevation = 0.dp
         ) {
             @Composable
@@ -55,41 +52,40 @@ fun MainBottomBar(
                 indicatorColor = Color.Transparent
             )
 
-            NavigationBarItem(
-                selected = current == HomeTab.Home,
-                onClick = { onOpenTab(HomeTab.Home) },
-                label = { Text("Home") },
-                icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-                colors = itemColors()
-            )
-            NavigationBarItem(
-                selected = current == HomeTab.Progress,
-                onClick = { onOpenTab(HomeTab.Progress) },
-                label = { Text("Progress") },
-                icon = { Icon(Icons.Filled.BarChart, contentDescription = null) },
-                colors = itemColors()
-            )
-            NavigationBarItem(
-                selected = current == HomeTab.Weight,
-                onClick = { onOpenTab(HomeTab.Weight) },
-                label = { Text("Weight") },
-                icon = { Icon(Icons.Filled.MonitorWeight, contentDescription = null) },
-                colors = itemColors()
-            )
-            NavigationBarItem(
-                selected = current == HomeTab.Fasting,
-                onClick = { onOpenTab(HomeTab.Fasting) },
-                label = { Text("Fasting") },
-                icon = { Icon(Icons.Filled.AccessTime, contentDescription = null) },
-                colors = itemColors()
-            )
-            NavigationBarItem(
-                selected = current == HomeTab.Workout,
-                onClick = { onOpenTab(HomeTab.Workout) },
-                label = { Text("Workout") },
-                icon = { Icon(Icons.Filled.FitnessCenter, contentDescription = null) },
-                colors = itemColors()
-            )
+            @Composable
+            fun NavItem(
+                tab: HomeTab,
+                label: String,
+                icon: @Composable (tint: Color) -> Unit
+            ) {
+                val isSelected = current == tab
+                val tint = if (isSelected) selected else unselected
+
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { onOpenTab(tab) },
+                    alwaysShowLabel = true,
+                    label = { Text(text = label, color = tint) },     // ✅ 強制 label 顏色
+                    icon = { icon(tint) },                            // ✅ 強制 icon tint
+                    colors = itemColors()
+                )
+            }
+
+            NavItem(tab = HomeTab.Home, label = "Home") { tint ->
+                Icon(Icons.Filled.Home, contentDescription = null, tint = tint)
+            }
+            NavItem(tab = HomeTab.Progress, label = "Progress") { tint ->
+                Icon(Icons.Filled.BarChart, contentDescription = null, tint = tint)
+            }
+            NavItem(tab = HomeTab.Weight, label = "Weight") { tint ->
+                Icon(Icons.Filled.MonitorWeight, contentDescription = null, tint = tint)
+            }
+            NavItem(tab = HomeTab.Fasting, label = "Fasting") { tint ->
+                Icon(Icons.Filled.AccessTime, contentDescription = null, tint = tint)
+            }
+            NavItem(tab = HomeTab.Workout, label = "Workout") { tint ->
+                Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = tint)
+            }
         }
     }
 }
