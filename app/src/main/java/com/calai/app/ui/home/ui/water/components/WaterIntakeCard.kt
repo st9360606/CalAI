@@ -32,7 +32,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.water.store.WaterUnit
 import com.calai.app.ui.home.components.CardStyles
@@ -84,9 +82,7 @@ private fun RoundActionButton(
             ) {
                 scope.launch {
                     // 亮一下深灰圈（比按鈕大）
-                    flashAlphaGoal = 0.4f
                     delay(120)
-                    flashAlphaGoal = 0f
                 }
                 onClick()
             },
@@ -259,8 +255,8 @@ fun WaterIntakeCard(
                 Spacer(Modifier.height(10.dp))
 
                 // 第二排：單位切換（文字在切換鈕上）
-                UnitSwitchLabeled(
-                    checked = (state.unit == WaterUnit.ML), // true=ml, false=oz
+                UnitSwitchLabeledV2(
+                    checked = (state.unit == WaterUnit.ML),
                     onCheckedChange = { newChecked ->
                         val isMlNow = (state.unit == WaterUnit.ML)
                         if (newChecked != isMlNow) onToggleUnit()
@@ -269,11 +265,6 @@ fun WaterIntakeCard(
                     height = 30.dp,
                     leftLabel = "oz",
                     rightLabel = "ml",
-                    trackBase = Color(0xFF888888).copy(alpha = 0.25f),
-                    textStyle = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp // ★ 再放大
-                    )
                 )
             }
         }
