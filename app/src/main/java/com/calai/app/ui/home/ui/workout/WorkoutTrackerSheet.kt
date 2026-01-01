@@ -90,9 +90,6 @@ private val DividerGray = Color(0xFFD1D5DB)
 private val TextPrimary = Color(0xFF111114)
 private val TextSecondary = Color(0xFF4B5563)
 private val HandleGray = Color(0xFF9CA3AF)
-private val DarkSurface = Color(0xFF111114)
-private val Green = Color(0xFF84CC16)
-private val GrayBtn = Color(0xFF374151)
 private val TrackGray = Color(0xFFE6E9EF) // 很淡的灰，近截圖
 private val Amber = Color(0xFFF59E0B)
 /** 面板模式（都在同一顆 Sheet 內切換） */

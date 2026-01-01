@@ -39,10 +39,7 @@
             WorkoutTrackerSheet(
                 vm = vm,
                 visible = visible,
-                onClose = { // ★ 關閉：清 VM
-                    vm.dismissDialogs()
-                    onCloseFull()
-                },
+                onClose = { onCloseFull() },
                 onCollapse = { // ★ 只收合：不清 VM（保留 showDurationPickerFor）
                     onCollapseOnly()
                 }

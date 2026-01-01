@@ -37,14 +37,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -189,12 +185,7 @@ fun HomeScreen(
     val registryOwner = LocalActivityResultRegistryOwner.current
 
     // === 這裡是新增的狀態：控制 bottom sheet (Workout Tracker) 是否顯示 ===
-    var showWorkoutSheet by rememberSaveable { mutableStateOf(false) }
-
-    // ★ 共用 BottomSheetState（僅建立一次）
-    val workoutSheetState: SheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
+    val showWorkoutSheet = rememberSaveable { mutableStateOf(false) }
 
     // 只有在 owner 存在時才建立 launcher，否則用 null 表示不用它
     val requestNotifications = if (registryOwner != null) {
@@ -222,7 +213,7 @@ fun HomeScreen(
     // ✅ 有成功訊息就關掉 Host（停留在 HOME）
     LaunchedEffect(workoutUi.toastMessage) {
         if (workoutUi.toastMessage != null) {
-            showWorkoutSheet = false
+            showWorkoutSheet.value = false
         }
     }
 
@@ -409,7 +400,7 @@ fun HomeScreen(
                 ringSize = 74.dp,      // ← 對應縮小的圓環
                 centerDisk = 36.dp,    // ← 對應縮小的中心灰圓
                 ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
-                onAddWorkoutClick = { showWorkoutSheet = true },
+                onAddWorkoutClick = { showWorkoutSheet.value = true },
                 onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁
             )
             // ===== Fourth block: 最近上傳
@@ -429,11 +420,7 @@ fun HomeScreen(
         }
     }
     // ===== ✅ Toast 疊加層（先顯示 Fasting，再顯示 Workout） =====
-    val sheetFullyHidden by remember {
-        derivedStateOf { workoutSheetState.currentValue == SheetValue.Hidden }
-    }
-
-    val canShowWorkoutToast = !showWorkoutSheet || sheetFullyHidden
+    val canShowWorkoutToast = !showWorkoutSheet.value
     val workoutToast = workoutUi.toastMessage
     val fastingToast = fastingUi.toastMessage   // ★ 來自 FastingPlanViewModel
     Box(Modifier.fillMaxSize()) {
@@ -470,16 +457,9 @@ fun HomeScreen(
     // ===== 共用 BottomSheet Host（常駐），以 visible 控制顯示 =====
     WorkoutTrackerHost(
         vm = workoutVm,
-        sheetState = workoutSheetState,
-        visible = showWorkoutSheet,
-        onCloseFull = {            // 完整關閉：收合 + 清 VM
-            showWorkoutSheet = false
-            workoutVm.dismissDialogs()
-        },
-        onCollapseOnly = {         // 只收合：不清 VM（供 onClickPresetPlus 使用）
-            showWorkoutSheet = false
-            // 切記不要呼叫 workoutVm.dismissDialogs()
-        }
+        visible = showWorkoutSheet.value,
+        onCloseFull = { showWorkoutSheet.value = false },
+        onCollapseOnly = { showWorkoutSheet.value = false }
     )
 }
 
