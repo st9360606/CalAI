@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Person
@@ -22,7 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.calai.app.ui.home.HomeTab
 
 /**
- * 共用 BottomBar：Home / Fasting / Progress / Daily / Personal 都用同一個
+ * 共用 BottomBar：Home / Progress / Weight / Fasting / Workout
+ * Personal 入口保留給右上角 user button（不放在 bottom bar）
  */
 @Composable
 fun MainBottomBar(
@@ -83,10 +85,10 @@ fun MainBottomBar(
                 colors = itemColors()
             )
             NavigationBarItem(
-                selected = current == HomeTab.Personal,
-                onClick = { onOpenTab(HomeTab.Personal) },
-                label = { Text("Personal") },
-                icon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                selected = current == HomeTab.Workout,
+                onClick = { onOpenTab(HomeTab.Workout) },
+                label = { Text("Workout") },
+                icon = { Icon(Icons.Filled.FitnessCenter, contentDescription = null) },
                 colors = itemColors()
             )
         }

@@ -649,6 +649,7 @@ fun BiteCalNavHost(
                             HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
                             HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
                             HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
                             HomeTab.Personal -> nav.navigate(Routes.PERSONAL) { launchSingleTop = true; restoreState = true }
                         }
                     },
@@ -703,6 +704,7 @@ fun BiteCalNavHost(
                         HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
                         HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
                         HomeTab.Fasting -> Unit
+                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
                         HomeTab.Personal -> nav.navigate(Routes.PERSONAL) { launchSingleTop = true; restoreState = true }
                     }
                 }
@@ -890,6 +892,7 @@ fun BiteCalNavHost(
                             HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
                             HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
                             HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
                             HomeTab.Personal -> Unit
                         }
                     },
