@@ -765,7 +765,7 @@ fun ResultContent(
                     contentColor = Black
                 )
             ) {
-                Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -818,10 +818,10 @@ fun FailedContent(
 
             Text(
                 "The workout description may be incorrect ( For example : 30 min Running ),  or the internet connection is weak.",
-                color = Black.copy(alpha = 0.9f),
-                style = MaterialTheme.typography.bodyLarge,
+                color = Black.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 24.dp)
+                modifier = Modifier.padding(horizontal = 17.dp)
             )
         }
 
@@ -868,7 +868,7 @@ fun FailedContent(
                 Text(
                     "Cancel",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
