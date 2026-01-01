@@ -648,7 +648,7 @@ fun BiteCalNavHost(
                         when (tab) {
                             HomeTab.Home -> Unit
                             HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Daily -> nav.navigate(Routes.DAILY) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
                             HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
                             HomeTab.Personal -> nav.navigate(Routes.PERSONAL) { launchSingleTop = true; restoreState = true }
                         }
@@ -701,19 +701,10 @@ fun BiteCalNavHost(
                 { tab ->
                     when (tab) {
                         HomeTab.Home -> nav.goHome()
-                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        HomeTab.Daily -> nav.navigate(Routes.DAILY) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        HomeTab.Fasting -> Unit // 已在本頁，什麼都不做
-                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Fasting -> Unit
+                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL) { launchSingleTop = true; restoreState = true }
                     }
                 }
             }
@@ -898,7 +889,7 @@ fun BiteCalNavHost(
                         when (tab) {
                             HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
                             HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Daily -> nav.navigate(Routes.DAILY) { launchSingleTop = true; restoreState = true }
+                            HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
                             HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
                             HomeTab.Personal -> Unit
                         }

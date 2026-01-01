@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -69,10 +69,10 @@ fun MainBottomBar(
                 colors = itemColors()
             )
             NavigationBarItem(
-                selected = current == HomeTab.Daily,
-                onClick = { onOpenTab(HomeTab.Daily) },
-                label = { Text("Daily") },
-                icon = { Icon(Icons.Filled.CalendarToday, contentDescription = null) },
+                selected = current == HomeTab.Weight,
+                onClick = { onOpenTab(HomeTab.Weight) },
+                label = { Text("Weight") },
+                icon = { Icon(Icons.Filled.MonitorWeight, contentDescription = null) },
                 colors = itemColors()
             )
             NavigationBarItem(

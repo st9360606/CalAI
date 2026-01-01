@@ -96,7 +96,7 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
-enum class HomeTab { Home, Progress, Daily, Fasting, Personal }
+enum class HomeTab { Home, Progress, Weight, Fasting, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -251,14 +251,7 @@ fun HomeScreen(
         bottomBar = {
             MainBottomBar(
                 current = HomeTab.Home,
-                onOpenTab = { tab ->
-                    when (tab) {
-                        HomeTab.Daily -> {                     // 👈 修改這裡
-                            onOpenTab(HomeTab.Daily)
-                        }
-                        else -> onOpenTab(tab)
-                    }
-                }
+                onOpenTab = { tab -> onOpenTab(tab) }
             )
         }
     ) { inner ->
