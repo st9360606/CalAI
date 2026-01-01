@@ -120,7 +120,6 @@ object Routes {
     const val HOME = "home"
     const val APP_ENTRY = "app_entry"
     const val PROGRESS = "progress"
-    const val DAILY = "daily"
     const val FASTING = "fasting"
     const val PERSONAL = "personal"
     const val CAMERA = "camera"
