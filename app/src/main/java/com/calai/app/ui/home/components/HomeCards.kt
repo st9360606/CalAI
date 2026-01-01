@@ -52,6 +52,7 @@ import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
 import com.calai.app.R
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.BaselineShift
 import com.calai.app.ui.home.ui.fasting.components.FastingPlanCard
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
@@ -244,15 +245,11 @@ private fun MacroStatCardModern(
 @Composable
 fun StepsWorkoutRowModern(
     summary: HomeSummary,
-    // ★ 新增：卡片高度 & 圓環大小，可依需求調整
-    cardHeight: Dp = 120.dp,   // 原 132.dp → 小一點
-    ringSize: Dp = 74.dp,      // 原 76.dp → 略小，避免卡片太擠
-    centerDisk: Dp = 36.dp,    // 原 30.dp → 跟著縮小一點
-    ringStroke: Dp = 6.dp,    // 保持視覺厚度不變（要更輕可改 7.dp）
-    // ★ 新增：Workout 黑圓＋大小可調
-    plusButtonSize: Dp = 24.dp,  // 黑色圓的直徑（預設放大）
-    plusIconSize: Dp = 19.dp,     // 中間白色「＋」圖示大小
-    // ★ 新增：點擊黑色 + 要做什麼
+    workoutTotalKcalOverride: Int? = null,
+    cardHeight: Dp = 120.dp,
+    ringSize: Dp = 74.dp,
+    centerDisk: Dp = 36.dp,
+    ringStroke: Dp = 6.dp,
     onAddWorkoutClick: () -> Unit,
     onWorkoutCardClick: () -> Unit = {}
 ) {
@@ -277,11 +274,11 @@ fun StepsWorkoutRowModern(
             centerDisk = centerDisk
         )
 
-        // Workout
-        val workoutKcal = summary.todayActivity.activeKcal.toInt()
+        // Workout（✅ 只改這張：kcal 小、細）
+        val workoutKcal = workoutTotalKcalOverride ?: summary.todayActivity.activeKcal.toInt()
         ActivityStatCardSplit(
             title = "Workout",
-            primary = "$workoutKcal kcal",
+            primary = workoutKcal.toString(), // 傳什麼都可（因為 primaryContent 會覆蓋）
             secondary = null,
             ringColor = Color(0xFFA855F7),
             progress = 0f,
@@ -290,8 +287,10 @@ fun StepsWorkoutRowModern(
             ringSize = ringSize,
             ringStroke = ringStroke,
             centerDisk = centerDisk,
+            primaryContent = {
+                WorkoutPrimaryText(kcal = workoutKcal)
+            },
             leftExtra = {
-                // ✅ 新版：使用共用按鈕 + 灰色閃光
                 WorkoutAddButton(
                     onClick = onAddWorkoutClick,
                     outerSizeDp = 36.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
@@ -299,11 +298,46 @@ fun StepsWorkoutRowModern(
                     iconSizeDp = 24.dp
                 )
             },
-            onCardClick = onWorkoutCardClick          // ★ 串進來
+            onCardClick = onWorkoutCardClick
         )
     }
 }
+/**
+ * ✅ Workout 專用 primary：數字大/粗，kcal 小/細
+ * - 不會影響 Steps，因為 Steps 不會用 primaryContent
+ */
+@Composable
+private fun WorkoutPrimaryText(kcal: Int) {
+    Row(verticalAlignment = Alignment.Bottom) {
+        Text(
+            text = kcal.toString(),
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.SemiBold
+            ),
+            color = Color(0xFF0F172A),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
+        Spacer(Modifier.width(5.dp))
+
+        Text(
+            text = "kcal",
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Normal,
+                baselineShift = BaselineShift(0.28f) // ✅ 往上移：0.15~0.35 自己微調
+            ),
+            color = Color(0xFF0F172A),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+/**
+ * 活動類卡片（左右分欄）：
+ * - 左：主/副文字 + 可選額外小圖示
+ * - 右：圓形進度條（含中心淺灰圓）
+ */
 /**
  * 活動類卡片（左右分欄）：
  * - 左：主/副文字 + 可選額外小圖示
@@ -311,12 +345,12 @@ fun StepsWorkoutRowModern(
  */
 @Composable
 fun ActivityStatCardSplit(
+    modifier: Modifier = Modifier,
     title: String,
     primary: String,
     secondary: String? = null,
     ringColor: Color,
     progress: Float = 0f,
-    modifier: Modifier = Modifier,
     cardHeight: Dp = PanelHeights.Metric,
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
@@ -337,11 +371,15 @@ fun ActivityStatCardSplit(
     // ⭐ 左下角額外內容（Workout 的「+」按鈕）
     leftExtra: (@Composable () -> Unit)? = null,
 
+    // ✅ 新增：primary 自訂內容（不傳就保持原本 Text(primary)）
+    primaryContent: (@Composable () -> Unit)? = null,
+
     // ★★★ 新增：整張卡片點擊（可為 null 表示不啟用）
     onCardClick: (() -> Unit)? = null
 ) {
     val titleStyle = titleTextStyle ?: MaterialTheme.typography.bodySmall
-    val primaryStyle = primaryTextStyle ?: MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+    val primaryStyle =
+        primaryTextStyle ?: MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
     val secondaryStyle = secondaryTextStyle ?: MaterialTheme.typography.bodySmall
 
     // ★ 為保持樣式不變：不使用 ripple
@@ -401,13 +439,18 @@ fun ActivityStatCardSplit(
 
                     Spacer(Modifier.height(gapTitleToPrimary))
 
-                    Text(
-                        text = primary,
-                        style = primaryStyle,
-                        color = Color(0xFF0F172A),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    // ✅ 只有傳 primaryContent 的卡才會用自訂（Workout）
+                    if (primaryContent != null) {
+                        primaryContent()
+                    } else {
+                        Text(
+                            text = primary,
+                            style = primaryStyle,
+                            color = Color(0xFF0F172A),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
 
                     Spacer(Modifier.height(gapPrimaryToSecondary))
 
@@ -428,8 +471,7 @@ fun ActivityStatCardSplit(
                 // ⬇⬇⬇ Workout 的 + 按鈕固定在左下角，不再被 Column 擠壓
                 leftExtra?.let { extraContent ->
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
+                        modifier = Modifier.align(Alignment.BottomStart)
                     ) {
                         extraContent()
                     }

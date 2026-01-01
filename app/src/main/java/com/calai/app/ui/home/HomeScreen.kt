@@ -178,6 +178,13 @@ fun HomeScreen(
     // ★ 新增：監聽 Workout VM 狀態（為了一次性導航）
     val workoutUi by workoutVm.ui.collectAsState()
 
+    // ✅ 確保 Home 進入就有 today total（跟 History 一致）
+    LaunchedEffect(Unit) {
+        workoutVm.init()
+        workoutVm.refreshToday()
+    }
+    val workoutTotalKcalToday: Int? = workoutUi.today?.totalKcalToday
+
     val ctx = LocalContext.current
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
@@ -389,6 +396,7 @@ fun HomeScreen(
             // ★ 想再小就把 cardHeight 調更小，環也可一起調
             StepsWorkoutRowModern(
                 summary = s,
+                workoutTotalKcalOverride = workoutTotalKcalToday,
                 cardHeight = 112.dp,   // ← 你想要的高度
                 ringSize = 74.dp,      // ← 對應縮小的圓環
                 centerDisk = 36.dp,    // ← 對應縮小的中心灰圓
