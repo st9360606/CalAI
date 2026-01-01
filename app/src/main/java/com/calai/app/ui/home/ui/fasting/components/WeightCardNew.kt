@@ -40,6 +40,13 @@ import com.calai.app.ui.home.components.GaugeRing
 import com.calai.app.ui.home.components.RingColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.calai.app.R
 
 /**
  * WeightCardNew v2
@@ -52,33 +59,31 @@ import kotlinx.coroutines.launch
 @Composable
 fun WeightCardNew(
     modifier: Modifier = Modifier,
-    primary: String,                        // 例：+0.8 kg / +2 lbs
+    primary: String,
     secondary: String? = "to goal",
     ringColor: Color = Color(0xFF06B6D4),
     progress: Float = 0f,
     cardHeight: Dp,
-    // 右側圓環尺寸
     ringSize: Dp = 74.dp,
     ringStroke: Dp = 6.dp,
-    centerDisk: Dp = 36.dp,
+    centerDisk: Dp = 40.dp,
 
-    // 標題頂欄（與 FastingPlan 一致）
+    // ✅ 新增：中心 icon（你要放 bullseye 就用預設）
+    centerIconRes: Int = R.drawable.flag,
+    centerIconDescription: String = "weight target",
+    centerIconTint: Color? = null,                    // Vector 想統一色可給 Color(0xFF111114)
+
     topBarTitle: String = "Weight",
     topBarHeight: Dp = TopBarDefaults.Height,
     topBarTextStyle: TextStyle = MaterialTheme.typography.titleSmall,
-
-    // ★ primary 可調
     primaryTextStyle: TextStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-    primaryFontSize: TextUnit? = null,      // 同時給時，以這個優先生效
-    primaryYOffset: Dp = 0.dp,              // 負值 = 往上
-    primaryTopSpacing: Dp = 10.dp,          // 與頂欄距離
-    // ★ secondary 可調
+    primaryFontSize: TextUnit? = null,
+    primaryYOffset: Dp = 0.dp,
+    primaryTopSpacing: Dp = 10.dp,
     secondaryTextStyle: TextStyle = MaterialTheme.typography.bodySmall,
     secondaryFontSize: TextUnit? = null,
-    secondaryYOffset: Dp = 0.dp,            // 負值 = 往上
-    gapPrimaryToSecondary: Dp = 2.dp,       // 主次文字間距
-
-    // ★ 新增：點擊加號做什麼（例如打開修改體重/目標的畫面）
+    secondaryYOffset: Dp = 0.dp,
+    gapPrimaryToSecondary: Dp = 2.dp,
     onAddWeightClick: () -> Unit = {}
 ) {
     TopBarCard(
@@ -90,27 +95,25 @@ fun WeightCardNew(
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(0.dp),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // ========= 左半：Box 疊層，文字在上，+ 按鈕固定左下 =========
+            // ========= 左半：文字 + 固定左下 + =========
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             ) {
-                // 文字群組（貼上方）
                 Column(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .fillMaxWidth(),
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.Top,
+                    verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.Start
                 ) {
                     Spacer(Modifier.height(primaryTopSpacing))
 
-                    // Primary (+0.8 kg / +2 lbs)
                     Text(
                         text = primary,
                         style = primaryTextStyle,
@@ -118,12 +121,11 @@ fun WeightCardNew(
                         color = Color(0xFF0F172A),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.offset(y = primaryYOffset)
+                        modifier = Modifier.offset(x = (-4).dp, y = primaryYOffset)
                     )
 
                     Spacer(Modifier.height(gapPrimaryToSecondary))
 
-                    // Secondary ("to goal")
                     if (!secondary.isNullOrBlank()) {
                         Text(
                             text = secondary,
@@ -139,13 +141,14 @@ fun WeightCardNew(
                     }
                 }
 
-                // 加號按鈕：固定貼在左下角，尺寸不被壓縮
                 WeightAddButton(
                     onClick = onAddWeightClick,
-                    outerSizeDp = 34.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
-                    innerSizeDp = 26.dp, // 黑底圓按鈕大小 (和 Water 卡一致)
+                    outerSizeDp = 34.dp,
+                    innerSizeDp = 26.dp,
                     iconSizeDp = 21.dp,
-                    modifier = Modifier.align(Alignment.BottomStart)
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .offset(x = (-5).dp, y = (1).dp)
                 )
             }
 
@@ -169,56 +172,56 @@ fun WeightCardNew(
                         drawTopTick = true,
                         tickColor = ringColor
                     )
+
+                    // ✅ 中心灰圓底 + bullseye
                     Surface(
                         color = RingColors.CenterFill,
                         shape = CircleShape,
                         modifier = Modifier.size(centerDisk)
-                    ) {}
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = centerIconRes),
+                                contentDescription = centerIconDescription,
+                                modifier = Modifier
+                                    .size(21.dp)
+                                    .padding(0.dp),
+                                contentScale = ContentScale.Fit,
+                                colorFilter = centerIconTint?.let { ColorFilter.tint(it) }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-/**
- * WeightAddButton
- *
- * - 外圈 50dp：實際可點擊區 / 灰色閃光範圍（和 Workout/Water 的 + 一致）
- * - 內圈 38dp：黑色圓底 + 白色「+」
- * - 點擊時會閃一個半透明深灰圓，120ms 後自動淡掉
- *
- * 注意：這裡直接複製互動邏輯，讓 Weight 卡不用去 import 其他 package。
- */
 @Composable
 private fun WeightAddButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    outerSizeDp: Dp = 36.dp,   // 和 Water/Workout 一致
-    innerSizeDp: Dp = 30.dp,    // 黑色圓的實際直徑
-    iconSizeDp: Dp = 24.dp    // ✅ 白色「＋」加大
-
+    outerSizeDp: Dp = 36.dp,
+    innerSizeDp: Dp = 30.dp,
+    iconSizeDp: Dp = 24.dp
 ) {
     val scope = rememberCoroutineScope()
-
-    // 0f ~ 0.4f 控制閃光強度
     var flashAlphaGoal by remember { mutableFloatStateOf(0f) }
 
-    // 用動畫淡出閃光
     val animatedAlpha by animateFloatAsState(
         targetValue = flashAlphaGoal,
         label = "weightAddFlash"
     )
 
-    // 不用 ripple，用我們自己的灰圓閃光
     val noRipple = remember { MutableInteractionSource() }
 
     Box(
         modifier = modifier
             .size(outerSizeDp)
-            .clickable(
-                interactionSource = noRipple,
-                indication = null
-            ) {
+            .clickable(interactionSource = noRipple, indication = null) {
                 scope.launch {
                     flashAlphaGoal = 0.4f
                     delay(120)
@@ -228,7 +231,6 @@ private fun WeightAddButton(
             },
         contentAlignment = Alignment.Center
     ) {
-        // 灰色閃光圈（比黑按鈕大）
         if (animatedAlpha > 0f) {
             Box(
                 modifier = Modifier
@@ -240,7 +242,6 @@ private fun WeightAddButton(
             )
         }
 
-        // 黑色圓按鈕本體
         Box(
             modifier = Modifier
                 .size(innerSizeDp)

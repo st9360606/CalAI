@@ -299,7 +299,7 @@ fun StepsWorkoutRowModern(
             primaryTextStyle = activityPrimaryStyle,
 
             // ✅ 只影響 Steps：secondary 往下 + 字體變大
-            gapPrimaryToSecondary = 5.dp,         // 往下移一點（原本預設 2.dp）
+            gapPrimaryToSecondary = 4.dp,         // 往下移一點（原本預設 2.dp）
             secondaryTextStyle = stepsSecondaryStyle,
 
             ringCenterContent = {
@@ -607,14 +607,14 @@ fun WeightFastingRowModern(
             cardHeight = cardHeight,
             ringSize = 74.dp,
             ringStroke = 6.dp,
-            centerDisk = 36.dp,
+            centerDisk = 40.dp,
             topBarTitle = "Weight",
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,
             primaryFontSize = 19.sp,
             primaryYOffset = (-6).dp,
             primaryTopSpacing = 4.dp,
-            secondaryYOffset = (-6).dp,
+            secondaryYOffset = (-5).dp,
             gapPrimaryToSecondary = 0.dp,
             onAddWeightClick = onQuickLogWeight        // ★ 按「＋」直接開記錄頁
         )
