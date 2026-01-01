@@ -51,11 +51,11 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun WeightCardNew(
+    modifier: Modifier = Modifier,
     primary: String,                        // 例：+0.8 kg / +2 lbs
     secondary: String? = "to goal",
     ringColor: Color = Color(0xFF06B6D4),
     progress: Float = 0f,
-    modifier: Modifier = Modifier,
     cardHeight: Dp,
     // 右側圓環尺寸
     ringSize: Dp = 74.dp,
@@ -142,11 +142,10 @@ fun WeightCardNew(
                 // 加號按鈕：固定貼在左下角，尺寸不被壓縮
                 WeightAddButton(
                     onClick = onAddWeightClick,
-                    outerSizeDp = 36.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
-                    innerSizeDp = 28.dp, // 黑底圓按鈕大小 (和 Water 卡一致)
-                    iconSizeDp = 24.dp,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
+                    outerSizeDp = 34.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
+                    innerSizeDp = 26.dp, // 黑底圓按鈕大小 (和 Water 卡一致)
+                    iconSizeDp = 21.dp,
+                    modifier = Modifier.align(Alignment.BottomStart)
                 )
             }
 

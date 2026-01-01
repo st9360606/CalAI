@@ -397,9 +397,9 @@ fun HomeScreen(
             StepsWorkoutRowModern(
                 summary = s,
                 workoutTotalKcalOverride = workoutTotalKcalToday,
-                cardHeight = 112.dp,   // ← 你想要的高度
+                cardHeight = 104.dp,   // ← 你想要的高度
                 ringSize = 74.dp,      // ← 對應縮小的圓環
-                centerDisk = 36.dp,    // ← 對應縮小的中心灰圓
+                centerDisk = 38.dp,    // ← 對應縮小的中心灰圓
                 ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
                 onAddWorkoutClick = { showWorkoutSheet.value = true },
                 onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁

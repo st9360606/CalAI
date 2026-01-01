@@ -2,8 +2,10 @@ package com.calai.app.ui.home.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,36 +33,40 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.calai.app.data.home.repo.HomeSummary
-import kotlin.math.roundToInt
-import androidx.compose.runtime.remember
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.unit.sp
-import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
 import com.calai.app.R
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.BaselineShift
+import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.ui.home.ui.fasting.components.FastingPlanCard
+import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
     val Size = 66.dp      // 圓直徑
     val Stroke = 5.dp     // 圓環粗細
     val CenterDisk = 34.dp// 圓心淺灰底大小
+}
+
+// ✅ Steps / Workout 圓環色票（依你需求：Steps 淺藍、Workout 深藍）
+private object ActivityRingColors {
+    val StepsLightBlue = Color(0xFF60A5FA)  // 淺藍
+    val WorkoutDeepBlue = Color(0xFF2563EB) // 深藍
 }
 
 @Composable
@@ -254,11 +260,11 @@ fun StepsWorkoutRowModern(
     workoutTotalKcalOverride: Int? = null,
     cardHeight: Dp = 120.dp,
     ringSize: Dp = 74.dp,
-    centerDisk: Dp = 36.dp,
+    centerDisk: Dp = 38.dp,
     ringStroke: Dp = 6.dp,
 
-    // ✅ 新增：圓環滿圈的 kcal（100% = 300 kcal）
-    kcalRingGoal: Int = 300,
+    // ✅ 新增：圓環滿圈的 kcal（100% = 450 kcal）
+    kcalRingGoal: Int = 450,
 
     onAddWorkoutClick: () -> Unit,
     onWorkoutCardClick: () -> Unit = {}
@@ -270,67 +276,106 @@ fun StepsWorkoutRowModern(
         val steps = summary.todayActivity.steps
         val stepsKcalApprox = (steps * 0.04f).roundToInt()
 
-        // ✅ 300 kcal = 100%
+        // ✅ 450 kcal = 100%
         val stepsProgress = kcalToProgress(stepsKcalApprox, kcalRingGoal)
+        val activityPrimaryStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+        // Steps ✅ 圓環淺藍 + 中心 footstep
+        val stepsSecondaryStyle = MaterialTheme.typography.bodySmall.copy(
+            fontSize = 13.sp,              // ✅ 變大一點點（原本 bodySmall 通常 12sp 左右）
+            fontWeight = FontWeight.Medium // ✅ 更清楚一點（不想加粗可改 Normal）
+        )
 
-        // Steps
         ActivityStatCardSplit(
             title = "Steps",
             primary = "$steps",
             secondary = "≈ $stepsKcalApprox kcal",
-            ringColor = Color(0xFF3B82F6),
+            ringColor = ActivityRingColors.StepsLightBlue,
             progress = stepsProgress,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = ringSize,
             ringStroke = ringStroke,
-            centerDisk = centerDisk
+            centerDisk = centerDisk,
+            primaryTextStyle = activityPrimaryStyle,
+
+            // ✅ 只影響 Steps：secondary 往下 + 字體變大
+            gapPrimaryToSecondary = 5.dp,         // 往下移一點（原本預設 2.dp）
+            secondaryTextStyle = stepsSecondaryStyle,
+
+            ringCenterContent = {
+                Image(
+                    painter = painterResource(R.drawable.footstep),
+                    contentDescription = "Footstep",
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         )
 
         // Workout
         val workoutKcal = workoutTotalKcalOverride ?: summary.todayActivity.activeKcal.toInt()
 
-        // ✅ 300 kcal = 100%
+        // ✅ 450 kcal = 100%
         val workoutProgress = kcalToProgress(workoutKcal, kcalRingGoal)
 
+        // Workout ✅ 圓環深藍 + 中心 dumbbell
         ActivityStatCardSplit(
             title = "Workout",
             primary = workoutKcal.toString(),
             secondary = null,
-            ringColor = Color(0xFF6D28D9),
+            ringColor = ActivityRingColors.WorkoutDeepBlue, // ✅ 深藍
             progress = workoutProgress,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = ringSize,
             ringStroke = ringStroke,
             centerDisk = centerDisk,
+            primaryTextStyle = activityPrimaryStyle,
+            ringCenterContent = {
+                Image(
+                    painter = painterResource(R.drawable.fitness),
+                    contentDescription = "Dumbbell",
+                    modifier = Modifier.size(26.dp)
+                )
+            },
             primaryContent = {
-                WorkoutPrimaryText(kcal = workoutKcal)
+                WorkoutPrimaryText(
+                    kcal = workoutKcal,
+                    numberStyle = activityPrimaryStyle // ✅ 關鍵：數字吃同一份 style
+                )
             },
             leftExtra = {
-                WorkoutAddButton(
-                    onClick = onAddWorkoutClick,
-                    outerSizeDp = 36.dp,
-                    innerSizeDp = 28.dp,
-                    iconSizeDp = 24.dp
-                )
+                Box(
+                    modifier = Modifier.offset(
+                        x = (-4).dp,
+                        y = (2).dp
+                    )
+                ) {
+                    WorkoutAddButton(
+                        onClick = onAddWorkoutClick,
+                        outerSizeDp = 34.dp,
+                        innerSizeDp = 26.dp,
+                        iconSizeDp = 21.dp
+                    )
+                }
             },
             onCardClick = onWorkoutCardClick
         )
     }
 }
+
 /**
  * ✅ Workout 專用 primary：數字大/粗，kcal 小/細
  * - 不會影響 Steps，因為 Steps 不會用 primaryContent
  */
 @Composable
-private fun WorkoutPrimaryText(kcal: Int) {
+private fun WorkoutPrimaryText(
+    kcal: Int,
+    numberStyle: TextStyle
+) {
     Row(verticalAlignment = Alignment.Bottom) {
         Text(
             text = kcal.toString(),
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold
-            ),
+            style = numberStyle, // ✅ 用外面傳進來的 style，確保跟 Steps 一樣大
             color = Color(0xFF0F172A),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -350,11 +395,7 @@ private fun WorkoutPrimaryText(kcal: Int) {
         )
     }
 }
-/**
- * 活動類卡片（左右分欄）：
- * - 左：主/副文字 + 可選額外小圖示
- * - 右：圓形進度條（含中心淺灰圓）
- */
+
 /**
  * 活動類卡片（左右分欄）：
  * - 左：主/副文字 + 可選額外小圖示
@@ -373,6 +414,9 @@ fun ActivityStatCardSplit(
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
     drawRing: Boolean = true,
+
+    // ✅ 新增：圓環中心內容（放 footstep / dumbbell）
+    ringCenterContent: (@Composable () -> Unit)? = null,
 
     // 小三角 prefix（可選）
     titlePrefix: (@Composable () -> Unit)? = null,
@@ -521,6 +565,7 @@ fun ActivityStatCardSplit(
                             shape = CircleShape,
                             modifier = Modifier.size(centerDisk)
                         ) {}
+                        ringCenterContent?.invoke()
                     } else {
                         Spacer(Modifier.size(ringSize))
                     }
