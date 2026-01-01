@@ -83,17 +83,18 @@ fun WeightScreen(
         ) { inner ->
             Box(
                 modifier = Modifier
-                    .padding(inner)
                     .fillMaxSize()
                     .background(Color(0xFFF5F5F5))
             ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(inner),
                     contentPadding = PaddingValues(
                         start = 16.dp,
                         top = 6.dp,
                         end = 16.dp,
-                        bottom = 96.dp
+                        bottom = 24.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -161,6 +162,7 @@ fun WeightScreen(
                 }
             }
         }
+
         if (error != null) {
             ErrorTopToast(
                 message = error,
@@ -168,6 +170,7 @@ fun WeightScreen(
             )
         }
     }
+
     LaunchedEffect(error) {
         if (error != null) {
             delay(2000)
