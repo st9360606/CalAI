@@ -29,9 +29,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
@@ -105,7 +108,6 @@ fun HomeScreen(
     waterVm: WaterViewModel,
     workoutVm: WorkoutViewModel,
     weightVm: WeightViewModel,
-    onOpenAlarm: () -> Unit,
     onOpenCamera: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
     onOpenFastingPlans: () -> Unit,
@@ -330,17 +332,16 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Avatar(s.avatarUrl, size = 48.dp, startPadding = 6.dp)  // 放大＋往右一些
-                IconButton(
-                    onClick = onOpenAlarm,
-                    modifier = Modifier.padding(end = 4.dp)   // 👈 往左移一點（離右邊邊界遠一點）
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.home_notification),
-                        contentDescription = "alarm",
-                        modifier = Modifier.size(32.dp)       // 👈 比原本 28.dp 再大一點
-                    )
-                }
+                Avatar(
+                    url = s.avatarUrl,
+                    avatarSize = 42.dp,
+                    touchSize = 48.dp,
+                    startPadding = 5.dp
+                )
+                TopBarUserButton(
+                    onClick = { onOpenTab(HomeTab.Personal) },
+                    modifier = Modifier.padding(end = 5.dp)
+                )
             }
 
             val today = remember { LocalDate.now() }
@@ -485,37 +486,44 @@ fun HomeScreen(
 @Composable
 private fun Avatar(
     url: Uri?,
-    size: Dp = 40.dp,
+    avatarSize: Dp = 40.dp,
+    touchSize: Dp = 48.dp,
     startPadding: Dp = 0.dp
 ) {
-    val modifier = Modifier
-        .padding(start = startPadding) // ← 新增：整體往右一點
-        .size(size)                    // ← 新增：支援放大
-        .clip(CircleShape)
+    Box(
+        modifier = Modifier
+            .padding(start = startPadding)
+            .size(touchSize),
+        contentAlignment = Alignment.Center
+    ) {
+        val avatarModifier = Modifier
+            .size(avatarSize)
+            .clip(CircleShape)
 
-    if (url == null) {
-        Image(
-            painter = painterResource(R.drawable.profile),
-            contentDescription = "avatar_default",
-            modifier = modifier,
-            contentScale = ContentScale.Crop
-        )
-    } else {
-        val ctx = LocalContext.current
-        val request = remember(url) {
-            ImageRequest.Builder(ctx)
-                .data(url)
-                .crossfade(false)
-                .allowHardware(true)
-                .build()
+        if (url == null) {
+            Image(
+                painter = painterResource(R.drawable.profile),
+                contentDescription = "avatar_default",
+                modifier = avatarModifier,
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            val ctx = LocalContext.current
+            val request = remember(url) {
+                ImageRequest.Builder(ctx)
+                    .data(url)
+                    .crossfade(false)
+                    .allowHardware(true)
+                    .build()
+            }
+            AsyncImage(
+                model = request,
+                contentDescription = "avatar",
+                modifier = avatarModifier,
+                contentScale = ContentScale.Crop,
+                error = painterResource(R.drawable.profile)
+            )
         }
-        AsyncImage(
-            model = request,
-            contentDescription = "avatar",
-            modifier = modifier,
-            contentScale = ContentScale.Crop,
-            error = painterResource(R.drawable.profile)
-        )
     }
 }
 
@@ -523,6 +531,7 @@ private fun Avatar(
 @Composable
 private fun TwoPagePager(
     summary: HomeSummary,
+    modifier: Modifier = Modifier,
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
     baseHeight: Dp = PanelHeights.Metric,
@@ -541,7 +550,6 @@ private fun TwoPagePager(
     onWaterPlus: () -> Unit,
     onWaterMinus: () -> Unit,
     onToggleUnit: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
@@ -716,5 +724,36 @@ private fun roundFirstNumberToIntText(input: String): String {
     val replaced = (if (keepPlus) "+$roundedInt" else roundedInt.toString())
 
     return input.replaceRange(m.range, replaced)
+}
+@Composable
+private fun TopBarUserButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    touchSize: Dp = 48.dp,
+    visualSize: Dp = 42.dp,
+    iconSize: Dp = 26.dp
+) {
+    val bg = Color(0xFFECEFF2)
+    val fg = Color(0xFF9CA3AF)
+
+    Box(
+        modifier = modifier.size(touchSize),     // ✅ 48dp 熱區
+        contentAlignment = Alignment.Center
+    ) {
+        FilledTonalIconButton(
+            onClick = onClick,
+            modifier = Modifier.size(visualSize), // ✅ 40dp 視覺圓
+            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                containerColor = bg,
+                contentColor = fg
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Person,
+                contentDescription = "user",
+                modifier = Modifier.size(iconSize)
+            )
+        }
+    }
 }
 

@@ -643,7 +643,6 @@ fun BiteCalNavHost(
                     workoutVm = workoutVm,
                     fastingVm = fastingVm,
                     weightVm = weightVm,
-                    onOpenAlarm = { nav.navigate(Routes.REMINDERS) { launchSingleTop = true; restoreState = true } },
                     onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
                     onOpenTab = { tab ->
                         when (tab) {
