@@ -54,6 +54,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.BaselineShift
 import com.calai.app.ui.home.ui.fasting.components.FastingPlanCard
+import kotlin.math.max
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
 private object RingDefaults {
@@ -242,6 +243,11 @@ private fun MacroStatCardModern(
     }
 }
 
+private fun kcalToProgress(kcal: Int, goalKcal: Int): Float {
+    val g = max(goalKcal, 1) // 防呆：避免除以 0
+    return (kcal.toFloat() / g.toFloat()).coerceIn(0f, 1f)
+}
+
 @Composable
 fun StepsWorkoutRowModern(
     summary: HomeSummary,
@@ -250,6 +256,10 @@ fun StepsWorkoutRowModern(
     ringSize: Dp = 74.dp,
     centerDisk: Dp = 36.dp,
     ringStroke: Dp = 6.dp,
+
+    // ✅ 新增：圓環滿圈的 kcal（100% = 300 kcal）
+    kcalRingGoal: Int = 300,
+
     onAddWorkoutClick: () -> Unit,
     onWorkoutCardClick: () -> Unit = {}
 ) {
@@ -260,13 +270,16 @@ fun StepsWorkoutRowModern(
         val steps = summary.todayActivity.steps
         val stepsKcalApprox = (steps * 0.04f).roundToInt()
 
+        // ✅ 300 kcal = 100%
+        val stepsProgress = kcalToProgress(stepsKcalApprox, kcalRingGoal)
+
         // Steps
         ActivityStatCardSplit(
             title = "Steps",
             primary = "$steps",
             secondary = "≈ $stepsKcalApprox kcal",
             ringColor = Color(0xFF3B82F6),
-            progress = 0f,
+            progress = stepsProgress,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = ringSize,
@@ -274,14 +287,18 @@ fun StepsWorkoutRowModern(
             centerDisk = centerDisk
         )
 
-        // Workout（✅ 只改這張：kcal 小、細）
+        // Workout
         val workoutKcal = workoutTotalKcalOverride ?: summary.todayActivity.activeKcal.toInt()
+
+        // ✅ 300 kcal = 100%
+        val workoutProgress = kcalToProgress(workoutKcal, kcalRingGoal)
+
         ActivityStatCardSplit(
             title = "Workout",
-            primary = workoutKcal.toString(), // 傳什麼都可（因為 primaryContent 會覆蓋）
+            primary = workoutKcal.toString(),
             secondary = null,
-            ringColor = Color(0xFFA855F7),
-            progress = 0f,
+            ringColor = Color(0xFF6D28D9),
+            progress = workoutProgress,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = ringSize,
@@ -293,8 +310,8 @@ fun StepsWorkoutRowModern(
             leftExtra = {
                 WorkoutAddButton(
                     onClick = onAddWorkoutClick,
-                    outerSizeDp = 36.dp,  // 觸控區 & 灰閃圈 (和 Water 卡一致)
-                    innerSizeDp = 28.dp, // 黑底圓按鈕大小 (和 Water 卡一致)
+                    outerSizeDp = 36.dp,
+                    innerSizeDp = 28.dp,
                     iconSizeDp = 24.dp
                 )
             },
