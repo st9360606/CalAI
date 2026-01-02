@@ -59,6 +59,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.health.connect.client.PermissionController
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -96,6 +97,12 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.StepsRecord
+import com.calai.app.data.activity.healthconnect.HealthConnectPermissionProxyActivity
+import com.calai.app.data.activity.model.DailyActivityStatus
+
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -185,6 +192,10 @@ fun HomeScreen(
     }
     val workoutTotalKcalToday: Int? = workoutUi.today?.totalKcalToday
 
+    val stepsToday by vm.dailyStepsToday.collectAsState()
+    val activeKcalToday by vm.dailyActiveKcalToday.collectAsState()
+    val dailyStatus by vm.dailyStatus.collectAsState()
+
     val ctx = LocalContext.current
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
@@ -247,6 +258,66 @@ fun HomeScreen(
             )
         }
     }
+
+
+
+    // ✅ 你需要的權限（先 Steps + ActiveKcal）
+    val hcPermissions = remember {
+        setOf(
+            HealthPermission.getReadPermission(StepsRecord::class),
+            HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class)
+        )
+    }
+
+    // ✅ Health Connect 權限請求 launcher（官方：createRequestPermissionResultContract）:contentReference[oaicite:2]{index=2}
+    val requestHealthConnectPerms =
+        if (registryOwner != null) {
+            rememberLauncherForActivityResult(
+                contract = PermissionController.createRequestPermissionResultContract()
+            ) { granted: Set<String> ->
+                Log.e("HC_UI", "HC permission result granted=${granted.size} $granted")
+                vm.refreshDailyActivity() // 回來就重算狀態/數字
+            }
+        } else null
+
+    var hcPromptedOnce by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(dailyStatus, registryOwner) {
+        val canLaunch = requestHealthConnectPerms != null
+        if (!hcPromptedOnce &&
+            canLaunch &&
+            dailyStatus == DailyActivityStatus.PERMISSION_NOT_GRANTED
+        ) {
+            hcPromptedOnce = true
+            requestHealthConnectPerms.launch(hcPermissions)
+        }
+    }
+
+
+
+    val onStepsCardClick: () -> Unit = {
+        when (dailyStatus) {
+            DailyActivityStatus.PERMISSION_NOT_GRANTED -> {
+                // ✅ 你要的 8170：用 ProxyActivity 走 permission contract
+                HealthConnectPermissionProxyActivity.start(ctx, hcPermissions)
+            }
+
+            DailyActivityStatus.ERROR_RETRYABLE -> vm.refreshDailyActivity()
+
+            DailyActivityStatus.HC_NOT_INSTALLED,
+            DailyActivityStatus.HC_UNAVAILABLE -> vm.onDailyCtaClick(ctx)
+
+            DailyActivityStatus.NO_DATA -> vm.refreshDailyActivity()
+
+            DailyActivityStatus.AVAILABLE_GRANTED -> Unit
+        }
+    }
+
+    LifecycleResumeEffect(dailyStatus) {
+        // 回到前景就 refresh（你也可以加節流）
+        vm.refreshDailyActivity()
+        onPauseOrDispose { }
+    }
+
     // ========= 「背景」改在這裡放一層即可 =========
     Box(Modifier.fillMaxSize()) {
         LightHomeBackground() // ← 背景
@@ -266,7 +337,6 @@ fun HomeScreen(
 
         val scrollState = rememberScrollState()
 
-// ✅ Pager 水平滑動時，暫停外層垂直捲動，避免搶手勢
         var verticalScrollEnabled by remember { mutableStateOf(true) }
 
         val pagerGestureLockModifier = Modifier.pointerInput(Unit) {
@@ -393,16 +463,19 @@ fun HomeScreen(
 
             Spacer(Modifier.height(5.dp))
 
-            // ★ 想再小就把 cardHeight 調更小，環也可一起調
             StepsWorkoutRowModern(
                 summary = s,
                 workoutTotalKcalOverride = workoutTotalKcalToday,
-                cardHeight = 104.dp,   // ← 你想要的高度
-                ringSize = 74.dp,      // ← 對應縮小的圓環
-                centerDisk = 38.dp,    // ← 對應縮小的中心灰圓
-                ringStroke = 6.dp,      // ← 視覺厚度；想更輕可 7.dp
+                stepsOverride = stepsToday,
+                activeKcalOverride = activeKcalToday,
+                dailyStatus = dailyStatus,
+                onDailyCtaClick = onStepsCardClick,
+                cardHeight = 104.dp,
+                ringSize = 74.dp,
+                centerDisk = 38.dp,
+                ringStroke = 6.dp,
                 onAddWorkoutClick = { showWorkoutSheet.value = true },
-                onWorkoutCardClick = { onOpenActivityHistory() }   // ★ 新增：點整張卡 → 歷史頁
+                onWorkoutCardClick = { onOpenActivityHistory() }
             )
             // ===== Fourth block: 最近上傳
             if (s.recentMeals.isNotEmpty()) {

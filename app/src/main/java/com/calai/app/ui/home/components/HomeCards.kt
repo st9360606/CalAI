@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
+import com.calai.app.data.activity.model.DailyActivityStatus
 import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
@@ -258,14 +259,16 @@ private fun kcalToProgress(kcal: Int, goalKcal: Int): Float {
 fun StepsWorkoutRowModern(
     summary: HomeSummary,
     workoutTotalKcalOverride: Int? = null,
+
+    stepsOverride: Long? = null,
+    activeKcalOverride: Int? = null,
+    dailyStatus: DailyActivityStatus = DailyActivityStatus.AVAILABLE_GRANTED,
+    onDailyCtaClick: (() -> Unit)? = null,
+
     cardHeight: Dp = 120.dp,
     ringSize: Dp = 74.dp,
     centerDisk: Dp = 38.dp,
     ringStroke: Dp = 6.dp,
-
-    // ✅ 新增：圓環滿圈的 kcal（100% = 400 kcal）
-    kcalRingGoal: Int = 400,
-
     onAddWorkoutClick: () -> Unit,
     onWorkoutCardClick: () -> Unit = {}
 ) {
@@ -273,63 +276,63 @@ fun StepsWorkoutRowModern(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        val steps = summary.todayActivity.steps
-        val stepsKcalApprox = (steps * 0.04f).roundToInt()
+        // ✅ 今日：只要不是 AVAILABLE_GRANTED，就不要顯示後端舊值（避免誤導）
+        val canShowLive = dailyStatus == DailyActivityStatus.AVAILABLE_GRANTED
 
-        // ✅ 400 kcal = 100%
-        val stepsProgress = kcalToProgress(stepsKcalApprox, kcalRingGoal)
-        val activityPrimaryStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-        // Steps ✅ 圓環淺藍 + 中心 footstep
-        val stepsSecondaryStyle = MaterialTheme.typography.bodySmall.copy(
-            fontSize = 13.sp,              // ✅ 變大一點點（原本 bodySmall 通常 12sp 左右）
-            fontWeight = FontWeight.Medium // ✅ 更清楚一點（不想加粗可改 Normal）
-        )
+        val steps: Long? = if (canShowLive) stepsOverride else null
+        val activeKcal: Int? = if (canShowLive) activeKcalOverride else null
+
+        val stepsPrimary = when {
+            canShowLive -> (steps?.toString() ?: "—")
+            dailyStatus == DailyActivityStatus.NO_DATA -> "—"
+            dailyStatus == DailyActivityStatus.PERMISSION_NOT_GRANTED -> "未授權"
+            dailyStatus == DailyActivityStatus.HC_NOT_INSTALLED -> "未安裝"
+            dailyStatus == DailyActivityStatus.HC_UNAVAILABLE -> "不可用"
+            else -> "暫時無法取得"
+        }
+
+        val stepsSecondary = when {
+            canShowLive -> (activeKcal?.let { "$it kcal" } ?: "—")
+            dailyStatus == DailyActivityStatus.NO_DATA -> "No data yet"
+            else -> "connect"
+        }
 
         ActivityStatCardSplit(
             title = "Steps",
-            primary = "$steps",
-            secondary = "≈ $stepsKcalApprox kcal",
+            primary = stepsPrimary,
+            secondary = stepsSecondary,
             ringColor = ActivityRingColors.StepsLightBlue,
-            progress = stepsProgress,
+            progress = 0f,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = ringSize,
             ringStroke = ringStroke,
             centerDisk = centerDisk,
-            primaryTextStyle = activityPrimaryStyle,
-
-            // ✅ 只影響 Steps：secondary 往下 + 字體變大
-            gapPrimaryToSecondary = 4.dp,         // 往下移一點（原本預設 2.dp）
-            secondaryTextStyle = stepsSecondaryStyle,
-
             ringCenterContent = {
                 Image(
                     painter = painterResource(R.drawable.footstep),
                     contentDescription = "Footstep",
                     modifier = Modifier.size(22.dp)
                 )
-            }
+            },
+            onCardClick = onDailyCtaClick // ✅ 降級時可導去授權/安裝
         )
 
-        // Workout
+        // Workout 卡保持你現有邏輯（VM today total）
         val workoutKcal = workoutTotalKcalOverride ?: summary.todayActivity.activeKcal.toInt()
+        val workoutProgress = 0f
 
-        // ✅ 400 kcal = 100%
-        val workoutProgress = kcalToProgress(workoutKcal, kcalRingGoal)
-
-        // Workout ✅ 圓環深藍 + 中心 dumbbell
         ActivityStatCardSplit(
             title = "Workout",
             primary = workoutKcal.toString(),
             secondary = null,
-            ringColor = ActivityRingColors.WorkoutDeepBlue, // ✅ 深藍
+            ringColor = ActivityRingColors.WorkoutDeepBlue,
             progress = workoutProgress,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = ringSize,
             ringStroke = ringStroke,
             centerDisk = centerDisk,
-            primaryTextStyle = activityPrimaryStyle,
             ringCenterContent = {
                 Image(
                     painter = painterResource(R.drawable.fitness),
@@ -337,19 +340,8 @@ fun StepsWorkoutRowModern(
                     modifier = Modifier.size(26.dp)
                 )
             },
-            primaryContent = {
-                WorkoutPrimaryText(
-                    kcal = workoutKcal,
-                    numberStyle = activityPrimaryStyle // ✅ 關鍵：數字吃同一份 style
-                )
-            },
             leftExtra = {
-                Box(
-                    modifier = Modifier.offset(
-                        x = (-4).dp,
-                        y = (2).dp
-                    )
-                ) {
+                Box(modifier = Modifier.offset(x = (-4).dp, y = (2).dp)) {
                     WorkoutAddButton(
                         onClick = onAddWorkoutClick,
                         outerSizeDp = 34.dp,

@@ -6,15 +6,14 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 若要在開機/更新後重排程，需這個權限 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
-
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:targetApi="31" />
 
-    <!-- Android 14+ 平台健康權限（你要讀的資料對應三個） -->
+    <!-- Health Connect data types -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
     <application
         android:name="com.calai.app.BiteCal"
@@ -87,6 +86,13 @@
                 <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
             </intent-filter>
         </activity-alias>
+
+        <activity
+            android:name=".data.activity.healthconnect.HealthConnectPermissionProxyActivity"
+            android:exported="false"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Transparent" />
 
         <!-- WorkManager：使用自訂 Configuration.Provider（HiltWorkerFactory）時，
          必須移除預設的 WorkManagerInitializer（lint: RemoveWorkManagerInitializer） -->

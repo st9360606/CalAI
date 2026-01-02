@@ -2,6 +2,7 @@ package com.calai.app.di
 
 import android.content.Context
 import com.calai.app.BuildConfig
+import com.calai.app.data.activity.api.DailyActivityApi
 import com.calai.app.data.auth.api.AuthApi
 import com.calai.app.data.auth.net.AuthInterceptor
 import com.calai.app.data.auth.net.TokenAuthenticator
@@ -35,7 +36,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private fun json() = Json { ignoreUnknownKeys = true; explicitNulls = false; encodeDefaults = false }
+    private fun json() = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = true     // ✅ 讓 null 真的送出（符合 PUT 全量覆蓋）
+        encodeDefaults = false
+    }
     private fun contentType() = "application/json".toMediaType()
 
     // ★ 所有請求一律帶上使用者本地時區（IANA）
@@ -138,4 +143,9 @@ object NetworkModule {
     fun provideAutoGoalsApi(@Named("apiRetrofit") retrofit: Retrofit): AutoGoalsApi =
         retrofit.create(AutoGoalsApi::class.java)
 
+    @Provides
+    @Singleton
+    fun provideDailyActivityApi(
+        @Named("apiRetrofit") retrofit: Retrofit
+    ): DailyActivityApi = retrofit.create(DailyActivityApi::class.java)
 }
