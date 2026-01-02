@@ -729,9 +729,23 @@ fun BiteCalNavHost(
             val goBackHome = remember(nav) { { nav.goHome() } }
             // ✅ 系統返回鍵也回 HOME
             BackHandler { goBackHome() }
+            val onOpenTab: (HomeTab) -> Unit = remember(nav) {
+                { tab ->
+                    when (tab) {
+                        HomeTab.Home -> nav.goHome()
+                        HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Workout -> Unit
+                        HomeTab.Personal -> nav.navigate(Routes.PERSONAL) { launchSingleTop = true; restoreState = true }
+                    }
+                }
+            }
             WorkoutHistoryScreen(
                 vm = workoutVm,
-                onBack = goBackHome
+                onBack = goBackHome,
+                currentTab = HomeTab.Workout,
+                onOpenTab = onOpenTab
             )
         }
 

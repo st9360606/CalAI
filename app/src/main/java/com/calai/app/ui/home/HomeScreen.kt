@@ -710,12 +710,12 @@ private fun roundFirstNumberToIntText(input: String): String {
 private fun TopBarUserButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    touchSize: Dp = 48.dp,
+    touchSize: Dp = 50.dp,
     visualSize: Dp = 42.dp,
     iconSize: Dp = 26.dp
 ) {
-    val bg = Color(0xFFECEFF2)
-    val fg = Color(0xFF9CA3AF)
+    val bg = Color(0xFFE4E7EA)
+    val fg = Color(0xFF858C98)
 
     Box(
         modifier = modifier.size(touchSize),     // ✅ 48dp 熱區

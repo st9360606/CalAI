@@ -263,8 +263,8 @@ fun StepsWorkoutRowModern(
     centerDisk: Dp = 38.dp,
     ringStroke: Dp = 6.dp,
 
-    // ✅ 新增：圓環滿圈的 kcal（100% = 450 kcal）
-    kcalRingGoal: Int = 450,
+    // ✅ 新增：圓環滿圈的 kcal（100% = 400 kcal）
+    kcalRingGoal: Int = 400,
 
     onAddWorkoutClick: () -> Unit,
     onWorkoutCardClick: () -> Unit = {}
@@ -276,7 +276,7 @@ fun StepsWorkoutRowModern(
         val steps = summary.todayActivity.steps
         val stepsKcalApprox = (steps * 0.04f).roundToInt()
 
-        // ✅ 450 kcal = 100%
+        // ✅ 400 kcal = 100%
         val stepsProgress = kcalToProgress(stepsKcalApprox, kcalRingGoal)
         val activityPrimaryStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         // Steps ✅ 圓環淺藍 + 中心 footstep
@@ -314,7 +314,7 @@ fun StepsWorkoutRowModern(
         // Workout
         val workoutKcal = workoutTotalKcalOverride ?: summary.todayActivity.activeKcal.toInt()
 
-        // ✅ 450 kcal = 100%
+        // ✅ 400 kcal = 100%
         val workoutProgress = kcalToProgress(workoutKcal, kcalRingGoal)
 
         // Workout ✅ 圓環深藍 + 中心 dumbbell
