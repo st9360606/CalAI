@@ -251,12 +251,6 @@ private fun MacroStatCardModern(
     }
 }
 
-private fun kcalToProgress(kcal: Int, goalKcal: Int): Float {
-    val g = max(goalKcal, 1) // 防呆：避免除以 0
-    return (kcal.toFloat() / g.toFloat()).coerceIn(0f, 1f)
-}
-
-
 private const val WORKOUT_RING_GOAL_KCAL: Int = 400
 
 private fun progressOfLong(current: Long?, goal: Long?): Float {
@@ -346,7 +340,6 @@ fun StepsWorkoutRowModern(
             onCardClick = onDailyCtaClick // ✅ 降級時可導去授權/安裝
         )
 
-        // ===== Workout =====
         // ===== Workout =====
         val workoutKcal: Int? = workoutTotalKcalOverride
             ?: summary.todayActivity.activeKcal?.roundToInt()
