@@ -33,11 +33,33 @@ class DailyActivitySyncer @Inject constructor(
 ) {
     private val df = DateTimeFormatter.ISO_LOCAL_DATE
 
-    /**
-     * ✅ 新版：
-     * 1) 只同步 steps（activeKcal = null，後端會用 weight_timeseries 最新體重 + steps 計算）
-     * 2) 同步完後，GET range 撈回 server 計算結果，回填 activeKcal（讓 UI 立即顯示）
-     */
+    private fun choosePreferredOrigin(
+        byOrigin: Map<String, Long>,
+        preferred: List<String>
+    ): String? {
+        if (byOrigin.isEmpty()) return null
+
+        // 只看 >0 的來源
+        fun hasSteps(pkg: String) = (byOrigin[pkg] ?: 0L) > 0L
+
+        // 1) 先依偏好找：Google Fit > Samsung Health
+        for (pkg in preferred) {
+            if (pkg == DataOriginPrefs.ON_DEVICE_ANDROID) continue
+            if (hasSteps(pkg)) return pkg
+        }
+
+        // 2) 都沒有命中偏好：如果你把 ON_DEVICE_ANDROID 放在 preferred，
+        //    表示「接受任何來源」→ 選 steps 最大的來源（Other flow）
+        if (preferred.contains(DataOriginPrefs.ON_DEVICE_ANDROID)) {
+            return byOrigin
+                .filterValues { it > 0L }
+                .maxByOrNull { it.value }
+                ?.key
+        }
+
+        return null
+    }
+
     suspend fun syncLast7DaysWithStatus(nowZone: ZoneId): Result<DailyActivitySyncResult> {
         Log.e("HC_SYNC", "syncLast7Days enter zone=${nowZone.id}")
         (reader as? HealthConnectDailyReader)?.debugDumpEnv()
@@ -56,30 +78,34 @@ class DailyActivitySyncer @Inject constructor(
             val out = mutableListOf<DailyActivityDayResult>()
 
             for (d in days) {
+                // ✅ 直接拿當天所有來源 steps
+                val byOrigin = try {
+                    reader.readStepsByOrigin(d, nowZone)
+                } catch (ce: CancellationException) {
+                    throw ce
+                } catch (t: Throwable) {
+                    Log.e("HC_SYNC", "readStepsByOrigin failed date=$d err=${t.javaClass.simpleName}:${t.message}")
+                    emptyMap()
+                }
+
+                // ✅ 依偏好挑來源：Fit > Samsung > 其他(steps 最大)
+                val chosen = choosePreferredOrigin(byOrigin, DataOriginPrefs.preferred)
+                Log.e("HC_SYNC", "date=$d origins=${byOrigin.size} chosen=$chosen")
+
+                val steps = chosen?.let { byOrigin[it] }
+                if (chosen == null || steps == null || steps <= 0L) {
+                    // 完全沒資料：跳過
+                    continue
+                }
+
                 if (d == today) {
+                    // 需要就印出 debug
                     (reader as? HealthConnectDailyReader)?.debugDumpStepsOrigins(d, nowZone)
                 }
 
-                val chosen = pickFirstExistingOrigin(DataOriginPrefs.preferred) { pkg ->
-                    try {
-                        reader.hasAnyRecord(d, nowZone, pkg)
-                    } catch (ce: CancellationException) {
-                        throw ce
-                    } catch (t: Throwable) {
-                        Log.e("HC_SYNC", "hasAnyRecord failed pkg=$pkg date=$d err=${t.javaClass.simpleName}:${t.message}")
-                        false
-                    }
-                }
-
-                Log.e("HC_SYNC", "date=$d chosenOrigin=$chosen")
-                if (chosen == null) continue
-
-                val steps = reader.readSteps(d, nowZone, chosen)
                 val originName = reader.resolveOriginName(chosen)
 
-                Log.e("HC_SYNC", "date=$d steps=$steps originName=$originName")
-
-                // ✅ 只送 steps；activeKcal 一律送 null（避免 client 亂算/權限依賴）
+                // ✅ 只送 steps；activeKcal 一律送 null（server 回填）
                 api.upsert(
                     DailyActivityUpsertRequest(
                         localDate = d.format(df),
@@ -96,31 +122,28 @@ class DailyActivitySyncer @Inject constructor(
                     localDate = d,
                     timezone = nowZone.id,
                     steps = steps,
-                    activeKcal = null, // 先空，等一下從 server 回填
+                    activeKcal = null,
                     dataOriginPackage = chosen,
                     dataOriginName = originName
                 )
             }
 
-            // ✅ 一次性撈回 server 計算後的 activeKcal（避免每一天打一個 GET）
+            // ✅ 撈回 server 的 activeKcal 回填
             val from = days.first().format(df)
             val to = days.last().format(df)
 
             val serverRows = runCatching { api.getRange(from = from, to = to) }
-                .getOrElse { t ->
-                    Log.e("HC_SYNC", "getRange for merge failed (ok): ${t.javaClass.simpleName}:${t.message}")
+                .getOrElse {
+                    Log.e("HC_SYNC", "getRange for merge failed (ok): ${it.javaClass.simpleName}:${it.message}")
                     emptyList()
                 }
 
-            val kcalByDate: Map<LocalDate, Int?> = serverRows.associate { dto ->
+            val kcalByDate = serverRows.associate { dto ->
                 val date = LocalDate.parse(dto.localDate)
-                val kcalInt = dto.activeKcal?.roundToInt()
-                date to kcalInt
+                date to dto.activeKcal?.roundToInt()
             }
 
-            val merged = out.map { day ->
-                day.copy(activeKcal = kcalByDate[day.localDate])
-            }
+            val merged = out.map { day -> day.copy(activeKcal = kcalByDate[day.localDate]) }
 
             Result.success(DailyActivitySyncResult(status = status, days = merged))
         } catch (ce: CancellationException) {
@@ -129,10 +152,5 @@ class DailyActivitySyncer @Inject constructor(
             Log.e("HC_SYNC", "sync failed err=${t.javaClass.simpleName}:${t.message}")
             Result.failure(t)
         }
-    }
-
-    /** ✅ 舊版保留：如果你其他地方還在用，不會壞 */
-    suspend fun syncLast7Days(nowZone: ZoneId): Result<List<DailyActivityDayResult>> {
-        return syncLast7DaysWithStatus(nowZone).map { it.days }
     }
 }

@@ -3,6 +3,7 @@ package com.calai.app.ui.home.model
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.app.data.activity.model.DailyActivityStatus
@@ -86,6 +87,29 @@ class HomeViewModel @Inject constructor(
     // ✅ NEW：避免重複同步（回前景/refresh 連發）
     private var refreshDailyJob: Job? = null
 
+    // ✅ 1.5 秒 debounce（只擋「自動連發」，手動/授權要能 bypass）
+    private val dailyDebounceMs: Long = 1_500L
+    private var lastDailyRefreshAtMs: Long = 0L
+
+    private fun shouldStartDailyRefresh(force: Boolean): Boolean {
+        val now = SystemClock.elapsedRealtime()
+
+        // force：永遠允許（但會先 cancel 舊 job）
+        if (force) {
+            lastDailyRefreshAtMs = now
+            return true
+        }
+
+        // job 還在跑：不要重進（避免浪費）
+        if (refreshDailyJob?.isActive == true) return false
+
+        // debounce：1.5 秒內忽略
+        if (now - lastDailyRefreshAtMs < dailyDebounceMs) return false
+
+        lastDailyRefreshAtMs = now
+        return true
+    }
+
     init {
         refresh()
 
@@ -99,8 +123,8 @@ class HomeViewModel @Inject constructor(
     fun refresh() = viewModelScope.launch {
         _ui.update { it.copy(loading = true, error = null) }
 
-        // ✅ daily activity 並行啟動（自己會控 job/cancel）
-        refreshDailyActivity()
+        // ✅ 自動觸發：不 force（會被 1.5 秒 debounce 擋）
+        refreshDailyActivity(force = false)
 
         val first = runCatching {
             withContext(Dispatchers.IO) { repo.loadSummaryFromServer().getOrThrow() }
@@ -165,18 +189,22 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * ✅ NEW：今天活動同步（依你規格）
-     * - 今天 timezone：用裝置當下 zoneId
-     * - 多來源：Google Fit > Samsung Health > on-device steps（Syncer 已做）
-     * - status 不可用/未授權：UI 顯示降級，不顯示舊 server 值
+     * ✅ today 活動同步（加 debounce / force）
      *
-     * ✅ 重點：同一時間只允許一個同步 job
+     * @param force
+     * - false：自動觸發（onResume / refresh()）會被 1.5 秒 debounce 擋掉
+     * - true：使用者點擊 / permission result 需要「立刻更新」→ 不擋
      */
-    fun refreshDailyActivity() {
-        refreshDailyJob?.cancel()
+    fun refreshDailyActivity(force: Boolean = false) {
+        if (!shouldStartDailyRefresh(force)) return
+
+        if (force) refreshDailyJob?.cancel()
+
         refreshDailyJob = viewModelScope.launch {
             try {
-                val r = withContext(Dispatchers.IO) { dailySyncer.syncLast7DaysWithStatus(zoneId) }
+                val r = withContext(Dispatchers.IO) {
+                    dailySyncer.syncLast7DaysWithStatus(zoneId)
+                }
 
                 r.onFailure { t ->
                     if (t is CancellationException) throw t
@@ -188,7 +216,6 @@ class HomeViewModel @Inject constructor(
                 r.onSuccess { result ->
                     _dailyStatus.value = result.status
 
-                    // ✅ 只要不是 AVAILABLE_GRANTED，一律不要顯示數字（避免誤導）
                     if (result.status != DailyActivityStatus.AVAILABLE_GRANTED) {
                         _dailyStepsToday.value = null
                         _dailyActiveKcalToday.value = null
@@ -199,7 +226,6 @@ class HomeViewModel @Inject constructor(
                     val todayRow = result.days.lastOrNull { it.localDate == today }
 
                     if (todayRow == null) {
-                        // ✅ 有授權但沒有今天資料：用 NO_DATA 讓 UI 顯示「—」
                         _dailyStatus.value = DailyActivityStatus.NO_DATA
                         _dailyStepsToday.value = null
                         _dailyActiveKcalToday.value = null
@@ -209,7 +235,6 @@ class HomeViewModel @Inject constructor(
                     }
                 }
             } catch (ce: CancellationException) {
-                // ✅ 被新 job cancel：不要改狀態，直接結束
                 throw ce
             } catch (_: Throwable) {
                 _dailyStatus.value = DailyActivityStatus.ERROR_RETRYABLE

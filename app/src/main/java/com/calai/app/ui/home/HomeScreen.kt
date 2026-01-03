@@ -271,7 +271,7 @@ fun HomeScreen(
                 contract = PermissionController.createRequestPermissionResultContract()
             ) { granted: Set<String> ->
                 Log.e("HC_UI", "HC permission result granted=${granted.size} $granted")
-                vm.refreshDailyActivity() // 回來就重算狀態/數字
+                vm.refreshDailyActivity(force = true) // ✅ 授權後立刻更新，不吃 debounce
             }
         } else null
 
@@ -292,10 +292,10 @@ fun HomeScreen(
             DailyActivityStatus.PERMISSION_NOT_GRANTED -> {
                 HealthConnectPermissionProxyActivity.start(ctx, hcPermissions)
             }
-            DailyActivityStatus.ERROR_RETRYABLE -> vm.refreshDailyActivity()
+            DailyActivityStatus.ERROR_RETRYABLE -> vm.refreshDailyActivity(force = true) // ✅ 手動重試
+            DailyActivityStatus.NO_DATA -> vm.refreshDailyActivity(force = true)         // ✅ 手動重抓
             DailyActivityStatus.HC_NOT_INSTALLED,
             DailyActivityStatus.HC_UNAVAILABLE -> vm.onDailyCtaClick(ctx)
-            DailyActivityStatus.NO_DATA -> vm.refreshDailyActivity()
             DailyActivityStatus.AVAILABLE_GRANTED -> Unit
         }
     }
