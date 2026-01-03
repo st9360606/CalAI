@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.activity.model.DailyActivityStatus
+import com.calai.app.data.activity.util.ActivityKcalEstimator
 import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
@@ -259,9 +260,9 @@ private fun kcalToProgress(kcal: Int, goalKcal: Int): Float {
 fun StepsWorkoutRowModern(
     summary: HomeSummary,
     workoutTotalKcalOverride: Int? = null,
-
     stepsOverride: Long? = null,
     activeKcalOverride: Int? = null,
+    weightKgLatest: Double? = null,
     dailyStatus: DailyActivityStatus = DailyActivityStatus.AVAILABLE_GRANTED,
     onDailyCtaClick: (() -> Unit)? = null,
 
@@ -278,10 +279,7 @@ fun StepsWorkoutRowModern(
     ) {
         // ✅ 今日：只要不是 AVAILABLE_GRANTED，就不要顯示後端舊值（避免誤導）
         val canShowLive = dailyStatus == DailyActivityStatus.AVAILABLE_GRANTED
-
         val steps: Long? = if (canShowLive) stepsOverride else null
-        val activeKcal: Int? = if (canShowLive) activeKcalOverride else null
-
         val stepsPrimary = when {
             canShowLive -> (steps?.toString() ?: "—")
             dailyStatus == DailyActivityStatus.NO_DATA -> "—"
@@ -291,8 +289,17 @@ fun StepsWorkoutRowModern(
             else -> "暫時無法取得"
         }
 
+        // ✅ secondary：優先用 server 回填的 activeKcalOverride
         val stepsSecondary = when {
-            canShowLive -> (activeKcal?.let { "$it kcal" } ?: "—")
+            canShowLive && activeKcalOverride != null -> "$activeKcalOverride kcal"
+
+            // （可選 fallback）如果你想：server 沒回來時，用 client 估算補洞
+            canShowLive && steps != null && weightKgLatest != null -> {
+                val kcal = ActivityKcalEstimator.estimateActiveKcal(weightKgLatest, steps)
+                "$kcal kcal"
+            }
+
+            canShowLive -> "—"
             dailyStatus == DailyActivityStatus.NO_DATA -> "No data yet"
             else -> "connect"
         }
