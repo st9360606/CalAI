@@ -134,7 +134,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         weightVm.initIfNeeded()
     }
-
+    val stepsGoal by vm.dailyStepGoal.collectAsState()
     val weightUnit = weightUi.unit
 
     // current：kg/lbs 都準備好（LBS 顯示與差值用 lbs；progress 仍用 kg）
@@ -234,8 +234,8 @@ fun HomeScreen(
         }
     }
 
-    // Switch 行為：一律讓 VM 做權限判斷；onNeedPermission 內採用「能 launcher 就 launcher；否則導到設定頁」
-    val onToggleFasting: (Boolean) -> Unit = remember {
+    // ✅ 建議：帶 key，避免 ctx / launcher 更新後仍用舊的
+    val onToggleFasting: (Boolean) -> Unit = remember(ctx, requestNotifications, fastingVm) {
         { requested ->
             fastingVm.onToggleEnabled(
                 requested = requested,
@@ -252,7 +252,7 @@ fun HomeScreen(
                     }
                 },
                 onDenied = {
-                    // 可選：顯示提示；不加也不會影響穩定性
+                    // TODO: 你要的話可以丟 toast：「需要通知權限才能啟用提醒」
                 }
             )
         }
@@ -300,8 +300,7 @@ fun HomeScreen(
         }
     }
 
-    LifecycleResumeEffect(dailyStatus) {
-        // 回到前景就 refresh（你也可以加節流）
+    LifecycleResumeEffect(Unit) {
         vm.refreshDailyActivity()
         onPauseOrDispose { }
     }
@@ -391,12 +390,12 @@ fun HomeScreen(
                     )
                 }
 
-                val today = remember { LocalDate.now() }
+                val today = LocalDate.now()
                 val pastDays = 20
                 val futureDays = 1   // 若不想顯示未來任何一天，改成 0
                 val days =
                     remember(today) { (-pastDays..futureDays).map { today.plusDays(it.toLong()) } }
-                var selected by rememberSaveable { mutableStateOf(LocalDate.now()) }
+                var selected by rememberSaveable(today) { mutableStateOf(today) }
                 CalendarStrip(
                     days = days,
                     selected = selected,
@@ -457,6 +456,7 @@ fun HomeScreen(
                     weightKgLatest = weightUi.current,
                     dailyStatus = dailyStatus,
                     onDailyCtaClick = onStepsCardClick,
+                    stepsGoalOverride = stepsGoal,
                     cardHeight = 104.dp,
                     ringSize = 74.dp,
                     centerDisk = 38.dp,
@@ -598,7 +598,7 @@ private fun TwoPagePager(
 
     // 固定頁面總高度
     val spacerV = verticalGap
-    val pageHeight = baseHeight * 2 + spacerV
+    val pageHeight = baseHeight + baseHeight + spacerV
     val minCard = 96.dp
     val maxSwap = (baseHeight - minCard).coerceAtLeast(0.dp)
 

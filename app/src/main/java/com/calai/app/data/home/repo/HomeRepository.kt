@@ -19,6 +19,10 @@ import kotlin.math.roundToInt
 private const val KG_PER_LB = 0.45359237
 private const val LBS_PER_KG = 1.0 / KG_PER_LB
 
+/** UI/DB 的合理範圍防呆（你後端 clamp 到 200000；這裡對齊） */
+private const val DEFAULT_DAILY_STEP_GOAL = 10000
+private const val MAX_DAILY_STEP_GOAL = 200000
+
 /** 無條件捨去到一位小數 */
 private fun floor1(v: Double): Double =
     floor(v * 10.0 + 1e-8) / 10.0
@@ -62,6 +66,17 @@ class HomeRepository @Inject constructor(
     suspend fun loadSummaryFromServer(): Result<HomeSummary> = runCatching {
         // 1) 以 Server/DB 為事實來源
         val p = profileApi.getMyProfile()
+
+        // ✅ NEW：把 DB 的 dailyStepGoal 同步到 DataStore（讓 Home Steps 圓環吃到 DB）
+        runCatching {
+            val dbGoal = p.dailyStepGoal
+            val safeGoal = when {
+                dbGoal == null -> DEFAULT_DAILY_STEP_GOAL
+                dbGoal <= 0 -> DEFAULT_DAILY_STEP_GOAL
+                else -> dbGoal.coerceAtMost(MAX_DAILY_STEP_GOAL)
+            }
+            store.setDailyStepGoal(safeGoal)
+        }
 
         // 2) 取本機快照（含體重單位、目標體重、斷食方案等）
         val local = store.snapshot()

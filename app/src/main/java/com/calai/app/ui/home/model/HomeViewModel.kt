@@ -1,5 +1,8 @@
 package com.calai.app.ui.home.model
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.app.data.activity.model.DailyActivityStatus
@@ -8,23 +11,24 @@ import com.calai.app.data.health.HealthConnectRepository
 import com.calai.app.data.home.repo.HomeRepository
 import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.data.profile.repo.ProfileRepository
+import com.calai.app.data.profile.repo.UserProfileStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.math.roundToInt
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import kotlinx.coroutines.CancellationException
-import java.time.LocalDate
+
 data class HomeUiState(
     val loading: Boolean = true,
     val summary: HomeSummary? = null,
@@ -53,16 +57,17 @@ private data class SummaryUiKey(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repo: HomeRepository,
-    private val hc: HealthConnectRepository,
-    private val profileRepo: ProfileRepository, // ★ 新增：用於 401/404 自動補救
-    private val dailySyncer: DailyActivitySyncer, // ✅ NEW：串 daily activity
-    private val zoneId: ZoneId                   // ✅ NEW：用裝置當下 timezone
+    private val hc: HealthConnectRepository,          // 目前未用到，可保留
+    private val profileRepo: ProfileRepository,       // 401/404 自動補救
+    private val dailySyncer: DailyActivitySyncer,     // ✅ 串 daily activity
+    private val profileStore: UserProfileStore,
+    private val zoneId: ZoneId                        // ✅ 用裝置當下 timezone
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(HomeUiState())
     val ui: StateFlow<HomeUiState> = _ui.asStateFlow()
 
-    // ====== ✅ NEW：提供給 HomeScreen 的 override ======
+    // ====== Daily Activity override（給 HomeScreen 顯示） ======
     private val _dailyStatus = MutableStateFlow(DailyActivityStatus.ERROR_RETRYABLE)
     val dailyStatus: StateFlow<DailyActivityStatus> = _dailyStatus.asStateFlow()
 
@@ -72,19 +77,30 @@ class HomeViewModel @Inject constructor(
     private val _dailyActiveKcalToday = MutableStateFlow<Int?>(null)
     val dailyActiveKcalToday: StateFlow<Int?> = _dailyActiveKcalToday.asStateFlow()
 
+    private val _dailyStepGoal = MutableStateFlow(10000L)
+    val dailyStepGoal: StateFlow<Long> = _dailyStepGoal.asStateFlow()
 
-    // ====== Summary key：真的要減少重組就要「沒變就不要 emit」 ======
+    // ====== Summary key：沒變就不要 emit，避免整頁重組 ======
     private var lastSummaryKey: SummaryUiKey? = null
+
+    // ✅ NEW：避免重複同步（回前景/refresh 連發）
+    private var refreshDailyJob: Job? = null
 
     init {
         refresh()
+
+        viewModelScope.launch {
+            profileStore.dailyStepGoalFlow.collectLatest { v ->
+                _dailyStepGoal.value = v.toLong()
+            }
+        }
     }
 
     fun refresh() = viewModelScope.launch {
         _ui.update { it.copy(loading = true, error = null) }
 
-        // ✅ daily activity 可以並行，不必等 summary
-        launch { refreshDailyActivity() }
+        // ✅ daily activity 並行啟動（自己會控 job/cancel）
+        refreshDailyActivity()
 
         val first = runCatching {
             withContext(Dispatchers.IO) { repo.loadSummaryFromServer().getOrThrow() }
@@ -118,6 +134,7 @@ class HomeViewModel @Inject constructor(
                 return@launch
             }
         }
+
         _ui.update { it.copy(loading = false, error = e?.message ?: "Failed to load profile") }
     }
 
@@ -142,7 +159,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // ✅ 簡化：避免 withContext 推斷問題
     fun onAddWater(ml: Int) = viewModelScope.launch {
         runCatching { withContext(Dispatchers.IO) { repo.addWater(ml) } }
         refresh()
@@ -151,71 +167,74 @@ class HomeViewModel @Inject constructor(
     /**
      * ✅ NEW：今天活動同步（依你規格）
      * - 今天 timezone：用裝置當下 zoneId
-     * - 多來源：Google Fit > Samsung Health > on-device steps（你 Syncer 已做）
+     * - 多來源：Google Fit > Samsung Health > on-device steps（Syncer 已做）
      * - status 不可用/未授權：UI 顯示降級，不顯示舊 server 值
+     *
+     * ✅ 重點：同一時間只允許一個同步 job
      */
-    fun refreshDailyActivity() = viewModelScope.launch {
-        try {
-            val r = withContext(Dispatchers.IO) { dailySyncer.syncLast7DaysWithStatus(zoneId) }
+    fun refreshDailyActivity() {
+        refreshDailyJob?.cancel()
+        refreshDailyJob = viewModelScope.launch {
+            try {
+                val r = withContext(Dispatchers.IO) { dailySyncer.syncLast7DaysWithStatus(zoneId) }
 
-            r.onFailure { t ->
-                if (t is CancellationException) throw t
+                r.onFailure { t ->
+                    if (t is CancellationException) throw t
+                    _dailyStatus.value = DailyActivityStatus.ERROR_RETRYABLE
+                    _dailyStepsToday.value = null
+                    _dailyActiveKcalToday.value = null
+                }
+
+                r.onSuccess { result ->
+                    _dailyStatus.value = result.status
+
+                    // ✅ 只要不是 AVAILABLE_GRANTED，一律不要顯示數字（避免誤導）
+                    if (result.status != DailyActivityStatus.AVAILABLE_GRANTED) {
+                        _dailyStepsToday.value = null
+                        _dailyActiveKcalToday.value = null
+                        return@onSuccess
+                    }
+
+                    val today = LocalDate.now(zoneId)
+                    val todayRow = result.days.lastOrNull { it.localDate == today }
+
+                    if (todayRow == null) {
+                        // ✅ 有授權但沒有今天資料：用 NO_DATA 讓 UI 顯示「—」
+                        _dailyStatus.value = DailyActivityStatus.NO_DATA
+                        _dailyStepsToday.value = null
+                        _dailyActiveKcalToday.value = null
+                    } else {
+                        _dailyStepsToday.value = todayRow.steps
+                        _dailyActiveKcalToday.value = todayRow.activeKcal
+                    }
+                }
+            } catch (ce: CancellationException) {
+                // ✅ 被新 job cancel：不要改狀態，直接結束
+                throw ce
+            } catch (_: Throwable) {
                 _dailyStatus.value = DailyActivityStatus.ERROR_RETRYABLE
                 _dailyStepsToday.value = null
                 _dailyActiveKcalToday.value = null
             }
-
-            r.onSuccess { result ->
-                _dailyStatus.value = result.status
-
-                // ✅ 只要不是 AVAILABLE_GRANTED，一律不要顯示數字（避免誤導）
-                if (result.status != DailyActivityStatus.AVAILABLE_GRANTED) {
-                    _dailyStepsToday.value = null
-                    _dailyActiveKcalToday.value = null
-                    return@onSuccess
-                }
-
-                val today = LocalDate.now(zoneId)
-                val todayRow = result.days.lastOrNull { it.localDate == today }
-
-                if (todayRow == null) {
-                    _dailyStatus.value = DailyActivityStatus.NO_DATA
-                    _dailyStepsToday.value = null
-                    _dailyActiveKcalToday.value = null
-                } else {
-                    _dailyStepsToday.value = todayRow.steps
-                    _dailyActiveKcalToday.value = todayRow.activeKcal
-                }
-            }
-        } catch (ce: CancellationException) {
-            throw ce
-        } catch (_: Throwable) {
-            _dailyStatus.value = DailyActivityStatus.ERROR_RETRYABLE
-            _dailyStepsToday.value = null
-            _dailyActiveKcalToday.value = null
         }
     }
 
-
     /**
-     * ✅ NEW：卡片 CTA 點擊（能跑先行版）
+     * ✅ 卡片 CTA 點擊（最小可用版）
      * - 未安裝：導 Play Store
-     * - 未授權/不可用：導到你的 HealthConnectIntroScreen（更好）
-     *
-     * 目前你 UI 是呼叫 vm.onDailyCtaClick(ctx)，所以先做「直接開連結」最小可用。
-     * 後續建議改成：VM emit UiEvent，由 NavHost 導到 Routes.ONBOARD_HEALTH_CONNECT（見風險&改良）
+     * - 未授權/不可用：目前也先導 Play Store（你註解：之後換成 app 內 Intro/授權頁更好）
      */
     fun onDailyCtaClick(ctx: Context) {
-        val st = _dailyStatus.value
-        when (st) {
-            DailyActivityStatus.HC_NOT_INSTALLED -> openPlayStore(ctx, "com.google.android.apps.healthdata")
+        when (_dailyStatus.value) {
+            DailyActivityStatus.HC_NOT_INSTALLED ->
+                openPlayStore(ctx, "com.google.android.apps.healthdata")
+
             DailyActivityStatus.PERMISSION_NOT_GRANTED,
             DailyActivityStatus.HC_UNAVAILABLE,
             DailyActivityStatus.ERROR_RETRYABLE,
-            DailyActivityStatus.NO_DATA -> {
-                // 最小可用：先導到 Play Store（或你也可以導到你自己的 HealthConnectIntro route）
+            DailyActivityStatus.NO_DATA ->
                 openPlayStore(ctx, "com.google.android.apps.healthdata")
-            }
+
             DailyActivityStatus.AVAILABLE_GRANTED -> Unit
         }
     }
@@ -227,18 +246,17 @@ class HomeViewModel @Inject constructor(
         val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$pkg")).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        runCatching { ctx.startActivity(market) }.recoverCatching { ctx.startActivity(web) }
+        runCatching { ctx.startActivity(market) }
+            .recoverCatching { ctx.startActivity(web) }
     }
 
-
-    fun onRequestHealthPermissions() = viewModelScope.launch { refresh() }
-
+    fun onRequestHealthPermissions() = viewModelScope.launch {
+        refresh()
+    }
 
     fun refreshAfterLogin() {
         viewModelScope.launch {
             // TODO: 重新拉 summary / profile / macros
-            // repo.refreshSummary()
-            // repo.refreshPlanMetrics()
         }
     }
 }
@@ -251,8 +269,10 @@ private fun HomeSummary.toUiKey(): SummaryUiKey {
         append(rm.size)
         rm.take(3).forEach { m -> append('|').append(m.hashCode()) }
     }
+
     // ✅ activeKcal 可能為 null：用 -1 當 key 的穩定 sentinel（不影響 UI 顯示）
     val activeKcalSafe = this.todayActivity.activeKcal?.toDouble()?.roundToInt() ?: -1
+
     return SummaryUiKey(
         avatarUrl = this.avatarUrl?.toString(),
         tdee = this.tdee,
