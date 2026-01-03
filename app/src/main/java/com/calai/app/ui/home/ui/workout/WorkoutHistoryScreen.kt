@@ -51,9 +51,11 @@ fun WorkoutHistoryScreen(
     currentTab: HomeTab = HomeTab.Workout,
     onOpenTab: (HomeTab) -> Unit = {}
 ) {
-    // 初始化
-    LaunchedEffect(Unit) { vm.init() }
-    LaunchedEffect(Unit) { vm.refreshToday() }
+
+    LaunchedEffect(Unit) {
+        vm.init()
+        vm.refreshToday()
+    }
 
     val ui = vm.ui.collectAsStateWithLifecycle().value
     val today = ui.today
