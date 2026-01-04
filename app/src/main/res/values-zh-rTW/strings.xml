@@ -207,4 +207,7 @@
     <string name="fasting_endsoon_body">還有 1 小時就結束（到 %1$s）。如果還有最後一餐，記得慢慢吃、順手記錄。</string>
 
 
+    <string name="steps_hint_connect_fit_samsung">Connect Google Health to track your steps</string>
+    <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
+
 </resources>

@@ -212,4 +212,7 @@
     <string name="fasting_endsoon_body">1 hour left (until %1$s). If you have a last meal, take it slow and log it.</string>
 
 
+    <string name="steps_hint_connect_fit_samsung">Connect Google Health to track your steps</string>
+    <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
+
 </resources>

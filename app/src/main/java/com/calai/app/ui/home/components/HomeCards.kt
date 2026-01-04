@@ -1,5 +1,6 @@
 package com.calai.app.ui.home.components
 
+import android.os.Build
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -36,11 +38,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -315,6 +320,20 @@ fun StepsWorkoutRowModern(
             else -> "connect"
         }
 
+        // ✅ 只在「未授權」與「未安裝」時顯示提示小卡
+        val showHint = dailyStatus == DailyActivityStatus.PERMISSION_NOT_GRANTED ||
+                dailyStatus == DailyActivityStatus.HC_NOT_INSTALLED
+
+        val hintText = when (dailyStatus) {
+            DailyActivityStatus.PERMISSION_NOT_GRANTED ->
+                stringResource(R.string.steps_hint_connect_fit_samsung)
+
+            DailyActivityStatus.HC_NOT_INSTALLED ->
+                stringResource(R.string.steps_hint_install_health_connect)
+
+            else -> ""
+        }
+
         // ✅ Steps 圓環進度：100% = daily_step_goal（只有可用時才算）
         val stepsProgress = if (canShowLive) progressOfLong(steps, stepsGoalOverride) else 0f
 
@@ -337,7 +356,34 @@ fun StepsWorkoutRowModern(
                     modifier = Modifier.size(22.dp)
                 )
             },
-            onCardClick = onDailyCtaClick // ✅ 降級時可導去授權/安裝
+            onCardClick = onDailyCtaClick, // ✅ 降級時可導去授權/安裝
+
+            // ✅ NEW
+            blurBackground = showHint,
+            overlay = if (showHint) {
+                {
+                    StepsConnectHintCard(
+                        text = hintText,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        minHeight = 76.dp,
+                        textStyle = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 11.sp,                  // ✅ 字大小
+                            fontWeight = FontWeight.Medium,    // ✅ 粗度
+                            lineHeight = 15.sp                 // ✅ 行高（可選）
+                            // letterSpacing = 0.1.sp          // ✅ 字距（可選）
+                        ),
+                        icon = {
+                            Image(
+                                painter = painterResource(R.drawable.google_health),
+                                contentDescription = "Google Health",
+                                modifier = Modifier
+                                    .padding(start = 6.dp) // ✅ 只推 icon
+                                    .size(24.dp)
+                            )
+                        }
+                    )
+                }
+            } else null
         )
 
         // ===== Workout =====
@@ -457,7 +503,13 @@ fun ActivityStatCardSplit(
     primaryContent: (@Composable () -> Unit)? = null,
 
     // ★★★ 新增：整張卡片點擊（可為 null 表示不啟用）
-    onCardClick: (() -> Unit)? = null
+    onCardClick: (() -> Unit)? = null,
+
+    // ✅ NEW：底層模糊 + 中央 overlay
+    blurBackground: Boolean = false,
+    blurRadius: Dp = 14.dp,
+    dimAlpha: Float = 0.35f,
+    overlay: (@Composable () -> Unit)? = null
 ) {
     val titleStyle = titleTextStyle ?: MaterialTheme.typography.bodySmall
     val primaryStyle =
@@ -473,9 +525,15 @@ fun ActivityStatCardSplit(
         ) { onCardClick() }
     } else Modifier
 
+    // ✅ 只模糊底層（Android 12+ 才真的 blur；低版本就只做 alpha 降級）
+    fun Modifier.smartBlurAndDim(): Modifier {
+        val m = this.graphicsLayer { alpha = dimAlpha }
+        return if (Build.VERSION.SDK_INT >= 31) m.blur(blurRadius) else m
+    }
+
     Card(
         modifier = modifier
-            .then(clickableMod)                 // ★ 套在 Card 上：整張卡片可點
+            .then(clickableMod)
             .height(cardHeight)
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
         shape = CardStyles.Corner,
@@ -483,113 +541,128 @@ fun ActivityStatCardSplit(
         border = CardStyles.Border,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(cardHeight)
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // ========= 左半：用 Box 疊兩層 =========
-            Box(
+        Box(modifier = Modifier.fillMaxSize()) {
+
+            // ===== 底層：你原本的 Row 內容（必要時模糊）=====
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
+                    .fillMaxWidth()
+                    .height(cardHeight)
+                    .then(if (blurBackground) Modifier.smartBlurAndDim() else Modifier)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // 文字群組 (置頂)
-                Column(
+                Box(
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.Start
+                        .weight(1f)
+                        .fillMaxHeight()
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (titlePrefix != null) {
-                            titlePrefix()
-                            Spacer(Modifier.width(titlePrefixGap))
+                    // 文字群組 (置頂)
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (titlePrefix != null) {
+                                titlePrefix()
+                                Spacer(Modifier.width(titlePrefixGap))
+                            }
+                            Text(
+                                text = title,
+                                style = titleStyle,
+                                color = Color(0xFF111114),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
-                        Text(
-                            text = title,
-                            style = titleStyle,
-                            color = Color(0xFF111114),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+
+                        Spacer(Modifier.height(gapTitleToPrimary))
+
+                        // ✅ 只有傳 primaryContent 的卡才會用自訂（Workout）
+                        if (primaryContent != null) {
+                            primaryContent()
+                        } else {
+                            Text(
+                                text = primary,
+                                style = primaryStyle,
+                                color = Color(0xFF0F172A),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Spacer(Modifier.height(gapPrimaryToSecondary))
+
+                        if (!secondary.isNullOrBlank()) {
+                            Text(
+                                text = secondary,
+                                style = secondaryStyle,
+                                color = Color(0xFF111114),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        } else {
+                            // 保留占位高度，避免版面大跳
+                            Spacer(Modifier.height(18.dp))
+                        }
                     }
 
-                    Spacer(Modifier.height(gapTitleToPrimary))
-
-                    // ✅ 只有傳 primaryContent 的卡才會用自訂（Workout）
-                    if (primaryContent != null) {
-                        primaryContent()
-                    } else {
-                        Text(
-                            text = primary,
-                            style = primaryStyle,
-                            color = Color(0xFF0F172A),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Spacer(Modifier.height(gapPrimaryToSecondary))
-
-                    if (!secondary.isNullOrBlank()) {
-                        Text(
-                            text = secondary,
-                            style = secondaryStyle,
-                            color = Color(0xFF111114),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    } else {
-                        // 保留占位高度，避免版面大跳
-                        Spacer(Modifier.height(18.dp))
+                    // ⬇⬇⬇ Workout 的 + 按鈕固定在左下角，不再被 Column 擠壓
+                    leftExtra?.let { extraContent ->
+                        Box(
+                            modifier = Modifier.align(Alignment.BottomStart)
+                        ) {
+                            extraContent()
+                        }
                     }
                 }
 
-                // ⬇⬇⬇ Workout 的 + 按鈕固定在左下角，不再被 Column 擠壓
-                leftExtra?.let { extraContent ->
+                // ========= 右半：圓環進度 =========
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Box(
-                        modifier = Modifier.align(Alignment.BottomStart)
+                        modifier = Modifier.size(ringSize),
+                        contentAlignment = Alignment.Center
                     ) {
-                        extraContent()
+                        if (drawRing) {
+                            GaugeRing(
+                                progress = progress,
+                                sizeDp = ringSize,
+                                strokeDp = ringStroke,
+                                trackColor = Color(0xFFEFF0F3),
+                                progressColor = ringColor,
+                                drawTopTick = true,
+                                tickColor = ringColor
+                            )
+                            Surface(
+                                color = RingColors.CenterFill,
+                                shape = CircleShape,
+                                modifier = Modifier.size(centerDisk)
+                            ) {}
+                            ringCenterContent?.invoke()
+                        } else {
+                            Spacer(Modifier.size(ringSize))
+                        }
                     }
                 }
             }
-
-            // ========= 右半：圓環進度 =========
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.Center
-            ) {
+            // ===== 上層：中央提示卡（不模糊）=====
+            if (overlay != null) {
                 Box(
-                    modifier = Modifier.size(ringSize),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Transparent),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (drawRing) {
-                        GaugeRing(
-                            progress = progress,
-                            sizeDp = ringSize,
-                            strokeDp = ringStroke,
-                            trackColor = Color(0xFFEFF0F3),
-                            progressColor = ringColor,
-                            drawTopTick = true,
-                            tickColor = ringColor
-                        )
-                        Surface(
-                            color = RingColors.CenterFill,
-                            shape = CircleShape,
-                            modifier = Modifier.size(centerDisk)
-                        ) {}
-                        ringCenterContent?.invoke()
-                    } else {
-                        Spacer(Modifier.size(ringSize))
-                    }
+                    overlay()
                 }
             }
         }
