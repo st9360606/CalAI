@@ -297,28 +297,36 @@ fun StepsWorkoutRowModern(
 
         val canShowLive = dailyStatus == DailyActivityStatus.AVAILABLE_GRANTED
         val steps: Long? = if (canShowLive) stepsOverride else null
+
+        // 建議：把 — 也資源化（可選，但我建議做）
+        val dash = stringResource(R.string.common_dash)
+
         val stepsPrimary = when {
-            canShowLive -> (steps?.toString() ?: "—")
-            dailyStatus == DailyActivityStatus.NO_DATA -> "—"
-            dailyStatus == DailyActivityStatus.PERMISSION_NOT_GRANTED -> "未授權"
-            dailyStatus == DailyActivityStatus.HC_NOT_INSTALLED -> "未安裝"
-            dailyStatus == DailyActivityStatus.HC_UNAVAILABLE -> "不可用"
-            else -> "暫時無法取得"
+            canShowLive -> (steps?.toString() ?: dash)
+            dailyStatus == DailyActivityStatus.NO_DATA -> dash
+            dailyStatus == DailyActivityStatus.PERMISSION_NOT_GRANTED ->
+                stringResource(R.string.steps_status_permission_not_granted)
+            dailyStatus == DailyActivityStatus.HC_NOT_INSTALLED ->
+                stringResource(R.string.steps_status_hc_not_installed)
+            dailyStatus == DailyActivityStatus.HC_UNAVAILABLE ->
+                stringResource(R.string.steps_status_hc_unavailable)
+            else -> stringResource(R.string.common_error)
         }
 
-        // ✅ secondary：優先用 server 回填的 activeKcalOverride
+        // secondary
         val stepsSecondary = when {
-            canShowLive && activeKcalOverride != null -> "≈ $activeKcalOverride kcal"
+            canShowLive && activeKcalOverride != null ->
+                stringResource(R.string.steps_secondary_est_kcal, activeKcalOverride)
 
-            // （可選 fallback）如果你想：server 沒回來時，用 client 估算補洞
             canShowLive && steps != null && weightKgLatest != null -> {
                 val kcal = ActivityKcalEstimator.estimateActiveKcal(weightKgLatest, steps)
-                "≈ $kcal kcal"
+                stringResource(R.string.steps_secondary_est_kcal, kcal)
             }
 
-            canShowLive -> "—"
-            dailyStatus == DailyActivityStatus.NO_DATA -> "No data yet"
-            else -> "connect"
+            canShowLive -> dash
+            dailyStatus == DailyActivityStatus.NO_DATA ->
+                stringResource(R.string.steps_secondary_no_data_yet)
+            else -> stringResource(R.string.steps_secondary_connect)
         }
 
         // ✅ 只在「未授權」與「未安裝」時顯示提示小卡
@@ -327,12 +335,18 @@ fun StepsWorkoutRowModern(
 
         val hintText = when (dailyStatus) {
             DailyActivityStatus.PERMISSION_NOT_GRANTED ->
-                stringResource(R.string.steps_hint_connect_fit_samsung)
+                stringResource(R.string.steps_hint_connect_google_health)
 
             DailyActivityStatus.HC_NOT_INSTALLED ->
                 stringResource(R.string.steps_hint_install_health_connect)
 
             else -> ""
+        }
+
+        val hintIconRes = when (dailyStatus) {
+            DailyActivityStatus.PERMISSION_NOT_GRANTED -> R.drawable.google_health
+            DailyActivityStatus.HC_NOT_INSTALLED -> R.drawable.health_connect_logo
+            else -> R.drawable.google_health
         }
 
         // ✅ Steps 圓環進度：100% = daily_step_goal（只有可用時才算）
@@ -359,13 +373,12 @@ fun StepsWorkoutRowModern(
             },
             onCardClick = onDailyCtaClick, // ✅ 降級時可導去授權/安裝
 
-            // ✅ NEW
             blurBackground = showHint,
             overlay = if (showHint) {
                 {
                     StepsConnectHintCard(
                         text = hintText,
-                        modifier = Modifier.fillMaxWidth(0.79f),
+                        modifier = Modifier.fillMaxWidth(0.8f),
                         minHeight = 78.dp,
                         textStyle = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp,                  // ✅ 字大小
@@ -375,10 +388,10 @@ fun StepsWorkoutRowModern(
                         ),
                         icon = {
                             Image(
-                                painter = painterResource(R.drawable.google_health),
+                                painter = painterResource(hintIconRes),
                                 contentDescription = "Google Health",
                                 modifier = Modifier
-                                    .padding(start = 6.dp) // ✅ 只推 icon
+                                    .padding(start = 4.dp) // ✅ 只推 icon
                                     .size(24.dp)
                             )
                         },

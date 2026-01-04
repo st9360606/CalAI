@@ -206,8 +206,17 @@
     <string name="fasting_endsoon_title">進食窗快結束了 ⏰</string>
     <string name="fasting_endsoon_body">還有 1 小時就結束（到 %1$s）。如果還有最後一餐，記得慢慢吃、順手記錄。</string>
 
+    <!-- Steps Card  -->
+    <string name="steps_hint_connect_google_health">連線 Google Health 以追蹤步數</string>
+    <string name="steps_hint_install_health_connect">安裝 Health Connect 以追蹤步數</string>
+    <string name="common_error">錯誤</string>
+    <string name="common_dash">—</string>
 
-    <string name="steps_hint_connect_fit_samsung">Connect Google Health to track your steps</string>
-    <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
+    <string name="steps_status_permission_not_granted">未授權</string>
+    <string name="steps_status_hc_not_installed">未安裝</string>
+    <string name="steps_status_hc_unavailable">不可用</string>
+    <string name="steps_secondary_no_data_yet">尚無資料</string>
+    <string name="steps_secondary_connect">連線</string>
+    <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
 
 </resources>

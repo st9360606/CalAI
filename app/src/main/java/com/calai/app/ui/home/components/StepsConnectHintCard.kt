@@ -27,9 +27,9 @@ fun StepsConnectHintCard(
     corner: Dp = 16.dp,
     paddingH: Dp = 8.dp,
     paddingV: Dp = 11.dp,
-    iconGap: Dp = 8.dp,
+    iconGap: Dp = 6.dp,
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
-    maxLines: Int = 4,
+    maxLines: Int = 5,
     minHeight: Dp = 68.dp,
     icon: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null
