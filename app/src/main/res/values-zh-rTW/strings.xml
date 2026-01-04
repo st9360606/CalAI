@@ -207,8 +207,8 @@
     <string name="fasting_endsoon_body">還有 1 小時就結束（到 %1$s）。如果還有最後一餐，記得慢慢吃、順手記錄。</string>
 
     <!-- Steps Card  -->
-    <string name="steps_hint_connect_google_health">連線 Google Health 以追蹤步數</string>
-    <string name="steps_hint_install_health_connect">安裝 Health Connect 以追蹤步數</string>
+    <string name="steps_hint_connect_google_health">連結 Google Health 取得步數資料</string>
+    <string name="steps_hint_install_health_connect">安裝 Health Connect 取得步數資料</string>
     <string name="common_error">錯誤</string>
     <string name="common_dash">—</string>
 

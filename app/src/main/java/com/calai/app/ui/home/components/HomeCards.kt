@@ -378,7 +378,7 @@ fun StepsWorkoutRowModern(
                 {
                     StepsConnectHintCard(
                         text = hintText,
-                        modifier = Modifier.fillMaxWidth(0.8f),
+                        modifier = Modifier.fillMaxWidth(0.79f),
                         minHeight = 78.dp,
                         textStyle = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp,                  // ✅ 字大小
@@ -391,8 +391,8 @@ fun StepsWorkoutRowModern(
                                 painter = painterResource(hintIconRes),
                                 contentDescription = "Google Health",
                                 modifier = Modifier
-                                    .padding(start = 4.dp) // ✅ 只推 icon
-                                    .size(24.dp)
+                                    .padding(start = 4.dp)
+                                    .size(26.dp)
                             )
                         },
                         onClick = onDailyCtaClick // ✅ 點提示卡也會導去授權/安裝
