@@ -2,6 +2,7 @@ package com.calai.app.ui.home.components
 
 import android.os.Build
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -364,8 +365,8 @@ fun StepsWorkoutRowModern(
                 {
                     StepsConnectHintCard(
                         text = hintText,
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                        minHeight = 76.dp,
+                        modifier = Modifier.fillMaxWidth(0.79f),
+                        minHeight = 78.dp,
                         textStyle = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp,                  // ✅ 字大小
                             fontWeight = FontWeight.Medium,    // ✅ 粗度
@@ -380,7 +381,8 @@ fun StepsWorkoutRowModern(
                                     .padding(start = 6.dp) // ✅ 只推 icon
                                     .size(24.dp)
                             )
-                        }
+                        },
+                        onClick = onDailyCtaClick // ✅ 點提示卡也會導去授權/安裝
                     )
                 }
             } else null
@@ -476,39 +478,33 @@ fun ActivityStatCardSplit(
     secondary: String? = null,
     ringColor: Color,
     progress: Float = 0f,
-    cardHeight: Dp = PanelHeights.Metric,
-    ringSize: Dp = RingDefaults.Size,
-    ringStroke: Dp = RingDefaults.Stroke,
-    centerDisk: Dp = RingDefaults.CenterDisk,
+    cardHeight: Dp = 120.dp,
+    ringSize: Dp = 74.dp,
+    ringStroke: Dp = 6.dp,
+    centerDisk: Dp = 38.dp,
     drawRing: Boolean = true,
-
-    // ✅ 新增：圓環中心內容（放 footstep / dumbbell）
     ringCenterContent: (@Composable () -> Unit)? = null,
-
-    // 小三角 prefix（可選）
     titlePrefix: (@Composable () -> Unit)? = null,
     titlePrefixGap: Dp = 4.dp,
-
-    // 文字樣式/間距
     titleTextStyle: TextStyle? = null,
     primaryTextStyle: TextStyle? = null,
     secondaryTextStyle: TextStyle? = null,
     gapTitleToPrimary: Dp = 4.dp,
     gapPrimaryToSecondary: Dp = 2.dp,
-
-    // ⭐ 左下角額外內容（Workout 的「+」按鈕）
     leftExtra: (@Composable () -> Unit)? = null,
-
-    // ✅ 新增：primary 自訂內容（不傳就保持原本 Text(primary)）
     primaryContent: (@Composable () -> Unit)? = null,
-
-    // ★★★ 新增：整張卡片點擊（可為 null 表示不啟用）
     onCardClick: (() -> Unit)? = null,
 
-    // ✅ NEW：底層模糊 + 中央 overlay
+    // ✅ 模糊/提示狀態
     blurBackground: Boolean = false,
-    blurRadius: Dp = 14.dp,
-    dimAlpha: Float = 0.35f,
+
+    // ✅ 建議值：比你原本更接近圖片（「輕微」）
+    blurRadiusWhenOn: Dp = 1.dp,
+    dimAlphaWhenOn: Float = 0.88f,
+
+    // ✅ 霧面感（白色薄紗），更像你圖
+    scrimAlphaWhenOn: Float = 0.1f,
+
     overlay: (@Composable () -> Unit)? = null
 ) {
     val titleStyle = titleTextStyle ?: MaterialTheme.typography.bodySmall
@@ -516,7 +512,6 @@ fun ActivityStatCardSplit(
         primaryTextStyle ?: MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
     val secondaryStyle = secondaryTextStyle ?: MaterialTheme.typography.bodySmall
 
-    // ★ 為保持樣式不變：不使用 ripple
     val interaction = remember { MutableInteractionSource() }
     val clickableMod = if (onCardClick != null) {
         Modifier.clickable(
@@ -525,10 +520,24 @@ fun ActivityStatCardSplit(
         ) { onCardClick() }
     } else Modifier
 
-    // ✅ 只模糊底層（Android 12+ 才真的 blur；低版本就只做 alpha 降級）
+    // ✅ 動畫化（切換更順）
+    val animBlur by animateDpAsState(
+        targetValue = if (blurBackground) blurRadiusWhenOn else 0.dp,
+        label = "stepsBlur"
+    )
+    val animAlpha by animateFloatAsState(
+        targetValue = if (blurBackground) dimAlphaWhenOn else 1f,
+        label = "stepsDimAlpha"
+    )
+    val animScrim by animateFloatAsState(
+        targetValue = if (blurBackground) scrimAlphaWhenOn else 0f,
+        label = "stepsScrimAlpha"
+    )
+
     fun Modifier.smartBlurAndDim(): Modifier {
-        val m = this.graphicsLayer { alpha = dimAlpha }
-        return if (Build.VERSION.SDK_INT >= 31) m.blur(blurRadius) else m
+        // 低版本不 blur，只 dim；31+ 才 blur
+        val dimmed = this.graphicsLayer { alpha = animAlpha }
+        return if (Build.VERSION.SDK_INT >= 31 && animBlur > 0.dp) dimmed.blur(animBlur) else dimmed
     }
 
     Card(
@@ -543,14 +552,13 @@ fun ActivityStatCardSplit(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
 
-            // ===== 底層：你原本的 Row 內容（必要時模糊）=====
+            // ===== 底層內容（必要時 blur + dim）=====
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(cardHeight)
                     .then(if (blurBackground) Modifier.smartBlurAndDim() else Modifier)
                     .padding(horizontal = 14.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
@@ -558,13 +566,10 @@ fun ActivityStatCardSplit(
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-                    // 文字群組 (置頂)
                     Column(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.Top,
-                        horizontalAlignment = Alignment.Start
+                            .fillMaxWidth()
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (titlePrefix != null) {
@@ -582,7 +587,6 @@ fun ActivityStatCardSplit(
 
                         Spacer(Modifier.height(gapTitleToPrimary))
 
-                        // ✅ 只有傳 primaryContent 的卡才會用自訂（Workout）
                         if (primaryContent != null) {
                             primaryContent()
                         } else {
@@ -606,32 +610,23 @@ fun ActivityStatCardSplit(
                                 overflow = TextOverflow.Ellipsis
                             )
                         } else {
-                            // 保留占位高度，避免版面大跳
                             Spacer(Modifier.height(18.dp))
                         }
                     }
 
-                    // ⬇⬇⬇ Workout 的 + 按鈕固定在左下角，不再被 Column 擠壓
-                    leftExtra?.let { extraContent ->
-                        Box(
-                            modifier = Modifier.align(Alignment.BottomStart)
-                        ) {
-                            extraContent()
-                        }
+                    leftExtra?.let { extra ->
+                        Box(modifier = Modifier.align(Alignment.BottomStart)) { extra() }
                     }
                 }
 
-                // ========= 右半：圓環進度 =========
+                // 右側圓環
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier.size(ringSize),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.size(ringSize), contentAlignment = Alignment.Center) {
                         if (drawRing) {
                             GaugeRing(
                                 progress = progress,
@@ -654,12 +649,20 @@ fun ActivityStatCardSplit(
                     }
                 }
             }
-            // ===== 上層：中央提示卡（不模糊）=====
-            if (overlay != null) {
+
+            // ✅ scrim：放在「底層」上方、overlay 下方（更像你圖）
+            if (animScrim > 0f) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Transparent),
+                        .background(Color.White.copy(alpha = animScrim))
+                )
+            }
+
+            // ===== 上層提示卡：不模糊 =====
+            if (overlay != null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     overlay()
