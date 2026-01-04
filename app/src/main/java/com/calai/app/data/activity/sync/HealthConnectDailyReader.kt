@@ -73,9 +73,8 @@ class HealthConnectDailyReader @Inject constructor(
         zoneId: ZoneId,
         originPackage: String
     ): Boolean {
-        // ✅ 舊 API 仍保留（以免別處用到）
         val map = readStepsByOrigin(localDate, zoneId)
-        return map[originPackage]?.let { it > 0 } == true
+        return map.containsKey(originPackage) // ✅ 0 也算
     }
 
     override suspend fun readSteps(localDate: LocalDate, zoneId: ZoneId, originPackage: String): Long? {

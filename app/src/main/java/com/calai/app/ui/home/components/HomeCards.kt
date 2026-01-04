@@ -331,7 +331,8 @@ fun StepsWorkoutRowModern(
 
         // ✅ 只在「未授權」與「未安裝」時顯示提示小卡
         val showHint = dailyStatus == DailyActivityStatus.PERMISSION_NOT_GRANTED ||
-                dailyStatus == DailyActivityStatus.HC_NOT_INSTALLED
+                dailyStatus == DailyActivityStatus.HC_NOT_INSTALLED ||
+                dailyStatus == DailyActivityStatus.NO_DATA
 
         val hintText = when (dailyStatus) {
             DailyActivityStatus.PERMISSION_NOT_GRANTED ->
@@ -340,12 +341,16 @@ fun StepsWorkoutRowModern(
             DailyActivityStatus.HC_NOT_INSTALLED ->
                 stringResource(R.string.steps_hint_install_health_connect)
 
+            DailyActivityStatus.NO_DATA ->  // ✅ NEW
+                stringResource(R.string.steps_hint_no_source_app)
+
             else -> ""
         }
 
         val hintIconRes = when (dailyStatus) {
             DailyActivityStatus.PERMISSION_NOT_GRANTED -> R.drawable.google_health
             DailyActivityStatus.HC_NOT_INSTALLED -> R.drawable.health_connect_logo
+            DailyActivityStatus.NO_DATA -> R.drawable.google_health  // 或你想換 Fit icon
             else -> R.drawable.google_health
         }
 

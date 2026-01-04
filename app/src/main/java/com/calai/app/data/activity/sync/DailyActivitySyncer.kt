@@ -37,28 +37,32 @@ class DailyActivitySyncer @Inject constructor(
         byOrigin: Map<String, Long>,
         preferred: List<String>
     ): String? {
+        //改成：先挑偏好中 >0 的；都沒有 >0 才退回 0 / max
         if (byOrigin.isEmpty()) return null
 
-        // 只看 >0 的來源
-        fun hasSteps(pkg: String) = (byOrigin[pkg] ?: 0L) > 0L
+        fun stepsOf(pkg: String) = byOrigin[pkg]
 
-        // 1) 先依偏好找：Google Fit > Samsung Health
+        // 1) 先依偏好找：Google Fit > Samsung Health（但必須 >0）
         for (pkg in preferred) {
             if (pkg == DataOriginPrefs.ON_DEVICE_ANDROID) continue
-            if (hasSteps(pkg)) return pkg
+            val v = stepsOf(pkg)
+            if (v != null && v > 0L) return pkg
         }
 
-        // 2) 都沒有命中偏好：如果你把 ON_DEVICE_ANDROID 放在 preferred，
-        //    表示「接受任何來源」→ 選 steps 最大的來源（Other flow）
+        // 2) 允許任何來源：選 steps 最大（可能是 0）
         if (preferred.contains(DataOriginPrefs.ON_DEVICE_ANDROID)) {
-            return byOrigin
-                .filterValues { it > 0L }
-                .maxByOrNull { it.value }
-                ?.key
+            return byOrigin.maxByOrNull { it.value }?.key
+        }
+
+        // 3) 不允許 any-source：那就挑偏好存在的（即使 0），最後才 null
+        for (pkg in preferred) {
+            if (pkg == DataOriginPrefs.ON_DEVICE_ANDROID) continue
+            if (byOrigin.containsKey(pkg)) return pkg
         }
 
         return null
     }
+
 
     suspend fun syncLast7DaysWithStatus(nowZone: ZoneId): Result<DailyActivitySyncResult> {
         Log.e("HC_SYNC", "syncLast7Days enter zone=${nowZone.id}")
@@ -93,8 +97,8 @@ class DailyActivitySyncer @Inject constructor(
                 Log.e("HC_SYNC", "date=$d origins=${byOrigin.size} chosen=$chosen")
 
                 val steps = chosen?.let { byOrigin[it] }
-                if (chosen == null || steps == null || steps <= 0L) {
-                    // 完全沒資料：跳過
+                // ✅ 只擋 null；0 也要留下來
+                if (chosen == null || steps == null) {
                     continue
                 }
 

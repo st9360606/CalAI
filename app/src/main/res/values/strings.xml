@@ -218,6 +218,7 @@
     <!-- Steps Card  -->
     <string name="steps_hint_connect_google_health">Connect Google Health to track your steps</string>
     <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
+    <string name="steps_hint_no_source_app">Enable a health app in Health Connect to sync steps</string>
     <string name="common_error">Error</string>
     <string name="common_dash">—</string>
 

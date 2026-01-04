@@ -251,16 +251,33 @@ class HomeViewModel @Inject constructor(
      */
     fun onDailyCtaClick(ctx: Context) {
         when (_dailyStatus.value) {
-            DailyActivityStatus.HC_NOT_INSTALLED ->
-                openPlayStore(ctx, "com.google.android.apps.healthdata")
+            DailyActivityStatus.HC_NOT_INSTALLED -> openPlayStore(ctx, "com.google.android.apps.healthdata")
+
+            DailyActivityStatus.NO_DATA -> openHealthConnectOrStore(ctx) // ✅ NEW：比 refresh 更有用
 
             DailyActivityStatus.PERMISSION_NOT_GRANTED,
-            DailyActivityStatus.HC_UNAVAILABLE,
-            DailyActivityStatus.ERROR_RETRYABLE,
-            DailyActivityStatus.NO_DATA ->
-                openPlayStore(ctx, "com.google.android.apps.healthdata")
+            DailyActivityStatus.HC_UNAVAILABLE -> openHealthConnectOrStore(ctx)
+
+            DailyActivityStatus.ERROR_RETRYABLE -> refreshDailyActivity(force = true)
 
             DailyActivityStatus.AVAILABLE_GRANTED -> Unit
+        }
+    }
+
+    private fun openHealthConnectOrStore(ctx: Context) {
+        val pkg = "com.google.android.apps.healthdata"
+        val launch = ctx.packageManager.getLaunchIntentForPackage(pkg)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        val market = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$pkg"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$pkg"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        when {
+            launch != null -> runCatching { ctx.startActivity(launch) }
+            else -> runCatching { ctx.startActivity(market) }.recoverCatching { ctx.startActivity(web) }
         }
     }
 
