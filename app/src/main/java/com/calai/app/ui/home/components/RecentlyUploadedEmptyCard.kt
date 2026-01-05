@@ -67,10 +67,10 @@ data class RecentlyUploadedEmptyStyle(
 fun RecentlyUploadedEmptySection(
     modifier: Modifier = Modifier,
     thumbnailPainter: Painter? = null,
-    cardHeight: Dp = 130.dp,
+    cardHeight: Dp = 100.dp,
     style: RecentlyUploadedEmptyStyle = RecentlyUploadedEmptyStyle.Default,
     titleStartPadding: Dp = 14.dp,
-    titleBottomPadding: Dp = 12.dp
+    titleBottomPadding: Dp = 10.dp
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -92,18 +92,18 @@ fun RecentlyUploadedEmptySection(
 fun RecentlyUploadedEmptyCard(
     modifier: Modifier = Modifier,
     thumbnailPainter: Painter? = null,
-    cardHeight: Dp = 130.dp,
+    cardHeight: Dp = 100.dp,
     style: RecentlyUploadedEmptyStyle = RecentlyUploadedEmptyStyle.Default,
 
-    contentPaddingV: Dp = 18.dp,
-    pillHeight: Dp = 92.dp,
-    pillWidthFraction: Float = 0.88f,
+    contentPaddingV: Dp = 16.dp,
+    pillHeight: Dp = 80.dp,
+    pillWidthFraction: Float = 0.82f,
     outerCorner: Dp = 20.dp,
     pillCorner: Dp = 18.dp,
 
     // 邊框粗度
-    outerBorderWidth: Dp = 0.75.dp,
-    pillBorderWidth: Dp = 0.75.dp
+    outerBorderWidth: Dp = 0.9.dp,
+    pillBorderWidth: Dp = 0.85.dp
 ) {
     val outerShape = RoundedCornerShape(outerCorner)
     val pillShape = RoundedCornerShape(pillCorner)
@@ -215,7 +215,7 @@ private fun SkeletonLine(
 ) {
     Box(
         modifier = modifier
-            .height(10.dp)
+            .height(8.dp)
             .clip(RoundedCornerShape(6.dp))
             .background(color)
     )

@@ -469,12 +469,12 @@ fun HomeScreen(
                     onWorkoutCardClick = { onOpenActivityHistory() }
                 )
                 // ===== Fourth block: 最近上傳
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(24.dp))
 
                 if (s.recentMeals.isEmpty()) {
                     // ✅ 空狀態：跟截圖一樣
                     RecentlyUploadedEmptySection(
-                        cardHeight = 130.dp // 你想更大就改這裡
+                        cardHeight = 100.dp // 你想更大就改這裡
                     )
                 } else {
                     // ✅ 有資料：沿用你原本的列表（先不動）
@@ -488,7 +488,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(12.dp))
                     }
                 }
-                Spacer(Modifier.height(60.dp))
+                Spacer(Modifier.height(70.dp))
             }
         }
         // ===== ✅ Toast 疊加層（先顯示 Fasting，再顯示 Workout） =====
@@ -795,7 +795,7 @@ private fun TopBarSettingsButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     touchSize: Dp = 50.dp,
-    visualSize: Dp = 42.dp,
+    visualSize: Dp = 43.dp,
     iconSize: Dp = 30.dp
 ) {
     val bg = Color(0xFFE4E7EA)
