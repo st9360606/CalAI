@@ -12,8 +12,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +32,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -102,6 +104,7 @@ import androidx.health.connect.client.records.StepsRecord
 import com.calai.app.data.activity.healthconnect.HealthConnectPermissionProxyActivity
 import com.calai.app.data.activity.model.DailyActivityStatus
 import com.calai.app.ui.home.components.RecentlyUploadedEmptySection
+import androidx.compose.ui.semantics.Role
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -383,14 +386,14 @@ fun HomeScreen(
                         url = s.avatarUrl,
                         avatarSize = 42.dp,
                         touchSize = 48.dp,
-                        startPadding = 5.dp
+                        startPadding = 5.dp,
+                        onClick = { onOpenTab(HomeTab.Personal) }
                     )
-                    TopBarUserButton(
+                    TopBarSettingsButton(
                         onClick = { onOpenTab(HomeTab.Personal) },
                         modifier = Modifier.padding(end = 5.dp)
                     )
                 }
-
                 val today = LocalDate.now()
                 val pastDays = 20
                 val futureDays = 1   // 若不想顯示未來任何一天，改成 0
@@ -409,7 +412,7 @@ fun HomeScreen(
 
                 // ★ 這兩個值就是你要調的數字（正數=上面減、下面加；負數相反）
                 val topSwap =
-                    16.dp        // 例：Calories -8dp；Macro +8dp  第一頁 Calories 變矮、Macro 變高（或相反），但整頁高度不變、不跳動。
+                    16.dp    // 例：Calories -8dp；Macro +8dp  第一頁 Calories 變矮、Macro 變高（或相反），但整頁高度不變、不跳動。
                 val bottomSwap =
                     8.dp    // 例：Workout -12dp；Weight/Fasting +12dp 第二頁 Workout 變矮、Weight/Fasting 變高（或相反），整頁高度不變。
 
@@ -538,12 +541,24 @@ private fun Avatar(
     url: Uri?,
     avatarSize: Dp = 40.dp,
     touchSize: Dp = 48.dp,
-    startPadding: Dp = 0.dp
+    startPadding: Dp = 0.dp,
+    onClick: (() -> Unit)? = null, // ✅ NEW
 ) {
+    val interaction = remember { MutableInteractionSource() }
+
     Box(
         modifier = Modifier
             .padding(start = startPadding)
-            .size(touchSize),
+            .size(touchSize)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interaction,
+                        indication = null,
+                        role = Role.Button
+                    ) { onClick() }
+                } else Modifier
+            ),
         contentAlignment = Alignment.Center
     ) {
         val avatarModifier = Modifier
@@ -553,7 +568,7 @@ private fun Avatar(
         if (url == null) {
             Image(
                 painter = painterResource(R.drawable.profile),
-                contentDescription = "avatar_default",
+                contentDescription = "avatar",
                 modifier = avatarModifier,
                 contentScale = ContentScale.Crop
             )
@@ -776,12 +791,12 @@ private fun roundFirstNumberToIntText(input: String): String {
     return input.replaceRange(m.range, replaced)
 }
 @Composable
-private fun TopBarUserButton(
+private fun TopBarSettingsButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     touchSize: Dp = 50.dp,
     visualSize: Dp = 42.dp,
-    iconSize: Dp = 26.dp
+    iconSize: Dp = 30.dp
 ) {
     val bg = Color(0xFFE4E7EA)
     val fg = Color(0xFF858C98)
@@ -799,8 +814,8 @@ private fun TopBarUserButton(
             )
         ) {
             Icon(
-                imageVector = Icons.Filled.Person,
-                contentDescription = "user",
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "settings",
                 modifier = Modifier.size(iconSize)
             )
         }
