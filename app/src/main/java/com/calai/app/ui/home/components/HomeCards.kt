@@ -301,6 +301,7 @@ fun StepsWorkoutRowModern(
         // 建議：把 — 也資源化（可選，但我建議做）
         val dash = stringResource(R.string.common_dash)
 
+        // primary
         val stepsPrimary = when {
             canShowLive -> (steps?.toString() ?: dash)
             dailyStatus == DailyActivityStatus.NO_DATA -> dash
@@ -322,7 +323,6 @@ fun StepsWorkoutRowModern(
                 val kcal = ActivityKcalEstimator.estimateActiveKcal(weightKgLatest, steps)
                 stringResource(R.string.steps_secondary_est_kcal, kcal)
             }
-
             canShowLive -> dash
             dailyStatus == DailyActivityStatus.NO_DATA ->
                 stringResource(R.string.steps_secondary_no_data_yet)
@@ -330,27 +330,27 @@ fun StepsWorkoutRowModern(
         }
 
         // ✅ 只在「未授權」與「未安裝」時顯示提示小卡
-        val showHint = dailyStatus == DailyActivityStatus.PERMISSION_NOT_GRANTED ||
-                dailyStatus == DailyActivityStatus.HC_NOT_INSTALLED ||
-                dailyStatus == DailyActivityStatus.NO_DATA
-
-        val hintText = when (dailyStatus) {
+        val hintText: String? = when (dailyStatus) {
             DailyActivityStatus.PERMISSION_NOT_GRANTED ->
                 stringResource(R.string.steps_hint_connect_google_health)
 
             DailyActivityStatus.HC_NOT_INSTALLED ->
                 stringResource(R.string.steps_hint_install_health_connect)
 
-            DailyActivityStatus.NO_DATA ->  // ✅ NEW
-                stringResource(R.string.steps_hint_no_source_app)
+            DailyActivityStatus.HC_UNAVAILABLE ->
+                stringResource(R.string.steps_hint_hc_unavailable)
 
-            else -> ""
+            DailyActivityStatus.ERROR_RETRYABLE ->
+                stringResource(R.string.steps_hint_retry)
+
+            else -> null
         }
 
         val hintIconRes = when (dailyStatus) {
             DailyActivityStatus.PERMISSION_NOT_GRANTED -> R.drawable.google_health
             DailyActivityStatus.HC_NOT_INSTALLED -> R.drawable.health_connect_logo
-            DailyActivityStatus.NO_DATA -> R.drawable.google_health  // 或你想換 Fit icon
+            DailyActivityStatus.HC_UNAVAILABLE -> R.drawable.health_connect_logo
+            DailyActivityStatus.ERROR_RETRYABLE -> R.drawable.google_health
             else -> R.drawable.google_health
         }
 
@@ -378,11 +378,11 @@ fun StepsWorkoutRowModern(
             },
             onCardClick = onDailyCtaClick, // ✅ 降級時可導去授權/安裝
 
-            blurBackground = showHint,
-            overlay = if (showHint) {
+            blurBackground = (hintText != null),
+            overlay = hintText?.let { text ->
                 {
                     StepsConnectHintCard(
-                        text = hintText,
+                        text = text,
                         modifier = Modifier.fillMaxWidth(0.79f),
                         minHeight = 78.dp,
                         textStyle = MaterialTheme.typography.bodySmall.copy(
@@ -400,10 +400,10 @@ fun StepsWorkoutRowModern(
                                     .size(26.dp)
                             )
                         },
-                        onClick = onDailyCtaClick // ✅ 點提示卡也會導去授權/安裝
+                        onClick = onDailyCtaClick
                     )
                 }
-            } else null
+            }
         )
 
         // ===== Workout =====

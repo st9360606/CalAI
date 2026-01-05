@@ -213,6 +213,8 @@
     <string name="steps_hint_connect_google_health">連結 Google Health 取得步數資料</string>
     <string name="steps_hint_install_health_connect">安裝 Health Connect 取得步數資料</string>
     <string name="steps_hint_no_source_app">請在 Health Connect 啟用 Health App 同步步數</string>
+    <string name="steps_hint_hc_unavailable">此裝置無法使用 Health Connect</string>
+    <string name="steps_hint_retry">同步失敗，點擊重試</string>
     <string name="common_error">錯誤</string>
     <string name="common_dash">—</string>
 

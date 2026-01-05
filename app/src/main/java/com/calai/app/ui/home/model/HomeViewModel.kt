@@ -227,8 +227,9 @@ class HomeViewModel @Inject constructor(
 
                     if (todayRow == null) {
                         _dailyStatus.value = DailyActivityStatus.NO_DATA
-                        _dailyStepsToday.value = null
-                        _dailyActiveKcalToday.value = null
+                        // ✅ 合成 0：因為 HC 沒有「0 record」，只有「沒有 record」
+                        _dailyStepsToday.value = 0L
+                        _dailyActiveKcalToday.value = 0
                     } else {
                         _dailyStepsToday.value = todayRow.steps
                         _dailyActiveKcalToday.value = todayRow.activeKcal

@@ -298,8 +298,8 @@ fun HomeScreen(
             DailyActivityStatus.PERMISSION_NOT_GRANTED -> {
                 HealthConnectPermissionProxyActivity.start(ctx, hcPermissions)
             }
-            DailyActivityStatus.ERROR_RETRYABLE -> vm.refreshDailyActivity(force = true) // ✅ 手動重試
-            DailyActivityStatus.NO_DATA -> vm.refreshDailyActivity(force = true)         // ✅ 手動重抓
+            DailyActivityStatus.ERROR_RETRYABLE -> vm.refreshDailyActivity(force = true)
+            DailyActivityStatus.NO_DATA -> vm.onDailyCtaClick(ctx)
             DailyActivityStatus.HC_NOT_INSTALLED,
             DailyActivityStatus.HC_UNAVAILABLE -> vm.onDailyCtaClick(ctx)
             DailyActivityStatus.AVAILABLE_GRANTED -> Unit
