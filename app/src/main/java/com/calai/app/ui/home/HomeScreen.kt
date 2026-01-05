@@ -387,7 +387,7 @@ fun HomeScreen(
                         avatarSize = 42.dp,
                         touchSize = 48.dp,
                         startPadding = 5.dp,
-                        onClick = { onOpenTab(HomeTab.Personal) }
+                        onClick = null
                     )
                     TopBarSettingsButton(
                         onClick = { onOpenTab(HomeTab.Personal) },
