@@ -11,6 +11,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import retrofit2.HttpException
 
 data class DailyActivityDayResult(
     val localDate: LocalDate,
@@ -80,75 +81,75 @@ class DailyActivitySyncer @Inject constructor(
             val days = (0..6).map { today.minusDays(it.toLong()) }.reversed()
 
             val out = mutableListOf<DailyActivityDayResult>()
+            var anyUpsertSucceeded = false
 
             for (d in days) {
-                // ✅ 直接拿當天所有來源 steps
-                val byOrigin = try {
-                    reader.readStepsByOrigin(d, nowZone)
-                } catch (ce: CancellationException) {
-                    throw ce
-                } catch (t: Throwable) {
-                    Log.e("HC_SYNC", "readStepsByOrigin failed date=$d err=${t.javaClass.simpleName}:${t.message}")
-                    emptyMap()
-                }
+                val byOrigin = runCatching { reader.readStepsByOrigin(d, nowZone) }
+                    .getOrElse {
+                        Log.e("HC_SYNC", "readStepsByOrigin failed date=$d err=${it.javaClass.simpleName}:${it.message}")
+                        emptyMap()
+                    }
 
-                // ✅ 依偏好挑來源：Fit > Samsung > 其他(steps 最大)
                 val chosen = choosePreferredOrigin(byOrigin, DataOriginPrefs.preferred)
-                Log.e("HC_SYNC", "date=$d origins=${byOrigin.size} chosen=$chosen")
-
                 val steps = chosen?.let { byOrigin[it] }
-                // ✅ 只擋 null；0 也要留下來
-                if (chosen == null || steps == null) {
-                    continue
-                }
 
-                if (d == today) {
-                    // 需要就印出 debug
-                    (reader as? HealthConnectDailyReader)?.debugDumpStepsOrigins(d, nowZone)
-                }
+                if (chosen == null || steps == null) continue
 
                 val originName = reader.resolveOriginName(chosen)
 
-                // ✅ 只送 steps；activeKcal 一律送 null（server 回填）
-                api.upsert(
-                    DailyActivityUpsertRequest(
-                        localDate = d.format(df),
-                        timezone = nowZone.id,
-                        steps = steps,
-                        activeKcal = null,
-                        ingestSource = "HEALTH_CONNECT",
-                        dataOriginPackage = chosen,
-                        dataOriginName = originName
-                    )
-                )
-
+                // ✅ 先把「本機讀到的結果」放進 out（不依賴後端成功）
                 out += DailyActivityDayResult(
                     localDate = d,
                     timezone = nowZone.id,
                     steps = steps,
-                    activeKcal = null,
+                    activeKcal = null,              // 先 null，後面再 merge server
                     dataOriginPackage = chosen,
                     dataOriginName = originName
                 )
+
+                // ✅ 後端 upsert：失敗不要讓整包炸掉（best-effort）
+                try {
+                    api.upsert(
+                        DailyActivityUpsertRequest(
+                            localDate = d.format(df),
+                            timezone = nowZone.id,
+                            steps = steps,
+                            activeKcal = null,
+                            ingestSource = "HEALTH_CONNECT",
+                            dataOriginPackage = chosen,
+                            dataOriginName = originName
+                        )
+                    )
+                    anyUpsertSucceeded = true
+                } catch (ce: CancellationException) {
+                    throw ce
+                } catch (he: HttpException) {
+                    Log.e("HC_SYNC", "upsert failed date=$d code=${he.code()} msg=${he.message()}")
+                    // 不中斷：continue
+                } catch (t: Throwable) {
+                    Log.e("HC_SYNC", "upsert failed date=$d err=${t.javaClass.simpleName}:${t.message}")
+                    // 不中斷：continue
+                }
             }
 
-            // ✅ 撈回 server 的 activeKcal 回填
+            // ✅ 只有「至少有一次 upsert 成功」才去拉 server merge kcal（避免永遠 500）
+            if (!anyUpsertSucceeded) {
+                return Result.success(DailyActivitySyncResult(status = status, days = out))
+            }
+
             val from = days.first().format(df)
             val to = days.last().format(df)
-
             val serverRows = runCatching { api.getRange(from = from, to = to) }
                 .getOrElse {
-                    Log.e("HC_SYNC", "getRange for merge failed (ok): ${it.javaClass.simpleName}:${it.message}")
+                    Log.e("HC_SYNC", "getRange failed (ok): ${it.javaClass.simpleName}:${it.message}")
                     emptyList()
                 }
 
             val kcalByDate = serverRows.associate { dto ->
-                val date = LocalDate.parse(dto.localDate)
-                date to dto.activeKcal?.roundToInt()
+                LocalDate.parse(dto.localDate) to dto.activeKcal?.roundToInt()
             }
 
             val merged = out.map { day -> day.copy(activeKcal = kcalByDate[day.localDate]) }
-
             Result.success(DailyActivitySyncResult(status = status, days = merged))
         } catch (ce: CancellationException) {
             throw ce
