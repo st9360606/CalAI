@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.app.data.workout.api.WorkoutSessionDto
 import com.calai.app.ui.home.HomeTab
-import com.calai.app.ui.home.ui.components.MainBottomBar
+import com.calai.app.ui.home.components.MainBottomBar
 import com.calai.app.ui.home.ui.workout.model.WorkoutViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

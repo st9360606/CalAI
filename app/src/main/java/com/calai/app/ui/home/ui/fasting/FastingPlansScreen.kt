@@ -82,7 +82,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.app.R
 import com.calai.app.data.fasting.model.FastingPlan
 import com.calai.app.ui.home.HomeTab
-import com.calai.app.ui.home.ui.components.MainBottomBar
+import com.calai.app.ui.home.components.MainBottomBar
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalTime

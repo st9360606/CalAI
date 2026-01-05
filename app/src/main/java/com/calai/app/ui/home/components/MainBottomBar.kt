@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.components
+package com.calai.app.ui.home.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column

@@ -64,8 +64,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.ui.unit.sp
-import com.calai.app.ui.home.ui.components.MainBottomBar
-import com.calai.app.ui.home.ui.components.ScanFab
+import com.calai.app.ui.home.components.MainBottomBar
+import com.calai.app.ui.home.components.scan.ScanFab
 
 /**
  * ✅ Personal => Settings（你圖上的那個）

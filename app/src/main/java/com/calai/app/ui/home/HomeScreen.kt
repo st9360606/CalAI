@@ -80,9 +80,9 @@ import com.calai.app.ui.home.components.PanelHeights
 import com.calai.app.ui.home.components.StepsWorkoutRowModern
 import com.calai.app.ui.home.components.WeightFastingRowModern
 import com.calai.app.ui.home.model.HomeViewModel
-import com.calai.app.ui.home.ui.components.MainBottomBar
-import com.calai.app.ui.home.ui.components.ScanFab
-import com.calai.app.ui.home.ui.components.SuccessTopToast
+import com.calai.app.ui.home.components.MainBottomBar
+import com.calai.app.ui.home.components.scan.ScanFab
+import com.calai.app.ui.home.components.toast.SuccessTopToast
 import com.calai.app.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.app.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.app.ui.home.ui.water.model.WaterUiState

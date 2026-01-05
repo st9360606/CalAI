@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.app.ui.home.ui.components.ErrorTopToast
+import com.calai.app.ui.home.components.toast.ErrorTopToast
 import com.calai.app.ui.home.ui.weight.components.FilterTabs
 import com.calai.app.ui.home.ui.weight.components.HistoryRow
 import com.calai.app.ui.home.ui.weight.components.SegmentedButtons

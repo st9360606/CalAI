@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.components
+package com.calai.app.ui.home.components.scan
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.offset

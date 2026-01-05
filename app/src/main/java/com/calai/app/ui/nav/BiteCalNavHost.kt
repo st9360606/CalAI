@@ -80,8 +80,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import com.calai.app.i18n.LanguageManager
 import kotlinx.coroutines.delay
-import com.calai.app.ui.home.ui.components.SuccessTopToast
-import com.calai.app.ui.home.ui.components.ErrorTopToast
+import com.calai.app.ui.home.components.toast.SuccessTopToast
+import com.calai.app.ui.home.components.toast.ErrorTopToast
 import com.calai.app.ui.home.ui.personal.details.EditAgeScreen
 import com.calai.app.ui.home.ui.personal.details.EditDailyStepGoalScreen
 import com.calai.app.ui.home.ui.personal.details.EditGenderScreen
