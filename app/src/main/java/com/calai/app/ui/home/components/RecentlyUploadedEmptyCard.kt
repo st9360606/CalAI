@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.R
-import kotlin.math.max
 
 @Immutable
 data class RecentlyUploadedEmptyStyle(
@@ -79,7 +78,6 @@ fun RecentlyUploadedEmptySection(
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
             modifier = Modifier.padding(start = titleStartPadding, bottom = titleBottomPadding)
         )
-
         RecentlyUploadedEmptyCard(
             thumbnailPainter = thumbnailPainter,
             cardHeight = cardHeight,
@@ -110,7 +108,7 @@ fun RecentlyUploadedEmptyCard(
     val outerShape = RoundedCornerShape(outerCorner)
     val pillShape = RoundedCornerShape(pillCorner)
 
-    // ✅ 外層：無陰影（移除 .shadow），elevation=0
+    // 外層：無陰影（移除 .shadow），elevation=0
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -127,7 +125,7 @@ fun RecentlyUploadedEmptyCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // ✅ 內層 pill：無陰影（移除 .shadow），elevation=0
+            // 內層 pill：無陰影（移除 .shadow），elevation=0
             Card(
                 modifier = Modifier
                     .fillMaxWidth(pillWidthFraction)
