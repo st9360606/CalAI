@@ -185,7 +185,8 @@
 
     <string name="recently_uploaded">Recently uploaded</string>
     <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
-
+    <string name="quick_add_log_workout">Log workout</string>
+    <string name="quick_add_scan_food">Scan food</string>
 
 
     <!-- res/values/strings.xml（節錄） -->

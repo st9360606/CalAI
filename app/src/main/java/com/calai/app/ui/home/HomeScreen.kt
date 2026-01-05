@@ -105,6 +105,7 @@ import com.calai.app.data.activity.healthconnect.HealthConnectPermissionProxyAct
 import com.calai.app.data.activity.model.DailyActivityStatus
 import com.calai.app.ui.home.components.RecentlyUploadedEmptySection
 import androidx.compose.ui.semantics.Role
+import com.calai.app.ui.home.components.scan.QuickAddOverlay
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,6 +125,7 @@ fun HomeScreen(
     onQuickLogWeight: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
+    val showQuickAdd = rememberSaveable { mutableStateOf(false) }
     val waterState by waterVm.ui.collectAsState()
 
     // ====== Fasting VM 狀態 / 權限設定 ======
@@ -316,7 +318,9 @@ fun HomeScreen(
 
         Scaffold(
             containerColor = Color.Transparent,   // ★ 讓下方漸層透出
-            floatingActionButton = { ScanFab(onClick = onOpenCamera) },
+            floatingActionButton = {
+                ScanFab(onClick = { showQuickAdd.value = !showQuickAdd.value })
+            },
             bottomBar = {
                 MainBottomBar(
                     current = HomeTab.Home,
@@ -532,6 +536,14 @@ fun HomeScreen(
             visible = showWorkoutSheet.value,
             onCloseFull = { showWorkoutSheet.value = false },
             onCollapseOnly = { showWorkoutSheet.value = false }
+        )
+        // 1) 快捷面板（跟截圖一樣）
+        QuickAddOverlay(
+            visible = showQuickAdd.value,
+            onDismiss = { showQuickAdd.value = false },
+            onLogWorkout = { showWorkoutSheet.value = true },
+            onOpenScanFoods = { onOpenCamera() },
+            bottomPadding = 92.dp
         )
     }
 }

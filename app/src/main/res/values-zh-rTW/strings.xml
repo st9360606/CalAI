@@ -181,6 +181,8 @@
 
     <string name="recently_uploaded">最近上傳</string>
     <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
+    <string name="quick_add_log_workout">记录运动</string>
+    <string name="quick_add_scan_food">扫描食物</string>
 
 
     <!-- res/values-zh-rTW/strings.xml -->

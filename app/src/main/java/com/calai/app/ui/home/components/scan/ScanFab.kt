@@ -17,17 +17,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ScanFab(onClick: () -> Unit) {
+fun ScanFab(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     FloatingActionButton(
         onClick = onClick,
-        shape = CircleShape, // ✅ 強制圓形
+        shape = CircleShape,
         containerColor = Color(0xFF111114),
         contentColor = Color.White,
         elevation = FloatingActionButtonDefaults.elevation(
             defaultElevation = 6.dp,
             pressedElevation = 8.dp
         ),
-        modifier = Modifier
+        modifier = modifier
             .size(68.dp)
             .offset(x = 6.dp, y = 6.dp)
     ) {
@@ -81,7 +84,7 @@ fun ScanCameraIcon(
             Path().apply {
                 moveTo(left + cornerLen, top)
                 lineTo(left + radius, top)
-                quadraticBezierTo(left, top, left, top + radius)
+                quadraticTo(left, top, left, top + radius)
                 lineTo(left, top + cornerLen)
             }
         )
@@ -89,7 +92,7 @@ fun ScanCameraIcon(
             Path().apply {
                 moveTo(right - cornerLen, top)
                 lineTo(right - radius, top)
-                quadraticBezierTo(right, top, right, top + radius)
+                quadraticTo(right, top, right, top + radius)
                 lineTo(right, top + cornerLen)
             }
         )
@@ -97,7 +100,7 @@ fun ScanCameraIcon(
             Path().apply {
                 moveTo(left, bottom - cornerLen)
                 lineTo(left, bottom - radius)
-                quadraticBezierTo(left, bottom, left + radius, bottom)
+                quadraticTo(left, bottom, left + radius, bottom)
                 lineTo(left + cornerLen, bottom)
             }
         )
@@ -105,7 +108,7 @@ fun ScanCameraIcon(
             Path().apply {
                 moveTo(right - cornerLen, bottom)
                 lineTo(right - radius, bottom)
-                quadraticBezierTo(right, bottom, right, bottom - radius)
+                quadraticTo(right, bottom, right, bottom - radius)
                 lineTo(right, bottom - cornerLen)
             }
         )
