@@ -180,6 +180,7 @@
     <string name="msg_login_failed_generic">登入失敗，請再試一次</string>
 
     <string name="recently_uploaded">最近上傳</string>
+    <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
 
 
     <!-- res/values-zh-rTW/strings.xml -->

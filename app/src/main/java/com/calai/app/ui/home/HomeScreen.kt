@@ -101,6 +101,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.StepsRecord
 import com.calai.app.data.activity.healthconnect.HealthConnectPermissionProxyActivity
 import com.calai.app.data.activity.model.DailyActivityStatus
+import com.calai.app.ui.home.components.RecentlyUploadedEmptySection
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -465,8 +466,15 @@ fun HomeScreen(
                     onWorkoutCardClick = { onOpenActivityHistory() }
                 )
                 // ===== Fourth block: 最近上傳
-                if (s.recentMeals.isNotEmpty()) {
-                    Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(20.dp))
+
+                if (s.recentMeals.isEmpty()) {
+                    // ✅ 空狀態：跟截圖一樣
+                    RecentlyUploadedEmptySection(
+                        cardHeight = 130.dp // 你想更大就改這裡
+                    )
+                } else {
+                    // ✅ 有資料：沿用你原本的列表（先不動）
                     Text(
                         text = stringResource(R.string.recently_uploaded),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -477,7 +485,7 @@ fun HomeScreen(
                         Spacer(Modifier.height(12.dp))
                     }
                 }
-                Spacer(Modifier.height(80.dp))
+                Spacer(Modifier.height(60.dp))
             }
         }
         // ===== ✅ Toast 疊加層（先顯示 Fasting，再顯示 Workout） =====

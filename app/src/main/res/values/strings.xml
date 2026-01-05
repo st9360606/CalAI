@@ -184,6 +184,7 @@
 
 
     <string name="recently_uploaded">Recently uploaded</string>
+    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
 
 
 
