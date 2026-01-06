@@ -35,8 +35,8 @@ fun DurationPickerSheet(
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val maxSheetHeight = (screenHeightDp * 0.75f).dp
 
-    var hours by remember { mutableStateOf(0) }
-    var minutes by remember { mutableStateOf(30) }
+    var hours by remember { mutableIntStateOf(0) }
+    var minutes by remember { mutableIntStateOf(30) }
 
     val rowItemHeight = 48.dp
     val visibleCount = 5

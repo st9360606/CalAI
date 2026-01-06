@@ -76,6 +76,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.foundation.Image
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.calai.app.R
@@ -99,6 +100,9 @@ private sealed interface SheetMode {
     data class Result(val result: EstimateResponse) : SheetMode
     data object Failed : SheetMode
 }
+
+private const val WORKOUT_TRACKER_TITLE = "Workout Tracker"
+private const val WORKOUT_TRACKER_SUBTITLE = "Describe the Type of Exercise and the duration"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -269,8 +273,6 @@ private fun TrackerContent(
     ) {
         item {
             HeaderSection(
-                title = "Workout Tracker",
-                subtitle = "Describe the Type of Exercise and the duration",
                 onClose = onClose
             )
 
@@ -377,10 +379,10 @@ fun CyclingEstimatingLine(
     modifier: Modifier = Modifier,
     intervalMs: Int = 1600
 ) {
-    // 保底：避免空陣列造成 crash
-    val safePhrases = if (phrases.isEmpty()) listOf("Estimating…") else phrases
+    val safePhrases = phrases.ifEmpty { listOf("Estimating…") }
 
-    var index by remember { mutableStateOf(0) }
+    var index by remember { mutableIntStateOf(0) }
+
     LaunchedEffect(safePhrases) {
         while (true) {
             delay(intervalMs.toLong())
@@ -390,9 +392,7 @@ fun CyclingEstimatingLine(
 
     AnimatedContent(
         targetState = index,
-        transitionSpec = {
-            fadeIn(tween(160)) togetherWith fadeOut(tween(120))
-        },
+        transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(120)) },
         modifier = modifier,
         label = "estimating_cycling"
     ) { i ->
@@ -400,7 +400,6 @@ fun CyclingEstimatingLine(
             text = safePhrases[i],
             color = Black,
             textAlign = TextAlign.Center,
-            // 與你既有風格一致（titleLarge + SemiBold）
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.2.sp
@@ -878,9 +877,9 @@ fun FailedContent(
 /* --- 共用元件 --- */
 @Composable
 private fun HeaderSection(
-    title: String,
-    subtitle: String,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    title: String = WORKOUT_TRACKER_TITLE,
+    subtitle: String = WORKOUT_TRACKER_SUBTITLE
 ) {
     Column(
         modifier = Modifier
