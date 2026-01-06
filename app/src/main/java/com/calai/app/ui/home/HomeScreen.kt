@@ -395,7 +395,7 @@ fun HomeScreen(
                     )
                     TopBarSettingsButton(
                         onClick = { onOpenTab(HomeTab.Personal) },
-                        modifier = Modifier.padding(end = 5.dp)
+                        modifier = Modifier.padding(end = 3.dp)
                     )
                 }
                 val today = LocalDate.now()
@@ -810,8 +810,8 @@ private fun TopBarSettingsButton(
     visualSize: Dp = 43.dp,
     iconSize: Dp = 30.dp
 ) {
-    val bg = Color(0xFFE4E7EA)
-    val fg = Color(0xFF858C98)
+    val bg = Color(0xFFE5E7EB)
+    val fg = Color(0xFF979DA7)
 
     Box(
         modifier = modifier.size(touchSize),     // ✅ 48dp 熱區
