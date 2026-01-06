@@ -4,6 +4,9 @@ import android.util.Log
 import com.calai.app.data.activity.api.DailyActivityApi
 import com.calai.app.data.activity.api.DailyActivityUpsertRequest
 import com.calai.app.data.activity.model.DailyActivityStatus
+import com.calai.app.data.activity.test.DailyActivityDebug
+import com.calai.app.data.activity.test.DailyActivityDebugConfig
+import com.calai.app.data.activity.test.OriginPicker
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CancellationException
 import java.time.LocalDate
@@ -66,11 +69,13 @@ class DailyActivitySyncer @Inject constructor(
 
 
     suspend fun syncLast7DaysWithStatus(nowZone: ZoneId): Result<DailyActivitySyncResult> {
-        Log.e("HC_SYNC", "syncLast7Days enter zone=${nowZone.id}")
-        (reader as? HealthConnectDailyReader)?.debugDumpEnv()
+        DailyActivityDebug.logSyncEnter(nowZone)
+
+        // ✅ 環境/權限：一次印清楚
+        (reader as? HealthConnectDailyReader)?.debugDumpEnvDetailed()
 
         val status = reader.getStatus()
-        Log.e("HC_SYNC", "reader.getStatus() = $status")
+        DailyActivityDebug.logStatus(status)
 
         if (status != DailyActivityStatus.AVAILABLE_GRANTED) {
             return Result.success(DailyActivitySyncResult(status = status, days = emptyList()))
@@ -90,24 +95,37 @@ class DailyActivitySyncer @Inject constructor(
                         emptyMap()
                     }
 
-                val chosen = choosePreferredOrigin(byOrigin, DataOriginPrefs.preferred)
+                // ✅ 直接印：當天各來源的詳細（records/time-range）
+                if (DailyActivityDebugConfig.enabled) {
+                    (reader as? HealthConnectDailyReader)?.debugDumpStepsOriginsDetailed(d, nowZone)
+                }
+
+                val chosen = OriginPicker.choosePreferredOrigin(byOrigin, DataOriginPrefs.preferred)
                 val steps = chosen?.let { byOrigin[it] }
+
+                DailyActivityDebug.logPickDecision(
+                    date = d,
+                    preferred = DataOriginPrefs.preferred,
+                    byOrigin = byOrigin,
+                    chosen = chosen,
+                    chosenSteps = steps
+                )
 
                 if (chosen == null || steps == null) continue
 
                 val originName = reader.resolveOriginName(chosen)
 
-                // ✅ 先把「本機讀到的結果」放進 out（不依賴後端成功）
+                // 先把本機讀到的結果放進 out（不依賴後端成功）
                 out += DailyActivityDayResult(
                     localDate = d,
                     timezone = nowZone.id,
                     steps = steps,
-                    activeKcal = null,              // 先 null，後面再 merge server
+                    activeKcal = null,
                     dataOriginPackage = chosen,
                     dataOriginName = originName
                 )
 
-                // ✅ 後端 upsert：失敗不要讓整包炸掉（best-effort）
+                // 後端 upsert：best-effort
                 try {
                     api.upsert(
                         DailyActivityUpsertRequest(
@@ -121,29 +139,34 @@ class DailyActivitySyncer @Inject constructor(
                         )
                     )
                     anyUpsertSucceeded = true
+                    DailyActivityDebug.logUpsertOk(d, chosen, steps)
                 } catch (ce: CancellationException) {
                     throw ce
                 } catch (he: HttpException) {
-                    Log.e("HC_SYNC", "upsert failed date=$d code=${he.code()} msg=${he.message()}")
-                    // 不中斷：continue
+                    DailyActivityDebug.logUpsertFail(d, "code=${he.code()} msg=${he.message()}")
                 } catch (t: Throwable) {
-                    Log.e("HC_SYNC", "upsert failed date=$d err=${t.javaClass.simpleName}:${t.message}")
-                    // 不中斷：continue
+                    DailyActivityDebug.logUpsertFail(d, "err=${t.javaClass.simpleName}:${t.message}")
                 }
             }
 
-            // ✅ 只有「至少有一次 upsert 成功」才去拉 server merge kcal（避免永遠 500）
+            // 只有至少一次 upsert 成功才拉 server merge
             if (!anyUpsertSucceeded) {
                 return Result.success(DailyActivitySyncResult(status = status, days = out))
             }
 
             val from = days.first().format(df)
             val to = days.last().format(df)
+
             val serverRows = runCatching { api.getRange(from = from, to = to) }
                 .getOrElse {
                     Log.e("HC_SYNC", "getRange failed (ok): ${it.javaClass.simpleName}:${it.message}")
                     emptyList()
                 }
+
+            DailyActivityDebug.logServerMerge(from, to, serverRows.size)
+            serverRows.forEach { dto ->
+                DailyActivityDebug.logServerRow(dto.localDate, dto.activeKcal?.roundToInt())
+            }
 
             val kcalByDate = serverRows.associate { dto ->
                 LocalDate.parse(dto.localDate) to dto.activeKcal?.roundToInt()
