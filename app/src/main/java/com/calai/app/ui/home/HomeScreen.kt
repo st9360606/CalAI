@@ -108,6 +108,8 @@ import androidx.compose.ui.semantics.Role
 import android.content.pm.PackageManager
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.core.content.ContextCompat
+import com.calai.app.data.activity.healthconnect.HealthConnectPermissionIntents
+import com.calai.app.data.activity.healthconnect.HealthConnectPermissionPrefs
 import com.calai.app.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.app.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.app.ui.home.ui.camera.components.openCameraPermissionSettings
@@ -297,11 +299,26 @@ fun HomeScreen(
         }
     }
 
+    LaunchedEffect(dailyStatus) {
+        if (dailyStatus == DailyActivityStatus.AVAILABLE_GRANTED) {
+            HealthConnectPermissionPrefs.resetDeniedCount(ctx)
+        }
+    }
+
     val onStepsCardClick: () -> Unit = {
         when (dailyStatus) {
             DailyActivityStatus.PERMISSION_NOT_GRANTED -> {
-                HealthConnectPermissionProxyActivity.start(ctx, hcPermissions)
+                val deniedCount = HealthConnectPermissionPrefs.getDeniedCount(ctx)
+                Log.d("HC_UI", "onStepsCardClick status=$dailyStatus deniedCount=$deniedCount sdkInt=${Build.VERSION.SDK_INT}")
+                if (deniedCount >= 2) {
+                    // ✅ 第三次（已拒絕兩次）→ 直接導設定頁
+                    HealthConnectPermissionIntents.openHealthPermissionsSettings(ctx)
+                } else {
+                    // ✅ 第 1、2 次 → 彈 Health Connect 權限請求 UI（由 ProxyActivity 統一處理結果+計數）
+                    HealthConnectPermissionProxyActivity.start(ctx, hcPermissions)
+                }
             }
+
             DailyActivityStatus.ERROR_RETRYABLE -> vm.refreshDailyActivity(force = true)
             DailyActivityStatus.NO_DATA -> vm.onDailyCtaClick(ctx)
             DailyActivityStatus.HC_NOT_INSTALLED,
@@ -309,6 +326,7 @@ fun HomeScreen(
             DailyActivityStatus.AVAILABLE_GRANTED -> Unit
         }
     }
+
 
     LifecycleResumeEffect(Unit) {
         vm.refreshDailyActivity()

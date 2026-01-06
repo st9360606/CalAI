@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/data/activity/healthconnect/HealthConnectPermissionProxyActivity.kt
 package com.calai.app.data.activity.healthconnect
 
 import android.content.Context
@@ -9,15 +8,29 @@ import androidx.activity.ComponentActivity
 import androidx.health.connect.client.PermissionController
 
 /**
- * 用來「保證」打開 Health Connect 的 App-specific 權限頁（你要的 8170）。
+ * 用來「保證」打開 Health Connect 的 App-specific 權限頁。
  * 不依賴 Compose 的 LocalActivityResultRegistryOwner。
+ *
+ * ✅ 這裡順手維護「拒絕次數」：
+ * - 若此次 request 後仍未完整授權 → deniedCount + 1
+ * - 若完整授權 → deniedCount reset
  */
 class HealthConnectPermissionProxyActivity : ComponentActivity() {
+
+    private var requiredPerms: Set<String> = emptySet()
 
     private val requestPerms =
         registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { granted ->
             Log.d(TAG, "HC permission result: granted=${granted.size} $granted")
-            // 這裡不要做太多事；回到 Home 後用 onResume/refresh 再抓資料
+
+            val allGranted = requiredPerms.isNotEmpty() && granted.containsAll(requiredPerms)
+            if (allGranted) {
+                HealthConnectPermissionPrefs.resetDeniedCount(this)
+            } else {
+                // 使用者拒絕 / 取消 / 部分授權，都算一次「未成功授權」
+                HealthConnectPermissionPrefs.incrementDeniedCount(this)
+            }
+
             finish()
         }
 
@@ -29,7 +42,9 @@ class HealthConnectPermissionProxyActivity : ComponentActivity() {
             finish()
             return
         }
-        requestPerms.launch(perms.toSet())
+
+        requiredPerms = perms.toSet()
+        requestPerms.launch(requiredPerms)
     }
 
     companion object {
