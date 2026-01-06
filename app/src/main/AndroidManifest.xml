@@ -15,6 +15,9 @@
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
 
+    <!-- Camera -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:name="com.calai.app.BiteCal"
         android:allowBackup="true"
@@ -108,6 +111,14 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <activity
+            android:name=".ui.home.ui.camera.components.CameraPermissionProxyActivity"
+            android:exported="false"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Transparent" />
+
 
     </application>
 

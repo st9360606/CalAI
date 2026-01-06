@@ -64,6 +64,8 @@ class HomeViewModel @Inject constructor(
     private val profileStore: UserProfileStore,
     private val zoneId: ZoneId                        // ✅ 用裝置當下 timezone
 ) : ViewModel() {
+    private val _pendingOpenCamera = MutableStateFlow(false)
+    val pendingOpenCamera: StateFlow<Boolean> = _pendingOpenCamera.asStateFlow()
 
     private val _ui = MutableStateFlow(HomeUiState())
     val ui: StateFlow<HomeUiState> = _ui.asStateFlow()
@@ -301,6 +303,14 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             // TODO: 重新拉 summary / profile / macros
         }
+    }
+
+    fun markPendingOpenCamera() {
+        _pendingOpenCamera.value = true
+    }
+
+    fun clearPendingOpenCamera() {
+        _pendingOpenCamera.value = false
     }
 }
 

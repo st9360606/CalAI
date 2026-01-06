@@ -97,6 +97,7 @@ import androidx.core.net.toUri
 import com.calai.app.ui.home.ui.personal.details.EditNutritionGoalsRoute
 import com.calai.app.ui.home.ui.personal.details.model.NutritionGoalsViewModel
 import androidx.navigation.compose.navigation
+import com.calai.app.ui.home.ui.camera.CameraScreen
 import com.calai.app.ui.home.ui.personal.details.AutoGenerateGoalsCalcScreen
 import com.calai.app.ui.home.ui.personal.details.model.AutoGenerateGoalsCalcViewModel
 
@@ -1344,8 +1345,15 @@ fun BiteCalNavHost(
             }
         }
 
-
-        composable(Routes.CAMERA) { SimplePlaceholder("Camera") }
+        composable(Routes.CAMERA) {
+            CameraScreen(
+                onClose = { nav.popBackStack() },
+                onImagePicked = { uri ->
+                    // TODO: 你後續要做：上傳 / 丟 AI / 或導到食物編輯頁
+                    // 先留著即可
+                }
+            )
+        }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 
     }

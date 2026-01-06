@@ -105,7 +105,12 @@ import com.calai.app.data.activity.healthconnect.HealthConnectPermissionProxyAct
 import com.calai.app.data.activity.model.DailyActivityStatus
 import com.calai.app.ui.home.components.RecentlyUploadedEmptySection
 import androidx.compose.ui.semantics.Role
-import com.calai.app.ui.home.components.scan.QuickAddOverlay
+import android.content.pm.PackageManager
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.core.content.ContextCompat
+import com.calai.app.ui.home.ui.camera.components.CameraPermissionPrefs
+import com.calai.app.ui.home.ui.camera.components.CameraPermissionProxyActivity
+import com.calai.app.ui.home.ui.camera.components.openCameraPermissionSettings
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,7 +130,6 @@ fun HomeScreen(
     onQuickLogWeight: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
-    val showQuickAdd = rememberSaveable { mutableStateOf(false) }
     val waterState by waterVm.ui.collectAsState()
 
     // ====== Fasting VM 狀態 / 權限設定 ======
@@ -311,6 +315,102 @@ fun HomeScreen(
         onPauseOrDispose { }
     }
 
+    // ===== Camera permission gate for FAB =====
+    val hasCameraPerm = remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
+                    PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    // ✅ 讀取「曾拒絕一次」：第二次點 FAB 直接去設定頁
+    val cameraDeniedOnce = rememberSaveable {
+        mutableStateOf(CameraPermissionPrefs.isCameraDeniedOnce(ctx))
+    }
+
+    val pendingOpenCamera by vm.pendingOpenCamera.collectAsState()
+    val latestOnOpenCamera = rememberUpdatedState(onOpenCamera)
+
+    // 有 owner 才能用 launcher；沒有就 null（你已有 ProxyActivity 兜底）
+    val requestCameraPermLauncher =
+        if (registryOwner != null) {
+            rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                hasCameraPerm.value = granted
+
+                if (granted) {
+                    // ✅ 一旦授權成功：清掉「拒絕一次」旗標
+                    cameraDeniedOnce.value = false
+                    CameraPermissionPrefs.setCameraDeniedOnce(ctx, false)
+                } else {
+                    // ✅ 第一次拒絕：記錄起來 → 第二次點 FAB 導設定頁
+                    cameraDeniedOnce.value = true
+                    CameraPermissionPrefs.setCameraDeniedOnce(ctx, true)
+
+                    // （可選）如果使用者選了「不再詢問」，也可以直接導設定頁
+                    // 這裡 Compose 不一定拿得到 Activity，但可以用 ProxyActivity 方案處理。
+                    // 若你想在這裡判斷，需要 ctx.findActivity()；我先給最穩的：第二次點再導。
+                }
+            }
+        } else null
+
+    // App 回前景：使用者可能去設定頁手動開權限
+    LifecycleResumeEffect(Unit) {
+        val grantedNow =
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
+                    PackageManager.PERMISSION_GRANTED
+
+        hasCameraPerm.value = grantedNow
+
+        if (grantedNow) {
+            // ✅ 使用者已在設定頁打開 → 清掉 deniedOnce
+            cameraDeniedOnce.value = false
+            CameraPermissionPrefs.setCameraDeniedOnce(ctx, false)
+        }
+
+        // ✅ 回前景時同步讀一次（避免 ProxyActivity 寫入後 UI 還是舊值）
+        cameraDeniedOnce.value = CameraPermissionPrefs.isCameraDeniedOnce(ctx)
+
+        onPauseOrDispose { }
+    }
+
+    // ✅ 統一出口：只要「授權成功 + pending=true」就開相機一次
+    LaunchedEffect(hasCameraPerm.value, pendingOpenCamera) {
+        if (hasCameraPerm.value && pendingOpenCamera) {
+            vm.clearPendingOpenCamera()
+            latestOnOpenCamera.value.invoke()
+        }
+    }
+
+    // FAB 點擊：第一次拒絕後，第二次點直接導設定頁
+    val onFabClick: () -> Unit = remember(ctx, requestCameraPermLauncher) {
+        {
+            val grantedNow =
+                ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
+                        PackageManager.PERMISSION_GRANTED
+
+            if (grantedNow) {
+                onOpenCamera()
+                return@remember
+            }
+
+            // 沒授權：先把 pending 打開（讓使用者從設定頁回來時能自動開相機）
+            vm.markPendingOpenCamera()
+
+            // ✅ 重點：如果已經拒絕過一次 → 第二次點直接跳「相機權限」頁
+            val deniedOnceNow = CameraPermissionPrefs.isCameraDeniedOnce(ctx)
+            if (deniedOnceNow) {
+                openCameraPermissionSettings(ctx) // ← 你截圖那種頁（能直達就直達，否則 App details）
+                return@remember
+            }
+
+            // 第一次點（還沒拒絕過）：照正常流程 request
+            requestCameraPermLauncher?.launch(Manifest.permission.CAMERA)
+                ?: CameraPermissionProxyActivity.start(ctx) // owner=null 兜底
+        }
+    }
+
     // ========= 「背景」改在這裡放一層即可 =========
     Box(Modifier.fillMaxSize()) {
         LightHomeBackground() // ← 背景
@@ -319,7 +419,7 @@ fun HomeScreen(
         Scaffold(
             containerColor = Color.Transparent,   // ★ 讓下方漸層透出
             floatingActionButton = {
-                ScanFab(onClick = { showQuickAdd.value = !showQuickAdd.value })
+                ScanFab(onClick = onFabClick)
             },
             bottomBar = {
                 MainBottomBar(
@@ -536,14 +636,6 @@ fun HomeScreen(
             visible = showWorkoutSheet.value,
             onCloseFull = { showWorkoutSheet.value = false },
             onCollapseOnly = { showWorkoutSheet.value = false }
-        )
-        // 1) 快捷面板（跟截圖一樣）
-        QuickAddOverlay(
-            visible = showQuickAdd.value,
-            onDismiss = { showQuickAdd.value = false },
-            onLogWorkout = { showWorkoutSheet.value = true },
-            onOpenScanFoods = { onOpenCamera() },
-            bottomPadding = 92.dp
         )
     }
 }
