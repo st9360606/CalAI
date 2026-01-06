@@ -323,11 +323,6 @@ fun HomeScreen(
         )
     }
 
-    // ✅ 讀取「曾拒絕一次」：第二次點 FAB 直接去設定頁
-    val cameraDeniedOnce = rememberSaveable {
-        mutableStateOf(CameraPermissionPrefs.isCameraDeniedOnce(ctx))
-    }
-
     val pendingOpenCamera by vm.pendingOpenCamera.collectAsState()
     val latestOnOpenCamera = rememberUpdatedState(onOpenCamera)
 
@@ -340,38 +335,25 @@ fun HomeScreen(
                 hasCameraPerm.value = granted
 
                 if (granted) {
-                    // ✅ 一旦授權成功：清掉「拒絕一次」旗標
-                    cameraDeniedOnce.value = false
-                    CameraPermissionPrefs.setCameraDeniedOnce(ctx, false)
+                    CameraPermissionPrefs.resetCameraDeniedCount(ctx)
                 } else {
-                    // ✅ 第一次拒絕：記錄起來 → 第二次點 FAB 導設定頁
-                    cameraDeniedOnce.value = true
-                    CameraPermissionPrefs.setCameraDeniedOnce(ctx, true)
-
-                    // （可選）如果使用者選了「不再詢問」，也可以直接導設定頁
-                    // 這裡 Compose 不一定拿得到 Activity，但可以用 ProxyActivity 方案處理。
-                    // 若你想在這裡判斷，需要 ctx.findActivity()；我先給最穩的：第二次點再導。
+                    CameraPermissionPrefs.incrementCameraDeniedCount(ctx)
+                    // ✅ 若使用者勾「不再詢問」：第二次起系統可能不會彈窗
+                    // 這時直接導設定頁是唯一解
+                    // （這段若你堅持第三次才導，可以移除，但 UX 會卡死）
+                    // 這裡需要 Activity 才能 shouldShow...；HomeScreen 這裡 ctx 不一定是 Activity
+                    // 所以我們不在這裡判斷 dontAskAgain，交給 ProxyActivity 或下一次點擊導頁即可
                 }
             }
         } else null
 
     // App 回前景：使用者可能去設定頁手動開權限
     LifecycleResumeEffect(Unit) {
-        val grantedNow =
-            ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
-                    PackageManager.PERMISSION_GRANTED
-
+        val grantedNow = ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         hasCameraPerm.value = grantedNow
-
         if (grantedNow) {
-            // ✅ 使用者已在設定頁打開 → 清掉 deniedOnce
-            cameraDeniedOnce.value = false
-            CameraPermissionPrefs.setCameraDeniedOnce(ctx, false)
+            CameraPermissionPrefs.resetCameraDeniedCount(ctx)
         }
-
-        // ✅ 回前景時同步讀一次（避免 ProxyActivity 寫入後 UI 還是舊值）
-        cameraDeniedOnce.value = CameraPermissionPrefs.isCameraDeniedOnce(ctx)
-
         onPauseOrDispose { }
     }
 
@@ -383,31 +365,34 @@ fun HomeScreen(
         }
     }
 
-    // FAB 點擊：第一次拒絕後，第二次點直接導設定頁
-    val onFabClick: () -> Unit = remember(ctx, requestCameraPermLauncher) {
+    // FAB 點擊：第 1、2 次都 request；第 3 次才導設定
+    val onFabClick: () -> Unit = remember(ctx, requestCameraPermLauncher,
+        onOpenCamera,
+        vm
+    ) {
         {
+            val deniedCount = CameraPermissionPrefs.getCameraDeniedCount(ctx)
             val grantedNow =
                 ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
                         PackageManager.PERMISSION_GRANTED
-
             if (grantedNow) {
+                CameraPermissionPrefs.resetCameraDeniedCount(ctx)
                 onOpenCamera()
-                return@remember
+            } else {
+                // 沒授權：先標記 pending（你原本流程 OK）
+                vm.markPendingOpenCamera()
+                if (deniedCount >= 2) {
+                    // ✅ 第三次（count >= 2）才導設定頁
+                    openCameraPermissionSettings(ctx)
+                } else {
+                    // ✅ 第 1、2 次：request（owner=null 用 ProxyActivity 兜底）
+                    if (requestCameraPermLauncher != null) {
+                        requestCameraPermLauncher.launch(Manifest.permission.CAMERA)
+                    } else {
+                        CameraPermissionProxyActivity.start(ctx)
+                    }
+                }
             }
-
-            // 沒授權：先把 pending 打開（讓使用者從設定頁回來時能自動開相機）
-            vm.markPendingOpenCamera()
-
-            // ✅ 重點：如果已經拒絕過一次 → 第二次點直接跳「相機權限」頁
-            val deniedOnceNow = CameraPermissionPrefs.isCameraDeniedOnce(ctx)
-            if (deniedOnceNow) {
-                openCameraPermissionSettings(ctx) // ← 你截圖那種頁（能直達就直達，否則 App details）
-                return@remember
-            }
-
-            // 第一次點（還沒拒絕過）：照正常流程 request
-            requestCameraPermLauncher?.launch(Manifest.permission.CAMERA)
-                ?: CameraPermissionProxyActivity.start(ctx) // owner=null 兜底
         }
     }
 

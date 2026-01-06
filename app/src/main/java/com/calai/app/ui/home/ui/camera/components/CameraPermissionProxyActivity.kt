@@ -6,33 +6,16 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 
-/**
- * 用來「保證」能彈出 CAMERA 權限請求（不依賴 Compose 的 LocalActivityResultRegistryOwner）。
- */
-/**
- * 用來「保證」能彈出 CAMERA 權限請求（不依賴 Compose 的 LocalActivityResultRegistryOwner）。
- */
 class CameraPermissionProxyActivity : ComponentActivity() {
 
     private val requestPerm =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
-                // ✅ 授權成功：清掉 deniedOnce
-                CameraPermissionPrefs.setCameraDeniedOnce(this, false)
+                CameraPermissionPrefs.resetCameraDeniedCount(this)
             } else {
-                // ✅ 拒絕：記錄「拒絕過一次」
-                CameraPermissionPrefs.setCameraDeniedOnce(this, true)
-
-                // 若使用者拒絕且 shouldShow... == false，通常代表「不再詢問」或政策阻擋 → 直接導設定
-                val dontAskAgain = !ActivityCompat.shouldShowRequestPermissionRationale(
-                    this,
-                    Manifest.permission.CAMERA
-                )
-                if (dontAskAgain) {
-                    openCameraPermissionSettings(this)
-                }
+                // ✅ 只累積次數，不做任何跳設定（由 Home 第三次點擊來做）
+                CameraPermissionPrefs.incrementCameraDeniedCount(this)
             }
             finish()
         }
@@ -51,4 +34,3 @@ class CameraPermissionProxyActivity : ComponentActivity() {
         }
     }
 }
-
