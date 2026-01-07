@@ -1,9 +1,15 @@
 package com.calai.app.ui.home.ui.weight
 
+import android.Manifest
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.LocalActivityResultRegistryOwner
@@ -58,6 +64,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -78,6 +86,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.calai.app.R
 import com.calai.app.data.profile.repo.UserProfileStore
@@ -164,12 +175,12 @@ private fun RecordWeightScreenContent(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // 1) KG / LBS 範圍
-    val KG_MIN = 20.0
-    val KG_MAX = 800.0
-    val LBS_TENTHS_MIN = kgToLbsTenthsRecord(KG_MIN)
-    val LBS_TENTHS_MAX = kgToLbsTenthsRecord(KG_MAX)
-    val LBS_INT_MIN = LBS_TENTHS_MIN / 10
-    val LBS_INT_MAX = LBS_TENTHS_MAX / 10
+    val kgMin = 20.0
+    val kgMax = 800.0
+    val lbsTenthsMin = kgToLbsTenthsRecord(kgMin)
+    val lbsTenthsMax = kgToLbsTenthsRecord(kgMax)
+    val lbsIntMin = lbsTenthsMin / 10
+    val lbsIntMax = lbsTenthsMax / 10
 
     // 2) 日期狀態（預設今天）
     val today = remember { LocalDate.now() }
@@ -180,8 +191,8 @@ private fun RecordWeightScreenContent(
     // 3) ⚠️ 初始值只做一次（避免 ui refresh 時輪盤跳回）
     var initialized by rememberSaveable { mutableStateOf(false) }
     var useMetric by rememberSaveable { mutableStateOf(true) }
-    var valueKg by rememberSaveable { mutableStateOf(65.0) }
-    var valueLbsTenths by rememberSaveable { mutableStateOf(kgToLbsTenthsRecord(65.0)) }
+    var valueKg by rememberSaveable { mutableDoubleStateOf(70.0) }
+    var valueLbsTenths by rememberSaveable { mutableIntStateOf(kgToLbsTenthsRecord(70.0)) }
 
     LaunchedEffect(ui.unit, ui.current, ui.profileWeightKg) {
         if (initialized) return@LaunchedEffect
@@ -189,19 +200,19 @@ private fun RecordWeightScreenContent(
 
         useMetric = (ui.unit == UserProfileStore.WeightUnit.KG)
 
-        val initialKgRaw = ui.current ?: ui.profileWeightKg ?: 65.0
-        val initialKg = initialKgRaw.coerceIn(KG_MIN, KG_MAX)
+        val initialKgRaw = ui.current ?: ui.profileWeightKg ?: 70.0
+        val initialKg = initialKgRaw.coerceIn(kgMin, kgMax)
         valueKg = initialKg
-        valueLbsTenths = kgToLbsTenthsRecord(initialKg).coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+        valueLbsTenths = kgToLbsTenthsRecord(initialKg).coerceIn(lbsTenthsMin, lbsTenthsMax)
     }
 
     // 4) 從 value 推 wheel 選中值
     val kgTenths = (valueKg * 10.0).toInt()
-        .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+        .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
     val kgIntSel = kgTenths / 10
     val kgDecSel = kgTenths % 10
 
-    val lbsTenthsClamped = valueLbsTenths.coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+    val lbsTenthsClamped = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
     val lbsIntSel = lbsTenthsClamped / 10
     val lbsDecSel = lbsTenthsClamped % 10
 
@@ -209,6 +220,22 @@ private fun RecordWeightScreenContent(
     val context = LocalContext.current
     val isPreview = LocalInspectionMode.current
     var photoUriString by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // ========= ✅ Camera permission helpers（新增） =========
+    fun hasCameraPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun openAppSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
 
     // 拍照（回傳 Bitmap，再存成 cache 檔）
     val takePhotoLauncher =
@@ -227,9 +254,36 @@ private fun RecordWeightScreenContent(
             }
         } else null
 
+    // ✅ Request CAMERA runtime permission（新增）
+    val requestCameraPermissionLauncher =
+        if (canUseActivityResult) {
+            rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                if (granted) {
+                    // ✅ 授權成功：立刻再開一次相機
+                    runCatching { takePhotoLauncher?.launch(null) }
+                        .onFailure { e ->
+                            Log.e("RecordWeightScreen", "Camera launch after permission failed", e)
+                            Toast.makeText(context, "Camera failed to open.", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    Toast.makeText(context, "Camera permission required.", Toast.LENGTH_SHORT).show()
+
+                    // ✅ 若勾「不再詢問」：導設定（拿不到 Activity 就降級只 toast）
+                    val act = context.findActivity()
+                    val dontAskAgain = act != null &&
+                            !ActivityCompat.shouldShowRequestPermissionRationale(
+                                act,
+                                Manifest.permission.CAMERA
+                            )
+                    if (dontAskAgain) openAppSettings()
+                }
+            }
+        } else null
+
     fun launchTakePhoto() {
-        val launcher = takePhotoLauncher
-        if (launcher == null) {
+        if (takePhotoLauncher == null) {
             val msg = if (isPreview) {
                 "Camera only works in the running app, not in Preview."
             } else {
@@ -238,7 +292,27 @@ private fun RecordWeightScreenContent(
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             return
         }
-        launcher.launch(null)
+
+        // ✅ 先確保 runtime permission（修正點）
+        if (!hasCameraPermission()) {
+            requestCameraPermissionLauncher?.launch(Manifest.permission.CAMERA)
+            return
+        }
+
+        try {
+            takePhotoLauncher.launch(null)
+        } catch (e: ActivityNotFoundException) {
+            Log.e("RecordWeightScreen", "No camera app can handle ACTION_IMAGE_CAPTURE", e)
+            Toast.makeText(context, "No camera app found on this device.", Toast.LENGTH_SHORT).show()
+        } catch (e: SecurityException) {
+            // 仍保留：某些 ROM/相機 App 會在權限變更瞬間丟這個
+            Log.e("RecordWeightScreen", "Camera launch blocked by SecurityException", e)
+            Toast.makeText(context, "Camera permission required.", Toast.LENGTH_SHORT).show()
+            openAppSettings()
+        } catch (e: Throwable) {
+            Log.e("RecordWeightScreen", "Camera launch failed", e)
+            Toast.makeText(context, "Camera failed to open.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     // 日期 BottomSheet
@@ -278,19 +352,18 @@ private fun RecordWeightScreenContent(
                         }
 
                         val (kgToSave, lbsToSave) = if (useMetric) {
-                            val kgClamped = valueKg.coerceIn(KG_MIN, KG_MAX)
+                            val kgClamped = valueKg.coerceIn(kgMin, kgMax)
                             val kgRounded = roundToOneDecimal(kgClamped)
                             kgRounded to kgToLbs1(kgRounded)
                         } else {
-                            val rawLbs = (valueLbsTenths.coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)) / 10.0
+                            val rawLbs = (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)) / 10.0
                             val lbsRounded = roundToOneDecimal(rawLbs)
-                            val kg = lbsToKg1(lbsRounded).coerceIn(KG_MIN, KG_MAX)
+                            val kg = lbsToKg1(lbsRounded).coerceIn(kgMin, kgMax)
                             kg to lbsRounded
                         }
 
                         val photoFile = uriStringToCacheFile(context, photoUriString)
 
-                        // ✅ 成功才 onSaved；失敗留在本頁 snackbar
                         vm.save(
                             weightKg = kgToSave,
                             weightLbs = lbsToSave,
@@ -378,11 +451,11 @@ private fun RecordWeightScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheelRecord(
-                        range = KG_MIN.toInt()..KG_MAX.toInt(),
+                        range = kgMin.toInt()..kgMax.toInt(),
                         value = kgIntSel,
                         onValueChange = { newInt ->
                             val newTenths = (newInt * 10 + kgDecSel)
-                                .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
                             val newKg = newTenths / 10.0
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenthsRecord(newKg)
@@ -401,7 +474,7 @@ private fun RecordWeightScreenContent(
                         value = kgDecSel,
                         onValueChange = { newDec ->
                             val newTenths = (kgIntSel * 10 + newDec)
-                                .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
                             val newKg = newTenths / 10.0
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenthsRecord(newKg)
@@ -426,13 +499,13 @@ private fun RecordWeightScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheelRecord(
-                        range = LBS_INT_MIN..LBS_INT_MAX,
+                        range = lbsIntMin..lbsIntMax,
                         value = lbsIntSel,
                         onValueChange = { newInt ->
                             val newTenths = (newInt * 10 + lbsDecSel)
-                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
                             valueLbsTenths = newTenths
-                            val newKg = lbsToKg1(newTenths / 10.0).coerceIn(KG_MIN, KG_MAX)
+                            val newKg = lbsToKg1(newTenths / 10.0).coerceIn(kgMin, kgMax)
                             valueKg = newKg
                         },
                         rowHeight = rowHeight,
@@ -449,9 +522,9 @@ private fun RecordWeightScreenContent(
                         value = lbsDecSel,
                         onValueChange = { newDec ->
                             val newTenths = (lbsIntSel * 10 + newDec)
-                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
                             valueLbsTenths = newTenths
-                            val newKg = lbsToKg1(newTenths / 10.0).coerceIn(KG_MIN, KG_MAX)
+                            val newKg = lbsToKg1(newTenths / 10.0).coerceIn(kgMin, kgMax)
                             valueKg = newKg
                         },
                         rowHeight = rowHeight,
@@ -531,13 +604,13 @@ private fun WeightUnitSegmentedRecord(
         shape = RoundedCornerShape(40.dp),
         color = Color(0xFFE2E5EA),
         modifier = modifier
-            .fillMaxWidth(0.51f)      // ✅ 更窄（原本 0.55f）
-            .height(52.dp)            // ✅ 更高（固定高度，視覺更穩）
+            .fillMaxWidth(0.51f)
+            .height(52.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(6.dp)        // ✅ 內邊距加大，膠囊更厚
+                .padding(6.dp)
         ) {
             SegItemRecord(
                 text = "lbs",
@@ -546,7 +619,7 @@ private fun WeightUnitSegmentedRecord(
                 selectedColor = Color.Black,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()  // ✅ 跟外層等高
+                    .fillMaxHeight()
             )
             Spacer(Modifier.width(6.dp))
             SegItemRecord(
@@ -571,7 +644,7 @@ private fun SegItemRecord(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val fontSize = 18.sp   // ✅ 稍微大一點（原本 18.sp）
+    val fontSize = 18.sp
 
     Surface(
         onClick = onClick,
@@ -581,9 +654,9 @@ private fun SegItemRecord(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()                // ✅ 撐滿高度
-                .defaultMinSize(minHeight = 48.dp) // ✅ 高度再保底（原本 40.dp）
-                .padding(horizontal = 18.dp), // ✅ 不要上下 padding，避免高度被吃掉
+                .fillMaxSize()
+                .defaultMinSize(minHeight = 48.dp)
+                .padding(horizontal = 18.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -613,8 +686,8 @@ private fun NumberWheelRecord(
     modifier: Modifier = Modifier,
     label: (Int) -> String = { it.toString() }
 ) {
-    val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2
+    val visibleCount = 5
+    val mid = visibleCount / 2
     val items = remember(range) { range.toList() }
     val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
@@ -647,12 +720,12 @@ private fun NumberWheelRecord(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(rowHeight * VISIBLE_COUNT)
+            .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
@@ -663,7 +736,9 @@ private fun NumberWheelRecord(
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
 
                 Row(
-                    modifier = Modifier.height(rowHeight).fillMaxWidth(),
+                    modifier = Modifier
+                        .height(rowHeight)
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -721,12 +796,12 @@ private fun WeighingDateSheet(
     val today = remember(maxDate) { maxDate }
     val yearRange = remember(today) { (today.year - 5)..today.year }
 
-    var year by rememberSaveable(currentDate) { mutableStateOf(currentDate.year) }
-    var month by rememberSaveable(currentDate) { mutableStateOf(currentDate.monthValue) }
-    var day by rememberSaveable(currentDate) { mutableStateOf(currentDate.dayOfMonth) }
+    var year by rememberSaveable(currentDate) { mutableIntStateOf(currentDate.year) }
+    var month by rememberSaveable(currentDate) { mutableIntStateOf(currentDate.monthValue) }
+    var day by rememberSaveable(currentDate) { mutableIntStateOf(currentDate.dayOfMonth) }
 
     val months = remember {
-        Month.values().map { m ->
+        Month.entries.map { m ->
             m.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)
         }
     }
@@ -844,7 +919,9 @@ private fun WeighingDateSheet(
 
                         onConfirm(finalDate)
                     },
-                    modifier = Modifier.fillMaxWidth().height(55.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp),
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
@@ -856,7 +933,9 @@ private fun WeighingDateSheet(
 
                 OutlinedButton(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth().height(55.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp),
                     shape = RoundedCornerShape(999.dp),
                     border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -880,7 +959,7 @@ private fun PhotoPickerBlock(
     cameraAvailable: Boolean,
     onPickPhoto: () -> Unit
 ) {
-    val uri = photoUriString?.takeIf { it.isNotBlank() }?.let { Uri.parse(it) }
+    val uri = photoUriString?.takeIf { it.isNotBlank() }?.toUri()
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -929,7 +1008,7 @@ private fun PhotoPickerBlock(
 private fun uriStringToCacheFile(context: Context, uriString: String?): File? {
     if (uriString.isNullOrBlank()) return null
     return runCatching {
-        val uri = Uri.parse(uriString)
+        val uri = uriString.toUri()
 
         // ✅ file:// 直接轉 File（你拍照是 Uri.fromFile(file) 產生的）
         if (uri.scheme == "file") {
@@ -967,12 +1046,20 @@ private fun kgToLbsTenthsRecord(kg: Double): Int =
 private fun roundToOneDecimal(value: Double): Double =
     BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).toDouble()
 
-/* ---------------------------- Context 尋找 ActivityResultRegistryOwner ---------------------------- */
+/* ---------------------------- Context helpers ---------------------------- */
 
 private tailrec fun Context.findActivityResultRegistryOwner(): ActivityResultRegistryOwner? {
     return when (this) {
         is ActivityResultRegistryOwner -> this
         is ContextWrapper -> baseContext.findActivityResultRegistryOwner()
+        else -> null
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? {
+    return when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
         else -> null
     }
 }

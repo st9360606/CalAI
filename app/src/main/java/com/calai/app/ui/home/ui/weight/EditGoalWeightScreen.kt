@@ -61,7 +61,8 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.abs
-
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableIntStateOf
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EditGoalWeightScreen(
@@ -73,20 +74,20 @@ fun EditGoalWeightScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val KG_MIN = 20.0
-    val KG_MAX = 800.0
-    val LBS_TENTHS_MIN = kgToLbsTenthsForGoal(KG_MIN)
-    val LBS_TENTHS_MAX = kgToLbsTenthsForGoal(KG_MAX)
-    val LBS_INT_MIN = LBS_TENTHS_MIN / 10
-    val LBS_INT_MAX = LBS_TENTHS_MAX / 10
+    val kgMin = 20.0
+    val kgMax = 800.0
+    val lbsTenthsMin = kgToLbsTenthsForGoal(kgMin)
+    val lbsTenthsMax = kgToLbsTenthsForGoal(kgMax)
+    val lbsIntMin = lbsTenthsMin / 10
+    val lbsIntMax = lbsTenthsMax / 10
 
     val profileUnit = ui.unit
 
     // ✅ 初始值只初始化一次（避免 ui refresh 時輪盤跳回）
     var initialized by rememberSaveable { mutableStateOf(false) }
     var useMetric by rememberSaveable { mutableStateOf(profileUnit == UserProfileStore.WeightUnit.KG) }
-    var valueKg by rememberSaveable { mutableStateOf(70.0) }
-    var valueLbsTenths by rememberSaveable { mutableStateOf(kgToLbsTenthsForGoal(70.0)) }
+    var valueKg by rememberSaveable { mutableDoubleStateOf(70.0) }
+    var valueLbsTenths by rememberSaveable { mutableIntStateOf(kgToLbsTenthsForGoal(70.0)) }
 
     LaunchedEffect(
         profileUnit,
@@ -110,20 +111,18 @@ fun EditGoalWeightScreen(
                 ?: ui.currentLbs
                 ?: ui.profileWeightLbs
 
-        val fromKg = kgCandidate
         val fromLbs = lbsCandidate?.let { lbsToKg1(it) }
-
-        val baseKg = (fromKg ?: fromLbs ?: 70.0).coerceIn(KG_MIN, KG_MAX)
+        val baseKg = (kgCandidate ?: fromLbs ?: 70.0).coerceIn(kgMin, kgMax)
         valueKg = baseKg
-        valueLbsTenths = kgToLbsTenthsForGoal(baseKg).coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+        valueLbsTenths = kgToLbsTenthsForGoal(baseKg).coerceIn(lbsTenthsMin, lbsTenthsMax)
     }
 
     val kgTenths = (valueKg * 10.0).toInt()
-        .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+        .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
     val kgIntSel = kgTenths / 10
     val kgDecSel = kgTenths % 10
 
-    val lbsTenthsClamped = valueLbsTenths.coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+    val lbsTenthsClamped = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
     val lbsIntSel = lbsTenthsClamped / 10
     val lbsDecSel = lbsTenthsClamped % 10
 
@@ -157,11 +156,11 @@ fun EditGoalWeightScreen(
 
                             val (valueToSave, unitToSave) =
                                 if (useMetric) {
-                                    val kgClamped = valueKg.coerceIn(KG_MIN, KG_MAX)
+                                    val kgClamped = valueKg.coerceIn(kgMin, kgMax)
                                     val kgRounded = roundToOneDecimalForGoal(kgClamped)
                                     kgRounded to UserProfileStore.WeightUnit.KG
                                 } else {
-                                    val rawLbs = (valueLbsTenths.coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)) / 10.0
+                                    val rawLbs = (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)) / 10.0
                                     val lbsRounded = roundToOneDecimalForGoal(rawLbs)
                                     lbsRounded to UserProfileStore.WeightUnit.LBS
                                 }
@@ -234,11 +233,11 @@ fun EditGoalWeightScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheelForGoal(
-                        range = KG_MIN.toInt()..KG_MAX.toInt(),
+                        range = kgMin.toInt()..kgMax.toInt(),
                         value = kgIntSel,
                         onValueChange = { newInt ->
                             val newTenths = (newInt * 10 + kgDecSel)
-                                .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
                             val newKg = newTenths / 10.0
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenthsForGoal(newKg)
@@ -257,7 +256,7 @@ fun EditGoalWeightScreen(
                         value = kgDecSel,
                         onValueChange = { newDec ->
                             val newTenths = (kgIntSel * 10 + newDec)
-                                .coerceIn((KG_MIN * 10).toInt(), (KG_MAX * 10).toInt())
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
                             val newKg = newTenths / 10.0
                             valueKg = newKg
                             valueLbsTenths = kgToLbsTenthsForGoal(newKg)
@@ -282,13 +281,13 @@ fun EditGoalWeightScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheelForGoal(
-                        range = LBS_INT_MIN..LBS_INT_MAX,
+                        range = lbsIntMin..lbsIntMax,
                         value = lbsIntSel,
                         onValueChange = { newInt ->
                             val newTenths = (newInt * 10 + lbsDecSel)
-                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
                             valueLbsTenths = newTenths
-                            valueKg = lbsToKg1(newTenths / 10.0).coerceIn(KG_MIN, KG_MAX)
+                            valueKg = lbsToKg1(newTenths / 10.0).coerceIn(kgMin, kgMax)
                         },
                         rowHeight = 56.dp,
                         centerTextSize = 28.sp,
@@ -304,9 +303,9 @@ fun EditGoalWeightScreen(
                         value = lbsDecSel,
                         onValueChange = { newDec ->
                             val newTenths = (lbsIntSel * 10 + newDec)
-                                .coerceIn(LBS_TENTHS_MIN, LBS_TENTHS_MAX)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
                             valueLbsTenths = newTenths
-                            valueKg = lbsToKg1(newTenths / 10.0).coerceIn(KG_MIN, KG_MAX)
+                            valueKg = lbsToKg1(newTenths / 10.0).coerceIn(kgMin, kgMax)
                         },
                         rowHeight = 56.dp,
                         centerTextSize = 28.sp,
@@ -436,8 +435,8 @@ private fun NumberWheelForGoal(
     modifier: Modifier = Modifier,
     label: (Int) -> String = { it.toString() }
 ) {
-    val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2
+    val visibleCount = 5
+    val mid = visibleCount / 2
     val items = remember(range) { range.toList() }
     val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
@@ -470,12 +469,12 @@ private fun NumberWheelForGoal(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(rowHeight * VISIBLE_COUNT)
+            .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {

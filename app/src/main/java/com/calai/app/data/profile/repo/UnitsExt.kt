@@ -28,9 +28,8 @@ fun feetInchesToCm1(feet: Int, inches: Int): Double {
 /** cm -> ft/in（用「最近整吋」；避免 69.999999 -> 69 的地雷） */
 fun cmToFeetInches1(cm: Double): Pair<Int, Int> {
     val totalInches = (cm / 2.54).roundToInt().coerceAtLeast(0) // ✅ 用 round，不要 toInt()
-    var feet = totalInches / 12
-    var inches = totalInches % 12
-    if (inches == 12) { feet += 1; inches = 0 }
+    val feet = totalInches / 12
+    val inches = totalInches % 12
     return feet to inches
 }
 
