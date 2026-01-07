@@ -78,7 +78,7 @@ class WeightViewModel @Inject constructor(
 
     private fun sortHistoryDescStable(list: List<WeightItemDto>): List<WeightItemDto> {
         return list
-            .sortedWith(compareByDescending<WeightItemDto> { parseDateOrMin(it.logDate) })
+            .sortedWith(compareByDescending { parseDateOrMin(it.logDate) })
             .toList()
     }
 

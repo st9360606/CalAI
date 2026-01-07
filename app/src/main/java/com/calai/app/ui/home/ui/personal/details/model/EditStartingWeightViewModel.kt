@@ -49,10 +49,6 @@ class EditStartingWeightViewModel @Inject constructor(
         }
     }
 
-    fun clearError() {
-        _ui.update { it.copy(error = null) }
-    }
-
     /**
      * ✅ 存 Starting Weight（user_profiles.weight_kg/weight_lbs）
      * - 成功後 commit unit（跟你 EditGoalWeight 的行為一致：用戶用什麼單位存，就切到該單位）

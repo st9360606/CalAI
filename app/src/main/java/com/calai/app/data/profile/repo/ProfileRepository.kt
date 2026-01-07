@@ -44,10 +44,11 @@ class ProfileRepository @Inject constructor(
             else -> throw e
         }
     } catch (e: IOException) {
-        null
+        throw e
     }
 
     /** 將伺服器 locale（若有且非空）同步到本機 DataStore。回傳是否有同步 */
+    @Suppress("unused")
     suspend fun syncLocaleFromServerToStore(): Boolean {
         val p = getServerProfileOrNull() ?: return false
         val tag = p.locale?.takeIf { it.isNotBlank() } ?: return false
@@ -148,6 +149,7 @@ class ProfileRepository @Inject constructor(
      * ✅ 給 NavHost / ViewModel 用：如果你外層用 runCatching，要能抓到失敗就用這個
      * （因為 upsertFromLocal() 自己回傳 Result，外層 runCatching 可能抓不到 HttpException）
      */
+    @Suppress("unused")
     suspend fun upsertFromLocalOrThrow(): UserProfileDto =
         upsertFromLocal().getOrThrow()
 
@@ -179,6 +181,7 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    @Suppress("unused")
     suspend fun updateLocaleOnlyOrThrow(newLocale: String): UserProfileDto =
         updateLocaleOnly(newLocale).getOrThrow()
 
@@ -211,6 +214,7 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    @Suppress("unused")
     suspend fun updateGoalWeightOrThrow(
         value: Double,
         unit: UserProfileStore.WeightUnit
@@ -342,6 +346,7 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    @Suppress("unused")
     suspend fun updateGenderOnlyOrThrow(newGender: String): UserProfileDto =
         updateGenderOnly(newGender).getOrThrow()
 
@@ -378,6 +383,7 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    @Suppress("unused")
     suspend fun updateDailyStepGoalOnlyOrThrow(v: Int): UserProfileDto =
         updateDailyStepGoalOnly(v).getOrThrow()
 
@@ -470,6 +476,7 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    @Suppress("unused")
     suspend fun upsertFromLocalForOnboardingOrThrow(): UserProfileDto =
         upsertFromLocalForOnboarding().getOrThrow()
 }

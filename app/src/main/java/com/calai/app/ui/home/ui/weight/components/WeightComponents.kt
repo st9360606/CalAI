@@ -59,6 +59,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
@@ -72,6 +73,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.calai.app.BuildConfig
 
 private const val X_TICK_COUNT = 5
+private val NUM_LOCALE: Locale = Locale.US
 
 // ----------------------------------------------------------
 // Summary Cards
@@ -378,65 +380,17 @@ fun formatWeightCard(
     if (kg == null) return "—"
     return if (unit == UserProfileStore.WeightUnit.KG) {
         // KG 模式：顯示到小數點一位
-        String.format("%.1f kg", kg)
+        String.format(NUM_LOCALE, "%.1f kg", kg)
     } else {
         // LBS 模式：一律走共用的 kgToLbs1，確保跟 Record / 後端一致
         val lbs = kgToLbs1(kg)
         if (lbsAsInt) {
             // 只要整數：TO GOAL WEIGHT / axis label 等場合你想顯示 176 lbs 這種
-            String.format("%d lbs", lbs.toInt())
+            String.format(NUM_LOCALE, "%d lbs", lbs.toInt())
         } else {
             // 顯示到小數點一位：如 CURRENT WEIGHT、TO GOAL WEIGHT 主數字
-            String.format("%.1f lbs", lbs)
+            String.format(NUM_LOCALE, "%.1f lbs", lbs)
         }
-    }
-}
-
-fun formatDeltaGoalMinusCurrent(
-    goalKg: Double?,
-    currentKg: Double?,
-    unit: UserProfileStore.WeightUnit,
-    lbsAsInt: Boolean
-): String {
-    if (goalKg == null || currentKg == null) return "—"
-    val diffKg = goalKg - currentKg
-    val sign = if (diffKg >= 0) "+" else "−"
-    val absKg = kotlin.math.abs(diffKg)
-
-    return if (unit == UserProfileStore.WeightUnit.KG) {
-        // KG：差多少 kg，顯示到小數點一位
-        String.format("%s%.1f kg", sign, absKg)
-    } else {
-        // LBS：差多少 lbs，一律透過 kgToLbs1
-        val lbs = kgToLbs1(absKg)
-        val core = if (lbsAsInt) {
-            lbs.toInt().toString()
-        } else {
-            String.format("%.1f", lbs)
-        }
-        "$sign$core lbs"
-    }
-}
-
-fun formatWeight(kg: Double?, unit: UserProfileStore.WeightUnit): String {
-    if (kg == null) return "—"
-    return if (unit == UserProfileStore.WeightUnit.KG) {
-        String.format("%.1f kg", kg)
-    } else {
-        // 歷史列表也共用同一套 lbs 算法
-        val lbs = kgToLbs1(kg)
-        String.format("%.1f lbs", lbs)
-    }
-}
-
-fun formatDelta(deltaKg: Double, unit: UserProfileStore.WeightUnit): String {
-    val sign = if (deltaKg >= 0) "+" else "−"
-    val absKg = kotlin.math.abs(deltaKg)
-    return if (unit == UserProfileStore.WeightUnit.KG) {
-        String.format("%s%.1f kg", sign, absKg)
-    } else {
-        val lbs = kgToLbs1(absKg)
-        String.format("%s%.1f lbs", sign, lbs)
     }
 }
 
@@ -574,11 +528,10 @@ fun WeightChartCard(
             Spacer(Modifier.height(12.dp))
 
             GoalProgressChart(
-                series               = ui.series,
-                unit                 = unit,
-                currentKg            = currentKg,
-                goalKg               = goalKg,
-                profileWeightKg      = profileWeight,
+                series = ui.series,
+                unit = unit,
+                currentKg = currentKg,
+                goalKg = goalKg,
                 startWeightAllTimeKg = startWeightAllTimeKg
             )
 
@@ -672,7 +625,6 @@ private fun buildWeightChartData(
     unit: UserProfileStore.WeightUnit,
     currentKg: Double?,
     goalKg: Double?,
-    profileWeightKg: Double?,
     startWeightAllTimeKg: Double? = null
 ): WeightChartData {
     if (series.isEmpty()) {
@@ -695,7 +647,7 @@ private fun buildWeightChartData(
                 Triple(
                     date,
                     item.weightKg,
-                    item.weightLbs?.toDouble() // DB 的 178.0 會變成 178.0
+                    item.weightLbs // DB 的 178.0 會變成 178.0
                 )
             }
     }.sortedBy { it.first }
@@ -780,13 +732,12 @@ private fun buildWeightChartData(
     // 4) Y / X 標籤
     val yLabels = buildYAxisLabels(topKg, bottomKg, unit)
 
-    val allDates  = datesSorted
-    val axisDates = buildXAxisDates(allDates, maxLabels = X_TICK_COUNT)
+    val axisDates = buildXAxisDates(datesSorted)
     val xLabels   = axisDates.map { axisDateFormatter.format(it) }
 
     // 共同時間座標基準
-    val firstDay = allDates.first().toEpochDay()
-    val lastDay  = allDates.last().toEpochDay()
+    val firstDay = datesSorted.first().toEpochDay()
+    val lastDay  = datesSorted.last().toEpochDay()
     val daySpan  = (lastDay - firstDay).coerceAtLeast(1L)
 
     // 5) 折線資料點 → 正規化
@@ -863,16 +814,14 @@ private fun buildYAxisLabels(
 
 /** X 軸：從 minDate~maxDate 等分 maxLabels 個刻度（不依賴資料分佈） */
 private fun buildXAxisDates(
-    dates: List<LocalDate>,
-    maxLabels: Int
+    dates: List<LocalDate>
 ): List<LocalDate> {
-    if (dates.isEmpty() || maxLabels <= 0) return emptyList()
+    val maxLabels = X_TICK_COUNT
+    if (dates.isEmpty()) return emptyList()
 
     val sortedDistinct = dates.distinct().sorted()
     val minDate = sortedDistinct.first()
     val maxDate = sortedDistinct.last()
-
-    if (maxLabels == 1) return listOf(maxDate)
 
     val spanDays = (maxDate.toEpochDay() - minDate.toEpochDay()).coerceAtLeast(0L)
 
@@ -954,18 +903,20 @@ private fun GoalProgressChart(
     unit: UserProfileStore.WeightUnit,
     currentKg: Double?,
     goalKg: Double?,
-    profileWeightKg: Double?,
+    modifier: Modifier = Modifier,
     startWeightAllTimeKg: Double? = null,
-    modifier: Modifier = Modifier
+) {
+    // ✅ 保留你原本預設尺寸，但允許 caller 覆蓋（caller 的 modifier 會在最後 then）
+    val baseModifier = Modifier
         .fillMaxWidth()
         .height(190.dp)
-) {
+        .then(modifier)
+
     val chartData = buildWeightChartData(
         series = series,
         unit = unit,
         currentKg = currentKg,
         goalKg = goalKg,
-        profileWeightKg = profileWeightKg,
         startWeightAllTimeKg = startWeightAllTimeKg
     )
 
@@ -979,8 +930,8 @@ private fun GoalProgressChart(
 
     val shownIndex: Int? = activeIndex ?: pinnedIndex
 
-    var chartWidthPx by remember { mutableStateOf(0f) }
-    var chartHeightPx by remember { mutableStateOf(0f) }
+    var chartWidthPx by remember { mutableFloatStateOf(0f) }
+    var chartHeightPx by remember { mutableFloatStateOf(0f) }
 
     val density = LocalDensity.current
     val startPaddingDp = 40.dp
@@ -1008,7 +959,7 @@ private fun GoalProgressChart(
         if (activeIndex != idx) activeIndex = idx
     }
 
-    Column(modifier = modifier) {
+    Column(modifier = baseModifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1042,7 +993,7 @@ private fun GoalProgressChart(
                             if (!dragging) {
                                 val dist2 = dx * dx + dy * dy
                                 if (dist2 >= slop * slop) {
-                                    if (kotlin.math.abs(dx) >= kotlin.math.abs(dy)) {
+                                    if (abs(dx) >= abs(dy)) {
                                         dragging = true
                                     } else {
                                         cancelledByVertical = true
@@ -1340,9 +1291,8 @@ private fun GoalProgressChart(
                 var tx = centerX - tooltipWidthPx / 2f
 
                 val paddingPx = with(density) { 8.dp.toPx() }
-                val minX = paddingPx
                 val maxX = chartWidthPx - tooltipWidthPx - paddingPx
-                tx = tx.coerceIn(minX, maxX)
+                tx = tx.coerceIn(paddingPx, maxX)
 
                 val ty = centerY - with(density) { 52.dp.toPx() }
 
@@ -1369,7 +1319,7 @@ private fun GoalProgressChart(
                 val goal = chartData.dates[pi]
                 if (chartData.axisDates.isEmpty()) return@let null
                 chartData.axisDates.withIndex()
-                    .minByOrNull { (_, d) -> kotlin.math.abs(d.toEpochDay() - goal.toEpochDay()) }
+                    .minByOrNull { (_, d) -> abs(d.toEpochDay() - goal.toEpochDay()) }
                     ?.index
             }
 
@@ -1725,7 +1675,7 @@ private fun formatSigned1(value: Double, unit: UserProfileStore.WeightUnit): Str
     }
     val absV = abs(value)
     val unitText = if (unit == UserProfileStore.WeightUnit.KG) "kg" else "lbs"
-    return String.format("%s%.1f %s", sign, absV, unitText)
+    return String.format(NUM_LOCALE, "%s%.1f %s", sign, absV, unitText)
 }
 
 /**
@@ -1785,12 +1735,11 @@ private fun buildCatmullRomPath(
         val p3x = if (i + 1 == last) xs[i + 1] else xs[i + 2]
         val p3y = if (i + 1 == last) ys[i + 1] else ys[i + 2]
 
-        val t = tension
         // Catmull-Rom 轉 cubic 的控制點公式
-        val c1x = p1x + (p2x - p0x) / 6f * t
-        val c1y = p1y + (p2y - p0y) / 6f * t
-        val c2x = p2x - (p3x - p1x) / 6f * t
-        val c2y = p2y - (p3y - p1y) / 6f * t
+        val c1x = p1x + (p2x - p0x) / 6f * tension
+        val c1y = p1y + (p2y - p0y) / 6f * tension
+        val c2x = p2x - (p3x - p1x) / 6f * tension
+        val c2y = p2y - (p3y - p1y) / 6f * tension
 
         path.cubicTo(c1x, c1y, c2x, c2y, p2x, p2y)
     }
@@ -1853,11 +1802,11 @@ fun formatWeightFromDb(
     return when (unit) {
         UserProfileStore.WeightUnit.KG -> {
             // KG 模式：只看 DB 的 kg，沒有就顯示破折號
-            kg?.let { String.format("%.1f kg", it) } ?: "—"
+            kg?.let { String.format(NUM_LOCALE,"%.1f kg", it) } ?: "—"
         }
         UserProfileStore.WeightUnit.LBS -> {
             // LBS 模式：只看 DB 的 lbs，沒有就顯示破折號
-            lbs?.let { String.format("%.1f lbs", it) } ?: "—"
+            lbs?.let { String.format(NUM_LOCALE,"%.1f lbs", it) } ?: "—"
         }
     }
 }
@@ -1872,12 +1821,12 @@ fun formatTooltipWeight(
 ): String {
     return when (unit) {
         UserProfileStore.WeightUnit.KG -> {
-            String.format("%.1f kg", weightKg)
+            String.format(NUM_LOCALE,"%.1f kg", weightKg)
         }
         UserProfileStore.WeightUnit.LBS -> {
             // 這裡也一樣：先用 DB 的 lbs
             val lbs = weightLbs ?: kgToLbs1(weightKg)
-            String.format("%.1f lbs", lbs)
+            String.format(NUM_LOCALE, "%.1f lbs", lbs)
         }
     }
 }
