@@ -107,7 +107,7 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
 
     // 進度：依目前 range 的 timeseries 算
     val pr = computeWeightProgress(
-        timeseries      = ui.series,
+        timeSeries      = ui.series,
         currentKg       = currentKg,
         goalKg          = goalKg,
         profileWeightKg = ui.profileWeightKg
@@ -200,12 +200,26 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
             HorizontalDivider(color = divider, thickness = 1.dp)
             Spacer(Modifier.height(10.dp))
 
+            val achievedFractionForLabel: Float =
+                if (unit == UserProfileStore.WeightUnit.KG) {
+                    progress
+                } else {
+                    // ✅ LBS 模式：用 DB lbs 算 ACHIEVED（資料不足就 fallback 回 kg）
+                    computeWeightProgressFractionLbs(
+                        timeSeries = ui.series,
+                        currentLbs = currentLbs,
+                        goalLbs = goalLbs,
+                        profileWeightLbs = ui.profileWeightLbs
+                    ) ?: progress
+                }
+
             UpperLabel(
-                text = "ACHIEVED ${(progress * 100).toInt()}% OF GOAL",
+                text = "ACHIEVED ${formatAchievedPercent1(achievedFractionForLabel)}% OF GOAL",
                 color = label,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(start = 4.dp)
             )
+
 
             Spacer(Modifier.height(10.dp))
             HatchedProgressBar(
@@ -246,10 +260,10 @@ fun SummaryCards(ui: WeightViewModel.UiState) {
 
 @Composable
 private fun UpperLabel(
+    modifier: Modifier = Modifier,
     text: String,
     color: Color,
     fontWeight: FontWeight = FontWeight.Medium,
-    modifier: Modifier = Modifier
 ) {
     Text(
         text = text,
@@ -517,7 +531,7 @@ fun WeightChartCard(
     val profileWeight = ui.profileWeightKg   // 起點仍然用 DB 的 current weight
 
     val progressFraction = computeWeightProgress(
-        timeseries       = ui.series,
+        timeSeries       = ui.series,
         currentKg        = currentKg,
         goalKg           = goalKg,
         profileWeightKg  = profileWeight
@@ -2014,4 +2028,8 @@ internal fun placeXAxisLabelsAtLeast(
     }
 
     return best
+}
+
+internal fun formatAchievedPercent1(progress: Float): String {
+    return String.format(Locale.US, "%.1f", progress * 100f)
 }

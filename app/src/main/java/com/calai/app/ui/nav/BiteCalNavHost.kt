@@ -99,7 +99,9 @@ import com.calai.app.ui.home.ui.personal.details.model.NutritionGoalsViewModel
 import androidx.navigation.compose.navigation
 import com.calai.app.ui.home.ui.camera.CameraScreen
 import com.calai.app.ui.home.ui.personal.details.AutoGenerateGoalsCalcScreen
+import com.calai.app.ui.home.ui.personal.details.EditStartingWeightScreen
 import com.calai.app.ui.home.ui.personal.details.model.AutoGenerateGoalsCalcViewModel
+import com.calai.app.ui.home.ui.personal.details.model.EditStartingWeightViewModel
 
 object Routes {
     const val LANDING = "landing"
@@ -129,6 +131,7 @@ object Routes {
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
     const val EDIT_GOAL_WEIGHT = "edit_goal_weight"
+    const val EDIT_STARTING_WEIGHT = "edit_start_weight"
     const val PERSONAL_DETAILS = "personal_details"
     const val EDIT_HEIGHT = "edit_height"
     const val EDIT_AGE = "edit_age"
@@ -1002,6 +1005,7 @@ fun BiteCalNavHost(
                     onEditAge = { nav.navigate(Routes.EDIT_AGE) },
                     onEditGender = { nav.navigate(Routes.EDIT_GENDER) },
                     onEditDailyStepGoal = { nav.navigate(Routes.EDIT_DAILY_STEP_GOAL) },
+                    onEditStartingWeight = { nav.navigate(Routes.EDIT_STARTING_WEIGHT) },
                 )
                 when {
                     !navError.isNullOrBlank() -> {
@@ -1070,6 +1074,33 @@ fun BiteCalNavHost(
             EditHeightScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
+                onSaved = {
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.EDIT_STARTING_WEIGHT) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val vm: EditStartingWeightViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditStartingWeightScreen(
+                vm = vm,
+                onCancel = { nav.popBackStack() },
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle

@@ -69,6 +69,7 @@ fun PersonalDetailsScreen(
     onEditAge: () -> Unit = {},
     onEditGender: () -> Unit = {},
     onEditDailyStepGoal: () -> Unit = {},
+    onEditStartingWeight: () -> Unit = {},
 ) {
     val bg = Color(0xFFF6F7F9)
     val cardShape = RoundedCornerShape(22.dp)
@@ -237,6 +238,23 @@ fun PersonalDetailsScreen(
                         titleFontSize = titleSize,
                         valueMain = formatGender(profile?.gender),
                         onClick = onEditGender
+                    )
+
+                    val (startMain,  _) = formatWeightBothLines(
+                        kg = profile?.weightKg,
+                        lbs = profile?.weightLbs,
+                        unit = unit
+                    )
+
+                    PersonalRowDivider(outline)
+
+                    PersonalDetailsRow(
+                        title = "Starting Weight",
+                        valueMain = startMain,
+                        titleOffsetY = 4.dp,
+                        valueOffsetY = 4.dp,
+                        titleFontSize = titleSize,
+                        onClick = onEditStartingWeight
                     )
 
                     PersonalRowDivider(outline)

@@ -217,6 +217,60 @@ class ProfileRepository @Inject constructor(
     ): UserProfileDto = updateGoalWeight(value, unit).getOrThrow()
 
     /**
+     * ✅ 更新「Starting Weight」：寫入 DB user_profiles.weight_kg & weight_lbs
+     * 做法：沿用 PUT /users/me/profile，只送主單位，另一單位交給後端換算。
+     * - source=null：避免觸發 onboarding 才允許的宏量重算
+     */
+    suspend fun updateStartingWeight(
+        value: Double,
+        unit: UserProfileStore.WeightUnit
+    ): Result<UserProfileDto> = runCatching {
+
+        // ✅ 與你其他 profile 寫入一致：先在 client 做一次 0.1 無條件捨去
+        val trimmed = round1Floor(value)
+
+        val (kgToSend, lbsToSend) = when (unit) {
+            UserProfileStore.WeightUnit.KG -> trimmed to null
+            UserProfileStore.WeightUnit.LBS -> null to trimmed
+        }
+
+        val req = UpsertProfileRequest(
+            gender = null,
+            age = null,
+            heightCm = null,
+            heightFeet = null,
+            heightInches = null,
+
+            // ✅ 關鍵：只更新 starting weight
+            weightKg = kgToSend,
+            weightLbs = lbsToSend,
+
+            exerciseLevel = null,
+            goal = null,
+            goalWeightKg = null,
+            goalWeightLbs = null,
+            dailyStepGoal = null,
+            referralSource = null,
+            locale = null,
+            unitPreference = null,
+            workoutsPerWeek = null
+        )
+
+        val resp = api.upsertMyProfile(req, source = null)
+
+        // ✅ 成功後同步回本機 DataStore（讓 UI 立即更新 & fallback 更準）
+        runCatching {
+            resp.weightKg?.let { store.setWeightKg(roundKg1(it)) }
+            resp.weightLbs?.let { store.setWeightLbs(roundLbs1(it)) }
+        }
+
+        // ✅ 成功：讓依賴 profile 的 VM（包含 WeightVM merge(bus.profile)）可以強制 refresh
+        bus.invalidateProfile()
+
+        resp
+    }
+
+    /**
      * 下載 server profile 並寫入本機 store（只同步數值，不改偏好）
      * ✅ 寫入 store 後也 invalidate，讓 UI 視需要強制刷新。
      */

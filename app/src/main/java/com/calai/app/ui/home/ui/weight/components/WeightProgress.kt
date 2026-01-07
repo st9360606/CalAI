@@ -14,12 +14,12 @@ data class ProgressResult(
 /**
  * 規則（新版）：
  * 1) start：一律以 user_profiles.weight_kg（profileWeightKg）為主；
- *    若沒有，才退回：timeseries 最早一筆 → 再退 current。
- * 2) 沒有「新日誌」前（timeseries 空、或只有 1 筆且等於 start）→ 0%。
+ *    若沒有，才退回：timeSeries 最早一筆 → 再退 current。
+ * 2) 沒有「新日誌」前（timeSeries 空、或只有 1 筆且等於 start）→ 0%。
  * 3) 自動判斷方向；往反方向移動 → 0%；到達目標 → 100%。
  */
 fun computeWeightProgress(
-    timeseries: List<WeightItemDto>,
+    timeSeries: List<WeightItemDto>,
     currentKg: Double?,
     goalKg: Double?,
     profileWeightKg: Double?
@@ -30,23 +30,18 @@ fun computeWeightProgress(
     }
 
     // ★ 1) 起點一律以 user_profiles.weight_kg 為主
-    val earliestFromSeries = timeseries
+    val earliestFromSeries = timeSeries
         .minByOrNull { it.logDate }    // 最早日期那筆
         ?.weightKg
 
     val startKg = profileWeightKg           // user_profiles.weight_kg
-        ?: earliestFromSeries              // 沒有 profile 才退 timeseries 最早一筆
+        ?: earliestFromSeries              // 沒有 profile 才退 timeSeries 最早一筆
         ?: currentKg                       // 最後保底
-
-    // 這裡基本上不會是 null，但保個險
-    if (startKg == null) {
-        return ProgressResult(null, currentKg, goalKg, 0f)
-    }
 
     // ★ 2) 沒有「新日誌」：完全沒 history，
     //    或只有一筆且 weight 等於 start（代表目前只是起點）
-    val hasAnyLogs = timeseries.isNotEmpty()
-    if (!hasAnyLogs || (timeseries.size == 1 && timeseries.first().weightKg == startKg)) {
+    val hasAnyLogs = timeSeries.isNotEmpty()
+    if (!hasAnyLogs || (timeSeries.size == 1 && timeSeries.first().weightKg == startKg)) {
         return ProgressResult(startKg, currentKg, goalKg, 0f)
     }
 
@@ -75,4 +70,49 @@ fun computeWeightProgress(
         goalKg = goalKg,
         fraction = fraction
     )
+}
+
+/**
+ * ✅ 只給「ACHIEVED xx% OF GOAL」用（LBS 模式）
+ * 規則完全比照 computeWeightProgress 的邏輯，但改用 lbs：
+ * 1) start：profileWeightLbs 優先；否則最早一筆 series.weightLbs；最後保底 currentLbs
+ * 2) 沒有新日誌 → 0%
+ * 3) 自動判斷方向；往反方向 → 0%；到達 → 100%
+ *
+ * 回傳 null 表示 LBS 目前資料不足（current/goal 缺），呼叫端可 fallback 回 kg fraction。
+ */
+internal fun computeWeightProgressFractionLbs(
+    timeSeries: List<WeightItemDto>,
+    currentLbs: Double?,
+    goalLbs: Double?,
+    profileWeightLbs: Double?
+): Float? {
+    if (currentLbs == null || goalLbs == null) return null
+
+    val earliestFromSeriesLbs = timeSeries
+        .minByOrNull { it.logDate }
+        ?.weightLbs
+
+    val startLbs = profileWeightLbs ?: earliestFromSeriesLbs ?: currentLbs
+
+    // 沒有新日誌：timeSeries 空，或只有一筆且等於 start
+    val hasAnyLogs = timeSeries.isNotEmpty()
+    if (!hasAnyLogs || (timeSeries.size == 1 && timeSeries.first().weightLbs == startLbs)) {
+        return 0f
+    }
+
+    val total = abs(goalLbs - startLbs)
+    if (total == 0.0) {
+        return if (currentLbs == goalLbs) 1f else 0f
+    }
+
+    val moved = if (goalLbs < startLbs) {
+        // 減重：往下掉才算
+        max(0.0, startLbs - currentLbs)
+    } else {
+        // 增重：往上升才算
+        max(0.0, currentLbs - startLbs)
+    }
+
+    return (moved / total).toFloat().coerceIn(0f, 1f)
 }
