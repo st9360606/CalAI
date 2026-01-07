@@ -1,8 +1,6 @@
 package com.calai.app.ui.home.ui.personal.details
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,7 +20,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,7 +30,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,12 +37,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -247,7 +241,7 @@ fun PersonalDetailsScreen(
 
                     PersonalRowDivider(outline)
 
-                    val stepText = profile?.dailyStepGoal?.let { "${it} steps" } ?: "—"
+                    val stepText = profile?.dailyStepGoal?.let { "$it steps" } ?: "—"
                     PersonalDetailsRow(
                         title = "Daily Step Goal",
                         valueMain = stepText,
@@ -322,11 +316,11 @@ private fun PersonalDetailsRow(
     }
 }
 
-private fun formatHeight(p: UserProfileDto?): String {
+internal fun formatHeight(p: UserProfileDto?): String {
     val ft = p?.heightFeet
     val inch = p?.heightInches
     return if (ft != null && inch != null) {
-        "${ft} ft ${inch} in"
+        return "$ft ft $inch in"
     } else {
         val cm = p?.heightCm
         if (cm == null) "—" else "${formatSmartNumber(cm)} cm"
@@ -373,7 +367,7 @@ private fun formatWeightBothLines(
 }
 
 
-private fun formatSmartNumber(v: Double): String {
+internal fun formatSmartNumber(v: Double): String {
     val isInt = abs(v - v.toInt()) < 1e-9
     return if (isInt) v.toInt().toString() else String.format(Locale.US, "%.1f", v)
 }
