@@ -104,9 +104,9 @@ android {
             versionNameSuffix = "-dev"
             //buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")   //模擬器
             // ✅ 你原本用的（尾巴有 /）
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"") //同WIFI
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"") //同WIFI
             // ✅ 新增給你現在要用的（尾巴不要 /，方便你 concat path）
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
@@ -116,8 +116,8 @@ android {
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
 
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
@@ -204,7 +204,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
 
     // ===== 其他（Health Connect / Coil / Paging / Room / Media） =====
-    implementation("androidx.health.connect:connect-client:1.1.0")
+    implementation("androidx.health.connect:connect-client:1.2.0-alpha02")
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("androidx.paging:paging-compose:3.3.2")
 
@@ -231,6 +231,7 @@ dependencies {
 
     // ===== 測試 =====
     testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
@@ -238,6 +239,12 @@ dependencies {
 
     // Baseline Profile
     baselineProfile(project(":baselineprofile"))
+
+    // CameraX
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1")
+
 }
 
 kapt {
