@@ -1,8 +1,7 @@
-package com.calai.app.ui.home.ui.personal.details
+package com.calai.app.ui.home.ui.settings.details
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -36,30 +37,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.app.R
-import com.calai.app.ui.home.ui.personal.details.model.EditDailyStepGoalViewModel
+import com.calai.app.ui.home.ui.settings.details.model.EditWaterGoalViewModel
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun EditDailyStepGoalScreen(
-    vm: EditDailyStepGoalViewModel,
+fun EditWaterGoalScreen(
+    vm: EditWaterGoalViewModel,
     onBack: () -> Unit,
     onSaved: () -> Unit
 ) {
@@ -68,7 +64,7 @@ fun EditDailyStepGoalScreen(
 
     LaunchedEffect(Unit) {
         vm.events.collectLatest { e ->
-            if (e is EditDailyStepGoalViewModel.UiEvent.Saved) {
+            if (e is EditWaterGoalViewModel.UiEvent.Saved) {
                 focus.clearFocus()
                 onSaved()
             }
@@ -82,7 +78,7 @@ fun EditDailyStepGoalScreen(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             WeightTopBar(
-                title = "Edit Step Goal",
+                title = "Edit Water Goal",
                 onBack = onBack
             )
         }
@@ -96,7 +92,6 @@ fun EditDailyStepGoalScreen(
                 .padding(horizontal = 22.dp)
                 .padding(top = 14.dp, bottom = 20.dp)
         ) {
-
             Spacer(Modifier.height(60.dp))
 
             // --- previous goal card ---
@@ -112,7 +107,7 @@ fun EditDailyStepGoalScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    StepRingIcon(
+                    WaterRingIcon(
                         modifier = Modifier
                             .size(88.dp)
                             .offset(x = 6.dp)
@@ -120,7 +115,7 @@ fun EditDailyStepGoalScreen(
 
                     Column {
                         Text(
-                            text = ui.previousGoal.toString(),
+                            text = ui.previousGoalMl.toString(),
                             fontSize = 19.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF2F3947),
@@ -128,7 +123,7 @@ fun EditDailyStepGoalScreen(
                         )
                         Spacer(Modifier.height(3.dp))
                         Text(
-                            text = "Previous goal ${ui.previousGoal} steps",
+                            text = "Previous goal ${ui.previousGoalMl} ml",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color(0xFF6B7280),
@@ -140,9 +135,7 @@ fun EditDailyStepGoalScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            // --- input box (thick black border, label inside) ---
-            StepGoalInputBox(
-                label = "Daily Step Goal",
+            WaterGoalInputBox(
                 value = ui.input,
                 onValueChange = vm::onInputChange,
                 isError = ui.error != null,
@@ -154,7 +147,6 @@ fun EditDailyStepGoalScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            // --- buttons ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(18.dp)
@@ -177,6 +169,7 @@ fun EditDailyStepGoalScreen(
                         fontWeight = FontWeight.Medium
                     )
                 }
+
                 val enabled = ui.canSave()
                 Button(
                     onClick = { vm.save() },
@@ -199,15 +192,12 @@ fun EditDailyStepGoalScreen(
                     )
                 }
             }
-
-            // （圖片沒有顯示錯誤提示；你要 1:1 就先不畫紅字，保留 state 方便之後加）
         }
     }
 }
 
 @Composable
-private fun StepGoalInputBox(
-    label: String,
+private fun WaterGoalInputBox(
     value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean,
@@ -223,7 +213,7 @@ private fun StepGoalInputBox(
             .padding(start = 3.dp)
     ) {
         Text(
-            text = label,
+            text = "Daily Water Goal (ml)",
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF6B7280)
@@ -248,21 +238,16 @@ private fun StepGoalInputBox(
             ),
             modifier = Modifier.fillMaxWidth()
         ) { inner ->
-            // 讓游標/內容位置看起來更像截圖（左上靠近）
-            Box(Modifier.fillMaxWidth()) {
-                inner()
-            }
+            Box(Modifier.fillMaxWidth()) { inner() }
         }
     }
 }
 
 /**
- * 左側圓環 + 腳印（用 Canvas 自刻，接近截圖）
- * - 灰色全圈 + 黑色右半圈
- * - 中間淡灰底 + 黑腳印
+ * 圓環 + 水滴 icon（結構比照 StepRingIcon）
  */
 @Composable
-private fun StepRingIcon(modifier: Modifier = Modifier) {
+private fun WaterRingIcon(modifier: Modifier = Modifier) {
     val ringGrey = Color(0xFFD1D5DB)
     val ringBlack = Color(0xFF111114)
     val innerBg = Color(0xFFF2F4F7)
@@ -300,45 +285,12 @@ private fun StepRingIcon(modifier: Modifier = Modifier) {
                 .background(innerBg),
             contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(R.drawable.footstep),
+            androidx.compose.material3.Icon(
+                imageVector = Icons.Filled.Opacity,
                 contentDescription = null,
-                modifier = Modifier.size(26.dp),
-                contentScale = ContentScale.Fit,
-                colorFilter = ColorFilter.tint(Color(0xFF111114))
+                tint = Color(0xFF111114),
+                modifier = Modifier.size(24.dp)
             )
         }
-    }
-}
-
-
-@Composable
-private fun FootprintsLikeIcon(modifier: Modifier = Modifier) {
-    val fg = Color(0xFF111114)
-    val bg = Color(0xFFF2F4F7)
-
-    androidx.compose.foundation.Canvas(modifier = modifier) {
-        // 左腳
-        val w = size.width
-        val h = size.height
-
-        fun foot(cx: Float, cy: Float, tilt: Float) {
-            // sole
-            drawRoundRect(
-                color = fg,
-                topLeft = Offset(cx - w * 0.18f, cy - h * 0.30f),
-                size = Size(w * 0.28f, h * 0.62f),
-                cornerRadius = CornerRadius(w * 0.14f, w * 0.14f)
-            )
-            // heel hole (用背景色蓋回去)
-            drawOval(
-                color = bg,
-                topLeft = Offset(cx - w * 0.12f, cy + h * 0.16f),
-                size = Size(w * 0.14f, h * 0.14f)
-            )
-        }
-
-        foot(cx = size.width * 0.42f, cy = size.height * 0.48f, tilt = 0f)
-        foot(cx = size.width * 0.64f, cy = size.height * 0.40f, tilt = 0f)
     }
 }

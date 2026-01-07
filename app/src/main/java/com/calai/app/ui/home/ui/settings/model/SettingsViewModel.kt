@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.model
+package com.calai.app.ui.home.ui.settings.model
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -16,7 +16,7 @@ import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 @HiltViewModel
-class PersonalViewModel @Inject constructor(
+class SettingsViewModel @Inject constructor(
     private val usersRepo: UsersRepository,
     private val profileRepo: ProfileRepository
 ) : ViewModel() {
@@ -89,11 +89,21 @@ class PersonalViewModel @Inject constructor(
         }
     }
 
-    /**
-     * ✅ NEW（可選）：用「本機 DataStore 快照」先讓 UI 立即更新
-     * 適合：EditHeight 按下 Continue -> 已存本機，但網路同步還沒回來 / 失敗
-     */
-    fun applyLocalProfileSnapshot(snapshot: UserProfileDto) {
-        _ui.update { it.copy(profile = snapshot) }
+    fun refreshMeOnly() = viewModelScope.launch {
+        // 不想轉圈可移除 loading
+        _ui.update { it.copy(loading = true, error = null) }
+        try {
+            val me = usersRepo.meOrNull()
+            _ui.update { cur ->
+                cur.copy(
+                    loading = false,
+                    name = me?.name ?: cur.name,
+                    pictureUrl = me?.picture ?: cur.pictureUrl,
+                    error = null
+                )
+            }
+        } catch (t: Throwable) {
+            _ui.update { it.copy(loading = false, error = t.message ?: t.javaClass.simpleName) }
+        }
     }
 }

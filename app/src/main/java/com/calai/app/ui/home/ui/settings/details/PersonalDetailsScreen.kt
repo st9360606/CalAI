@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details
+package com.calai.app.ui.home.ui.settings.details
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable

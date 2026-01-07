@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal
+package com.calai.app.ui.home.ui.settings
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -74,7 +74,7 @@ import com.calai.app.ui.home.components.scan.ScanFab
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonalScreen(
+fun SettingsScreen(
     avatarUrl: Uri?,
     profileName: String,
     ageText: String,
@@ -82,6 +82,7 @@ fun PersonalScreen(
     onOpenTab: (HomeTab) -> Unit,
     onOpenCamera: () -> Unit,
     onOpenPersonalDetails: () -> Unit = {},
+    onOpenEditName: () -> Unit = {},
     onOpenAdjustMacros: () -> Unit = {},
     onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
@@ -100,7 +101,7 @@ fun PersonalScreen(
         floatingActionButton = { ScanFab(onClick = onOpenCamera) },
         bottomBar = { MainBottomBar(current = currentTab, onOpenTab = onOpenTab) }
     ) { inner ->
-        PersonalContent(
+        SettingsContent(
             modifier = Modifier
                 .padding(inner)
                 .fillMaxSize(),
@@ -108,6 +109,7 @@ fun PersonalScreen(
             profileName = profileName,
             ageText = ageText,
             onOpenPersonalDetails = onOpenPersonalDetails,
+            onOpenEditName = onOpenEditName,
             onOpenAdjustMacros = onOpenAdjustMacros,
             onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
             onOpenWeightHistory = onOpenWeightHistory,
@@ -123,12 +125,13 @@ fun PersonalScreen(
 }
 
 @Composable
-private fun PersonalContent(
+private fun SettingsContent(
     modifier: Modifier = Modifier,
     avatarUrl: Uri?,
     profileName: String,
     ageText: String,
     onOpenPersonalDetails: () -> Unit,
+    onOpenEditName: () -> Unit,
     onOpenAdjustMacros: () -> Unit,
     onOpenGoalAndCurrentWeight: () -> Unit,
     onOpenWeightHistory: () -> Unit,
@@ -149,7 +152,7 @@ private fun PersonalContent(
             .padding(top = 14.dp, bottom = 120.dp) // ✅ 底部多留，避免被 FAB 擋到
     ) {
         Text(
-            text = "Personal",
+            text = "Settings",
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier
                 .offset(x = 7.dp, y = (-6).dp)  // ✅ 右、上
@@ -159,7 +162,8 @@ private fun PersonalContent(
         ProfileCard(
             avatarUrl = avatarUrl,
             name = profileName,
-            subtitle = ageText
+            subtitle = ageText,
+            onClick = onOpenEditName
         )
 
         Spacer(Modifier.height(14.dp))
@@ -222,7 +226,8 @@ private fun PersonalContent(
 private fun ProfileCard(
     avatarUrl: Uri?,
     name: String,
-    subtitle: String
+    subtitle: String,
+    onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(22.dp)
     Card(
@@ -230,6 +235,7 @@ private fun ProfileCard(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -250,11 +256,11 @@ private fun ProfileCard(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF404A58),
-                        fontSize = 18.sp,     // ✅ 你要的「用 size 控制」
+                        fontSize = 17.sp,     // ✅ 你要的「用 size 控制」
                         lineHeight = 22.sp    // ✅ 順便控制行高，排版更穩
                     )
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(4.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall.copy(
@@ -272,7 +278,6 @@ private fun ProfileAvatar(url: Uri?) {
     val modifier = Modifier.size(46.dp).clip(CircleShape)
 
     if (url == null) {
-        // 你專案既有預設頭像
         AsyncImage(
             model = ImageRequest.Builder(ctx).data(R.drawable.profile).build(),
             contentDescription = "avatar_default",
@@ -282,7 +287,7 @@ private fun ProfileAvatar(url: Uri?) {
     } else {
         val req = remember(url) {
             ImageRequest.Builder(ctx)
-                .data(url ?: R.drawable.profile) // ✅ url=null 直接用預設圖
+                .data(url)                 // ✅ url 在這裡一定 non-null
                 .crossfade(false)
                 .allowHardware(true)
                 .build()
@@ -296,6 +301,7 @@ private fun ProfileAvatar(url: Uri?) {
         )
     }
 }
+
 
 @Composable
 private fun InviteFriendsCard() {

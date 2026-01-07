@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details
+package com.calai.app.ui.home.ui.settings.details
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,8 +8,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.calai.app.ui.home.ui.personal.details.model.AutoGenEvent
-import com.calai.app.ui.home.ui.personal.details.model.AutoGenerateGoalsCalcViewModel
+import com.calai.app.ui.home.ui.settings.details.model.AutoGenEvent
+import com.calai.app.ui.home.ui.settings.details.model.AutoGenerateGoalsCalcViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable

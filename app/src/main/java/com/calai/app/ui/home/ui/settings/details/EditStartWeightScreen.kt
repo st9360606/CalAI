@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details
+package com.calai.app.ui.home.ui.settings.details
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -24,9 +25,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,9 +38,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,57 +55,76 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.app.data.profile.repo.UserProfileStore
-import com.calai.app.data.profile.repo.cmToFeetInches1
-import com.calai.app.data.profile.repo.feetInchesToCm1
-import com.calai.app.ui.home.ui.personal.details.model.EditHeightViewModel
+import com.calai.app.data.profile.repo.kgToLbs1
+import com.calai.app.data.profile.repo.lbsToKg1
+import com.calai.app.ui.home.ui.settings.details.model.EditStartingWeightViewModel
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
+import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.math.abs
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun EditHeightScreen(
-    vm: EditHeightViewModel,
-    onBack: () -> Unit,
-    onSaved: () -> Unit,
+fun EditStartingWeightScreen(
+    vm: EditStartingWeightViewModel,
+    onCancel: () -> Unit,
+    onSaved: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
-    val init by vm.initialHeight.collectAsState()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) { vm.initIfNeeded() }
+    val kgMin = 20.0
+    val kgMax = 800.0
+    val lbsTenthsMin = kgToLbsTenthsForStart(kgMin)
+    val lbsTenthsMax = kgToLbsTenthsForStart(kgMax)
+    val lbsIntMin = lbsTenthsMin / 10
+    val lbsIntMax = lbsTenthsMax / 10
 
-    // SSOT: cmVal（Double 一位小數）
-    val CM_MIN = 80.0
-    val CM_MAX = 350.0
+    val profileUnit = ui.unit
 
-    // ✅ 不要用 rememberSaveable：避免回來時還原舊 seed
-    var seeded by remember { mutableStateOf(false) }
+    // ✅ 初始值只初始化一次（避免 ui refresh 時輪盤跳回）
+    var initialized by rememberSaveable { mutableStateOf(false) }
+    var useMetric by rememberSaveable { mutableStateOf(profileUnit == UserProfileStore.WeightUnit.KG) }
+    var valueKg by rememberSaveable { mutableDoubleStateOf(70.0) }
+    var valueLbsTenths by rememberSaveable { mutableIntStateOf(kgToLbsTenthsForStart(70.0)) }
 
-    var useMetric by remember { mutableStateOf(true) }
-    var cmVal by remember { mutableStateOf(170.0) }
-    var feet by remember { mutableIntStateOf(5) }
-    var inches by remember { mutableIntStateOf(7) }
+    LaunchedEffect(profileUnit, ui.startingKg, ui.startingLbs) {
+        if (initialized) return@LaunchedEffect
+        initialized = true
 
-    // ✅ 初始化完成後，seed 一次（DB 值優先）
-    LaunchedEffect(ui.initializing, init) {
-        if (!ui.initializing && !seeded) {
-            useMetric = (init.unit == UserProfileStore.HeightUnit.CM)
-            cmVal = init.cm.coerceIn(CM_MIN, CM_MAX)
-            feet = init.feet
-            inches = init.inches
-            seeded = true
-        }
+        useMetric = (profileUnit == UserProfileStore.WeightUnit.KG)
+
+        val kgCandidate = ui.startingKg
+        val lbsCandidate = ui.startingLbs
+        val fromLbs = lbsCandidate?.let { lbsToKg1(it) }
+
+        val baseKg = (kgCandidate ?: fromLbs ?: 70.0).coerceIn(kgMin, kgMax)
+        valueKg = baseKg
+        valueLbsTenths = kgToLbsTenthsForStart(baseKg).coerceIn(lbsTenthsMin, lbsTenthsMax)
     }
+
+    val kgTenths = (valueKg * 10.0).toInt()
+        .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
+    val kgIntSel = kgTenths / 10
+    val kgDecSel = kgTenths % 10
+
+    val lbsTenthsClamped = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
+    val lbsIntSel = lbsTenthsClamped / 10
+    val lbsDecSel = lbsTenthsClamped % 10
+
+    val isSaving = ui.saving
 
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             WeightTopBar(
-                title = "Edit Your Height",
-                onBack = onBack
+                title = "Edit Starting Weight",
+                onBack = onCancel
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             Box(
                 modifier = Modifier
@@ -113,25 +139,41 @@ fun EditHeightScreen(
                 ) {
                     Button(
                         onClick = {
-                            vm.saveAndSyncHeight(
-                                useMetric = useMetric,
-                                cmVal = cmVal,
-                                feet = feet,
-                                inches = inches,
-                                onSuccess = onSaved
-                            )
+                            if (isSaving) return@Button
+
+                            val (valueToSave, unitToSave) =
+                                if (useMetric) {
+                                    val kgClamped = valueKg.coerceIn(kgMin, kgMax)
+                                    val kgRounded = roundToOneDecimalForStart(kgClamped)
+                                    kgRounded to UserProfileStore.WeightUnit.KG
+                                } else {
+                                    val rawLbs = (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)) / 10.0
+                                    val lbsRounded = roundToOneDecimalForStart(rawLbs)
+                                    lbsRounded to UserProfileStore.WeightUnit.LBS
+                                }
+
+                            vm.updateStartingWeight(value = valueToSave, unit = unitToSave) { result ->
+                                result.onSuccess { onSaved() }
+                                    .onFailure { e ->
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = e.message ?: "Failed to update starting weight"
+                                            )
+                                        }
+                                    }
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        enabled = !ui.saving,
+                        enabled = !isSaving,
                         shape = RoundedCornerShape(28.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor = Color.White
                         )
                     ) {
-                        if (ui.saving) {
+                        if (isSaving) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
@@ -147,7 +189,6 @@ fun EditHeightScreen(
                             )
                         }
                     }
-
                 }
             }
         }
@@ -160,42 +201,15 @@ fun EditHeightScreen(
         ) {
             Spacer(Modifier.height(80.dp))
 
-            if (ui.error != null) {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = ui.error!!,
-                    color = Color(0xFFEF4444),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    textAlign = TextAlign.Center
-                )
-            }
-            HeightUnitSegmentedSameAsGoal(
+            WeightUnitSegmentedForStart(
                 useMetric = useMetric,
-                onChange = { isMetric ->
-                    if (isMetric) {
-                        // 切回 cm：用目前 ft/in 換算回 cm
-                        cmVal = feetInchesToCm1(feet, inches).coerceIn(CM_MIN, CM_MAX)
-                    } else {
-                        // 切到 ft/in：用目前 cm 推導
-                        val (ft, inch) = cmToFeetInches1(cmVal)
-                        feet = ft
-                        inches = inch
-                    }
-                    useMetric = isMetric
-                },
+                onChange = { useMetric = it },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
+
             Spacer(Modifier.height(16.dp))
 
             if (useMetric) {
-                val cmTenths = (cmVal * 10.0).toInt()
-                    .coerceIn((CM_MIN * 10).toInt(), (CM_MAX * 10).toInt())
-                val cmIntSel = cmTenths / 10
-                val cmDecSel = cmTenths % 10
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -203,58 +217,45 @@ fun EditHeightScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NumberWheel(
-                        range = CM_MIN.toInt()..CM_MAX.toInt(),
-                        value = cmIntSel,
+                    NumberWheelForStart(
+                        range = kgMin.toInt()..kgMax.toInt(),
+                        value = kgIntSel,
                         onValueChange = { newInt ->
-                            val newCm = (newInt * 10 + cmDecSel) / 10.0
-                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                            val newTenths = (newInt * 10 + kgDecSel)
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
+                            val newKg = newTenths / 10.0
+                            valueKg = newKg
+                            valueLbsTenths = kgToLbsTenthsForStart(newKg)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 30.dp)
+                            .padding(start = 35.dp)
                     )
-
-                    // 小數點：用固定寬度 Box 來置中
-                    Box(
-                        modifier = Modifier.width(18.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = ".",
-                            fontSize = 34.sp,
-                            modifier = Modifier.offset(x = 5.dp)
-                        )
-                    }
-
-                    NumberWheel(
+                    Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
+                    NumberWheelForStart(
                         range = 0..9,
-                        value = cmDecSel,
+                        value = kgDecSel,
                         onValueChange = { newDec ->
-                            val newCm = (cmIntSel * 10 + newDec) / 10.0
-                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                            val newTenths = (kgIntSel * 10 + newDec)
+                                .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
+                            val newKg = newTenths / 10.0
+                            valueKg = newKg
+                            valueLbsTenths = kgToLbsTenthsForStart(newKg)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = null,
                         modifier = Modifier
                             .width(80.dp)
-                            .padding(start = 8.dp)
+                            .padding(end = 7.dp)
                     )
-
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "cm",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text("kg", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Row(
@@ -264,56 +265,55 @@ fun EditHeightScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NumberWheel(
-                        range = 4..9,
-                        value = feet,
-                        onValueChange = { newFeet ->
-                            feet = newFeet
-                            cmVal = feetInchesToCm1(newFeet, inches)
-                                .coerceIn(CM_MIN, CM_MAX)
+                    NumberWheelForStart(
+                        range = lbsIntMin..lbsIntMax,
+                        value = lbsIntSel,
+                        onValueChange = { newInt ->
+                            val newTenths = (newInt * 10 + lbsDecSel)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
+                            valueLbsTenths = newTenths
+                            valueKg = lbsToKg1(newTenths / 10.0).coerceIn(kgMin, kgMax)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = "ft",
                         modifier = Modifier
                             .width(120.dp)
-                            .padding(start = 22.dp)
+                            .padding(start = 35.dp)
                     )
-                    Spacer(Modifier.width(11.dp))
-                    NumberWheel(
-                        range = 0..11,
-                        value = inches,
-                        onValueChange = { newIn ->
-                            inches = newIn
-                            cmVal = feetInchesToCm1(feet, newIn)
-                                .coerceIn(CM_MIN, CM_MAX)
+                    Text(".", fontSize = 34.sp, modifier = Modifier.padding(horizontal = 6.dp))
+                    NumberWheelForStart(
+                        range = 0..9,
+                        value = lbsDecSel,
+                        onValueChange = { newDec ->
+                            val newTenths = (lbsIntSel * 10 + newDec)
+                                .coerceIn(lbsTenthsMin, lbsTenthsMax)
+                            valueLbsTenths = newTenths
+                            valueKg = lbsToKg1(newTenths / 10.0).coerceIn(kgMin, kgMax)
                         },
                         rowHeight = 56.dp,
-                        centerTextSize = 30.sp,
-                        textSize = 26.sp,
+                        centerTextSize = 28.sp,
+                        textSize = 24.sp,
                         sideAlpha = 0.35f,
-                        unitLabel = "in",
                         modifier = Modifier
-                            .width(120.dp)
-                            .padding(end = 22.dp)
+                            .width(80.dp)
+                            .padding(end = 7.dp)
                     )
+                    Spacer(Modifier.width(8.dp))
+                    Text("lbs", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
 
             Spacer(Modifier.height(18.dp))
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(
-                        text = "Set your current Height",
+                        text = "Set your starting weight",
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -321,7 +321,7 @@ fun EditHeightScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Your height is used only to improve calorie estimate accuracy.", //你的身高僅用於提升熱量估算準確度。
+                        text = "We will use it as your baseline for progress.",
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -329,55 +329,49 @@ fun EditHeightScreen(
                     )
                 }
             }
+
             Spacer(Modifier.height(40.dp))
         }
     }
 }
 
+/* ---------------------------- Segmented ---------------------------- */
+
 @Composable
-private fun HeightUnitSegmentedSameAsGoal(
+private fun WeightUnitSegmentedForStart(
     useMetric: Boolean,
     onChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
+    Surface(
+        shape = RoundedCornerShape(40.dp),
+        color = Color(0xFFE2E5EA),
+        modifier = modifier
+            .fillMaxWidth(0.55f)
+            .heightIn(min = 40.dp)
     ) {
-        Surface(
-            shape = RoundedCornerShape(40.dp),
-            color = Color(0xFFE2E5EA),
-            modifier = Modifier
-                .fillMaxWidth(0.60f)
-                .heightIn(min = 40.dp)
-        ) {
-            Row(Modifier.padding(6.dp)) {
-                SegItemSameAsGoal(
-                    text = "ft",
-                    selected = !useMetric,
-                    onClick = { onChange(false) },
-                    selectedColor = Color.Black,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                SegItemSameAsGoal(
-                    text = "cm",
-                    selected = useMetric,
-                    onClick = { onChange(true) },
-                    selectedColor = Color.Black,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp)
-                )
-            }
+        Row(Modifier.padding(6.dp)) {
+            SegItemForStart(
+                text = "lbs",
+                selected = !useMetric,
+                onClick = { onChange(false) },
+                selectedColor = Color.Black,
+                modifier = Modifier.weight(1f).height(40.dp)
+            )
+            Spacer(Modifier.width(6.dp))
+            SegItemForStart(
+                text = "kg",
+                selected = useMetric,
+                onClick = { onChange(true) },
+                selectedColor = Color.Black,
+                modifier = Modifier.weight(1f).height(40.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun SegItemSameAsGoal(
+private fun SegItemForStart(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -385,8 +379,7 @@ private fun SegItemSameAsGoal(
     modifier: Modifier = Modifier
 ) {
     val corner = 22.dp
-    val fSize = 20.sp
-
+    val fSize = 18.sp
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(corner),
@@ -412,38 +405,34 @@ private fun SegItemSameAsGoal(
     }
 }
 
+/* ---------------------------- NumberWheel ---------------------------- */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun NumberWheel(
+private fun NumberWheelForStart(
     range: IntRange,
     value: Int,
     onValueChange: (Int) -> Unit,
     rowHeight: Dp,
     centerTextSize: TextUnit,
-    textSize: TextUnit = 26.sp,
+    textSize: TextUnit,
     sideAlpha: Float,
-    unitLabel: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    label: (Int) -> String = { it.toString() }
 ) {
-    val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2
+    val visibleCount = 5
+    val mid = visibleCount / 2
     val items = remember(range) { range.toList() }
-
-    // 外部 value 對應到 items 的 index
     val selectedIdx = (value - range.first).coerceIn(0, items.lastIndex)
 
     val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(lazyListState = state)
 
-    // ✅ 防止「程式對齊」期間又回寫 value 造成跳回去
-    var aligning by remember { mutableStateOf(true) }
-
-    // ✅ 外部 value 改變時，Wheel 要跟著對齊（不然一定停錯）
-    LaunchedEffect(selectedIdx) {
-        if (!state.isScrollInProgress) {
-            aligning = true
+    var initialized by remember(range) { mutableStateOf(false) }
+    LaunchedEffect(range, value) {
+        if (!initialized) {
             state.scrollToItem(selectedIdx)
-            aligning = false
+            initialized = true
         }
     }
 
@@ -458,23 +447,19 @@ private fun NumberWheel(
         }
     }
 
-    // ✅ 使用者滑動時才回寫；程式對齊中不回寫，避免把 DB 值打回舊值
-    LaunchedEffect(centerIndex, aligning) {
-        if (!aligning) {
-            val newValue = items.getOrNull(centerIndex) ?: return@LaunchedEffect
-            if (newValue != value) onValueChange(newValue)
-        }
+    LaunchedEffect(centerIndex, initialized) {
+        if (initialized) onValueChange(items[centerIndex])
     }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(rowHeight * VISIBLE_COUNT)
+            .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
@@ -483,41 +468,23 @@ private fun NumberWheel(
                 val alpha = if (isCenter) 1f else sideAlpha
                 val size = if (isCenter) centerTextSize else textSize
                 val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
-                val unitSize = if (isCenter) 20.sp else 18.sp
 
                 Row(
-                    modifier = Modifier
-                        .height(rowHeight)
-                        .fillMaxWidth(),
+                    modifier = Modifier.height(rowHeight).fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (unitLabel != null && isCenter) {
-                        Spacer(Modifier.width(16.dp))  // 想再靠右一點可以改成 10.dp、12.dp
-                    }
                     Text(
-                        text = num.toString(),
+                        text = label(num),
                         fontSize = size,
                         fontWeight = weight,
                         color = Color.Black.copy(alpha = alpha),
                         textAlign = TextAlign.Center
                     )
-
-                    // ✅ 建議只在中心顯示 unit（比較像你 Age 的版本）
-                    if (unitLabel != null && isCenter) {
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = unitLabel,
-                            fontSize = unitSize,
-                            color = Color(0xFF333333).copy(alpha = alpha),
-                            fontWeight = FontWeight.Normal
-                        )
-                    }
                 }
             }
         }
 
-        // center lines（保留你原本的）
         val lineColor = Color(0x11000000)
         val half = rowHeight / 2
         val lineThickness = 1.dp
@@ -540,3 +507,10 @@ private fun NumberWheel(
     }
 }
 
+/* ---------------------------- utils ---------------------------- */
+
+private fun kgToLbsTenthsForStart(kg: Double): Int =
+    (kgToLbs1(kg) * 10.0).toInt()
+
+private fun roundToOneDecimalForStart(value: Double): Double =
+    BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).toDouble()

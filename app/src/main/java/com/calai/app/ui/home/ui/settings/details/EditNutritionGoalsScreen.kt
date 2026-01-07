@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details
+package com.calai.app.ui.home.ui.settings.details
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -76,8 +76,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.app.ui.home.ui.personal.details.model.NutritionGoalsUiState
-import com.calai.app.ui.home.ui.personal.details.model.NutritionGoalsViewModel
+import com.calai.app.ui.home.ui.settings.details.model.NutritionGoalsUiState
+import com.calai.app.ui.home.ui.settings.details.model.NutritionGoalsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

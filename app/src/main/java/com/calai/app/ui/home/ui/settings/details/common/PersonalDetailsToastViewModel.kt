@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details.common
+package com.calai.app.ui.home.ui.settings.details.common
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel

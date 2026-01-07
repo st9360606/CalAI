@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details.common
+package com.calai.app.ui.home.ui.settings.details.common
 
 import com.calai.app.data.profile.repo.UserProfileStore
 import java.util.Locale

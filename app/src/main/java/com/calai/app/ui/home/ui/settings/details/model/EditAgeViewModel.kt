@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details.model
+package com.calai.app.ui.home.ui.settings.details.model
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

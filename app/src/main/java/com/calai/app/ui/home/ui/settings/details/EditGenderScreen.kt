@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.personal.details
+package com.calai.app.ui.home.ui.settings.details
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.app.ui.home.ui.personal.details.model.EditGenderViewModel
+import com.calai.app.ui.home.ui.settings.details.model.EditGenderViewModel
 import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
