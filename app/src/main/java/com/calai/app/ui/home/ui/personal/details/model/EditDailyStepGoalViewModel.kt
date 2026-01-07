@@ -32,7 +32,7 @@ class EditDailyStepGoalViewModel @Inject constructor(
 
         fun canSave(): Boolean {
             val v = parsedOrNull() ?: return false
-            if (v < 0 || v > 200000) return false
+            if (v !in 0..200000) return false
             return v != previousGoal && !isSaving
         }
     }
@@ -92,7 +92,7 @@ class EditDailyStepGoalViewModel @Inject constructor(
             _ui.update { it.copy(error = "Invalid number") }
             return
         }
-        if (v < 0 || v > 200000) {
+        if (v !in 0..200000) {
             _ui.update { it.copy(error = "Out of range") }
             return
         }
