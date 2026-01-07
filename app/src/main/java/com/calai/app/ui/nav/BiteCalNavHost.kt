@@ -100,8 +100,10 @@ import androidx.navigation.compose.navigation
 import com.calai.app.ui.home.ui.camera.CameraScreen
 import com.calai.app.ui.home.ui.personal.details.AutoGenerateGoalsCalcScreen
 import com.calai.app.ui.home.ui.personal.details.EditStartingWeightScreen
+import com.calai.app.ui.home.ui.personal.details.EditWaterGoalScreen
 import com.calai.app.ui.home.ui.personal.details.model.AutoGenerateGoalsCalcViewModel
 import com.calai.app.ui.home.ui.personal.details.model.EditStartingWeightViewModel
+import com.calai.app.ui.home.ui.personal.details.model.EditWaterGoalViewModel
 
 object Routes {
     const val LANDING = "landing"
@@ -137,6 +139,7 @@ object Routes {
     const val EDIT_AGE = "edit_age"
     const val EDIT_GENDER = "edit_gender"
     const val EDIT_DAILY_STEP_GOAL = "edit_daily_step_goal"
+    const val EDIT_WATER_GOAL = "edit_water_goal"
     const val EDIT_NUTRITION_GOALS = "edit_nutrition_goals"
     const val AUTO_GENERATE_GOALS = "auto_generate_goals"
     const val AUTO_GENERATE_EXERCISE_FREQUENCY = "auto_generate_exercise_frequency"
@@ -1006,6 +1009,7 @@ fun BiteCalNavHost(
                     onEditGender = { nav.navigate(Routes.EDIT_GENDER) },
                     onEditDailyStepGoal = { nav.navigate(Routes.EDIT_DAILY_STEP_GOAL) },
                     onEditStartingWeight = { nav.navigate(Routes.EDIT_STARTING_WEIGHT) },
+                    onEditDailyWaterGoal = { nav.navigate(Routes.EDIT_WATER_GOAL) },
                 )
                 when {
                     !navError.isNullOrBlank() -> {
@@ -1171,6 +1175,33 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
             EditDailyStepGoalScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                    personalVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.EDIT_WATER_GOAL) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val vm: EditWaterGoalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val personalVm: PersonalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditWaterGoalScreen(
                 vm = vm,
                 onBack = { nav.popBackStack() },
                 onSaved = {

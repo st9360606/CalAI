@@ -89,7 +89,8 @@ data class UpsertProfileRequest(
     val referralSource: String?,
     val locale: String?,
     val unitPreference: String? = null,
-    val workoutsPerWeek: Int? = null
+    val workoutsPerWeek: Int? = null,
+    val waterMl: Int? = null
 )
 
 @Serializable

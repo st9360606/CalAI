@@ -288,7 +288,7 @@ class ProfileRepository @Inject constructor(
             p.referralSource?.let { store.setReferralSource(it) }
             p.goal?.let { store.setGoal(it) }
             p.dailyStepGoal?.let { store.setDailyStepGoal(it) }
-
+            p.waterMl?.let { store.setWaterGoalMl(it) }
             // height：有 feet/inches 就視為英制，否則用 cm
             if (p.heightFeet != null && p.heightInches != null) {
                 store.setHeightUnit(UserProfileStore.HeightUnit.FT_IN)
@@ -479,4 +479,62 @@ class ProfileRepository @Inject constructor(
     @Suppress("unused")
     suspend fun upsertFromLocalForOnboardingOrThrow(): UserProfileDto =
         upsertFromLocalForOnboarding().getOrThrow()
+
+
+    /**
+     * 只抓 waterMl（從 DB/Server）
+     * - 401/404：視為沒有資料，回 Success(null)
+     * - 其他 Http error：回 Failure
+     */
+    suspend fun getWaterGoalFromServer(): Result<Int?> = try {
+        val p = api.getMyProfile()
+        Result.success(p.waterMl)
+    } catch (e: HttpException) {
+        when (e.code()) {
+            401, 404 -> Result.success(null)
+            else -> Result.failure(e)
+        }
+    } catch (e: IOException) {
+        Result.failure(e)
+    }
+
+    /**
+     * ✅ 只更新每日目標飲水量（ml）
+     * 後端規則：非 null 才覆寫，所以其他欄位一律給 null，不會蓋掉資料。
+     */
+    suspend fun updateDailyWaterGoalOnly(waterMl: Int): Result<UserProfileDto> = runCatching {
+        val safe = waterMl.coerceIn(0, 20000)
+
+        val req = UpsertProfileRequest(
+            gender = null,
+            age = null,
+            heightCm = null,
+            heightFeet = null,
+            heightInches = null,
+            weightKg = null,
+            weightLbs = null,
+            exerciseLevel = null,
+            goal = null,
+            goalWeightKg = null,
+            goalWeightLbs = null,
+            dailyStepGoal = null,
+            referralSource = null,
+            locale = null,
+            unitPreference = null,
+            workoutsPerWeek = null,
+            waterMl = safe
+        )
+
+        val resp = api.upsertMyProfile(req, source = null)
+
+        // ✅ 同步回本機 DataStore（讓 Water 模組立即吃到）
+        runCatching { store.setWaterGoalMl(resp.waterMl ?: safe) }
+
+        // ✅ 寫入成功 -> invalidate
+        bus.invalidateProfile()
+
+        resp
+    }
+
+
 }

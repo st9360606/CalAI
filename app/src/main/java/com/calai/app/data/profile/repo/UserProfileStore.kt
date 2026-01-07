@@ -60,6 +60,10 @@ class UserProfileStore @Inject constructor(
     private companion object {
         const val DEFAULT_DAILY_STEP_GOAL = 10000
         const val MAX_DAILY_STEP_GOAL = 200000
+
+        // ✅ NEW：UI 預設值（不代表 DB 真實值）
+        const val DEFAULT_WATER_GOAL_ML = 2000
+        const val MAX_WATER_GOAL_ML = 20000
     }
 
     private val dateFmt: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -341,6 +345,29 @@ class UserProfileStore @Inject constructor(
         if (remote == null) return
         val cur = dailyStepGoalRaw()
         if (cur == null) setDailyStepGoal(remote)
+    }
+
+    /** UI 用：永遠有值（沒設定就顯示 2000） */
+    val waterGoalUiFlow: Flow<Int> =
+        context.userProfileDataStore.data.map { p ->
+            p[Keys.WATER_GOAL_ML] ?: DEFAULT_WATER_GOAL_ML
+        }
+
+    /** 上傳/同步用：raw nullable（避免把 default 當 DB 真值） */
+    suspend fun waterGoalMlRaw(): Int? =
+        context.userProfileDataStore.data.map { it[Keys.WATER_GOAL_ML] }.first()
+
+    /** 從 server 回寫時用：remote=null 不覆蓋 */
+    suspend fun applyRemoteWaterGoal(remote: Int?) {
+        if (remote == null) return
+        setWaterGoalMl(remote.coerceIn(0, MAX_WATER_GOAL_ML))
+    }
+
+    /** 可選：只有在本地完全沒存過才補 remote */
+    suspend fun ensureWaterGoalIfMissing(remote: Int?) {
+        if (remote == null) return
+        val cur = waterGoalMlRaw()
+        if (cur == null) setWaterGoalMl(remote.coerceIn(0, MAX_WATER_GOAL_ML))
     }
 
     // ======= 快照（登入後上傳 & 冷啟檢查） =======
