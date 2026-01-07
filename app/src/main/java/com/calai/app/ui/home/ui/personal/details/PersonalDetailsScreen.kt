@@ -201,8 +201,8 @@ fun PersonalDetailsScreen(
                     PersonalDetailsRow(
                         title = "Current Weight",
                         valueMain = curMain,
-                        titleOffsetY = 4.dp,
-                        valueOffsetY = 4.dp,
+                        titleOffsetY = 2.dp,
+                        valueOffsetY = 2.dp,
                         titleFontSize = titleSize,
                         onClick = onEditCurrentWeight
                     )
@@ -251,8 +251,8 @@ fun PersonalDetailsScreen(
                     PersonalDetailsRow(
                         title = "Starting Weight",
                         valueMain = startMain,
-                        titleOffsetY = 4.dp,
-                        valueOffsetY = 4.dp,
+                        titleOffsetY = 1.dp,
+                        valueOffsetY = 1.dp,
                         titleFontSize = titleSize,
                         onClick = onEditStartingWeight
                     )
@@ -270,7 +270,7 @@ fun PersonalDetailsScreen(
                     )
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(24.dp))
             }
         }
     }
@@ -283,14 +283,14 @@ private fun PersonalDetailsRow(
     valueSub: String? = null,
     titleOffsetY: Dp = 0.dp,
     valueOffsetY: Dp = 0.dp,
-    titleFontSize: TextUnit = 13.sp,
+    titleFontSize: TextUnit = 15.sp,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
