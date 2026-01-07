@@ -221,6 +221,9 @@ private fun RecordWeightScreenContent(
     val isPreview = LocalInspectionMode.current
     var photoUriString by rememberSaveable { mutableStateOf<String?>(null) }
 
+    // ✅ 新增：相機權限「拒絕次數」計數（拒絕兩次後，第三次點擊導設定）
+    var cameraDenyCount by rememberSaveable { mutableIntStateOf(0) }
+
     // ========= ✅ Camera permission helpers（新增） =========
     fun hasCameraPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -261,23 +264,29 @@ private fun RecordWeightScreenContent(
                 contract = ActivityResultContracts.RequestPermission()
             ) { granted ->
                 if (granted) {
-                    // ✅ 授權成功：立刻再開一次相機
+                    // ✅ 授權成功：歸零 + 立刻開相機
+                    cameraDenyCount = 0
                     runCatching { takePhotoLauncher?.launch(null) }
                         .onFailure { e ->
                             Log.e("RecordWeightScreen", "Camera launch after permission failed", e)
                             Toast.makeText(context, "Camera failed to open.", Toast.LENGTH_SHORT).show()
                         }
                 } else {
+                    // ✅ 拒絕：累加（但不在這裡導設定，除非已經「不再詢問」）
+                    cameraDenyCount += 1
                     Toast.makeText(context, "Camera permission required.", Toast.LENGTH_SHORT).show()
 
-                    // ✅ 若勾「不再詢問」：導設定（拿不到 Activity 就降級只 toast）
                     val act = context.findActivity()
                     val dontAskAgain = act != null &&
                             !ActivityCompat.shouldShowRequestPermissionRationale(
                                 act,
                                 Manifest.permission.CAMERA
                             )
-                    if (dontAskAgain) openAppSettings()
+
+                    // ✅ 若已勾「不再詢問」：系統不會再彈窗，直接導設定頁
+                    if (dontAskAgain) {
+                        openAppSettings()
+                    }
                 }
             }
         } else null
@@ -293,26 +302,34 @@ private fun RecordWeightScreenContent(
             return
         }
 
-        // ✅ 先確保 runtime permission（修正點）
-        if (!hasCameraPermission()) {
-            requestCameraPermissionLauncher?.launch(Manifest.permission.CAMERA)
+        // ✅ 已有權限：順便歸零（例如從設定頁回來後）
+        if (hasCameraPermission()) {
+            if (cameraDenyCount != 0) cameraDenyCount = 0
+            try {
+                takePhotoLauncher.launch(null)
+            } catch (e: ActivityNotFoundException) {
+                Log.e("RecordWeightScreen", "No camera app can handle ACTION_IMAGE_CAPTURE", e)
+                Toast.makeText(context, "No camera app found on this device.", Toast.LENGTH_SHORT).show()
+            } catch (e: SecurityException) {
+                Log.e("RecordWeightScreen", "Camera launch blocked by SecurityException", e)
+                Toast.makeText(context, "Camera permission required.", Toast.LENGTH_SHORT).show()
+                openAppSettings()
+            } catch (e: Throwable) {
+                Log.e("RecordWeightScreen", "Camera launch failed", e)
+                Toast.makeText(context, "Camera failed to open.", Toast.LENGTH_SHORT).show()
+            }
             return
         }
 
-        try {
-            takePhotoLauncher.launch(null)
-        } catch (e: ActivityNotFoundException) {
-            Log.e("RecordWeightScreen", "No camera app can handle ACTION_IMAGE_CAPTURE", e)
-            Toast.makeText(context, "No camera app found on this device.", Toast.LENGTH_SHORT).show()
-        } catch (e: SecurityException) {
-            // 仍保留：某些 ROM/相機 App 會在權限變更瞬間丟這個
-            Log.e("RecordWeightScreen", "Camera launch blocked by SecurityException", e)
-            Toast.makeText(context, "Camera permission required.", Toast.LENGTH_SHORT).show()
+        // ✅ 沒權限：拒絕兩次後，第三次點擊直接導設定（不再彈權限）
+        if (cameraDenyCount >= 2) {
+            Toast.makeText(context, "Please enable Camera permission in Settings.", Toast.LENGTH_SHORT).show()
             openAppSettings()
-        } catch (e: Throwable) {
-            Log.e("RecordWeightScreen", "Camera launch failed", e)
-            Toast.makeText(context, "Camera failed to open.", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        // ✅ 第 1~2 次：仍彈權限視窗
+        requestCameraPermissionLauncher?.launch(Manifest.permission.CAMERA)
     }
 
     // 日期 BottomSheet
