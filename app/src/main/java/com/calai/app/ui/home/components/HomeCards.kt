@@ -61,7 +61,6 @@ import com.calai.app.data.activity.util.ActivityKcalEstimator
 import com.calai.app.data.home.repo.HomeSummary
 import com.calai.app.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.app.ui.home.ui.fasting.components.WeightCardNew
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 // 統一圓環尺寸（與「蛋白質」卡相同）
@@ -257,8 +256,6 @@ private fun MacroStatCardModern(
     }
 }
 
-private const val WORKOUT_RING_GOAL_KCAL: Int = 400
-
 private fun progressOfLong(current: Long?, goal: Long?): Float {
     val c = current ?: return 0f
     val g = (goal ?: 0L)
@@ -266,9 +263,10 @@ private fun progressOfLong(current: Long?, goal: Long?): Float {
     return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
 }
 
-private fun progressOfInt(current: Int?, goal: Int): Float {
+private fun progressOfInt(current: Int?, goal: Int?): Float {
     val c = current ?: return 0f
-    val g = max(goal, 1)
+    val g = goal ?: return 0f
+    if (g <= 0) return 0f
     return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
 }
 
@@ -282,6 +280,7 @@ fun StepsWorkoutRowModern(
     dailyStatus: DailyActivityStatus = DailyActivityStatus.AVAILABLE_GRANTED,
     onDailyCtaClick: (() -> Unit)? = null,
     stepsGoalOverride: Long? = null,
+    workoutGoalKcalOverride: Int? = null,
     cardHeight: Dp = 120.dp,
     ringSize: Dp = 74.dp,
     centerDisk: Dp = 38.dp,
@@ -408,10 +407,15 @@ fun StepsWorkoutRowModern(
 
         // ===== Workout =====
         val workoutKcal: Int? = workoutTotalKcalOverride
-            ?: summary.todayActivity.activeKcal?.roundToInt()
+            ?: summary.todayActivity.activeKcal.roundToInt().coerceAtLeast(0)
 
-        val workoutPrimary = workoutKcal?.toString() ?: "—"
-        val workoutProgress = progressOfInt(workoutKcal, WORKOUT_RING_GOAL_KCAL)// ✅ Workout 圓環進度：100% 固定 400 kcal
+        val workoutPrimary = workoutKcal?.toString() ?: dash
+
+        // ✅ NEW：goal 來源改成 DB 傳入；沒拿到就 fallback 450（避免 UI 壞掉）
+        val workoutGoalKcal = workoutGoalKcalOverride ?: 450 // fallback（對齊你 DB default）
+
+        // ✅ 100% = workoutGoal
+        val workoutProgress = progressOfInt(workoutKcal, workoutGoalKcal)
 
         ActivityStatCardSplit(
             title = "Workout",

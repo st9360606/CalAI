@@ -55,6 +55,7 @@ class UserProfileStore @Inject constructor(
 
         // Daily Step Goal
         val DAILY_STEP_GOAL = intPreferencesKey("daily_step_goal")
+        val DAILY_WORKOUT_GOAL_KCAL = intPreferencesKey("daily_workout_goal_kcal")
     }
 
     private companion object {
@@ -64,6 +65,8 @@ class UserProfileStore @Inject constructor(
         // ✅ NEW：UI 預設值（不代表 DB 真實值）
         const val DEFAULT_WATER_GOAL_ML = 2000
         const val MAX_WATER_GOAL_ML = 20000
+        const val DEFAULT_DAILY_WORKOUT_GOAL_KCAL = 450
+        const val MAX_DAILY_WORKOUT_GOAL_KCAL = 5000
     }
 
     private val dateFmt: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -370,6 +373,31 @@ class UserProfileStore @Inject constructor(
         if (cur == null) setWaterGoalMl(remote.coerceIn(0, MAX_WATER_GOAL_ML))
     }
 
+    val dailyWorkoutGoalUiFlow: Flow<Int> =
+        context.userProfileDataStore.data.map { p ->
+            p[Keys.DAILY_WORKOUT_GOAL_KCAL] ?: DEFAULT_DAILY_WORKOUT_GOAL_KCAL
+        }
+
+    suspend fun dailyWorkoutGoalRaw(): Int? =
+        context.userProfileDataStore.data.map { it[Keys.DAILY_WORKOUT_GOAL_KCAL] }.first()
+
+    suspend fun setDailyWorkoutGoalKcal(v: Int) {
+        context.userProfileDataStore.edit { p ->
+            p[Keys.DAILY_WORKOUT_GOAL_KCAL] = v.coerceIn(0, MAX_DAILY_WORKOUT_GOAL_KCAL)
+        }
+    }
+
+    suspend fun applyRemoteDailyWorkoutGoal(remote: Int?) {
+        if (remote == null) return
+        setDailyWorkoutGoalKcal(remote)
+    }
+
+    suspend fun ensureDailyWorkoutGoalIfMissing(remote: Int?) {
+        if (remote == null) return
+        val cur = dailyWorkoutGoalRaw()
+        if (cur == null) setDailyWorkoutGoalKcal(remote)
+    }
+
     // ======= 快照（登入後上傳 & 冷啟檢查） =======
     data class LocalProfileSnapshot(
         val gender: String?,
@@ -391,6 +419,7 @@ class UserProfileStore @Inject constructor(
         val locale: String?,
         val fastingPlan: String?,
         val waterGoalMl: Int?,
+        val dailyWorkoutGoalKcal: Int?
     )
 
     suspend fun snapshot(): LocalProfileSnapshot {
@@ -415,7 +444,8 @@ class UserProfileStore @Inject constructor(
             locale = p[Keys.LOCALE_TAG],
             fastingPlan = p[Keys.FASTING_PLAN],
             waterGoalMl = p[Keys.WATER_GOAL_ML],
-            dailyStepGoal = p[Keys.DAILY_STEP_GOAL] // ✅ raw nullable
+            dailyStepGoal = p[Keys.DAILY_STEP_GOAL],
+            dailyWorkoutGoalKcal = p[Keys.DAILY_WORKOUT_GOAL_KCAL]
         )
     }
 

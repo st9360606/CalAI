@@ -147,6 +147,7 @@ fun HomeScreen(
         weightVm.initIfNeeded()
     }
     val stepsGoal by vm.dailyStepGoal.collectAsState()
+    val workoutGoalKcal by vm.dailyWorkoutGoalKcal.collectAsState()
     val weightUnit = weightUi.unit
 
     // current：kg/lbs 都準備好（LBS 顯示與差值用 lbs；progress 仍用 kg）
@@ -568,6 +569,7 @@ fun HomeScreen(
                     dailyStatus = dailyStatus,
                     onDailyCtaClick = onStepsCardClick,
                     stepsGoalOverride = stepsGoal,
+                    workoutGoalKcalOverride = workoutGoalKcal,
                     cardHeight = 104.dp,
                     ringSize = 74.dp,
                     centerDisk = 38.dp,

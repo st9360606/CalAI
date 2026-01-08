@@ -82,6 +82,8 @@ class HomeViewModel @Inject constructor(
 
     private val _dailyStepGoal = MutableStateFlow(10000L)
     val dailyStepGoal: StateFlow<Long> = _dailyStepGoal.asStateFlow()
+    private val _dailyWorkoutGoalKcal = MutableStateFlow(450) // fallback（真正值由 store flow 驅動）
+    val dailyWorkoutGoalKcal: StateFlow<Int> = _dailyWorkoutGoalKcal.asStateFlow()
 
     // ====== Summary key：沒變就不要 emit，避免整頁重組 ======
     private var lastSummaryKey: SummaryUiKey? = null
@@ -118,6 +120,11 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             profileStore.dailyStepGoalFlow.collectLatest { v ->
                 _dailyStepGoal.value = v.toLong()
+            }
+        }
+        viewModelScope.launch {
+            profileStore.dailyWorkoutGoalUiFlow.collectLatest { v ->
+                _dailyWorkoutGoalKcal.value = v
             }
         }
     }

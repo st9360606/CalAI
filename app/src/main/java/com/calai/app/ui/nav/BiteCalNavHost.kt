@@ -100,9 +100,11 @@ import com.calai.app.ui.home.ui.settings.SettingsScreen
 import com.calai.app.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
 import com.calai.app.ui.home.ui.settings.details.EditStartingWeightScreen
 import com.calai.app.ui.home.ui.settings.details.EditWaterGoalScreen
+import com.calai.app.ui.home.ui.settings.details.EditWorkoutGoalScreen
 import com.calai.app.ui.home.ui.settings.details.model.AutoGenerateGoalsCalcViewModel
 import com.calai.app.ui.home.ui.settings.details.model.EditStartingWeightViewModel
 import com.calai.app.ui.home.ui.settings.details.model.EditWaterGoalViewModel
+import com.calai.app.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
 import com.calai.app.ui.home.ui.settings.editname.EditNameScreen
 import com.calai.app.ui.home.ui.settings.editname.model.EditNameViewModel
 import com.calai.app.ui.home.ui.settings.model.SettingsViewModel
@@ -152,6 +154,7 @@ object Routes {
     const val AUTO_GENERATE_WEIGHT = "auto_generate_weight"
     const val AUTO_GENERATE_GOALS_CALC = "auto_generate_goals_calc"
     const val AUTO_GENERATE_FLOW = "auto_generate_flow"
+    const val EDIT_WORKOUT_GOAL = "edit_workout_goal"
 }
 
 object NavResults {
@@ -1022,6 +1025,7 @@ fun BiteCalNavHost(
                     onEditDailyStepGoal = { nav.navigate(Routes.EDIT_DAILY_STEP_GOAL) },
                     onEditStartingWeight = { nav.navigate(Routes.EDIT_STARTING_WEIGHT) },
                     onEditDailyWaterGoal = { nav.navigate(Routes.EDIT_WATER_GOAL) },
+                    onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) },
                 )
                 when {
                     !navError.isNullOrBlank() -> {
@@ -1280,6 +1284,27 @@ fun BiteCalNavHost(
                         ?.savedStateHandle
                         ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                     settingsVm.refreshProfileOnly()
+                    nav.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.EDIT_WORKOUT_GOAL) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+
+            val vm: EditWorkoutGoalViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            EditWorkoutGoalScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onSaved = {
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
                     nav.popBackStack()
                 }
             )

@@ -45,6 +45,7 @@ data class UserProfileDto(
     val goalWeightLbs: Double? = null,
     val unitPreference: String? = null,
     val workoutsPerWeek: Int? = null,
+    val dailyWorkoutGoalKcal: Int? = null,
     val dailyStepGoal: Int? = null,
     val referralSource: String? = null,
     val locale: String? = null,
@@ -90,7 +91,8 @@ data class UpsertProfileRequest(
     val locale: String?,
     val unitPreference: String? = null,
     val workoutsPerWeek: Int? = null,
-    val waterMl: Int? = null
+    val waterMl: Int? = null,
+    val dailyWorkoutGoalKcal: Int? = null
 )
 
 @Serializable

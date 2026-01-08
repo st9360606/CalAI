@@ -307,6 +307,7 @@ class ProfileRepository @Inject constructor(
             p.weightLbs?.let { store.setWeightLbs(roundLbs1(it)) }
             p.goalWeightKg?.let { store.setGoalWeightKg(roundKg1(it)) }
             p.goalWeightLbs?.let { store.setGoalWeightLbs(roundLbs1(it)) }
+            p.dailyWorkoutGoalKcal?.let { store.applyRemoteDailyWorkoutGoal(it) }
         }
 
         // ✅ 寫入 store 完 -> invalidate（讓依賴 profile 的 VM 可 force refresh）
@@ -536,5 +537,48 @@ class ProfileRepository @Inject constructor(
         resp
     }
 
+    suspend fun getDailyWorkoutGoalFromServer(): Result<Int?> = try {
+        val p = api.getMyProfile()
+        Result.success(p.dailyWorkoutGoalKcal)
+    } catch (e: HttpException) {
+        when (e.code()) {
+            401, 404 -> Result.success(null)
+            else -> Result.failure(e)
+        }
+    } catch (e: IOException) {
+        Result.failure(e)
+    }
+
+    suspend fun updateDailyWorkoutGoalOnly(kcal: Int): Result<UserProfileDto> = runCatching {
+        val safe = kcal.coerceIn(0, 5000)
+
+        val req = UpsertProfileRequest(
+            gender = null,
+            age = null,
+            heightCm = null,
+            heightFeet = null,
+            heightInches = null,
+            weightKg = null,
+            weightLbs = null,
+            exerciseLevel = null,
+            goal = null,
+            goalWeightKg = null,
+            goalWeightLbs = null,
+            dailyStepGoal = null,
+            referralSource = null,
+            locale = null,
+            unitPreference = null,
+            workoutsPerWeek = null,
+            waterMl = null,
+            dailyWorkoutGoalKcal = safe
+        )
+
+        val resp = api.upsertMyProfile(req, source = null)
+
+        runCatching { store.applyRemoteDailyWorkoutGoal(resp.dailyWorkoutGoalKcal ?: safe) }
+
+        bus.invalidateProfile()
+        resp
+    }
 
 }

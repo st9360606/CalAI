@@ -71,6 +71,7 @@ fun PersonalDetailsScreen(
     onEditDailyStepGoal: () -> Unit = {},
     onEditStartingWeight: () -> Unit = {},
     onEditDailyWaterGoal: () -> Unit = {},
+    onEditDailyWorkoutGoal: () -> Unit = {},
 ) {
     val bg = Color(0xFFF6F7F9)
     val cardShape = RoundedCornerShape(22.dp)
@@ -280,6 +281,18 @@ fun PersonalDetailsScreen(
                         valueOffsetY = (-2).dp,
                         titleFontSize = titleSize,
                         onClick = onEditDailyWaterGoal
+                    )
+
+                    PersonalRowDivider(outline)
+
+                    val workoutGoalText = profile?.dailyWorkoutGoalKcal?.let { "$it kcal" } ?: "—"
+                    PersonalDetailsRow(
+                        title = "Daily Workout Goal",
+                        valueMain = workoutGoalText,
+                        titleOffsetY = (-2).dp,
+                        valueOffsetY = (-2).dp,
+                        titleFontSize = titleSize,
+                        onClick = onEditDailyWorkoutGoal
                     )
                 }
 
