@@ -16,7 +16,7 @@ private val Context.userProfileDataStore by preferencesDataStore(name = "user_pr
 
 @Singleton
 class UserProfileStore @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     enum class HeightUnit { CM, FT_IN }
     enum class WeightUnit { KG, LBS }
