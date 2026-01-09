@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.cmToFeetInches1
 import com.calai.app.data.profile.repo.feetInchesToCm1
 import com.calai.app.ui.home.ui.settings.details.model.EditHeightViewModel
@@ -55,6 +54,8 @@ import com.calai.app.ui.home.ui.weight.components.WeightTopBar
 import kotlin.math.abs
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.mutableDoubleStateOf
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -69,24 +70,28 @@ fun EditHeightScreen(
     LaunchedEffect(Unit) { vm.initIfNeeded() }
 
     // SSOT: cmVal（Double 一位小數）
-    val CM_MIN = 80.0
-    val CM_MAX = 350.0
+    val cmMin = 80.0
+    val cmMax = 350.0
 
     // ✅ 不要用 rememberSaveable：避免回來時還原舊 seed
     var seeded by remember { mutableStateOf(false) }
 
-    var useMetric by remember { mutableStateOf(true) }
-    var cmVal by remember { mutableStateOf(170.0) }
+    // ✅ 預設 FT
+    var useMetric by remember { mutableStateOf(false) }
+    var cmVal by remember { mutableDoubleStateOf(170.0) }
     var feet by remember { mutableIntStateOf(5) }
     var inches by remember { mutableIntStateOf(7) }
 
     // ✅ 初始化完成後，seed 一次（DB 值優先）
     LaunchedEffect(ui.initializing, init) {
         if (!ui.initializing && !seeded) {
-            useMetric = (init.unit == UserProfileStore.HeightUnit.CM)
-            cmVal = init.cm.coerceIn(CM_MIN, CM_MAX)
+            // ✅ 強制預設顯示 FT（但數值仍以 init 為準）
+            useMetric = false
+
+            cmVal = init.cm.coerceIn(cmMin, cmMax)
             feet = init.feet
             inches = init.inches
+
             seeded = true
         }
     }
@@ -177,7 +182,7 @@ fun EditHeightScreen(
                 onChange = { isMetric ->
                     if (isMetric) {
                         // 切回 cm：用目前 ft/in 換算回 cm
-                        cmVal = feetInchesToCm1(feet, inches).coerceIn(CM_MIN, CM_MAX)
+                        cmVal = feetInchesToCm1(feet, inches).coerceIn(cmMin, cmMax)
                     } else {
                         // 切到 ft/in：用目前 cm 推導
                         val (ft, inch) = cmToFeetInches1(cmVal)
@@ -191,8 +196,9 @@ fun EditHeightScreen(
             Spacer(Modifier.height(16.dp))
 
             if (useMetric) {
-                val cmTenths = (cmVal * 10.0).toInt()
-                    .coerceIn((CM_MIN * 10).toInt(), (CM_MAX * 10).toInt())
+                // ✅ 關鍵修正：不要用 toInt()，用 roundToInt() 把 182.19999 拉回 182.2
+                val cmTenths = (cmVal * 10.0).roundToInt()
+                    .coerceIn((cmMin * 10).roundToInt(), (cmMax * 10).roundToInt())
                 val cmIntSel = cmTenths / 10
                 val cmDecSel = cmTenths % 10
 
@@ -204,11 +210,11 @@ fun EditHeightScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
-                        range = CM_MIN.toInt()..CM_MAX.toInt(),
+                        range = cmMin.toInt()..cmMax.toInt(),
                         value = cmIntSel,
                         onValueChange = { newInt ->
                             val newCm = (newInt * 10 + cmDecSel) / 10.0
-                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                            cmVal = newCm.coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 56.dp,
                         centerTextSize = 30.sp,
@@ -237,7 +243,7 @@ fun EditHeightScreen(
                         value = cmDecSel,
                         onValueChange = { newDec ->
                             val newCm = (cmIntSel * 10 + newDec) / 10.0
-                            cmVal = newCm.coerceIn(CM_MIN, CM_MAX)
+                            cmVal = newCm.coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 56.dp,
                         centerTextSize = 30.sp,
@@ -270,7 +276,7 @@ fun EditHeightScreen(
                         onValueChange = { newFeet ->
                             feet = newFeet
                             cmVal = feetInchesToCm1(newFeet, inches)
-                                .coerceIn(CM_MIN, CM_MAX)
+                                .coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 56.dp,
                         centerTextSize = 30.sp,
@@ -288,7 +294,7 @@ fun EditHeightScreen(
                         onValueChange = { newIn ->
                             inches = newIn
                             cmVal = feetInchesToCm1(feet, newIn)
-                                .coerceIn(CM_MIN, CM_MAX)
+                                .coerceIn(cmMin, cmMax)
                         },
                         rowHeight = 56.dp,
                         centerTextSize = 30.sp,
@@ -425,8 +431,8 @@ private fun NumberWheel(
     unitLabel: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val VISIBLE_COUNT = 5
-    val MID = VISIBLE_COUNT / 2
+    val visibleCount = 5
+    val mid = visibleCount / 2
     val items = remember(range) { range.toList() }
 
     // 外部 value 對應到 items 的 index
@@ -469,12 +475,12 @@ private fun NumberWheel(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(rowHeight * VISIBLE_COUNT)
+            .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
             state = state,
             flingBehavior = fling,
-            contentPadding = PaddingValues(vertical = rowHeight * MID),
+            contentPadding = PaddingValues(vertical = rowHeight * mid),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {

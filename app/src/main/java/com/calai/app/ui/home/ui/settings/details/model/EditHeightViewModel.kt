@@ -7,10 +7,7 @@ import com.calai.app.data.profile.repo.UserProfileStore
 import com.calai.app.data.profile.repo.roundCm1
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -114,17 +111,6 @@ class EditHeightViewModel @Inject constructor(
         }
     }
 
-    // 給其他地方用（如果你還需要）
-    val heightCmState: StateFlow<Float> =
-        store.heightCmFlow
-            .map { it ?: 170f }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 170f)
-
-    val heightUnitState: StateFlow<UserProfileStore.HeightUnit> =
-        store.heightUnitFlow
-            .map { it ?: UserProfileStore.HeightUnit.CM }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserProfileStore.HeightUnit.CM)
-
     fun saveAndSyncHeight(
         useMetric: Boolean,
         cmVal: Double,
@@ -138,7 +124,7 @@ class EditHeightViewModel @Inject constructor(
             _ui.update { it.copy(saving = true, error = null, toastMessage = null) }
 
             val cmToSave: Float = if (useMetric) {
-                roundCm1(cmVal).toFloat()
+                roundCm1(cmVal)
             } else {
                 feetInchesToCm1(feet, inches).toFloat()   // ✅ ft/in 為準
             }

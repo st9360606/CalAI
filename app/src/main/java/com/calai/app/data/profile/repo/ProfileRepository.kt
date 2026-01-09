@@ -1,5 +1,6 @@
 package com.calai.app.data.profile.repo
 
+import android.util.Log
 import com.calai.app.data.common.RepoInvalidationBus
 import com.calai.app.data.profile.api.ProfileApi
 import com.calai.app.data.profile.api.UpdateGoalWeightRequest
@@ -10,6 +11,7 @@ import java.io.IOException
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 @Singleton
 class ProfileRepository @Inject constructor(
@@ -69,6 +71,14 @@ class ProfileRepository @Inject constructor(
         else -> "very_active"               // 7 以上（含 bucket=7）
     }
 
+    private fun quantize1dpFromFloat(v: Float): Double {
+        // 先變成「以 0.1 為單位的整數」再除回來，避免 178.199996 這種誤差被 floor 吃掉
+        return (v * 10f).roundToInt() / 10.0
+    }
+
+    private fun quantize(v: Double): Double =
+        (v * 10.0).roundToInt() / 10.0
+
     /**
      * 上傳策略：
      * - 身高：一律送 cm；若使用者是 ft/in，就另外送 feet/inches。
@@ -80,10 +90,10 @@ class ProfileRepository @Inject constructor(
         val localeTag = p.locale?.takeIf { it.isNotBlank() }
             ?: Locale.getDefault().toLanguageTag()
 
-        // ★ 身高 cm：保持 0.1 精度（無條件捨去）
+        // ✅ height cm：若走 cm 模式，就量化後再送
         val heightCmToSend: Double? = when (p.heightUnit) {
-            UserProfileStore.HeightUnit.FT_IN -> null // ✅ ft/in 模式不送 cm
-            else -> p.heightCm?.toDouble()?.let { round1Floor(it) }
+            UserProfileStore.HeightUnit.FT_IN -> null
+            else -> p.heightCm?.toDouble()?.let { quantize(it) }
         }
 
         val (feet, inches) = when (p.heightUnit) {
@@ -116,6 +126,8 @@ class ProfileRepository @Inject constructor(
             UserProfileStore.WeightUnit.KG -> rawGoalKg to null
             UserProfileStore.WeightUnit.LBS -> null to rawGoalLbs
         }
+
+        Log.d("ProfileRepo", "upsert heightUnit=${p.heightUnit} heightCm(raw)=${p.heightCm} heightCmToSend=$heightCmToSend ft=$feet in=$inches")
 
         val req = UpsertProfileRequest(
             gender = p.gender,
@@ -418,7 +430,7 @@ class ProfileRepository @Inject constructor(
 
         val heightCmToSend: Double? = when (p.heightUnit) {
             UserProfileStore.HeightUnit.FT_IN -> null
-            else -> p.heightCm?.toDouble()?.let { round1Floor(it) }
+            else -> p.heightCm?.let { quantize1dpFromFloat(it) }  // ✅ 178.2f -> 178.2
         }
 
         val (feet, inches) = when (p.heightUnit) {

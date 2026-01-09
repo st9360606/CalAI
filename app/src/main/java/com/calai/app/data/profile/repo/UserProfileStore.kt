@@ -11,6 +11,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 private val Context.userProfileDataStore by preferencesDataStore(name = "user_profile")
 
@@ -111,7 +112,9 @@ class UserProfileStore @Inject constructor(
         context.userProfileDataStore.data.map { it[Keys.HEIGHT] }
 
     suspend fun setHeightCm(cm: Float) {
-        context.userProfileDataStore.edit { it[Keys.HEIGHT] = cm }
+        // ✅ 量化到 0.1，避免 182.2 變 182.199996 導致後續 floor/toInt 掉一格
+        val q = (cm * 10f).roundToInt() / 10f
+        context.userProfileDataStore.edit { it[Keys.HEIGHT] = q }
     }
 
     val heightUnitFlow: Flow<HeightUnit?> =
