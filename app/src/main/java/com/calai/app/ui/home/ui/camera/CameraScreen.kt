@@ -436,6 +436,7 @@ fun CameraScreen(
     }
 }
 
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun ScanFrameOverlay(
@@ -460,9 +461,9 @@ private fun ScanFrameOverlay(
                 CornerBrackets(
                     color = color,
                     boxSize = frameSize,
-                    stroke = 5.dp,         // ✅ 更粗（你要更粗就 6.dp）
-                    cornerLen = 36.dp,     // ✅ 更大（角更長）
-                    arcRadius = 12.dp,     // ✅ 圓弧轉角半徑（越大越圓）
+                    stroke = 5.dp,
+                    cornerLen = 36.dp,
+                    arcRadius = 12.dp,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .offset(y = foodOffsetY)
@@ -471,14 +472,44 @@ private fun ScanFrameOverlay(
             }
 
             CameraMode.BARCODE -> {
-                RoundedFrame(
+                // === Tokens（想更像圖就調這裡）===
+                val barcodeW = maxW * 0.85f
+                val barcodeH = 180.dp
+                val barcodeRadius = 18.dp
+                val barcodeStroke = 4.dp
+
+                // ✅ NEW：框往下移的量（你要再下就 +，要再上就 -）
+                val barcodeExtraDown = 68.dp
+
+                // ✅ 文字大小：大一點點（titleSmall -> titleMedium）
+                val titleText = "条形码扫描器"
+                val titleGap = 12.dp        // 文字與框的距離
+                val titleNudgeUp = 10.dp    // 微調：讓它更像你圖上的位置（想更靠近框就減小）
+
+                // ✅ 框的實際 Y（讓文字跟著框走）
+                val barcodeFrameY = frameOffsetY + barcodeExtraDown
+
+                // 標題：固定在「框上方」
+                Text(
+                    text = titleText,
                     color = color,
-                    width = maxW * 0.74f,
-                    height = 110.dp,
-                    radius = 18.dp,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset(y = frameOffsetY) // 維持原本偏上
+                        .offset(y = barcodeFrameY - (barcodeH / 2) - titleGap - titleNudgeUp)
+                        .testTag("barcode_title")
+                )
+
+                // 框：往下移 + 加粗
+                RoundedFrame(
+                    color = color,
+                    width = barcodeW,
+                    height = barcodeH,
+                    radius = barcodeRadius,
+                    strokeWidth = barcodeStroke,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = barcodeFrameY)
                         .testTag("scan_frame_barcode")
                 )
             }
@@ -489,30 +520,32 @@ private fun ScanFrameOverlay(
                     width = maxW * 0.70f,
                     height = maxW * 0.70f,
                     radius = 18.dp,
+                    strokeWidth = 2.dp,
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset(y = frameOffsetY) // 維持原本偏上
+                        .offset(y = frameOffsetY)
                         .testTag("scan_frame_label")
                 )
             }
         }
-
     }
 }
 
 @Composable
 private fun RoundedFrame(
+    modifier: Modifier = Modifier,
     color: Color,
     width: Dp,
     height: Dp,
     radius: Dp,
-    modifier: Modifier = Modifier
+    strokeWidth: Dp = 2.dp, // ✅ NEW：可調框線粗細
 ) {
+    val shape = RoundedCornerShape(radius)
     Box(
         modifier = modifier
             .size(width, height)
-            .clip(RoundedCornerShape(radius))
-            .border(width = 2.dp, color = color, shape = RoundedCornerShape(radius))
+            .clip(shape)
+            .border(width = strokeWidth, color = color, shape = shape)
     )
 }
 
