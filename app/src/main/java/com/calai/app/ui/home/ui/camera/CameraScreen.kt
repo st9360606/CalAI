@@ -71,6 +71,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import android.util.Log
 import androidx.camera.core.Camera
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.outlined.FlashOff
 import androidx.compose.runtime.LaunchedEffect
@@ -79,6 +80,8 @@ import kotlin.math.min
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextOverflow
+
 enum class CameraMode { FOOD, BARCODE, LABEL }
 
 @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
@@ -229,8 +232,8 @@ fun CameraScreen(
 
     // tile：左右 padding + 間距固定，寬度用螢幕自動算
     val sidePadding = 18.dp
-    val tileGap = 10.dp
-    val tileH = 58.dp
+    val tileGap = 6.dp
+    val tileH = 72.dp
     val tileCorner = 14.dp
 
     val tileBg = Color(0xFFE9EBEF).copy(alpha = 0.92f)
@@ -311,7 +314,7 @@ fun CameraScreen(
                 horizontalArrangement = Arrangement.spacedBy(tileGap),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ModeTileV2(
+                ModeTile(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
@@ -324,7 +327,7 @@ fun CameraScreen(
                     onClick = { mode = CameraMode.FOOD },
                     modifier = Modifier.testTag("mode_food")
                 )
-                ModeTileV2(
+                ModeTile(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
@@ -337,7 +340,7 @@ fun CameraScreen(
                     onClick = { mode = CameraMode.BARCODE },
                     modifier = Modifier.testTag("mode_barcode")
                 )
-                ModeTileV2(
+                ModeTile(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
@@ -350,7 +353,7 @@ fun CameraScreen(
                     onClick = { mode = CameraMode.LABEL },
                     modifier = Modifier.testTag("mode_label")
                 )
-                ModeTileV2(
+                ModeTile(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
@@ -373,7 +376,7 @@ fun CameraScreen(
                 )
             }
 
-            Spacer(Modifier.height(38.dp))
+            Spacer(Modifier.height(36.dp))
 
             // 快門列（在下）
             Row(
@@ -385,7 +388,7 @@ fun CameraScreen(
             ) {
                 val flashEnabled = enableCameraX && hasCameraPerm && hasFlashUnit && (boundCamera.value != null)
 
-                CircleIconButtonV2(
+                CircleIconButton(
                     modifier = Modifier
                         .testTag("camera_flash")
                         .offset(x = 8.dp, y = (-3).dp),
@@ -405,7 +408,7 @@ fun CameraScreen(
                 )
 
 
-                ShutterButtonV2(
+                ShutterButton(
                     onClick = { /* TODO capture */ },
                     modifier = Modifier.testTag("camera_shutter")
                 )
@@ -468,7 +471,7 @@ private fun ScanFrameOverlay(
             }
 
             CameraMode.BARCODE -> {
-                RoundedFrameV2(
+                RoundedFrame(
                     color = color,
                     width = maxW * 0.74f,
                     height = 110.dp,
@@ -481,7 +484,7 @@ private fun ScanFrameOverlay(
             }
 
             CameraMode.LABEL -> {
-                RoundedFrameV2(
+                RoundedFrame(
                     color = color,
                     width = maxW * 0.70f,
                     height = maxW * 0.70f,
@@ -498,7 +501,7 @@ private fun ScanFrameOverlay(
 }
 
 @Composable
-private fun RoundedFrameV2(
+private fun RoundedFrame(
     color: Color,
     width: Dp,
     height: Dp,
@@ -597,7 +600,7 @@ private fun CornerBrackets(
 
 
 @Composable
-private fun ModeTileV2(
+private fun ModeTile(
     width: Dp,
     height: Dp,
     corner: Dp,
@@ -612,19 +615,27 @@ private fun ModeTileV2(
 ) {
     val shape = RoundedCornerShape(corner)
     val interactionSource = remember { MutableInteractionSource() }
+
+    // ✅ selected：淡淡邊框（最不破壞風格）
+    val border = if (selected) BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)) else null
+
+    // ✅ 可選：selected 時背景稍微更實（想更明顯再開）
+    val bgAlpha = if (selected) 0.96f else 0.92f
+
     Surface(
-        color = bg.copy(alpha = if (selected) 1.0f else 0.92f),
+        color = bg.copy(alpha = bgAlpha),
         shape = shape,
+        border = border,                 // ✅ NEW
         onClick = onClick,
         interactionSource = interactionSource,
         modifier = modifier
             .size(width, height)
-            .clip(shape)
+            .clip(shape)                 // ✅ 保持圓角一致
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 6.dp, bottom = 6.dp),
+                .padding(top = 8.dp, bottom = 8.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -632,20 +643,22 @@ private fun ModeTileV2(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(24.dp)
             )
             Spacer(Modifier.size(3.dp))
             Text(
                 text = label,
                 color = textColor,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium)
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
 
 @Composable
-private fun CircleIconButtonV2(
+private fun CircleIconButton(
     modifier: Modifier = Modifier,
     icon: ImageVector,
     tint: Color,
@@ -678,7 +691,7 @@ private fun CircleIconButtonV2(
 }
 
 @Composable
-private fun ShutterButtonV2(
+private fun ShutterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
