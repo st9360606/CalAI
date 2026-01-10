@@ -1506,8 +1506,6 @@ fun BiteCalNavHost(
         composable(Routes.CAMERA) {
             val ctx = LocalContext.current
             val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
-
-            // ★ 核心：提供 ActivityResultRegistryOwner，讓 rememberLauncherForActivityResult 能註冊成功
             val owner: ActivityResultRegistryOwner = activity
 
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
@@ -1519,6 +1517,7 @@ fun BiteCalNavHost(
                 )
             }
         }
+
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 
     }
