@@ -303,7 +303,7 @@ fun CameraScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(bottom = 18.dp),
+                .padding(bottom = 43.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 4 個 tiles（在上）
@@ -376,7 +376,7 @@ fun CameraScreen(
                 )
             }
 
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(26.dp))
 
             // 快門列（在下）
             Row(
@@ -413,7 +413,7 @@ fun CameraScreen(
                     modifier = Modifier.testTag("camera_shutter")
                 )
 
-                Spacer(Modifier.size(38.dp))
+                Spacer(Modifier.size(28.dp))
             }
 
             // 沒相機權限提示
