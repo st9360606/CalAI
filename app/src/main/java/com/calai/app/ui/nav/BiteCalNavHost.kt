@@ -1504,13 +1504,20 @@ fun BiteCalNavHost(
         }
 
         composable(Routes.CAMERA) {
-            CameraScreen(
-                onClose = { nav.popBackStack() },
-                onImagePicked = { uri ->
-                    // TODO: 你後續要做：上傳 / 丟 AI / 或導到食物編輯頁
-                    // 先留著即可
-                }
-            )
+            val ctx = LocalContext.current
+            val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
+
+            // ★ 核心：提供 ActivityResultRegistryOwner，讓 rememberLauncherForActivityResult 能註冊成功
+            val owner: ActivityResultRegistryOwner = activity
+
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                CameraScreen(
+                    onClose = { nav.popBackStack() },
+                    onImagePicked = { uri ->
+                        // TODO: upload / AI / navigate
+                    }
+                )
+            }
         }
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 
