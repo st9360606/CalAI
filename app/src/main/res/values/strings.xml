@@ -237,4 +237,23 @@
 
 
 
+    <!-- ================= Camera ======================= -->
+    <!-- Camera modes -->
+    <string name="camera_mode_food">Scan Food</string>
+    <string name="camera_mode_barcode">Barcode</string>
+    <string name="camera_mode_label">Food Label</string>
+    <string name="camera_mode_album">Album</string>
+
+    <!-- Camera titles -->
+    <string name="camera_barcode_title">Barcode Scanner</string>
+    <string name="camera_label_title">Label Scanner</string>
+
+    <!-- Camera permission -->
+    <string name="camera_need_permission">Camera permission is required to scan</string>
+
+
+
+
+
+
 </resources>

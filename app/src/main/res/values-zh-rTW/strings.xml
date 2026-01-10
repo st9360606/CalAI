@@ -225,4 +225,23 @@
     <string name="steps_secondary_connect">連線</string>
     <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
 
+
+
+
+    <!-- ================= Camera ======================= -->
+    <!-- Camera modes -->
+    <string name="camera_mode_food">掃描食物</string>
+    <string name="camera_mode_barcode">條型碼</string>
+    <string name="camera_mode_label">食品標籤</string>
+    <string name="camera_mode_album">相簿</string>
+
+    <!-- Camera titles -->
+    <string name="camera_barcode_title">條型掃描器</string>
+    <string name="camera_label_title">標籤掃描器</string>
+
+    <!-- Camera permission -->
+    <string name="camera_need_permission">需要相機權限才能掃描</string>
+
+
+
 </resources>

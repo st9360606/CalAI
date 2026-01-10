@@ -80,8 +80,9 @@ import kotlin.math.min
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-
+import com.calai.app.R
 enum class CameraMode { FOOD, BARCODE, LABEL }
 
 @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
@@ -318,7 +319,7 @@ fun CameraScreen(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
-                    label = "扫描食物",
+                    label = stringResource(R.string.camera_mode_food),
                     icon = Icons.Outlined.Restaurant,
                     bg = tileBg,
                     textColor = tileText,
@@ -331,7 +332,7 @@ fun CameraScreen(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
-                    label = "条形码",
+                    label = stringResource(R.string.camera_mode_barcode),
                     icon = Icons.Outlined.QrCodeScanner,
                     bg = tileBg,
                     textColor = tileText,
@@ -344,7 +345,7 @@ fun CameraScreen(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
-                    label = "食品标签",
+                    label = stringResource(R.string.camera_mode_label),
                     icon = Icons.AutoMirrored.Outlined.ReceiptLong,
                     bg = tileBg,
                     textColor = tileText,
@@ -357,7 +358,7 @@ fun CameraScreen(
                     width = tileW,
                     height = tileH,
                     corner = tileCorner,
-                    label = "相册",
+                    label = stringResource(R.string.camera_mode_album),
                     icon = Icons.Outlined.Image,
                     bg = tileBg,
                     textColor = tileText,
@@ -420,7 +421,7 @@ fun CameraScreen(
             if (!hasCameraPerm) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "需要相机权限才能扫描",
+                    text = stringResource(R.string.camera_need_permission),
                     color = Color.White.copy(alpha = 0.85f),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
@@ -445,7 +446,7 @@ private fun ScanFrameOverlay(
     color: Color,
     frameSizeRatio: Float,
     frameOffsetYRatio: Float,
-    foodOffsetYRatio: Float = -0.05f,
+    foodOffsetYRatio: Float = -0.06f,
 ) {
     BoxWithConstraints(modifier = modifier) {
         // ✅ 讓 IDE 明確看到「使用了 BoxWithConstraints scope」
@@ -482,7 +483,7 @@ private fun ScanFrameOverlay(
                 val barcodeExtraDown = 68.dp
 
                 // ✅ 文字大小：大一點點（titleSmall -> titleMedium）
-                val titleText = "条形码扫描器"
+                val titleText = stringResource(R.string.camera_barcode_title)
                 val titleGap = 12.dp        // 文字與框的距離
                 val titleNudgeUp = 10.dp    // 微調：讓它更像你圖上的位置（想更靠近框就減小）
 
@@ -515,18 +516,48 @@ private fun ScanFrameOverlay(
             }
 
             CameraMode.LABEL -> {
-                RoundedFrame(
+                // === Tokens（想更像圖就調這裡）===
+                val labelW = maxW * 0.78f              // 寬度維持原本 0.70
+                val labelH = maxW * 1.1f              // ✅ 高度加大（直向更高）
+                val labelRadius = 18.dp
+                val labelStroke = 4.dp                // ✅ 框線加粗（原本 2.dp）
+
+                // ✅ NEW：框往下移的量（需要更下就 +，要更上就 -）
+                val labelExtraDown = 56.dp
+
+                // ✅ 標題（框上方）
+                val titleText = stringResource(R.string.camera_label_title)
+                val titleGap = 12.dp                  // 文字與框的距離
+                val titleNudgeUp = 10.dp               // 微調：想更靠近框就減小
+
+                // ✅ 框的實際 Y（文字跟著框走）
+                val labelFrameY = frameOffsetY + labelExtraDown
+
+                // 標題：固定在「框上方」
+                Text(
+                    text = titleText,
                     color = color,
-                    width = maxW * 0.70f,
-                    height = maxW * 0.70f,
-                    radius = 18.dp,
-                    strokeWidth = 2.dp,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .offset(y = frameOffsetY)
+                        .offset(y = labelFrameY - (labelH / 2) - titleGap - titleNudgeUp)
+                        .testTag("label_title")
+                )
+
+                // 框：高度更大 + 加粗
+                RoundedFrame(
+                    color = color,
+                    width = labelW,
+                    height = labelH,
+                    radius = labelRadius,
+                    strokeWidth = labelStroke,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = labelFrameY)
                         .testTag("scan_frame_label")
                 )
             }
+
         }
     }
 }
