@@ -242,7 +242,7 @@
     <string name="camera_mode_food">Scan Food</string>
     <string name="camera_mode_barcode">Barcode</string>
     <string name="camera_mode_label">Food Label</string>
-    <string name="camera_mode_album">Album</string>
+    <string name="camera_mode_album">Gallery</string>
 
     <!-- Camera titles -->
     <string name="camera_barcode_title">Barcode Scanner</string>
