@@ -96,6 +96,8 @@ import com.calai.app.ui.home.ui.settings.details.EditNutritionGoalsRoute
 import com.calai.app.ui.home.ui.settings.details.model.NutritionGoalsViewModel
 import androidx.navigation.compose.navigation
 import com.calai.app.ui.home.ui.camera.CameraScreen
+import com.calai.app.ui.home.ui.foodlog.FoodLogDetailScreen
+import com.calai.app.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import com.calai.app.ui.home.ui.settings.SettingsScreen
 import com.calai.app.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
 import com.calai.app.ui.home.ui.settings.details.EditStartingWeightScreen
@@ -155,6 +157,12 @@ object Routes {
     const val AUTO_GENERATE_GOALS_CALC = "auto_generate_goals_calc"
     const val AUTO_GENERATE_FLOW = "auto_generate_flow"
     const val EDIT_WORKOUT_GOAL = "edit_workout_goal"
+
+    /**
+     * Camera Snapshots food log detail
+     */
+    const val FOOD_LOG_DETAIL = "foodLog/{id}"
+    fun foodLogDetail(id: String) = "foodLog/$id"
 }
 
 object NavResults {
@@ -1503,20 +1511,51 @@ fun BiteCalNavHost(
             }
         }
 
-        composable(Routes.CAMERA) {
+        composable(Routes.CAMERA) { backStackEntry ->
             val ctx = LocalContext.current
             val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
             val owner: ActivityResultRegistryOwner = activity
+
+            val flowVm: FoodLogFlowViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
 
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
                 CameraScreen(
                     onClose = { nav.popBackStack() },
                     onImagePicked = { uri ->
-                        // TODO: upload / AI / navigate
+                        flowVm.submitAlbum(ctx, uri) { foodLogId ->
+                            nav.navigate(Routes.foodLogDetail(foodLogId)) {
+                                launchSingleTop = true
+                            }
+                        }
                     }
                 )
             }
         }
+
+        composable(Routes.FOOD_LOG_DETAIL) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id") ?: return@composable
+            val ctx = LocalContext.current
+            val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
+
+            val flowVm: FoodLogFlowViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            FoodLogDetailScreen(
+                foodLogId = id,
+                vm = flowVm,
+                onBack = { nav.popBackStack() },
+                onOpenEditor = { foodLogId ->
+                    // TODO: 導到你的可編輯頁（EditFoodLog）
+                    // nav.navigate(Routes.EDIT_FOOD_LOG(foodLogId))
+                }
+            )
+        }
+
 
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 
