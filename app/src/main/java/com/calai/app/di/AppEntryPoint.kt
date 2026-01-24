@@ -1,5 +1,6 @@
 package com.calai.app.di
 
+import com.calai.app.data.account.repo.AccountRepository
 import com.calai.app.data.auth.repo.AuthRepository
 import com.calai.app.data.auth.repo.TokenStore
 import com.calai.app.data.auth.state.AuthState
@@ -26,4 +27,5 @@ interface AppEntryPoint {
     fun weightRepository(): WeightRepository
     fun autoGoalsRepository(): AutoGoalsRepository
     fun foodLogsRepository(): FoodLogsRepository
+    fun accountRepository(): AccountRepository
 }

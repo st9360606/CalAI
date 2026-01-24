@@ -63,9 +63,12 @@ import com.calai.app.ui.home.components.LightHomeBackground
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.sp
 import com.calai.app.ui.home.components.MainBottomBar
 import com.calai.app.ui.home.components.scan.ScanFab
+import com.calai.app.ui.home.ui.settings.delete.DeleteAccountDialog
+import kotlinx.coroutines.launch
 
 /**
  * ✅ Personal => Settings（你圖上的那個）
@@ -144,18 +147,45 @@ private fun SettingsContent(
     onLogout: () -> Unit
 ) {
     val scroll = rememberScrollState()
+    val scope = rememberCoroutineScope()
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var deleting by remember { mutableStateOf(false) }
+
+    // ✅ Dialog 放外層（不受 scroll 影響）
+    DeleteAccountDialog(
+        visible = showDeleteDialog,
+        deleting = deleting,
+        onDismiss = { if (!deleting) showDeleteDialog = false },
+        onCancel = { if (!deleting) showDeleteDialog = false },
+        onDelete = {
+            if (deleting) return@DeleteAccountDialog
+            // 先鎖 UI + 關 dialog（跟你截圖體感一致：按下去就收起來）
+            deleting = true
+            showDeleteDialog = false
+            scope.launch {
+                try {
+                    // ✅ 交給上層（NavHost）去做：call API + navigate landing
+                    onDeleteAccount()
+                } finally {
+                    // ✅ 無論成功失敗都解鎖（成功通常已導頁，看不到也沒差）
+                    deleting = false
+                }
+            }
+        }
+    )
 
     Column(
         modifier = modifier
             .verticalScroll(scroll)
             .padding(horizontal = 20.dp)
-            .padding(top = 14.dp, bottom = 120.dp) // ✅ 底部多留，避免被 FAB 擋到
+            .padding(top = 14.dp, bottom = 120.dp)
     ) {
         Text(
             text = "Settings",
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier
-                .offset(x = 7.dp, y = (-6).dp)  // ✅ 右、上
+                .offset(x = 7.dp, y = (-6).dp)
                 .padding(vertical = 10.dp)
         )
 
@@ -167,9 +197,7 @@ private fun SettingsContent(
         )
 
         Spacer(Modifier.height(14.dp))
-
         InviteFriendsCard()
-
         Spacer(Modifier.height(16.dp))
 
         SettingsListCard {
@@ -185,13 +213,9 @@ private fun SettingsContent(
         }
 
         Spacer(Modifier.height(16.dp))
-
         PreferencesCard()
-
         Spacer(Modifier.height(18.dp))
-
         WidgetsSection()
-
         Spacer(Modifier.height(18.dp))
 
         SettingsListCard {
@@ -203,15 +227,17 @@ private fun SettingsContent(
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Group, title = "Feature Request", onClick = onOpenFeatureRequest)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Person, title = "Delete Account?", onClick = onDeleteAccount)
+            SettingsRow(
+                icon = Icons.Outlined.Person,
+                title = "Delete Account?",
+                onClick = { if (!deleting) showDeleteDialog = true }
+            )
         }
 
         Spacer(Modifier.height(16.dp))
-
         LogoutButton(onLogout = onLogout)
 
         Spacer(Modifier.height(12.dp))
-
         Text(
             text = "VERSION 1.0.150",
             style = MaterialTheme.typography.labelMedium.copy(color = Color(0xFF9CA3AF)),

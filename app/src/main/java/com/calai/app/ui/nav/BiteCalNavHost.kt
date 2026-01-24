@@ -878,6 +878,8 @@ fun BiteCalNavHost(
         composable(Routes.SETTINGS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val scope = rememberCoroutineScope()
+            val accountRepo = remember(ep) { ep.accountRepository() }
 
             val homeVm: HomeViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
@@ -959,6 +961,21 @@ fun BiteCalNavHost(
                         }
                     },
                     onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
+                    onDeleteAccount = {
+                        scope.launch {
+                            val r = accountRepo.deleteAccount()
+                            if (r.isSuccess) {
+                                nav.navigate(Routes.LANDING) {
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
+                            } else {
+                                backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] =
+                                    (r.exceptionOrNull()?.message ?: "Delete account failed")
+                            }
+                        }
+                    }
                 )
 
                 when {

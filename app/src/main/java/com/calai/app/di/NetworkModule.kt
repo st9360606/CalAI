@@ -2,6 +2,7 @@ package com.calai.app.di
 
 import android.content.Context
 import com.calai.app.BuildConfig
+import com.calai.app.data.account.api.AccountApi
 import com.calai.app.data.activity.api.DailyActivityApi
 import com.calai.app.data.auth.api.AuthApi
 import com.calai.app.data.auth.net.AuthInterceptor
@@ -154,4 +155,10 @@ object NetworkModule {
     @Singleton
     fun provideFoodLogsApi(@Named("apiRetrofit") retrofit: Retrofit): FoodLogsApi =
         retrofit.create(FoodLogsApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAccountApi(@Named("apiRetrofit") retrofit: Retrofit): AccountApi =
+        retrofit.create(AccountApi::class.java)
+
 }
