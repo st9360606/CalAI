@@ -1,3 +1,4 @@
+// app/src/main/java/com/calai/app/data/account/repo/AccountRepository.kt
 package com.calai.app.data.account.repo
 
 import com.calai.app.data.account.api.AccountApi
@@ -15,28 +16,31 @@ class AccountRepository @Inject constructor(
 ) {
 
     /**
-     * ✅ 最小閉環：
-     * 1) 呼叫後端 deletion-request（後端會 revoke token + 去識別）
-     * 2) 本機清 token + 清 hasServerProfile（避免下次誤判）
+     * ✅ 最小閉環（強化版）：
+     * - 正常 200 ok=true：清本機 -> success
+     * - 401/403：視為「後端已 revoke / token 不再可用」-> 仍清本機 -> success
+     * - 其他錯：回 failure（讓 UI 顯示錯誤）
      */
     suspend fun deleteAccount(): Result<Unit> {
         return runCatching {
             val res = api.requestDeletion()
             if (!res.ok) throw IllegalStateException("DELETE_ACCOUNT_FAILED")
 
-            // ✅ 本機登出（不要依賴 /auth/logout，因為後端已 revoke）
-            tokenStore.clear()
-            runCatching { profileStore.clearHasServerProfile() }
-            runCatching { profileStore.clearOnboarding() }
-
+            clearLocalAuth()
             Unit
         }.recoverCatching { e ->
-            // 你若想「401/403 也當失敗」，這裡直接丟回去即可
-            // （如果你想 401/403 視為成功，我再給你另一版）
+            // ✅ 重要：401/403 視為成功（revoke race）
             if (e is HttpException && (e.code() == 401 || e.code() == 403)) {
-                throw e
+                clearLocalAuth()
+                return@recoverCatching Unit
             }
             throw e
         }
+    }
+
+    private suspend fun clearLocalAuth() {
+        tokenStore.clear()
+        runCatching { profileStore.clearHasServerProfile() }
+        runCatching { profileStore.clearOnboarding() }
     }
 }
