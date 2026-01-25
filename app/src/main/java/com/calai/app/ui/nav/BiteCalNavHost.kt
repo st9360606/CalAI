@@ -111,6 +111,9 @@ import com.calai.app.ui.home.ui.settings.editname.EditNameScreen
 import com.calai.app.ui.home.ui.settings.editname.model.EditNameViewModel
 import com.calai.app.ui.home.ui.settings.model.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
+import com.calai.app.R
 
 object Routes {
     const val LANDING = "landing"
@@ -918,6 +921,13 @@ fun BiteCalNavHost(
             // ✅ 4) age 先用 ProfileApi 回來的
             val ageText = pUi.profile?.age?.let { "$it years old" } ?: "—"
 
+            // ✅ URLs (Privacy Policy 內會包含 Data Deletion Policy)
+            val uriHandler = LocalUriHandler.current
+            val termsUrl = stringResource(R.string.url_terms)
+            val privacyUrl = stringResource(R.string.url_privacy)
+            val featureUrl = stringResource(R.string.url_feature_request)
+            val supportMailUrl = stringResource(R.string.url_support_email)
+
             Box(Modifier.fillMaxSize()) {
                 SettingsScreen(
                     avatarUrl = avatar,
@@ -961,6 +971,13 @@ fun BiteCalNavHost(
                         }
                     },
                     onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
+
+                    // ✅ Terms / Privacy / Support / Feature
+                    onOpenTerms = { uriHandler.openUri(termsUrl) },
+                    onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
+                    onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
+                    onOpenFeatureRequest = { uriHandler.openUri(featureUrl) },
+
                     onDeleteAccount = {
                         scope.launch {
                             val r = accountRepo.deleteAccount()

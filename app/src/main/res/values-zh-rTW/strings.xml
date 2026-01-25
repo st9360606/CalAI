@@ -243,5 +243,12 @@
     <string name="camera_need_permission">需要相機權限才能掃描</string>
 
 
+    <!-- SettingScreen privacy policy -->
+    <string name="url_terms">https://YOUR_DOMAIN/terms</string>
+    <string name="url_privacy">https://YOUR_DOMAIN/privacy#data-deletion</string>
+    <string name="url_feature_request">https://YOUR_DOMAIN/feature-request</string>
+    <string name="support_email">support@YOUR_DOMAIN</string>
+    <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
+
 
 </resources>
