@@ -7,6 +7,7 @@ import com.calai.app.data.activity.api.DailyActivityApi
 import com.calai.app.data.auth.api.AuthApi
 import com.calai.app.data.auth.net.AuthInterceptor
 import com.calai.app.data.auth.net.TokenAuthenticator
+import com.calai.app.data.entitlement.api.EntitlementApi
 import com.calai.app.data.fasting.api.FastingApi
 import com.calai.app.data.fasting.notifications.FastingAlarmScheduler
 import com.calai.app.data.fasting.repo.FastingRepository
@@ -160,5 +161,10 @@ object NetworkModule {
     @Singleton
     fun provideAccountApi(@Named("apiRetrofit") retrofit: Retrofit): AccountApi =
         retrofit.create(AccountApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideEntitlementApi(@Named("apiRetrofit") retrofit: Retrofit): EntitlementApi =
+        retrofit.create(EntitlementApi::class.java)
 
 }

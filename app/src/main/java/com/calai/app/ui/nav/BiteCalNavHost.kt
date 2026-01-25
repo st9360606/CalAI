@@ -309,13 +309,15 @@ fun BiteCalNavHost(
 
             val currentTag = localeController.tag.ifBlank { "en" }
             val scope = rememberCoroutineScope()
-
+            val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
             EmailCodeScreen(
                 vm = vm,
                 email = email,
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
                     scope.launch {
+                        // ✅ 不阻塞導頁：背景自動 sync 訂閱（無 restore 按鈕）
+                        launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
                         // ★ 先印一個 flow log，確定有進來
                         val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)

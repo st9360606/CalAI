@@ -60,7 +60,7 @@ fun EmailCodeScreen(
     }
 
     // ===== 本地倒數 fallback（與 VM 的 canResendInSec 取最大值）=====
-    var localLeft by remember { mutableStateOf(0) }
+    var localLeft by remember { mutableIntStateOf(0) }
     LaunchedEffect(localLeft) {
         if (localLeft > 0) { delay(1000); localLeft -= 1 }
     }
@@ -192,7 +192,7 @@ fun EmailCodeScreen(
             }
 
             Spacer(Modifier.height(28.dp))
-            Divider(color = Color(0x1A000000))
+            HorizontalDivider(color = Color(0x1A000000))
             Spacer(Modifier.height(12.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -248,7 +248,7 @@ fun EmailCodeScreen(
 private fun maskEmail(email: String): String {
     val at = email.indexOf('@')
     if (at <= 1) return "••••"
-    val head = email.substring(0, 2)
+    val head = email.take(2)
     val tail = email.substring(at)
     return buildString {
         append(head)

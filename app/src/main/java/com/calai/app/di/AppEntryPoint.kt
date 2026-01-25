@@ -4,6 +4,7 @@ import com.calai.app.data.account.repo.AccountRepository
 import com.calai.app.data.auth.repo.AuthRepository
 import com.calai.app.data.auth.repo.TokenStore
 import com.calai.app.data.auth.state.AuthState
+import com.calai.app.data.entitlement.EntitlementSyncer
 import com.calai.app.data.foodlog.repo.FoodLogsRepository
 import com.calai.app.data.profile.repo.AutoGoalsRepository
 import com.calai.app.data.profile.repo.UserProfileStore
@@ -28,4 +29,5 @@ interface AppEntryPoint {
     fun autoGoalsRepository(): AutoGoalsRepository
     fun foodLogsRepository(): FoodLogsRepository
     fun accountRepository(): AccountRepository
+    fun entitlementSyncer(): EntitlementSyncer
 }
