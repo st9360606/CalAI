@@ -18,6 +18,12 @@
     <!-- Camera -->
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- ✅ 修正 lint: PermissionImpliesUnsupportedChromeOsHardware
+         宣告相機硬體是「可選」(required=false)，避免 Play/ChromeOS 推定「必須有相機」 -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <application
         android:name="com.calai.bitecal.BiteCal"
         android:allowBackup="true"
@@ -98,7 +104,7 @@
             android:theme="@style/Theme.Transparent" />
 
         <!-- WorkManager：使用自訂 Configuration.Provider（HiltWorkerFactory）時，
-         必須移除預設的 WorkManagerInitializer（lint: RemoveWorkManagerInitializer） -->
+             必須移除預設的 WorkManagerInitializer（lint: RemoveWorkManagerInitializer） -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
@@ -118,7 +124,6 @@
             android:noHistory="true"
             android:excludeFromRecents="true"
             android:theme="@style/Theme.Transparent" />
-
 
     </application>
 
