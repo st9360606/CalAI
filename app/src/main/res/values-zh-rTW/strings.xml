@@ -79,7 +79,7 @@
     <string name="onboard_height_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
 
     <!-- weight -->
-    <string name="onboard_weight_title">你的體重大約是多少？</string>
+    <string name="onboard_weight_title">你的當前體重是多少？</string>
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_weight_hint">這將用於校準你的自訂計畫。</string>
     <string name="onboard_weight_zero_error">請輸入大於 0 的體重</string>
@@ -110,7 +110,7 @@
     <!-- notifications -->
     <string name="allow_notifications_cta">允許通知</string>
     <string name="notif_title">每一餐都算數</string>
-    <string name="notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓每日的熱量與三大營養素更準確、進度更清晰。偶爾的放鬆或小失手很正常，有提醒就能更快回到你的計畫裡，把努力穩穩累積起來。</string>
+    <string name="notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓你的熱量、三大營養素與進度保持在正軌。偶爾忘記很正常；及時提醒能幫你更快回到節奏。</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
     <string name="open_notification_settings">開啟通知設定</string>
@@ -136,9 +136,9 @@
     <string name="progress_item_health_score">健康指數</string>
 
     <!-- plan -->
-    <string name="plan_title_congrats">太棒了！</string>
+    <string name="plan_title_congrats">恭喜!</string>
     <string name="plan_subtitle_ready">你的個人健康計畫已完成！</string>
-    <string name="plan_edit_anytime">每日攝取量已根據你的目標進行客製化</string>
+    <string name="plan_edit_anytime">每日攝取量已根據您的目標進行客製化</string>
 
     <string name="plan_macros_carbs">碳水化合物</string>
     <string name="plan_macros_proteins">蛋白質</string>
@@ -180,6 +180,9 @@
     <string name="msg_login_failed_generic">登入失敗，請再試一次</string>
 
     <string name="recently_uploaded">最近上傳</string>
+    <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
+    <string name="quick_add_log_workout">记录运动</string>
+    <string name="quick_add_scan_food">扫描食物</string>
 
 
     <!-- res/values-zh-rTW/strings.xml -->
@@ -197,4 +200,55 @@
     <string name="fasting_window_ended">進食時段結束</string>
     <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
     <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
+
+
+
+    <!-- Fasting notifications 通知內容 -->
+    <string name="fasting_start_title">今天的 %1$s 開跑 🍽️</string>
+    <string name="fasting_start_body">你的進食窗已開啟（%1$s–%2$s）。有吃東西記得順手記錄。</string>
+    <string name="fasting_endsoon_title">進食窗快結束了 ⏰</string>
+    <string name="fasting_endsoon_body">還有 1 小時就結束（到 %1$s）。如果還有最後一餐，記得慢慢吃、順手記錄。</string>
+
+    <!-- Steps Card  -->
+    <string name="steps_hint_connect_google_health">連結 Google Health 取得步數資料</string>
+    <string name="steps_hint_install_health_connect">安裝 Health Connect 取得步數資料</string>
+    <string name="steps_hint_no_source_app">請在 Health Connect 啟用 Health App 同步步數</string>
+    <string name="steps_hint_hc_unavailable">此裝置無法使用 Health Connect</string>
+    <string name="steps_hint_retry">同步失敗，點擊重試</string>
+    <string name="common_error">錯誤</string>
+    <string name="common_dash">—</string>
+
+    <string name="steps_status_permission_not_granted">未授權</string>
+    <string name="steps_status_hc_not_installed">未安裝</string>
+    <string name="steps_status_hc_unavailable">不可用</string>
+    <string name="steps_secondary_no_data_yet">尚無資料</string>
+    <string name="steps_secondary_connect">連線</string>
+    <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
+
+
+
+
+    <!-- ================= Camera ======================= -->
+    <!-- Camera modes -->
+    <string name="camera_mode_food">掃描食物</string>
+    <string name="camera_mode_barcode">條型碼</string>
+    <string name="camera_mode_label">食品標籤</string>
+    <string name="camera_mode_album">相簿</string>
+
+    <!-- Camera titles -->
+    <string name="camera_barcode_title">條型掃描器</string>
+    <string name="camera_label_title">標籤掃描器</string>
+
+    <!-- Camera permission -->
+    <string name="camera_need_permission">需要相機權限才能掃描</string>
+
+
+    <!-- SettingScreen privacy policy -->
+    <string name="url_terms">https://YOUR_DOMAIN/terms</string>
+    <string name="url_privacy">https://YOUR_DOMAIN/privacy#data-deletion</string>
+    <string name="url_feature_request">https://YOUR_DOMAIN/feature-request</string>
+    <string name="support_email">support@YOUR_DOMAIN</string>
+    <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
+
+
 </resources>

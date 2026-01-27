@@ -110,7 +110,7 @@
     <!-- notifications -->
     <string name="allow_notifications_cta">Allow Notifications</string>
     <string name="notif_title">Make every meal count !</string>
-    <string name="notif_subtitle">Enable notifications and we’ll gently remind you at the right times to log meals consistently—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
+    <string name="notif_subtitle">Enable notifications for gentle reminders to log meals—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
     <string name="onb_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
     <string name="onb_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
     <string name="open_notification_settings">Open notification settings</string>
@@ -137,9 +137,9 @@
     <string name="progress_item_health_score">Health score</string>
 
     <!-- plan -->
-    <string name="plan_title_congrats">Awesome!</string>
-    <string name="plan_subtitle_ready">Your personal health plan is ready.</string>
-    <string name="plan_edit_anytime">Daily intake has been customized according to your goal.</string>
+    <string name="plan_title_congrats">Congratulations!</string>
+    <string name="plan_subtitle_ready">Your personal health plan is ready!</string>
+    <string name="plan_edit_anytime">You can edit this anytime.</string>
 
     <string name="plan_macros_carbs">Carbs</string>
     <string name="plan_macros_proteins">Protein</string>
@@ -184,7 +184,9 @@
 
 
     <string name="recently_uploaded">Recently uploaded</string>
-
+    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
+    <string name="quick_add_log_workout">Log workout</string>
+    <string name="quick_add_scan_food">Scan food</string>
 
 
     <!-- res/values/strings.xml（節錄） -->
@@ -202,6 +204,63 @@
     <string name="fasting_window_ended">Eating window ended</string>
     <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
     <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
+
+
+
+    <!-- Fasting notifications 通知內容 -->
+    <string name="fasting_start_title">Today’s %1$s starts 🍽️</string>
+    <string name="fasting_start_body">Your eating window is open (%1$s–%2$s). If you eat, remember to log it.</string>
+    <string name="fasting_endsoon_title">Eating window ends soon ⏰</string>
+    <string name="fasting_endsoon_body">1 hour left (until %1$s). If you have a last meal, take it slow and log it.</string>
+
+
+
+
+
+    <!-- Steps Card  -->
+    <string name="steps_hint_connect_google_health">Connect Google Health to track your steps</string>
+    <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
+    <string name="steps_hint_no_source_app">Enable a health app in Health Connect to sync steps</string>
+    <string name="steps_hint_hc_unavailable">Health Connect isn’t available on this device</string>
+    <string name="steps_hint_retry">Sync failed. Tap to retry</string>
+    <string name="common_error">Error</string>
+    <string name="common_dash">—</string>
+
+    <string name="steps_status_permission_not_granted">Not authorized</string>
+    <string name="steps_status_hc_not_installed">Not installed</string>
+    <string name="steps_status_hc_unavailable">Unavailable</string>
+    <string name="steps_secondary_no_data_yet">No data yet</string>
+    <string name="steps_secondary_connect">Connect</string>
+    <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
+
+
+
+
+
+    <!-- ================= Camera ======================= -->
+    <!-- Camera modes -->
+    <string name="camera_mode_food">Scan Food</string>
+    <string name="camera_mode_barcode">Barcode</string>
+    <string name="camera_mode_label">Food Label</string>
+    <string name="camera_mode_album">Photos</string>
+
+    <!-- Camera titles -->
+    <string name="camera_barcode_title">Barcode Scanner</string>
+    <string name="camera_label_title">Label Scanner</string>
+
+    <!-- Camera permission -->
+    <string name="camera_need_permission">Camera permission is required to scan</string>
+
+
+
+
+    <!-- SettingScreen privacy policy -->
+    <string name="url_terms">https://YOUR_DOMAIN/terms</string>
+    <string name="url_privacy">https://YOUR_DOMAIN/privacy#data-deletion</string>
+    <string name="url_feature_request">https://YOUR_DOMAIN/feature-request</string>
+    <string name="support_email">support@YOUR_DOMAIN</string>
+    <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
+
 
 
 </resources>

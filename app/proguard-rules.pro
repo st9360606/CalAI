@@ -45,8 +45,8 @@
 -keep class okhttp3.** { *; }
 
 # DTO 若未以 @SerializedName 標註，保留欄位（依你的 package 調整）
--keepclassmembers class com.calai.app.net.** { <fields>; }
--keepclassmembers class com.calai.app.data.** { <fields>; }
+-keepclassmembers class com.calai.bitecal.net.** { <fields>; }
+-keepclassmembers class com.calai.bitecal.data.** { <fields>; }
 
 # @Keep
 -keep @androidx.annotation.Keep class * { *; }
