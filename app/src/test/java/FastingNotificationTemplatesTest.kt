@@ -1,4 +1,4 @@
-import com.calai.app.data.fasting.notifications.FastingNotificationTemplates
+import com.calai.bitecal.data.fasting.notifications.FastingNotificationTemplates
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

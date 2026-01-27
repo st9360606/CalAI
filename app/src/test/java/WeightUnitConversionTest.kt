@@ -1,7 +1,7 @@
-package com.calai.app.ui.home.ui.weight.logic
+package com.calai.bitecal.ui.home.ui.weight.logic
 
-import com.calai.app.data.profile.repo.kgToLbs1
-import com.calai.app.data.profile.repo.lbsToKg1
+import com.calai.bitecal.data.profile.repo.kgToLbs1
+import com.calai.bitecal.data.profile.repo.lbsToKg1
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

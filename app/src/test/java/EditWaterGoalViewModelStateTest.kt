@@ -1,4 +1,4 @@
-package com.calai.app.ui.home.ui.settings.details.model
+package com.calai.bitecal.ui.home.ui.settings.details.model
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

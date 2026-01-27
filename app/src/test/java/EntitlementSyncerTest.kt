@@ -1,9 +1,9 @@
-import com.calai.app.data.billing.ActiveSub
-import com.calai.app.data.billing.BillingGateway
-import com.calai.app.data.entitlement.EntitlementSyncer
-import com.calai.app.data.entitlement.api.EntitlementApi
-import com.calai.app.data.entitlement.api.EntitlementSyncRequest
-import com.calai.app.data.entitlement.api.EntitlementSyncResponse
+import com.calai.bitecal.data.billing.ActiveSub
+import com.calai.bitecal.data.billing.BillingGateway
+import com.calai.bitecal.data.entitlement.EntitlementSyncer
+import com.calai.bitecal.data.entitlement.api.EntitlementApi
+import com.calai.bitecal.data.entitlement.api.EntitlementSyncRequest
+import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

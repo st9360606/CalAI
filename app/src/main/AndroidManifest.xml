@@ -19,7 +19,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
-        android:name="com.calai.app.BiteCal"
+        android:name="com.calai.bitecal.BiteCal"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -50,7 +50,7 @@
 
         <!-- ★★★ 將 Receiver 放在 application 裡 ★★★ -->
         <receiver
-            android:name="com.calai.app.data.fasting.notifications.FastingReceiver"
+            android:name="com.calai.bitecal.data.fasting.notifications.FastingReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="FASTING_START" />
@@ -60,7 +60,7 @@
 
         <!-- exported="false"：只有系統或你自己 App（同 UID）能觸發（外部 App 不能隨便叫） -->
         <receiver
-            android:name="com.calai.app.data.fasting.notifications.RescheduleBootReceiver"
+            android:name="com.calai.bitecal.data.fasting.notifications.RescheduleBootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

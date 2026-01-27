@@ -12,15 +12,15 @@ plugins {
 
 @Suppress("UnstableApiUsage")
 android {
-    namespace = "com.calai.app"
+    namespace = "com.calai.bitecal"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.calai.app"
+        applicationId = "com.calai.bitecal"
         minSdk = 30
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 10001
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 預設 app 顯示名稱（不覆蓋多語字串）

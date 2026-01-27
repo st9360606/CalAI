@@ -1,9 +1,9 @@
-package com.calai.app.data.profile.repo
+package com.calai.bitecal.data.profile.repo
 
-import com.calai.app.data.common.RepoInvalidationBus
-import com.calai.app.data.profile.api.ProfileApi
-import com.calai.app.data.profile.api.UpsertProfileRequest
-import com.calai.app.data.profile.api.UserProfileDto
+import com.calai.bitecal.data.common.RepoInvalidationBus
+import com.calai.bitecal.data.profile.api.ProfileApi
+import com.calai.bitecal.data.profile.api.UpsertProfileRequest
+import com.calai.bitecal.data.profile.api.UserProfileDto
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

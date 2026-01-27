@@ -1,7 +1,7 @@
-import com.calai.app.data.account.api.AccountApi
-import com.calai.app.data.account.repo.AccountRepository
-import com.calai.app.data.auth.repo.TokenStore
-import com.calai.app.data.profile.repo.UserProfileStore
+import com.calai.bitecal.data.account.api.AccountApi
+import com.calai.bitecal.data.account.repo.AccountRepository
+import com.calai.bitecal.data.auth.repo.TokenStore
+import com.calai.bitecal.data.profile.repo.UserProfileStore
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
