@@ -19,7 +19,7 @@ android {
         applicationId = "com.calai.bitecal"
         minSdk = 30
         targetSdk = 36
-        versionCode = 10003
+        versionCode = 10004
         versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -142,8 +142,8 @@ android {
             dimension = "env"
             // TODO: 之後換正式域名
 
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
