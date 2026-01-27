@@ -19,8 +19,8 @@ android {
         applicationId = "com.calai.bitecal"
         minSdk = 30
         targetSdk = 36
-        versionCode = 10001
-        versionName = "1.0.0"
+        versionCode = 10003
+        versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 預設 app 顯示名稱（不覆蓋多語字串）
@@ -78,14 +78,17 @@ android {
             signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
+
+            // ✅ Play Console 建議的「原生程式碼偵錯符號」
+            // 產生 native debug symbols，幫助 Crash/ANR 符號化
+            ndk {
+                debugSymbolLevel = "FULL" // 可選：SYMBOL_TABLE / FULL
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 file("proguard-rules.pro")
             )
             manifestPlaceholders["appLabel"] = "BiteCal"
-
-            // （可選）release 也能再覆蓋一次，但通常用 flavor 控就夠
-            // buildConfigField("String", "API_BASE_URL", "\"https://api.yourdomain.com\"")
         }
         getByName("debug") {
             isMinifyEnabled = false
