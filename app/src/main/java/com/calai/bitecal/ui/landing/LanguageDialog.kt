@@ -46,7 +46,6 @@ val LANGS = listOf(
     LangItem("한국어", "ko", "🇰🇷"),
     LangItem("Tiếng Việt", "vi", "🇻🇳"),
     LangItem("ไทย", "th", "🇹🇭"),
-    LangItem("Bahasa Indonesia", "id", "🇮🇩"),
     LangItem("Bahasa Melayu", "ms", "🇲🇾"),
     LangItem("繁體中文", "zh-TW", "🇹🇼"),
     LangItem("简体中文", "zh-CN", "🇨🇳"),

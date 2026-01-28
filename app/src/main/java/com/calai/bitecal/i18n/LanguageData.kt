@@ -21,7 +21,6 @@ val LANGS: List<LangOption> = listOf(
     LangOption("ko",      "한국어",             "🇰🇷", "KR"),
     LangOption("vi",      "Tiếng Việt",      "🇻🇳", "VI"),
     LangOption("th",      "ไทย",              "🇹🇭", "TH"),
-    LangOption("id",      "Bahasa Indonesia","🇮🇩", "ID"),
     LangOption("ms",      "Bahasa Melayu",   "🇲🇾", "MS"),
     LangOption("zh-TW",   "繁體中文",         "🇹🇼", "CH"),
     LangOption("zh-CN",   "简体中文",         "🇨🇳", "CH"),
