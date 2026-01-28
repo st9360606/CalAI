@@ -90,8 +90,8 @@ enum class CameraMode { FOOD, BARCODE, LABEL }
 @Composable
 fun CameraScreen(
     onClose: () -> Unit,
-    onImagePicked: (Uri) -> Unit,
-    enableCameraX: Boolean = true // ✅ 測試/Preview 可關閉，避免 AndroidView + 相機干擾
+    onImagePicked: (mode: CameraMode, uri: Uri) -> Unit,
+    enableCameraX: Boolean = true
 ) {
     val ctx = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -119,7 +119,7 @@ fun CameraScreen(
     val pickImageLauncher =
         registryOwner?.let {
             rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-                if (uri != null) onImagePicked(uri)
+                if (uri != null) onImagePicked(mode, uri)
             }
         }
 

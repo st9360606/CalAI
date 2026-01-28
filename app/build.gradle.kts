@@ -236,7 +236,6 @@ dependencies {
     // ===== WorkManager + Hilt =====
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-
     // ===== 測試 =====
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.12")
@@ -255,6 +254,9 @@ dependencies {
 
     // Google Play Billing (KTX) ✅ 一定要有，不然 com.android.billingclient.* 全紅
     implementation("com.android.billingclient:billing-ktx:7.1.1")
+
+    //mlkit:barcode-scanning
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 
 }
 

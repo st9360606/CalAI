@@ -42,7 +42,39 @@ class FoodLogFlowViewModel @Inject constructor(
                 _state.value = UiState(loading = false, envelope = env)
                 onCreated(env.foodLogId)
             }.onFailure {
-                _state.value = UiState(loading = false, error = it.message ?: "submit failed")
+                _state.value = UiState(loading = false, error = it.message ?: "submit album failed")
+            }
+        }
+    }
+
+    fun submitLabel(ctx: Context, uri: Uri, onCreated: (foodLogId: String) -> Unit) {
+        viewModelScope.launch {
+            runCatching {
+                _state.value = UiState(loading = true)
+
+                val bytes = ctx.contentResolver.openInputStream(uri)!!.use { it.readBytes() }
+                val reqBody = bytes.toRequestBody("image/*".toMediaType())
+                val part = MultipartBody.Part.createFormData("file", "label.jpg", reqBody)
+
+                val env = repo.submitLabelImage(part)
+                _state.value = UiState(loading = false, envelope = env)
+                onCreated(env.foodLogId)
+            }.onFailure {
+                _state.value = UiState(loading = false, error = it.message ?: "submit label failed")
+            }
+        }
+    }
+
+    fun submitBarcode(barcode: String, onCreated: (foodLogId: String) -> Unit) {
+        viewModelScope.launch {
+            runCatching {
+                _state.value = UiState(loading = true)
+
+                val env = repo.submitBarcode(barcode)
+                _state.value = UiState(loading = false, envelope = env)
+                onCreated(env.foodLogId)
+            }.onFailure {
+                _state.value = UiState(loading = false, error = it.message ?: "submit barcode failed")
             }
         }
     }

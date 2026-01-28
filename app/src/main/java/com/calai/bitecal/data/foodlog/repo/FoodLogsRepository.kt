@@ -1,5 +1,6 @@
 package com.calai.bitecal.data.foodlog.repo
 
+import com.calai.bitecal.data.foodlog.api.BarcodeReq
 import com.calai.bitecal.data.foodlog.api.FoodLogsApi
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
@@ -12,15 +13,15 @@ class FoodLogsRepository @Inject constructor(
     suspend fun submitAlbumImage(part: okhttp3.MultipartBody.Part): FoodLogEnvelopeDto =
         api.postAlbum(part)
 
-    suspend fun getOne(id: String): FoodLogEnvelopeDto = api.getOne(id)
+    suspend fun submitLabelImage(part: okhttp3.MultipartBody.Part): FoodLogEnvelopeDto =
+        api.postLabel(part)
 
+    suspend fun submitBarcode(barcode: String): FoodLogEnvelopeDto =
+        api.postBarcode(BarcodeReq(barcode))
+
+    suspend fun getOne(id: String): FoodLogEnvelopeDto = api.getOne(id)
     suspend fun retry(id: String): FoodLogEnvelopeDto = api.retry(id)
 
-    /**
-     * MVP 輪詢策略：
-     * - 看到 PENDING：delay(pollAfterSec or 2s) 後再打
-     * - 看到 DRAFT/FAILED/SAVED/DELETED：停止
-     */
     suspend fun pollUntilTerminal(id: String, maxAttempts: Int = 60): FoodLogEnvelopeDto {
         var last: FoodLogEnvelopeDto = api.getOne(id)
         repeat(maxAttempts) {

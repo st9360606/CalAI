@@ -114,6 +114,7 @@ import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import com.calai.bitecal.ui.home.ui.camera.CameraMode
 
 object Routes {
     const val LANDING = "landing"
@@ -1560,10 +1561,13 @@ fun BiteCalNavHost(
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
                 CameraScreen(
                     onClose = { nav.popBackStack() },
-                    onImagePicked = { uri ->
-                        flowVm.submitAlbum(ctx, uri) { foodLogId ->
-                            nav.navigate(Routes.foodLogDetail(foodLogId)) {
-                                launchSingleTop = true
+                    onImagePicked = { mode, uri ->
+                        when (mode) {
+                            CameraMode.LABEL -> flowVm.submitLabel(ctx, uri) { foodLogId ->
+                                nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+                            }
+                            else -> flowVm.submitAlbum(ctx, uri) { foodLogId ->
+                                nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
                             }
                         }
                     }
