@@ -38,7 +38,6 @@ val LANGS = listOf(
     LangItem("English", "en", "🇺🇸"),
     LangItem("Español", "es", "🇪🇸"),
     LangItem("العربية", "ar", "🇸🇦"),
-    LangItem("বাংলা", "bn", "🇧🇩"),
     LangItem("Русский", "ru", "🇷🇺"),
     LangItem("Français", "fr", "🇫🇷"),
     LangItem("Deutsch", "de", "🇩🇪"),

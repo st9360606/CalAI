@@ -13,7 +13,6 @@ val LANGS: List<LangOption> = listOf(
     LangOption("en",      "English",         "🇺🇸", "EN"),
     LangOption("es",      "Español",         "🇪🇸", "ES"),
     LangOption("ar",      "العربية",          "🇸🇦", "AR"),
-    LangOption("bn",      "বাংলা",             "🇧🇩", "BN"),
     LangOption("ru",      "Русский",         "🇷🇺", "RU"),
     LangOption("fr",      "Français",        "🇫🇷", "FR"),
     LangOption("de",      "Deutsch",         "🇩🇪", "DE"),
