@@ -76,6 +76,7 @@ import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import com.calai.bitecal.i18n.LanguageManager
 import kotlinx.coroutines.delay
@@ -1558,20 +1559,76 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
+            // ✅ NEW：讀取 detail 回傳的模式要求（LABEL / BARCODE / FOOD）
+            var initialMode by rememberSaveable { mutableStateOf(CameraMode.FOOD) }
+            val requestedMode = backStackEntry.savedStateHandle.get<String>("camera_mode")
+
+            LaunchedEffect(requestedMode) {
+                if (!requestedMode.isNullOrBlank()) {
+                    runCatching { initialMode = CameraMode.valueOf(requestedMode) }
+                    // ✅ 用完就清掉，避免一直覆寫使用者手動切換
+                    backStackEntry.savedStateHandle["camera_mode"] = null
+                }
+            }
+
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
-                CameraScreen(
-                    onClose = { nav.popBackStack() },
-                    onImagePicked = { mode, uri ->
-                        when (mode) {
-                            CameraMode.LABEL -> flowVm.submitLabel(ctx, uri) { foodLogId ->
-                                nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+                val st by flowVm.state.collectAsState()
+
+                Box(Modifier.fillMaxSize()) {
+                    CameraScreen(
+                        onClose = { nav.popBackStack() },
+                        busy = st.loading,
+                        initialMode = initialMode, // ✅ NEW
+                        onImagePicked = { mode, uri ->
+                            when (mode) {
+                                CameraMode.LABEL -> flowVm.submitLabel(ctx, uri) { foodLogId ->
+                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+                                }
+                                else -> flowVm.submitAlbum(ctx, uri) { foodLogId ->
+                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+                                }
                             }
-                            else -> flowVm.submitAlbum(ctx, uri) { foodLogId ->
+                        },
+                        onShutterCaptured = { mode, file ->
+                            when (mode) {
+                                CameraMode.FOOD -> flowVm.submitPhotoFile(file) { foodLogId ->
+                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+                                }
+                                CameraMode.LABEL -> flowVm.submitLabelFile(file) { foodLogId ->
+                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+                                }
+                                CameraMode.BARCODE -> Unit
+                            }
+                        },
+                        onBarcodeScanned = { code ->
+                            if (st.loading) return@CameraScreen
+                            flowVm.submitBarcode(code) { foodLogId ->
                                 nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
                             }
                         }
+                    )
+
+                    when {
+                        st.cooldown != null -> {
+                            ErrorTopToast(
+                                message = "冷卻中：${st.cooldown?.cooldownSeconds ?: "-"}s",
+                                modifier = Modifier.align(Alignment.TopCenter)
+                            )
+                        }
+                        st.refused != null -> {
+                            ErrorTopToast(
+                                message = st.refused?.hint ?: "無法識別，請只拍攝食物",
+                                modifier = Modifier.align(Alignment.TopCenter)
+                            )
+                        }
+                        !st.error.isNullOrBlank() -> {
+                            ErrorTopToast(
+                                message = st.error!!,
+                                modifier = Modifier.align(Alignment.TopCenter)
+                            )
+                        }
                     }
-                )
+                }
             }
         }
 
@@ -1585,13 +1642,39 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
+            // ✅ 盡量抓到 Camera 的 backStackEntry（更穩）
+            val cameraEntry = runCatching { nav.getBackStackEntry(Routes.CAMERA) }.getOrNull()
+
             FoodLogDetailScreen(
-                foodLogId = id,
+                foodLogId = id, // ✅ 修正：你原本傳 foodLogId 但沒宣告，這裡應該傳 id
                 vm = flowVm,
                 onBack = { nav.popBackStack() },
                 onOpenEditor = { foodLogId ->
                     // TODO: 導到你的可編輯頁（EditFoodLog）
                     // nav.navigate(Routes.EDIT_FOOD_LOG(foodLogId))
+                },
+
+                onGoLabel = {
+                    // ✅ 回到 Camera 並切到 LABEL
+                    if (cameraEntry != null) {
+                        cameraEntry.savedStateHandle["camera_mode"] = CameraMode.LABEL.name
+                        nav.popBackStack(Routes.CAMERA, false)
+                    } else {
+                        // fallback：如果 Camera 不在 stack，就退回上一頁（通常也會是 Camera）
+                        nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.LABEL.name)
+                        nav.popBackStack()
+                    }
+                },
+
+                onRescanBarcode = {
+                    // ✅ 回到 Camera 並切到 BARCODE
+                    if (cameraEntry != null) {
+                        cameraEntry.savedStateHandle["camera_mode"] = CameraMode.BARCODE.name
+                        nav.popBackStack(Routes.CAMERA, false)
+                    } else {
+                        nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.BARCODE.name)
+                        nav.popBackStack()
+                    }
                 }
             )
         }
