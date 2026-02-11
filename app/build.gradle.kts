@@ -107,9 +107,9 @@ android {
             versionNameSuffix = "-dev"
             //buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")   //模擬器
             // ✅ 你原本用的（尾巴有 /）
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"") //同WIFI
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"") //同WIFI
             // ✅ 新增給你現在要用的（尾巴不要 /，方便你 concat path）
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
@@ -119,8 +119,8 @@ android {
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
 
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
@@ -258,6 +258,8 @@ dependencies {
 
     // ML Kit Barcode :barcode-scanning
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    // ML Kit Text Recognition（On-device）
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 
 }
 
