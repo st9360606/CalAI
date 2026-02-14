@@ -118,9 +118,9 @@ fun CameraScreen(
     val lastBarcodeAtMs = remember { mutableLongStateOf(0L) }
 
     // ===== 模式 =====
-    var mode by rememberSaveable { mutableStateOf(CameraMode.FOOD) }
+    var mode by rememberSaveable { mutableStateOf(initialMode) }
 
-    // ✅ 外部要求切模式時同步（只在外部改 initialMode 時發生）
+    // ✅ 外部要求切模式時同步（例如從 Detail 點「改用 Label/Barcode」回來）
     LaunchedEffect(initialMode) {
         mode = initialMode
     }

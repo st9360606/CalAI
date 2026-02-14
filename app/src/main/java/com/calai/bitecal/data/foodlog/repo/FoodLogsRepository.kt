@@ -51,20 +51,24 @@ class FoodLogsRepository @Inject constructor(
         } catch (e: HttpException) {
             val code = e.code()
             val body = e.response()?.errorBody()?.string().orEmpty()
-
             // 429: COOLDOWN_ACTIVE
             if (code == 429 && body.isNotBlank()) {
-                runCatching {
-                    val dto = json.decodeFromString(CooldownActiveDto.serializer(), body)
-                    if (dto.errorCode == "COOLDOWN_ACTIVE") throw FoodLogApiException.CooldownActive(dto)
+                val dto = runCatching {
+                    json.decodeFromString(CooldownActiveDto.serializer(), body)
+                }.getOrNull()
+
+                if (dto?.errorCode == "COOLDOWN_ACTIVE") {
+                    throw FoodLogApiException.CooldownActive(dto)
                 }
             }
-
             // 422: MODEL_REFUSED
             if (code == 422 && body.isNotBlank()) {
-                runCatching {
-                    val dto = json.decodeFromString(ModelRefusedDto.serializer(), body)
-                    if (dto.errorCode == "MODEL_REFUSED") throw FoodLogApiException.ModelRefused(dto)
+                val dto = runCatching {
+                    json.decodeFromString(ModelRefusedDto.serializer(), body)
+                }.getOrNull()
+
+                if (dto?.errorCode == "MODEL_REFUSED") {
+                    throw FoodLogApiException.ModelRefused(dto)
                 }
             }
 

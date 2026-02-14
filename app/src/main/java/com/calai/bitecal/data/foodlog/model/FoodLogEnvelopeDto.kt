@@ -16,6 +16,14 @@ enum class DegradeLevel {
 }
 
 @Serializable
+enum class ModelTier {
+    @SerialName("MODEL_TIER_HIGH")
+    HIGH,
+    @SerialName("MODEL_TIER_LOW")
+    LOW
+}
+
+@Serializable
 data class NutritionResultDto(
     val foodName: String? = null,
     val quantity: QuantityDto? = null,
@@ -43,7 +51,7 @@ data class TaskDto(val taskId: String? = null, val pollAfterSec: Int? = null)
 @Serializable
 data class ApiErrorDto(
     val errorCode: String? = null,
-    val clientAction: String? = null,
+    val clientAction: ClientAction? = null,
     val retryAfterSec: Int? = null
 )
 
@@ -55,6 +63,8 @@ data class FoodLogEnvelopeDto(
     val foodLogId: String,
     val status: FoodLogStatus,
     val degradeLevel: DegradeLevel? = null,
+    val tierUsed: ModelTier? = null,
+    val fromCache: Boolean = false,
     val nutritionResult: NutritionResultDto? = null,
     val task: TaskDto? = null,
     val error: ApiErrorDto? = null,

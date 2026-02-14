@@ -1554,31 +1554,47 @@ fun BiteCalNavHost(
             val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
             val owner: ActivityResultRegistryOwner = activity
 
+            val cameraOwner = backStackEntry
             val flowVm: FoodLogFlowViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
+                viewModelStoreOwner = cameraOwner,
+                factory = HiltViewModelFactory(activity, cameraOwner)
             )
 
-            // ✅ NEW：讀取 detail 回傳的模式要求（LABEL / BARCODE / FOOD）
+            // ✅ 改：用 Flow 監聽 key 的變化
             var initialMode by rememberSaveable { mutableStateOf(CameraMode.FOOD) }
-            val requestedMode = backStackEntry.savedStateHandle.get<String>("camera_mode")
+            val modeReqFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>("camera_mode", null)
+            }
+            val modeReqRaw by modeReqFlow.collectAsState(initial = null)
 
-            LaunchedEffect(requestedMode) {
-                if (!requestedMode.isNullOrBlank()) {
-                    runCatching { initialMode = CameraMode.valueOf(requestedMode) }
-                    // ✅ 用完就清掉，避免一直覆寫使用者手動切換
-                    backStackEntry.savedStateHandle["camera_mode"] = null
-                }
+            LaunchedEffect(modeReqRaw) {
+                val raw = modeReqRaw ?: return@LaunchedEffect
+                val req = runCatching { CameraMode.valueOf(raw) }.getOrNull()
+                // ✅ consume：讀完就清掉，避免一直覆寫使用者手動切換
+                backStackEntry.savedStateHandle.remove<String>("camera_mode")
+                if (req != null) initialMode = req
             }
 
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
                 val st by flowVm.state.collectAsState()
 
+                // ✅ NEW：toast 2 秒後自動清掉（不然會一直黏在 Camera）
+                LaunchedEffect(st.cooldown, st.refused, st.error) {
+                    val hasToast = st.cooldown != null || st.refused != null || !st.error.isNullOrBlank()
+                    if (hasToast) {
+                        delay(2_000)
+                        flowVm.clearTransient()
+                    }
+                }
+
                 Box(Modifier.fillMaxSize()) {
                     CameraScreen(
-                        onClose = { nav.popBackStack() },
+                        onClose = {
+                            flowVm.reset()
+                            nav.popBackStack()
+                        },
                         busy = st.loading,
-                        initialMode = initialMode, // ✅ NEW
+                        initialMode = initialMode,
                         onImagePicked = { mode, uri ->
                             when (mode) {
                                 CameraMode.LABEL -> flowVm.submitLabel(ctx, uri) { foodLogId ->
@@ -1609,24 +1625,18 @@ fun BiteCalNavHost(
                     )
 
                     when {
-                        st.cooldown != null -> {
-                            ErrorTopToast(
-                                message = "冷卻中：${st.cooldown?.cooldownSeconds ?: "-"}s",
-                                modifier = Modifier.align(Alignment.TopCenter)
-                            )
-                        }
-                        st.refused != null -> {
-                            ErrorTopToast(
-                                message = st.refused?.hint ?: "無法識別，請只拍攝食物",
-                                modifier = Modifier.align(Alignment.TopCenter)
-                            )
-                        }
-                        !st.error.isNullOrBlank() -> {
-                            ErrorTopToast(
-                                message = st.error!!,
-                                modifier = Modifier.align(Alignment.TopCenter)
-                            )
-                        }
+                        st.cooldown != null -> ErrorTopToast(
+                            message = "冷卻中：${st.cooldown?.cooldownSeconds ?: "-"}s",
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                        st.refused != null -> ErrorTopToast(
+                            message = st.refused?.hint ?: "無法識別，請只拍攝食物",
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                        !st.error.isNullOrBlank() -> ErrorTopToast(
+                            message = st.error!!,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
                     }
                 }
             }
@@ -1637,37 +1647,34 @@ fun BiteCalNavHost(
             val ctx = LocalContext.current
             val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
 
-            val flowVm: FoodLogFlowViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
-            )
-
             // ✅ 盡量抓到 Camera 的 backStackEntry（更穩）
             val cameraEntry = runCatching { nav.getBackStackEntry(Routes.CAMERA) }.getOrNull()
 
+            // ✅ 讓 Detail 共用「Camera 的 VM」
+            val vmOwner = cameraEntry ?: backStackEntry
+
+            val flowVm: FoodLogFlowViewModel = viewModel(
+                viewModelStoreOwner = vmOwner,
+                factory = HiltViewModelFactory(activity, vmOwner)
+            )
+
             FoodLogDetailScreen(
-                foodLogId = id, // ✅ 修正：你原本傳 foodLogId 但沒宣告，這裡應該傳 id
+                foodLogId = id,
                 vm = flowVm,
                 onBack = { nav.popBackStack() },
                 onOpenEditor = { foodLogId ->
-                    // TODO: 導到你的可編輯頁（EditFoodLog）
-                    // nav.navigate(Routes.EDIT_FOOD_LOG(foodLogId))
+                    // TODO
                 },
-
                 onGoLabel = {
-                    // ✅ 回到 Camera 並切到 LABEL
                     if (cameraEntry != null) {
                         cameraEntry.savedStateHandle["camera_mode"] = CameraMode.LABEL.name
                         nav.popBackStack(Routes.CAMERA, false)
                     } else {
-                        // fallback：如果 Camera 不在 stack，就退回上一頁（通常也會是 Camera）
                         nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.LABEL.name)
                         nav.popBackStack()
                     }
                 },
-
                 onRescanBarcode = {
-                    // ✅ 回到 Camera 並切到 BARCODE
                     if (cameraEntry != null) {
                         cameraEntry.savedStateHandle["camera_mode"] = CameraMode.BARCODE.name
                         nav.popBackStack(Routes.CAMERA, false)
