@@ -17,9 +17,14 @@ class BaseHeadersInterceptor @Inject constructor(
         val tzId = TimeZone.getDefault().id // e.g. Asia/Taipei
 
         val req = chain.request().newBuilder()
-            .header("X-Device-Id", deviceIdProvider.get())   // ✅ 修正
+            .header("X-Device-Id", deviceIdProvider.get())
             .header("Accept-Language", acceptLanguage)
-            .header("X-Timezone", tzId) // ✅ NEW：讓後端用來算 daily/monthly key
+
+            // ✅ v1.2：後端以這個為準計算 daily/monthly key
+            .header("X-Client-Timezone", tzId)
+
+            // ✅ 相容：你若後端/其他服務仍讀這個也不會壞
+            .header("X-Timezone", tzId)
             .build()
 
         return chain.proceed(req)

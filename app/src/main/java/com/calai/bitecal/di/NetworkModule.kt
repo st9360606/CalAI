@@ -12,6 +12,7 @@ import com.calai.bitecal.data.fasting.api.FastingApi
 import com.calai.bitecal.data.fasting.notifications.FastingAlarmScheduler
 import com.calai.bitecal.data.fasting.repo.FastingRepository
 import com.calai.bitecal.data.foodlog.api.FoodLogsApi
+import com.calai.bitecal.data.net.BaseHeadersInterceptor
 import com.calai.bitecal.data.profile.api.AutoGoalsApi
 import com.calai.bitecal.data.profile.api.ProfileApi
 import com.calai.bitecal.data.users.api.UsersApi
@@ -46,15 +47,6 @@ object NetworkModule {
     }
     private fun contentType() = "application/json".toMediaType()
 
-    // ★ 所有請求一律帶上使用者本地時區（IANA）
-    private fun tzHeaderInterceptor(): Interceptor = Interceptor { chain ->
-        val tz = ZoneId.systemDefault().id
-        val req = chain.request().newBuilder()
-            .header("X-Client-Timezone", tz)
-            .build()
-        chain.proceed(req)
-    }
-
     private fun logging(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
             // Debug 顯示標頭；Release 關閉或降到 BASIC
@@ -66,24 +58,27 @@ object NetworkModule {
     }
 
     @Provides @Singleton @Named("authClient")
-    fun provideAuthOkHttp(): OkHttpClient =
+    fun provideAuthOkHttp(
+        baseHeadersInterceptor: BaseHeadersInterceptor
+    ): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(tzHeaderInterceptor())
-            .addInterceptor(logging())              // ← 改用封裝好的 logging()
+            .addInterceptor(baseHeadersInterceptor)  // ✅ NEW：deviceId/lang/tz
+            .addInterceptor(logging())
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .build()
 
     @Provides @Singleton @Named("apiClient")
     fun provideApiOkHttp(
+        baseHeadersInterceptor: BaseHeadersInterceptor,
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(tzHeaderInterceptor())
+            .addInterceptor(baseHeadersInterceptor)  // ✅ NEW：deviceId/lang/tz
             .addInterceptor(authInterceptor)
             .authenticator(tokenAuthenticator)
-            .addInterceptor(logging())              // ← 同上
+            .addInterceptor(logging())
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .build()
