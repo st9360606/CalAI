@@ -4,6 +4,7 @@ import com.calai.bitecal.R
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -115,7 +116,17 @@ import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import com.calai.bitecal.data.foodlog.model.ClientAction
 import com.calai.bitecal.ui.home.ui.camera.CameraMode
+import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorCard
+import android.provider.Settings
+import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.calai.bitecal.data.foodlog.model.FoodLogStatus
+import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
 
 object Routes {
     const val LANDING = "landing"
@@ -1560,7 +1571,7 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, cameraOwner)
             )
 
-            // ✅ 改：用 Flow 監聽 key 的變化
+            // ✅ 外部要求切模式（Detail 回來）
             var initialMode by rememberSaveable { mutableStateOf(CameraMode.FOOD) }
             val modeReqFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<String?>("camera_mode", null)
@@ -1570,20 +1581,62 @@ fun BiteCalNavHost(
             LaunchedEffect(modeReqRaw) {
                 val raw = modeReqRaw ?: return@LaunchedEffect
                 val req = runCatching { CameraMode.valueOf(raw) }.getOrNull()
-                // ✅ consume：讀完就清掉，避免一直覆寫使用者手動切換
-                backStackEntry.savedStateHandle.remove<String>("camera_mode")
-                if (req != null) initialMode = req
+                backStackEntry.savedStateHandle.remove<String>("camera_mode") // consume
+                if (req != null) {
+                    flowVm.reset()
+                    initialMode = req
+                }
             }
 
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
                 val st by flowVm.state.collectAsState()
 
-                // ✅ NEW：toast 2 秒後自動清掉（不然會一直黏在 Camera）
+                // ✅ toast 2 秒後自動清掉（不動 envelope）
                 LaunchedEffect(st.cooldown, st.refused, st.error) {
                     val hasToast = st.cooldown != null || st.refused != null || !st.error.isNullOrBlank()
                     if (hasToast) {
                         delay(2_000)
                         flowVm.clearTransient()
+                    }
+                }
+
+                // ✅ 只在 FAILED/DELETED 且 error != null 時顯示卡片
+                val apiErrUi = remember(st.envelope?.error) {
+                    ApiErrorUiMapper.map(st.envelope?.error)
+                }
+                val showApiCard = apiErrUi != null && (
+                        st.envelope?.status == FoodLogStatus.FAILED || st.envelope?.status == FoodLogStatus.DELETED
+                        )
+
+                fun handleClientAction(action: ClientAction) {
+                    when (action) {
+                        ClientAction.TRY_LABEL -> {
+                            flowVm.reset()
+                            initialMode = CameraMode.LABEL
+                        }
+                        ClientAction.TRY_BARCODE -> {
+                            flowVm.reset()
+                            initialMode = CameraMode.BARCODE
+                        }
+                        ClientAction.RETAKE_PHOTO -> {
+                            flowVm.reset()
+                            initialMode = CameraMode.FOOD
+                        }
+                        ClientAction.RETRY_LATER -> {
+                            flowVm.reset()
+                        }
+                        ClientAction.CHECK_NETWORK -> {
+                            openNetworkSettings(ctx)
+                        }
+                        ClientAction.CONTACT_SUPPORT -> {
+                            openSupportEmail(ctx)
+                        }
+                        ClientAction.ENTER_MANUALLY -> {
+                            // ✅ 先給可用 fallback（你之後有手動頁再換成 nav.navigate）
+                            Toast.makeText(ctx, "手動輸入尚未實作，先改用標籤辨識", Toast.LENGTH_SHORT).show()
+                            flowVm.reset()
+                            initialMode = CameraMode.LABEL
+                        }
                     }
                 }
 
@@ -1618,11 +1671,33 @@ fun BiteCalNavHost(
                         },
                         onBarcodeScanned = { code ->
                             if (st.loading) return@CameraScreen
-                            flowVm.submitBarcode(code) { foodLogId ->
-                                nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+
+                            flowVm.submitBarcode(code) { env ->
+                                when (env.status) {
+                                    FoodLogStatus.DRAFT,
+                                    FoodLogStatus.SAVED,
+                                    FoodLogStatus.PENDING -> {
+                                        nav.navigate(Routes.foodLogDetail(env.foodLogId)) { launchSingleTop = true }
+                                    }
+                                    FoodLogStatus.FAILED,
+                                    FoodLogStatus.DELETED -> {
+                                        // ✅ 留在 Camera：ApiErrorCard 會顯示（用 st.envelope?.error）
+                                    }
+                                }
                             }
                         }
                     )
+
+                    if (showApiCard && apiErrUi != null) {
+                        ApiErrorCard(
+                            ui = apiErrUi,
+                            onAction = ::handleClientAction,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 200.dp) // 避開底部 tiles/shutter
+                        )
+                    }
 
                     when {
                         st.cooldown != null -> ErrorTopToast(
@@ -1695,4 +1770,20 @@ fun BiteCalNavHost(
 @Composable
 private fun SimplePlaceholder(title: String) {
     Text(modifier = Modifier.padding(24.dp), text = "TODO: $title page")
+}
+
+private fun openNetworkSettings(ctx: Context) {
+    val intent = Intent(Settings.ACTION_WIFI_SETTINGS).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { ctx.startActivity(intent) }
+}
+
+private fun openSupportEmail(ctx: Context) {
+    val intent = Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:support@bitcalai.example")
+        putExtra(Intent.EXTRA_SUBJECT, "BiteCal Support")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { ctx.startActivity(intent) }
 }

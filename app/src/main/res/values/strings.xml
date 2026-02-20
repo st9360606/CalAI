@@ -263,4 +263,38 @@
 
 
 
+
+    <!-- foodlog error msg -->
+    <string name="err_barcode_not_found_title">Product not found</string>
+    <string name="err_barcode_not_found_msg">We couldn’t find this barcode. Try taking a photo of the nutrition label.</string>
+
+    <string name="err_barcode_lookup_failed_title">Lookup failed</string>
+    <string name="err_barcode_lookup_failed_msg">We couldn’t reach the product database. Check your connection and try again.</string>
+
+    <string name="err_generic_title">Something went wrong</string>
+    <string name="err_generic_msg">Please try again.</string>
+
+    <string name="err_network_title">Network issue</string>
+    <string name="err_network_msg">Please check your internet connection and try again.</string>
+
+    <string name="err_photo_title">Photo needed</string>
+    <string name="err_photo_msg">Try taking the photo again with better lighting.</string>
+
+    <string name="err_manual_title">Enter manually</string>
+    <string name="err_manual_msg">You can enter details manually.</string>
+
+    <string name="err_support_title">Contact support</string>
+    <string name="err_support_msg">Please contact support if the issue persists.</string>
+
+    <!-- CTA -->
+    <string name="cta_try_label">Scan nutrition label</string>
+    <string name="cta_enter_manually">Enter manually</string>
+    <string name="cta_retry">Retry</string>
+    <string name="cta_check_network">Check network</string>
+    <string name="cta_retake">Retake</string>
+    <string name="cta_contact_support">Contact support</string>
+    <string name="cta_rescan_barcode">Rescan barcode</string>
+
+
+
 </resources>

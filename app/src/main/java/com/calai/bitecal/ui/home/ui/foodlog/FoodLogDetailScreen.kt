@@ -326,6 +326,7 @@ private fun ModelRefusedPanel(
 private fun ModelTier?.toDisplayName(): String = when (this) {
     ModelTier.HIGH -> "高品質（HIGH）"
     ModelTier.LOW -> "省成本（LOW）"
+    ModelTier.BARCODE -> "條碼（BARCODE）"
     null -> "未知"
 }
 

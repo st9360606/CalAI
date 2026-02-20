@@ -169,28 +169,33 @@ fun CameraScreen(
     val mainExecutor: Executor = remember(ctx) { ContextCompat.getMainExecutor(ctx) }
 
     // ===== Barcode Analyzer（只在 BARCODE 模式開）=====
-    val scannedOnce = remember { AtomicBoolean(false) }
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
 
     val latestBusy by rememberUpdatedState(busy)
     val latestOnBarcodeScanned by rememberUpdatedState(onBarcodeScanned)
 
     val barcodeAnalyzer = remember {
-        BarcodeScannerProcessor { code ->
-            if (latestBusy) return@BarcodeScannerProcessor
+        BarcodeScannerProcessor(
+            onBarcode = { code ->
+                // ✅ 上傳中不送
+                if (latestBusy) return@BarcodeScannerProcessor
 
-            // ✅ Step10C-5：同碼 3 秒內只吃一次（防重送）
-            val now = System.currentTimeMillis()
-            val prev = lastBarcode.value
-            val prevAt = lastBarcodeAtMs.value
-            if (prev == code && (now - prevAt) < 3000) return@BarcodeScannerProcessor
-            lastBarcode.value = code
-            lastBarcodeAtMs.value = now
+                // ✅ 同碼 3 秒內只吃一次（防重送）
+                val now = System.currentTimeMillis()
+                val prev = lastBarcode.value
+                val prevAt = lastBarcodeAtMs.longValue
+                if (prev == code && (now - prevAt) < 3000) return@BarcodeScannerProcessor
 
-            if (scannedOnce.compareAndSet(false, true)) {
+                lastBarcode.value = code
+                lastBarcodeAtMs.longValue = now
+
                 latestOnBarcodeScanned(code)
+            },
+            shouldAccept = {
+                // ✅ 只要「不在 busy」就允許 analyzer 吃碼
+                !latestBusy
             }
-        }
+        )
     }
 
     DisposableEffect(Unit) {
@@ -200,9 +205,12 @@ fun CameraScreen(
         }
     }
 
-    // 模式切換時，重置一次掃描鎖
+    // ✅ 切到 BARCODE 時把節流清掉，讓使用者回來可立刻掃
     LaunchedEffect(mode) {
-        scannedOnce.set(false)
+        if (mode == CameraMode.BARCODE) {
+            lastBarcode.value = null
+            lastBarcodeAtMs.longValue = 0L
+        }
     }
 
     // ===== Torch (Flash) =====

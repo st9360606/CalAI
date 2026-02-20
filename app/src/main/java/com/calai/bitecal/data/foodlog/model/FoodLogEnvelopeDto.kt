@@ -20,7 +20,9 @@ enum class ModelTier {
     @SerialName("MODEL_TIER_HIGH")
     HIGH,
     @SerialName("MODEL_TIER_LOW")
-    LOW
+    LOW,
+    @SerialName("BARCODE")
+    BARCODE
 }
 
 @Serializable
@@ -30,6 +32,8 @@ data class NutritionResultDto(
     val nutrients: NutrientsDto? = null,
     val healthScore: Int? = null,
     val confidence: Double? = null,
+    val warnings: List<String>? = null,
+    val degradedReason: String? = null,
     val source: SourceDto? = null
 )
 

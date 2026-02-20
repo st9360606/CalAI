@@ -7,8 +7,13 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * ✅ 不做「永久只吃一次」鎖（避免掃一次就死）
+ * ✅ 是否要接受（例如 busy 上傳中）交給 shouldAccept
+ */
 class BarcodeScannerProcessor(
-    private val onBarcode: (rawValue: String) -> Unit
+    private val onBarcode: (rawValue: String) -> Unit,
+    private val shouldAccept: () -> Boolean = { true },
 ) : ImageAnalysis.Analyzer {
 
     private val scanner = BarcodeScanning.getClient()
@@ -22,7 +27,13 @@ class BarcodeScannerProcessor(
             return
         }
 
-        // 避免同時多個 frame 丟進 ML Kit（手機會燙、也會狂觸發）
+        // ✅ 外層不允許就略過（例如正在上傳）
+        if (!shouldAccept()) {
+            imageProxy.close()
+            return
+        }
+
+        // ✅ 同時只跑一個 MLKit 任務
         if (!busy.compareAndSet(false, true)) {
             imageProxy.close()
             return
@@ -32,11 +43,14 @@ class BarcodeScannerProcessor(
 
         scanner.process(image)
             .addOnSuccessListener { barcodes ->
-                val first = barcodes.firstOrNull { !it.rawValue.isNullOrBlank() }?.rawValue
-                if (!first.isNullOrBlank()) onBarcode(first)
-            }
-            .addOnFailureListener {
-                // ignore (你可以加 log)
+                if (!shouldAccept()) return@addOnSuccessListener
+
+                val raw = barcodes.firstOrNull { !it.rawValue.isNullOrBlank() }?.rawValue ?: return@addOnSuccessListener
+                val cleaned = raw.filter { it.isDigit() }
+
+                if (cleaned.length in 6..32) {
+                    onBarcode(cleaned)
+                }
             }
             .addOnCompleteListener {
                 busy.set(false)
