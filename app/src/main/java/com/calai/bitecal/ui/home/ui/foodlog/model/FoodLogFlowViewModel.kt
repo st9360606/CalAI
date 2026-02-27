@@ -4,13 +4,14 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.calai.bitecal.data.foodlog.model.ApiErrorDto
 import com.calai.bitecal.data.foodlog.model.CooldownActiveDto
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
 import com.calai.bitecal.data.foodlog.repo.FoodLogApiException
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
-import com.calai.bitecal.data.foodlog.repo.MultipartParts
+import com.calai.bitecal.data.foodlog.repo.ImageCompressUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.time.Instant
 import javax.inject.Inject
-import java.io.IOException
 
 @HiltViewModel
 class FoodLogFlowViewModel @Inject constructor(
@@ -37,6 +37,7 @@ class FoodLogFlowViewModel @Inject constructor(
         val envelope: FoodLogEnvelopeDto? = null,
         val cooldown: CooldownActiveDto? = null,
         val refused: ModelRefusedDto? = null,
+        val apiError: ApiErrorDto? = null, // ✅ NEW
         val error: String? = null
     )
 
@@ -63,62 +64,45 @@ class FoodLogFlowViewModel @Inject constructor(
         pollingJob = null
     }
 
-    private suspend fun readBytesOrThrow(ctx: Context, uri: Uri): ByteArray =
-        withContext(Dispatchers.IO) {
-            val inStream = ctx.contentResolver.openInputStream(uri)
-                ?: throw IOException("openInputStream returned null: $uri")
-            inStream.use { it.readBytes() }
-        }
-
-    fun submitAlbum(ctx: Context, uri: Uri, onCreated: (foodLogId: String) -> Unit) {
+    fun submitAlbum(ctx: Context, uri: Uri, onCreated: (FoodLogEnvelopeDto) -> Unit) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                val bytes = readBytesOrThrow(ctx, uri)
-                val reqBody = bytes.toRequestBody("image/*".toMediaType())
+                val bytes = withContext(Dispatchers.IO) {
+                    ImageCompressUtil.compressUriToJpegBytes(
+                        ctx = ctx,
+                        uri = uri,
+                        maxSide = 1600,
+                        quality = 82
+                    )
+                }
+                val reqBody = bytes.toRequestBody("image/jpeg".toMediaType())
                 val part = MultipartBody.Part.createFormData("file", "album.jpg", reqBody)
 
-                // ✅ ALBUM：不傳 deviceCapturedAtUtc
                 val env = repo.submitAlbumImage(part)
                 _state.value = UiState(loading = false, envelope = env)
-                onCreated(env.foodLogId)
+                onCreated(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 _state.value = UiState(loading = false, cooldown = e.dto)
+
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
+
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
             } catch (ce: CancellationException) {
                 throw ce
+
             } catch (t: Throwable) {
                 _state.value = UiState(loading = false, error = t.message ?: "submit album failed")
-            }
-        }
-    }
-
-    fun submitLabel(ctx: Context, uri: Uri, onCreated: (foodLogId: String) -> Unit) {
-        viewModelScope.launch {
-            try {
-                stopPollingSilently()
-                _state.value = UiState(loading = true)
-
-                val bytes = readBytesOrThrow(ctx, uri)
-                val reqBody = bytes.toRequestBody("image/*".toMediaType())
-                val part = MultipartBody.Part.createFormData("file", "label.jpg", reqBody)
-
-                val env = repo.submitLabelImage(part, deviceCapturedAtUtc = nowUtcPart())
-                _state.value = UiState(loading = false, envelope = env)
-                onCreated(env.foodLogId)
-
-            } catch (e: FoodLogApiException.CooldownActive) {
-                _state.value = UiState(loading = false, cooldown = e.dto)
-            } catch (e: FoodLogApiException.ModelRefused) {
-                _state.value = UiState(loading = false, refused = e.dto)
-            } catch (ce: CancellationException) {
-                throw ce
-            } catch (t: Throwable) {
-                _state.value = UiState(loading = false, error = t.message ?: "submit label failed")
             }
         }
     }
@@ -139,6 +123,13 @@ class FoodLogFlowViewModel @Inject constructor(
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
 
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
             } catch (ce: CancellationException) {
                 // ✅ 被 reset/stop/submit 切換取消 → 不更新 state
                 throw ce
@@ -157,6 +148,7 @@ class FoodLogFlowViewModel @Inject constructor(
                     loading = true,
                     cooldown = null,
                     refused = null,
+                    apiError = null,
                     error = null
                 )
 
@@ -169,8 +161,14 @@ class FoodLogFlowViewModel @Inject constructor(
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
 
+            } catch (e: FoodLogApiException.BusinessError) { // ✅ 補這個
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
             } catch (ce: CancellationException) {
-                // ✅ 被 stop/reset/submit/retry 取消 → 不更新 state
                 throw ce
 
             } catch (t: Throwable) {
@@ -187,18 +185,17 @@ class FoodLogFlowViewModel @Inject constructor(
                     loading = true,
                     cooldown = null,
                     refused = null,
+                    apiError = null,
                     error = null
                 )
 
                 val env = repo.retry(foodLogId)
 
-                // ✅ 小優化：回 PENDING 先顯示 loading，不要先 loading=false 再 startPolling 造成閃爍
                 _state.value = UiState(
                     loading = (env.status == FoodLogStatus.PENDING),
                     envelope = env
                 )
 
-                // ✅ 關鍵：如果 retry 後回 PENDING，要重新輪詢
                 if (env.status == FoodLogStatus.PENDING) {
                     startPolling(foodLogId)
                 }
@@ -209,8 +206,14 @@ class FoodLogFlowViewModel @Inject constructor(
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
 
+            } catch (e: FoodLogApiException.BusinessError) { // ✅ 補這個
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
             } catch (ce: CancellationException) {
-                // ✅ 被 reset/stop/submit/retry 切換取消 → 不更新 state
                 throw ce
 
             } catch (t: Throwable) {
@@ -219,17 +222,26 @@ class FoodLogFlowViewModel @Inject constructor(
         }
     }
 
-    fun submitPhotoFile(file: File, onCreated: (foodLogId: String) -> Unit) {
+    fun submitPhotoFile(file: File, onCreated: (FoodLogEnvelopeDto) -> Unit) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                val part = MultipartParts.imagePartFromFile("file", "photo.jpg", file)
+                val bytes = withContext(Dispatchers.IO) {
+                    ImageCompressUtil.compressFileToJpegBytes(
+                        file = file,
+                        maxSide = 1600,
+                        quality = 82
+                    )
+                }
+
+                val reqBody = bytes.toRequestBody("image/jpeg".toMediaType())
+                val part = MultipartBody.Part.createFormData("file", "photo.jpg", reqBody)
                 val env = repo.submitPhotoImage(part, deviceCapturedAtUtc = nowUtcPart())
 
                 _state.value = UiState(loading = false, envelope = env)
-                onCreated(env.foodLogId)
+                onCreated(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 _state.value = UiState(loading = false, cooldown = e.dto)
@@ -237,8 +249,14 @@ class FoodLogFlowViewModel @Inject constructor(
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
 
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
             } catch (ce: CancellationException) {
-                // ✅ 被 reset/stop/submit 切換取消 → 不更新 state
                 throw ce
 
             } catch (t: Throwable) {
@@ -250,17 +268,26 @@ class FoodLogFlowViewModel @Inject constructor(
         }
     }
 
-    fun submitLabelFile(file: File, onCreated: (foodLogId: String) -> Unit) {
+    fun submitLabelFile(file: File, onCreated: (FoodLogEnvelopeDto) -> Unit) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                val part = MultipartParts.imagePartFromFile("file", "label.jpg", file)
+                val bytes = withContext(Dispatchers.IO) {
+                    ImageCompressUtil.compressFileToJpegBytes(
+                        file = file,
+                        maxSide = 1600,
+                        quality = 82
+                    )
+                }
+
+                val reqBody = bytes.toRequestBody("image/jpeg".toMediaType())
+                val part = MultipartBody.Part.createFormData("file", "label.jpg", reqBody)
                 val env = repo.submitLabelImage(part, deviceCapturedAtUtc = nowUtcPart())
 
                 _state.value = UiState(loading = false, envelope = env)
-                onCreated(env.foodLogId)
+                onCreated(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 _state.value = UiState(loading = false, cooldown = e.dto)
@@ -268,8 +295,14 @@ class FoodLogFlowViewModel @Inject constructor(
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
 
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
             } catch (ce: CancellationException) {
-                // ✅ 被 reset/stop/submit 切換取消 → 不更新 state
                 throw ce
 
             } catch (t: Throwable) {
@@ -296,6 +329,7 @@ class FoodLogFlowViewModel @Inject constructor(
             loading = false,
             cooldown = null,
             refused = null,
+            apiError = null,
             error = null
         )
     }

@@ -110,6 +110,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.core.content.ContextCompat
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
+import com.calai.bitecal.ui.home.components.RecentUploadCard
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
@@ -133,6 +134,7 @@ fun HomeScreen(
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
+    val recentUpload by vm.recentUpload.collectAsState()
 
     // ====== Fasting VM 狀態 / 權限設定 ======
     val fastingUi by fastingVm.state.collectAsState()
@@ -580,21 +582,35 @@ fun HomeScreen(
                 // ===== Fourth block: 最近上傳
                 Spacer(Modifier.height(24.dp))
 
-                if (s.recentMeals.isEmpty()) {
-                    // ✅ 空狀態：跟截圖一樣
-                    RecentlyUploadedEmptySection(
-                        cardHeight = 100.dp // 你想更大就改這裡
-                    )
-                } else {
-                    // ✅ 有資料：沿用你原本的列表（先不動）
-                    Text(
-                        text = stringResource(R.string.recently_uploaded),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    for (m in s.recentMeals) {
-                        MealCard(m)
-                        Spacer(Modifier.height(12.dp))
+                when {
+                    recentUpload != null -> {
+                        Text(
+                            text = stringResource(R.string.recently_uploaded),
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        RecentUploadCard(
+                            item = recentUpload!!,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    s.recentMeals.isEmpty() -> {
+                        RecentlyUploadedEmptySection(
+                            cardHeight = 100.dp
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            text = stringResource(R.string.recently_uploaded),
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        for (m in s.recentMeals) {
+                            MealCard(m)
+                            Spacer(Modifier.height(12.dp))
+                        }
                     }
                 }
                 Spacer(Modifier.height(70.dp))

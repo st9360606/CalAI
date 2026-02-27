@@ -4,6 +4,7 @@ import com.calai.bitecal.data.foodlog.api.BarcodeReq
 import com.calai.bitecal.data.foodlog.api.FoodLogsApi
 import com.calai.bitecal.data.foodlog.model.CooldownActiveDto
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
+import com.calai.bitecal.data.foodlog.model.FoodLogServerErrorDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
 import kotlinx.coroutines.delay
@@ -85,6 +86,28 @@ class FoodLogsRepository @Inject constructor(
                 }
             }
 
+            if (body.isNotBlank()) {
+                val dto = runCatching {
+                    json.decodeFromString(FoodLogServerErrorDto.serializer(), body)
+                }.getOrNull()
+                if (dto?.normalizedCode() != null) {
+                    throw FoodLogApiException.BusinessError(dto)
+                }
+            }
+
+            // ✅ fallback：如果代理層直接回 413 / 非 JSON，也盡量轉成可顯示錯誤
+            if (code == 413) {
+                throw FoodLogApiException.BusinessError(
+                    FoodLogServerErrorDto(
+                        errorCode = "IMAGE_TOO_LARGE",
+                        code = null,
+                        message = "Image exceeds upload size limit",
+                        requestId = null,
+                        clientAction = "RETAKE_PHOTO",
+                        retryAfterSec = null
+                    )
+                )
+            }
             throw e
         }
     }

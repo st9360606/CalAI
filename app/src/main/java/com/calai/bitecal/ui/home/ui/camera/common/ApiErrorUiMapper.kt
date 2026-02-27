@@ -42,15 +42,49 @@ object ApiErrorUiMapper {
             "BARCODE_LOOKUP_FAILED" -> UiModel(
                 titleResId = R.string.err_barcode_lookup_failed_title,
                 messageResId = R.string.err_barcode_lookup_failed_msg,
-                primaryCtaResId = R.string.cta_rescan_barcode, // ✅ 你 strings 已經有
+                primaryCtaResId = R.string.cta_rescan_barcode,
                 secondaryCtaResId = R.string.cta_check_network,
                 primaryAction = ClientAction.TRY_BARCODE,
                 secondaryAction = ClientAction.CHECK_NETWORK
             )
 
-            // ✅ errorCode 缺失或未收錄：直接用 clientAction fallback
-            null -> fallbackByAction(action)
+            // ===== IMAGE / UPLOAD =====
+            "IMAGE_TOO_LARGE",
+            "FILE_REQUIRED",
+            "UNSUPPORTED_IMAGE_FORMAT",
+            "IMAGE_DECODE_FAILED" -> UiModel(
+                titleResId = R.string.err_photo_title,
+                messageResId = R.string.err_photo_msg,
+                primaryCtaResId = R.string.cta_retake,
+                primaryAction = ClientAction.RETAKE_PHOTO
+            )
 
+            // ===== FOOD VISION 常見失敗 =====
+            "LOW_CONFIDENCE",
+            "NO_FOOD_DETECTED" -> UiModel(
+                titleResId = R.string.err_photo_title,
+                messageResId = R.string.err_photo_msg,
+                primaryCtaResId = R.string.cta_retake,
+                secondaryCtaResId = R.string.cta_rescan_barcode,
+                primaryAction = ClientAction.RETAKE_PHOTO,
+                secondaryAction = ClientAction.TRY_BARCODE
+            )
+
+            // ===== NETWORK / SERVER =====
+            "NETWORK_ERROR",
+            "TIMEOUT",
+            "UPSTREAM_TIMEOUT",
+            "PROVIDER_UNAVAILABLE" -> UiModel(
+                titleResId = R.string.err_network_title,
+                messageResId = R.string.err_network_msg,
+                primaryCtaResId = R.string.cta_retry,
+                secondaryCtaResId = R.string.cta_check_network,
+                primaryAction = ClientAction.RETRY_LATER,
+                secondaryAction = ClientAction.CHECK_NETWORK
+            )
+
+            // ===== generic / fallback =====
+            null -> fallbackByAction(action)
             else -> fallbackByAction(action)
         }
     }

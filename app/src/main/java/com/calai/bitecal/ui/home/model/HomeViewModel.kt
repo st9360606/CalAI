@@ -8,6 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.activity.model.DailyActivityStatus
 import com.calai.bitecal.data.activity.sync.DailyActivitySyncer
+import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
+import com.calai.bitecal.data.foodlog.model.FoodLogStatus
+import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
 import com.calai.bitecal.data.health.HealthConnectRepository
 import com.calai.bitecal.data.home.repo.HomeRepository
 import com.calai.bitecal.data.home.repo.HomeSummary
@@ -62,7 +65,8 @@ class HomeViewModel @Inject constructor(
     private val profileRepo: ProfileRepository,       // 401/404 自動補救
     private val dailySyncer: DailyActivitySyncer,     // ✅ 串 daily activity
     private val profileStore: UserProfileStore,
-    private val zoneId: ZoneId                        // ✅ 用裝置當下 timezone
+    private val zoneId: ZoneId,                        // ✅ 用裝置當下 timezone
+    private val foodLogsRepository: FoodLogsRepository
 ) : ViewModel() {
     private val _pendingOpenCamera = MutableStateFlow(false)
     val pendingOpenCamera: StateFlow<Boolean> = _pendingOpenCamera.asStateFlow()
@@ -127,6 +131,106 @@ class HomeViewModel @Inject constructor(
                 _dailyWorkoutGoalKcal.value = v
             }
         }
+    }
+
+
+    //============= recentUpload ==================
+    private val _recentUpload = MutableStateFlow<HomeRecentUploadUi?>(null)
+    val recentUpload: StateFlow<HomeRecentUploadUi?> = _recentUpload.asStateFlow()
+
+    private var recentUploadPollJob: Job? = null
+
+    fun onFoodLogCreated(
+        env: FoodLogEnvelopeDto,
+        previewUri: String?,
+        timeText: String
+    ) {
+        recentUploadPollJob?.cancel()
+
+        when (env.status) {
+            FoodLogStatus.PENDING -> {
+                _recentUpload.value = HomeRecentUploadMapper.pending(
+                    foodLogId = env.foodLogId,
+                    previewUri = previewUri,
+                    timeText = timeText
+                )
+                startRecentUploadPolling(
+                    foodLogId = env.foodLogId,
+                    previewUri = previewUri,
+                    timeText = timeText
+                )
+            }
+
+            FoodLogStatus.DRAFT,
+            FoodLogStatus.SAVED -> {
+                _recentUpload.value = HomeRecentUploadMapper.success(
+                    foodLogId = env.foodLogId,
+                    previewUri = previewUri,
+                    timeText = timeText,
+                    env = env
+                )
+                refresh()
+            }
+
+            FoodLogStatus.FAILED,
+            FoodLogStatus.DELETED -> {
+                _recentUpload.value = null
+            }
+        }
+    }
+
+    fun clearRecentUpload() {
+        recentUploadPollJob?.cancel()
+        recentUploadPollJob = null
+        _recentUpload.value = null
+    }
+
+    private fun startRecentUploadPolling(
+        foodLogId: String,
+        previewUri: String?,
+        timeText: String
+    ) {
+        recentUploadPollJob?.cancel()
+
+        recentUploadPollJob = viewModelScope.launch {
+            try {
+                val env = withContext(Dispatchers.IO) {
+                    foodLogsRepository.pollUntilTerminal(foodLogId)
+                }
+
+                when (env.status) {
+                    FoodLogStatus.DRAFT,
+                    FoodLogStatus.SAVED -> {
+                        _recentUpload.value = HomeRecentUploadMapper.success(
+                            foodLogId = foodLogId,
+                            previewUri = previewUri,
+                            timeText = timeText,
+                            env = env
+                        )
+                        refresh()
+                    }
+
+                    FoodLogStatus.FAILED,
+                    FoodLogStatus.DELETED -> {
+                        _recentUpload.value = null
+                    }
+
+                    FoodLogStatus.PENDING -> {
+                        // 理論上 pollUntilTerminal 不會回 PENDING；保底不動
+                    }
+                }
+            } catch (ce: CancellationException) {
+                throw ce
+            } catch (_: Throwable) {
+                // MVP：poll 失敗先把 overlay 清掉，避免卡死在 pending
+                _recentUpload.value = null
+            }
+        }
+    }
+
+    override fun onCleared() {
+        recentUploadPollJob?.cancel()
+        super.onCleared()
     }
 
     fun refresh() = viewModelScope.launch {

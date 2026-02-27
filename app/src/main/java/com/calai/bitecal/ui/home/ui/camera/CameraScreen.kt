@@ -101,23 +101,24 @@ enum class CameraMode { FOOD, BARCODE, LABEL }
 @Composable
 fun CameraScreen(
     onClose: () -> Unit,
-    onImagePicked: (mode: CameraMode, uri: Uri) -> Unit,
+    onAlbumPicked: (uri: Uri) -> Unit, // ✅ ALBUM 永遠走這個
     onShutterCaptured: (mode: CameraMode, file: File) -> Unit,
     onBarcodeScanned: (barcode: String) -> Unit,
     busy: Boolean = false, // ✅ 上傳中鎖 UI
     enableCameraX: Boolean = true,
-    initialMode: CameraMode = CameraMode.FOOD, // ✅ NEW：外部指定初始模式
+    initialMode: CameraMode = CameraMode.FOOD, // ✅ 外部指定初始模式
 ) {
     val ctx = LocalContext.current
+
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // 你之前踩過的坑：LocalActivityResultRegistryOwner 可能為 null
     val registryOwner = LocalActivityResultRegistryOwner.current
 
     val lastBarcode = remember { mutableStateOf<String?>(null) }
+
     val lastBarcodeAtMs = remember { mutableLongStateOf(0L) }
 
-    // ===== 模式 =====
     var mode by rememberSaveable { mutableStateOf(initialMode) }
 
     // ✅ 外部要求切模式時同步（例如從 Detail 點「改用 Label/Barcode」回來）
@@ -143,7 +144,7 @@ fun CameraScreen(
     val pickImageLauncher =
         registryOwner?.let {
             rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-                if (uri != null) onImagePicked(mode, uri)
+                if (uri != null) onAlbumPicked(uri)
             }
         }
 
@@ -160,6 +161,7 @@ fun CameraScreen(
             .setJpegQuality(90)
             .build()
     }
+
     val imageAnalysis = remember {
         ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
@@ -330,7 +332,9 @@ fun CameraScreen(
     val tileIcon = Color.Black
 
     BoxWithConstraints(
-        modifier = Modifier.fillMaxSize().background(Color.Black)
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
     ) {
         val maxW = maxWidth
 
@@ -403,6 +407,7 @@ fun CameraScreen(
                     onClick = { mode = CameraMode.FOOD },
                     modifier = Modifier.testTag("mode_food")
                 )
+
                 ModeTile(
                     width = tileW,
                     height = tileH,
@@ -416,6 +421,7 @@ fun CameraScreen(
                     onClick = { mode = CameraMode.BARCODE },
                     modifier = Modifier.testTag("mode_barcode")
                 )
+
                 ModeTile(
                     width = tileW,
                     height = tileH,
@@ -429,6 +435,7 @@ fun CameraScreen(
                     onClick = { mode = CameraMode.LABEL },
                     modifier = Modifier.testTag("mode_label")
                 )
+
                 ModeTile(
                     width = tileW,
                     height = tileH,
@@ -461,7 +468,8 @@ fun CameraScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val flashEnabled = enableCameraX && hasCameraPerm && hasFlashUnit && (boundCamera.value != null)
+                val flashEnabled =
+                    enableCameraX && hasCameraPerm && hasFlashUnit && (boundCamera.value != null)
 
                 CircleIconButton(
                     modifier = Modifier
@@ -489,7 +497,8 @@ fun CameraScreen(
                     enabled = shutterEnabled,
                     onClick = {
                         if (!hasCameraPerm) {
-                            requestCameraPermLauncher?.launch(Manifest.permission.CAMERA) ?: openAppSettings(ctx)
+                            requestCameraPermLauncher?.launch(Manifest.permission.CAMERA)
+                                ?: openAppSettings(ctx)
                             return@ShutterButton
                         }
                         if (mode == CameraMode.BARCODE) return@ShutterButton
@@ -549,14 +558,13 @@ private fun ScanFrameOverlay(
     foodOffsetYRatio: Float = -0.06f,
 ) {
     BoxWithConstraints(modifier = modifier) {
-        // ✅ 讓 IDE 明確看到「使用了 BoxWithConstraints scope」
         val maxW = maxWidth
         val maxH = maxHeight
 
-        // ✅ 用 remember，尺寸變化才重算
         val frameSize: Dp = remember(maxW, frameSizeRatio) { maxW * frameSizeRatio }
         val frameOffsetY: Dp = remember(maxH, frameOffsetYRatio) { maxH * frameOffsetYRatio }
         val foodOffsetY: Dp = remember(maxH, foodOffsetYRatio) { maxH * foodOffsetYRatio }
+
         when (mode) {
             CameraMode.FOOD -> {
                 CornerBrackets(
@@ -573,24 +581,16 @@ private fun ScanFrameOverlay(
             }
 
             CameraMode.BARCODE -> {
-                // === Tokens（想更像圖就調這裡）===
                 val barcodeW = maxW * 0.85f
                 val barcodeH = 180.dp
                 val barcodeRadius = 18.dp
                 val barcodeStroke = 4.dp
-
-                // ✅ NEW：框往下移的量（你要再下就 +，要再上就 -）
                 val barcodeExtraDown = 68.dp
-
-                // ✅ 文字大小：大一點點（titleSmall -> titleMedium）
                 val titleText = stringResource(R.string.camera_barcode_title)
-                val titleGap = 12.dp        // 文字與框的距離
-                val titleNudgeUp = 10.dp    // 微調：讓它更像你圖上的位置（想更靠近框就減小）
-
-                // ✅ 框的實際 Y（讓文字跟著框走）
+                val titleGap = 12.dp
+                val titleNudgeUp = 10.dp
                 val barcodeFrameY = frameOffsetY + barcodeExtraDown
 
-                // 標題：固定在「框上方」
                 Text(
                     text = titleText,
                     color = color,
@@ -601,7 +601,6 @@ private fun ScanFrameOverlay(
                         .testTag("barcode_title")
                 )
 
-                // 框：往下移 + 加粗
                 RoundedFrame(
                     color = color,
                     width = barcodeW,
@@ -616,24 +615,16 @@ private fun ScanFrameOverlay(
             }
 
             CameraMode.LABEL -> {
-                // === Tokens（想更像圖就調這裡）===
-                val labelW = maxW * 0.78f              // 寬度維持原本 0.70
-                val labelH = maxW * 1.1f              // ✅ 高度加大（直向更高）
+                val labelW = maxW * 0.78f
+                val labelH = maxW * 1.1f
                 val labelRadius = 18.dp
-                val labelStroke = 4.dp                // ✅ 框線加粗（原本 2.dp）
-
-                // ✅ NEW：框往下移的量（需要更下就 +，要更上就 -）
+                val labelStroke = 4.dp
                 val labelExtraDown = 56.dp
-
-                // ✅ 標題（框上方）
                 val titleText = stringResource(R.string.camera_label_title)
-                val titleGap = 12.dp                  // 文字與框的距離
-                val titleNudgeUp = 10.dp               // 微調：想更靠近框就減小
-
-                // ✅ 框的實際 Y（文字跟著框走）
+                val titleGap = 12.dp
+                val titleNudgeUp = 10.dp
                 val labelFrameY = frameOffsetY + labelExtraDown
 
-                // 標題：固定在「框上方」
                 Text(
                     text = titleText,
                     color = color,
@@ -644,7 +635,6 @@ private fun ScanFrameOverlay(
                         .testTag("label_title")
                 )
 
-                // 框：高度更大 + 加粗
                 RoundedFrame(
                     color = color,
                     width = labelW,
@@ -657,7 +647,6 @@ private fun ScanFrameOverlay(
                         .testTag("scan_frame_label")
                 )
             }
-
         }
     }
 }
@@ -669,7 +658,7 @@ private fun RoundedFrame(
     width: Dp,
     height: Dp,
     radius: Dp,
-    strokeWidth: Dp = 2.dp, // ✅ NEW：可調框線粗細
+    strokeWidth: Dp = 2.dp,
 ) {
     val shape = RoundedCornerShape(radius)
     Box(
@@ -694,25 +683,20 @@ private fun CornerBrackets(
         val h = size.height
 
         val s = stroke.toPx().coerceAtLeast(1f)
-        val pad = s / 2f // ✅ 避免粗線貼邊被裁切
-
+        val pad = s / 2f
         val maxLen = (min(w, h) / 2f - pad).coerceAtLeast(1f)
         val len = cornerLen.toPx().coerceIn(1f, maxLen)
-
-        // ✅ 圓弧半徑不能大於角長
         val r = arcRadius.toPx().coerceIn(1f, len)
 
         val style = Stroke(
             width = s,
-            cap = StrokeCap.Round // ✅ 線段端點圓滑（更像 iOS）
+            cap = StrokeCap.Round
         )
 
-        // ---- Top-Left ----
         drawPath(
             path = Path().apply {
                 moveTo(pad, pad + len)
                 lineTo(pad, pad + r)
-                // 圓弧：從 (pad, pad+r) 轉到 (pad+r, pad)
                 quadraticTo(pad, pad, pad + r, pad)
                 lineTo(pad + len, pad)
             },
@@ -720,12 +704,10 @@ private fun CornerBrackets(
             style = style
         )
 
-        // ---- Top-Right ----
         drawPath(
             path = Path().apply {
                 moveTo(w - pad - len, pad)
                 lineTo(w - pad - r, pad)
-                // 圓弧：轉到 (w-pad, pad+r)
                 quadraticTo(w - pad, pad, w - pad, pad + r)
                 lineTo(w - pad, pad + len)
             },
@@ -733,12 +715,10 @@ private fun CornerBrackets(
             style = style
         )
 
-        // ---- Bottom-Left ----
         drawPath(
             path = Path().apply {
                 moveTo(pad, h - pad - len)
                 lineTo(pad, h - pad - r)
-                // 圓弧：轉到 (pad+r, h-pad)
                 quadraticTo(pad, h - pad, pad + r, h - pad)
                 lineTo(pad + len, h - pad)
             },
@@ -746,12 +726,10 @@ private fun CornerBrackets(
             style = style
         )
 
-        // ---- Bottom-Right ----
         drawPath(
             path = Path().apply {
                 moveTo(w - pad - len, h - pad)
                 lineTo(w - pad - r, h - pad)
-                // 圓弧：轉到 (w-pad, h-pad-r)
                 quadraticTo(w - pad, h - pad, w - pad, h - pad - r)
                 lineTo(w - pad, h - pad - len)
             },
@@ -760,8 +738,6 @@ private fun CornerBrackets(
         )
     }
 }
-
-
 
 @Composable
 private fun ModeTile(
@@ -779,22 +755,18 @@ private fun ModeTile(
 ) {
     val shape = RoundedCornerShape(corner)
     val interactionSource = remember { MutableInteractionSource() }
-
-    // ✅ selected：淡淡邊框（最不破壞風格）
     val border = if (selected) BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)) else null
-
-    // ✅ 可選：selected 時背景稍微更實（想更明顯再開）
     val bgAlpha = if (selected) 0.96f else 0.92f
 
     Surface(
         color = bg.copy(alpha = bgAlpha),
         shape = shape,
-        border = border,                 // ✅ NEW
+        border = border,
         onClick = onClick,
         interactionSource = interactionSource,
         modifier = modifier
             .size(width, height)
-            .clip(shape)                 // ✅ 保持圓角一致
+            .clip(shape)
     ) {
         Column(
             modifier = Modifier
@@ -856,7 +828,7 @@ private fun CircleIconButton(
 
 @Composable
 private fun ShutterButton(
-    enabled: Boolean,          // ✅ NEW：補上 enabled
+    enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -867,20 +839,18 @@ private fun ShutterButton(
         modifier = modifier
             .size(outer)
             .clip(CircleShape)
-            .alpha(if (enabled) 1f else 0.45f) // ✅ disabled 變淡
+            .alpha(if (enabled) 1f else 0.45f)
             .clickable(
-                enabled = enabled,            // ✅ disabled 不可點（解掉誤觸）
+                enabled = enabled,
                 role = Role.Button
             ) { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        // 外圈（描邊）
         Box(
             modifier = Modifier
                 .size(outer)
                 .border(3.dp, Color.White.copy(alpha = 0.80f), CircleShape)
         )
-        // 內圈（實心）
         Surface(
             color = Color.White.copy(alpha = 0.92f),
             shape = CircleShape,

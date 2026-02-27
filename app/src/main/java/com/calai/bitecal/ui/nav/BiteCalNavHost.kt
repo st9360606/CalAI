@@ -127,6 +127,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
+import java.io.File
 
 object Routes {
     const val LANDING = "landing"
@@ -1571,6 +1572,17 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, cameraOwner)
             )
 
+            // ✅ 取得 HomeViewModel（讓 Camera 成功後可以把 recent upload 狀態交給 Home）
+            val homeEntry = remember(nav) {
+                runCatching { nav.getBackStackEntry(Routes.HOME) }.getOrNull()
+            }
+            val homeVm: HomeViewModel? = homeEntry?.let { entry ->
+                viewModel(
+                    viewModelStoreOwner = entry,
+                    factory = HiltViewModelFactory(activity, entry)
+                )
+            }
+
             // ✅ 外部要求切模式（Detail 回來）
             var initialMode by rememberSaveable { mutableStateOf(CameraMode.FOOD) }
             val modeReqFlow = remember(backStackEntry) {
@@ -1601,12 +1613,14 @@ fun BiteCalNavHost(
                 }
 
                 // ✅ 只在 FAILED/DELETED 且 error != null 時顯示卡片
-                val apiErrUi = remember(st.envelope?.error) {
-                    ApiErrorUiMapper.map(st.envelope?.error)
+                val apiErrUi = remember(st.envelope?.error, st.apiError) {
+                    ApiErrorUiMapper.map(st.apiError ?: st.envelope?.error)
                 }
                 val showApiCard = apiErrUi != null && (
-                        st.envelope?.status == FoodLogStatus.FAILED || st.envelope?.status == FoodLogStatus.DELETED
-                        )
+                        st.apiError != null ||
+                        st.envelope?.status == FoodLogStatus.FAILED ||
+                        st.envelope?.status == FoodLogStatus.DELETED
+                )
 
                 fun handleClientAction(action: ClientAction) {
                     when (action) {
@@ -1640,6 +1654,39 @@ fun BiteCalNavHost(
                     }
                 }
 
+                // ✅ 回 Home：優先 pop 回既有 Home；沒有再 navigate
+                fun goHome() {
+                    val popped = nav.popBackStack(Routes.HOME, false)
+                    if (!popped) {
+                        nav.navigate(Routes.HOME) {
+                            launchSingleTop = true
+                        }
+                    }
+                }
+
+                // ✅ Home 第四區塊右上角時間，例如 11:10
+                fun nowHm(): String =
+                    java.time.LocalTime.now()
+                        .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+
+                // ✅ FOOD / LABEL 要先複製 preview，因為原始 file 之後會被 finally 刪掉
+                fun createPreviewCopy(src: File): String? = runCatching {
+                    val preview = File(ctx.cacheDir, "recent_preview_${System.currentTimeMillis()}.jpg")
+                    src.copyTo(preview, overwrite = true)
+                    Uri.fromFile(preview).toString()
+                }.getOrNull()
+
+                // ✅ ALBUM
+                fun copyUriToPreviewFile(ctx: Context, srcUri: Uri): String? = runCatching {
+                    val preview = File(ctx.cacheDir, "recent_preview_${System.currentTimeMillis()}.jpg")
+                    ctx.contentResolver.openInputStream(srcUri)?.use { input ->
+                        preview.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    } ?: return null
+                    Uri.fromFile(preview).toString()
+                }.getOrNull()
+
                 Box(Modifier.fillMaxSize()) {
                     CameraScreen(
                         onClose = {
@@ -1648,27 +1695,53 @@ fun BiteCalNavHost(
                         },
                         busy = st.loading,
                         initialMode = initialMode,
-                        onImagePicked = { mode, uri ->
-                            when (mode) {
-                                CameraMode.LABEL -> flowVm.submitLabel(ctx, uri) { foodLogId ->
-                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
-                                }
-                                else -> flowVm.submitAlbum(ctx, uri) { foodLogId ->
-                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
-                                }
+
+                        // ✅ ALBUM 一律走 album，不再看當前 mode
+                        onAlbumPicked = { uri ->
+                            val previewUri = copyUriToPreviewFile(ctx, uri)
+                            flowVm.submitAlbum(ctx, uri) { env ->
+                                homeVm?.onFoodLogCreated(
+                                    env = env,
+                                    previewUri = previewUri,
+                                    timeText = nowHm()
+                                )
+                                flowVm.reset()
+                                goHome()
                             }
                         },
+
                         onShutterCaptured = { mode, file ->
                             when (mode) {
-                                CameraMode.FOOD -> flowVm.submitPhotoFile(file) { foodLogId ->
-                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+                                CameraMode.FOOD -> {
+                                    val previewUri = createPreviewCopy(file)
+                                    flowVm.submitPhotoFile(file) { env ->
+                                        homeVm?.onFoodLogCreated(
+                                            env = env,
+                                            previewUri = previewUri,
+                                            timeText = nowHm()
+                                        )
+                                        flowVm.reset()
+                                        goHome()
+                                    }
                                 }
-                                CameraMode.LABEL -> flowVm.submitLabelFile(file) { foodLogId ->
-                                    nav.navigate(Routes.foodLogDetail(foodLogId)) { launchSingleTop = true }
+
+                                CameraMode.LABEL -> {
+                                    val previewUri = createPreviewCopy(file)
+                                    flowVm.submitLabelFile(file) { env ->
+                                        homeVm?.onFoodLogCreated(
+                                            env = env,
+                                            previewUri = previewUri,
+                                            timeText = nowHm()
+                                        )
+                                        flowVm.reset()
+                                        goHome()
+                                    }
                                 }
+
                                 CameraMode.BARCODE -> Unit
                             }
                         },
+
                         onBarcodeScanned = { code ->
                             if (st.loading) return@CameraScreen
 
@@ -1677,8 +1750,15 @@ fun BiteCalNavHost(
                                     FoodLogStatus.DRAFT,
                                     FoodLogStatus.SAVED,
                                     FoodLogStatus.PENDING -> {
-                                        nav.navigate(Routes.foodLogDetail(env.foodLogId)) { launchSingleTop = true }
+                                        homeVm?.onFoodLogCreated(
+                                            env = env,
+                                            previewUri = null,
+                                            timeText = nowHm()
+                                        )
+                                        flowVm.reset()
+                                        goHome()
                                     }
+
                                     FoodLogStatus.FAILED,
                                     FoodLogStatus.DELETED -> {
                                         // ✅ 留在 Camera：ApiErrorCard 會顯示（用 st.envelope?.error）
@@ -1704,10 +1784,12 @@ fun BiteCalNavHost(
                             message = "冷卻中：${st.cooldown?.cooldownSeconds ?: "-"}s",
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
+
                         st.refused != null -> ErrorTopToast(
                             message = st.refused?.hint ?: "無法識別，請只拍攝食物",
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
+
                         !st.error.isNullOrBlank() -> ErrorTopToast(
                             message = st.error!!,
                             modifier = Modifier.align(Alignment.TopCenter)

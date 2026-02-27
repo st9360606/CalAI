@@ -99,7 +99,7 @@
     <string name="ex_freq_7_plus_title">7+</string>
     <string name="ex_freq_7_plus_sub">Very high activity</string>
 
-    <!-- exercise -->
+    <!-- goal -->
     <string name="onboard_goal_title">What’s your goal ?</string>
     <string name="onboard_goal_subtitle">This helps us tailor your calorie plan.</string>
     <string name="goal_lose">Lose weight</string>
@@ -180,16 +180,12 @@
     <string name="msg_login_success">Sign-in successful</string>
     <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
 
-
-
-
     <string name="recently_uploaded">Recently uploaded</string>
     <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
     <string name="quick_add_log_workout">Log workout</string>
     <string name="quick_add_scan_food">Scan food</string>
 
-
-    <!-- res/values/strings.xml（節錄） -->
+    <!-- Fasting -->
     <string name="fasting_plan_title">Fasting Plan</string>
     <string name="fasting_plans">Fasting Plans</string>
     <string name="choose_fasting_plan">Choose fasting plan</string>
@@ -205,19 +201,12 @@
     <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
     <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
 
-
-
-    <!-- Fasting notifications 通知內容 -->
     <string name="fasting_start_title">Today’s %1$s starts 🍽️</string>
     <string name="fasting_start_body">Your eating window is open (%1$s–%2$s). If you eat, remember to log it.</string>
     <string name="fasting_endsoon_title">Eating window ends soon ⏰</string>
     <string name="fasting_endsoon_body">1 hour left (until %1$s). If you have a last meal, take it slow and log it.</string>
 
-
-
-
-
-    <!-- Steps Card  -->
+    <!-- Steps Card -->
     <string name="steps_hint_connect_google_health">Connect Google Health to track your steps</string>
     <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
     <string name="steps_hint_no_source_app">Enable a health app in Health Connect to sync steps</string>
@@ -233,26 +222,16 @@
     <string name="steps_secondary_connect">Connect</string>
     <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
 
-
-
-
-
-    <!-- ================= Camera ======================= -->
-    <!-- Camera modes -->
+    <!-- Camera -->
     <string name="camera_mode_food">Scan Food</string>
     <string name="camera_mode_barcode">Barcode</string>
     <string name="camera_mode_label">Food Label</string>
     <string name="camera_mode_album">Photos</string>
 
-    <!-- Camera titles -->
     <string name="camera_barcode_title">Barcode Scanner</string>
     <string name="camera_label_title">Label Scanner</string>
 
-    <!-- Camera permission -->
     <string name="camera_need_permission">Camera permission is required to scan</string>
-
-
-
 
     <!-- SettingScreen privacy policy -->
     <string name="url_terms">https://YOUR_DOMAIN/terms</string>
@@ -260,9 +239,6 @@
     <string name="url_feature_request">https://YOUR_DOMAIN/feature-request</string>
     <string name="support_email">support@YOUR_DOMAIN</string>
     <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
-
-
-
 
     <!-- foodlog error msg -->
     <string name="err_barcode_not_found_title">Product not found</string>
@@ -286,6 +262,13 @@
     <string name="err_support_title">Contact support</string>
     <string name="err_support_msg">Please contact support if the issue persists.</string>
 
+    <!-- image / upload specific -->
+    <string name="err_image_too_large_title">Image too large</string>
+    <string name="err_image_too_large_msg">This image is too large to upload. Please retake it or choose a smaller photo.</string>
+
+    <string name="err_image_format_title">Unsupported image</string>
+    <string name="err_image_format_msg">We couldn’t read this image. Please retake the photo or choose a different one.</string>
+
     <!-- CTA -->
     <string name="cta_try_label">Scan nutrition label</string>
     <string name="cta_enter_manually">Enter manually</string>
@@ -294,7 +277,4 @@
     <string name="cta_retake">Retake</string>
     <string name="cta_contact_support">Contact support</string>
     <string name="cta_rescan_barcode">Rescan barcode</string>
-
-
-
 </resources>

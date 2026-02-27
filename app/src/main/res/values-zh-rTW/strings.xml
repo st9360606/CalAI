@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BiteCal｜卡路里相機（AI）：拍照計算卡路里與減脂記錄</string>
+    <string name="app_name">BiteCal｜AI 卡路里相機：拍照算熱量、記錄飲食</string>
     <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
     <string name="cta_get_started">開始使用</string>
     <string name="cta_login_prefix">已擁有帳號？</string>
@@ -9,9 +9,9 @@
     <string name="signin_title">登入</string>
     <string name="signin_with_apple">使用 Apple 登入</string>
     <string name="signin_with_google">使用 Google 登入</string>
-    <string name="signin_with_email">通過電子郵件繼續</string>
+    <string name="signin_with_email">使用 Email 繼續</string>
     <string name="signin_legal_hint">繼續即表示你同意 BiteCal 的</string>
-    <string name="signin_terms">條款與條件</string>
+    <string name="signin_terms">服務條款</string>
     <string name="signin_and">和</string>
     <string name="signin_privacy">隱私政策</string>
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
@@ -26,41 +26,41 @@
     <string name="continue_btn">繼續</string>
     <string name="sending">傳送中…</string>
 
-    <!-- Email OTP 畫面 -->
+    <!-- Email OTP -->
     <string name="confirm_email_title">確認你的 Email</string>
     <string name="confirm_email_hint">請輸入我們剛剛寄出的 4 位數驗證碼</string>
 
-    <!-- 重送 -->
+    <!-- Resend -->
     <string name="didnt_receive_code">沒有收到驗證碼？</string>
     <string name="resend">重新寄送</string>
     <string name="resend_countdown">%1$d 秒後可重新寄送</string>
 
-    <!-- 錯誤 -->
+    <!-- Errors -->
     <string name="err_otp_invalid">驗證碼錯誤，請重新輸入</string>
-    <string name="err_otp_too_many_attempts">嘗試太頻繁，請稍後再試</string>
-    <string name="err_network_io">網路連線異常，請稍後再試</string>
+    <string name="err_otp_too_many_attempts">嘗試次數過多，請稍後再試</string>
+    <string name="err_network_io">網路異常，請稍後再試</string>
     <string name="err_server_unavailable">服務暫時無法使用，請稍後再試</string>
     <string name="err_generic">發生錯誤，請稍後再試</string>
 
     <!-- Google -->
-    <string name="err_google_id_token_empty">Google 回傳為空的 ID Token</string>
+    <string name="err_google_id_token_empty">Google 回傳的 ID Token 為空</string>
     <string name="err_google_result_parse">解析登入結果失敗</string>
     <string name="err_google_cancelled">你已取消登入</string>
     <string name="err_google_launch_failed">無法啟動 Google 登入%1$s</string>
-    <string name="err_google_no_account_hint">建議到「設定 → 帳號」先新增 Google 帳號，再重試</string>
+    <string name="err_google_no_account_hint">建議先到「設定 → 帳號」新增 Google 帳號，再重新嘗試</string>
     <string name="err_google_signin_failed">Google 登入失敗</string>
-    <string name="err_google_not_completed_with_code">登入未完成，請再試一次（錯誤碼：%1$d）。你也可以改用 Email 登入。</string>
+    <string name="err_google_not_completed_with_code">登入未完成，請再試一次（錯誤碼：%1$d）</string>
 
     <!-- Onboarding: Gender -->
     <string name="onb_gender_title">選擇你的性別</string>
     <string name="onb_gender_subtitle">這將用於校準你的自訂計畫。</string>
     <string name="male_simple">男</string>
-    <string name="female">女性</string>
+    <string name="female">女</string>
     <string name="other">其他</string>
     <string name="continue_text">下一步</string>
 
     <!-- referral_source -->
-    <string name="onboard_referral_title">你是怎麼發現我們的？</string>
+    <string name="onboard_referral_title">你是怎麼知道 BiteCal 的？</string>
     <string name="referral_app_store">App Store</string>
     <string name="referral_youtube">YouTube</string>
     <string name="referral_instagram">Instagram</string>
@@ -71,12 +71,12 @@
     <string name="referral_other">其他</string>
 
     <!-- age -->
-    <string name="onboard_age_title">請問你的年齡？</string>
-    <string name="onboard_age_subtitle">我們僅使用您的歲數來改善體驗並提高卡路里估算準確度。</string>
+    <string name="onboard_age_title">你的年齡是？</string>
+    <string name="onboard_age_subtitle">我們只會用你的年齡來改善使用體驗與熱量估算準確度。</string>
 
     <!-- height -->
-    <string name="onboard_height_title">你的身高是多少呢？</string>
-    <string name="onboard_height_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
+    <string name="onboard_height_title">你的身高是多少？</string>
+    <string name="onboard_height_subtitle">我們只會用你的資料來改善使用體驗與熱量估算準確度。</string>
 
     <!-- weight -->
     <string name="onboard_weight_title">你的當前體重是多少？</string>
@@ -89,21 +89,21 @@
     <string name="onboard_ex_freq_title">你平均每週運動幾次？</string>
     <string name="onboard_ex_freq_subtitle">這將用於校準你的自訂計畫。</string>
     <string name="ex_freq_0_title">0</string>
-    <string name="ex_freq_0_sub">靜態活動</string>
+    <string name="ex_freq_0_sub">幾乎不運動</string>
     <string name="ex_freq_1_3_title">1–3</string>
-    <string name="ex_freq_1_3_sub">輕度運動量</string>
+    <string name="ex_freq_1_3_sub">輕度活動</string>
     <string name="ex_freq_3_5_title">3–5</string>
-    <string name="ex_freq_3_5_sub">中度運動量</string>
+    <string name="ex_freq_3_5_sub">中度活動</string>
     <string name="ex_freq_6_7_plus_title">6–7</string>
-    <string name="ex_freq_6_7_plus_sub">高度運動量</string>
+    <string name="ex_freq_6_7_plus_sub">高度活動</string>
     <string name="ex_freq_7_plus_title">7+</string>
-    <string name="ex_freq_7_plus_sub">非常高度運動量</string>
+    <string name="ex_freq_7_plus_sub">非常高活動量</string>
 
-    <!-- exercise -->
+    <!-- goal -->
     <string name="onboard_goal_title">你的目標是什麼呢？</string>
     <string name="onboard_goal_subtitle">這有助于為您的熱量攝入制定計畫。</string>
     <string name="goal_lose">減重</string>
-    <string name="goal_maintain">維持</string>
+    <string name="goal_maintain">維持體重</string>
     <string name="goal_gain">增重</string>
     <string name="goal_healthy_eating">健康飲食</string>
 
@@ -133,14 +133,14 @@
     <string name="progress_item_carbs">碳水化合物</string>
     <string name="progress_item_protein">蛋白質</string>
     <string name="progress_item_fats">脂肪</string>
-    <string name="progress_item_health_score">健康指數</string>
+    <string name="progress_item_health_score">健康分數</string>
 
     <!-- plan -->
     <string name="plan_title_congrats">恭喜!</string>
     <string name="plan_subtitle_ready">你的個人健康計畫已完成！</string>
     <string name="plan_edit_anytime">每日攝取量已根據您的目標進行客製化</string>
 
-    <string name="plan_macros_carbs">碳水化合物</string>
+    <string name="plan_macros_carbs">碳水</string>
     <string name="plan_macros_proteins">蛋白質</string>
     <string name="plan_macros_fat">脂肪</string>
 
@@ -148,7 +148,7 @@
     <string name="plan_unit_g">g</string>
 
     <string name="plan_bmi_index">BMI 指數</string>
-    <string name="plan_bmi_label_underweight">體重過輕</string>
+    <string name="plan_bmi_label_underweight">過輕</string>
     <string name="plan_bmi_label_normal">正常</string>
     <string name="plan_bmi_label_overweight">過重</string>
     <string name="plan_bmi_label_obesity">肥胖</string>
@@ -174,20 +174,19 @@
     <!-- REQUIRE_SIGN_IN -->
     <string name="auth_sign_in_account_title">登入帳戶</string>
     <string name="auth_sign_in_with_google">使用 Google 登入</string>
-    <string name="auth_signin_with_email">通過電子郵件繼續</string>
-    <string name="common_skip">Skip</string>
+    <string name="auth_signin_with_email">使用 Email 繼續</string>
+    <string name="common_skip">略過</string>
     <string name="msg_login_success">登入成功</string>
     <string name="msg_login_failed_generic">登入失敗，請再試一次</string>
 
-    <string name="recently_uploaded">最近上傳</string>
+    <string name="recently_uploaded">最近記錄</string>
     <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
-    <string name="quick_add_log_workout">记录运动</string>
-    <string name="quick_add_scan_food">扫描食物</string>
+    <string name="quick_add_log_workout">記錄運動</string>
+    <string name="quick_add_scan_food">掃描食物</string>
 
-
-    <!-- res/values-zh-rTW/strings.xml -->
+    <!-- Fasting -->
     <string name="fasting_plan_title">禁食計畫</string>
-    <string name="fasting_plans">選擇禁食計畫</string>
+    <string name="fasting_plans">禁食計畫</string>
     <string name="choose_fasting_plan">選擇禁食計畫</string>
     <string name="start_time">開始時間</string>
     <string name="end_time">結束時間</string>
@@ -196,18 +195,15 @@
 
     <!-- Fasting notifications -->
     <string name="fasting_window_started">進食時段開始</string>
-    <string name="fasting_window_started_body">僅供自我管理，非醫療建議。</string>
+    <string name="fasting_window_started_body">此提醒僅供自我管理參考，非醫療建議。</string>
     <string name="fasting_window_ended">進食時段結束</string>
     <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
     <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
 
-
-
-    <!-- Fasting notifications 通知內容 -->
-    <string name="fasting_start_title">今天的 %1$s 開跑 🍽️</string>
-    <string name="fasting_start_body">你的進食窗已開啟（%1$s–%2$s）。有吃東西記得順手記錄。</string>
-    <string name="fasting_endsoon_title">進食窗快結束了 ⏰</string>
-    <string name="fasting_endsoon_body">還有 1 小時就結束（到 %1$s）。如果還有最後一餐，記得慢慢吃、順手記錄。</string>
+    <string name="fasting_start_title">今天的 %1$s 開始了 🍽️</string>
+    <string name="fasting_start_body">你的進食時間已開始（%1$s–%2$s）。有吃東西的話，記得順手記錄。</string>
+    <string name="fasting_endsoon_title">進食時間快結束了 ⏰</string>
+    <string name="fasting_endsoon_body">距離結束還有 1 小時（到 %1$s）。如果還要吃最後一餐，記得順手記錄。</string>
 
     <!-- Steps Card  -->
     <string name="steps_hint_connect_google_health">連結 Google Health 取得步數資料</string>
@@ -220,28 +216,20 @@
 
     <string name="steps_status_permission_not_granted">未授權</string>
     <string name="steps_status_hc_not_installed">未安裝</string>
-    <string name="steps_status_hc_unavailable">不可用</string>
+    <string name="steps_status_hc_unavailable">無法使用</string>
     <string name="steps_secondary_no_data_yet">尚無資料</string>
-    <string name="steps_secondary_connect">連線</string>
+    <string name="steps_secondary_connect">連接</string>
     <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
 
-
-
-
-    <!-- ================= Camera ======================= -->
-    <!-- Camera modes -->
+    <!-- Camera -->
     <string name="camera_mode_food">掃描食物</string>
-    <string name="camera_mode_barcode">條型碼</string>
+    <string name="camera_mode_barcode">條碼</string>
     <string name="camera_mode_label">食品標籤</string>
     <string name="camera_mode_album">相簿</string>
 
-    <!-- Camera titles -->
-    <string name="camera_barcode_title">條型掃描器</string>
+    <string name="camera_barcode_title">條碼掃描</string>
     <string name="camera_label_title">標籤掃描器</string>
-
-    <!-- Camera permission -->
     <string name="camera_need_permission">需要相機權限才能掃描</string>
-
 
     <!-- SettingScreen privacy policy -->
     <string name="url_terms">https://YOUR_DOMAIN/terms</string>
@@ -250,13 +238,12 @@
     <string name="support_email">support@YOUR_DOMAIN</string>
     <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
 
-
     <!-- foodlog error msg -->
     <string name="err_barcode_not_found_title">查無此商品</string>
-    <string name="err_barcode_not_found_msg">資料庫找不到此條碼。建議改拍營養標示，成功率更高。</string>
+    <string name="err_barcode_not_found_msg">資料庫找不到此條碼。建議改拍食品標籤，成功率更高。</string>
 
     <string name="err_barcode_lookup_failed_title">查詢失敗</string>
-    <string name="err_barcode_lookup_failed_msg">目前無法連線到商品資料庫。請檢查網路後再試一次。</string>
+    <string name="err_barcode_lookup_failed_msg">目前無法連上商品資料庫。請檢查網路後再試一次。</string>
 
     <string name="err_generic_title">發生錯誤</string>
     <string name="err_generic_msg">請稍後再試。</string>
@@ -265,21 +252,27 @@
     <string name="err_network_msg">請檢查網路連線後重試。</string>
 
     <string name="err_photo_title">需要更清楚的照片</string>
-    <string name="err_photo_msg">請在光線充足下重新拍攝。</string>
+    <string name="err_photo_msg">請在光線充足、對焦清楚的情況下重新拍攝。</string>
 
     <string name="err_manual_title">改用手動輸入</string>
-    <string name="err_manual_msg">你也可以手動輸入內容與營養數據。</string>
+    <string name="err_manual_msg">你也可以直接手動輸入食物與營養標籤資料。</string>
 
     <string name="err_support_title">請聯絡客服</string>
     <string name="err_support_msg">若問題持續發生，請聯絡客服協助。</string>
 
+    <!-- image / upload specific -->
+    <string name="err_image_too_large_title">圖片太大</string>
+    <string name="err_image_too_large_msg">這張圖片太大，暫時無法上傳。請重新拍攝，或改選較小的照片。</string>
+
+    <string name="err_image_format_title">圖片無法使用</string>
+    <string name="err_image_format_msg">目前無法讀取這張圖片。請重新拍攝，或改選另一張照片。</string>
+
     <!-- CTA -->
-    <string name="cta_try_label">拍營養標示</string>
+    <string name="cta_try_label">拍食品標籤</string>
     <string name="cta_enter_manually">手動輸入</string>
     <string name="cta_retry">重試</string>
     <string name="cta_check_network">檢查網路</string>
     <string name="cta_retake">重拍</string>
     <string name="cta_contact_support">聯絡客服</string>
     <string name="cta_rescan_barcode">重新掃描條碼</string>
-
 </resources>

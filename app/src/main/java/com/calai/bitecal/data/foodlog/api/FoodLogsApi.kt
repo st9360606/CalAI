@@ -46,3 +46,4 @@ interface FoodLogsApi {
 
 @Serializable
 data class BarcodeReq(val barcode: String)
+
