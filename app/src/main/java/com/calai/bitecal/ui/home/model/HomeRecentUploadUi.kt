@@ -52,7 +52,7 @@ object HomeRecentUploadMapper {
             foodLogId = foodLogId,
             previewUri = previewUri,
             timeText = timeText,
-            title = result?.foodName?.takeIf { it.isNotBlank() } ?: "已完成分析",
+            title = result?.foodName?.takeIf { it.isNotBlank() }.orEmpty(),
             kcal = nutrients?.kcal?.roundToInt() ?: 0,
             proteinG = nutrients?.protein?.roundToInt() ?: 0,
             carbsG = nutrients?.carbs?.roundToInt() ?: 0,

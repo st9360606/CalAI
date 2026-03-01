@@ -277,4 +277,13 @@
     <string name="cta_retake">Retake</string>
     <string name="cta_contact_support">Contact support</string>
     <string name="cta_rescan_barcode">Rescan barcode</string>
+
+    <string name="foodlog_pending_analysis">Analyzing your food...</string>
+    <string name="foodlog_analysis_done">Analysis complete</string>
+
+    <string name="foodlog_nutrition_kcal">🔥 %1$d calories</string>
+    <string name="foodlog_nutrition_protein_g">🥩 %1$dg protein</string>
+    <string name="foodlog_nutrition_carbs_g">🌾 %1$dg carbs</string>
+    <string name="foodlog_nutrition_fat_g">🥑 %1$dg fat</string>
+
 </resources>

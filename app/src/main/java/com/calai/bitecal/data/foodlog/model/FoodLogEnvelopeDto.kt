@@ -19,8 +19,10 @@ enum class DegradeLevel {
 enum class ModelTier {
     @SerialName("MODEL_TIER_HIGH")
     HIGH,
+
     @SerialName("MODEL_TIER_LOW")
     LOW,
+
     @SerialName("BARCODE")
     BARCODE
 }
@@ -34,11 +36,20 @@ data class NutritionResultDto(
     val confidence: Double? = null,
     val warnings: List<String>? = null,
     val degradedReason: String? = null,
+    val foodCategory: String? = null,
+    val foodSubCategory: String? = null,
+
     val source: SourceDto? = null
 )
 
-@Serializable data class QuantityDto(val value: Double? = null, val unit: String? = null)
-@Serializable data class NutrientsDto(
+@Serializable
+data class QuantityDto(
+    val value: Double? = null,
+    val unit: String? = null
+)
+
+@Serializable
+data class NutrientsDto(
     val kcal: Double? = null,
     val protein: Double? = null,
     val fat: Double? = null,
@@ -47,10 +58,18 @@ data class NutritionResultDto(
     val sugar: Double? = null,
     val sodium: Double? = null
 )
-@Serializable data class SourceDto(val method: String? = null, val provider: String? = null)
 
 @Serializable
-data class TaskDto(val taskId: String? = null, val pollAfterSec: Int? = null)
+data class SourceDto(
+    val method: String? = null,
+    val provider: String? = null
+)
+
+@Serializable
+data class TaskDto(
+    val taskId: String? = null,
+    val pollAfterSec: Int? = null
+)
 
 @Serializable
 data class ApiErrorDto(
@@ -60,7 +79,9 @@ data class ApiErrorDto(
 )
 
 @Serializable
-data class TraceDto(val requestId: String? = null)
+data class TraceDto(
+    val requestId: String? = null
+)
 
 @Serializable
 data class FoodLogEnvelopeDto(

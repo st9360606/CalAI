@@ -4,7 +4,13 @@ import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import kotlinx.serialization.Serializable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.Part
+import retrofit2.http.Path
 
 interface FoodLogsApi {
 
@@ -22,7 +28,9 @@ interface FoodLogsApi {
     ): FoodLogEnvelopeDto
 
     @POST("/api/v1/food-logs/barcode")
-    suspend fun postBarcode(@Body req: BarcodeReq): FoodLogEnvelopeDto
+    suspend fun postBarcode(
+        @Body req: BarcodeReq
+    ): FoodLogEnvelopeDto
 
     @Multipart
     @POST("/api/v1/food-logs/label")
@@ -32,18 +40,28 @@ interface FoodLogsApi {
     ): FoodLogEnvelopeDto
 
     @GET("/api/v1/food-logs/{id}")
-    suspend fun getOne(@Path("id") id: String): FoodLogEnvelopeDto
+    suspend fun getOne(
+        @Path("id") id: String
+    ): FoodLogEnvelopeDto
 
     @POST("/api/v1/food-logs/{id}/retry")
-    suspend fun retry(@Path("id") id: String): FoodLogEnvelopeDto
+    suspend fun retry(
+        @Path("id") id: String
+    ): FoodLogEnvelopeDto
 
     @POST("/api/v1/food-logs/{id}/save")
-    suspend fun save(@Path("id") id: String): FoodLogEnvelopeDto
+    suspend fun save(
+        @Path("id") id: String
+    ): FoodLogEnvelopeDto
 
     @DELETE("/api/v1/food-logs/{id}")
-    suspend fun delete(@Path("id") id: String): FoodLogEnvelopeDto
+    suspend fun delete(
+        @Path("id") id: String
+    ): FoodLogEnvelopeDto
 }
 
 @Serializable
-data class BarcodeReq(val barcode: String)
-
+data class BarcodeReq(
+    val barcode: String,
+    val locale: String? = null
+)

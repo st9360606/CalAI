@@ -12,12 +12,16 @@ import kotlinx.serialization.json.Json
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.HttpException
+import java.util.Locale
 import javax.inject.Inject
 
 class FoodLogsRepository @Inject constructor(
     private val api: FoodLogsApi
 ) {
-    private val json = Json { ignoreUnknownKeys = true; explicitNulls = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = true
+    }
 
     suspend fun submitAlbumImage(part: MultipartBody.Part): FoodLogEnvelopeDto =
         safeCall { api.postAlbum(part) }
@@ -28,8 +32,32 @@ class FoodLogsRepository @Inject constructor(
     ): FoodLogEnvelopeDto =
         safeCall { api.postLabel(part, deviceCapturedAtUtc) }
 
+    /**
+     * ✅ 保持舊呼叫點不壞：
+     * ViewModel 還是可以直接 repo.submitBarcode(barcode)
+     */
     suspend fun submitBarcode(barcode: String): FoodLogEnvelopeDto =
-        safeCall { api.postBarcode(BarcodeReq(barcode)) }
+        submitBarcode(
+            barcode = barcode,
+            locale = defaultLocaleTag()
+        )
+
+    /**
+     * ✅ 若未來你有 App 內自選語言（不是 system locale），
+     * 可以從上層明確傳 locale 進來。
+     */
+    suspend fun submitBarcode(
+        barcode: String,
+        locale: String?
+    ): FoodLogEnvelopeDto =
+        safeCall {
+            api.postBarcode(
+                BarcodeReq(
+                    barcode = barcode,
+                    locale = normalizeLocaleTag(locale)
+                )
+            )
+        }
 
     suspend fun getOne(id: String): FoodLogEnvelopeDto =
         safeCall { api.getOne(id) }
@@ -45,10 +73,13 @@ class FoodLogsRepository @Inject constructor(
 
     suspend fun pollUntilTerminal(id: String, maxAttempts: Int = 60): FoodLogEnvelopeDto {
         var last: FoodLogEnvelopeDto = getOne(id)
+
         repeat(maxAttempts) {
             if (last.status != FoodLogStatus.PENDING) return last
+
             val sec = last.task?.pollAfterSec?.coerceIn(1, 30) ?: 2
             delay(sec * 1000L)
+
             last = try {
                 getOne(id)
             } catch (e: FoodLogApiException.CooldownActive) {
@@ -72,6 +103,7 @@ class FoodLogsRepository @Inject constructor(
                 val dto = runCatching {
                     json.decodeFromString(CooldownActiveDto.serializer(), body)
                 }.getOrNull()
+
                 if (dto?.errorCode == "COOLDOWN_ACTIVE") {
                     throw FoodLogApiException.CooldownActive(dto)
                 }
@@ -81,6 +113,7 @@ class FoodLogsRepository @Inject constructor(
                 val dto = runCatching {
                     json.decodeFromString(ModelRefusedDto.serializer(), body)
                 }.getOrNull()
+
                 if (dto?.errorCode == "MODEL_REFUSED") {
                     throw FoodLogApiException.ModelRefused(dto)
                 }
@@ -90,6 +123,7 @@ class FoodLogsRepository @Inject constructor(
                 val dto = runCatching {
                     json.decodeFromString(FoodLogServerErrorDto.serializer(), body)
                 }.getOrNull()
+
                 if (dto?.normalizedCode() != null) {
                     throw FoodLogApiException.BusinessError(dto)
                 }
@@ -110,5 +144,27 @@ class FoodLogsRepository @Inject constructor(
             }
             throw e
         }
+    }
+
+    /**
+     * 預設用 system locale。
+     * 例：
+     * - zh-TW
+     * - en-US
+     * - pt-BR
+     */
+    private fun defaultLocaleTag(): String? {
+        val tag = runCatching { Locale.getDefault().toLanguageTag() }.getOrNull()
+        return normalizeLocaleTag(tag)
+    }
+
+    /**
+     * 簡單正規化：
+     * - null / blank -> null
+     * - Kotlin/Java locale tag 原樣保留
+     */
+    private fun normalizeLocaleTag(raw: String?): String? {
+        val s = raw?.trim()
+        return if (s.isNullOrBlank()) null else s
     }
 }

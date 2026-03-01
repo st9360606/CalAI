@@ -275,4 +275,14 @@
     <string name="cta_retake">重拍</string>
     <string name="cta_contact_support">聯絡客服</string>
     <string name="cta_rescan_barcode">重新掃描條碼</string>
+
+    <string name="foodlog_pending_analysis">正在分析食物...</string>
+    <string name="foodlog_analysis_done">已完成分析</string>
+
+    <string name="foodlog_nutrition_kcal">🔥 %1$d 卡路里</string>
+    <string name="foodlog_nutrition_protein_g">🥩 %1$dg 蛋白質</string>
+    <string name="foodlog_nutrition_carbs_g">🌾 %1$dg 碳水</string>
+    <string name="foodlog_nutrition_fat_g">🥑 %1$dg 脂肪</string>
+
+
 </resources>
