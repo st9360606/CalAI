@@ -12,6 +12,7 @@ import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
 import com.calai.bitecal.data.foodlog.repo.FoodLogApiException
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
 import com.calai.bitecal.data.foodlog.repo.ImageCompressUtil
+import com.calai.bitecal.data.foodlog.repo.MultipartParts
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -20,8 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.time.Instant
@@ -37,7 +37,7 @@ class FoodLogFlowViewModel @Inject constructor(
         val envelope: FoodLogEnvelopeDto? = null,
         val cooldown: CooldownActiveDto? = null,
         val refused: ModelRefusedDto? = null,
-        val apiError: ApiErrorDto? = null, // ✅ NEW
+        val apiError: ApiErrorDto? = null,
         val error: String? = null
     )
 
@@ -58,19 +58,27 @@ class FoodLogFlowViewModel @Inject constructor(
         _state.value = _state.value.copy(loading = false)
     }
 
-    // ✅ 共用：submit 前先停掉舊 polling（避免舊 polling 回來覆寫 state）
+    /**
+     * submit 前先停掉舊 polling，避免舊輪詢覆寫新狀態。
+     */
     private fun stopPollingSilently() {
         pollingJob?.cancel()
         pollingJob = null
     }
 
-    fun submitAlbum(ctx: Context, uri: Uri, onCreated: (FoodLogEnvelopeDto) -> Unit) {
+    fun submitAlbum(
+        ctx: Context,
+        uri: Uri,
+        onCreated: (FoodLogEnvelopeDto) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                val bytes = withContext(Dispatchers.IO) {
+                // ✅ Album / PhotoPicker / Gallery：
+                // 不管來源是 HEIC / HEIF / PNG / WebP，都先轉成 JPEG bytes 再上傳
+                val jpegBytes = withContext(Dispatchers.IO) {
                     ImageCompressUtil.compressUriToJpegBytes(
                         ctx = ctx,
                         uri = uri,
@@ -78,8 +86,11 @@ class FoodLogFlowViewModel @Inject constructor(
                         quality = 82
                     )
                 }
-                val reqBody = bytes.toRequestBody("image/jpeg".toMediaType())
-                val part = MultipartBody.Part.createFormData("file", "album.jpg", reqBody)
+
+                val part = MultipartParts.jpegImagePart(
+                    filename = "album.jpg",
+                    jpegBytes = jpegBytes
+                )
 
                 val env = repo.submitAlbumImage(part)
                 _state.value = UiState(loading = false, envelope = env)
@@ -102,12 +113,18 @@ class FoodLogFlowViewModel @Inject constructor(
                 throw ce
 
             } catch (t: Throwable) {
-                _state.value = UiState(loading = false, error = t.message ?: "submit album failed")
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "submit album failed"
+                )
             }
         }
     }
 
-    fun submitBarcode(barcode: String, onResult: (FoodLogEnvelopeDto) -> Unit) {
+    fun submitBarcode(
+        barcode: String,
+        onResult: (FoodLogEnvelopeDto) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
@@ -115,7 +132,7 @@ class FoodLogFlowViewModel @Inject constructor(
 
                 val env = repo.submitBarcode(barcode)
                 _state.value = UiState(loading = false, envelope = env)
-                onResult(env) // ✅ 改成整包給 UI 決策
+                onResult(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 _state.value = UiState(loading = false, cooldown = e.dto)
@@ -131,11 +148,13 @@ class FoodLogFlowViewModel @Inject constructor(
                 )
 
             } catch (ce: CancellationException) {
-                // ✅ 被 reset/stop/submit 切換取消 → 不更新 state
                 throw ce
 
             } catch (t: Throwable) {
-                _state.value = UiState(loading = false, error = t.message ?: "submit barcode failed")
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "submit barcode failed"
+                )
             }
         }
     }
@@ -161,7 +180,7 @@ class FoodLogFlowViewModel @Inject constructor(
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
 
-            } catch (e: FoodLogApiException.BusinessError) { // ✅ 補這個
+            } catch (e: FoodLogApiException.BusinessError) {
                 _state.value = UiState(
                     loading = false,
                     apiError = e.dto.toApiErrorDto(),
@@ -172,7 +191,10 @@ class FoodLogFlowViewModel @Inject constructor(
                 throw ce
 
             } catch (t: Throwable) {
-                _state.value = UiState(loading = false, error = t.message ?: "poll failed")
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "poll failed"
+                )
             }
         }
     }
@@ -206,7 +228,7 @@ class FoodLogFlowViewModel @Inject constructor(
             } catch (e: FoodLogApiException.ModelRefused) {
                 _state.value = UiState(loading = false, refused = e.dto)
 
-            } catch (e: FoodLogApiException.BusinessError) { // ✅ 補這個
+            } catch (e: FoodLogApiException.BusinessError) {
                 _state.value = UiState(
                     loading = false,
                     apiError = e.dto.toApiErrorDto(),
@@ -217,18 +239,25 @@ class FoodLogFlowViewModel @Inject constructor(
                 throw ce
 
             } catch (t: Throwable) {
-                _state.value = UiState(loading = false, error = t.message ?: "retry failed")
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "retry failed"
+                )
             }
         }
     }
 
-    fun submitPhotoFile(file: File, onCreated: (FoodLogEnvelopeDto) -> Unit) {
+    fun submitPhotoFile(
+        file: File,
+        onCreated: (FoodLogEnvelopeDto) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                val bytes = withContext(Dispatchers.IO) {
+                // ✅ 拍照檔也統一再轉成 JPEG bytes 後上傳
+                val jpegBytes = withContext(Dispatchers.IO) {
                     ImageCompressUtil.compressFileToJpegBytes(
                         file = file,
                         maxSide = 1600,
@@ -236,9 +265,15 @@ class FoodLogFlowViewModel @Inject constructor(
                     )
                 }
 
-                val reqBody = bytes.toRequestBody("image/jpeg".toMediaType())
-                val part = MultipartBody.Part.createFormData("file", "photo.jpg", reqBody)
-                val env = repo.submitPhotoImage(part, deviceCapturedAtUtc = nowUtcPart())
+                val part = MultipartParts.jpegImagePart(
+                    filename = "photo.jpg",
+                    jpegBytes = jpegBytes
+                )
+
+                val env = repo.submitPhotoImage(
+                    part = part,
+                    deviceCapturedAtUtc = nowUtcPart()
+                )
 
                 _state.value = UiState(loading = false, envelope = env)
                 onCreated(env)
@@ -260,21 +295,30 @@ class FoodLogFlowViewModel @Inject constructor(
                 throw ce
 
             } catch (t: Throwable) {
-                _state.value = UiState(loading = false, error = t.message ?: "submit photo failed")
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "submit photo failed"
+                )
 
             } finally {
-                runCatching { if (file.exists()) file.delete() }
+                runCatching {
+                    if (file.exists()) file.delete()
+                }
             }
         }
     }
 
-    fun submitLabelFile(file: File, onCreated: (FoodLogEnvelopeDto) -> Unit) {
+    fun submitLabelFile(
+        file: File,
+        onCreated: (FoodLogEnvelopeDto) -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                val bytes = withContext(Dispatchers.IO) {
+                // ✅ Label 圖也統一轉 JPEG
+                val jpegBytes = withContext(Dispatchers.IO) {
                     ImageCompressUtil.compressFileToJpegBytes(
                         file = file,
                         maxSide = 1600,
@@ -282,9 +326,15 @@ class FoodLogFlowViewModel @Inject constructor(
                     )
                 }
 
-                val reqBody = bytes.toRequestBody("image/jpeg".toMediaType())
-                val part = MultipartBody.Part.createFormData("file", "label.jpg", reqBody)
-                val env = repo.submitLabelImage(part, deviceCapturedAtUtc = nowUtcPart())
+                val part = MultipartParts.jpegImagePart(
+                    filename = "label.jpg",
+                    jpegBytes = jpegBytes
+                )
+
+                val env = repo.submitLabelImage(
+                    part = part,
+                    deviceCapturedAtUtc = nowUtcPart()
+                )
 
                 _state.value = UiState(loading = false, envelope = env)
                 onCreated(env)
@@ -306,10 +356,15 @@ class FoodLogFlowViewModel @Inject constructor(
                 throw ce
 
             } catch (t: Throwable) {
-                _state.value = UiState(loading = false, error = t.message ?: "submit label failed")
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "submit label failed"
+                )
 
             } finally {
-                runCatching { if (file.exists()) file.delete() }
+                runCatching {
+                    if (file.exists()) file.delete()
+                }
             }
         }
     }
@@ -320,11 +375,13 @@ class FoodLogFlowViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private fun nowUtcPart(): okhttp3.RequestBody =
-        Instant.now().toString().toRequestBody("text/plain".toMediaType())
+    /**
+     * 後端 `deviceCapturedAtUtc` multipart text part
+     */
+    private fun nowUtcPart(): RequestBody =
+        Instant.now().toString().toRequestBody(null)
 
     fun clearTransient() {
-        // ✅ 只清掉 toast 類的 transient state，不動 envelope
         _state.value = _state.value.copy(
             loading = false,
             cooldown = null,

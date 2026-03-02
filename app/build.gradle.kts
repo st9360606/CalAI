@@ -32,6 +32,9 @@ android {
          */
         buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+        testOptions {
+            unitTests.isIncludeAndroidResources = true
+        }
     }
 
     // ── 讀取 keystore.properties（兩個常見路徑；找不到就跳過簽章） ──
@@ -107,9 +110,9 @@ android {
             versionNameSuffix = "-dev"
             //buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")   //模擬器
             // ✅ 你原本用的（尾巴有 /）
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"") //同WIFI
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"") //同WIFI
             // ✅ 新增給你現在要用的（尾巴不要 /，方便你 concat path）
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
@@ -119,8 +122,8 @@ android {
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
 
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
@@ -142,8 +145,8 @@ android {
             dimension = "env"
             // TODO: 之後換正式域名
 
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
@@ -236,12 +239,16 @@ dependencies {
     // ===== WorkManager + Hilt =====
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-    // ===== 測試 =====
+// ===== 測試 =====
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("androidx.test:core-ktx:1.6.1")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:core-ktx:1.6.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 
     // Baseline Profile

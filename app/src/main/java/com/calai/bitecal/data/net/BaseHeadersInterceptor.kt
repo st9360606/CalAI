@@ -13,15 +13,22 @@ class BaseHeadersInterceptor @Inject constructor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val localeTag = Locale.getDefault().toLanguageTag().ifBlank { "en-US" }
-        val acceptLanguage = "$localeTag,${localeTag.substringBefore('-')};q=0.9,en;q=0.8"
+        val primaryLang = localeTag.substringBefore('-').ifBlank { "en" }
+
+        val acceptLanguage = if (primaryLang.equals(localeTag, ignoreCase = true)) {
+            "$localeTag,en;q=0.8"
+        } else {
+            "$localeTag,$primaryLang;q=0.9,en;q=0.8"
+        }
+
         val tzId = TimeZone.getDefault().id
 
         val req = chain.request().newBuilder()
             .header("X-Device-Id", deviceIdProvider.get())
-            .header("X-App-Lang", localeTag)          // ✅ NEW：業務語系統一用它
-            .header("Accept-Language", acceptLanguage) // ✅ 保留標準 header（可做 fallback/除錯）
+            .header("X-App-Lang", localeTag)
+            .header("Accept-Language", acceptLanguage)
             .header("X-Client-Timezone", tzId)
-            .header("X-Timezone", tzId)
+            .header("X-Timezone", tzId) // 可保留做 fallback / debug
             .build()
 
         return chain.proceed(req)
