@@ -34,8 +34,10 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
@@ -67,17 +69,27 @@ data class RecentlyUploadedEmptyStyle(
 fun RecentlyUploadedEmptySection(
     modifier: Modifier = Modifier,
     thumbnailPainter: Painter? = null,
-    cardHeight: Dp = 100.dp,
+    cardHeight: Dp = 120.dp,
     style: RecentlyUploadedEmptyStyle = RecentlyUploadedEmptyStyle.Default,
     titleStartPadding: Dp = 14.dp,
-    titleBottomPadding: Dp = 10.dp
+    titleBottomPadding: Dp = 10.dp,
+    titleFontSize: TextUnit = 18.sp,
+    titleFontWeight: FontWeight = FontWeight.SemiBold
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.recently_uploaded),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
-            modifier = Modifier.padding(start = titleStartPadding, bottom = titleBottomPadding)
+            style = TextStyle(
+                fontSize = titleFontSize,
+                lineHeight = 28.sp,
+                fontWeight = titleFontWeight
+            ),
+            modifier = Modifier.padding(
+                start = titleStartPadding,
+                bottom = titleBottomPadding
+            )
         )
+
         RecentlyUploadedEmptyCard(
             thumbnailPainter = thumbnailPainter,
             cardHeight = cardHeight,
@@ -92,27 +104,25 @@ fun RecentlyUploadedEmptySection(
 fun RecentlyUploadedEmptyCard(
     modifier: Modifier = Modifier,
     thumbnailPainter: Painter? = null,
-    cardHeight: Dp = 100.dp,
+    cardHeight: Dp = 120.dp,
     style: RecentlyUploadedEmptyStyle = RecentlyUploadedEmptyStyle.Default,
 
-    contentPaddingV: Dp = 16.dp,
-    pillHeight: Dp = 80.dp,
+    contentPaddingV: Dp = 10.dp,
+    pillHeight: Dp = 62.dp,
     pillWidthFraction: Float = 0.82f,
     outerCorner: Dp = 20.dp,
     pillCorner: Dp = 18.dp,
 
-    // 邊框粗度
     outerBorderWidth: Dp = 0.9.dp,
     pillBorderWidth: Dp = 0.85.dp
 ) {
     val outerShape = RoundedCornerShape(outerCorner)
     val pillShape = RoundedCornerShape(pillCorner)
 
-    // 外層：無陰影（移除 .shadow），elevation=0
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = cardHeight),
+            .height(cardHeight),
         shape = outerShape,
         colors = CardDefaults.cardColors(containerColor = style.outerContainerColor),
         border = BorderStroke(outerBorderWidth, SolidColor(style.outerBorderColor)),
@@ -125,7 +135,6 @@ fun RecentlyUploadedEmptyCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 內層 pill：無陰影（移除 .shadow），elevation=0
             Card(
                 modifier = Modifier
                     .fillMaxWidth(pillWidthFraction)
@@ -168,7 +177,7 @@ fun RecentlyUploadedEmptyCard(
                                     modifier = Modifier.size(40.dp)
                                 )
                             } else {
-                                Text(text = "\uD83E\uDD57", fontSize = 28.sp) // 🥗
+                                Text(text = "\uD83E\uDD57", fontSize = 28.sp)
                             }
                         }
 
@@ -197,11 +206,11 @@ fun RecentlyUploadedEmptyCard(
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(6.dp))
 
             Text(
                 text = stringResource(R.string.recently_uploaded_empty_hint),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = style.hintColor
             )
         }

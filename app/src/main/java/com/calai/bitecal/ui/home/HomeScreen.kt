@@ -107,10 +107,12 @@ import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
 import androidx.compose.ui.semantics.Role
 import android.content.pm.PackageManager
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
-import com.calai.bitecal.ui.home.components.RecentUploadCard
+import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadCard
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
@@ -580,15 +582,27 @@ fun HomeScreen(
                     onWorkoutCardClick = { onOpenActivityHistory() }
                 )
                 // ===== Fourth block: 最近上傳
-                Spacer(Modifier.height(24.dp))
+                val recentSectionTopGap = 16.dp
+                val recentSectionTitleBottomGap = 12.dp
+                val recentSectionTitleStart = 14.dp
+
+                Spacer(Modifier.height(recentSectionTopGap))
 
                 when {
                     recentUpload != null -> {
                         Text(
                             text = stringResource(R.string.recently_uploaded),
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                lineHeight = 28.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            modifier = Modifier.padding(
+                                start = recentSectionTitleStart,
+                                bottom = recentSectionTitleBottomGap
+                            )
                         )
+
                         RecentUploadCard(
                             item = recentUpload!!,
                             modifier = Modifier.fillMaxWidth()
@@ -597,16 +611,28 @@ fun HomeScreen(
 
                     s.recentMeals.isEmpty() -> {
                         RecentlyUploadedEmptySection(
-                            cardHeight = 100.dp
+                            cardHeight = 120.dp,
+                            titleStartPadding = recentSectionTitleStart,
+                            titleBottomPadding = recentSectionTitleBottomGap,
+                            titleFontSize = 18.sp,
+                            titleFontWeight = FontWeight.SemiBold
                         )
                     }
 
                     else -> {
                         Text(
                             text = stringResource(R.string.recently_uploaded),
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                lineHeight = 28.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            modifier = Modifier.padding(
+                                start = recentSectionTitleStart,
+                                bottom = recentSectionTitleBottomGap
+                            )
                         )
+
                         for (m in s.recentMeals) {
                             MealCard(m)
                             Spacer(Modifier.height(12.dp))

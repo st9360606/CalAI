@@ -11,6 +11,7 @@ import com.calai.bitecal.data.activity.sync.DailyActivitySyncer
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
+import com.calai.bitecal.data.foodlog.repo.HomeCardPollResult
 import com.calai.bitecal.data.health.HealthConnectRepository
 import com.calai.bitecal.data.home.repo.HomeRepository
 import com.calai.bitecal.data.home.repo.HomeSummary
@@ -20,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -193,37 +195,75 @@ class HomeViewModel @Inject constructor(
         recentUploadPollJob?.cancel()
 
         recentUploadPollJob = viewModelScope.launch {
-            try {
-                val env = withContext(Dispatchers.IO) {
-                    foodLogsRepository.pollUntilTerminal(foodLogId)
-                }
+            var enteredDelayedState = false
 
-                when (env.status) {
-                    FoodLogStatus.DRAFT,
-                    FoodLogStatus.SAVED -> {
-                        _recentUpload.value = HomeRecentUploadMapper.success(
-                            foodLogId = foodLogId,
-                            previewUri = previewUri,
-                            timeText = timeText,
-                            env = env
+            while (true) {
+                try {
+                    when (val result = withContext(Dispatchers.IO) {
+                        foodLogsRepository.pollForHomeCard(
+                            id = foodLogId,
+                            hotWindowMs = if (enteredDelayedState) 8_000L else 15_000L,
+                            maxAttempts = if (enteredDelayedState) 4 else 8
                         )
-                        refresh()
-                    }
+                    }) {
+                        is HomeCardPollResult.Terminal -> {
+                            when (result.env.status) {
+                                FoodLogStatus.DRAFT,
+                                FoodLogStatus.SAVED -> {
+                                    _recentUpload.value = HomeRecentUploadMapper.success(
+                                        foodLogId = foodLogId,
+                                        previewUri = previewUri,
+                                        timeText = timeText,
+                                        env = result.env
+                                    )
+                                    refresh()
+                                    return@launch
+                                }
 
-                    FoodLogStatus.FAILED,
-                    FoodLogStatus.DELETED -> {
-                        _recentUpload.value = null
-                    }
+                                FoodLogStatus.FAILED,
+                                FoodLogStatus.DELETED -> {
+                                    _recentUpload.value = null
+                                    return@launch
+                                }
 
-                    FoodLogStatus.PENDING -> {
-                        // 理論上 pollUntilTerminal 不會回 PENDING；保底不動
+                                FoodLogStatus.PENDING -> {
+                                    if (!enteredDelayedState) {
+                                        enteredDelayedState = true
+                                        _recentUpload.value = HomeRecentUploadMapper.delayed(
+                                            foodLogId = foodLogId,
+                                            previewUri = previewUri,
+                                            timeText = timeText
+                                        )
+                                    }
+                                    delay(8_000L)
+                                }
+                            }
+                        }
+
+                        is HomeCardPollResult.StillPending -> {
+                            if (!enteredDelayedState) {
+                                enteredDelayedState = true
+                                _recentUpload.value = HomeRecentUploadMapper.delayed(
+                                    foodLogId = foodLogId,
+                                    previewUri = previewUri,
+                                    timeText = timeText
+                                )
+                            }
+                            delay(8_000L)
+                        }
                     }
+                } catch (ce: CancellationException) {
+                    throw ce
+                } catch (_: Throwable) {
+                    _recentUpload.value = HomeRecentUploadMapper.delayed(
+                        foodLogId = foodLogId,
+                        previewUri = previewUri,
+                        timeText = timeText,
+                        title = "網路較慢",
+                        subtitle = "稍後會自動再試"
+                    )
+                    delay(10_000L)
                 }
-            } catch (ce: CancellationException) {
-                throw ce
-            } catch (_: Throwable) {
-                // MVP：poll 失敗先把 overlay 清掉，避免卡死在 pending
-                _recentUpload.value = null
             }
         }
     }

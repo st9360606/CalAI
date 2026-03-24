@@ -38,7 +38,10 @@ data class NutritionResultDto(
     val degradedReason: String? = null,
     val foodCategory: String? = null,
     val foodSubCategory: String? = null,
-
+    @SerialName("_reasoning")
+    val reasoning: String? = null,
+    val labelMeta: LabelMetaDto? = null,
+    val aiMeta: AiMetaDto? = null,
     val source: SourceDto? = null
 )
 
@@ -60,9 +63,28 @@ data class NutrientsDto(
 )
 
 @Serializable
+data class LabelMetaDto(
+    val servingsPerContainer: Double? = null,
+    val basis: String? = null
+)
+
+@Serializable
+data class AiMetaDto(
+    val degradedReason: String? = null,
+    val degradedAtUtc: String? = null,
+    val resultFromCache: Boolean? = null,
+    val foodCategory: String? = null,
+    val foodSubCategory: String? = null,
+    val source: String? = null,
+    val basis: String? = null,
+    val lang: String? = null
+)
+
+@Serializable
 data class SourceDto(
     val method: String? = null,
-    val provider: String? = null
+    val provider: String? = null,
+    val resolvedBy: String? = null
 )
 
 @Serializable
@@ -76,6 +98,13 @@ data class ApiErrorDto(
     val errorCode: String? = null,
     val clientAction: ClientAction? = null,
     val retryAfterSec: Int? = null
+)
+
+@Serializable
+data class HintDto(
+    val hintCode: String? = null,
+    val clientAction: ClientAction? = null,
+    val message: String? = null
 )
 
 @Serializable
@@ -93,5 +122,6 @@ data class FoodLogEnvelopeDto(
     val nutritionResult: NutritionResultDto? = null,
     val task: TaskDto? = null,
     val error: ApiErrorDto? = null,
+    val hints: List<HintDto>? = null,
     val trace: TraceDto? = null
 )

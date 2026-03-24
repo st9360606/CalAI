@@ -1,36 +1,55 @@
 package com.calai.bitecal.data.net
 
-import com.calai.bitecal.core.device.DeviceIdProvider
+import android.content.Context
+import android.provider.Settings
+import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.Interceptor
 import okhttp3.Response
+import java.time.ZoneId
 import java.util.Locale
-import java.util.TimeZone
+import java.util.UUID
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class BaseHeadersInterceptor @Inject constructor(
-    private val deviceIdProvider: DeviceIdProvider
+    @ApplicationContext private val context: Context
 ) : Interceptor {
 
+    private val prefs by lazy {
+        context.getSharedPreferences("base_headers_prefs", Context.MODE_PRIVATE)
+    }
+
     override fun intercept(chain: Interceptor.Chain): Response {
-        val localeTag = Locale.getDefault().toLanguageTag().ifBlank { "en-US" }
-        val primaryLang = localeTag.substringBefore('-').ifBlank { "en" }
+        val lang = runCatching { Locale.getDefault().toLanguageTag() }
+            .getOrDefault("en")
+            .ifBlank { "en" }
 
-        val acceptLanguage = if (primaryLang.equals(localeTag, ignoreCase = true)) {
-            "$localeTag,en;q=0.8"
-        } else {
-            "$localeTag,$primaryLang;q=0.9,en;q=0.8"
-        }
+        val tz = runCatching { ZoneId.systemDefault().id }
+            .getOrDefault("UTC")
 
-        val tzId = TimeZone.getDefault().id
+        val deviceId = stableDeviceId()
 
         val req = chain.request().newBuilder()
-            .header("X-Device-Id", deviceIdProvider.get())
-            .header("X-App-Lang", localeTag)
-            .header("Accept-Language", acceptLanguage)
-            .header("X-Client-Timezone", tzId)
-            .header("X-Timezone", tzId) // 可保留做 fallback / debug
+            .header("X-Client-Timezone", tz)
+            .header("X-Device-Id", deviceId)
+            .header("X-App-Lang", lang)
+            .header("Accept-Language", lang)
             .build()
 
         return chain.proceed(req)
+    }
+
+    private fun stableDeviceId(): String {
+        val cached = prefs.getString("device_id", null)
+        if (!cached.isNullOrBlank()) return cached
+
+        val androidId = runCatching {
+            Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
+        }.getOrNull()
+
+        val generated = androidId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        prefs.edit().putString("device_id", generated).apply()
+        return generated
     }
 }

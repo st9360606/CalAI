@@ -14,6 +14,14 @@ sealed interface HomeRecentUploadUi {
         override val timeText: String
     ) : HomeRecentUploadUi
 
+    data class Delayed(
+        override val foodLogId: String,
+        override val previewUri: String?,
+        override val timeText: String,
+        val title: String,
+        val subtitle: String
+    ) : HomeRecentUploadUi
+
     data class Success(
         override val foodLogId: String,
         override val previewUri: String?,
@@ -37,6 +45,21 @@ object HomeRecentUploadMapper {
             foodLogId = foodLogId,
             previewUri = previewUri,
             timeText = timeText
+        )
+
+    fun delayed(
+        foodLogId: String,
+        previewUri: String?,
+        timeText: String,
+        title: String = "分析時間較久",
+        subtitle: String = "完成後會自動更新"
+    ): HomeRecentUploadUi.Delayed =
+        HomeRecentUploadUi.Delayed(
+            foodLogId = foodLogId,
+            previewUri = previewUri,
+            timeText = timeText,
+            title = title,
+            subtitle = subtitle
         )
 
     fun success(

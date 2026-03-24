@@ -199,6 +199,98 @@ class FoodLogFlowViewModel @Inject constructor(
         }
     }
 
+    fun save(foodLogId: String) {
+        viewModelScope.launch {
+            try {
+                stopPollingSilently()
+                _state.value = _state.value.copy(
+                    loading = true,
+                    cooldown = null,
+                    refused = null,
+                    apiError = null,
+                    error = null
+                )
+
+                val env = repo.save(foodLogId)
+
+                _state.value = UiState(
+                    loading = (env.status == FoodLogStatus.PENDING),
+                    envelope = env
+                )
+
+                if (env.status == FoodLogStatus.PENDING) {
+                    startPolling(foodLogId)
+                }
+
+            } catch (e: FoodLogApiException.CooldownActive) {
+                _state.value = UiState(loading = false, cooldown = e.dto)
+
+            } catch (e: FoodLogApiException.ModelRefused) {
+                _state.value = UiState(loading = false, refused = e.dto)
+
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
+            } catch (ce: CancellationException) {
+                throw ce
+
+            } catch (t: Throwable) {
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "save failed"
+                )
+            }
+        }
+    }
+
+    fun delete(foodLogId: String) {
+        viewModelScope.launch {
+            try {
+                stopPollingSilently()
+                _state.value = _state.value.copy(
+                    loading = true,
+                    cooldown = null,
+                    refused = null,
+                    apiError = null,
+                    error = null
+                )
+
+                val env = repo.delete(foodLogId)
+
+                _state.value = UiState(
+                    loading = false,
+                    envelope = env
+                )
+
+            } catch (e: FoodLogApiException.CooldownActive) {
+                _state.value = UiState(loading = false, cooldown = e.dto)
+
+            } catch (e: FoodLogApiException.ModelRefused) {
+                _state.value = UiState(loading = false, refused = e.dto)
+
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
+            } catch (ce: CancellationException) {
+                throw ce
+
+            } catch (t: Throwable) {
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "delete failed"
+                )
+            }
+        }
+    }
+
     fun retry(foodLogId: String) {
         viewModelScope.launch {
             try {

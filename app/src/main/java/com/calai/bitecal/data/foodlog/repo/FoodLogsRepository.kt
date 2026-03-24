@@ -4,16 +4,24 @@ import com.calai.bitecal.data.foodlog.api.BarcodeReq
 import com.calai.bitecal.data.foodlog.api.FoodLogsApi
 import com.calai.bitecal.data.foodlog.model.CooldownActiveDto
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
+import com.calai.bitecal.data.foodlog.model.FoodLogListResponseDto
+import com.calai.bitecal.data.foodlog.model.FoodLogOverrideRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogServerErrorDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.HttpException
 import java.util.Locale
 import javax.inject.Inject
+
+sealed interface HomeCardPollResult {
+    data class Terminal(val env: FoodLogEnvelopeDto) : HomeCardPollResult
+    data class StillPending(val last: FoodLogEnvelopeDto) : HomeCardPollResult
+}
 
 class FoodLogsRepository @Inject constructor(
     private val api: FoodLogsApi
@@ -32,20 +40,18 @@ class FoodLogsRepository @Inject constructor(
     ): FoodLogEnvelopeDto =
         safeCall { api.postLabel(part, deviceCapturedAtUtc) }
 
-    /**
-     * ✅ 保持舊呼叫點不壞：
-     * ViewModel 還是可以直接 repo.submitBarcode(barcode)
-     */
+    suspend fun submitPhotoImage(
+        part: MultipartBody.Part,
+        deviceCapturedAtUtc: RequestBody? = null
+    ): FoodLogEnvelopeDto =
+        safeCall { api.postPhoto(part, deviceCapturedAtUtc) }
+
     suspend fun submitBarcode(barcode: String): FoodLogEnvelopeDto =
         submitBarcode(
             barcode = barcode,
             locale = defaultLocaleTag()
         )
 
-    /**
-     * ✅ 若未來你有 App 內自選語言（不是 system locale），
-     * 可以從上層明確傳 locale 進來。
-     */
     suspend fun submitBarcode(
         barcode: String,
         locale: String?
@@ -65,12 +71,68 @@ class FoodLogsRepository @Inject constructor(
     suspend fun retry(id: String): FoodLogEnvelopeDto =
         safeCall { api.retry(id) }
 
-    suspend fun submitPhotoImage(
-        part: MultipartBody.Part,
-        deviceCapturedAtUtc: RequestBody? = null
-    ): FoodLogEnvelopeDto =
-        safeCall { api.postPhoto(part, deviceCapturedAtUtc) }
+    suspend fun save(id: String): FoodLogEnvelopeDto =
+        safeCall { api.save(id) }
 
+    suspend fun delete(id: String): FoodLogEnvelopeDto =
+        safeCall { api.delete(id) }
+
+    suspend fun listSaved(
+        fromLocalDate: String,
+        toLocalDate: String,
+        page: Int = 0,
+        size: Int = 20
+    ): FoodLogListResponseDto =
+        safeCall {
+            api.listSaved(
+                fromLocalDate = fromLocalDate,
+                toLocalDate = toLocalDate,
+                page = page,
+                size = size
+            )
+        }
+
+    suspend fun listHistory(
+        status: String,
+        fromLocalDate: String,
+        toLocalDate: String,
+        page: Int = 0,
+        size: Int = 20
+    ): FoodLogListResponseDto =
+        safeCall {
+            api.listHistory(
+                status = status.trim().uppercase(Locale.ROOT),
+                fromLocalDate = fromLocalDate,
+                toLocalDate = toLocalDate,
+                page = page,
+                size = size
+            )
+        }
+
+    suspend fun applyOverride(
+        id: String,
+        fieldKey: String,
+        newValue: JsonElement,
+        reason: String? = null
+    ): FoodLogEnvelopeDto =
+        safeCall {
+            api.applyOverride(
+                id = id,
+                req = FoodLogOverrideRequestDto(
+                    fieldKey = fieldKey,
+                    newValue = newValue,
+                    reason = reason
+                )
+            )
+        }
+
+    suspend fun downloadImageBytes(id: String): ByteArray =
+        safeCall { api.getImage(id).bytes() }
+
+    /**
+     * 給 detail / blocking flow 用。
+     * 可能在 maxAttempts 耗盡後仍回 PENDING，因此不建議首頁卡片直接使用。
+     */
     suspend fun pollUntilTerminal(id: String, maxAttempts: Int = 60): FoodLogEnvelopeDto {
         var last: FoodLogEnvelopeDto = getOne(id)
 
@@ -83,13 +145,63 @@ class FoodLogsRepository @Inject constructor(
             last = try {
                 getOne(id)
             } catch (e: FoodLogApiException.CooldownActive) {
-                // ✅ 針對輪詢：不要把 cooldown 當錯誤，照建議秒數退避後繼續
                 val backoff = (e.dto.cooldownSeconds ?: 10L).coerceIn(1L, 60L)
                 delay(backoff * 1000L)
                 getOne(id)
             }
         }
         return last
+    }
+
+    /**
+     * 給 Home recent-upload 卡片用：
+     * - 只在短時間內做 hot polling
+     * - 若超過時間預算仍是 PENDING，交給 UI 顯示 Delayed 狀態
+     */
+    suspend fun pollForHomeCard(
+        id: String,
+        hotWindowMs: Long = 15_000L,
+        maxAttempts: Int = 8
+    ): HomeCardPollResult {
+        val startedAt = System.currentTimeMillis()
+        var last: FoodLogEnvelopeDto = getOne(id)
+
+        repeat(maxAttempts) {
+            if (last.status != FoodLogStatus.PENDING) {
+                return HomeCardPollResult.Terminal(last)
+            }
+
+            val sec = last.task?.pollAfterSec?.coerceIn(1, 10) ?: 2
+            val nextDelayMs = sec * 1000L
+            val elapsed = System.currentTimeMillis() - startedAt
+
+            if (elapsed + nextDelayMs > hotWindowMs) {
+                return HomeCardPollResult.StillPending(last)
+            }
+
+            delay(nextDelayMs)
+
+            last = try {
+                getOne(id)
+            } catch (e: FoodLogApiException.CooldownActive) {
+                val backoffSec = (e.dto.cooldownSeconds ?: 10L).coerceIn(1L, 20L)
+                val backoffMs = backoffSec * 1000L
+                val nowElapsed = System.currentTimeMillis() - startedAt
+
+                if (nowElapsed + backoffMs > hotWindowMs) {
+                    return HomeCardPollResult.StillPending(last)
+                }
+
+                delay(backoffMs)
+                getOne(id)
+            }
+        }
+
+        return if (last.status == FoodLogStatus.PENDING) {
+            HomeCardPollResult.StillPending(last)
+        } else {
+            HomeCardPollResult.Terminal(last)
+        }
     }
 
     private suspend fun <T> safeCall(block: suspend () -> T): T {
@@ -129,16 +241,12 @@ class FoodLogsRepository @Inject constructor(
                 }
             }
 
-            // ✅ fallback：如果代理層直接回 413 / 非 JSON，也盡量轉成可顯示錯誤
             if (code == 413) {
                 throw FoodLogApiException.BusinessError(
                     FoodLogServerErrorDto(
                         errorCode = "IMAGE_TOO_LARGE",
-                        code = null,
                         message = "Image exceeds upload size limit",
-                        requestId = null,
-                        clientAction = "RETAKE_PHOTO",
-                        retryAfterSec = null
+                        clientAction = "RETAKE_PHOTO"
                     )
                 )
             }
@@ -146,23 +254,11 @@ class FoodLogsRepository @Inject constructor(
         }
     }
 
-    /**
-     * 預設用 system locale。
-     * 例：
-     * - zh-TW
-     * - en-US
-     * - pt-BR
-     */
     private fun defaultLocaleTag(): String? {
         val tag = runCatching { Locale.getDefault().toLanguageTag() }.getOrNull()
         return normalizeLocaleTag(tag)
     }
 
-    /**
-     * 簡單正規化：
-     * - null / blank -> null
-     * - Kotlin/Java locale tag 原樣保留
-     */
     private fun normalizeLocaleTag(raw: String?): String? {
         val s = raw?.trim()
         return if (s.isNullOrBlank()) null else s

@@ -125,6 +125,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
 import java.io.File
@@ -1628,25 +1629,32 @@ fun BiteCalNavHost(
                             flowVm.reset()
                             initialMode = CameraMode.LABEL
                         }
+
+                        ClientAction.SCAN_AGAIN,
                         ClientAction.TRY_BARCODE -> {
                             flowVm.reset()
                             initialMode = CameraMode.BARCODE
                         }
+
+                        ClientAction.TRY_PHOTO,
                         ClientAction.RETAKE_PHOTO -> {
                             flowVm.reset()
                             initialMode = CameraMode.FOOD
                         }
+
                         ClientAction.RETRY_LATER -> {
                             flowVm.reset()
                         }
+
                         ClientAction.CHECK_NETWORK -> {
                             openNetworkSettings(ctx)
                         }
+
                         ClientAction.CONTACT_SUPPORT -> {
                             openSupportEmail(ctx)
                         }
+
                         ClientAction.ENTER_MANUALLY -> {
-                            // ✅ 先給可用 fallback（你之後有手動頁再換成 nav.navigate）
                             Toast.makeText(ctx, "手動輸入尚未實作，先改用標籤辨識", Toast.LENGTH_SHORT).show()
                             flowVm.reset()
                             initialMode = CameraMode.LABEL
@@ -1668,6 +1676,33 @@ fun BiteCalNavHost(
                 fun nowHm(): String =
                     java.time.LocalTime.now()
                         .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+
+                fun handleCreatedFoodLog(
+                    env: FoodLogEnvelopeDto,
+                    previewUri: String?
+                ) {
+                    homeVm?.onFoodLogCreated(
+                        env = env,
+                        previewUri = previewUri,
+                        timeText = nowHm()
+                    )
+
+                    when (env.status) {
+                        FoodLogStatus.DRAFT,
+                        FoodLogStatus.SAVED,
+                        FoodLogStatus.PENDING -> {
+                            flowVm.reset()
+                            goHome()
+                        }
+
+                        FoodLogStatus.FAILED,
+                        FoodLogStatus.DELETED -> {
+                            nav.navigate(Routes.foodLogDetail(env.foodLogId)) {
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                }
 
                 // ✅ FOOD / LABEL 要先複製 preview，因為原始 file 之後會被 finally 刪掉
                 fun createPreviewCopy(src: File): String? = runCatching {
@@ -1700,13 +1735,10 @@ fun BiteCalNavHost(
                         onAlbumPicked = { uri ->
                             val previewUri = copyUriToPreviewFile(ctx, uri)
                             flowVm.submitAlbum(ctx, uri) { env ->
-                                homeVm?.onFoodLogCreated(
+                                handleCreatedFoodLog(
                                     env = env,
-                                    previewUri = previewUri,
-                                    timeText = nowHm()
+                                    previewUri = previewUri
                                 )
-                                flowVm.reset()
-                                goHome()
                             }
                         },
 
@@ -1715,26 +1747,20 @@ fun BiteCalNavHost(
                                 CameraMode.FOOD -> {
                                     val previewUri = createPreviewCopy(file)
                                     flowVm.submitPhotoFile(file) { env ->
-                                        homeVm?.onFoodLogCreated(
+                                        handleCreatedFoodLog(
                                             env = env,
-                                            previewUri = previewUri,
-                                            timeText = nowHm()
+                                            previewUri = previewUri
                                         )
-                                        flowVm.reset()
-                                        goHome()
                                     }
                                 }
 
                                 CameraMode.LABEL -> {
                                     val previewUri = createPreviewCopy(file)
                                     flowVm.submitLabelFile(file) { env ->
-                                        homeVm?.onFoodLogCreated(
+                                        handleCreatedFoodLog(
                                             env = env,
-                                            previewUri = previewUri,
-                                            timeText = nowHm()
+                                            previewUri = previewUri
                                         )
-                                        flowVm.reset()
-                                        goHome()
                                     }
                                 }
 
@@ -1748,7 +1774,16 @@ fun BiteCalNavHost(
                             flowVm.submitBarcode(code) { env ->
                                 when (env.status) {
                                     FoodLogStatus.DRAFT,
-                                    FoodLogStatus.SAVED,
+                                    FoodLogStatus.SAVED -> {
+                                        homeVm?.onFoodLogCreated(
+                                            env = env,
+                                            previewUri = null,
+                                            timeText = nowHm()
+                                        )
+                                        flowVm.reset()
+                                        goHome()
+                                    }
+
                                     FoodLogStatus.PENDING -> {
                                         homeVm?.onFoodLogCreated(
                                             env = env,
@@ -1761,7 +1796,7 @@ fun BiteCalNavHost(
 
                                     FoodLogStatus.FAILED,
                                     FoodLogStatus.DELETED -> {
-                                        // ✅ 留在 Camera：ApiErrorCard 會顯示（用 st.envelope?.error）
+                                        // 留在 Camera：ApiErrorCard 會顯示（用 st.envelope?.error / st.apiError）
                                     }
                                 }
                             }
@@ -1820,7 +1855,16 @@ fun BiteCalNavHost(
                 vm = flowVm,
                 onBack = { nav.popBackStack() },
                 onOpenEditor = { foodLogId ->
-                    // TODO
+                    // TODO: 接你的 editor route
+                },
+                onGoPhoto = {
+                    if (cameraEntry != null) {
+                        cameraEntry.savedStateHandle["camera_mode"] = CameraMode.FOOD.name
+                        nav.popBackStack(Routes.CAMERA, false)
+                    } else {
+                        nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.FOOD.name)
+                        nav.popBackStack()
+                    }
                 },
                 onGoLabel = {
                     if (cameraEntry != null) {
@@ -1839,6 +1883,12 @@ fun BiteCalNavHost(
                         nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.BARCODE.name)
                         nav.popBackStack()
                     }
+                },
+                onCheckNetwork = {
+                    openNetworkSettings(ctx)
+                },
+                onContactSupport = {
+                    openSupportEmail(ctx)
                 }
             )
         }

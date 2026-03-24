@@ -26,7 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.data.foodlog.model.ApiErrorDto
 import com.calai.bitecal.data.foodlog.model.ClientAction
+import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.model.ModelTier
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
@@ -39,8 +41,11 @@ fun FoodLogDetailScreen(
     vm: FoodLogFlowViewModel,
     onBack: () -> Unit,
     onOpenEditor: (foodLogId: String) -> Unit,
-    onGoLabel: () -> Unit,        // 跳回相機並切 LABEL
-    onRescanBarcode: () -> Unit,  // 跳回相機並切 BARCODE
+    onGoPhoto: () -> Unit,
+    onGoLabel: () -> Unit,
+    onRescanBarcode: () -> Unit,
+    onCheckNetwork: () -> Unit,
+    onContactSupport: () -> Unit,
 ) {
     val st by vm.state.collectAsState()
 
@@ -48,14 +53,17 @@ fun FoodLogDetailScreen(
         vm.startPolling(foodLogId)
     }
 
-    // ✅ 離開 Detail 就停掉 polling（避免背景覆寫 state）
     DisposableEffect(foodLogId) {
         onDispose { vm.stopPolling() }
     }
 
     val env = st.envelope
+    val effectiveError = env?.error ?: st.apiError
 
-    // ✅ 建議：回相機切模式前 reset，避免回相機還殘留上一筆 toast/loading
+    val goPhotoSafe: () -> Unit = {
+        vm.reset()
+        onGoPhoto()
+    }
     val goLabelSafe: () -> Unit = {
         vm.reset()
         onGoLabel()
@@ -70,13 +78,14 @@ fun FoodLogDetailScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text("FoodLog: $foodLogId", style = MaterialTheme.typography.titleMedium)
             TextButton(onClick = onBack) { Text("關閉") }
         }
 
-        // ✅ Debug badge：tierUsed/fromCache
         if (env != null) {
             Spacer(Modifier.height(6.dp))
             Row(
@@ -97,7 +106,6 @@ fun FoodLogDetailScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        // ✅ 429：冷卻中
         st.cooldown?.let { cd ->
             CooldownPanel(
                 cdSeconds = cd.cooldownSeconds,
@@ -109,7 +117,6 @@ fun FoodLogDetailScreen(
             return@Column
         }
 
-        // ✅ 422：模型拒答（SAFETY/RECITATION/HARM）
         st.refused?.let { rf ->
             ModelRefusedPanel(
                 refuseReason = rf.refuseReason,
@@ -131,6 +138,22 @@ fun FoodLogDetailScreen(
             Spacer(Modifier.height(12.dp))
         }
 
+        if (effectiveError != null && (env == null || env.status == FoodLogStatus.FAILED)) {
+            ErrorActionPanel(
+                foodLogId = foodLogId,
+                apiError = effectiveError,
+                vm = vm,
+                onBack = onBack,
+                onOpenEditor = onOpenEditor,
+                onGoPhoto = goPhotoSafe,
+                onGoLabel = goLabelSafe,
+                onRescanBarcode = rescanBarcodeSafe,
+                onCheckNetwork = onCheckNetwork,
+                onContactSupport = onContactSupport
+            )
+            return@Column
+        }
+
         if (env == null) {
             Text("尚未取得資料…")
             return@Column
@@ -143,84 +166,207 @@ fun FoodLogDetailScreen(
             }
 
             FoodLogStatus.FAILED -> {
-                val errCode = env.error?.errorCode?.uppercase()
-                val retryAfter = env.error?.retryAfterSec
-                val actionEnum = env.error?.clientAction
-
                 Text(
-                    text = "辨識失敗：${env.error?.errorCode ?: "UNKNOWN"}",
+                    text = "辨識失敗，但未取得可用錯誤資訊",
                     color = MaterialTheme.colorScheme.error
                 )
-
-                if (retryAfter != null) {
-                    Spacer(Modifier.height(6.dp))
-                    Text("建議等待：${retryAfter}s")
-                }
-
                 Spacer(Modifier.height(10.dp))
-
-                when (actionEnum) {
-                    ClientAction.TRY_LABEL -> {
-                        Button(onClick = goLabelSafe) { Text("改用營養標示（Label）") }
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = rescanBarcodeSafe) { Text("重新掃描條碼") }
-                    }
-
-                    ClientAction.TRY_BARCODE -> {
-                        Button(onClick = rescanBarcodeSafe) { Text("改用條碼掃描（Barcode）") }
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = goLabelSafe) { Text("改用營養標示（Label）") }
-                    }
-
-                    ClientAction.CHECK_NETWORK -> {
-                        Button(onClick = { vm.retry(foodLogId) }) { Text("已檢查網路，重試") }
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = onBack) { Text("回到相機") }
-                    }
-
-                    ClientAction.RETAKE_PHOTO -> {
-                        Button(onClick = onBack) { Text("回到相機重拍") }
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = goLabelSafe) { Text("改用營養標示（Label）") }
-                    }
-
-                    ClientAction.ENTER_MANUALLY -> {
-                        Button(onClick = { onOpenEditor(foodLogId) }) { Text("手動輸入/編輯") }
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = onBack) { Text("回到相機") }
-                    }
-
-                    ClientAction.CONTACT_SUPPORT -> {
-                        Button(onClick = onBack) { Text("回到相機") }
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = { /* TODO: open mailto/support */ }) { Text("聯絡客服") }
-                    }
-
-                    else -> {
-                        // ✅ fallback：只有 actionEnum == null 才用 errCode 判斷 BARCODE_*
-                        val isBarcodeErr = actionEnum == null && (errCode?.startsWith("BARCODE_") == true)
-
-                        if (isBarcodeErr) {
-                            Button(onClick = goLabelSafe) { Text("改用營養標示（Label）") }
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedButton(onClick = rescanBarcodeSafe) { Text("重新掃描條碼") }
-                        } else {
-                            Button(onClick = { vm.retry(foodLogId) }) { Text("重試") }
-                        }
-                    }
+                Button(onClick = { vm.retry(foodLogId) }) {
+                    Text("重試")
                 }
             }
 
             FoodLogStatus.DRAFT -> {
                 Text("已完成（可編輯）")
                 Spacer(Modifier.height(8.dp))
-                Button(onClick = { onOpenEditor(foodLogId) }) { Text("編輯結果") }
+
+                NutritionSummarySection(env)
+
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { onOpenEditor(foodLogId) },
+                        enabled = !st.loading
+                    ) {
+                        Text("編輯結果")
+                    }
+
+                    OutlinedButton(
+                        onClick = { vm.save(foodLogId) },
+                        enabled = !st.loading
+                    ) {
+                        Text("存入歷史")
+                    }
+
+                    OutlinedButton(
+                        onClick = { vm.delete(foodLogId) },
+                        enabled = !st.loading
+                    ) {
+                        Text("刪除")
+                    }
+                }
             }
 
-            FoodLogStatus.SAVED -> Text("已存入歷史")
-            FoodLogStatus.DELETED -> Text("已刪除")
+            FoodLogStatus.SAVED -> {
+                Text("已存入歷史")
+                Spacer(Modifier.height(8.dp))
+
+                NutritionSummarySection(env)
+
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { onOpenEditor(foodLogId) },
+                        enabled = !st.loading
+                    ) {
+                        Text("編輯結果")
+                    }
+
+                    OutlinedButton(
+                        onClick = { vm.delete(foodLogId) },
+                        enabled = !st.loading
+                    ) {
+                        Text("刪除")
+                    }
+                }
+            }
+
+            FoodLogStatus.DELETED -> {
+                Text("已刪除")
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = onBack) {
+                    Text("返回")
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun ErrorActionPanel(
+    foodLogId: String,
+    apiError: ApiErrorDto,
+    vm: FoodLogFlowViewModel,
+    onBack: () -> Unit,
+    onOpenEditor: (String) -> Unit,
+    onGoPhoto: () -> Unit,
+    onGoLabel: () -> Unit,
+    onRescanBarcode: () -> Unit,
+    onCheckNetwork: () -> Unit,
+    onContactSupport: () -> Unit,
+) {
+    val errCode = apiError.errorCode?.uppercase()
+    val retryAfter = apiError.retryAfterSec
+    val actionEnum = apiError.clientAction
+
+    Text(
+        text = "辨識失敗：${apiError.errorCode ?: "UNKNOWN"}",
+        color = MaterialTheme.colorScheme.error
+    )
+
+    if (retryAfter != null) {
+        Spacer(Modifier.height(6.dp))
+        Text("建議等待：${retryAfter}s")
+    }
+
+    Spacer(Modifier.height(10.dp))
+
+    when (actionEnum) {
+        ClientAction.TRY_LABEL -> {
+            Button(onClick = onGoLabel) { Text("改用營養標示（Label）") }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onRescanBarcode) { Text("重新掃描條碼") }
+        }
+
+        ClientAction.SCAN_AGAIN,
+        ClientAction.TRY_BARCODE -> {
+            Button(onClick = onRescanBarcode) { Text("改用條碼掃描（Barcode）") }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onGoLabel) { Text("改用營養標示（Label）") }
+        }
+
+        ClientAction.TRY_PHOTO,
+        ClientAction.RETAKE_PHOTO -> {
+            Button(onClick = onGoPhoto) { Text("回到相機重拍") }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onGoLabel) { Text("改用營養標示（Label）") }
+        }
+
+        ClientAction.CHECK_NETWORK -> {
+            Button(onClick = onCheckNetwork) { Text("開啟網路設定") }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = { vm.retry(foodLogId) }) { Text("已檢查完成，重新嘗試") }
+        }
+
+        ClientAction.ENTER_MANUALLY -> {
+            Button(onClick = { onOpenEditor(foodLogId) }) { Text("手動輸入/編輯") }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onBack) { Text("回到相機") }
+        }
+
+        ClientAction.CONTACT_SUPPORT -> {
+            Button(onClick = onContactSupport) { Text("聯絡客服") }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onBack) { Text("回到相機") }
+        }
+
+        ClientAction.RETRY_LATER -> {
+            Button(onClick = { vm.retry(foodLogId) }) { Text("稍後重試") }
+        }
+
+        else -> {
+            val isBarcodeErr = errCode?.startsWith("BARCODE_") == true
+
+            if (isBarcodeErr) {
+                Button(onClick = onGoLabel) { Text("改用營養標示（Label）") }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onRescanBarcode) { Text("重新掃描條碼") }
+            } else {
+                Button(onClick = { vm.retry(foodLogId) }) { Text("重試") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NutritionSummarySection(env: FoodLogEnvelopeDto) {
+    val result = env.nutritionResult ?: run {
+        Text("沒有 nutritionResult")
+        return
+    }
+
+    Spacer(Modifier.height(8.dp))
+    Text("辨識結果", style = MaterialTheme.typography.titleSmall)
+    Spacer(Modifier.height(8.dp))
+
+    LabeledValue("foodName", result.foodName)
+    LabeledValue("quantity", result.quantity?.let { "${it.value ?: "-"} ${it.unit ?: ""}".trim() })
+    LabeledValue("kcal", result.nutrients?.kcal?.toString())
+    LabeledValue("protein", result.nutrients?.protein?.toString())
+    LabeledValue("fat", result.nutrients?.fat?.toString())
+    LabeledValue("carbs", result.nutrients?.carbs?.toString())
+    LabeledValue("fiber", result.nutrients?.fiber?.toString())
+    LabeledValue("sugar", result.nutrients?.sugar?.toString())
+    LabeledValue("sodium", result.nutrients?.sodium?.toString())
+    LabeledValue("confidence", result.confidence?.toString())
+    LabeledValue("healthScore", result.healthScore?.toString())
+    LabeledValue("degradedReason", result.degradedReason)
+    LabeledValue("foodCategory", result.foodCategory)
+    LabeledValue("foodSubCategory", result.foodSubCategory)
+
+    if (!result.warnings.isNullOrEmpty()) {
+        LabeledValue("warnings", result.warnings.joinToString(", "))
+    }
+
+    if (!result.reasoning.isNullOrBlank()) {
+        LabeledValue("_reasoning", result.reasoning)
+    }
+}
+
+@Composable
+private fun LabeledValue(label: String, value: String?) {
+    Text("$label: ${value ?: "-"}")
+    Spacer(Modifier.height(4.dp))
 }
 
 @Composable
@@ -306,8 +452,8 @@ private fun ModelRefusedPanel(
     }
 
     val msg = hint ?: when (reason) {
-        "RECITATION" -> "這張內容可能涉及版權/引用限制，建議改拍「食物本體」或使用 Label/Barcode。"
-        else -> "請只拍攝食物（避免人臉/不雅內容/螢幕截圖），並確保光線充足。"
+        "RECITATION" -> "這張內容可能涉及版權/引用限制，建議改拍食物本體或使用 Label/Barcode。"
+        else -> "請只拍攝食物，避免人臉/不雅內容/螢幕截圖，並確保光線充足。"
     }
 
     Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)

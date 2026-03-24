@@ -9,7 +9,12 @@ data class FoodLogServerErrorDto(
     val message: String? = null,
     val requestId: String? = null,
     val clientAction: String? = null,
-    val retryAfterSec: Int? = null
+    val retryAfterSec: Int? = null,
+    val nextAllowedAtUtc: String? = null,
+    val cooldownSeconds: Int? = null,
+    val cooldownLevel: Int? = null,
+    val cooldownReason: String? = null,
+    val suggestedTier: String? = null
 ) {
     fun normalizedCode(): String? = errorCode ?: code
 
