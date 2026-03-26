@@ -3,6 +3,7 @@ package com.calai.bitecal.ui.home
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -37,7 +38,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +46,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,14 +59,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.StepsRecord
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.calai.bitecal.R
+import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
+import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
+import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionProxyActivity
+import com.calai.bitecal.data.activity.model.DailyActivityStatus
 import com.calai.bitecal.data.fasting.notifications.NotificationPermission
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.UserProfileStore
@@ -74,16 +85,21 @@ import com.calai.bitecal.ui.home.components.CalendarStrip
 import com.calai.bitecal.ui.home.components.CaloriesCardModern
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MacroRowModern
+import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.MealCard
 import com.calai.bitecal.ui.home.components.PagerDots
 import com.calai.bitecal.ui.home.components.PanelHeights
+import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
 import com.calai.bitecal.ui.home.components.StepsWorkoutRowModern
 import com.calai.bitecal.ui.home.components.WeightFastingRowModern
-import com.calai.bitecal.ui.home.model.HomeViewModel
-import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.scan.ScanFab
 import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
+import com.calai.bitecal.ui.home.model.HomeViewModel
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
+import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadCard
 import com.calai.bitecal.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
@@ -99,23 +115,6 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
-import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.StepsRecord
-import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionProxyActivity
-import com.calai.bitecal.data.activity.model.DailyActivityStatus
-import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
-import androidx.compose.ui.semantics.Role
-import android.content.pm.PackageManager
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
-import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
-import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadCard
-import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
-import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
-import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,7 +135,7 @@ fun HomeScreen(
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
-    val recentUpload by vm.recentUpload.collectAsState()
+    val recentUploads by vm.recentUploads.collectAsState()
 
     // ====== Fasting VM 狀態 / 權限設定 ======
     val fastingUi by fastingVm.state.collectAsState()
@@ -582,20 +581,20 @@ fun HomeScreen(
                     onWorkoutCardClick = { onOpenActivityHistory() }
                 )
                 // ===== Fourth block: 最近上傳
-                val recentSectionTopGap = 16.dp
+                val recentSectionTopGap = 20.dp
                 val recentSectionTitleBottomGap = 12.dp
                 val recentSectionTitleStart = 14.dp
 
                 Spacer(Modifier.height(recentSectionTopGap))
 
                 when {
-                    recentUpload != null -> {
+                    recentUploads.isNotEmpty() -> {
                         Text(
                             text = stringResource(R.string.recently_uploaded),
                             style = TextStyle(
-                                fontSize = 18.sp,
-                                lineHeight = 28.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontSize = 21.sp,
+                                lineHeight = 30.sp,
+                                fontWeight = FontWeight.Bold
                             ),
                             modifier = Modifier.padding(
                                 start = recentSectionTitleStart,
@@ -603,10 +602,20 @@ fun HomeScreen(
                             )
                         )
 
-                        RecentUploadCard(
-                            item = recentUpload!!,
+                        Column(
                             modifier = Modifier.fillMaxWidth()
-                        )
+                        ) {
+                            recentUploads.forEachIndexed { index, item ->
+                                RecentUploadCard(
+                                    item = item,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                if (index != recentUploads.lastIndex) {
+                                    Spacer(Modifier.height(12.dp))
+                                }
+                            }
+                        }
                     }
 
                     s.recentMeals.isEmpty() -> {
@@ -614,8 +623,9 @@ fun HomeScreen(
                             cardHeight = 120.dp,
                             titleStartPadding = recentSectionTitleStart,
                             titleBottomPadding = recentSectionTitleBottomGap,
-                            titleFontSize = 18.sp,
-                            titleFontWeight = FontWeight.SemiBold
+                            titleFontSize = 21.sp,
+                            lineHeight = 30.sp,
+                            titleFontWeight = FontWeight.Bold
                         )
                     }
 

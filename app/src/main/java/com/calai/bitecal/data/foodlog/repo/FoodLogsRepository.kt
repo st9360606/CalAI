@@ -1,9 +1,11 @@
 package com.calai.bitecal.data.foodlog.repo
 
+import android.util.Log
 import com.calai.bitecal.data.foodlog.api.BarcodeReq
 import com.calai.bitecal.data.foodlog.api.FoodLogsApi
 import com.calai.bitecal.data.foodlog.model.CooldownActiveDto
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
+import com.calai.bitecal.data.foodlog.model.FoodLogListItemDto
 import com.calai.bitecal.data.foodlog.model.FoodLogListResponseDto
 import com.calai.bitecal.data.foodlog.model.FoodLogOverrideRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogServerErrorDto
@@ -15,6 +17,9 @@ import kotlinx.serialization.json.JsonElement
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.HttpException
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 import javax.inject.Inject
 
@@ -29,6 +34,10 @@ class FoodLogsRepository @Inject constructor(
     private val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = true
+    }
+
+    private companion object {
+        const val TAG = "FoodLogsRepo"
     }
 
     suspend fun submitAlbumImage(part: MultipartBody.Part): FoodLogEnvelopeDto =
@@ -252,6 +261,111 @@ class FoodLogsRepository @Inject constructor(
             }
             throw e
         }
+    }
+
+    suspend fun listHomeRecentUploads(
+        zoneId: ZoneId,
+        lookBackDays: Long = 3,
+        maxItems: Int = 10,
+        sizePerStatus: Int = maxItems
+    ): List<FoodLogListItemDto> {
+        val safeDays = lookBackDays.coerceIn(1, 7)
+        val safeMaxItems = maxItems.coerceIn(1, 10)
+        val safeRequestedSize = maxOf(safeMaxItems, sizePerStatus.coerceIn(1, 20))
+        val lookBackHours = (safeDays * 24).toInt()
+
+        val response = runCatching {
+            safeCall {
+                api.listRecentPreviews(
+                    lookBackHours = lookBackHours,
+                    size = safeRequestedSize
+                )
+            }
+        }.onFailure { t ->
+            Log.w(
+                TAG,
+                "listHomeRecentUploads failed lookBackHours=$lookBackHours size=$safeRequestedSize: ${t.javaClass.simpleName}: ${t.message}",
+                t
+            )
+        }.getOrElse {
+            return emptyList()
+        }
+
+        return response.items
+            .asSequence()
+            .filter {
+                it.status == FoodLogStatus.PENDING ||
+                        it.status == FoodLogStatus.DRAFT ||
+                        it.status == FoodLogStatus.SAVED
+            }
+            .distinctBy { it.foodLogId }
+            .sortedByDescending { homeRecentSortKey(it, zoneId) }
+            .take(safeMaxItems)
+            .toList()
+    }
+
+    private fun homeRecentSortKey(
+        item: FoodLogListItemDto,
+        zoneId: ZoneId
+    ): Long {
+        parseInstantOrNull(
+            raw = item.serverReceivedAtUtc,
+            fieldName = "serverReceivedAtUtc"
+        )?.let { return it.toEpochMilli() }
+
+        parseInstantOrNull(
+            raw = item.capturedAtUtc,
+            fieldName = "capturedAtUtc"
+        )?.let { return it.toEpochMilli() }
+
+        parseLocalDateStartOfDayOrNull(
+            raw = item.capturedLocalDate,
+            zoneId = zoneId,
+            fieldName = "capturedLocalDate"
+        )?.let {
+            return it.toEpochMilli()
+        }
+
+        return Long.MIN_VALUE
+    }
+
+    private fun parseInstantOrNull(
+        raw: String?,
+        fieldName: String
+    ): Instant? {
+        val value = raw?.trim()
+        if (value.isNullOrBlank()) return null
+
+        return runCatching {
+            Instant.parse(value)
+        }.onFailure { t ->
+            Log.w(
+                TAG,
+                "parseInstantOrNull failed field=$fieldName value=$value: ${t.javaClass.simpleName}: ${t.message}",
+                t
+            )
+        }.getOrNull()
+    }
+
+    private fun parseLocalDateStartOfDayOrNull(
+        raw: String?,
+        zoneId: ZoneId,
+        fieldName: String
+    ): Instant? {
+        val value = raw?.trim()
+        if (value.isNullOrBlank()) return null
+
+        return runCatching {
+            LocalDate.parse(value)
+                .atStartOfDay(zoneId)
+                .toInstant()
+        }.onFailure { t ->
+            Log.w(
+                TAG,
+                "parseLocalDateStartOfDayOrNull failed field=$fieldName value=$value: ${t.javaClass.simpleName}: ${t.message}",
+                t
+            )
+        }.getOrNull()
     }
 
     private fun defaultLocaleTag(): String? {

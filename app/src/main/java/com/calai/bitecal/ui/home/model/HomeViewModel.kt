@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.activity.model.DailyActivityStatus
@@ -18,6 +19,7 @@ import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.ProfileRepository
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,8 +32,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import java.io.File
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -63,13 +69,16 @@ private data class SummaryUiKey(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repo: HomeRepository,
-    private val hc: HealthConnectRepository,          // 目前未用到，可保留
-    private val profileRepo: ProfileRepository,       // 401/404 自動補救
-    private val dailySyncer: DailyActivitySyncer,     // ✅ 串 daily activity
+    private val hc: HealthConnectRepository,
+    private val profileRepo: ProfileRepository,
+    private val dailySyncer: DailyActivitySyncer,
     private val profileStore: UserProfileStore,
-    private val zoneId: ZoneId,                        // ✅ 用裝置當下 timezone
-    private val foodLogsRepository: FoodLogsRepository
+    private val zoneId: ZoneId,
+    private val foodLogsRepository: FoodLogsRepository,
+    @ApplicationContext private val appContext: Context
 ) : ViewModel() {
+    private val recentPreviewCacheMaxAgeMs = TimeUnit.DAYS.toMillis(3)
+    private val recentUploadLookBackDays = 3L
     private val _pendingOpenCamera = MutableStateFlow(false)
     val pendingOpenCamera: StateFlow<Boolean> = _pendingOpenCamera.asStateFlow()
 
@@ -101,6 +110,10 @@ class HomeViewModel @Inject constructor(
     private val dailyDebounceMs: Long = 1_500L
     private var lastDailyRefreshAtMs: Long = 0L
 
+    private companion object {
+        const val TAG = "HomeViewModel"
+    }
+
     private fun shouldStartDailyRefresh(force: Boolean): Boolean {
         val now = SystemClock.elapsedRealtime()
 
@@ -122,6 +135,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         refresh()
+        restoreRecentUploadsFromServer()
 
         viewModelScope.launch {
             profileStore.dailyStepGoalFlow.collectLatest { v ->
@@ -136,11 +150,14 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    //============= recentUpload ==================
-    private val _recentUpload = MutableStateFlow<HomeRecentUploadUi?>(null)
-    val recentUpload: StateFlow<HomeRecentUploadUi?> = _recentUpload.asStateFlow()
+    //============= recentUploads ==================
+    private val _recentUploads = MutableStateFlow<List<HomeRecentUploadUi>>(emptyList())
+    val recentUploads: StateFlow<List<HomeRecentUploadUi>> = _recentUploads.asStateFlow()
 
     private var recentUploadPollJob: Job? = null
+    private var recentUploadRestoreJob: Job? = null
+    private val recentUploadTimeFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern("HH:mm")
 
     fun onFoodLogCreated(
         env: FoodLogEnvelopeDto,
@@ -151,10 +168,12 @@ class HomeViewModel @Inject constructor(
 
         when (env.status) {
             FoodLogStatus.PENDING -> {
-                _recentUpload.value = HomeRecentUploadMapper.pending(
-                    foodLogId = env.foodLogId,
-                    previewUri = previewUri,
-                    timeText = timeText
+                upsertRecentUpload(
+                    HomeRecentUploadMapper.pending(
+                        foodLogId = env.foodLogId,
+                        previewUri = previewUri,
+                        timeText = timeText
+                    )
                 )
                 startRecentUploadPolling(
                     foodLogId = env.foodLogId,
@@ -165,18 +184,20 @@ class HomeViewModel @Inject constructor(
 
             FoodLogStatus.DRAFT,
             FoodLogStatus.SAVED -> {
-                _recentUpload.value = HomeRecentUploadMapper.success(
-                    foodLogId = env.foodLogId,
-                    previewUri = previewUri,
-                    timeText = timeText,
-                    env = env
+                upsertRecentUpload(
+                    HomeRecentUploadMapper.success(
+                        foodLogId = env.foodLogId,
+                        previewUri = previewUri,
+                        timeText = timeText,
+                        env = env
+                    )
                 )
                 refresh()
             }
 
             FoodLogStatus.FAILED,
             FoodLogStatus.DELETED -> {
-                _recentUpload.value = null
+                removeRecentUpload(env.foodLogId)
             }
         }
     }
@@ -184,7 +205,29 @@ class HomeViewModel @Inject constructor(
     fun clearRecentUpload() {
         recentUploadPollJob?.cancel()
         recentUploadPollJob = null
-        _recentUpload.value = null
+        _recentUploads.value = emptyList()
+    }
+
+    private fun upsertRecentUpload(item: HomeRecentUploadUi) {
+        _recentUploads.update { current ->
+            buildList {
+                add(item)
+                current
+                    .filterNot { it.foodLogId == item.foodLogId }
+                    .take(9)
+                    .forEach(::add)
+            }
+        }
+    }
+
+    private fun removeRecentUpload(foodLogId: String) {
+        _recentUploads.update { current ->
+            current.filterNot { it.foodLogId == foodLogId }
+        }
+    }
+
+    private fun replaceRecentUploads(items: List<HomeRecentUploadUi>) {
+        _recentUploads.value = items.take(10)
     }
 
     private fun startRecentUploadPolling(
@@ -210,11 +253,13 @@ class HomeViewModel @Inject constructor(
                             when (result.env.status) {
                                 FoodLogStatus.DRAFT,
                                 FoodLogStatus.SAVED -> {
-                                    _recentUpload.value = HomeRecentUploadMapper.success(
-                                        foodLogId = foodLogId,
-                                        previewUri = previewUri,
-                                        timeText = timeText,
-                                        env = result.env
+                                    upsertRecentUpload(
+                                        HomeRecentUploadMapper.success(
+                                            foodLogId = foodLogId,
+                                            previewUri = previewUri,
+                                            timeText = timeText,
+                                            env = result.env
+                                        )
                                     )
                                     refresh()
                                     return@launch
@@ -222,17 +267,19 @@ class HomeViewModel @Inject constructor(
 
                                 FoodLogStatus.FAILED,
                                 FoodLogStatus.DELETED -> {
-                                    _recentUpload.value = null
+                                    removeRecentUpload(foodLogId)
                                     return@launch
                                 }
 
                                 FoodLogStatus.PENDING -> {
                                     if (!enteredDelayedState) {
                                         enteredDelayedState = true
-                                        _recentUpload.value = HomeRecentUploadMapper.delayed(
-                                            foodLogId = foodLogId,
-                                            previewUri = previewUri,
-                                            timeText = timeText
+                                        upsertRecentUpload(
+                                            HomeRecentUploadMapper.delayed(
+                                                foodLogId = foodLogId,
+                                                previewUri = previewUri,
+                                                timeText = timeText
+                                            )
                                         )
                                     }
                                     delay(8_000L)
@@ -243,10 +290,12 @@ class HomeViewModel @Inject constructor(
                         is HomeCardPollResult.StillPending -> {
                             if (!enteredDelayedState) {
                                 enteredDelayedState = true
-                                _recentUpload.value = HomeRecentUploadMapper.delayed(
-                                    foodLogId = foodLogId,
-                                    previewUri = previewUri,
-                                    timeText = timeText
+                                upsertRecentUpload(
+                                    HomeRecentUploadMapper.delayed(
+                                        foodLogId = foodLogId,
+                                        previewUri = previewUri,
+                                        timeText = timeText
+                                    )
                                 )
                             }
                             delay(8_000L)
@@ -255,12 +304,14 @@ class HomeViewModel @Inject constructor(
                 } catch (ce: CancellationException) {
                     throw ce
                 } catch (_: Throwable) {
-                    _recentUpload.value = HomeRecentUploadMapper.delayed(
-                        foodLogId = foodLogId,
-                        previewUri = previewUri,
-                        timeText = timeText,
-                        title = "網路較慢",
-                        subtitle = "稍後會自動再試"
+                    upsertRecentUpload(
+                        HomeRecentUploadMapper.delayed(
+                            foodLogId = foodLogId,
+                            previewUri = previewUri,
+                            timeText = timeText,
+                            title = "網路較慢",
+                            subtitle = "稍後會自動再試"
+                        )
                     )
                     delay(10_000L)
                 }
@@ -270,7 +321,142 @@ class HomeViewModel @Inject constructor(
 
     override fun onCleared() {
         recentUploadPollJob?.cancel()
+        recentUploadRestoreJob?.cancel()
         super.onCleared()
+    }
+
+    private fun restoreRecentUploadsFromServer() {
+        if (recentUploadPollJob?.isActive == true) return
+
+        recentUploadRestoreJob?.cancel()
+        recentUploadRestoreJob = viewModelScope.launch {
+            val restored = withContext(Dispatchers.IO) {
+                pruneRecentUploadPreviewCache()
+                loadRecentUploadsFromServer()
+            }
+
+            if (recentUploadPollJob?.isActive != true) {
+                replaceRecentUploads(restored)
+
+                val pendingLike = restored.firstOrNull {
+                    it is HomeRecentUploadUi.Pending || it is HomeRecentUploadUi.Delayed
+                }
+
+                if (pendingLike != null) {
+                    startRecentUploadPolling(
+                        foodLogId = pendingLike.foodLogId,
+                        previewUri = pendingLike.previewUri,
+                        timeText = pendingLike.timeText
+                    )
+                }
+            }
+        }
+    }
+
+    private suspend fun loadRecentUploadsFromServer(): List<HomeRecentUploadUi> {
+        val items = foodLogsRepository.listHomeRecentUploads(
+            zoneId = zoneId,
+            lookBackDays = recentUploadLookBackDays,
+            maxItems = 10
+        )
+
+        return items.mapNotNull { item ->
+            HomeRecentUploadMapper.fromListItem(
+                previewUri = cacheRecentUploadPreview(item.foodLogId),
+                timeText = formatRecentUploadTime(
+                    serverReceivedAtUtc = item.serverReceivedAtUtc,
+                    capturedAtUtc = item.capturedAtUtc,
+                    capturedLocalDate = item.capturedLocalDate
+                ),
+                item = item
+            )
+        }
+    }
+
+    private suspend fun cacheRecentUploadPreview(foodLogId: String): String? {
+        return try {
+            val bytes = foodLogsRepository.downloadImageBytes(foodLogId)
+            if (bytes.isEmpty()) {
+                null
+            } else {
+                val dir = File(appContext.cacheDir, "foodlog_recent_upload_preview")
+                    .apply { mkdirs() }
+
+                val file = File(dir, "foodlog_$foodLogId.img")
+                file.writeBytes(bytes)
+                file.setLastModified(System.currentTimeMillis())
+                Uri.fromFile(file).toString()
+            }
+        } catch (t: Throwable) {
+            Log.w(
+                TAG,
+                "cacheRecentUploadPreview failed foodLogId=$foodLogId: ${t.javaClass.simpleName}: ${t.message}",
+                t
+            )
+            null
+        }
+    }
+
+    private fun formatRecentUploadTime(
+        serverReceivedAtUtc: String?,
+        capturedAtUtc: String?,
+        capturedLocalDate: String? = null
+    ): String {
+        parseRecentUploadTimeOrNull(
+            raw = serverReceivedAtUtc,
+            fieldName = "serverReceivedAtUtc"
+        )?.let { return it }
+
+        parseRecentUploadTimeOrNull(
+            raw = capturedAtUtc,
+            fieldName = "capturedAtUtc"
+        )?.let { return it }
+
+        return capturedLocalDate.orEmpty()
+    }
+
+    private fun parseRecentUploadTimeOrNull(
+        raw: String?,
+        fieldName: String
+    ): String? {
+        val value = raw?.trim()
+        if (value.isNullOrBlank()) return null
+
+        return runCatching {
+            Instant.parse(value)
+                .atZone(zoneId)
+                .toLocalTime()
+                .format(recentUploadTimeFormatter)
+        }.onFailure { t ->
+            Log.w(
+                TAG,
+                "parseRecentUploadTimeOrNull failed field=$fieldName value=$value: ${t.javaClass.simpleName}: ${t.message}",
+                t
+            )
+        }.getOrNull()
+    }
+
+    private fun pruneRecentUploadPreviewCache() {
+        val dir = File(appContext.cacheDir, "foodlog_recent_upload_preview")
+        if (!dir.exists() || !dir.isDirectory) return
+
+        val cutoff = System.currentTimeMillis() - recentPreviewCacheMaxAgeMs
+        dir.listFiles()?.forEach { file ->
+            if (file.isFile && file.lastModified() < cutoff) {
+                runCatching {
+                    val deleted = file.delete()
+                    if (!deleted && file.exists()) {
+                        Log.w(TAG, "pruneRecentUploadPreviewCache delete returned false path=${file.absolutePath}")
+                    }
+                }.onFailure { t ->
+                    Log.w(
+                        TAG,
+                        "pruneRecentUploadPreviewCache failed path=${file.absolutePath}: ${t.javaClass.simpleName}: ${t.message}",
+                        t
+                    )
+                }
+            }
+        }
     }
 
     fun refresh() = viewModelScope.launch {

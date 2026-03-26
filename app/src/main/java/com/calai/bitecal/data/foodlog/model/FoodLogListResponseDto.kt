@@ -16,6 +16,7 @@ data class FoodLogListItemDto(
     val status: FoodLogStatus,
     val capturedLocalDate: String? = null,
     val capturedAtUtc: String? = null,
+    val serverReceivedAtUtc: String? = null,
     val nutrition: FoodLogListNutritionDto? = null
 )
 

@@ -1,6 +1,8 @@
 package com.calai.bitecal.ui.home.model
 
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
+import com.calai.bitecal.data.foodlog.model.FoodLogListItemDto
+import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import kotlin.math.roundToInt
 
 sealed interface HomeRecentUploadUi {
@@ -81,5 +83,39 @@ object HomeRecentUploadMapper {
             carbsG = nutrients?.carbs?.roundToInt() ?: 0,
             fatG = nutrients?.fat?.roundToInt() ?: 0
         )
+    }
+
+    fun fromListItem(
+        previewUri: String?,
+        timeText: String,
+        item: FoodLogListItemDto
+    ): HomeRecentUploadUi? {
+        return when (item.status) {
+            FoodLogStatus.PENDING -> delayed(
+                foodLogId = item.foodLogId,
+                previewUri = previewUri,
+                timeText = timeText,
+                title = "正在分析食物...",
+                subtitle = "完成後會自動更新"
+            )
+
+            FoodLogStatus.DRAFT,
+            FoodLogStatus.SAVED -> {
+                val nutrition = item.nutrition
+                HomeRecentUploadUi.Success(
+                    foodLogId = item.foodLogId,
+                    previewUri = previewUri,
+                    timeText = timeText,
+                    title = nutrition?.foodName?.takeIf { it.isNotBlank() }.orEmpty(),
+                    kcal = nutrition?.kcal?.roundToInt() ?: 0,
+                    proteinG = nutrition?.protein?.roundToInt() ?: 0,
+                    carbsG = nutrition?.carbs?.roundToInt() ?: 0,
+                    fatG = nutrition?.fat?.roundToInt() ?: 0
+                )
+            }
+
+            FoodLogStatus.FAILED,
+            FoodLogStatus.DELETED -> null
+        }
     }
 }

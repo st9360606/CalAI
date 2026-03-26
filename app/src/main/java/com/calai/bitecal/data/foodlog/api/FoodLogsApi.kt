@@ -85,6 +85,12 @@ interface FoodLogsApi {
         @Query("size") size: Int = 20
     ): FoodLogListResponseDto
 
+    @GET("/api/v1/food-logs/recent-previews")
+    suspend fun listRecentPreviews(
+        @Query("lookBackHours") lookBackHours: Int = 72,
+        @Query("size") size: Int = 10
+    ): FoodLogListResponseDto
+
     @POST("/api/v1/food-logs/{id}/overrides")
     suspend fun applyOverride(
         @Path("id") id: String,

@@ -74,6 +74,7 @@ fun RecentlyUploadedEmptySection(
     titleStartPadding: Dp = 14.dp,
     titleBottomPadding: Dp = 10.dp,
     titleFontSize: TextUnit = 18.sp,
+    lineHeight: TextUnit = 28.sp,
     titleFontWeight: FontWeight = FontWeight.SemiBold
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -81,7 +82,7 @@ fun RecentlyUploadedEmptySection(
             text = stringResource(R.string.recently_uploaded),
             style = TextStyle(
                 fontSize = titleFontSize,
-                lineHeight = 28.sp,
+                lineHeight = lineHeight,
                 fontWeight = titleFontWeight
             ),
             modifier = Modifier.padding(
