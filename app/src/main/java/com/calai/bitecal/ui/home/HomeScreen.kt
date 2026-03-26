@@ -529,7 +529,7 @@ fun HomeScreen(
 
                 // ★ 兩邊總高度控制（共同升降）
                 val baseHeight = 128.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
-                val verticalGap = 10.dp    // ← 上下卡的間距
+                val verticalGap = 14.dp    // ← 上下卡的間距
 
                 // 將 VM 狀態轉為卡片顯示字串
                 val planName = fastingUi.selected.code
@@ -582,8 +582,8 @@ fun HomeScreen(
                 )
                 // ===== Fourth block: 最近上傳
                 val recentSectionTopGap = 20.dp
-                val recentSectionTitleBottomGap = 12.dp
-                val recentSectionTitleStart = 14.dp
+                val recentSectionTitleBottomGap = 16.dp
+                val recentSectionTitleStart = 2.dp
 
                 Spacer(Modifier.height(recentSectionTopGap))
 
@@ -592,7 +592,7 @@ fun HomeScreen(
                         Text(
                             text = stringResource(R.string.recently_uploaded),
                             style = TextStyle(
-                                fontSize = 21.sp,
+                                fontSize = 22.sp,
                                 lineHeight = 30.sp,
                                 fontWeight = FontWeight.Bold
                             ),
@@ -623,7 +623,7 @@ fun HomeScreen(
                             cardHeight = 120.dp,
                             titleStartPadding = recentSectionTitleStart,
                             titleBottomPadding = recentSectionTitleBottomGap,
-                            titleFontSize = 21.sp,
+                            titleFontSize = 22.sp,
                             lineHeight = 30.sp,
                             titleFontWeight = FontWeight.Bold
                         )
@@ -761,7 +761,7 @@ private fun TwoPagePager(
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
     baseHeight: Dp = PanelHeights.Metric,
-    verticalGap: Dp = 10.dp,
+    verticalGap: Dp = 14.dp,
     onOpenFastingPlans: () -> Unit = {},
     planOverride: String? = null,
     fastingStartText: String? = null,
