@@ -92,6 +92,7 @@ import com.calai.bitecal.ui.home.components.PanelHeights
 import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
 import com.calai.bitecal.ui.home.components.StepsWorkoutRowModern
 import com.calai.bitecal.ui.home.components.WeightFastingRowModern
+import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
 import com.calai.bitecal.ui.home.components.scan.ScanFab
 import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
 import com.calai.bitecal.ui.home.model.HomeViewModel
@@ -125,11 +126,11 @@ fun HomeScreen(
     workoutVm: WorkoutViewModel,
     weightVm: WeightViewModel,
     onOpenCamera: () -> Unit,
+    onOpenSavedFoods: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
     onOpenFastingPlans: () -> Unit,
     onOpenActivityHistory: () -> Unit,
     fastingVm: FastingPlanViewModel,
-    // ★ 新增這兩個參數
     onOpenWeight: () -> Unit,
     onQuickLogWeight: () -> Unit
 ) {
@@ -348,6 +349,12 @@ fun HomeScreen(
     val pendingOpenCamera by vm.pendingOpenCamera.collectAsState()
     val latestOnOpenCamera = rememberUpdatedState(onOpenCamera)
 
+    var showQuickAddMenu by rememberSaveable { mutableStateOf(false) }
+
+    val onFabClick: () -> Unit = remember {
+        { showQuickAddMenu = true }
+    }
+
     // 有 owner 才能用 launcher；沒有就 null（你已有 ProxyActivity 兜底）
     val requestCameraPermLauncher =
         if (registryOwner != null) {
@@ -387,8 +394,10 @@ fun HomeScreen(
         }
     }
 
-    // FAB 點擊：第 1、2 次都 request；第 3 次才導設定
-    val onFabClick: () -> Unit = remember(ctx, requestCameraPermLauncher,
+    // 掃描食物：第 1、2 次都 request；第 3 次才導設定
+    val onScanFoodClick: () -> Unit = remember(
+        ctx,
+        requestCameraPermLauncher,
         onOpenCamera,
         vm
     ) {
@@ -397,17 +406,15 @@ fun HomeScreen(
             val grantedNow =
                 ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
                         PackageManager.PERMISSION_GRANTED
+
             if (grantedNow) {
                 CameraPermissionPrefs.resetCameraDeniedCount(ctx)
                 onOpenCamera()
             } else {
-                // 沒授權：先標記 pending（你原本流程 OK）
                 vm.markPendingOpenCamera()
                 if (deniedCount >= 2) {
-                    // ✅ 第三次（count >= 2）才導設定頁
                     openCameraPermissionSettings(ctx)
                 } else {
-                    // ✅ 第 1、2 次：request（owner=null 用 ProxyActivity 兜底）
                     if (requestCameraPermLauncher != null) {
                         requestCameraPermLauncher.launch(Manifest.permission.CAMERA)
                     } else {
@@ -652,6 +659,20 @@ fun HomeScreen(
                 Spacer(Modifier.height(70.dp))
             }
         }
+
+        HomeQuickActionMenu(
+            visible = showQuickAddMenu,
+            onDismiss = { showQuickAddMenu = false },
+            onSavedFoodsClick = {
+                showQuickAddMenu = false
+                onOpenSavedFoods()
+            },
+            onScanFoodClick = {
+                showQuickAddMenu = false
+                onScanFoodClick()
+            }
+        )
+
         // ===== ✅ Toast 疊加層（先顯示 Fasting，再顯示 Workout） =====
         val canShowWorkoutToast = !showWorkoutSheet.value
         val workoutToast = workoutUi.toastMessage

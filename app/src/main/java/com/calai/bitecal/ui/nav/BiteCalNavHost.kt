@@ -128,6 +128,7 @@ import androidx.compose.runtime.setValue
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
+import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
 import java.io.File
 
 object Routes {
@@ -153,6 +154,7 @@ object Routes {
     const val FASTING = "fasting"
     const val SETTINGS = "settings"
     const val CAMERA = "camera"
+    const val SAVED_FOODS = "saved_foods"
     const val REMINDERS = "reminders"
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
@@ -686,6 +688,11 @@ fun BiteCalNavHost(
                     fastingVm = fastingVm,
                     weightVm = weightVm,
                     onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
+                    onOpenSavedFoods = {
+                        nav.navigate(Routes.SAVED_FOODS) {
+                            launchSingleTop = true
+                        }
+                    },
                     onOpenTab = { tab ->
                         when (tab) {
                             HomeTab.Home -> Unit
@@ -1832,6 +1839,16 @@ fun BiteCalNavHost(
                     }
                 }
             }
+        }
+
+        composable(Routes.SAVED_FOODS) {
+            SavedFoodsScreen(
+                onBack = { nav.safePopBackStack() },
+                onRecordToday = {
+                    // 本輪先只做 UI 原型，不虛構 backend 行為。
+                    // 下一輪若你要，我再幫你接「套用已保存食物到今天」的資料流。
+                }
+            )
         }
 
         composable(Routes.FOOD_LOG_DETAIL) { backStackEntry ->
