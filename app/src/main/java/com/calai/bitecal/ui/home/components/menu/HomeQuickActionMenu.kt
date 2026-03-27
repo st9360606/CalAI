@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,12 +32,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.scan.ScanCameraIcon
 
 private val ScrimColor = Color.Black.copy(alpha = 0.16f)
-private val CardColor = Color.White
-private val TileColor = Color(0xFFF7F7FB)
+private val TileColor = Color(0xFFF0F1F6)
 private val LabelColor = Color(0xFF202124)
+
+private val MenuSidePadding = 20.dp
+private val MenuBottomPadding = 116.dp
+private val MenuCardSpacing = 12.dp
 
 @Composable
 fun HomeQuickActionMenu(
@@ -69,7 +74,12 @@ fun HomeQuickActionMenu(
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 24.dp, end = 24.dp, bottom = 104.dp)
+                .padding(
+                    start = MenuSidePadding,
+                    end = MenuSidePadding,
+                    bottom = MenuBottomPadding
+                ),
+            horizontalArrangement = Arrangement.spacedBy(MenuCardSpacing)
         ) {
             QuickActionCard(
                 label = stringResource(R.string.quick_add_saved_foods),
@@ -80,12 +90,10 @@ fun HomeQuickActionMenu(
                         imageVector = Icons.Filled.Bookmark,
                         contentDescription = null,
                         tint = Color(0xFF202124),
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
 
             QuickActionCard(
                 label = stringResource(R.string.quick_add_scan_food),
@@ -93,7 +101,7 @@ fun HomeQuickActionMenu(
                 onClick = onScanFoodClick,
                 icon = {
                     ScanCameraIcon(
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(30.dp),
                         frameRatio = 0.86f,
                         cornerLenRatio = 0.30f,
                         cornerRoundness = 0.62f,
@@ -118,13 +126,15 @@ private fun QuickActionCard(
 ) {
     Card(
         modifier = Modifier
-            .width(156.dp)
-            .height(116.dp)
+            .width(170.dp)
+            .height(125.dp)
             .testTag(testTag),
         onClick = onClick,
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = CardColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+        shape = RoundedCornerShape(30.dp),
+        border = CardStyles.Border,
+        colors = CardDefaults.cardColors(
+            containerColor = CardStyles.Bg
+        )
     ) {
         Column(
             modifier = Modifier
@@ -134,7 +144,7 @@ private fun QuickActionCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(52.dp)
                     .background(
                         color = TileColor,
                         shape = RoundedCornerShape(14.dp)
@@ -144,7 +154,7 @@ private fun QuickActionCard(
                 icon()
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = label,

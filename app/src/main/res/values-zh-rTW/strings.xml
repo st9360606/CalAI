@@ -179,11 +179,6 @@
     <string name="msg_login_success">登入成功</string>
     <string name="msg_login_failed_generic">登入失敗，請再試一次</string>
 
-    <string name="recently_uploaded">最近記錄</string>
-    <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
-    <string name="quick_add_log_workout">記錄運動</string>
-    <string name="quick_add_scan_food">掃描食物</string>
-
     <!-- Fasting -->
     <string name="fasting_plan_title">禁食計畫</string>
     <string name="fasting_plans">禁食計畫</string>
@@ -283,6 +278,18 @@
     <string name="foodlog_nutrition_protein_g">🥩 %1$dg 蛋白質</string>
     <string name="foodlog_nutrition_carbs_g">🌾 %1$dg 碳水</string>
     <string name="foodlog_nutrition_fat_g">🥑 %1$dg 脂肪</string>
+
+
+
+    <string name="recently_uploaded">最近記錄</string>
+    <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
+    <string name="quick_add_log_workout">記錄運動</string>
+    <string name="quick_add_scan_food">掃描食物</string>
+    <string name="quick_add_saved_foods">已保存食物</string>
+    <string name="saved_foods_title">已保存食物</string>
+    <string name="saved_foods_record_today">記錄今天</string>
+    <string name="saved_foods_empty_title">還沒有已保存食物</string>
+    <string name="saved_foods_empty_body">你保存的食物會顯示在這裡。</string>
 
 
 </resources>

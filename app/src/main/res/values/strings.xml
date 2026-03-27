@@ -180,11 +180,6 @@
     <string name="msg_login_success">Sign-in successful</string>
     <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
 
-    <string name="recently_uploaded">Recently uploaded</string>
-    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
-    <string name="quick_add_log_workout">Log workout</string>
-    <string name="quick_add_scan_food">Scan food</string>
-
     <!-- Fasting -->
     <string name="fasting_plan_title">Fasting Plan</string>
     <string name="fasting_plans">Fasting Plans</string>
@@ -285,5 +280,18 @@
     <string name="foodlog_nutrition_protein_g">🥩 %1$dg protein</string>
     <string name="foodlog_nutrition_carbs_g">🌾 %1$dg carbs</string>
     <string name="foodlog_nutrition_fat_g">🥑 %1$dg fat</string>
+
+
+    <string name="recently_uploaded">Recently uploaded</string>
+    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
+    <string name="quick_add_log_workout">Log workout</string>
+    <string name="quick_add_scan_food">Scan food</string>
+    <string name="quick_add_saved_foods">Saved foods</string>
+    <string name="saved_foods_title">Saved foods</string>
+    <string name="saved_foods_record_today">Record today</string>
+    <string name="saved_foods_empty_title">No saved foods yet</string>
+    <string name="saved_foods_empty_body">Your saved foods will appear here.</string>
+
+
 
 </resources>

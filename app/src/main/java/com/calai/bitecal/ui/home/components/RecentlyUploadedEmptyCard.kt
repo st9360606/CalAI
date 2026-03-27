@@ -211,7 +211,7 @@ fun RecentlyUploadedEmptyCard(
 
             Text(
                 text = stringResource(R.string.recently_uploaded_empty_hint),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = style.hintColor
             )
         }
