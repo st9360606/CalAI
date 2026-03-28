@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.home.ui.foodlog
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -25,12 +27,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,13 +51,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.calai.bitecal.R
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
+import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
+
+private object DetailStyle {
+    val AppBg = Color(0xFFF3F3F3)
+    val SheetBg = Color.White
+    val Border = Color(0xFFEAEAEA)
+    val TextPrimary = Color(0xFF151515)
+    val TextSecondary = Color(0xFF6F6F6F)
+    val HeroFallback = Color(0xFF202124)
+    val Scrim = Color.Black.copy(alpha = 0.16f)
+    val FooterBtn = Color(0xFF171625)
+
+    val ChipBg = Color(0xFFF5F5F7)
+    val SoftCircle = Color(0xFFF7F7F8)
+
+    val ProteinTone = Color(0xFFFF6B7B)
+    val CarbsTone = Color(0xFFF6B24D)
+    val FatTone = Color(0xFF6FA3FF)
+
+    val FiberTone = Color(0xFF8E7DF2)
+    val SugarTone = Color(0xFFFF8A5B)
+    val SodiumTone = Color(0xFF4CB7A5)
+
+    val FireEmojiBg = Color(0xFFF7F6FB)
+}
 
 private data class ScaledNutrients(
     val kcal: Double,
@@ -127,125 +161,167 @@ fun RecentUploadDetailScreen(
     val isSaved = env.status == FoodLogStatus.SAVED
     val displayName = env.nutritionResult?.foodName?.takeIf { it.isNotBlank() } ?: "Unknown Food"
     val healthScore = env.nutritionResult?.healthScore ?: 0
+    var stablePreviewUri by rememberSaveable(foodLogId) { mutableStateOf(previewUri) }
 
+    LaunchedEffect(previewUri) {
+        if (!previewUri.isNullOrBlank()) {
+            stablePreviewUri = previewUri
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF6F6F6))
+            .background(DetailStyle.AppBg)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-
-            // ===== Header image =====
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.42f)
-            ) {
-                if (!previewUri.isNullOrBlank()) {
-                    AsyncImage(
-                        model = previewUri,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFF202124)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "No Image",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-
+        // Hero image
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.46f)
+        ) {
+            if (!stablePreviewUri.isNullOrBlank()) {
+                AsyncImage(
+                    model = stablePreviewUri,
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.16f))
-                )
-
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .statusBarsPadding()
-                        .padding(start = 12.dp, top = 8.dp)
-                        .size(46.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.22f))
-                        .align(Alignment.TopStart)
+                        .matchParentSize()
+                        .background(DetailStyle.HeroFallback),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
+                    Text(
+                        text = "No Image",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium
                     )
                 }
             }
 
-            // ===== Content =====
-            Surface(
+            Box(
                 modifier = Modifier
-                    .fillMaxSize(),
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                color = Color.White
+                    .matchParentSize()
+                    .background(DetailStyle.Scrim)
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .height(40.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onBack),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(
+                    Box(
                         modifier = Modifier
-                            .weight(1f)
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 18.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.6f)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFFF4F4F4),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .clickable(enabled = !st.loading) {
-                                            if (multiplier > 1) {
-                                                vm.persistMultiplierThenToggleSaved(
-                                                    foodLogId = foodLogId,
-                                                    baseEnv = env,
-                                                    multiplier = multiplier,
-                                                    onSuccess = { multiplier = 1 }
-                                                )
-                                            } else {
-                                                vm.toggleSaved(foodLogId)
-                                            }
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                                        contentDescription = "Save",
-                                        tint = Color.Black
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = DetailStyle.TextPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Nutrition",
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+
+        // Bottom sheet
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f),
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            color = DetailStyle.SheetBg,
+            shadowElevation = 10.dp
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 18.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SaveBadge(
+                            isSaved = isSaved,
+                            enabled = !st.loading,
+                            onClick = {
+                                if (multiplier > 1) {
+                                    vm.persistMultiplierThenToggleSaved(
+                                        foodLogId = foodLogId,
+                                        baseEnv = env,
+                                        multiplier = multiplier,
+                                        onSuccess = { multiplier = 1 }
                                     )
+                                } else {
+                                    vm.toggleSaved(foodLogId)
                                 }
                             }
+                        )
 
-                            Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
 
-                            Text(
-                                text = timeText.ifBlank { "--:--" },
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF6A6A6A),
-                                modifier = Modifier.weight(1f)
-                            )
+                        TimeChip(
+                            timeText = timeText
+                        )
+                    }
 
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        Text(
+                            text = displayName,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 12.dp),
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                lineHeight = 26.sp
+                            ),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DetailStyle.TextPrimary
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 4.dp, top = 1.dp)
+                        ) {
                             Stepper(
                                 value = multiplier,
                                 enabled = !st.loading,
@@ -253,101 +329,170 @@ fun RecentUploadDetailScreen(
                                 onPlus = { multiplier += 1 }
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        Text(
-                            text = displayName,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF111111)
-                        )
-
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        CaloriesCard(kcal = scaled.kcal.roundToInt())
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            MacroCard(
-                                modifier = Modifier.weight(1f),
-                                title = "Protein",
-                                value = "${scaled.protein.roundToInt()}g"
-                            )
-                            MacroCard(
-                                modifier = Modifier.weight(1f),
-                                title = "Carbs",
-                                value = "${scaled.carbs.roundToInt()}g"
-                            )
-                            MacroCard(
-                                modifier = Modifier.weight(1f),
-                                title = "Fats",
-                                value = "${scaled.fat.roundToInt()}g"
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        DetailRow(title = "Fiber", value = "${scaled.fiber.roundToInt()}g")
-                        DetailRow(title = "Sugar", value = "${scaled.sugar.roundToInt()}g")
-                        DetailRow(title = "Sodium", value = "${scaled.sodium.roundToInt()}mg")
-                        DetailRow(title = "Health Score", value = "$healthScore")
-
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
 
-                    Button(
-                        onClick = {
-                            if (multiplier > 1) {
-                                vm.persistMultiplierThenDone(
-                                    foodLogId = foodLogId,
-                                    baseEnv = env,
-                                    multiplier = multiplier,
-                                    onSuccess = {
-                                        multiplier = 1
-                                        onDone()
-                                    }
-                                )
-                            } else {
-                                onDone()
-                            }
-                        },
-                        enabled = !st.loading,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp)
-                            .navigationBarsPadding()
-                            .padding(bottom = 16.dp)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(999.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF171625)
-                        )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    CaloriesHeroCard(kcal = scaled.kcal.roundToInt())
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "DONE",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                        MacroCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Protein",
+                            value = "${scaled.protein.roundToInt()}g",
+                            tone = DetailStyle.ProteinTone,
+                            emoji = "🥩"
+                        )
+                        MacroCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Carbs",
+                            value = "${scaled.carbs.roundToInt()}g",
+                            tone = DetailStyle.CarbsTone,
+                            emoji = "🌾"
+                        )
+                        MacroCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Fats",
+                            value = "${scaled.fat.roundToInt()}g",
+                            tone = DetailStyle.FatTone,
+                            emoji = "🥑"
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        MacroCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Fiber",
+                            value = "${scaled.fiber.roundToInt()}g",
+                            tone = DetailStyle.FiberTone,
+                            emoji = "🌿"
+                        )
+                        MacroCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Sugar",
+                            value = "${scaled.sugar.roundToInt()}g",
+                            tone = DetailStyle.SugarTone,
+                            emoji = "🍯"
+                        )
+                        MacroCard(
+                            modifier = Modifier.weight(1f),
+                            title = "Sodium",
+                            value = "${scaled.sodium.roundToInt()}mg",
+                            tone = DetailStyle.SodiumTone,
+                            emoji = "🧂"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    HealthScoreCard(
+                        score = healthScore
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
+
+                FooterDoneBar(
+                    enabled = !st.loading,
+                    onDone = {
+                        if (multiplier > 1) {
+                            vm.persistMultiplierThenDone(
+                                foodLogId = foodLogId,
+                                baseEnv = env,
+                                multiplier = multiplier,
+                                onSuccess = {
+                                    multiplier = 1
+                                    onDone()
+                                }
+                            )
+                        } else {
+                            onDone()
+                        }
+                    }
+                )
             }
         }
-        if (st.loading) {
+
+        if (env != null && st.loading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.12f)),
+                    .background(Color.Black.copy(alpha = 0.10f)),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
         }
+    }
+}
+
+@Composable
+private fun SaveBadge(
+    isSaved: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(27.dp)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+            contentDescription = "Save",
+            tint = DetailStyle.TextPrimary,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+private fun formatDisplayTime(raw: String): String {
+    val input = raw.trim()
+    if (input.isBlank()) return "--:-- --"
+
+    val outputFormatter = DateTimeFormatter.ofPattern("HH:mm a", Locale.US)
+
+    val candidates = listOf(
+        DateTimeFormatter.ofPattern("H:mm", Locale.US),
+        DateTimeFormatter.ofPattern("HH:mm", Locale.US),
+        DateTimeFormatter.ofPattern("h:mm a", Locale.US),
+        DateTimeFormatter.ofPattern("hh:mm a", Locale.US)
+    )
+
+    for (formatter in candidates) {
+        runCatching {
+            return LocalTime.parse(input.uppercase(Locale.US), formatter).format(outputFormatter)
+        }
+    }
+
+    return input
+}
+
+@Composable
+private fun TimeChip(timeText: String) {
+    Surface(
+        color = DetailStyle.ChipBg,
+        shape = RoundedCornerShape(999.dp)
+    ) {
+        Text(
+            text = formatDisplayTime(timeText),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.bodySmall,
+            fontSize = 13.sp,
+            color = Color.Black,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -360,68 +505,94 @@ private fun Stepper(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
+            .height(43.dp)
             .clip(RoundedCornerShape(999.dp))
-            .border(2.dp, Color(0xFF171717), RoundedCornerShape(999.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .border(1.dp, DetailStyle.TextPrimary, RoundedCornerShape(999.dp))
+            .padding(horizontal = 18.dp)
     ) {
         IconButton(
             onClick = onMinus,
             enabled = enabled,
-            modifier = Modifier.size(28.dp)) {
+            modifier = Modifier.size(34.dp)
+        ) {
             Icon(
                 imageVector = Icons.Filled.Remove,
                 contentDescription = "Minus",
-                tint = Color(0xFF171717)
+                tint = DetailStyle.TextPrimary
             )
         }
 
         Text(
             text = value.toString(),
             style = MaterialTheme.typography.titleMedium,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF171717)
+            color = DetailStyle.TextPrimary
         )
 
         IconButton(
             onClick = onPlus,
             enabled = enabled,
-            modifier = Modifier.size(28.dp)) {
+            modifier = Modifier.size(34.dp)
+        ) {
             Icon(
                 imageVector = Icons.Outlined.Add,
                 contentDescription = "Plus",
-                tint = Color(0xFF171717)
+                tint = DetailStyle.TextPrimary
             )
         }
     }
 }
 
 @Composable
-private fun CaloriesCard(kcal: Int) {
+private fun CaloriesHeroCard(kcal: Int) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(82.dp),
         color = Color.White,
-        shape = RoundedCornerShape(20.dp),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE9E9E9))
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, DetailStyle.Border)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 20.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Calories",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF303030)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = kcal.toString(),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF111111)
-            )
+            Surface(
+                modifier = Modifier.size(54.dp),
+                shape = RoundedCornerShape(18.dp),
+                color = RingColors.CenterFill
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "🔥",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Calories",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = kcal.toString(),
+                    fontSize = 27.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DetailStyle.TextPrimary
+                )
+            }
         }
     }
 }
@@ -430,60 +601,178 @@ private fun CaloriesCard(kcal: Int) {
 private fun MacroCard(
     modifier: Modifier = Modifier,
     title: String,
-    value: String
+    value: String,
+    tone: Color,
+    emoji: String
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.height(62.dp),
         color = Color.White,
-        shape = RoundedCornerShape(18.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE9E9E9)),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, DetailStyle.Border)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF303030)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF111111)
-            )
+            Surface(
+                modifier = Modifier
+                    .size(22.dp)
+                    .offset(y = (-8).dp),
+                shape = CircleShape,
+                color = tone.copy(alpha = 0.14f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = emoji,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black,
+                    maxLines = 1
+                )
+
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DetailStyle.TextPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun DetailRow(
-    title: String,
-    value: String
+private fun HealthScoreCard(
+    score: Int
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    val safeScore = score.coerceIn(0, 10)
+    val progress = safeScore / 10f
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, DetailStyle.Border)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 14.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF303030)
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFFE7E8EC),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(1.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.apple_health),
+                    contentDescription = "apple_health",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+//                        text = stringResource(R.string.health_score),
+                        text = "Health Score",
+                        fontSize = 15.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Text(
+                        text = "$safeScore/10",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = DetailStyle.TextPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xFFE9E7EF))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progress)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color(0xFF6BCB77))
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FooterDoneBar(
+    enabled: Boolean,
+    onDone: () -> Unit
+) {
+    Surface(
+        color = Color.White,
+        shadowElevation = 10.dp
+    ) {
+        Button(
+            onClick = onDone,
+            enabled = enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .navigationBarsPadding()
+                .height(56.dp),
+            shape = RoundedCornerShape(999.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = DetailStyle.FooterBtn
             )
+        ) {
             Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF111111)
+                text = "Done",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold
             )
         }
-        HorizontalDivider(color = Color(0xFFF0F0F0))
     }
 }

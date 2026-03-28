@@ -291,5 +291,6 @@
     <string name="saved_foods_empty_title">還沒有已保存食物</string>
     <string name="saved_foods_empty_body">你保存的食物會顯示在這裡。</string>
 
+    <string name="health_score">健康分數</string>
 
 </resources>
