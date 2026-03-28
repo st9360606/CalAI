@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,13 +57,15 @@ private val ThumbPlaceholder = Color(0xFFF2F3F6)
 @Composable
 fun RecentUploadCard(
     item: HomeRecentUploadUi,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     val isLoadingLike = item is HomeRecentUploadUi.Pending || item is HomeRecentUploadUi.Delayed
 
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .testTag("recent_upload_card"),
         shape = RoundedCornerShape(22.dp),
         border = CardStyles.Border,

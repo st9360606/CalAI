@@ -21,6 +21,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
@@ -163,13 +166,19 @@ class FoodLogFlowViewModel @Inject constructor(
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(
-                    loading = true,
-                    cooldown = null,
-                    refused = null,
-                    apiError = null,
-                    error = null
-                )
+                val sameFoodLog = _state.value.envelope?.foodLogId == foodLogId
+
+                _state.value = if (sameFoodLog) {
+                    _state.value.copy(
+                        loading = true,
+                        cooldown = null,
+                        refused = null,
+                        apiError = null,
+                        error = null
+                    )
+                } else {
+                    UiState(loading = true)
+                }
 
                 val env = repo.pollUntilTerminal(foodLogId)
                 _state.value = UiState(loading = false, envelope = env)
@@ -461,6 +470,57 @@ class FoodLogFlowViewModel @Inject constructor(
         }
     }
 
+    fun toggleSaved(foodLogId: String) {
+        viewModelScope.launch {
+            try {
+                stopPollingSilently()
+
+                val current = _state.value.envelope ?: return@launch
+
+                _state.value = _state.value.copy(
+                    loading = true,
+                    cooldown = null,
+                    refused = null,
+                    apiError = null,
+                    error = null
+                )
+
+                val env = when (current.status) {
+                    FoodLogStatus.SAVED -> repo.unsave(foodLogId)
+                    FoodLogStatus.DRAFT -> repo.save(foodLogId)
+                    else -> repo.getOne(foodLogId)
+                }
+
+                _state.value = UiState(
+                    loading = false,
+                    envelope = env
+                )
+
+            } catch (e: FoodLogApiException.CooldownActive) {
+                _state.value = UiState(loading = false, cooldown = e.dto)
+
+            } catch (e: FoodLogApiException.ModelRefused) {
+                _state.value = UiState(loading = false, refused = e.dto)
+
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
+            } catch (ce: CancellationException) {
+                throw ce
+
+            } catch (t: Throwable) {
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "toggle saved failed"
+                )
+            }
+        }
+    }
+
     override fun onCleared() {
         pollingJob?.cancel()
         pollingJob = null
@@ -481,5 +541,197 @@ class FoodLogFlowViewModel @Inject constructor(
             apiError = null,
             error = null
         )
+    }
+
+    private fun buildScaledNutrientsJsonOrNull(
+        baseEnv: FoodLogEnvelopeDto,
+        multiplier: Int
+    ): JsonObject? {
+        val n = baseEnv.nutritionResult?.nutrients ?: return null
+        var count = 0
+
+        val obj = buildJsonObject {
+            fun putScaled(key: String, value: Double?) {
+                if (value != null) {
+                    put(key, value * multiplier)
+                    count++
+                }
+            }
+
+            putScaled("kcal", n.kcal)
+            putScaled("protein", n.protein)
+            putScaled("carbs", n.carbs)
+            putScaled("fat", n.fat)
+            putScaled("fiber", n.fiber)
+            putScaled("sugar", n.sugar)
+            putScaled("sodium", n.sodium)
+        }
+
+        return obj.takeIf { count > 0 }
+    }
+
+    private fun buildScaledQuantityJsonOrNull(
+        baseEnv: FoodLogEnvelopeDto,
+        multiplier: Int
+    ): JsonObject? {
+        val q = baseEnv.nutritionResult?.quantity ?: return null
+        val value = q.value ?: return null
+        val unit = q.unit?.takeIf { it.isNotBlank() } ?: return null
+
+        return buildJsonObject {
+            put("value", value * multiplier)
+            put("unit", unit)
+        }
+    }
+
+    private suspend fun applyMultiplierOverridesInternal(
+        foodLogId: String,
+        baseEnv: FoodLogEnvelopeDto,
+        multiplier: Int
+    ): FoodLogEnvelopeDto {
+        if (multiplier <= 1) return baseEnv
+
+        var latest = baseEnv
+        val reason = "RECENT_UPLOAD_MULTIPLIER_X$multiplier"
+
+        val nutrientsJson = buildScaledNutrientsJsonOrNull(baseEnv, multiplier)
+        if (nutrientsJson != null) {
+            latest = repo.applyOverride(
+                id = foodLogId,
+                fieldKey = "NUTRIENTS",
+                newValue = nutrientsJson,
+                reason = reason
+            )
+        }
+
+        val quantityJson = buildScaledQuantityJsonOrNull(baseEnv, multiplier)
+        if (quantityJson != null) {
+            latest = repo.applyOverride(
+                id = foodLogId,
+                fieldKey = "QUANTITY",
+                newValue = quantityJson,
+                reason = reason
+            )
+        }
+
+        return latest
+    }
+
+    fun persistMultiplierThenDone(
+        foodLogId: String,
+        baseEnv: FoodLogEnvelopeDto,
+        multiplier: Int,
+        onSuccess: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            try {
+                stopPollingSilently()
+
+                _state.value = _state.value.copy(
+                    loading = true,
+                    cooldown = null,
+                    refused = null,
+                    apiError = null,
+                    error = null
+                )
+
+                val env = applyMultiplierOverridesInternal(
+                    foodLogId = foodLogId,
+                    baseEnv = baseEnv,
+                    multiplier = multiplier
+                )
+
+                _state.value = UiState(
+                    loading = false,
+                    envelope = env
+                )
+
+                onSuccess()
+
+            } catch (e: FoodLogApiException.CooldownActive) {
+                _state.value = UiState(loading = false, cooldown = e.dto)
+
+            } catch (e: FoodLogApiException.ModelRefused) {
+                _state.value = UiState(loading = false, refused = e.dto)
+
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
+            } catch (ce: CancellationException) {
+                throw ce
+
+            } catch (t: Throwable) {
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "persist multiplier failed"
+                )
+            }
+        }
+    }
+
+    fun persistMultiplierThenToggleSaved(
+        foodLogId: String,
+        baseEnv: FoodLogEnvelopeDto,
+        multiplier: Int,
+        onSuccess: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            try {
+                stopPollingSilently()
+
+                _state.value = _state.value.copy(
+                    loading = true,
+                    cooldown = null,
+                    refused = null,
+                    apiError = null,
+                    error = null
+                )
+
+                var latest = applyMultiplierOverridesInternal(
+                    foodLogId = foodLogId,
+                    baseEnv = baseEnv,
+                    multiplier = multiplier
+                )
+
+                latest = when (latest.status) {
+                    FoodLogStatus.SAVED -> repo.unsave(foodLogId)
+                    FoodLogStatus.DRAFT -> repo.save(foodLogId)
+                    else -> repo.getOne(foodLogId)
+                }
+
+                _state.value = UiState(
+                    loading = false,
+                    envelope = latest
+                )
+
+                onSuccess()
+
+            } catch (e: FoodLogApiException.CooldownActive) {
+                _state.value = UiState(loading = false, cooldown = e.dto)
+
+            } catch (e: FoodLogApiException.ModelRefused) {
+                _state.value = UiState(loading = false, refused = e.dto)
+
+            } catch (e: FoodLogApiException.BusinessError) {
+                _state.value = UiState(
+                    loading = false,
+                    apiError = e.dto.toApiErrorDto(),
+                    error = e.dto.message ?: e.dto.normalizedCode()
+                )
+
+            } catch (ce: CancellationException) {
+                throw ce
+
+            } catch (t: Throwable) {
+                _state.value = UiState(
+                    loading = false,
+                    error = t.message ?: "persist and toggle saved failed"
+                )
+            }
+        }
     }
 }

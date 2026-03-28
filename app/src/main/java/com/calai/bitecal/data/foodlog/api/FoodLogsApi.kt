@@ -63,6 +63,11 @@ interface FoodLogsApi {
         @Path("id") id: String
     ): FoodLogEnvelopeDto
 
+    @POST("/api/v1/food-logs/{id}/unsave")
+    suspend fun unsave(
+        @Path("id") id: String
+    ): FoodLogEnvelopeDto
+
     @DELETE("/api/v1/food-logs/{id}")
     suspend fun delete(
         @Path("id") id: String

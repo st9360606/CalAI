@@ -83,6 +83,9 @@ class FoodLogsRepository @Inject constructor(
     suspend fun save(id: String): FoodLogEnvelopeDto =
         safeCall { api.save(id) }
 
+    suspend fun unsave(id: String): FoodLogEnvelopeDto =
+        safeCall { api.unsave(id) }
+
     suspend fun delete(id: String): FoodLogEnvelopeDto =
         safeCall { api.delete(id) }
 

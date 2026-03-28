@@ -1,34 +1,57 @@
 package com.calai.bitecal.ui.nav
 
-import com.calai.bitecal.R
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.HiltViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.calai.bitecal.R
 import com.calai.bitecal.data.auth.net.SessionBus
+import com.calai.bitecal.data.foodlog.model.ClientAction
+import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
+import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.di.AppEntryPoint
-import com.calai.bitecal.i18n.LocalLocaleController
+import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.LanguageSessionFlag
+import com.calai.bitecal.i18n.LocalLocaleController
 import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.appentry.AppEntryRoute
 import com.calai.bitecal.ui.auth.RequireSignInScreen
@@ -38,22 +61,50 @@ import com.calai.bitecal.ui.auth.email.EmailEnterScreen
 import com.calai.bitecal.ui.auth.email.EmailSignInViewModel
 import com.calai.bitecal.ui.home.HomeScreen
 import com.calai.bitecal.ui.home.HomeTab
+import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
+import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
 import com.calai.bitecal.ui.home.model.HomeViewModel
+import com.calai.bitecal.ui.home.ui.camera.CameraMode
+import com.calai.bitecal.ui.home.ui.camera.CameraScreen
+import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorCard
+import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
 import com.calai.bitecal.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.bitecal.ui.home.ui.foodlog.FoodLogDetailScreen
+import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadDetailScreen
+import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
+import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
+import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
+import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditAgeScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditDailyStepGoalScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditGenderScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditHeightScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditNutritionGoalsRoute
+import com.calai.bitecal.ui.home.ui.settings.details.EditStartingWeightScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditWaterGoalScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditWorkoutGoalScreen
 import com.calai.bitecal.ui.home.ui.settings.details.PersonalDetailsScreen
+import com.calai.bitecal.ui.home.ui.settings.details.model.AutoGenerateGoalsCalcViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditAgeViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditHeightViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditStartingWeightViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditWaterGoalViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
+import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
+import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
+import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
+import com.calai.bitecal.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.bitecal.ui.home.ui.weight.RecordWeightScreen
+import com.calai.bitecal.ui.home.ui.weight.WeightScreen
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import com.calai.bitecal.ui.home.ui.workout.WorkoutHistoryScreen
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.bitecal.ui.landing.LandingScreen
-import com.calai.bitecal.ui.onboarding.notifications.NotificationPermissionScreen
-import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import com.calai.bitecal.ui.home.ui.weight.WeightScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionViewModel
 import com.calai.bitecal.ui.onboarding.exercise.ExerciseFrequencyScreen
@@ -63,9 +114,12 @@ import com.calai.bitecal.ui.onboarding.gender.GenderSelectionScreen
 import com.calai.bitecal.ui.onboarding.gender.GenderSelectionViewModel
 import com.calai.bitecal.ui.onboarding.goal.GoalSelectionScreen
 import com.calai.bitecal.ui.onboarding.goal.GoalSelectionViewModel
+import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalScreen
+import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalViewModel
 import com.calai.bitecal.ui.onboarding.healthconnect.HealthConnectIntroScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionViewModel
+import com.calai.bitecal.ui.onboarding.notifications.NotificationPermissionScreen
 import com.calai.bitecal.ui.onboarding.plan.HealthPlanScreen
 import com.calai.bitecal.ui.onboarding.plan.HealthPlanViewModel
 import com.calai.bitecal.ui.onboarding.progress.ComputationProgressScreen
@@ -74,61 +128,12 @@ import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
-import com.calai.bitecal.i18n.LanguageManager
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
-import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
-import com.calai.bitecal.ui.home.ui.settings.details.EditAgeScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditDailyStepGoalScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditGenderScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditHeightScreen
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditAgeViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditHeightViewModel
-import com.calai.bitecal.ui.home.ui.weight.EditGoalWeightScreen
-import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalScreen
-import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalViewModel
-import androidx.core.net.toUri
-import com.calai.bitecal.ui.home.ui.settings.details.EditNutritionGoalsRoute
-import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
-import androidx.navigation.compose.navigation
-import com.calai.bitecal.ui.home.ui.camera.CameraScreen
-import com.calai.bitecal.ui.home.ui.foodlog.FoodLogDetailScreen
-import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
-import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
-import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditStartingWeightScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditWaterGoalScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditWorkoutGoalScreen
-import com.calai.bitecal.ui.home.ui.settings.details.model.AutoGenerateGoalsCalcViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditStartingWeightViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditWaterGoalViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
-import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
-import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
-import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.stringResource
-import com.calai.bitecal.data.foodlog.model.ClientAction
-import com.calai.bitecal.ui.home.ui.camera.CameraMode
-import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorCard
-import android.provider.Settings
-import android.widget.Toast
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
-import com.calai.bitecal.data.foodlog.model.FoodLogStatus
-import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
-import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 object Routes {
@@ -183,6 +188,12 @@ object Routes {
      */
     const val FOOD_LOG_DETAIL = "foodLog/{id}"
     fun foodLogDetail(id: String) = "foodLog/$id"
+
+    const val RECENT_UPLOAD_DETAIL = "recentUploadDetail/{id}"
+    fun recentUploadDetail(id: String) = "recentUploadDetail/$id"
+
+    const val RECENT_UPLOAD_PREVIEW_URI = "recent_upload_preview_uri"
+    const val RECENT_UPLOAD_TIME_TEXT = "recent_upload_time_text"
 }
 
 object NavResults {
@@ -706,7 +717,20 @@ fun BiteCalNavHost(
                     onOpenFastingPlans = { nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true } },
                     onOpenActivityHistory = { nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true } },
                     onOpenWeight = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
-                    onQuickLogWeight = { nav.navigate(Routes.RECORD_WEIGHT) { launchSingleTop = true; restoreState = true } }
+                    onQuickLogWeight = { nav.navigate(Routes.RECORD_WEIGHT) { launchSingleTop = true; restoreState = true } },
+                    onOpenRecentUploadDetail = { foodLogId, previewUri, timeText ->
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(Routes.RECENT_UPLOAD_PREVIEW_URI, previewUri)
+
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, timeText)
+
+                        nav.navigate(Routes.recentUploadDetail(foodLogId)) {
+                            launchSingleTop = true
+                        }
+                    }
                 )
 
                 when {
@@ -1848,6 +1872,36 @@ fun BiteCalNavHost(
                     // 本輪先只做 UI 原型，不虛構 backend 行為。
                     // 下一輪若你要，我再幫你接「套用已保存食物到今天」的資料流。
                 }
+            )
+        }
+
+        composable(Routes.RECENT_UPLOAD_DETAIL) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val recentUploadOwner = backStackEntry
+
+            val flowVm: FoodLogFlowViewModel = viewModel(
+                viewModelStoreOwner = recentUploadOwner,
+                factory = HiltViewModelFactory(activity, recentUploadOwner)
+            )
+
+            val id = backStackEntry.arguments?.getString("id").orEmpty()
+
+            val previewUri = nav.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<String>(Routes.RECENT_UPLOAD_PREVIEW_URI)
+
+            val timeText = nav.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<String>(Routes.RECENT_UPLOAD_TIME_TEXT)
+                .orEmpty()
+
+            RecentUploadDetailScreen(
+                foodLogId = id,
+                previewUri = previewUri,
+                timeText = timeText,
+                vm = flowVm,
+                onBack = { nav.goHome() },
+                onDone = { nav.goHome() }
             )
         }
 

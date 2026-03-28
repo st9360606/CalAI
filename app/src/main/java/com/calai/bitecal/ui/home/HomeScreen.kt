@@ -132,7 +132,8 @@ fun HomeScreen(
     onOpenActivityHistory: () -> Unit,
     fastingVm: FastingPlanViewModel,
     onOpenWeight: () -> Unit,
-    onQuickLogWeight: () -> Unit
+    onQuickLogWeight: () -> Unit,
+    onOpenRecentUploadDetail: (foodLogId: String, previewUri: String?, timeText: String) -> Unit
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -615,9 +616,15 @@ fun HomeScreen(
                             recentUploads.forEachIndexed { index, item ->
                                 RecentUploadCard(
                                     item = item,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = {
+                                        onOpenRecentUploadDetail(
+                                            item.foodLogId,
+                                            item.previewUri,
+                                            item.timeText
+                                        )
+                                    }
                                 )
-
                                 if (index != recentUploads.lastIndex) {
                                     Spacer(Modifier.height(12.dp))
                                 }
