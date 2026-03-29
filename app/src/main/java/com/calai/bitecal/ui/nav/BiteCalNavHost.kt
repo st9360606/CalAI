@@ -70,7 +70,6 @@ import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorCard
 import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
 import com.calai.bitecal.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
-import com.calai.bitecal.ui.home.ui.foodlog.FoodLogDetailScreen
 import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadDetailScreen
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
@@ -1884,6 +1883,17 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, recentUploadOwner)
             )
 
+            val homeEntry = remember(nav) {
+                runCatching { nav.getBackStackEntry(Routes.HOME) }.getOrNull()
+            }
+
+            val homeVm: HomeViewModel? = homeEntry?.let { entry ->
+                viewModel(
+                    viewModelStoreOwner = entry,
+                    factory = HiltViewModelFactory(activity, entry)
+                )
+            }
+
             val id = backStackEntry.arguments?.getString("id").orEmpty()
 
             val previewUri = nav.previousBackStackEntry
@@ -1901,69 +1911,13 @@ fun BiteCalNavHost(
                 timeText = timeText,
                 vm = flowVm,
                 onBack = { nav.goHome() },
-                onDone = { nav.goHome() }
-            )
-        }
-
-        composable(Routes.FOOD_LOG_DETAIL) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id") ?: return@composable
-            val ctx = LocalContext.current
-            val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
-
-            // ✅ 盡量抓到 Camera 的 backStackEntry（更穩）
-            val cameraEntry = runCatching { nav.getBackStackEntry(Routes.CAMERA) }.getOrNull()
-
-            // ✅ 讓 Detail 共用「Camera 的 VM」
-            val vmOwner = cameraEntry ?: backStackEntry
-
-            val flowVm: FoodLogFlowViewModel = viewModel(
-                viewModelStoreOwner = vmOwner,
-                factory = HiltViewModelFactory(activity, vmOwner)
-            )
-
-            FoodLogDetailScreen(
-                foodLogId = id,
-                vm = flowVm,
-                onBack = { nav.popBackStack() },
-                onOpenEditor = { foodLogId ->
-                    // TODO: 接你的 editor route
-                },
-                onGoPhoto = {
-                    if (cameraEntry != null) {
-                        cameraEntry.savedStateHandle["camera_mode"] = CameraMode.FOOD.name
-                        nav.popBackStack(Routes.CAMERA, false)
-                    } else {
-                        nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.FOOD.name)
-                        nav.popBackStack()
-                    }
-                },
-                onGoLabel = {
-                    if (cameraEntry != null) {
-                        cameraEntry.savedStateHandle["camera_mode"] = CameraMode.LABEL.name
-                        nav.popBackStack(Routes.CAMERA, false)
-                    } else {
-                        nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.LABEL.name)
-                        nav.popBackStack()
-                    }
-                },
-                onRescanBarcode = {
-                    if (cameraEntry != null) {
-                        cameraEntry.savedStateHandle["camera_mode"] = CameraMode.BARCODE.name
-                        nav.popBackStack(Routes.CAMERA, false)
-                    } else {
-                        nav.previousBackStackEntry?.savedStateHandle?.set("camera_mode", CameraMode.BARCODE.name)
-                        nav.popBackStack()
-                    }
-                },
-                onCheckNetwork = {
-                    openNetworkSettings(ctx)
-                },
-                onContactSupport = {
-                    openSupportEmail(ctx)
+                onDone = { nav.goHome() },
+                onDeleted = { deletedFoodLogId ->
+                    homeVm?.onRecentUploadDeleted(deletedFoodLogId)
+                    nav.goHome()
                 }
             )
         }
-
 
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 

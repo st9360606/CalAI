@@ -226,6 +226,36 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun onRecentUploadDeleted(foodLogId: String) {
+        recentUploadPollJob?.cancel()
+        recentUploadPollJob = null
+
+        removeRecentUpload(foodLogId)
+        deleteRecentUploadPreviewCache(foodLogId)
+    }
+
+    private fun deleteRecentUploadPreviewCache(foodLogId: String) {
+        val file = File(
+            appContext.cacheDir,
+            "foodlog_recent_upload_preview/foodlog_$foodLogId.img"
+        )
+
+        runCatching {
+            if (file.exists() && !file.delete()) {
+                Log.w(
+                    TAG,
+                    "deleteRecentUploadPreviewCache delete returned false path=${file.absolutePath}"
+                )
+            }
+        }.onFailure { t ->
+            Log.w(
+                TAG,
+                "deleteRecentUploadPreviewCache failed foodLogId=$foodLogId: ${t.javaClass.simpleName}: ${t.message}",
+                t
+            )
+        }
+    }
+
     private fun replaceRecentUploads(items: List<HomeRecentUploadUi>) {
         _recentUploads.value = items.take(10)
     }

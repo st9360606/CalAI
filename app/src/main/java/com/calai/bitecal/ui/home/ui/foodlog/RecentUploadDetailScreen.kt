@@ -1,6 +1,7 @@
 package com.calai.bitecal.ui.home.ui.foodlog
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -50,10 +52,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.Image
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +63,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.ui.home.components.RingColors
+import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -122,10 +124,35 @@ fun RecentUploadDetailScreen(
     timeText: String,
     vm: FoodLogFlowViewModel,
     onBack: () -> Unit,
-    onDone: () -> Unit
+    onDone: () -> Unit,
+    onDeleted: (String) -> Unit
 ) {
     val st by vm.state.collectAsState()
-    val env = st.envelope?.takeIf { it.foodLogId == foodLogId }
+
+    val liveEnv = st.envelope?.takeIf { it.foodLogId == foodLogId }
+
+    var lastStableEnv by remember(foodLogId) {
+        mutableStateOf<FoodLogEnvelopeDto?>(null)
+    }
+
+    LaunchedEffect(liveEnv) {
+        val candidate = liveEnv
+        if (
+            candidate != null &&
+            candidate.status != FoodLogStatus.DELETED &&
+            candidate.nutritionResult != null
+        ) {
+            lastStableEnv = candidate
+        }
+    }
+
+    val env = when {
+        liveEnv != null &&
+                liveEnv.status != FoodLogStatus.DELETED &&
+                liveEnv.nutritionResult != null -> liveEnv
+
+        else -> lastStableEnv
+    }
 
     LaunchedEffect(foodLogId) {
         vm.clearTransient()
@@ -134,6 +161,36 @@ fun RecentUploadDetailScreen(
 
     DisposableEffect(foodLogId) {
         onDispose { vm.stopPolling() }
+    }
+
+    var stablePreviewUri by rememberSaveable(foodLogId) { mutableStateOf(previewUri) }
+    var showDeleteDialog by rememberSaveable(foodLogId) { mutableStateOf(false) }
+    var deleteRequested by rememberSaveable(foodLogId) { mutableStateOf(false) }
+
+    LaunchedEffect(
+        deleteRequested,
+        st.loading,
+        st.error,
+        st.apiError,
+        st.cooldown,
+        st.refused
+    ) {
+        if (!deleteRequested || st.loading) return@LaunchedEffect
+
+        if (
+            st.error != null ||
+            st.apiError != null ||
+            st.cooldown != null ||
+            st.refused != null
+        ) {
+            deleteRequested = false
+        }
+    }
+
+    LaunchedEffect(previewUri) {
+        if (!previewUri.isNullOrBlank()) {
+            stablePreviewUri = previewUri
+        }
     }
 
     if (st.loading && env == null) {
@@ -161,19 +218,12 @@ fun RecentUploadDetailScreen(
     val isSaved = env.status == FoodLogStatus.SAVED
     val displayName = env.nutritionResult?.foodName?.takeIf { it.isNotBlank() } ?: "Unknown Food"
     val healthScore = env.nutritionResult?.healthScore ?: 0
-    var stablePreviewUri by rememberSaveable(foodLogId) { mutableStateOf(previewUri) }
 
-    LaunchedEffect(previewUri) {
-        if (!previewUri.isNullOrBlank()) {
-            stablePreviewUri = previewUri
-        }
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(DetailStyle.AppBg)
     ) {
-        // Hero image
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -220,7 +270,7 @@ fun RecentUploadDetailScreen(
                         .align(Alignment.CenterStart)
                         .size(40.dp)
                         .clip(CircleShape)
-                        .clickable(onClick = onBack),
+                        .clickable(enabled = !st.loading, onClick = onBack),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -246,10 +296,35 @@ fun RecentUploadDetailScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable(enabled = !st.loading) {
+                            showDeleteDialog = true
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.6f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.trash),
+                            contentDescription = "Delete",
+                            modifier = Modifier.size(22.dp),
+                            colorFilter = ColorFilter.tint(DetailStyle.TextPrimary)
+                        )
+                    }
+                }
             }
         }
 
-        // Bottom sheet
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -293,9 +368,7 @@ fun RecentUploadDetailScreen(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        TimeChip(
-                            timeText = timeText
-                        )
+                        TimeChip(timeText = timeText)
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -395,9 +468,7 @@ fun RecentUploadDetailScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    HealthScoreCard(
-                        score = healthScore
-                    )
+                    HealthScoreCard(score = healthScore)
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }
@@ -423,16 +494,22 @@ fun RecentUploadDetailScreen(
             }
         }
 
-        if (env != null && st.loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.10f)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
+        DeleteFoodLogDialog(
+            visible = showDeleteDialog,
+            onDismiss = { showDeleteDialog = false },
+            onCancel = { showDeleteDialog = false },
+            onDelete = {
+                if (!st.loading) {
+                    showDeleteDialog = false
+                    deleteRequested = true
+                    vm.delete(foodLogId) {
+                        deleteRequested = false
+                        onDeleted(foodLogId)
+                    }
+                }
+            },
+            deleting = deleteRequested && st.loading
+        )
     }
 }
 
@@ -708,7 +785,6 @@ private fun HealthScoreCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-//                        text = stringResource(R.string.health_score),
                         text = "Health Score",
                         fontSize = 15.sp,
                         color = Color.Black,

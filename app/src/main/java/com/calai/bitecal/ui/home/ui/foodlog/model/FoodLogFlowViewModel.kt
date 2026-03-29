@@ -256,7 +256,10 @@ class FoodLogFlowViewModel @Inject constructor(
         }
     }
 
-    fun delete(foodLogId: String) {
+    fun delete(
+        foodLogId: String,
+        onSuccess: () -> Unit
+    ) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
@@ -268,12 +271,10 @@ class FoodLogFlowViewModel @Inject constructor(
                     error = null
                 )
 
-                val env = repo.delete(foodLogId)
+                repo.delete(foodLogId)
 
-                _state.value = UiState(
-                    loading = false,
-                    envelope = env
-                )
+                _state.value = _state.value.copy(loading = false)
+                onSuccess()
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 _state.value = UiState(loading = false, cooldown = e.dto)
