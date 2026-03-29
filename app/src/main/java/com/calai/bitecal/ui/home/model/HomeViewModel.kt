@@ -234,6 +234,47 @@ class HomeViewModel @Inject constructor(
         deleteRecentUploadPreviewCache(foodLogId)
     }
 
+    fun deleteRecentUpload(
+        foodLogId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val deletingPendingLike = _recentUploads.value
+                .firstOrNull { it.foodLogId == foodLogId }
+                ?.let { item ->
+                    item is HomeRecentUploadUi.Pending || item is HomeRecentUploadUi.Delayed
+                } == true
+
+            if (deletingPendingLike) {
+                recentUploadPollJob?.cancel()
+                recentUploadPollJob = null
+            }
+
+            try {
+                withContext(Dispatchers.IO) {
+                    foodLogsRepository.delete(foodLogId)
+                }
+
+                onRecentUploadDeleted(foodLogId)
+                refresh()
+
+                if (deletingPendingLike) {
+                    restoreRecentUploadsFromServer()
+                }
+
+                onSuccess()
+            } catch (ce: CancellationException) {
+                throw ce
+            } catch (t: Throwable) {
+                if (deletingPendingLike) {
+                    restoreRecentUploadsFromServer()
+                }
+                onFailure(t)
+            }
+        }
+    }
+
     private fun deleteRecentUploadPreviewCache(foodLogId: String) {
         val file = File(
             appContext.cacheDir,

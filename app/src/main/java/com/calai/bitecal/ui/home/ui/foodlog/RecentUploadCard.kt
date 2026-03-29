@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.home.ui.foodlog
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -9,8 +10,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,10 +28,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -38,15 +46,24 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.model.HomeRecentUploadUi
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+
 private val TitleColor = Color(0xFF111111)
 private val SecondaryTextColor = Color(0xFF111111)
 private val TimeColor = Color(0xFF111111)
@@ -54,19 +71,139 @@ private val SkeletonBase = Color(0xFFD7D7E0)
 private val SkeletonHighlight = Color(0xFFECECF3)
 private val ThumbPlaceholder = Color(0xFFF2F3F6)
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun RecentUploadCard(
     item: HomeRecentUploadUi,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    BoxWithConstraints(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        val scope = rememberCoroutineScope()
+
+        val actionWidth = maxWidth * 0.25f
+        val density = LocalDensity.current
+        val actionWidthPx = with(density) { actionWidth.toPx() }
+        val openThresholdPx = actionWidthPx * 0.42f
+        val flingThresholdPx = with(density) { 380.dp.toPx() }
+
+        val offsetX = remember(item.foodLogId) { Animatable(0f) }
+        val isOpened = offsetX.value < -1f
+
+        val dragState = rememberDraggableState { delta ->
+            scope.launch {
+                val next = (offsetX.value + delta).coerceIn(-actionWidthPx, 0f)
+                offsetX.snapTo(next)
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .clip(RoundedCornerShape(22.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0xFFE46A6A))
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .width(actionWidth)
+                    .fillMaxHeight()
+                    .padding(end = 18.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            offsetX.snapTo(0f)
+                        }
+                        onDeleteClick()
+                    },
+                    enabled = isOpened,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .testTag("recent_upload_delete_button")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.trash),
+                        contentDescription = "delete recent upload",
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
+
+            RecentUploadCardContent(
+                item = item,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        translationX = offsetX.value
+                    }
+                    .draggable(
+                        state = dragState,
+                        orientation = Orientation.Horizontal,
+                        onDragStarted = {
+                            scope.launch {
+                                offsetX.stop()
+                            }
+                        },
+                        onDragStopped = { velocity ->
+                            val target = when {
+                                velocity <= -flingThresholdPx -> -actionWidthPx
+                                velocity >= flingThresholdPx -> 0f
+                                offsetX.value <= -openThresholdPx -> -actionWidthPx
+                                else -> 0f
+                            }
+
+                            scope.launch {
+                                offsetX.animateTo(
+                                    targetValue = target,
+                                    animationSpec = tween(
+                                        durationMillis = 180,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            }
+                        }
+                    )
+                    .clickable {
+                        if (isOpened) {
+                            scope.launch {
+                                offsetX.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = tween(
+                                        durationMillis = 160,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            }
+                        } else {
+                            onClick()
+                        }
+                    }
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecentUploadCardContent(
+    item: HomeRecentUploadUi,
+    modifier: Modifier = Modifier
 ) {
     val isLoadingLike = item is HomeRecentUploadUi.Pending || item is HomeRecentUploadUi.Delayed
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .testTag("recent_upload_card"),
+        modifier = modifier,
         shape = RoundedCornerShape(22.dp),
         border = CardStyles.Border,
         colors = CardDefaults.cardColors(
@@ -80,7 +217,7 @@ fun RecentUploadCard(
                 .padding(end = 12.dp)
                 .alpha(if (isLoadingLike) 0.99f else 1f),
             verticalAlignment = Alignment.CenterVertically
-        )  {
+        ) {
             when (item) {
                 is HomeRecentUploadUi.Pending -> {
                     LoadingThumb(

@@ -101,6 +101,7 @@ import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActiv
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadCard
+import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
@@ -351,6 +352,8 @@ fun HomeScreen(
     val latestOnOpenCamera = rememberUpdatedState(onOpenCamera)
 
     var showQuickAddMenu by rememberSaveable { mutableStateOf(false) }
+    var recentUploadDeleteTargetId by rememberSaveable { mutableStateOf<String?>(null) }
+    var recentUploadDeleteRequested by rememberSaveable { mutableStateOf(false) }
 
     val onFabClick: () -> Unit = remember {
         { showQuickAddMenu = true }
@@ -623,6 +626,9 @@ fun HomeScreen(
                                             item.previewUri,
                                             item.timeText
                                         )
+                                    },
+                                    onDeleteClick = {
+                                        recentUploadDeleteTargetId = item.foodLogId
                                     }
                                 )
                                 if (index != recentUploads.lastIndex) {
@@ -666,6 +672,36 @@ fun HomeScreen(
                 Spacer(Modifier.height(70.dp))
             }
         }
+        DeleteFoodLogDialog(
+            visible = recentUploadDeleteTargetId != null,
+            onDismiss = {
+                if (!recentUploadDeleteRequested) {
+                    recentUploadDeleteTargetId = null
+                }
+            },
+            onCancel = {
+                if (!recentUploadDeleteRequested) {
+                    recentUploadDeleteTargetId = null
+                }
+            },
+            onDelete = {
+                val targetId = recentUploadDeleteTargetId ?: return@DeleteFoodLogDialog
+                if (recentUploadDeleteRequested) return@DeleteFoodLogDialog
+
+                recentUploadDeleteRequested = true
+                vm.deleteRecentUpload(
+                    foodLogId = targetId,
+                    onSuccess = {
+                        recentUploadDeleteRequested = false
+                        recentUploadDeleteTargetId = null
+                    },
+                    onFailure = {
+                        recentUploadDeleteRequested = false
+                    }
+                )
+            },
+            deleting = recentUploadDeleteRequested
+        )
 
         HomeQuickActionMenu(
             visible = showQuickAddMenu,
