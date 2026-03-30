@@ -66,14 +66,46 @@ import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
+private val TitleColor = Color(0xFF111827)
+private val SecondaryTextColor = Color(0xFF667085)
+private val TimeColor = Color(0xFF667085)
+private val TimeChipBg = Color(0xFFF2F4F7)
+private val KcalColor = Color(0xFF0F172A)
+private val MacroColor = Color(0xFF344054)
 
-private val TitleColor = Color(0xFF111111)
-private val SecondaryTextColor = Color(0xFF111111)
-private val TimeColor = Color(0xFF111111)
-private val TimeChipBg = Color(0xFFF3F4F6)
 private val SkeletonBase = Color(0xFFD7D7E0)
 private val SkeletonHighlight = Color(0xFFECECF3)
 private val ThumbPlaceholder = Color(0xFFF2F3F6)
+
+private val TitleTextStyle = TextStyle(
+    fontSize = 16.sp,
+    lineHeight = 20.sp,
+    fontWeight = FontWeight.Bold,
+    color = TitleColor
+)
+
+private val TimeTextStyle = TextStyle(
+    fontSize = 11.sp,
+    lineHeight = 14.sp,
+    fontWeight = FontWeight.SemiBold,
+    color = TimeColor
+)
+
+private val KcalTextStyle = TextStyle(
+    fontSize = 15.sp,
+    lineHeight = 19.sp,
+    fontWeight = FontWeight.SemiBold,
+    color = KcalColor
+)
+
+private val MacroTextStyle = TextStyle(
+    fontSize = 13.sp,
+    lineHeight = 18.sp,
+    fontWeight = FontWeight.Medium,
+    color = MacroColor
+)
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
@@ -476,10 +508,7 @@ private fun SuccessContent(
         ) {
             Text(
                 text = displayTitle,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = TitleColor
-                ),
+                style = TitleTextStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -496,10 +525,7 @@ private fun SuccessContent(
 
         Text(
             text = "🔥 ${item.kcal} calories",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = Color(0xFF0F172A),
+            style = KcalTextStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag("recent_upload_kcal")
@@ -554,10 +580,7 @@ private fun RecentUploadTimeChip(
     ) {
         Text(
             text = formatDisplayTime(timeText),
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.SemiBold,
-                color = TimeColor
-            ),
+            style = TimeTextStyle,
             maxLines = 1
         )
     }
@@ -567,8 +590,7 @@ private fun RecentUploadTimeChip(
 private fun MacroText(text: String) {
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-        color = Color(0xFF0F172A),
+        style = MacroTextStyle,
         maxLines = 1,
         overflow = TextOverflow.Clip
     )
