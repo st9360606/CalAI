@@ -75,14 +75,10 @@ private object DetailStyle {
     val SheetBg = Color.White
     val Border = Color(0xFFEAEAEA)
     val TextPrimary = Color(0xFF151515)
-    val TextSecondary = Color(0xFF6F6F6F)
     val HeroFallback = Color(0xFF202124)
     val Scrim = Color.Black.copy(alpha = 0.16f)
     val FooterBtn = Color(0xFF171625)
-
     val ChipBg = Color(0xFFF5F5F7)
-    val SoftCircle = Color(0xFFF7F7F8)
-
     val ProteinTone = Color(0xFFFF6B7B)
     val CarbsTone = Color(0xFFF6B24D)
     val FatTone = Color(0xFF6FA3FF)
@@ -91,7 +87,6 @@ private object DetailStyle {
     val SugarTone = Color(0xFFFF8A5B)
     val SodiumTone = Color(0xFF4CB7A5)
 
-    val FireEmojiBg = Color(0xFFF7F6FB)
 }
 
 private data class ScaledNutrients(
@@ -164,6 +159,7 @@ fun RecentUploadDetailScreen(
     }
 
     var stablePreviewUri by rememberSaveable(foodLogId) { mutableStateOf(previewUri) }
+    var stableTimeText by rememberSaveable(foodLogId) { mutableStateOf(timeText) }
     var showDeleteDialog by rememberSaveable(foodLogId) { mutableStateOf(false) }
     var deleteRequested by rememberSaveable(foodLogId) { mutableStateOf(false) }
 
@@ -190,6 +186,12 @@ fun RecentUploadDetailScreen(
     LaunchedEffect(previewUri) {
         if (!previewUri.isNullOrBlank()) {
             stablePreviewUri = previewUri
+        }
+    }
+
+    LaunchedEffect(timeText) {
+        if (timeText.isNotBlank()) {
+            stableTimeText = timeText
         }
     }
 
@@ -368,7 +370,7 @@ fun RecentUploadDetailScreen(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        TimeChip(timeText = timeText)
+                        TimeChip(timeText = stableTimeText)
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -567,7 +569,7 @@ private fun TimeChip(timeText: String) {
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             style = MaterialTheme.typography.bodySmall,
             fontSize = 13.sp,
-            color = Color.Black,
+            color = Color(0xFF5C667A),
             fontWeight = FontWeight.Medium
         )
     }

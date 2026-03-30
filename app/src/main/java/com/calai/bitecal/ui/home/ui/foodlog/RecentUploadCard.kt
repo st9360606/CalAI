@@ -70,7 +70,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 private val TitleColor = Color(0xFF111827)
 private val SecondaryTextColor = Color(0xFF667085)
-private val TimeColor = Color(0xFF667085)
+private val TimeColor = Color(0xFF5C667A)
 private val TimeChipBg = Color(0xFFF2F4F7)
 private val KcalColor = Color(0xFF0F172A)
 private val MacroColor = Color(0xFF344054)
@@ -106,8 +106,8 @@ private val MacroTextStyle = TextStyle(
     fontWeight = FontWeight.Medium,
     color = MacroColor
 )
-
 @SuppressLint("UnusedBoxWithConstraintsScope")
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
 fun RecentUploadCard(
     item: HomeRecentUploadUi,
@@ -330,7 +330,6 @@ private fun LoadingThumb(
     ) {
         ThumbImage(
             previewUri = previewUri,
-            dimmed = false,
             modifier = Modifier.matchParentSize()
         )
 
@@ -366,7 +365,6 @@ private fun SuccessThumb(
     ) {
         ThumbImage(
             previewUri = previewUri,
-            dimmed = false,
             modifier = Modifier.matchParentSize()
         )
     }
@@ -375,7 +373,6 @@ private fun SuccessThumb(
 @Composable
 private fun ThumbImage(
     previewUri: String?,
-    dimmed: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -402,14 +399,6 @@ private fun ThumbImage(
             Text(
                 text = "☕",
                 style = MaterialTheme.typography.headlineSmall
-            )
-        }
-
-        if (dimmed) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(Color.White.copy(alpha = 0.22f))
             )
         }
     }
@@ -575,7 +564,7 @@ private fun RecentUploadTimeChip(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
             .background(TimeChipBg)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
