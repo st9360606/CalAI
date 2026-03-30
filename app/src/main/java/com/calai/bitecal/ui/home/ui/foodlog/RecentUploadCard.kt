@@ -1,6 +1,8 @@
 package com.calai.bitecal.ui.home.ui.foodlog
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -35,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -59,14 +62,15 @@ import coil.compose.AsyncImage
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.model.HomeRecentUploadUi
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private val TitleColor = Color(0xFF111111)
 private val SecondaryTextColor = Color(0xFF111111)
 private val TimeColor = Color(0xFF111111)
+private val TimeChipBg = Color(0xFFF3F4F6)
 private val SkeletonBase = Color(0xFFD7D7E0)
 private val SkeletonHighlight = Color(0xFFECECF3)
 private val ThumbPlaceholder = Color(0xFFF2F3F6)
@@ -214,7 +218,7 @@ private fun RecentUploadCardContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .padding(end = 12.dp)
+                .padding(end = 8.dp)
                 .alpha(if (isLoadingLike) 0.99f else 1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -247,7 +251,7 @@ private fun RecentUploadCardContent(
                 }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Column(
                 modifier = Modifier
@@ -341,7 +345,7 @@ private fun ThumbImage(
     previewUri: String?,
     dimmed: Boolean,
     modifier: Modifier = Modifier
-)  {
+) {
     Box(
         modifier = modifier
             .clip(
@@ -467,9 +471,7 @@ private fun SuccessContent(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -480,29 +482,24 @@ private fun SuccessContent(
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false)
+                modifier = Modifier.weight(1f)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
 
-            Text(
-                text = item.timeText,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = TimeColor
-                ),
-                maxLines = 1
+            RecentUploadTimeChip(
+                timeText = item.timeText,
+                modifier = Modifier.padding(start = 8.dp)
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "🔥 ${item.kcal} 卡路里",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = TitleColor
+            text = "🔥 ${item.kcal} calories",
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold
             ),
+            color = Color(0xFF0F172A),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.testTag("recent_upload_kcal")
@@ -511,7 +508,7 @@ private fun SuccessContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             MacroText("🥩 ${item.proteinG}g")
@@ -521,14 +518,57 @@ private fun SuccessContent(
     }
 }
 
+private fun formatDisplayTime(raw: String): String {
+    val input = raw.trim()
+    if (input.isBlank()) return "--:-- --"
+
+    val outputFormatter = DateTimeFormatter.ofPattern("HH:mm a", Locale.US)
+
+    val candidates = listOf(
+        DateTimeFormatter.ofPattern("H:mm", Locale.US),
+        DateTimeFormatter.ofPattern("HH:mm", Locale.US),
+        DateTimeFormatter.ofPattern("h:mm a", Locale.US),
+        DateTimeFormatter.ofPattern("hh:mm a", Locale.US)
+    )
+
+    for (formatter in candidates) {
+        runCatching {
+            return LocalTime.parse(input.uppercase(Locale.US), formatter).format(outputFormatter)
+        }
+    }
+
+    return input
+}
+
+@Composable
+private fun RecentUploadTimeChip(
+    timeText: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(TimeChipBg)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = formatDisplayTime(timeText),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = TimeColor
+            ),
+            maxLines = 1
+        )
+    }
+}
+
 @Composable
 private fun MacroText(text: String) {
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium.copy(
-            color = SecondaryTextColor,
-            fontWeight = FontWeight.SemiBold
-        ),
+        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+        color = Color(0xFF0F172A),
         maxLines = 1,
         overflow = TextOverflow.Clip
     )
