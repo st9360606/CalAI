@@ -19,10 +19,8 @@ enum class DegradeLevel {
 enum class ModelTier {
     @SerialName("MODEL_TIER_HIGH")
     HIGH,
-
     @SerialName("MODEL_TIER_LOW")
     LOW,
-
     @SerialName("BARCODE")
     BARCODE
 }
@@ -119,6 +117,7 @@ data class FoodLogEnvelopeDto(
     val degradeLevel: DegradeLevel? = null,
     val tierUsed: ModelTier? = null,
     val fromCache: Boolean = false,
+    val portionMultiplier: Int = 1, // NEW: 後端回傳目前已保存的份數，預設 1
     val nutritionResult: NutritionResultDto? = null,
     val task: TaskDto? = null,
     val error: ApiErrorDto? = null,

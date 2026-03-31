@@ -21,9 +21,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
@@ -61,9 +58,6 @@ class FoodLogFlowViewModel @Inject constructor(
         _state.value = _state.value.copy(loading = false)
     }
 
-    /**
-     * submit 前先停掉舊 polling，避免舊輪詢覆寫新狀態。
-     */
     private fun stopPollingSilently() {
         pollingJob?.cancel()
         pollingJob = null
@@ -79,8 +73,6 @@ class FoodLogFlowViewModel @Inject constructor(
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                // ✅ Album / PhotoPicker / Gallery：
-                // 不管來源是 HEIC / HEIF / PNG / WebP，都先轉成 JPEG bytes 再上傳
                 val jpegBytes = withContext(Dispatchers.IO) {
                     ImageCompressUtil.compressUriToJpegBytes(
                         ctx = ctx,
@@ -358,7 +350,6 @@ class FoodLogFlowViewModel @Inject constructor(
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                // ✅ 拍照檔也統一再轉成 JPEG bytes 後上傳
                 val jpegBytes = withContext(Dispatchers.IO) {
                     ImageCompressUtil.compressFileToJpegBytes(
                         file = file,
@@ -419,7 +410,6 @@ class FoodLogFlowViewModel @Inject constructor(
                 stopPollingSilently()
                 _state.value = UiState(loading = true)
 
-                // ✅ Label 圖也統一轉 JPEG
                 val jpegBytes = withContext(Dispatchers.IO) {
                     ImageCompressUtil.compressFileToJpegBytes(
                         file = file,
@@ -528,9 +518,6 @@ class FoodLogFlowViewModel @Inject constructor(
         super.onCleared()
     }
 
-    /**
-     * 後端 `deviceCapturedAtUtc` multipart text part
-     */
     private fun nowUtcPart(): RequestBody =
         Instant.now().toString().toRequestBody(null)
 
@@ -549,7 +536,8 @@ class FoodLogFlowViewModel @Inject constructor(
         baseEnv: FoodLogEnvelopeDto,
         multiplier: Int
     ): FoodLogEnvelopeDto {
-        if (multiplier <= 1) return baseEnv
+        val currentMultiplier = baseEnv.portionMultiplier.coerceAtLeast(1)
+        if (multiplier == currentMultiplier) return baseEnv
 
         return repo.applyPortionMultiplier(
             id = foodLogId,
@@ -618,7 +606,7 @@ class FoodLogFlowViewModel @Inject constructor(
         foodLogId: String,
         baseEnv: FoodLogEnvelopeDto,
         multiplier: Int,
-        onSuccess: () -> Unit = {}
+        onSuccess: (FoodLogEnvelopeDto) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
@@ -649,7 +637,7 @@ class FoodLogFlowViewModel @Inject constructor(
                     envelope = latest
                 )
 
-                onSuccess()
+                onSuccess(latest)
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 _state.value = UiState(loading = false, cooldown = e.dto)

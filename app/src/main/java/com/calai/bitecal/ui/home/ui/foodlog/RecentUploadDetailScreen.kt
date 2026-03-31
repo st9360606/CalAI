@@ -82,11 +82,9 @@ private object DetailStyle {
     val ProteinTone = Color(0xFFFF6B7B)
     val CarbsTone = Color(0xFFF6B24D)
     val FatTone = Color(0xFF6FA3FF)
-
     val FiberTone = Color(0xFF8E7DF2)
     val SugarTone = Color(0xFFFF8A5B)
     val SodiumTone = Color(0xFF4CB7A5)
-
 }
 
 private data class ScaledNutrients(
@@ -99,16 +97,33 @@ private data class ScaledNutrients(
     val sodium: Double
 )
 
-private fun FoodLogEnvelopeDto.scaledNutrients(multiplier: Int): ScaledNutrients {
+private val FoodLogEnvelopeDto.safePortionMultiplier: Int
+    get() = portionMultiplier.coerceAtLeast(1)
+
+/**
+ * 將目前 envelope 中「已保存」的 nutritionResult，先反推回 base(1x)，
+ * 再依 editingMultiplier 做即時預覽。
+ */
+private fun FoodLogEnvelopeDto.previewScaledNutrients(
+    editingMultiplier: Int
+): ScaledNutrients {
+    val persistedMultiplier = safePortionMultiplier.toDouble()
     val n = nutritionResult?.nutrients
+
+    fun rescale(value: Double?): Double {
+        val current = value ?: 0.0
+        val base = if (persistedMultiplier <= 0.0) current else current / persistedMultiplier
+        return base * editingMultiplier
+    }
+
     return ScaledNutrients(
-        kcal = (n?.kcal ?: 0.0) * multiplier,
-        protein = (n?.protein ?: 0.0) * multiplier,
-        carbs = (n?.carbs ?: 0.0) * multiplier,
-        fat = (n?.fat ?: 0.0) * multiplier,
-        fiber = (n?.fiber ?: 0.0) * multiplier,
-        sugar = (n?.sugar ?: 0.0) * multiplier,
-        sodium = (n?.sodium ?: 0.0) * multiplier
+        kcal = rescale(n?.kcal),
+        protein = rescale(n?.protein),
+        carbs = rescale(n?.carbs),
+        fat = rescale(n?.fat),
+        fiber = rescale(n?.fiber),
+        sugar = rescale(n?.sugar),
+        sodium = rescale(n?.sodium)
     )
 }
 
@@ -215,8 +230,20 @@ fun RecentUploadDetailScreen(
         return
     }
 
-    var multiplier by rememberSaveable(foodLogId) { mutableIntStateOf(1) }
-    val scaled = remember(env, multiplier) { env.scaledNutrients(multiplier) }
+    val persistedMultiplier = env.safePortionMultiplier
+
+    var multiplier by rememberSaveable(foodLogId) {
+        mutableIntStateOf(persistedMultiplier)
+    }
+
+    LaunchedEffect(foodLogId, persistedMultiplier) {
+        multiplier = persistedMultiplier
+    }
+
+    val scaled = remember(env, multiplier) {
+        env.previewScaledNutrients(multiplier)
+    }
+
     val isSaved = env.status == FoodLogStatus.SAVED
     val displayName = env.nutritionResult?.foodName?.takeIf { it.isNotBlank() } ?: "Unknown Food"
     val healthScore = env.nutritionResult?.healthScore ?: 0
@@ -355,12 +382,14 @@ fun RecentUploadDetailScreen(
                             isSaved = isSaved,
                             enabled = !st.loading,
                             onClick = {
-                                if (multiplier > 1) {
+                                if (multiplier != persistedMultiplier) {
                                     vm.persistMultiplierThenToggleSaved(
                                         foodLogId = foodLogId,
                                         baseEnv = env,
                                         multiplier = multiplier,
-                                        onSuccess = { multiplier = 1 }
+                                        onSuccess = { updatedEnv ->
+                                            multiplier = updatedEnv.portionMultiplier.coerceAtLeast(1)
+                                        }
                                     )
                                 } else {
                                     vm.toggleSaved(foodLogId)
@@ -477,13 +506,13 @@ fun RecentUploadDetailScreen(
                 FooterDoneBar(
                     enabled = !st.loading,
                     onDone = {
-                        if (multiplier > 1) {
+                        if (multiplier != persistedMultiplier) {
                             vm.persistMultiplierThenDone(
                                 foodLogId = foodLogId,
                                 baseEnv = env,
                                 multiplier = multiplier,
                                 onSuccess = { updatedEnv ->
-                                    multiplier = 1
+                                    multiplier = updatedEnv.portionMultiplier.coerceAtLeast(1)
                                     onDone(updatedEnv)
                                 }
                             )

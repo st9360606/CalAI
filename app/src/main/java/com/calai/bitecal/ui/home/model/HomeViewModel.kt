@@ -518,6 +518,7 @@ class HomeViewModel @Inject constructor(
         when (env.status) {
             FoodLogStatus.DRAFT,
             FoodLogStatus.SAVED -> {
+                // 1) 先直接更新 Home 上這張卡片
                 upsertRecentUpload(
                     HomeRecentUploadMapper.success(
                         foodLogId = env.foodLogId,
@@ -527,16 +528,13 @@ class HomeViewModel @Inject constructor(
                     )
                 )
 
+                // 2) 刷新 summary / calories / macros 等首頁其他資料
                 refresh()
 
+                // 3) 不要在 Done 返回的這個瞬間，立刻再從 server 重建 recentUploads
+                //    否則 previewUri 很可能被換掉，導致 AsyncImage 重新載圖而閃跳
                 recentUploadRestoreJob?.cancel()
-                recentUploadRestoreJob = viewModelScope.launch {
-                    val restored = withContext(Dispatchers.IO) {
-                        pruneRecentUploadPreviewCache()
-                        loadRecentUploadsFromServer()
-                    }
-                    replaceRecentUploads(restored)
-                }
+                recentUploadRestoreJob = null
             }
 
             FoodLogStatus.PENDING -> {

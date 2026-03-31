@@ -75,9 +75,6 @@ class FoodLogsRepository @Inject constructor(
             )
         }
 
-    suspend fun getOne(id: String): FoodLogEnvelopeDto =
-        safeCall { api.getOne(id) }
-
     suspend fun retry(id: String): FoodLogEnvelopeDto =
         safeCall { api.retry(id) }
 
@@ -372,6 +369,15 @@ class FoodLogsRepository @Inject constructor(
         }.getOrNull()
     }
 
+    suspend fun getOne(id: String): FoodLogEnvelopeDto =
+        safeCall { api.getOne(id) }
+            .also { env ->
+                Log.d(
+                    TAG,
+                    "getOne id=$id status=${env.status} portionMultiplier=${env.portionMultiplier}"
+                )
+            }
+
     suspend fun applyPortionMultiplier(
         id: String,
         multiplier: Int,
@@ -384,6 +390,11 @@ class FoodLogsRepository @Inject constructor(
                     multiplier = multiplier,
                     reason = reason
                 )
+            )
+        }.also { env ->
+            Log.d(
+                TAG,
+                "applyPortionMultiplier id=$id reqMultiplier=$multiplier respMultiplier=${env.portionMultiplier}"
             )
         }
 
