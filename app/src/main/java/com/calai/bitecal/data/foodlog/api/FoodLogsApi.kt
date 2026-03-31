@@ -3,6 +3,7 @@ package com.calai.bitecal.data.foodlog.api
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogListResponseDto
 import com.calai.bitecal.data.foodlog.model.FoodLogOverrideRequestDto
+import com.calai.bitecal.data.foodlog.model.FoodLogPortionMultiplierRequestDto
 import kotlinx.serialization.Serializable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -100,6 +101,12 @@ interface FoodLogsApi {
     suspend fun applyOverride(
         @Path("id") id: String,
         @Body req: FoodLogOverrideRequestDto
+    ): FoodLogEnvelopeDto
+
+    @POST("/api/v1/food-logs/{id}/portion-multiplier")
+    suspend fun applyPortionMultiplier(
+        @Path("id") id: String,
+        @Body req: FoodLogPortionMultiplierRequestDto
     ): FoodLogEnvelopeDto
 
     @Streaming

@@ -8,6 +8,7 @@ import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogListItemDto
 import com.calai.bitecal.data.foodlog.model.FoodLogListResponseDto
 import com.calai.bitecal.data.foodlog.model.FoodLogOverrideRequestDto
+import com.calai.bitecal.data.foodlog.model.FoodLogPortionMultiplierRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogServerErrorDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
@@ -370,6 +371,21 @@ class FoodLogsRepository @Inject constructor(
             )
         }.getOrNull()
     }
+
+    suspend fun applyPortionMultiplier(
+        id: String,
+        multiplier: Int,
+        reason: String? = null
+    ): FoodLogEnvelopeDto =
+        safeCall {
+            api.applyPortionMultiplier(
+                id = id,
+                req = FoodLogPortionMultiplierRequestDto(
+                    multiplier = multiplier,
+                    reason = reason
+                )
+            )
+        }
 
     private fun defaultLocaleTag(): String? {
         val tag = runCatching { Locale.getDefault().toLanguageTag() }.getOrNull()

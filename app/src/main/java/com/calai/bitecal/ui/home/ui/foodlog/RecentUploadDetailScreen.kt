@@ -119,7 +119,7 @@ fun RecentUploadDetailScreen(
     timeText: String,
     vm: FoodLogFlowViewModel,
     onBack: () -> Unit,
-    onDone: () -> Unit,
+    onDone: (FoodLogEnvelopeDto) -> Unit,
     onDeleted: (String) -> Unit
 ) {
     val st by vm.state.collectAsState()
@@ -474,7 +474,6 @@ fun RecentUploadDetailScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }
-
                 FooterDoneBar(
                     enabled = !st.loading,
                     onDone = {
@@ -483,13 +482,13 @@ fun RecentUploadDetailScreen(
                                 foodLogId = foodLogId,
                                 baseEnv = env,
                                 multiplier = multiplier,
-                                onSuccess = {
+                                onSuccess = { updatedEnv ->
                                     multiplier = 1
-                                    onDone()
+                                    onDone(updatedEnv)
                                 }
                             )
                         } else {
-                            onDone()
+                            onDone(env)
                         }
                     }
                 )

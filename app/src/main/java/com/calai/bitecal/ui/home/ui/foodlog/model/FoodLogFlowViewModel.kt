@@ -544,47 +544,6 @@ class FoodLogFlowViewModel @Inject constructor(
         )
     }
 
-    private fun buildScaledNutrientsJsonOrNull(
-        baseEnv: FoodLogEnvelopeDto,
-        multiplier: Int
-    ): JsonObject? {
-        val n = baseEnv.nutritionResult?.nutrients ?: return null
-        var count = 0
-
-        val obj = buildJsonObject {
-            fun putScaled(key: String, value: Double?) {
-                if (value != null) {
-                    put(key, value * multiplier)
-                    count++
-                }
-            }
-
-            putScaled("kcal", n.kcal)
-            putScaled("protein", n.protein)
-            putScaled("carbs", n.carbs)
-            putScaled("fat", n.fat)
-            putScaled("fiber", n.fiber)
-            putScaled("sugar", n.sugar)
-            putScaled("sodium", n.sodium)
-        }
-
-        return obj.takeIf { count > 0 }
-    }
-
-    private fun buildScaledQuantityJsonOrNull(
-        baseEnv: FoodLogEnvelopeDto,
-        multiplier: Int
-    ): JsonObject? {
-        val q = baseEnv.nutritionResult?.quantity ?: return null
-        val value = q.value ?: return null
-        val unit = q.unit?.takeIf { it.isNotBlank() } ?: return null
-
-        return buildJsonObject {
-            put("value", value * multiplier)
-            put("unit", unit)
-        }
-    }
-
     private suspend fun applyMultiplierOverridesInternal(
         foodLogId: String,
         baseEnv: FoodLogEnvelopeDto,
@@ -592,37 +551,18 @@ class FoodLogFlowViewModel @Inject constructor(
     ): FoodLogEnvelopeDto {
         if (multiplier <= 1) return baseEnv
 
-        var latest = baseEnv
-        val reason = "RECENT_UPLOAD_MULTIPLIER_X$multiplier"
-
-        val nutrientsJson = buildScaledNutrientsJsonOrNull(baseEnv, multiplier)
-        if (nutrientsJson != null) {
-            latest = repo.applyOverride(
-                id = foodLogId,
-                fieldKey = "NUTRIENTS",
-                newValue = nutrientsJson,
-                reason = reason
-            )
-        }
-
-        val quantityJson = buildScaledQuantityJsonOrNull(baseEnv, multiplier)
-        if (quantityJson != null) {
-            latest = repo.applyOverride(
-                id = foodLogId,
-                fieldKey = "QUANTITY",
-                newValue = quantityJson,
-                reason = reason
-            )
-        }
-
-        return latest
+        return repo.applyPortionMultiplier(
+            id = foodLogId,
+            multiplier = multiplier,
+            reason = "RECENT_UPLOAD_MULTIPLIER_X$multiplier"
+        )
     }
 
     fun persistMultiplierThenDone(
         foodLogId: String,
         baseEnv: FoodLogEnvelopeDto,
         multiplier: Int,
-        onSuccess: () -> Unit = {}
+        onSuccess: (FoodLogEnvelopeDto) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
@@ -647,7 +587,7 @@ class FoodLogFlowViewModel @Inject constructor(
                     envelope = env
                 )
 
-                onSuccess()
+                onSuccess(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 _state.value = UiState(loading = false, cooldown = e.dto)

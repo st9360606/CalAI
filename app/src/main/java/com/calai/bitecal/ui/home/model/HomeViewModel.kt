@@ -507,6 +507,63 @@ class HomeViewModel @Inject constructor(
         }.getOrNull()
     }
 
+    fun onRecentUploadUpdated(
+        env: FoodLogEnvelopeDto,
+        previewUri: String?,
+        timeText: String
+    ) {
+        recentUploadPollJob?.cancel()
+        recentUploadPollJob = null
+
+        when (env.status) {
+            FoodLogStatus.DRAFT,
+            FoodLogStatus.SAVED -> {
+                upsertRecentUpload(
+                    HomeRecentUploadMapper.success(
+                        foodLogId = env.foodLogId,
+                        previewUri = previewUri,
+                        timeText = timeText,
+                        env = env
+                    )
+                )
+
+                refresh()
+
+                recentUploadRestoreJob?.cancel()
+                recentUploadRestoreJob = viewModelScope.launch {
+                    val restored = withContext(Dispatchers.IO) {
+                        pruneRecentUploadPreviewCache()
+                        loadRecentUploadsFromServer()
+                    }
+                    replaceRecentUploads(restored)
+                }
+            }
+
+            FoodLogStatus.PENDING -> {
+                upsertRecentUpload(
+                    HomeRecentUploadMapper.pending(
+                        foodLogId = env.foodLogId,
+                        previewUri = previewUri,
+                        timeText = timeText
+                    )
+                )
+
+                startRecentUploadPolling(
+                    foodLogId = env.foodLogId,
+                    previewUri = previewUri,
+                    timeText = timeText
+                )
+            }
+
+            FoodLogStatus.FAILED,
+            FoodLogStatus.DELETED -> {
+                removeRecentUpload(env.foodLogId)
+                deleteRecentUploadPreviewCache(env.foodLogId)
+                refresh()
+            }
+        }
+    }
+
     private fun pruneRecentUploadPreviewCache() {
         val dir = File(appContext.cacheDir, "foodlog_recent_upload_preview")
         if (!dir.exists() || !dir.isDirectory) return

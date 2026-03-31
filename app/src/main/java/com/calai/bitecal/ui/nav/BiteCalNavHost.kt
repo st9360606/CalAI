@@ -1911,7 +1911,14 @@ fun BiteCalNavHost(
                 timeText = timeText,
                 vm = flowVm,
                 onBack = { nav.goHome() },
-                onDone = { nav.goHome() },
+                onDone = { updatedEnv ->
+                    homeVm?.onRecentUploadUpdated(
+                        env = updatedEnv,
+                        previewUri = previewUri,
+                        timeText = timeText
+                    )
+                    nav.goHome()
+                },
                 onDeleted = { deletedFoodLogId ->
                     homeVm?.onRecentUploadDeleted(deletedFoodLogId)
                     nav.goHome()
