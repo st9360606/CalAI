@@ -297,27 +297,42 @@ private fun SavedFoodCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "🔥 ${item.kcal} 卡路里",
+                            text = stringResource(R.string.saved_foods_kcal, item.kcal),
                             style = KcalTextStyle,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.testTag("recent_upload_kcal")
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                    Box(
-                        modifier = Modifier.height(18.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Box(
+                            modifier = Modifier.height(18.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            MacroValue(text = "🥩 ${item.proteinG}g")
-                            MacroValue(text = "🌾 ${item.carbsG}g")
-                            MacroValue(text = "🥑 ${item.fatG}g")
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                MacroValue(
+                                    text = stringResource(
+                                        R.string.saved_foods_protein,
+                                        item.proteinG
+                                    )
+                                )
+                                MacroValue(
+                                    text = stringResource(
+                                        R.string.saved_foods_carbs,
+                                        item.carbsG
+                                    )
+                                )
+                                MacroValue(
+                                    text = stringResource(
+                                        R.string.saved_foods_fat,
+                                        item.fatG
+                                    )
+                                )
+                            }
                         }
                     }
                 }

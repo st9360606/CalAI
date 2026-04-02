@@ -54,6 +54,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -290,7 +291,7 @@ private fun RecentUploadCardContent(
             ) {
                 when (item) {
                     is HomeRecentUploadUi.Pending -> PendingContent(
-                        title = "正在分析食物..."
+                        title = stringResource(R.string.foodlog_pending_analysis)
                     )
 
                     is HomeRecentUploadUi.Delayed -> PendingContent(
@@ -503,7 +504,7 @@ private fun SuccessContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "🔥 ${item.kcal} calories",
+            text = stringResource(R.string.recent_upload_kcal_text, item.kcal),
             style = KcalTextStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -516,9 +517,9 @@ private fun SuccessContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MacroText("🥩 ${item.proteinG}g")
-            MacroText("🌾 ${item.carbsG}g")
-            MacroText("🥑 ${item.fatG}g")
+            MacroText(stringResource(R.string.recent_upload_protein_text, item.proteinG))
+            MacroText(stringResource(R.string.recent_upload_carbs_text, item.carbsG))
+            MacroText(stringResource(R.string.recent_upload_fat_text, item.fatG))
         }
     }
 }

@@ -274,8 +274,16 @@
     <string name="foodlog_pending_analysis">正在分析食物...</string>
     <string name="foodlog_analysis_done">已完成分析</string>
 
+
+
+
+
     <string name="recently_uploaded">最近記錄</string>
     <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
+    <string name="recent_upload_kcal_text">🔥 %1$d 卡路里</string>
+    <string name="recent_upload_protein_text">🥩 %1$dg</string>
+    <string name="recent_upload_carbs_text">🌾 %1$dg</string>
+    <string name="recent_upload_fat_text">🥑 %1$dg</string>
     <string name="quick_add_log_workout">記錄運動</string>
     <string name="quick_add_scan_food">掃描食物</string>
     <string name="quick_add_saved_foods">已保存食物</string>
@@ -288,5 +296,36 @@
     <string name="saved_foods_keep_15_days_hint">這裡只會顯示最近 15 天內已保存的食物。</string>
     <string name="saved_foods_empty_title">還沒有已保存食物</string>
     <string name="saved_foods_empty_body">你在詳情頁按下保存後，食物會顯示在這裡。</string>
+    <string name="saved_foods_kcal">🔥 %1$d 卡路里</string>
+    <string name="saved_foods_protein">🥩 %1$dg</string>
+    <string name="saved_foods_carbs">🌾 %1$dg</string>
+    <string name="saved_foods_fat">🥑 %1$dg</string>
+
+
+    <!-- RecentUploadDetailScreen -->
+    <string name="foodlog_detail_load_failed">讀取失敗</string>
+    <string name="foodlog_unknown_food">未知食物</string>
+    <string name="foodlog_no_image">無圖片</string>
+
+    <string name="foodlog_detail_title">營養資訊</string>
+    <string name="foodlog_detail_back">返回</string>
+    <string name="foodlog_detail_delete">刪除</string>
+    <string name="foodlog_detail_save">保存</string>
+    <string name="foodlog_detail_minus">減少</string>
+    <string name="foodlog_detail_plus">增加</string>
+
+    <string name="foodlog_detail_calories">卡路里</string>
+    <string name="foodlog_detail_protein">蛋白質</string>
+    <string name="foodlog_detail_carbs">碳水</string>
+    <string name="foodlog_detail_fats">脂肪</string>
+    <string name="foodlog_detail_fiber">纖維</string>
+    <string name="foodlog_detail_sugar">糖</string>
+    <string name="foodlog_detail_sodium">鈉</string>
+    <string name="foodlog_detail_health_score">健康分數</string>
+    <string name="foodlog_detail_done">完成</string>
+
+    <string name="foodlog_detail_health_icon_desc">健康圖示</string>
+
+
 
 </resources>

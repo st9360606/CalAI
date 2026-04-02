@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -225,7 +226,7 @@ fun RecentUploadDetailScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = st.error ?: "讀取失敗")
+            Text(text = st.error ?: stringResource(R.string.foodlog_detail_load_failed))
         }
         return
     }
@@ -245,7 +246,11 @@ fun RecentUploadDetailScreen(
     }
 
     val isSaved = env.status == FoodLogStatus.SAVED
-    val displayName = env.nutritionResult?.foodName?.takeIf { it.isNotBlank() } ?: "Unknown Food"
+
+    val displayName = env.nutritionResult?.foodName
+        ?.takeIf { it.isNotBlank() }
+        ?: stringResource(R.string.foodlog_unknown_food)
+
     val healthScore = env.nutritionResult?.healthScore ?: 0
 
     Box(
@@ -273,7 +278,7 @@ fun RecentUploadDetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No Image",
+                        text = stringResource(R.string.foodlog_no_image),
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -311,7 +316,7 @@ fun RecentUploadDetailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.foodlog_detail_back),
                             tint = DetailStyle.TextPrimary,
                             modifier = Modifier.size(24.dp)
                         )
@@ -319,7 +324,7 @@ fun RecentUploadDetailScreen(
                 }
 
                 Text(
-                    text = "Nutrition",
+                    text = stringResource(R.string.foodlog_detail_title),
                     modifier = Modifier.align(Alignment.Center),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
@@ -345,7 +350,7 @@ fun RecentUploadDetailScreen(
                     ) {
                         Image(
                             painter = painterResource(R.drawable.trash),
-                            contentDescription = "Delete",
+                            contentDescription = stringResource(R.string.foodlog_detail_delete),
                             modifier = Modifier.size(22.dp),
                             colorFilter = ColorFilter.tint(DetailStyle.TextPrimary)
                         )
@@ -447,21 +452,21 @@ fun RecentUploadDetailScreen(
                     ) {
                         MacroCard(
                             modifier = Modifier.weight(1f),
-                            title = "Protein",
+                            title = stringResource(R.string.foodlog_detail_protein),
                             value = "${scaled.protein.roundToInt()}g",
                             tone = DetailStyle.ProteinTone,
                             emoji = "🥩"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
-                            title = "Carbs",
+                            title = stringResource(R.string.foodlog_detail_carbs),
                             value = "${scaled.carbs.roundToInt()}g",
                             tone = DetailStyle.CarbsTone,
                             emoji = "🌾"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
-                            title = "Fats",
+                            title = stringResource(R.string.foodlog_detail_fats),
                             value = "${scaled.fat.roundToInt()}g",
                             tone = DetailStyle.FatTone,
                             emoji = "🥑"
@@ -476,21 +481,21 @@ fun RecentUploadDetailScreen(
                     ) {
                         MacroCard(
                             modifier = Modifier.weight(1f),
-                            title = "Fiber",
+                            title = stringResource(R.string.foodlog_detail_fiber),
                             value = "${scaled.fiber.roundToInt()}g",
                             tone = DetailStyle.FiberTone,
                             emoji = "🌿"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
-                            title = "Sugar",
+                            title = stringResource(R.string.foodlog_detail_sugar),
                             value = "${scaled.sugar.roundToInt()}g",
                             tone = DetailStyle.SugarTone,
                             emoji = "🍯"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
-                            title = "Sodium",
+                            title = stringResource(R.string.foodlog_detail_sodium),
                             value = "${scaled.sodium.roundToInt()}mg",
                             tone = DetailStyle.SodiumTone,
                             emoji = "🧂"
@@ -557,7 +562,7 @@ private fun SaveBadge(
     ) {
         Icon(
             imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-            contentDescription = "Save",
+            contentDescription = stringResource(R.string.foodlog_detail_save),
             tint = DetailStyle.TextPrimary,
             modifier = Modifier.fillMaxSize()
         )
@@ -626,7 +631,7 @@ private fun Stepper(
         ) {
             Icon(
                 imageVector = Icons.Filled.Remove,
-                contentDescription = "Minus",
+                contentDescription = stringResource(R.string.foodlog_detail_minus),
                 tint = DetailStyle.TextPrimary
             )
         }
@@ -646,7 +651,7 @@ private fun Stepper(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Add,
-                contentDescription = "Plus",
+                contentDescription = stringResource(R.string.foodlog_detail_plus),
                 tint = DetailStyle.TextPrimary
             )
         }
@@ -688,7 +693,7 @@ private fun CaloriesHeroCard(kcal: Int) {
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Calories",
+                    text = stringResource(R.string.foodlog_detail_calories),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Black
                 )
@@ -797,7 +802,7 @@ private fun HealthScoreCard(
             ) {
                 Image(
                     painter = painterResource(R.drawable.apple_health),
-                    contentDescription = "apple_health",
+                    contentDescription = stringResource(R.string.foodlog_detail_health_icon_desc),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillBounds
                 )
@@ -815,7 +820,7 @@ private fun HealthScoreCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Health Score",
+                        text = stringResource(R.string.foodlog_detail_health_score),
                         fontSize = 15.sp,
                         color = Color.Black,
                         fontWeight = FontWeight.Medium
@@ -874,7 +879,7 @@ private fun FooterDoneBar(
             )
         ) {
             Text(
-                text = "Done",
+                text = stringResource(R.string.foodlog_detail_done),
                 color = Color.White,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold

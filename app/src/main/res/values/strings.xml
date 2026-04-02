@@ -276,8 +276,15 @@
     <string name="foodlog_pending_analysis">Analyzing your food...</string>
     <string name="foodlog_analysis_done">Analysis complete</string>
 
+
+
+
     <string name="recently_uploaded">Recently uploaded</string>
     <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
+    <string name="recent_upload_kcal_text">🔥 %1$d calories</string>
+    <string name="recent_upload_protein_text">🥩 %1$dg</string>
+    <string name="recent_upload_carbs_text">🌾 %1$dg</string>
+    <string name="recent_upload_fat_text">🥑 %1$dg</string>
     <string name="quick_add_log_workout">Log workout</string>
     <string name="quick_add_scan_food">Scan food</string>
     <string name="quick_add_saved_foods">Saved foods</string>
@@ -290,5 +297,38 @@
     <string name="saved_foods_keep_15_days_hint">Only saved foods from the last 15 days are shown here.</string>
     <string name="saved_foods_empty_title">No saved foods yet</string>
     <string name="saved_foods_empty_body">Foods you save from the detail screen will appear here.</string>
+    <string name="saved_foods_kcal">🔥 %1$d calories</string>
+    <string name="saved_foods_protein">🥩 %1$dg</string>
+    <string name="saved_foods_carbs">🌾 %1$dg</string>
+    <string name="saved_foods_fat">🥑 %1$dg</string>
+
+
+    <!-- RecentUploadDetailScreen -->
+    <string name="foodlog_detail_load_failed">Load failed</string>
+    <string name="foodlog_unknown_food">Unknown Food</string>
+    <string name="foodlog_no_image">No Image</string>
+
+    <string name="foodlog_detail_title">Nutrition</string>
+    <string name="foodlog_detail_back">Back</string>
+    <string name="foodlog_detail_delete">Delete</string>
+    <string name="foodlog_detail_save">Save</string>
+    <string name="foodlog_detail_minus">Minus</string>
+    <string name="foodlog_detail_plus">Plus</string>
+
+    <string name="foodlog_detail_calories">Calories</string>
+    <string name="foodlog_detail_protein">Protein</string>
+    <string name="foodlog_detail_carbs">Carbs</string>
+    <string name="foodlog_detail_fats">Fats</string>
+    <string name="foodlog_detail_fiber">Fiber</string>
+    <string name="foodlog_detail_sugar">Sugar</string>
+    <string name="foodlog_detail_sodium">Sodium</string>
+    <string name="foodlog_detail_health_score">Health Score</string>
+    <string name="foodlog_detail_done">Done</string>
+
+    <string name="foodlog_detail_health_icon_desc">Health icon</string>
+
+
+
+
 
 </resources>
