@@ -74,7 +74,6 @@ private val TimeColor = Color(0xFF5C667A)
 private val TimeChipBg = Color(0xFFF2F4F7)
 private val KcalColor = Color(0xFF0F172A)
 private val MacroColor = Color(0xFF344054)
-
 private val SkeletonBase = Color(0xFFD7D7E0)
 private val SkeletonHighlight = Color(0xFFECECF3)
 private val ThumbPlaceholder = Color(0xFFF2F3F6)
@@ -140,7 +139,7 @@ fun RecentUploadCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .clip(RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(20.dp))
         ) {
             Box(
                 modifier = Modifier
@@ -240,11 +239,9 @@ private fun RecentUploadCardContent(
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(20.dp),
         border = CardStyles.Border,
-        colors = CardDefaults.cardColors(
-            containerColor = CardStyles.Bg
-        )
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg)
     ) {
         Row(
             modifier = Modifier
@@ -377,14 +374,7 @@ private fun ThumbImage(
 ) {
     Box(
         modifier = modifier
-            .clip(
-                RoundedCornerShape(
-                    topStart = 26.dp,
-                    bottomStart = 26.dp,
-                    topEnd = 18.dp,
-                    bottomEnd = 18.dp
-                )
-            )
+            .clip(RoundedCornerShape(20.dp))
             .background(ThumbPlaceholder),
         contentAlignment = Alignment.Center
     ) {

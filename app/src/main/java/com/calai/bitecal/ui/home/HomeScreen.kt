@@ -592,7 +592,7 @@ fun HomeScreen(
                     onWorkoutCardClick = { onOpenActivityHistory() }
                 )
                 // ===== Fourth block: 最近上傳
-                val recentSectionTopGap = 16.dp
+                val recentSectionTopGap = 18.dp
                 val recentSectionTitleBottomGap = 16.dp
                 val recentSectionTitleStart = 2.dp
 
@@ -632,7 +632,7 @@ fun HomeScreen(
                                     }
                                 )
                                 if (index != recentUploads.lastIndex) {
-                                    Spacer(Modifier.height(12.dp))
+                                    Spacer(Modifier.height(20.dp))
                                 }
                             }
                         }

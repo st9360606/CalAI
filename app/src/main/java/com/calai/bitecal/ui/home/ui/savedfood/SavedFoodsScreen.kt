@@ -1,20 +1,24 @@
 package com.calai.bitecal.ui.home.ui.savedfood
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,73 +26,141 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.calai.bitecal.R
-
-private val ScreenBg = Color(0xFFFFF7FC)
-private val FoodCardBg = Color(0xFFF8EEF5)
-private val FoodCardBorder = Color(0xFFF0E5EC)
+import com.calai.bitecal.ui.home.components.CardStyles
+import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
+import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
+private val TitleColor = Color(0xFF111827)
+private val KcalColor = Color(0xFF0F172A)
+private val MacroColor = Color(0xFF344054)
 private val ActionBlack = Color(0xFF0F1115)
 private val SecondaryText = Color(0xFF5D5D66)
-private val MacroText = Color(0xFF3D3D45)
 
-private data class SavedFoodUi(
-    val name: String,
-    val kcal: Int,
-    val proteinG: Int,
-    val carbsG: Int,
-    val fatG: Int
+private val TitleTextStyle = TextStyle(
+    fontSize = 16.sp,
+    lineHeight = 20.sp,
+    fontWeight = FontWeight.Bold,
+    color = TitleColor
 )
 
-private val SampleIcedCoffee = SavedFoodUi(
-    name = "Iced Coffee",
-    kcal = 5,
-    proteinG = 0,
-    carbsG = 1,
-    fatG = 0
+private val KcalTextStyle = TextStyle(
+    fontSize = 15.sp,
+    lineHeight = 19.sp,
+    fontWeight = FontWeight.SemiBold,
+    color = KcalColor
+)
+
+private val MacroTextStyle = TextStyle(
+    fontSize = 13.sp,
+    lineHeight = 18.sp,
+    fontWeight = FontWeight.Medium,
+    color = MacroColor
 )
 
 @Composable
 fun SavedFoodsScreen(
     onBack: () -> Unit,
-    onRecordToday: () -> Unit = {},
+    onOpenDetail: (foodLogId: String, previewUri: String?, timeText: String) -> Unit,
+    vm: SavedFoodsViewModel,
     modifier: Modifier = Modifier
 ) {
-    var removed by rememberSaveable { mutableStateOf(false) }
+    val ui by vm.ui.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        vm.loadIfNeeded()
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(ScreenBg)
+            .background(Color.Transparent)
             .testTag("saved_foods_screen")
     ) {
         SavedFoodsTopBar(onBack = onBack)
 
-        if (removed) {
-            SavedFoodsEmptyState()
-        } else {
-            SavedFoodCard(
-                item = SampleIcedCoffee,
-                modifier = Modifier.padding(start = 24.dp, top = 18.dp),
-                onRemove = { removed = true },
-                onRecordToday = onRecordToday
-            )
+        Text(
+            text = stringResource(R.string.saved_foods_keep_15_days_hint),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            color = SecondaryText
+        )
+
+        when {
+            ui.loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 24.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            !ui.error.isNullOrBlank() -> {
+                SavedFoodsErrorState(
+                    message = ui.error!!,
+                    onRetry = vm::refresh
+                )
+            }
+
+            ui.items.isEmpty() -> {
+                SavedFoodsEmptyState()
+            }
+
+            else -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 20.dp,
+                        end = 20.dp,
+                        top = 16.dp,
+                        bottom = 24.dp
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(
+                        items = ui.items,
+                        key = { it.foodLogId }
+                    ) { item ->
+                        SavedFoodCard(
+                            item = item,
+                            onRemove = { vm.unsave(item.foodLogId) },
+                            onOpenDetail = {
+                                onOpenDetail(
+                                    item.foodLogId,
+                                    item.previewUri,
+                                    item.timeText
+                                )
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -101,19 +173,23 @@ private fun SavedFoodsTopBar(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .height(64.dp)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .height(40.dp)
     ) {
-        IconButton(
-            onClick = onBack,
+        Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(start = 8.dp)
-                .testTag("saved_foods_back")
+                .size(36.dp)
+                .clip(CircleShape)
+                .clickable(onClick = onBack)
+                .testTag("saved_foods_back"),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = Color(0xFF202124)
+                tint = Color(0xFF202124),
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -129,33 +205,36 @@ private fun SavedFoodsTopBar(
 
 @Composable
 private fun SavedFoodCard(
-    item: SavedFoodUi,
+    item: SavedFoodCardUi,
     onRemove: () -> Unit,
-    onRecordToday: () -> Unit,
+    onOpenDetail: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
-            .width(170.dp)
-            .height(270.dp)
-            .testTag("saved_food_card"),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = FoodCardBg),
+            .fillMaxWidth()
+            .aspectRatio(0.7f)
+            .testTag("saved_food_card")
+            .clickable(onClick = onOpenDetail),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, FoodCardBorder)
+        border = CardStyles.Border,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(start = 14.dp, end = 14.dp, top = 14.dp)
+                    .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 8.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .offset(x = (-2).dp, y = (-2).dp)
+                        .size(30.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.72f))
+                        .background(Color(0xFFE8E8ED))
                         .clickable(onClick = onRemove)
                         .align(Alignment.TopStart)
                         .testTag("saved_food_remove"),
@@ -163,8 +242,8 @@ private fun SavedFoodCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Remove saved food",
-                        modifier = Modifier.size(18.dp),
+                        contentDescription = "Unsave food",
+                        modifier = Modifier.size(16.dp),
                         tint = Color(0xFF4A4A53)
                     )
                 }
@@ -172,54 +251,74 @@ private fun SavedFoodCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 22.dp),
+                        .padding(top = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(108.dp)
+                            .size(100.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFEAE1E8))
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.9f),
-                                shape = CircleShape
-                            ),
+                            .background(Color(0xFFEAE1E8)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (!item.previewUri.isNullOrBlank()) {
+                            AsyncImage(
+                                model = item.previewUri,
+                                contentDescription = item.displayTitle,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Text(
+                                text = "🍽️",
+                                fontSize = 26.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Box(
+                        modifier = Modifier.height(22.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "☕",
-                            fontSize = 30.sp
+                            text = item.displayTitle,
+                            style = TitleTextStyle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                    Text(
-                        text = item.name,
-                        color = Color(0xFF111114),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "🔥 ${item.kcal} 卡路里",
-                        color = Color(0xFF111114),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier.height(20.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        MacroValue(text = "🥦 ${item.proteinG}g")
-                        MacroValue(text = "🌾 ${item.carbsG}g")
-                        MacroValue(text = "🥑 ${item.fatG}g")
+                        Text(
+                            text = "🔥 ${item.kcal} 卡路里",
+                            style = KcalTextStyle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.testTag("recent_upload_kcal")
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Box(
+                        modifier = Modifier.height(18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            MacroValue(text = "🥩 ${item.proteinG}g")
+                            MacroValue(text = "🌾 ${item.carbsG}g")
+                            MacroValue(text = "🥑 ${item.fatG}g")
+                        }
                     }
                 }
             }
@@ -227,23 +326,24 @@ private fun SavedFoodCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(46.dp)
+                    .height(36.dp)
                     .background(ActionBlack)
-                    .clickable(onClick = onRecordToday)
-                    .testTag("saved_food_record_today"),
+                    .clickable(onClick = onOpenDetail)
+                    .testTag("saved_food_detail"),
                 contentAlignment = Alignment.Center
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.saved_foods_record_today),
+                        text = stringResource(R.string.saved_foods_detail),
                         color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(start = 6.dp)
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -251,7 +351,7 @@ private fun SavedFoodCard(
                     Text(
                         text = "→",
                         color = Color.White,
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -264,9 +364,9 @@ private fun SavedFoodCard(
 private fun MacroValue(text: String) {
     Text(
         text = text,
-        color = MacroText,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium
+        style = MacroTextStyle,
+        maxLines = 1,
+        overflow = TextOverflow.Clip
     )
 }
 
@@ -290,5 +390,35 @@ private fun SavedFoodsEmptyState() {
             fontSize = 15.sp,
             color = SecondaryText
         )
+    }
+}
+
+@Composable
+private fun SavedFoodsErrorState(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = "Saved foods 載入失敗",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF202124)
+        )
+
+        Text(
+            text = message,
+            fontSize = 15.sp,
+            color = SecondaryText
+        )
+
+        TextButton(onClick = onRetry) {
+            Text(text = "Retry")
+        }
     }
 }

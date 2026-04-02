@@ -139,7 +139,7 @@ private fun QuickActionCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 16.dp, bottom = 14.dp),
+                .padding(top = 21.dp, bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(

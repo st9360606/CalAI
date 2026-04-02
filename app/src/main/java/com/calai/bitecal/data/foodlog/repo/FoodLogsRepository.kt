@@ -87,6 +87,17 @@ class FoodLogsRepository @Inject constructor(
     suspend fun delete(id: String): FoodLogEnvelopeDto =
         safeCall { api.delete(id) }
 
+    suspend fun listSavedRecent(
+        lookBackDays: Int = 15,
+        size: Int = 100
+    ): FoodLogListResponseDto =
+        safeCall {
+            api.listSavedRecent(
+                lookBackDays = lookBackDays,
+                size = size
+            )
+        }
+
     suspend fun listSaved(
         fromLocalDate: String,
         toLocalDate: String,

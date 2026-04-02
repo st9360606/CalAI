@@ -274,23 +274,19 @@
     <string name="foodlog_pending_analysis">正在分析食物...</string>
     <string name="foodlog_analysis_done">已完成分析</string>
 
-    <string name="foodlog_nutrition_kcal">🔥 %1$d 卡路里</string>
-    <string name="foodlog_nutrition_protein_g">🥩 %1$dg 蛋白質</string>
-    <string name="foodlog_nutrition_carbs_g">🌾 %1$dg 碳水</string>
-    <string name="foodlog_nutrition_fat_g">🥑 %1$dg 脂肪</string>
-
-
-
     <string name="recently_uploaded">最近記錄</string>
     <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
     <string name="quick_add_log_workout">記錄運動</string>
     <string name="quick_add_scan_food">掃描食物</string>
     <string name="quick_add_saved_foods">已保存食物</string>
-    <string name="saved_foods_title">已保存食物</string>
     <string name="saved_foods_record_today">記錄今天</string>
-    <string name="saved_foods_empty_title">還沒有已保存食物</string>
-    <string name="saved_foods_empty_body">你保存的食物會顯示在這裡。</string>
-
     <string name="health_score">健康分數</string>
+
+    <!-- SavedFoodsScreen -->
+    <string name="saved_foods_title">已保存食物</string>
+    <string name="saved_foods_detail">詳情</string>
+    <string name="saved_foods_keep_15_days_hint">這裡只會顯示最近 15 天內已保存的食物。</string>
+    <string name="saved_foods_empty_title">還沒有已保存食物</string>
+    <string name="saved_foods_empty_body">你在詳情頁按下保存後，食物會顯示在這裡。</string>
 
 </resources>

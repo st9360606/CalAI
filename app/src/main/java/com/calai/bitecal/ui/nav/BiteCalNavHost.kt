@@ -73,6 +73,7 @@ import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadDetailScreen
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
+import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
 import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
 import com.calai.bitecal.ui.home.ui.settings.details.EditAgeScreen
@@ -193,6 +194,7 @@ object Routes {
 
     const val RECENT_UPLOAD_PREVIEW_URI = "recent_upload_preview_uri"
     const val RECENT_UPLOAD_TIME_TEXT = "recent_upload_time_text"
+    const val RECENT_UPLOAD_SOURCE = "recent_upload_source"
 }
 
 object NavResults {
@@ -1864,12 +1866,31 @@ fun BiteCalNavHost(
             }
         }
 
-        composable(Routes.SAVED_FOODS) {
+        composable(Routes.SAVED_FOODS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val savedFoodsVm: SavedFoodsViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
             SavedFoodsScreen(
+                vm = savedFoodsVm,
                 onBack = { nav.safePopBackStack() },
-                onRecordToday = {
-                    // 本輪先只做 UI 原型，不虛構 backend 行為。
-                    // 下一輪若你要，我再幫你接「套用已保存食物到今天」的資料流。
+                onOpenDetail = { foodLogId, previewUri, timeText ->
+                    nav.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_PREVIEW_URI, previewUri)
+
+                    nav.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, timeText)
+
+                    nav.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_SOURCE, Routes.SAVED_FOODS)
+
+                    nav.navigate(Routes.recentUploadDetail(foodLogId)) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -1905,23 +1926,57 @@ fun BiteCalNavHost(
                 ?.get<String>(Routes.RECENT_UPLOAD_TIME_TEXT)
                 .orEmpty()
 
+            val savedFoodsEntry = remember(nav) {
+                runCatching { nav.getBackStackEntry(Routes.SAVED_FOODS) }.getOrNull()
+            }
+
+            val savedFoodsVm: SavedFoodsViewModel? = savedFoodsEntry?.let { entry ->
+                viewModel(
+                    viewModelStoreOwner = entry,
+                    factory = HiltViewModelFactory(activity, entry)
+                )
+            }
+
+            val source = nav.previousBackStackEntry
+                ?.savedStateHandle
+                ?.get<String>(Routes.RECENT_UPLOAD_SOURCE)
+
             RecentUploadDetailScreen(
                 foodLogId = id,
                 previewUri = previewUri,
                 timeText = timeText,
                 vm = flowVm,
-                onBack = { nav.goHome() },
+                onBack = {
+                    if (source == Routes.SAVED_FOODS) {
+                        savedFoodsVm?.refresh()
+                        nav.safePopBackStack()
+                    } else {
+                        nav.goHome()
+                    }
+                },
                 onDone = { updatedEnv ->
                     homeVm?.onRecentUploadUpdated(
                         env = updatedEnv,
                         previewUri = previewUri,
                         timeText = timeText
                     )
-                    nav.goHome()
+
+                    if (source == Routes.SAVED_FOODS) {
+                        savedFoodsVm?.refresh()
+                        nav.safePopBackStack()
+                    } else {
+                        nav.goHome()
+                    }
                 },
                 onDeleted = { deletedFoodLogId ->
                     homeVm?.onRecentUploadDeleted(deletedFoodLogId)
-                    nav.goHome()
+
+                    if (source == Routes.SAVED_FOODS) {
+                        savedFoodsVm?.refresh()
+                        nav.safePopBackStack()
+                    } else {
+                        nav.goHome()
+                    }
                 }
             )
         }

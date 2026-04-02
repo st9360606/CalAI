@@ -69,6 +69,12 @@ interface FoodLogsApi {
         @Path("id") id: String
     ): FoodLogEnvelopeDto
 
+    @GET("/api/v1/food-logs/saved-recent")
+    suspend fun listSavedRecent(
+        @Query("lookBackDays") lookBackDays: Int = 15,
+        @Query("size") size: Int = 100
+    ): FoodLogListResponseDto
+
     @DELETE("/api/v1/food-logs/{id}")
     suspend fun delete(
         @Path("id") id: String
