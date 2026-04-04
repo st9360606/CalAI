@@ -63,6 +63,9 @@ import java.math.RoundingMode
 import kotlin.math.abs
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.res.stringResource
+import com.calai.bitecal.R
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun EditGoalWeightScreen(
@@ -196,7 +199,7 @@ fun EditGoalWeightScreen(
                             )
                         } else {
                             Text(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.2.sp

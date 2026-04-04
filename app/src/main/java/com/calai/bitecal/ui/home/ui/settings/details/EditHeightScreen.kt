@@ -55,6 +55,8 @@ import kotlin.math.abs
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.ui.res.stringResource
+import com.calai.bitecal.R
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -144,7 +146,7 @@ fun EditHeightScreen(
                             )
                         } else {
                             Text(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.2.sp

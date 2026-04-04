@@ -48,12 +48,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
@@ -181,7 +183,7 @@ fun EditStartingWeightScreen(
                             )
                         } else {
                             Text(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.2.sp

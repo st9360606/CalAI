@@ -80,6 +80,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -417,7 +418,7 @@ private fun RecordWeightScreenContent(
                         )
                     } else {
                         Text(
-                            text = "Save",
+                            text = stringResource(R.string.save),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 0.2.sp
@@ -945,7 +946,7 @@ private fun WeighingDateSheet(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Save", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.save), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
 
                 OutlinedButton(

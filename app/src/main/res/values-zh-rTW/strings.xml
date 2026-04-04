@@ -19,7 +19,8 @@
 
     <!-- common -->
     <string name="close">關閉</string>
-
+    <string name="save">儲存</string>
+    <string name="cancel">取消</string>
     <!-- Email -->
     <string name="sign_in_title">登入</string>
     <string name="email_label">Email</string>
@@ -186,7 +187,8 @@
     <string name="start_time">開始時間</string>
     <string name="end_time">結束時間</string>
     <string name="enable_reminders">開啟提醒</string>
-    <string name="fasting_plan_save">儲存</string>
+    <string name="fasting_picker_title">設定你的禁食開始時間</string>
+    <string name="fasting_picker_subtitle">我們會在每天進食視窗開始時提醒你。</string>
 
     <!-- Fasting notifications -->
     <string name="fasting_window_started">進食時段開始</string>

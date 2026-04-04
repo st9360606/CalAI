@@ -48,9 +48,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.CalaiCenteredTopBar
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
+
+private val ScreenBg = Color(0xFFF5F5F5)
 private val TitleColor = Color(0xFF111827)
 private val KcalColor = Color(0xFF0F172A)
 private val MacroColor = Color(0xFF344054)
@@ -94,7 +97,7 @@ fun SavedFoodsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Transparent)
+            .background(ScreenBg)
             .testTag("saved_foods_screen")
     ) {
         SavedFoodsTopBar(onBack = onBack)
@@ -169,38 +172,10 @@ fun SavedFoodsScreen(
 private fun SavedFoodsTopBar(
     onBack: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 12.dp, vertical = 10.dp)
-            .height(40.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(36.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onBack)
-                .testTag("saved_foods_back"),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = Color(0xFF202124),
-                modifier = Modifier.size(24.dp)
-            )
-        }
-
-        Text(
-            text = stringResource(R.string.saved_foods_title),
-            modifier = Modifier.align(Alignment.Center),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF202124)
-        )
-    }
+    CalaiCenteredTopBar(
+        title = stringResource(R.string.saved_foods_title),
+        onBack = onBack
+    )
 }
 
 @Composable
