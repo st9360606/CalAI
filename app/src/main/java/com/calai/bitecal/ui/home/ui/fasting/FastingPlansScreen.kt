@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.fasting.model.FastingPlan
 import com.calai.bitecal.ui.common.CalaiCenteredTopBar
+import com.calai.bitecal.ui.common.components.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
@@ -138,7 +139,7 @@ fun FastingPlansScreen(
                     .fillMaxSize()
                     .background(ScreenBg)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 5.dp)
+                    .padding(horizontal = 20.dp, vertical = 5.dp)
             ) {
                 Spacer(Modifier.height(2.dp))
 
@@ -259,12 +260,14 @@ fun FastingPlansScreen(
                     }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(30.dp))
 
-                Button(
+                CalaiPrimaryActionButton(
+                    text = stringResource(R.string.save),
                     enabled = !saving,
+                    loading = false,
                     onClick = {
-                        if (saving) return@Button
+                        if (saving) return@CalaiPrimaryActionButton
                         saving = true
 
                         uiScope.launch {
@@ -276,25 +279,10 @@ fun FastingPlansScreen(
                                 saving = false
                             }
                         }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(55.dp),
-                    shape = RoundedCornerShape(999.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White,
-                        disabledContainerColor = Color.Black,
-                        disabledContentColor = Color.White
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.save),
-                        fontSize = 18.sp
-                    )
-                }
+                    }
+                )
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(14.dp))
             }
         }
 
@@ -636,7 +624,9 @@ private fun CupertinoWheelTimePickerSheet(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF111114),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 18.dp),
                 textAlign = TextAlign.Center
             )
 
@@ -649,8 +639,6 @@ private fun CupertinoWheelTimePickerSheet(
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
-
-            Spacer(Modifier.height(22.dp))
 
             Box(
                 modifier = Modifier.fillMaxWidth(),

@@ -1992,7 +1992,7 @@ fun BiteCalNavHost(
                         nav.goHome()
                     }
                 },
-                onDone = { updatedEnv ->
+                onSave = { updatedEnv ->
                     val latestTimeText = resolveFoodLogTimeText(
                         env = updatedEnv,
                         fallbackTimeText = timeText

@@ -31,8 +31,6 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +63,7 @@ import coil.compose.AsyncImage
 import com.calai.bitecal.R
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
+import com.calai.bitecal.ui.common.components.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
@@ -81,7 +80,6 @@ private object DetailStyle {
     val TextPrimary = Color(0xFF151515)
     val HeroFallback = Color(0xFF202124)
     val Scrim = Color.Black.copy(alpha = 0.16f)
-    val FooterBtn = Color(0xFF171625)
     val ChipBg = Color(0xFFF5F5F7)
     val ProteinTone = Color(0xFFFF6B7B)
     val CarbsTone = Color(0xFFF6B24D)
@@ -151,7 +149,7 @@ fun RecentUploadDetailScreen(
     timeText: String,
     vm: FoodLogFlowViewModel,
     onBack: () -> Unit,
-    onDone: (FoodLogEnvelopeDto) -> Unit,
+    onSave: (FoodLogEnvelopeDto) -> Unit,
     onDeleted: (String) -> Unit
 ) {
     val st by vm.state.collectAsState()
@@ -529,9 +527,9 @@ fun RecentUploadDetailScreen(
                 val hasMultiplierChange = multiplier != persistedMultiplier
                 val hasSavedChange = editingSaved != persistedSaved
 
-                FooterDoneBar(
+                FooterSaveBar(
                     enabled = !st.loading,
-                    onDone = {
+                    onSave = {
                         if (hasMultiplierChange || hasSavedChange) {
                             vm.commitDetailChanges(
                                 foodLogId = foodLogId,
@@ -544,11 +542,11 @@ fun RecentUploadDetailScreen(
                                         env = updatedEnv,
                                         fallbackTimeText = stableTimeText
                                     )
-                                    onDone(updatedEnv)
+                                    onSave(updatedEnv)
                                 }
                             )
                         } else {
-                            onDone(env)
+                            onSave(env)
                         }
                     }
                 )
@@ -883,35 +881,25 @@ private fun HealthScoreCard(
 }
 
 @Composable
-private fun FooterDoneBar(
+private fun FooterSaveBar(
     enabled: Boolean,
-    onDone: () -> Unit
+    onSave: () -> Unit
 ) {
     Surface(
         color = Color.White,
         shadowElevation = 10.dp
     ) {
-        Button(
-            onClick = onDone,
-            enabled = enabled,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
                 .navigationBarsPadding()
-                .height(56.dp),
-            shape = RoundedCornerShape(999.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = DetailStyle.FooterBtn,
-                contentColor = Color.White,
-                disabledContainerColor = DetailStyle.FooterBtn,
-                disabledContentColor = Color.White
-            )
+                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            Text(
-                text = stringResource(R.string.foodlog_detail_done),
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
+            CalaiPrimaryActionButton(
+                text = stringResource(R.string.save),
+                enabled = enabled,
+                loading = false,
+                onClick = onSave
             )
         }
     }
