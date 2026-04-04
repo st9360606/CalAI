@@ -303,36 +303,36 @@ private fun SavedFoodCard(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.testTag("recent_upload_kcal")
                         )
+                    }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                        Box(
-                            modifier = Modifier.height(18.dp),
-                            contentAlignment = Alignment.Center
+                    Box(
+                        modifier = Modifier.height(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                MacroValue(
-                                    text = stringResource(
-                                        R.string.saved_foods_protein,
-                                        item.proteinG
-                                    )
+                            MacroValue(
+                                text = stringResource(
+                                    R.string.saved_foods_protein,
+                                    item.proteinG
                                 )
-                                MacroValue(
-                                    text = stringResource(
-                                        R.string.saved_foods_carbs,
-                                        item.carbsG
-                                    )
+                            )
+                            MacroValue(
+                                text = stringResource(
+                                    R.string.saved_foods_carbs,
+                                    item.carbsG
                                 )
-                                MacroValue(
-                                    text = stringResource(
-                                        R.string.saved_foods_fat,
-                                        item.fatG
-                                    )
+                            )
+                            MacroValue(
+                                text = stringResource(
+                                    R.string.saved_foods_fat,
+                                    item.fatG
                                 )
-                            }
+                            )
                         }
                     }
                 }

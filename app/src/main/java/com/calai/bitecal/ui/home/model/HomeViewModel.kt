@@ -18,6 +18,7 @@ import com.calai.bitecal.data.home.repo.HomeRepository
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.ProfileRepository
 import com.calai.bitecal.data.profile.repo.UserProfileStore
+import com.calai.bitecal.ui.home.ui.foodlog.FoodLogTimeResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -33,10 +34,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.File
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -77,8 +76,10 @@ class HomeViewModel @Inject constructor(
     private val foodLogsRepository: FoodLogsRepository,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
+
     private val recentPreviewCacheMaxAgeMs = TimeUnit.DAYS.toMillis(3)
     private val recentUploadLookBackDays = 3L
+
     private val _pendingOpenCamera = MutableStateFlow(false)
     val pendingOpenCamera: StateFlow<Boolean> = _pendingOpenCamera.asStateFlow()
 
@@ -97,21 +98,46 @@ class HomeViewModel @Inject constructor(
 
     private val _dailyStepGoal = MutableStateFlow(10000L)
     val dailyStepGoal: StateFlow<Long> = _dailyStepGoal.asStateFlow()
-    private val _dailyWorkoutGoalKcal = MutableStateFlow(450) // fallback（真正值由 store flow 驅動）
+
+    private val _dailyWorkoutGoalKcal = MutableStateFlow(450) // fallback
     val dailyWorkoutGoalKcal: StateFlow<Int> = _dailyWorkoutGoalKcal.asStateFlow()
 
     // ====== Summary key：沒變就不要 emit，避免整頁重組 ======
     private var lastSummaryKey: SummaryUiKey? = null
 
-    // ✅ NEW：避免重複同步（回前景/refresh 連發）
+    // ✅ 避免重複同步（回前景/refresh 連發）
     private var refreshDailyJob: Job? = null
 
     // ✅ 1.5 秒 debounce（只擋「自動連發」，手動/授權要能 bypass）
     private val dailyDebounceMs: Long = 1_500L
     private var lastDailyRefreshAtMs: Long = 0L
 
+    //============= recentUploads ==================
+    private val _recentUploads = MutableStateFlow<List<HomeRecentUploadUi>>(emptyList())
+    val recentUploads: StateFlow<List<HomeRecentUploadUi>> = _recentUploads.asStateFlow()
+
+    private var recentUploadPollJob: Job? = null
+    private var recentUploadRestoreJob: Job? = null
+
     private companion object {
         const val TAG = "HomeViewModel"
+    }
+
+    init {
+        refresh()
+        restoreRecentUploadsFromServer()
+
+        viewModelScope.launch {
+            profileStore.dailyStepGoalFlow.collectLatest { v ->
+                _dailyStepGoal.value = v.toLong()
+            }
+        }
+
+        viewModelScope.launch {
+            profileStore.dailyWorkoutGoalUiFlow.collectLatest { v ->
+                _dailyWorkoutGoalKcal.value = v
+            }
+        }
     }
 
     private fun shouldStartDailyRefresh(force: Boolean): Boolean {
@@ -133,31 +159,18 @@ class HomeViewModel @Inject constructor(
         return true
     }
 
-    init {
-        refresh()
-        restoreRecentUploadsFromServer()
-
-        viewModelScope.launch {
-            profileStore.dailyStepGoalFlow.collectLatest { v ->
-                _dailyStepGoal.value = v.toLong()
-            }
-        }
-        viewModelScope.launch {
-            profileStore.dailyWorkoutGoalUiFlow.collectLatest { v ->
-                _dailyWorkoutGoalKcal.value = v
-            }
-        }
+    private fun resolveRecentUploadTimeText(
+        env: FoodLogEnvelopeDto,
+        fallbackTimeText: String = ""
+    ): String {
+        return FoodLogTimeResolver.resolveDisplayTimeText(
+            zoneId = zoneId,
+            updatedAtUtc = env.updatedAtUtc,
+            serverReceivedAtUtc = env.serverReceivedAtUtc,
+            capturedAtUtc = env.capturedAtUtc,
+            capturedLocalDate = env.capturedLocalDate
+        ).ifBlank { fallbackTimeText }
     }
-
-
-    //============= recentUploads ==================
-    private val _recentUploads = MutableStateFlow<List<HomeRecentUploadUi>>(emptyList())
-    val recentUploads: StateFlow<List<HomeRecentUploadUi>> = _recentUploads.asStateFlow()
-
-    private var recentUploadPollJob: Job? = null
-    private var recentUploadRestoreJob: Job? = null
-    private val recentUploadTimeFormatter: DateTimeFormatter =
-        DateTimeFormatter.ofPattern("HH:mm")
 
     fun onFoodLogCreated(
         env: FoodLogEnvelopeDto,
@@ -184,11 +197,16 @@ class HomeViewModel @Inject constructor(
 
             FoodLogStatus.DRAFT,
             FoodLogStatus.SAVED -> {
+                val resolvedTimeText = resolveRecentUploadTimeText(
+                    env = env,
+                    fallbackTimeText = timeText
+                )
+
                 upsertRecentUpload(
                     HomeRecentUploadMapper.success(
                         foodLogId = env.foodLogId,
                         previewUri = previewUri,
-                        timeText = timeText,
+                        timeText = resolvedTimeText,
                         env = env
                     )
                 )
@@ -324,11 +342,16 @@ class HomeViewModel @Inject constructor(
                             when (result.env.status) {
                                 FoodLogStatus.DRAFT,
                                 FoodLogStatus.SAVED -> {
+                                    val resolvedTimeText = resolveRecentUploadTimeText(
+                                        env = result.env,
+                                        fallbackTimeText = timeText
+                                    )
+
                                     upsertRecentUpload(
                                         HomeRecentUploadMapper.success(
                                             foodLogId = foodLogId,
                                             previewUri = previewUri,
-                                            timeText = timeText,
+                                            timeText = resolvedTimeText,
                                             env = result.env
                                         )
                                     )
@@ -434,7 +457,9 @@ class HomeViewModel @Inject constructor(
         return items.mapNotNull { item ->
             HomeRecentUploadMapper.fromListItem(
                 previewUri = cacheRecentUploadPreview(item.foodLogId),
-                timeText = formatRecentUploadTime(
+                timeText = FoodLogTimeResolver.resolveDisplayTimeText(
+                    zoneId = zoneId,
+                    updatedAtUtc = item.updatedAtUtc,
                     serverReceivedAtUtc = item.serverReceivedAtUtc,
                     capturedAtUtc = item.capturedAtUtc,
                     capturedLocalDate = item.capturedLocalDate
@@ -468,71 +493,27 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun formatRecentUploadTime(
-        serverReceivedAtUtc: String?,
-        capturedAtUtc: String?,
-        capturedLocalDate: String? = null
-    ): String {
-        parseRecentUploadTimeOrNull(
-            raw = serverReceivedAtUtc,
-            fieldName = "serverReceivedAtUtc"
-        )?.let { return it }
-
-        parseRecentUploadTimeOrNull(
-            raw = capturedAtUtc,
-            fieldName = "capturedAtUtc"
-        )?.let { return it }
-
-        return capturedLocalDate.orEmpty()
-    }
-
-    private fun parseRecentUploadTimeOrNull(
-        raw: String?,
-        fieldName: String
-    ): String? {
-        val value = raw?.trim()
-        if (value.isNullOrBlank()) return null
-
-        return runCatching {
-            Instant.parse(value)
-                .atZone(zoneId)
-                .toLocalTime()
-                .format(recentUploadTimeFormatter)
-        }.onFailure { t ->
-            Log.w(
-                TAG,
-                "parseRecentUploadTimeOrNull failed field=$fieldName value=$value: ${t.javaClass.simpleName}: ${t.message}",
-                t
-            )
-        }.getOrNull()
-    }
-
     fun onRecentUploadUpdated(
         env: FoodLogEnvelopeDto,
-        previewUri: String?,
-        timeText: String
+        previewUri: String?
     ) {
         recentUploadPollJob?.cancel()
         recentUploadPollJob = null
 
+        val resolvedTimeText = resolveRecentUploadTimeText(env = env)
+
         when (env.status) {
             FoodLogStatus.DRAFT,
             FoodLogStatus.SAVED -> {
-                // 1) 先直接更新 Home 上這張卡片
                 upsertRecentUpload(
                     HomeRecentUploadMapper.success(
                         foodLogId = env.foodLogId,
                         previewUri = previewUri,
-                        timeText = timeText,
+                        timeText = resolvedTimeText,
                         env = env
                     )
                 )
-
-                // 2) 刷新 summary / calories / macros 等首頁其他資料
                 refresh()
-
-                // 3) 不要在 Done 返回的這個瞬間，立刻再從 server 重建 recentUploads
-                //    否則 previewUri 很可能被換掉，導致 AsyncImage 重新載圖而閃跳
                 recentUploadRestoreJob?.cancel()
                 recentUploadRestoreJob = null
             }
@@ -542,14 +523,13 @@ class HomeViewModel @Inject constructor(
                     HomeRecentUploadMapper.pending(
                         foodLogId = env.foodLogId,
                         previewUri = previewUri,
-                        timeText = timeText
+                        timeText = resolvedTimeText
                     )
                 )
-
                 startRecentUploadPolling(
                     foodLogId = env.foodLogId,
                     previewUri = previewUri,
-                    timeText = timeText
+                    timeText = resolvedTimeText
                 )
             }
 
@@ -572,7 +552,10 @@ class HomeViewModel @Inject constructor(
                 runCatching {
                     val deleted = file.delete()
                     if (!deleted && file.exists()) {
-                        Log.w(TAG, "pruneRecentUploadPreviewCache delete returned false path=${file.absolutePath}")
+                        Log.w(
+                            TAG,
+                            "pruneRecentUploadPreviewCache delete returned false path=${file.absolutePath}"
+                        )
                     }
                 }.onFailure { t ->
                     Log.w(
@@ -713,13 +696,15 @@ class HomeViewModel @Inject constructor(
     /**
      * ✅ 卡片 CTA 點擊（最小可用版）
      * - 未安裝：導 Play Store
-     * - 未授權/不可用：目前也先導 Play Store（你註解：之後換成 app 內 Intro/授權頁更好）
+     * - 未授權/不可用：目前也先導 Play Store
      */
     fun onDailyCtaClick(ctx: Context) {
         when (_dailyStatus.value) {
-            DailyActivityStatus.HC_NOT_INSTALLED -> openPlayStore(ctx, "com.google.android.apps.healthdata")
+            DailyActivityStatus.HC_NOT_INSTALLED -> {
+                openPlayStore(ctx, "com.google.android.apps.healthdata")
+            }
 
-            DailyActivityStatus.NO_DATA -> openHealthConnectOrStore(ctx) // ✅ NEW：比 refresh 更有用
+            DailyActivityStatus.NO_DATA -> openHealthConnectOrStore(ctx)
 
             DailyActivityStatus.PERMISSION_NOT_GRANTED,
             DailyActivityStatus.HC_UNAVAILABLE -> openHealthConnectOrStore(ctx)
@@ -743,7 +728,8 @@ class HomeViewModel @Inject constructor(
 
         when {
             launch != null -> runCatching { ctx.startActivity(launch) }
-            else -> runCatching { ctx.startActivity(market) }.recoverCatching { ctx.startActivity(web) }
+            else -> runCatching { ctx.startActivity(market) }
+                .recoverCatching { ctx.startActivity(web) }
         }
     }
 

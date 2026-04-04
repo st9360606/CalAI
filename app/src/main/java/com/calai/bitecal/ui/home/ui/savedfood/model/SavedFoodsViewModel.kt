@@ -5,9 +5,10 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.calai.bitecal.data.foodlog.model.FoodLogListItemDto
+import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
+import com.calai.bitecal.ui.home.ui.foodlog.FoodLogTimeResolver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -18,9 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -53,7 +52,6 @@ class SavedFoodsViewModel @Inject constructor(
     val ui: StateFlow<SavedFoodsUiState> = _ui.asStateFlow()
 
     private var loaded = false
-    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     private companion object {
         const val TAG = "SavedFoodsVm"
@@ -62,7 +60,7 @@ class SavedFoodsViewModel @Inject constructor(
     }
 
     fun loadIfNeeded() {
-        if (loaded) return
+        if (loaded || _ui.value.items.isNotEmpty()) return
         refresh()
     }
 
@@ -133,11 +131,82 @@ class SavedFoodsViewModel @Inject constructor(
                         proteinG = (item.nutrition?.protein ?: 0.0).roundToInt(),
                         carbsG = (item.nutrition?.carbs ?: 0.0).roundToInt(),
                         fatG = (item.nutrition?.fat ?: 0.0).roundToInt(),
-                        timeText = formatTimeText(item),
+                        timeText = FoodLogTimeResolver.resolveDisplayTimeText(
+                            zoneId = zoneId,
+                            updatedAtUtc = item.updatedAtUtc,
+                            serverReceivedAtUtc = item.serverReceivedAtUtc,
+                            capturedAtUtc = item.capturedAtUtc,
+                            capturedLocalDate = item.capturedLocalDate
+                        ),
                         previewUri = previewUri
                     )
                 )
             }
+        }
+    }
+    fun onFoodLogUpdatedFromDetail(
+        env: FoodLogEnvelopeDto,
+        previewUri: String?
+    ) {
+        loaded = true
+
+        when (env.status) {
+            FoodLogStatus.SAVED -> {
+                val result = env.nutritionResult
+                val nutrients = result?.nutrients
+
+                val existingItem = _ui.value.items
+                    .firstOrNull { it.foodLogId == env.foodLogId }
+
+                val updated = SavedFoodCardUi(
+                    foodLogId = env.foodLogId,
+                    displayTitle = result?.foodName
+                        ?.trim()
+                        .takeUnless { it.isNullOrBlank() }
+                        ?: "Food",
+                    kcal = (nutrients?.kcal ?: 0.0).roundToInt(),
+                    proteinG = (nutrients?.protein ?: 0.0).roundToInt(),
+                    carbsG = (nutrients?.carbs ?: 0.0).roundToInt(),
+                    fatG = (nutrients?.fat ?: 0.0).roundToInt(),
+                    timeText = FoodLogTimeResolver.resolveDisplayTimeText(
+                        zoneId = zoneId,
+                        updatedAtUtc = env.updatedAtUtc,
+                        serverReceivedAtUtc = env.serverReceivedAtUtc,
+                        capturedAtUtc = env.capturedAtUtc,
+                        capturedLocalDate = env.capturedLocalDate
+                    ).ifBlank { existingItem?.timeText.orEmpty() },
+                    previewUri = previewUri ?: existingItem?.previewUri
+                )
+
+                _ui.update { st ->
+                    st.copy(
+                        items = buildList {
+                            add(updated)
+                            st.items
+                                .filterNot { it.foodLogId == env.foodLogId }
+                                .forEach(::add)
+                        }.take(PAGE_SIZE),
+                        error = null
+                    )
+                }
+            }
+
+            FoodLogStatus.DRAFT,
+            FoodLogStatus.FAILED,
+            FoodLogStatus.DELETED -> {
+                if (env.status == FoodLogStatus.DELETED) {
+                    deletePreviewCache(env.foodLogId)
+                }
+
+                _ui.update { st ->
+                    st.copy(
+                        items = st.items.filterNot { it.foodLogId == env.foodLogId },
+                        error = null
+                    )
+                }
+            }
+
+            FoodLogStatus.PENDING -> Unit
         }
     }
 
@@ -189,23 +258,5 @@ class SavedFoodsViewModel @Inject constructor(
                 runCatching { file.delete() }
             }
         }
-    }
-
-    private fun formatTimeText(item: FoodLogListItemDto): String {
-        parseUtcToLocalTime(item.serverReceivedAtUtc)?.let { return it }
-        parseUtcToLocalTime(item.capturedAtUtc)?.let { return it }
-        return item.capturedLocalDate.orEmpty()
-    }
-
-    private fun parseUtcToLocalTime(raw: String?): String? {
-        val value = raw?.trim()
-        if (value.isNullOrBlank()) return null
-
-        return runCatching {
-            Instant.parse(value)
-                .atZone(zoneId)
-                .toLocalTime()
-                .format(timeFormatter)
-        }.getOrNull()
     }
 }

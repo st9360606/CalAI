@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.home.ui.foodlog
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -67,6 +68,7 @@ import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -128,6 +130,19 @@ private fun FoodLogEnvelopeDto.previewScaledNutrients(
     )
 }
 
+private fun resolveFoodLogDisplayTime(
+    env: FoodLogEnvelopeDto,
+    fallbackTimeText: String = ""
+): String {
+    return FoodLogTimeResolver.resolveDisplayTimeText(
+        zoneId = ZoneId.systemDefault(),
+        updatedAtUtc = env.updatedAtUtc,
+        serverReceivedAtUtc = env.serverReceivedAtUtc,
+        capturedAtUtc = env.capturedAtUtc,
+        capturedLocalDate = env.capturedLocalDate
+    ).ifBlank { fallbackTimeText }
+}
+
 @Composable
 fun RecentUploadDetailScreen(
     foodLogId: String,
@@ -144,6 +159,17 @@ fun RecentUploadDetailScreen(
 
     var lastStableEnv by remember(foodLogId) {
         mutableStateOf<FoodLogEnvelopeDto?>(null)
+    }
+
+    val handleBack = remember(onBack, vm) {
+        {
+            vm.stopPolling()
+            onBack()
+        }
+    }
+
+    BackHandler(enabled = !st.loading) {
+        handleBack()
     }
 
     LaunchedEffect(liveEnv) {
@@ -199,18 +225,6 @@ fun RecentUploadDetailScreen(
         }
     }
 
-    LaunchedEffect(previewUri) {
-        if (!previewUri.isNullOrBlank()) {
-            stablePreviewUri = previewUri
-        }
-    }
-
-    LaunchedEffect(timeText) {
-        if (timeText.isNotBlank()) {
-            stableTimeText = timeText
-        }
-    }
-
     if (st.loading && env == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -245,7 +259,15 @@ fun RecentUploadDetailScreen(
         env.previewScaledNutrients(multiplier)
     }
 
-    val isSaved = env.status == FoodLogStatus.SAVED
+    val persistedSaved = env.status == FoodLogStatus.SAVED
+
+    var editingSaved by rememberSaveable(foodLogId) {
+        mutableStateOf(persistedSaved)
+    }
+
+    LaunchedEffect(foodLogId) {
+        editingSaved = persistedSaved
+    }
 
     val displayName = env.nutritionResult?.foodName
         ?.takeIf { it.isNotBlank() }
@@ -304,7 +326,7 @@ fun RecentUploadDetailScreen(
                         .align(Alignment.CenterStart)
                         .size(40.dp)
                         .clip(CircleShape)
-                        .clickable(enabled = !st.loading, onClick = onBack),
+                        .clickable(enabled = !st.loading, onClick = handleBack),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -384,21 +406,13 @@ fun RecentUploadDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SaveBadge(
-                            isSaved = isSaved,
-                            enabled = !st.loading,
+                            isSaved = editingSaved,
+                            enabled = !st.loading &&
+                                    env.status != FoodLogStatus.PENDING &&
+                                    env.status != FoodLogStatus.FAILED &&
+                                    env.status != FoodLogStatus.DELETED,
                             onClick = {
-                                if (multiplier != persistedMultiplier) {
-                                    vm.persistMultiplierThenToggleSaved(
-                                        foodLogId = foodLogId,
-                                        baseEnv = env,
-                                        multiplier = multiplier,
-                                        onSuccess = { updatedEnv ->
-                                            multiplier = updatedEnv.portionMultiplier.coerceAtLeast(1)
-                                        }
-                                    )
-                                } else {
-                                    vm.toggleSaved(foodLogId)
-                                }
+                                editingSaved = !editingSaved
                             }
                         )
 
@@ -508,16 +522,25 @@ fun RecentUploadDetailScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
                 }
+
+                val hasMultiplierChange = multiplier != persistedMultiplier
+                val hasSavedChange = editingSaved != persistedSaved
+
                 FooterDoneBar(
                     enabled = !st.loading,
                     onDone = {
-                        if (multiplier != persistedMultiplier) {
-                            vm.persistMultiplierThenDone(
+                        if (hasMultiplierChange || hasSavedChange) {
+                            vm.commitDetailChanges(
                                 foodLogId = foodLogId,
                                 baseEnv = env,
                                 multiplier = multiplier,
+                                targetSaved = editingSaved,
                                 onSuccess = { updatedEnv ->
                                     multiplier = updatedEnv.portionMultiplier.coerceAtLeast(1)
+                                    stableTimeText = resolveFoodLogDisplayTime(
+                                        env = updatedEnv,
+                                        fallbackTimeText = stableTimeText
+                                    )
                                     onDone(updatedEnv)
                                 }
                             )
@@ -875,7 +898,10 @@ private fun FooterDoneBar(
                 .height(56.dp),
             shape = RoundedCornerShape(999.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = DetailStyle.FooterBtn
+                containerColor = DetailStyle.FooterBtn,
+                contentColor = Color.White,
+                disabledContainerColor = DetailStyle.FooterBtn,
+                disabledContentColor = Color.White
             )
         ) {
             Text(

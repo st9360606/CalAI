@@ -118,6 +118,10 @@ data class FoodLogEnvelopeDto(
     val tierUsed: ModelTier? = null,
     val fromCache: Boolean = false,
     val portionMultiplier: Int = 1, // NEW: 後端回傳目前已保存的份數，預設 1
+    val updatedAtUtc: String? = null,
+    val serverReceivedAtUtc: String? = null,
+    val capturedAtUtc: String? = null,
+    val capturedLocalDate: String? = null,
     val nutritionResult: NutritionResultDto? = null,
     val task: TaskDto? = null,
     val error: ApiErrorDto? = null,

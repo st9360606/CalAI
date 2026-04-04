@@ -70,6 +70,7 @@ import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorCard
 import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
 import com.calai.bitecal.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.bitecal.ui.home.ui.foodlog.FoodLogTimeResolver
 import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadDetailScreen
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
@@ -135,6 +136,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 object Routes {
     const val LANDING = "landing"
@@ -220,6 +224,19 @@ private fun toHttpUriOrNull(raw: String?): Uri? {
     if (s.isBlank()) return null
     val uri = runCatching { s.toUri() }.getOrNull() ?: return null
     return uri.takeIf { it.scheme == "http" || it.scheme == "https" }
+}
+
+private fun resolveFoodLogTimeText(
+    env: FoodLogEnvelopeDto,
+    fallbackTimeText: String = ""
+): String {
+    return FoodLogTimeResolver.resolveDisplayTimeText(
+        zoneId = ZoneId.systemDefault(),
+        updatedAtUtc = env.updatedAtUtc,
+        serverReceivedAtUtc = env.serverReceivedAtUtc,
+        capturedAtUtc = env.capturedAtUtc,
+        capturedLocalDate = env.capturedLocalDate
+    ).ifBlank { fallbackTimeText }
 }
 
 private tailrec fun Context.findActivity(): Activity? =
@@ -1706,17 +1723,22 @@ fun BiteCalNavHost(
 
                 // ✅ Home 第四區塊右上角時間，例如 11:10
                 fun nowHm(): String =
-                    java.time.LocalTime.now()
-                        .format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                    LocalTime.now()
+                        .format(DateTimeFormatter.ofPattern("HH:mm"))
 
                 fun handleCreatedFoodLog(
                     env: FoodLogEnvelopeDto,
                     previewUri: String?
                 ) {
+                    val latestTimeText = resolveFoodLogTimeText(
+                        env = env,
+                        fallbackTimeText = nowHm()
+                    )
+
                     homeVm?.onFoodLogCreated(
                         env = env,
                         previewUri = previewUri,
-                        timeText = nowHm()
+                        timeText = latestTimeText
                     )
 
                     when (env.status) {
@@ -1807,20 +1829,30 @@ fun BiteCalNavHost(
                                 when (env.status) {
                                     FoodLogStatus.DRAFT,
                                     FoodLogStatus.SAVED -> {
+                                        val latestTimeText = resolveFoodLogTimeText(
+                                            env = env,
+                                            fallbackTimeText = nowHm()
+                                        )
+
                                         homeVm?.onFoodLogCreated(
                                             env = env,
                                             previewUri = null,
-                                            timeText = nowHm()
+                                            timeText = latestTimeText
                                         )
                                         flowVm.reset()
                                         goHome()
                                     }
 
                                     FoodLogStatus.PENDING -> {
+                                        val latestTimeText = resolveFoodLogTimeText(
+                                            env = env,
+                                            fallbackTimeText = nowHm()
+                                        )
+
                                         homeVm?.onFoodLogCreated(
                                             env = env,
                                             previewUri = null,
-                                            timeText = nowHm()
+                                            timeText = latestTimeText
                                         )
                                         flowVm.reset()
                                         goHome()
@@ -1868,10 +1900,15 @@ fun BiteCalNavHost(
 
         composable(Routes.SAVED_FOODS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) {
+                nav.getBackStackEntry(Routes.HOME)
+            }
+
             val savedFoodsVm: SavedFoodsViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
+
             SavedFoodsScreen(
                 vm = savedFoodsVm,
                 onBack = { nav.safePopBackStack() },
@@ -1917,29 +1954,31 @@ fun BiteCalNavHost(
 
             val id = backStackEntry.arguments?.getString("id").orEmpty()
 
-            val previewUri = nav.previousBackStackEntry
-                ?.savedStateHandle
-                ?.get<String>(Routes.RECENT_UPLOAD_PREVIEW_URI)
-
-            val timeText = nav.previousBackStackEntry
-                ?.savedStateHandle
-                ?.get<String>(Routes.RECENT_UPLOAD_TIME_TEXT)
-                .orEmpty()
-
-            val savedFoodsEntry = remember(nav) {
-                runCatching { nav.getBackStackEntry(Routes.SAVED_FOODS) }.getOrNull()
+            val previewUri = remember(backStackEntry) {
+                nav.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<String>(Routes.RECENT_UPLOAD_PREVIEW_URI)
             }
 
-            val savedFoodsVm: SavedFoodsViewModel? = savedFoodsEntry?.let { entry ->
+            val timeText = remember(backStackEntry) {
+                nav.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<String>(Routes.RECENT_UPLOAD_TIME_TEXT)
+                    .orEmpty()
+            }
+
+            val savedFoodsVm: SavedFoodsViewModel? = homeEntry?.let { entry ->
                 viewModel(
                     viewModelStoreOwner = entry,
                     factory = HiltViewModelFactory(activity, entry)
                 )
             }
 
-            val source = nav.previousBackStackEntry
-                ?.savedStateHandle
-                ?.get<String>(Routes.RECENT_UPLOAD_SOURCE)
+            val source = remember(backStackEntry) {
+                nav.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<String>(Routes.RECENT_UPLOAD_SOURCE)
+            }
 
             RecentUploadDetailScreen(
                 foodLogId = id,
@@ -1948,21 +1987,32 @@ fun BiteCalNavHost(
                 vm = flowVm,
                 onBack = {
                     if (source == Routes.SAVED_FOODS) {
-                        savedFoodsVm?.refresh()
                         nav.safePopBackStack()
                     } else {
                         nav.goHome()
                     }
                 },
                 onDone = { updatedEnv ->
+                    val latestTimeText = resolveFoodLogTimeText(
+                        env = updatedEnv,
+                        fallbackTimeText = timeText
+                    )
+
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, latestTimeText)
+
                     homeVm?.onRecentUploadUpdated(
                         env = updatedEnv,
-                        previewUri = previewUri,
-                        timeText = timeText
+                        previewUri = previewUri
+                    )
+
+                    savedFoodsVm?.onFoodLogUpdatedFromDetail(
+                        env = updatedEnv,
+                        previewUri = previewUri
                     )
 
                     if (source == Routes.SAVED_FOODS) {
-                        savedFoodsVm?.refresh()
                         nav.safePopBackStack()
                     } else {
                         nav.goHome()
