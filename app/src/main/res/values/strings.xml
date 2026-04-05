@@ -296,9 +296,9 @@
     <!-- SavedFoodsScreen -->
     <string name="saved_foods_title">Saved foods</string>
     <string name="saved_foods_detail">Detail</string>
-    <string name="saved_foods_keep_15_days_hint">Only saved foods from the last 15 days are shown here.</string>
+    <string name="saved_foods_keep_15_days_hint">Saved foods from the last 15 days.</string>
     <string name="saved_foods_empty_title">No saved foods yet</string>
-    <string name="saved_foods_empty_body">Foods you save from the detail screen will appear here.</string>
+    <string name="saved_foods_empty_body">Foods you save will appear here.</string>
     <string name="saved_foods_kcal">🔥 %1$d calories</string>
     <string name="saved_foods_protein">🥩 %1$dg</string>
     <string name="saved_foods_carbs">🌾 %1$dg</string>
@@ -328,6 +328,18 @@
     <string name="foodlog_detail_done">Done</string>
 
     <string name="foodlog_detail_health_icon_desc">Health icon</string>
+
+
+
+    <!-- DeleteFoodLogDialog -->
+    <string name="foodlog_delete_dialog_title">Delete Record?</string>
+    <string name="foodlog_delete_dialog_message">Are you sure you want to permanently delete this meal record? This action cannot be undone.</string>
+    <string name="foodlog_delete_dialog_confirm">Delete</string>
+
+    <string name="saved_foods_unsave_content_description">Remove from saved foods</string>
+    <string name="saved_foods_unsave_dialog_title">Remove from Saved Foods?</string>
+    <string name="saved_foods_unsave_dialog_message">This meal will be removed from your Saved Foods list, but it will still remain in your recent records.</string>
+    <string name="saved_foods_unsave_dialog_confirm">Remove</string>
 
 
 

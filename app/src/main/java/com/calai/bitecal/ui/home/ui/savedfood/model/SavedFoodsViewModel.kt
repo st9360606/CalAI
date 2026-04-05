@@ -89,7 +89,11 @@ class SavedFoodsViewModel @Inject constructor(
         }
     }
 
-    fun unsave(foodLogId: String) {
+    fun unsave(
+        foodLogId: String,
+        onSuccess: () -> Unit = {},
+        onFailure: (Throwable) -> Unit = {}
+    ) {
         viewModelScope.launch {
             runCatching {
                 repo.unsave(foodLogId)
@@ -101,9 +105,11 @@ class SavedFoodsViewModel @Inject constructor(
                         error = null
                     )
                 }
+                onSuccess()
             }.onFailure { t ->
                 Log.w(TAG, "unsave failed id=$foodLogId: ${t.javaClass.simpleName}: ${t.message}", t)
                 _ui.update { it.copy(error = t.message ?: "unsave failed") }
+                onFailure(t)
             }
         }
     }

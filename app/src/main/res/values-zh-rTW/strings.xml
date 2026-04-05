@@ -295,9 +295,9 @@
     <!-- SavedFoodsScreen -->
     <string name="saved_foods_title">已保存食物</string>
     <string name="saved_foods_detail">詳情</string>
-    <string name="saved_foods_keep_15_days_hint">這裡只會顯示最近 15 天內已保存的食物。</string>
-    <string name="saved_foods_empty_title">還沒有已保存食物</string>
-    <string name="saved_foods_empty_body">你在詳情頁按下保存後，食物會顯示在這裡。</string>
+    <string name="saved_foods_keep_15_days_hint">最近 15 天內儲存的食物。</string>
+    <string name="saved_foods_empty_title">還沒有已儲存的食物</string>
+    <string name="saved_foods_empty_body">你儲存的食物會顯示在這裡。</string>
     <string name="saved_foods_kcal">🔥 %1$d 卡路里</string>
     <string name="saved_foods_protein">🥩 %1$dg</string>
     <string name="saved_foods_carbs">🌾 %1$dg</string>
@@ -328,6 +328,16 @@
 
     <string name="foodlog_detail_health_icon_desc">健康圖示</string>
 
+
+    <!-- DeleteFoodLogDialog -->
+    <string name="foodlog_delete_dialog_title">刪除紀錄？</string>
+    <string name="foodlog_delete_dialog_message">你確定要永久刪除這筆餐點紀錄嗎？此操作無法復原。</string>
+    <string name="foodlog_delete_dialog_confirm">刪除</string>
+
+    <string name="saved_foods_unsave_content_description">從已儲存餐點中移除</string>
+    <string name="saved_foods_unsave_dialog_title">移除已儲存餐點？</string>
+    <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已儲存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
+    <string name="saved_foods_unsave_dialog_confirm">移除</string>
 
 
 </resources>

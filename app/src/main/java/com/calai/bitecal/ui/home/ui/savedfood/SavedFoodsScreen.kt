@@ -15,14 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +31,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.CalaiCenteredTopBar
+import com.calai.bitecal.ui.common.CalaiConfirmDialog
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
@@ -90,6 +93,9 @@ fun SavedFoodsScreen(
 ) {
     val ui by vm.ui.collectAsStateWithLifecycle()
 
+    var pendingUnsaveFoodLogId by rememberSaveable { mutableStateOf<String?>(null) }
+    var unsaveSubmitting by rememberSaveable { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         vm.loadIfNeeded()
     }
@@ -104,10 +110,14 @@ fun SavedFoodsScreen(
 
         Text(
             text = stringResource(R.string.saved_foods_keep_15_days_hint),
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = (-8).dp)
+                .padding(start = 20.dp, end = 20.dp, top = 0.dp, bottom = 2.dp),
             fontSize = 14.sp,
             lineHeight = 20.sp,
-            color = SecondaryText
+            color = SecondaryText,
+            textAlign = TextAlign.Center
         )
 
         when {
@@ -129,9 +139,7 @@ fun SavedFoodsScreen(
                 )
             }
 
-            ui.items.isEmpty() -> {
-                SavedFoodsEmptyState()
-            }
+            ui.items.isEmpty() -> Unit
 
             else -> {
                 LazyVerticalGrid(
@@ -140,7 +148,7 @@ fun SavedFoodsScreen(
                     contentPadding = PaddingValues(
                         start = 20.dp,
                         end = 20.dp,
-                        top = 16.dp,
+                        top = 10.dp,
                         bottom = 24.dp
                     ),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -152,7 +160,9 @@ fun SavedFoodsScreen(
                     ) { item ->
                         SavedFoodCard(
                             item = item,
-                            onRemove = { vm.unsave(item.foodLogId) },
+                            onRemove = {
+                                pendingUnsaveFoodLogId = item.foodLogId
+                            },
                             onOpenDetail = {
                                 onOpenDetail(
                                     item.foodLogId,
@@ -166,6 +176,41 @@ fun SavedFoodsScreen(
             }
         }
     }
+
+    CalaiConfirmDialog(
+        visible = pendingUnsaveFoodLogId != null,
+        onDismiss = {
+            if (!unsaveSubmitting) {
+                pendingUnsaveFoodLogId = null
+            }
+        },
+        onCancel = {
+            if (!unsaveSubmitting) {
+                pendingUnsaveFoodLogId = null
+            }
+        },
+        onConfirm = {
+            val targetId = pendingUnsaveFoodLogId ?: return@CalaiConfirmDialog
+            if (unsaveSubmitting) return@CalaiConfirmDialog
+
+            unsaveSubmitting = true
+            vm.unsave(
+                foodLogId = targetId,
+                onSuccess = {
+                    unsaveSubmitting = false
+                    pendingUnsaveFoodLogId = null
+                },
+                onFailure = {
+                    unsaveSubmitting = false
+                }
+            )
+        },
+        loading = unsaveSubmitting,
+        title = stringResource(R.string.saved_foods_unsave_dialog_title),
+        message = stringResource(R.string.saved_foods_unsave_dialog_message),
+        confirmText = stringResource(R.string.saved_foods_unsave_dialog_confirm),
+        cancelText = stringResource(R.string.cancel)
+    )
 }
 
 @Composable
@@ -185,6 +230,8 @@ private fun SavedFoodCard(
     onOpenDetail: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val unsaveContentDescription = stringResource(R.string.saved_foods_unsave_content_description)
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -217,7 +264,7 @@ private fun SavedFoodCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = "Unsave food",
+                        contentDescription = unsaveContentDescription,
                         modifier = Modifier.size(16.dp),
                         tint = Color(0xFF4A4A53)
                     )
@@ -358,29 +405,6 @@ private fun MacroValue(text: String) {
         maxLines = 1,
         overflow = TextOverflow.Clip
     )
-}
-
-@Composable
-private fun SavedFoodsEmptyState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.saved_foods_empty_title),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF202124)
-        )
-
-        Text(
-            text = stringResource(R.string.saved_foods_empty_body),
-            fontSize = 15.sp,
-            color = SecondaryText
-        )
-    }
 }
 
 @Composable
