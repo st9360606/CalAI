@@ -35,8 +35,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -278,6 +282,7 @@ fun StepsWorkoutRowModern(
     activeKcalOverride: Int? = null,
     weightKgLatest: Double? = null,
     dailyStatus: DailyActivityStatus = DailyActivityStatus.AVAILABLE_GRANTED,
+    dailyReady: Boolean = true,
     onDailyCtaClick: (() -> Unit)? = null,
     stepsGoalOverride: Long? = null,
     workoutGoalKcalOverride: Int? = null,
@@ -329,27 +334,30 @@ fun StepsWorkoutRowModern(
         }
 
         // ✅ 只在「未授權」與「未安裝」時顯示提示小卡
-        val hintText: String? = when (dailyStatus) {
-            DailyActivityStatus.PERMISSION_NOT_GRANTED ->
-                stringResource(R.string.steps_hint_connect_google_health)
+        val hintText: String? = if (!dailyReady) {
+            null
+        } else {
+            when (dailyStatus) {
+                DailyActivityStatus.PERMISSION_NOT_GRANTED ->
+                    stringResource(R.string.steps_hint_connect_google_health)
 
-            DailyActivityStatus.HC_NOT_INSTALLED ->
-                stringResource(R.string.steps_hint_install_health_connect)
+                DailyActivityStatus.HC_NOT_INSTALLED ->
+                    stringResource(R.string.steps_hint_install_health_connect)
 
-            DailyActivityStatus.HC_UNAVAILABLE ->
-                stringResource(R.string.steps_hint_hc_unavailable)
+                DailyActivityStatus.HC_UNAVAILABLE ->
+                    stringResource(R.string.steps_hint_hc_unavailable)
 
-            DailyActivityStatus.ERROR_RETRYABLE ->
-                stringResource(R.string.steps_hint_retry)
+                DailyActivityStatus.ERROR_RETRYABLE ->
+                    stringResource(R.string.steps_hint_retry)
 
-            else -> null
+                else -> null
+            }
         }
 
         val hintIconRes = when (dailyStatus) {
-            DailyActivityStatus.PERMISSION_NOT_GRANTED -> R.drawable.google_health
-            DailyActivityStatus.HC_NOT_INSTALLED -> R.drawable.health_connect_logo
+            DailyActivityStatus.HC_NOT_INSTALLED,
             DailyActivityStatus.HC_UNAVAILABLE -> R.drawable.health_connect_logo
-            DailyActivityStatus.ERROR_RETRYABLE -> R.drawable.google_health
+
             else -> R.drawable.google_health
         }
 

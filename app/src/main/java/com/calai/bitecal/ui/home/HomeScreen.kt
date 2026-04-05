@@ -213,6 +213,7 @@ fun HomeScreen(
     val stepsToday by vm.dailyStepsToday.collectAsState()
     val activeKcalToday by vm.dailyActiveKcalToday.collectAsState()
     val dailyStatus by vm.dailyStatus.collectAsState()
+    val dailyReady by vm.dailyReady.collectAsState()
 
     val ctx = LocalContext.current
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
@@ -581,6 +582,7 @@ fun HomeScreen(
                     activeKcalOverride = activeKcalToday,
                     weightKgLatest = weightUi.current,
                     dailyStatus = dailyStatus,
+                    dailyReady = dailyReady,
                     onDailyCtaClick = onStepsCardClick,
                     stepsGoalOverride = stepsGoal,
                     workoutGoalKcalOverride = workoutGoalKcal,

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.activity.model.DailyActivityStatus
@@ -65,6 +66,12 @@ private data class SummaryUiKey(
     val recentMealsSig: String
 )
 
+private data class DailyStableSnapshot(
+    val status: DailyActivityStatus,
+    val steps: Long?,
+    val activeKcal: Int?
+)
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repo: HomeRepository,
@@ -74,7 +81,8 @@ class HomeViewModel @Inject constructor(
     private val profileStore: UserProfileStore,
     private val zoneId: ZoneId,
     private val foodLogsRepository: FoodLogsRepository,
-    @ApplicationContext private val appContext: Context
+    @ApplicationContext private val appContext: Context,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val recentPreviewCacheMaxAgeMs = TimeUnit.DAYS.toMillis(3)
@@ -87,14 +95,91 @@ class HomeViewModel @Inject constructor(
     val ui: StateFlow<HomeUiState> = _ui.asStateFlow()
 
     // ====== Daily Activity override（給 HomeScreen 顯示） ======
-    private val _dailyStatus = MutableStateFlow(DailyActivityStatus.ERROR_RETRYABLE)
+    private companion object {
+        const val TAG = "HomeViewModel"
+
+        const val KEY_LAST_STABLE_DAILY_STATUS = "last_stable_daily_status"
+        const val KEY_LAST_STABLE_DAILY_STEPS = "last_stable_daily_steps"
+        const val KEY_LAST_STABLE_DAILY_ACTIVE_KCAL = "last_stable_daily_active_kcal"
+
+        @Volatile
+        private var inMemoryStableDailySnapshot: DailyStableSnapshot? = null
+    }
+
+    private fun restoreLastStableDailySnapshot(): DailyStableSnapshot? {
+        inMemoryStableDailySnapshot?.let { return it }
+
+        val rawStatus = savedStateHandle.get<String>(KEY_LAST_STABLE_DAILY_STATUS)
+        val status = rawStatus?.let { runCatching { DailyActivityStatus.valueOf(it) }.getOrNull() }
+            ?: return null
+
+        val steps = savedStateHandle.get<Long>(KEY_LAST_STABLE_DAILY_STEPS)
+        val activeKcal = savedStateHandle.get<Int>(KEY_LAST_STABLE_DAILY_ACTIVE_KCAL)
+
+        return DailyStableSnapshot(
+            status = status,
+            steps = steps,
+            activeKcal = activeKcal
+        )
+    }
+
+    private fun persistLastStableDailySnapshot(snapshot: DailyStableSnapshot) {
+        inMemoryStableDailySnapshot = snapshot
+        savedStateHandle[KEY_LAST_STABLE_DAILY_STATUS] = snapshot.status.name
+        savedStateHandle[KEY_LAST_STABLE_DAILY_STEPS] = snapshot.steps
+        savedStateHandle[KEY_LAST_STABLE_DAILY_ACTIVE_KCAL] = snapshot.activeKcal
+    }
+
+    private var lastStableDailySnapshot: DailyStableSnapshot? = restoreLastStableDailySnapshot()
+
+    private val _dailyReady = MutableStateFlow(lastStableDailySnapshot != null)
+    val dailyReady: StateFlow<Boolean> = _dailyReady.asStateFlow()
+
+    private val _dailyStatus = MutableStateFlow(
+        lastStableDailySnapshot?.status ?: DailyActivityStatus.ERROR_RETRYABLE
+    )
     val dailyStatus: StateFlow<DailyActivityStatus> = _dailyStatus.asStateFlow()
 
-    private val _dailyStepsToday = MutableStateFlow<Long?>(null)
+    private val _dailyStepsToday = MutableStateFlow(lastStableDailySnapshot?.steps)
     val dailyStepsToday: StateFlow<Long?> = _dailyStepsToday.asStateFlow()
 
-    private val _dailyActiveKcalToday = MutableStateFlow<Int?>(null)
+    private val _dailyActiveKcalToday = MutableStateFlow(lastStableDailySnapshot?.activeKcal)
     val dailyActiveKcalToday: StateFlow<Int?> = _dailyActiveKcalToday.asStateFlow()
+
+    private fun applyStableDailyState(
+        status: DailyActivityStatus,
+        steps: Long?,
+        activeKcal: Int?
+    ) {
+        val snapshot = DailyStableSnapshot(
+            status = status,
+            steps = steps,
+            activeKcal = activeKcal
+        )
+        lastStableDailySnapshot = snapshot
+        persistLastStableDailySnapshot(snapshot)
+
+        _dailyStatus.value = status
+        _dailyStepsToday.value = steps
+        _dailyActiveKcalToday.value = activeKcal
+        _dailyReady.value = true
+    }
+
+    private fun fallbackToLastStableDailyState() {
+        val stable = lastStableDailySnapshot
+        if (stable != null) {
+            _dailyStatus.value = stable.status
+            _dailyStepsToday.value = stable.steps
+            _dailyActiveKcalToday.value = stable.activeKcal
+            _dailyReady.value = true
+            return
+        }
+
+        _dailyStatus.value = DailyActivityStatus.ERROR_RETRYABLE
+        _dailyStepsToday.value = null
+        _dailyActiveKcalToday.value = null
+        _dailyReady.value = true
+    }
 
     private val _dailyStepGoal = MutableStateFlow(10000L)
     val dailyStepGoal: StateFlow<Long> = _dailyStepGoal.asStateFlow()
@@ -118,10 +203,6 @@ class HomeViewModel @Inject constructor(
 
     private var recentUploadPollJob: Job? = null
     private var recentUploadRestoreJob: Job? = null
-
-    private companion object {
-        const val TAG = "HomeViewModel"
-    }
 
     init {
         refresh()
@@ -656,17 +737,16 @@ class HomeViewModel @Inject constructor(
 
                 r.onFailure { t ->
                     if (t is CancellationException) throw t
-                    _dailyStatus.value = DailyActivityStatus.ERROR_RETRYABLE
-                    _dailyStepsToday.value = null
-                    _dailyActiveKcalToday.value = null
+                    fallbackToLastStableDailyState()
                 }
 
                 r.onSuccess { result ->
-                    _dailyStatus.value = result.status
-
                     if (result.status != DailyActivityStatus.AVAILABLE_GRANTED) {
-                        _dailyStepsToday.value = null
-                        _dailyActiveKcalToday.value = null
+                        applyStableDailyState(
+                            status = result.status,
+                            steps = null,
+                            activeKcal = null
+                        )
                         return@onSuccess
                     }
 
@@ -674,21 +754,23 @@ class HomeViewModel @Inject constructor(
                     val todayRow = result.days.lastOrNull { it.localDate == today }
 
                     if (todayRow == null) {
-                        _dailyStatus.value = DailyActivityStatus.NO_DATA
-                        // ✅ 合成 0：因為 HC 沒有「0 record」，只有「沒有 record」
-                        _dailyStepsToday.value = 0L
-                        _dailyActiveKcalToday.value = 0
+                        applyStableDailyState(
+                            status = DailyActivityStatus.NO_DATA,
+                            steps = 0L,
+                            activeKcal = 0
+                        )
                     } else {
-                        _dailyStepsToday.value = todayRow.steps
-                        _dailyActiveKcalToday.value = todayRow.activeKcal
+                        applyStableDailyState(
+                            status = DailyActivityStatus.AVAILABLE_GRANTED,
+                            steps = todayRow.steps,
+                            activeKcal = todayRow.activeKcal
+                        )
                     }
                 }
             } catch (ce: CancellationException) {
                 throw ce
             } catch (_: Throwable) {
-                _dailyStatus.value = DailyActivityStatus.ERROR_RETRYABLE
-                _dailyStepsToday.value = null
-                _dailyActiveKcalToday.value = null
+                fallbackToLastStableDailyState()
             }
         }
     }
@@ -744,8 +826,8 @@ class HomeViewModel @Inject constructor(
             .recoverCatching { ctx.startActivity(web) }
     }
 
-    fun onRequestHealthPermissions() = viewModelScope.launch {
-        refresh()
+    fun onRequestHealthPermissions() {
+        refreshDailyActivity(force = true)
     }
 
     fun refreshAfterLogin() {
