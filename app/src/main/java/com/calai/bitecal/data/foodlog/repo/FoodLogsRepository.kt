@@ -11,6 +11,7 @@ import com.calai.bitecal.data.foodlog.model.FoodLogOverrideRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogPortionMultiplierRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogServerErrorDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
+import com.calai.bitecal.data.foodlog.model.FoodLogWeeklyProgressDto
 import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
@@ -97,6 +98,9 @@ class FoodLogsRepository @Inject constructor(
                 size = size
             )
         }
+
+    suspend fun getWeeklyProgress(weekOffset: Int = 0): FoodLogWeeklyProgressDto =
+        safeCall { api.getWeeklyProgress(weekOffset.coerceIn(0, 3)) }
 
     suspend fun listSaved(
         fromLocalDate: String,

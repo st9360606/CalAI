@@ -775,8 +775,6 @@ fun BiteCalNavHost(
             }
         }
 
-        composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
-
         composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
@@ -2028,6 +2026,32 @@ fun BiteCalNavHost(
                         nav.goHome()
                     }
                 }
+            )
+        }
+
+        composable(Routes.PROGRESS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: com.calai.bitecal.ui.home.ui.progress.model.ProgressViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val goBackHome = remember(nav) { { nav.goHome() } }
+            val onOpenTab: (HomeTab) -> Unit = remember(nav) {
+                { tab ->
+                    when (tab) {
+                        HomeTab.Home -> nav.goHome()
+                        HomeTab.Progress -> Unit
+                        HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Personal -> nav.navigate(Routes.SETTINGS) { launchSingleTop = true; restoreState = true }
+                    }
+                }
+            }
+            com.calai.bitecal.ui.home.ui.progress.ProgressScreen(
+                vm = vm,
+                onBack = goBackHome,
+                onOpenTab = onOpenTab
             )
         }
 

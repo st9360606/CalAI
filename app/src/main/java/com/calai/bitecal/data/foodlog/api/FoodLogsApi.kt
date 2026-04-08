@@ -4,6 +4,7 @@ import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogListResponseDto
 import com.calai.bitecal.data.foodlog.model.FoodLogOverrideRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogPortionMultiplierRequestDto
+import com.calai.bitecal.data.foodlog.model.FoodLogWeeklyProgressDto
 import kotlinx.serialization.Serializable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -120,6 +121,11 @@ interface FoodLogsApi {
     suspend fun getImage(
         @Path("id") id: String
     ): ResponseBody
+
+    @GET("/api/v1/food-logs/progress/weekly")
+    suspend fun getWeeklyProgress(
+        @Query("weekOffset") weekOffset: Int = 0
+    ): FoodLogWeeklyProgressDto
 }
 
 @Serializable
