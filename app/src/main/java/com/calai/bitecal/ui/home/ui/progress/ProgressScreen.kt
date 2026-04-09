@@ -751,11 +751,7 @@ private fun ProgressChartCardFrame(
         deltaText
     }
 
-    val resolvedDeltaColor = deltaColorOverride ?: when (deltaDirection) {
-        "UP" -> Color(0xFF329A3F)
-        "DOWN" -> Color(0xFF6B7280)
-        else -> Color(0xFF6B7280)
-    }
+    val resolvedDeltaColor = deltaColorOverride ?: resolveDeltaColor(resolvedDeltaText)
 
     Column(
         modifier = modifier
@@ -858,5 +854,15 @@ private fun ProgressChartCardFrame(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+private fun resolveDeltaColor(resolvedDeltaText: String): Color {
+    val normalized = resolvedDeltaText.trim()
+
+    return when {
+        normalized.startsWith("↑") -> Color(0xFFE56C6C)
+        normalized.startsWith("↓") -> Color(0xFF329A3F)
+        else -> Color(0xFF74747A)
     }
 }

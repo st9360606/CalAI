@@ -37,7 +37,8 @@ data class ProgressUiState(
     val periodLabel: String = "This Week",
     val error: String? = null
 ) {
-    val isEmpty: Boolean get() = !loading && error == null && days.all { it.totalG <= 0f && it.totalKcal <= 0 }
+    val isEmpty: Boolean
+        get() = !loading && error == null && days.all { it.totalG <= 0f && it.totalKcal <= 0 }
 }
 
 @HiltViewModel
@@ -86,40 +87,74 @@ class ProgressViewModel @Inject constructor(
     }
 }
 
+private val ORDERED_WEEK_LABELS = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+
 private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState {
-    val dayUis = days.map { it.toUi() }
+    val rawDayUis = days.map { it.toUi() }
+    val normalizedDayUis = rawDayUis.normalizeWeekDays()
     val isCurrentWeek = weekOffset == 0
 
     val today = LocalDate.now()
     val yesterday = today.minusDays(1)
 
-    val todayKcal = dayUis.firstOrNull { it.date == today.toString() }?.totalKcal
-    val yesterdayKcal = dayUis.firstOrNull { it.date == yesterday.toString() }?.totalKcal
+    val displayDay: ProgressBarDayUi
+    val compareDay: ProgressBarDayUi?
 
-    val effectiveDeltaValue = if (isCurrentWeek && todayKcal != null && yesterdayKcal != null) {
+    if (isCurrentWeek) {
+        val todayUi = normalizedDayUis.firstOrNull { it.date == today.toString() }
+        val yesterdayUi = normalizedDayUis.firstOrNull { it.date == yesterday.toString() }
+
+        displayDay = todayUi ?: normalizedDayUis.lastOrNull { it.totalKcal > 0 } ?: emptyProgressDayUi("Sat")
+        compareDay = yesterdayUi
+    } else {
+        displayDay = normalizedDayUis.firstOrNull { it.dayLabel == "Sat" } ?: emptyProgressDayUi("Sat")
+        compareDay = normalizedDayUis.firstOrNull { it.dayLabel == "Fri" } ?: emptyProgressDayUi("Fri")
+    }
+
+    val effectiveDeltaValue = if (compareDay != null) {
         calculateDayDeltaPercent(
-            todayCalories = todayKcal,
-            yesterdayCalories = yesterdayKcal
+            todayCalories = displayDay.totalKcal,
+            yesterdayCalories = compareDay.totalKcal
         )
     } else {
-        summary.deltaPercent
+        null
     }
 
-    val effectiveTotalCaloriesText = if (isCurrentWeek && todayKcal != null) {
-        String.format(Locale.US, "%.1f cals", todayKcal.toDouble())
-    } else {
-        "${summary.totalCalories.roundToInt()} cals"
-    }
+    val effectiveTotalCaloriesText = String.format(
+        Locale.US,
+        "%.1f cals",
+        displayDay.totalKcal.toDouble()
+    )
 
     return ProgressUiState(
         loading = false,
         selectedWeekOffset = weekOffset,
         totalCaloriesText = effectiveTotalCaloriesText,
         deltaText = effectiveDeltaValue.toDeltaText(),
-        deltaDirection = effectiveDeltaValue.toDeltaDirection(summary.deltaDirection),
-        days = dayUis,
+        deltaDirection = effectiveDeltaValue.toDeltaDirection(),
+        days = normalizedDayUis,
         periodLabel = period.label.toPrettyLabel(),
         error = null
+    )
+}
+
+private fun List<ProgressBarDayUi>.normalizeWeekDays(): List<ProgressBarDayUi> {
+    val dayMap = associateBy { it.dayLabel.take(3) }
+
+    return ORDERED_WEEK_LABELS.map { label ->
+        dayMap[label] ?: emptyProgressDayUi(label)
+    }
+}
+
+private fun emptyProgressDayUi(label: String): ProgressBarDayUi {
+    return ProgressBarDayUi(
+        date = "",
+        dayLabel = label,
+        proteinG = 0f,
+        carbsG = 0f,
+        fatsG = 0f,
+        totalG = 0f,
+        totalKcal = 0
     )
 }
 
@@ -143,7 +178,8 @@ private fun Double?.toDeltaText(): String {
         else -> ""
     }
 
-    return prefix + abs(this).roundToInt() + "%"
+    val rounded = String.format(Locale.US, "%.1f", abs(this))
+    return "$prefix$rounded%"
 }
 
 private fun Double?.toDeltaDirection(
@@ -162,6 +198,7 @@ private fun ProgressDayDto.toUi(): ProgressBarDayUi {
     val protein = proteinG.toFloat()
     val carbs = carbsG.toFloat()
     val fats = fatsG.toFloat()
+
     return ProgressBarDayUi(
         date = date,
         dayLabel = dayOfWeek.take(3),
