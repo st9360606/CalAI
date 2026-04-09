@@ -1,12 +1,16 @@
 package com.calai.bitecal.ui.home.ui.progress
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,68 +18,62 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
+import com.calai.bitecal.ui.home.ui.progress.model.BmiCardUi
+import com.calai.bitecal.ui.home.ui.progress.model.BmiStatusTone
 import com.calai.bitecal.ui.home.ui.progress.model.ProgressBarDayUi
 import com.calai.bitecal.ui.home.ui.progress.model.ProgressViewModel
 import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
+import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.offset
-import androidx.compose.runtime.remember
-import kotlinx.coroutines.launch
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BakeryDining
-import androidx.compose.material.icons.filled.EggAlt
-import androidx.compose.material.icons.filled.Opacity
-import androidx.compose.material3.Icon
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.Dp
 
 private val ProteinColor = Color(0xFFE56C6C)
 private val CarbsColor = Color(0xFFD89A62)
 private val FatsColor = Color(0xFF6C93D8)
+
 private val ProgressBg = Color(0xFFF5F5F5)
 private val CardBg = Color.White
 private val BorderColor = Color(0xFFE7E7E7)
 private val ChipSelected = Color(0xFF111114)
-
-
-
-
 
 private val WeekTabsContainerBg = Color(0xFFF1F1F3)
 private val WeekTabsActiveBg = Color(0xFFFFFFFF)
@@ -83,12 +81,22 @@ private val WeekTabsActiveBorder = Color(0xFFE2E2E6)
 private val WeekTabsActiveText = Color(0xFF2D2F35)
 private val WeekTabsIdleText = Color(0xFF3A3D43)
 
-
-
 private val ChartGridColor = Color(0xFFBDBDBD)
 private val ChartXAxisIdleColor = Color(0xFF8A8A8E)
 private val ChartXAxisActiveColor = Color(0xFF666A73)
-private val ChartZeroDotColor = Color(0xFFD8DADF)
+
+private val BmiTitleColor = Color(0xFF1B1B21)
+private val BmiPrimaryText = Color(0xFF17171C)
+private val BmiSecondaryText = Color(0xFF74747A)
+private val BmiHelpTint = Color(0xFF2B2E34)
+private val BmiUnknownPill = Color(0xFFB8BDC7)
+
+private val BmiBarBlue = Color(0xFF2D9CDB)
+private val BmiBarGreen = Color(0xFF35C36C)
+private val BmiBarYellow = Color(0xFFF2C94C)
+private val BmiBarOrange = Color(0xFFF2994A)
+private val BmiBarRed = Color(0xFFEB5757)
+private val BmiMarkerColor = Color(0xFF17171C)
 
 @Composable
 fun ProgressScreen(
@@ -120,6 +128,13 @@ fun ProgressScreen(
                 .padding(inner),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                BmiCard(
+                    bmiCard = ui.bmiCard,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+
             item {
                 WeekTabs(
                     selected = ui.selectedWeekOffset,
@@ -160,7 +175,6 @@ fun ProgressScreen(
                         ChartCard(
                             totalCaloriesText = ui.totalCaloriesText,
                             deltaText = ui.deltaText,
-                            deltaDirection = ui.deltaDirection,
                             days = ui.days,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
@@ -170,6 +184,193 @@ fun ProgressScreen(
 
             item { Spacer(modifier = Modifier.height(5.dp)) }
         }
+    }
+}
+
+@Composable
+private fun BmiCard(
+    bmiCard: BmiCardUi,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(CardBg, RoundedCornerShape(28.dp))
+            .border(1.dp, Color(0xFFD9D9DB), RoundedCornerShape(28.dp))
+            .padding(horizontal = 26.dp, vertical = 26.dp)
+    ) {
+        Text(
+            text = "Your BMI",
+            color = BmiTitleColor,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = bmiCard.bmiText,
+                color = BmiPrimaryText,
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 36.sp
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(
+                text = "Your weight is",
+                color = BmiSecondaryText,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            BmiStatusPill(
+                text = bmiCard.statusText,
+                tone = bmiCard.statusTone
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Icon(
+                imageVector = Icons.Outlined.HelpOutline,
+                contentDescription = "BMI info",
+                tint = BmiHelpTint,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        BmiRangeBar(
+            markerProgress = bmiCard.markerProgress
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            BmiLegendItem(
+                color = BmiBarBlue,
+                label = "Underweight"
+            )
+            BmiLegendItem(
+                color = BmiBarGreen,
+                label = "Healthy"
+            )
+            BmiLegendItem(
+                color = BmiBarYellow,
+                label = "Overweight"
+            )
+            BmiLegendItem(
+                color = BmiBarRed,
+                label = "Obese"
+            )
+        }
+    }
+}
+
+@Composable
+private fun BmiStatusPill(
+    text: String,
+    tone: BmiStatusTone
+) {
+    val bg = when (tone) {
+        BmiStatusTone.Underweight -> BmiBarBlue
+        BmiStatusTone.Healthy -> BmiBarGreen
+        BmiStatusTone.Overweight -> BmiBarYellow
+        BmiStatusTone.Obese -> BmiBarRed
+        BmiStatusTone.Unknown -> BmiUnknownPill
+    }
+
+    Box(
+        modifier = Modifier
+            .background(bg, RoundedCornerShape(999.dp))
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun BmiRangeBar(
+    markerProgress: Float,
+    modifier: Modifier = Modifier
+) {
+    val clamped = markerProgress.coerceIn(0f, 1f)
+    val markerWidth = 3.dp
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(34.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colorStops = arrayOf(
+                            0.00f to BmiBarBlue,
+                            0.34f to BmiBarGreen,
+                            0.64f to BmiBarYellow,
+                            0.82f to BmiBarOrange,
+                            1.00f to BmiBarRed
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .offset(x = (maxWidth - markerWidth) * clamped)
+                .width(markerWidth)
+                .height(34.dp)
+                .background(BmiMarkerColor, RoundedCornerShape(999.dp))
+        )
+    }
+}
+
+@Composable
+private fun BmiLegendItem(
+    color: Color,
+    label: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(color, CircleShape)
+        )
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        Text(
+            text = label,
+            color = Color(0xFF6F727A),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 
@@ -231,29 +432,22 @@ private fun WeekTabs(
 private fun ChartCard(
     totalCaloriesText: String,
     deltaText: String,
-    deltaDirection: String,
     days: List<ProgressBarDayUi>,
     modifier: Modifier = Modifier
 ) {
     ProgressChartCardFrame(
         totalCaloriesText = totalCaloriesText,
         deltaText = deltaText,
-        deltaDirection = deltaDirection,
         modifier = modifier
     ) {
-        StackedBarChart(
-            days = days,
-            showBars = true,
-            showZeroDots = false
-        )
+        StackedBarChart(days = days, showBars = true)
     }
 }
 
 @Composable
 private fun StackedBarChart(
     days: List<ProgressBarDayUi>,
-    showBars: Boolean = true,
-    showZeroDots: Boolean = false
+    showBars: Boolean = true
 ) {
     val orderedLabels = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
     val dayMap = days.associateBy { it.dayLabel.take(3) }
@@ -528,7 +722,6 @@ private fun LoadingCard(
     ProgressChartCardFrame(
         totalCaloriesText = "--.- cals",
         deltaText = "--",
-        deltaDirection = "UP",
         deltaDisplayText = "↑ --%",
         deltaColorOverride = Color(0xFF33A144),
         modifier = modifier
@@ -696,19 +889,21 @@ private fun EmptyCard(
     ProgressChartCardFrame(
         totalCaloriesText = "0.0 cals",
         deltaText = "--",
-        deltaDirection = "NONE",
         modifier = modifier
     ) {
         StackedBarChart(
             days = emptyList(),
-            showBars = false,
-            showZeroDots = false
+            showBars = false
         )
     }
 }
 
 @Composable
-private fun ErrorCard(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+private fun ErrorCard(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -719,7 +914,11 @@ private fun ErrorCard(message: String, onRetry: () -> Unit, modifier: Modifier =
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = message, color = Color(0xFF111114), textAlign = TextAlign.Center)
+            Text(
+                text = message,
+                color = Color(0xFF111114),
+                textAlign = TextAlign.Center
+            )
             Spacer(modifier = Modifier.height(12.dp))
             Box(
                 modifier = Modifier
@@ -727,7 +926,11 @@ private fun ErrorCard(message: String, onRetry: () -> Unit, modifier: Modifier =
                     .clickable { onRetry() }
                     .padding(horizontal = 18.dp, vertical = 10.dp)
             ) {
-                Text(text = "Retry", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "Retry",
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -737,7 +940,6 @@ private fun ErrorCard(message: String, onRetry: () -> Unit, modifier: Modifier =
 private fun ProgressChartCardFrame(
     totalCaloriesText: String,
     deltaText: String,
-    deltaDirection: String,
     modifier: Modifier = Modifier,
     deltaDisplayText: String? = null,
     deltaColorOverride: Color? = null,
@@ -839,7 +1041,7 @@ private fun ProgressChartCardFrame(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .offset(x = 8.dp) // 這裡用 offset 往右挪一點點，最不會破壞置中的感覺
+                .offset(x = 8.dp)
                 .background(
                     color = Color(0xFFEAF5E8),
                     shape = RoundedCornerShape(12.dp)
@@ -848,7 +1050,7 @@ private fun ProgressChartCardFrame(
         ) {
             Text(
                 text = "Keep it up! Getting started is the hardest part!",
-                color = Color(0xFF3C9E45 ), // 套用上次說的深一點點的綠
+                color = Color(0xFF3C9E45),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center

@@ -5,7 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.foodlog.model.FoodLogWeeklyProgressDto
 import com.calai.bitecal.data.foodlog.model.ProgressDayDto
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
+import com.calai.bitecal.data.profile.api.UserProfileDto
+import com.calai.bitecal.data.profile.repo.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +19,7 @@ import java.time.LocalDate
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 data class ProgressBarDayUi(
@@ -27,6 +32,21 @@ data class ProgressBarDayUi(
     val totalKcal: Int
 )
 
+data class BmiCardUi(
+    val bmiText: String = "--.--",
+    val statusText: String = "--",
+    val statusTone: BmiStatusTone = BmiStatusTone.Unknown,
+    val markerProgress: Float = 0.5f
+)
+
+enum class BmiStatusTone {
+    Underweight,
+    Healthy,
+    Overweight,
+    Obese,
+    Unknown
+}
+
 data class ProgressUiState(
     val loading: Boolean = true,
     val selectedWeekOffset: Int = 0,
@@ -35,6 +55,7 @@ data class ProgressUiState(
     val deltaDirection: String = "NONE",
     val days: List<ProgressBarDayUi> = emptyList(),
     val periodLabel: String = "This Week",
+    val bmiCard: BmiCardUi = BmiCardUi(),
     val error: String? = null
 ) {
     val isEmpty: Boolean
@@ -43,7 +64,8 @@ data class ProgressUiState(
 
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
-    private val repo: FoodLogsRepository
+    private val repo: FoodLogsRepository,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(ProgressUiState())
@@ -68,21 +90,44 @@ class ProgressViewModel @Inject constructor(
 
     private fun refresh(weekOffset: Int) {
         viewModelScope.launch {
-            _ui.update { it.copy(loading = true, selectedWeekOffset = weekOffset, error = null) }
-            runCatching { repo.getWeeklyProgress(weekOffset) }
-                .onSuccess { dto ->
-                    loaded = true
-                    _ui.value = dto.toUiState(weekOffset)
+            _ui.update {
+                it.copy(
+                    loading = true,
+                    selectedWeekOffset = weekOffset,
+                    error = null
+                )
+            }
+
+            coroutineScope {
+                val progressDeferred = async {
+                    runCatching { repo.getWeeklyProgress(weekOffset) }
                 }
-                .onFailure { t ->
-                    _ui.update {
-                        it.copy(
-                            loading = false,
-                            selectedWeekOffset = weekOffset,
-                            error = t.message ?: "Load progress failed"
-                        )
+
+                val bmiDeferred = async {
+                    runCatching {
+                        profileRepository.getServerProfileOrNull()?.toBmiCardUi() ?: BmiCardUi()
                     }
                 }
+
+                val progressResult = progressDeferred.await()
+                val bmiCard = bmiDeferred.await().getOrElse { _ui.value.bmiCard }
+
+                progressResult
+                    .onSuccess { dto ->
+                        loaded = true
+                        _ui.value = dto.toUiState(weekOffset).copy(bmiCard = bmiCard)
+                    }
+                    .onFailure { t ->
+                        _ui.update {
+                            it.copy(
+                                loading = false,
+                                selectedWeekOffset = weekOffset,
+                                bmiCard = bmiCard,
+                                error = t.message ?: "Load progress failed"
+                            )
+                        }
+                    }
+            }
         }
     }
 }
@@ -216,4 +261,67 @@ private fun String.toPrettyLabel(): String = when (uppercase(Locale.ROOT)) {
     "TWO_WEEKS_AGO" -> "2 wks. ago"
     "THREE_WEEKS_AGO" -> "3 wks. ago"
     else -> this.replace('_', ' ')
+}
+
+private fun UserProfileDto.toBmiCardUi(): BmiCardUi {
+    val bmiValue = resolveBmiValue()
+    val tone = resolveBmiTone(bmiValue)
+
+    return BmiCardUi(
+        bmiText = bmiValue?.let { String.format(Locale.US, "%.2f", it) } ?: "--.--",
+        statusText = tone.toDisplayText(),
+        statusTone = tone,
+        markerProgress = bmiValue
+            ?.let { ((it - 15.0) / 20.0).toFloat().coerceIn(0f, 1f) }
+            ?: 0.5f
+    )
+}
+
+private fun UserProfileDto.resolveBmiValue(): Double? {
+    bmi?.takeIf { it > 0.0 }?.let { return it }
+
+    val resolvedWeightKg = when {
+        weightKg != null && weightKg > 0.0 -> weightKg
+        weightLbs != null && weightLbs > 0.0 -> weightLbs * 0.45359237
+        else -> null
+    }
+
+    val resolvedHeightMeters = when {
+        heightCm != null && heightCm > 0.0 -> heightCm / 100.0
+        heightFeet != null && heightFeet >= 0 && heightInches != null && heightInches >= 0 -> {
+            val totalInches = (heightFeet * 12) + heightInches
+            (totalInches * 2.54) / 100.0
+        }
+        else -> null
+    }
+
+    return if (resolvedWeightKg != null && resolvedHeightMeters != null && resolvedHeightMeters > 0.0) {
+        resolvedWeightKg / resolvedHeightMeters.pow(2)
+    } else {
+        null
+    }
+}
+
+private fun UserProfileDto.resolveBmiTone(bmiValue: Double?): BmiStatusTone {
+    return when (bmiClass?.trim()?.uppercase(Locale.ROOT)) {
+        "UNDERWEIGHT" -> BmiStatusTone.Underweight
+        "NORMAL", "HEALTHY" -> BmiStatusTone.Healthy
+        "OVERWEIGHT" -> BmiStatusTone.Overweight
+        "OBESE", "OBESITY" -> BmiStatusTone.Obese
+        else -> when {
+            bmiValue == null -> BmiStatusTone.Unknown
+            bmiValue < 18.5 -> BmiStatusTone.Underweight
+            bmiValue < 25.0 -> BmiStatusTone.Healthy
+            bmiValue < 30.0 -> BmiStatusTone.Overweight
+            else -> BmiStatusTone.Obese
+        }
+    }
+}
+
+private fun BmiStatusTone.toDisplayText(): String = when (this) {
+    BmiStatusTone.Underweight -> "Underweight"
+    BmiStatusTone.Healthy -> "Healthy"
+    BmiStatusTone.Overweight -> "Overweight"
+    BmiStatusTone.Obese -> "Obese"
+    BmiStatusTone.Unknown -> "--"
 }
