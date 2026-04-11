@@ -277,9 +277,6 @@
     <string name="foodlog_analysis_done">已完成分析</string>
 
 
-
-
-
     <string name="recently_uploaded">最近記錄</string>
     <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
     <string name="recent_upload_kcal_text">🔥 %1$d 卡路里</string>
@@ -338,6 +335,57 @@
     <string name="saved_foods_unsave_dialog_title">移除已儲存餐點？</string>
     <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已儲存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
     <string name="saved_foods_unsave_dialog_confirm">移除</string>
+
+
+    <!-- BMI Card -->
+    <string name="bmi_card_title">你的 BMI</string>
+    <string name="bmi_card_subtitle">你的體重屬於</string>
+    <string name="bmi_card_info_cd">BMI 說明</string>
+
+    <!-- BMI Status -->
+    <string name="bmi_status_underweight">體重過輕</string>
+    <string name="bmi_status_healthy">健康</string>
+    <string name="bmi_status_overweight">過重</string>
+    <string name="bmi_status_obese">肥胖</string>
+    <string name="bmi_status_unknown">未知</string>
+
+    <!-- BMI Info Dialog -->
+    <string name="bmi_info_title">什麼是 BMI？</string>
+    <string name="bmi_info_subtitle">身體質量指數</string>
+    <string name="bmi_info_formula_title">計算公式</string>
+    <string name="bmi_info_formula_value">BMI = 體重（公斤）/ 身高（公尺）的平方</string>
+    <string name="bmi_info_meaning_title">它代表什麼</string>
+    <string name="bmi_info_meaning_body">BMI 可用來大致判斷你的體重是否落在相對健康的範圍內。</string>
+    <string name="bmi_info_note_title">請注意</string>
+    <string name="bmi_info_note_body">BMI 只是一般性的參考指標，不能直接反映體脂肪、肌肉量或整體健康狀況。</string>
+    <string name="bmi_info_cta">我知道了</string>
+
+    <!-- Progress screen -->
+    <string name="progress_screen_title">進度</string>
+    <string name="progress_tab_this_week">本週</string>
+    <string name="progress_tab_last_week">上週</string>
+    <string name="progress_tab_two_weeks_ago">兩週前</string>
+    <string name="progress_tab_three_weeks_ago">三週前</string>
+
+    <string name="progress_error_load_failed">載入失敗</string>
+    <string name="progress_retry">重試</string>
+
+    <string name="progress_chart_total_calories">總卡路里</string>
+    <string name="progress_chart_cals">卡</string>
+
+    <string name="progress_legend_protein">蛋白質</string>
+    <string name="progress_legend_carbs">碳水</string>
+    <string name="progress_legend_fats">脂肪</string>
+
+    <string name="progress_keep_it_up">繼續保持！開始永遠是最難的一步！</string>
+
+    <string name="progress_day_sun">日</string>
+    <string name="progress_day_mon">一</string>
+    <string name="progress_day_tue">二</string>
+    <string name="progress_day_wed">三</string>
+    <string name="progress_day_thu">四</string>
+    <string name="progress_day_fri">五</string>
+    <string name="progress_day_sat">六</string>
 
 
 </resources>

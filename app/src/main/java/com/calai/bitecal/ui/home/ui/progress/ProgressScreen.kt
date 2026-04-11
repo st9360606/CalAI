@@ -40,11 +40,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.bmi.CommonBmiCard
 import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
 import com.calai.bitecal.ui.common.bmi.CommonBmiTone
@@ -97,7 +99,7 @@ fun ProgressScreen(
         containerColor = ProgressBg,
         topBar = {
             WeightTopBar(
-                title = "Progress",
+                title = stringResource(R.string.progress_screen_title),
                 onBack = onBack
             )
         },
@@ -114,7 +116,7 @@ fun ProgressScreen(
         ) {
             item {
                 CommonBmiCard(
-                    model = ui.bmiCard.toCommonBmiCardModel(),
+                    model = rememberProgressBmiCardModel(ui.bmiCard),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
@@ -139,7 +141,8 @@ fun ProgressScreen(
                 ui.error != null -> {
                     item {
                         ErrorCard(
-                            message = ui.error ?: "Load failed",
+                            message = ui.error?.takeIf { it.isNotBlank() }
+                                ?: stringResource(R.string.progress_error_load_failed),
                             onRetry = vm::retry,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
@@ -177,7 +180,12 @@ private fun WeekTabs(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val labels = listOf("This Week", "Last Week", "2 wks. ago", "3 wks. ago")
+    val labels = listOf(
+        stringResource(R.string.progress_tab_this_week),
+        stringResource(R.string.progress_tab_last_week),
+        stringResource(R.string.progress_tab_two_weeks_ago),
+        stringResource(R.string.progress_tab_three_weeks_ago)
+    )
     val containerShape = RoundedCornerShape(18.dp)
     val activeTabShape = RoundedCornerShape(14.dp)
 
@@ -474,7 +482,7 @@ private fun StackedBarChart(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = day.dayLabel,
+                        text = localizedDayLabel(day.dayLabel),
                         color = if (active) ChartXAxisActiveColor else ChartXAxisIdleColor,
                         fontSize = 13.sp,
                         fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
@@ -724,7 +732,7 @@ private fun ErrorCard(
                     .padding(horizontal = 18.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = "Retry",
+                    text = stringResource(R.string.progress_retry),
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -760,7 +768,7 @@ private fun ProgressChartCardFrame(
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
         Text(
-            text = "Total calories",
+            text = stringResource(R.string.progress_chart_total_calories),
             color = Color(0xFF1B1B21),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -782,7 +790,7 @@ private fun ProgressChartCardFrame(
             Spacer(modifier = Modifier.width(6.dp))
 
             Text(
-                text = "cals",
+                text = stringResource(R.string.progress_chart_cals),
                 color = Color(0xFF74747A),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
@@ -813,21 +821,21 @@ private fun ProgressChartCardFrame(
             horizontalArrangement = Arrangement.Center
         ) {
             LegendChip(
-                label = "Protein",
+                label = stringResource(R.string.progress_legend_protein),
                 emoji = "🥩",
                 emojiFontSize = 15.sp
             )
             Spacer(modifier = Modifier.width(24.dp))
 
             LegendChip(
-                label = "Carbs",
+                label = stringResource(R.string.progress_legend_carbs),
                 emoji = "🌾",
                 emojiFontSize = 15.sp
             )
             Spacer(modifier = Modifier.width(24.dp))
 
             LegendChip(
-                label = "Fats",
+                label = stringResource(R.string.progress_legend_fats),
                 emoji = "🥑",
                 emojiFontSize = 15.sp
             )
@@ -846,7 +854,7 @@ private fun ProgressChartCardFrame(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Text(
-                text = "Keep it up! Getting started is the hardest part!",
+                text = stringResource(R.string.progress_keep_it_up),
                 color = Color(0xFF3C9E45),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
@@ -866,13 +874,47 @@ private fun resolveDeltaColor(resolvedDeltaText: String): Color {
     }
 }
 
-private fun BmiCardUi.toCommonBmiCardModel(): CommonBmiCardModel {
-    return CommonBmiCardModel(
-        bmiText = bmiText,
-        statusText = statusText,
-        statusTone = statusTone.toCommonBmiTone(),
-        markerProgress = markerProgress
-    )
+@Composable
+private fun rememberProgressBmiCardModel(
+    ui: BmiCardUi
+): CommonBmiCardModel {
+    val title = stringResource(R.string.bmi_card_title)
+    val subtitle = stringResource(R.string.bmi_card_subtitle)
+    val underweight = stringResource(R.string.bmi_status_underweight)
+    val healthy = stringResource(R.string.bmi_status_healthy)
+    val overweight = stringResource(R.string.bmi_status_overweight)
+    val obese = stringResource(R.string.bmi_status_obese)
+    val unknown = stringResource(R.string.bmi_status_unknown)
+
+    return remember(
+        ui.bmiText,
+        ui.statusTone,
+        ui.markerProgress,
+        title,
+        subtitle,
+        underweight,
+        healthy,
+        overweight,
+        obese,
+        unknown
+    ) {
+        val localizedStatus = when (ui.statusTone) {
+            BmiStatusTone.Underweight -> underweight
+            BmiStatusTone.Healthy -> healthy
+            BmiStatusTone.Overweight -> overweight
+            BmiStatusTone.Obese -> obese
+            BmiStatusTone.Unknown -> unknown
+        }
+
+        CommonBmiCardModel(
+            bmiText = ui.bmiText,
+            statusText = localizedStatus,
+            statusTone = ui.statusTone.toCommonBmiTone(),
+            markerProgress = ui.markerProgress,
+            titleText = title,
+            subtitleText = subtitle
+        )
+    }
 }
 
 private fun BmiStatusTone.toCommonBmiTone(): CommonBmiTone {
@@ -882,5 +924,19 @@ private fun BmiStatusTone.toCommonBmiTone(): CommonBmiTone {
         BmiStatusTone.Overweight -> CommonBmiTone.Overweight
         BmiStatusTone.Obese -> CommonBmiTone.Obese
         BmiStatusTone.Unknown -> CommonBmiTone.Unknown
+    }
+}
+
+@Composable
+private fun localizedDayLabel(label: String): String {
+    return when (label.take(3)) {
+        "Sun" -> stringResource(R.string.progress_day_sun)
+        "Mon" -> stringResource(R.string.progress_day_mon)
+        "Tue" -> stringResource(R.string.progress_day_tue)
+        "Wed" -> stringResource(R.string.progress_day_wed)
+        "Thu" -> stringResource(R.string.progress_day_thu)
+        "Fri" -> stringResource(R.string.progress_day_fri)
+        "Sat" -> stringResource(R.string.progress_day_sat)
+        else -> label
     }
 }

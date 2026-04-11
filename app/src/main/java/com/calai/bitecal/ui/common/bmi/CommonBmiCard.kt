@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,10 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
 
 enum class CommonBmiTone {
     Underweight,
@@ -50,8 +53,8 @@ data class CommonBmiCardModel(
     val statusText: String = "--",
     val statusTone: CommonBmiTone = CommonBmiTone.Unknown,
     val markerProgress: Float = 0.5f,
-    val titleText: String = "Your BMI",
-    val subtitleText: String = "Your weight is"
+    val titleText: String = "",
+    val subtitleText: String = ""
 )
 
 private val CardBg = Color.White
@@ -75,6 +78,7 @@ fun CommonBmiCard(
     modifier: Modifier = Modifier
 ) {
     var showBmiInfoDialog by rememberSaveable { mutableStateOf(false) }
+    val dialogModel = rememberCommonBmiInfoDialogModel()
 
     Column(
         modifier = modifier
@@ -137,7 +141,7 @@ fun CommonBmiCard(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.HelpOutline,
-                    contentDescription = "BMI info",
+                    contentDescription = stringResource(R.string.bmi_card_info_cd),
                     tint = HelpTint,
                     modifier = Modifier.size(23.dp)
                 )
@@ -156,16 +160,78 @@ fun CommonBmiCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            CommonBmiLegendItem(color = BarBlue, label = "Underweight")
-            CommonBmiLegendItem(color = BarGreen, label = "Healthy")
-            CommonBmiLegendItem(color = BarYellow, label = "Overweight")
-            CommonBmiLegendItem(color = BarRed, label = "Obese")
+            CommonBmiLegendItem(
+                color = BarBlue,
+                label = stringResource(R.string.bmi_status_underweight)
+            )
+            CommonBmiLegendItem(
+                color = BarGreen,
+                label = stringResource(R.string.bmi_status_healthy)
+            )
+            CommonBmiLegendItem(
+                color = BarYellow,
+                label = stringResource(R.string.bmi_status_overweight)
+            )
+            CommonBmiLegendItem(
+                color = BarRed,
+                label = stringResource(R.string.bmi_status_obese)
+            )
         }
     }
 
     if (showBmiInfoDialog) {
         CommonBmiInfoDialog(
+            model = dialogModel,
             onDismiss = { showBmiInfoDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun rememberCommonBmiInfoDialogModel(): CommonBmiInfoDialogModel {
+    val title = stringResource(R.string.bmi_info_title)
+    val subtitle = stringResource(R.string.bmi_info_subtitle)
+    val formulaTitle = stringResource(R.string.bmi_info_formula_title)
+    val formulaValue = stringResource(R.string.bmi_info_formula_value)
+    val meaningTitle = stringResource(R.string.bmi_info_meaning_title)
+    val meaningBody = stringResource(R.string.bmi_info_meaning_body)
+    val underweight = stringResource(R.string.bmi_status_underweight)
+    val healthy = stringResource(R.string.bmi_status_healthy)
+    val overweight = stringResource(R.string.bmi_status_overweight)
+    val obese = stringResource(R.string.bmi_status_obese)
+    val noteTitle = stringResource(R.string.bmi_info_note_title)
+    val noteBody = stringResource(R.string.bmi_info_note_body)
+    val cta = stringResource(R.string.bmi_info_cta)
+
+    return remember(
+        title,
+        subtitle,
+        formulaTitle,
+        formulaValue,
+        meaningTitle,
+        meaningBody,
+        underweight,
+        healthy,
+        overweight,
+        obese,
+        noteTitle,
+        noteBody,
+        cta
+    ) {
+        CommonBmiInfoDialogModel(
+            title = title,
+            subtitle = subtitle,
+            formulaTitle = formulaTitle,
+            formulaValue = formulaValue,
+            meaningTitle = meaningTitle,
+            meaningBody = meaningBody,
+            underweightText = underweight,
+            healthyText = healthy,
+            overweightText = overweight,
+            obeseText = obese,
+            noteTitle = noteTitle,
+            noteBody = noteBody,
+            ctaText = cta
         )
     }
 }

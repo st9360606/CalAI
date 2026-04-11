@@ -279,8 +279,6 @@
     <string name="foodlog_analysis_done">Analysis complete</string>
 
 
-
-
     <string name="recently_uploaded">Recently uploaded</string>
     <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
     <string name="recent_upload_kcal_text">🔥 %1$d calories</string>
@@ -330,7 +328,6 @@
     <string name="foodlog_detail_health_icon_desc">Health icon</string>
 
 
-
     <!-- DeleteFoodLogDialog -->
     <string name="foodlog_delete_dialog_title">Delete Record?</string>
     <string name="foodlog_delete_dialog_message">Are you sure you want to permanently delete this meal record? This action cannot be undone.</string>
@@ -342,7 +339,55 @@
     <string name="saved_foods_unsave_dialog_confirm">Remove</string>
 
 
+    <!-- BMI Card -->
+    <string name="bmi_card_title">Your BMI</string>
+    <string name="bmi_card_subtitle">Your weight is</string>
+    <string name="bmi_card_info_cd">BMI info</string>
 
+    <!-- BMI Status -->
+    <string name="bmi_status_underweight">Underweight</string>
+    <string name="bmi_status_healthy">Healthy</string>
+    <string name="bmi_status_overweight">Overweight</string>
+    <string name="bmi_status_obese">Obese</string>
+    <string name="bmi_status_unknown">Unknown</string>
+
+    <!-- BMI Info Dialog -->
+    <string name="bmi_info_title">What is BMI?</string>
+    <string name="bmi_info_subtitle">Body Mass Index</string>
+    <string name="bmi_info_formula_title">Formula</string>
+    <string name="bmi_info_formula_value">BMI = weight (kg) / height (m²)</string>
+    <string name="bmi_info_meaning_title">What it tells you</string>
+    <string name="bmi_info_meaning_body">BMI helps estimate whether your body weight is in a generally healthy range.</string>
+    <string name="bmi_info_note_title">Keep in mind</string>
+    <string name="bmi_info_note_body">BMI is a general guide. It does not directly measure body fat, muscle mass, or overall health.</string>
+    <string name="bmi_info_cta">Got it</string>
+
+    <!-- Progress screen -->
+    <string name="progress_screen_title">Progress</string>
+    <string name="progress_tab_this_week">This Week</string>
+    <string name="progress_tab_last_week">Last Week</string>
+    <string name="progress_tab_two_weeks_ago">2 wks. ago</string>
+    <string name="progress_tab_three_weeks_ago">3 wks. ago</string>
+
+    <string name="progress_error_load_failed">Load failed</string>
+    <string name="progress_retry">Retry</string>
+
+    <string name="progress_chart_total_calories">Total calories</string>
+    <string name="progress_chart_cals">cals</string>
+
+    <string name="progress_legend_protein">Protein</string>
+    <string name="progress_legend_carbs">Carbs</string>
+    <string name="progress_legend_fats">Fats</string>
+
+    <string name="progress_keep_it_up">Keep it up! Getting started is the hardest part!</string>
+
+    <string name="progress_day_sun">Sun</string>
+    <string name="progress_day_mon">Mon</string>
+    <string name="progress_day_tue">Tue</string>
+    <string name="progress_day_wed">Wed</string>
+    <string name="progress_day_thu">Thu</string>
+    <string name="progress_day_fri">Fri</string>
+    <string name="progress_day_sat">Sat</string>
 
 
 </resources>

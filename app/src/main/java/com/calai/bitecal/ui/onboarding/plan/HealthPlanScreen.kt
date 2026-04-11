@@ -258,7 +258,7 @@ fun HealthPlanScreen(
                 Text(
                     text = stringResource(R.string.plan_edit_anytime),
                     color = NeutralText.copy(alpha = 0.85f),
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(0.55f),
                     textAlign = TextAlign.Center
                 )
@@ -267,12 +267,10 @@ fun HealthPlanScreen(
             Spacer(Modifier.height(24.dp))
 
             CommonBmiCard(
-                model = remember(plan.bmi, plan.bmiClass) {
-                    healthPlanBmiCardModel(
-                        bmi = plan.bmi,
-                        klass = plan.bmiClass
-                    )
-                },
+                model = rememberHealthPlanBmiCardModel(
+                    bmi = plan.bmi,
+                    klass = plan.bmiClass
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -805,31 +803,53 @@ fun ResearchSourcesBlock(
 }
 
 // === Utils ===
-private fun kgToLbsFloor1(v: Float): Float =
-    kgToLbs1(v.toDouble()).toFloat()
-
-private fun healthPlanBmiCardModel(
+@Composable
+private fun rememberHealthPlanBmiCardModel(
     bmi: Double,
     klass: BmiClass
 ): CommonBmiCardModel {
-    val statusText = when (klass) {
-        BmiClass.Underweight -> "Underweight"
-        BmiClass.Normal -> "Healthy"
-        BmiClass.Overweight -> "Overweight"
-        BmiClass.Obesity -> "Obese"
-    }
+    val title = stringResource(R.string.bmi_card_title)
+    val subtitle = stringResource(R.string.bmi_card_subtitle)
+    val underweight = stringResource(R.string.bmi_status_underweight)
+    val healthy = stringResource(R.string.bmi_status_healthy)
+    val overweight = stringResource(R.string.bmi_status_overweight)
+    val obese = stringResource(R.string.bmi_status_obese)
 
-    val statusTone = when (klass) {
-        BmiClass.Underweight -> CommonBmiTone.Underweight
-        BmiClass.Normal -> CommonBmiTone.Healthy
-        BmiClass.Overweight -> CommonBmiTone.Overweight
-        BmiClass.Obesity -> CommonBmiTone.Obese
-    }
+    return remember(
+        bmi,
+        klass,
+        title,
+        subtitle,
+        underweight,
+        healthy,
+        overweight,
+        obese
+    ) {
+        val statusText = when (klass) {
+            BmiClass.Underweight -> underweight
+            BmiClass.Normal -> healthy
+            BmiClass.Overweight -> overweight
+            BmiClass.Obesity -> obese
+        }
 
-    return CommonBmiCardModel(
-        bmiText = String.format(Locale.US, "%.2f", bmi),
-        statusText = statusText,
-        statusTone = statusTone,
-        markerProgress = ((bmi - 15.0) / 20.0).toFloat().coerceIn(0f, 1f)
-    )
+        val statusTone = when (klass) {
+            BmiClass.Underweight -> CommonBmiTone.Underweight
+            BmiClass.Normal -> CommonBmiTone.Healthy
+            BmiClass.Overweight -> CommonBmiTone.Overweight
+            BmiClass.Obesity -> CommonBmiTone.Obese
+        }
+
+        CommonBmiCardModel(
+            bmiText = String.format(Locale.getDefault(), "%.2f", bmi),
+            statusText = statusText,
+            statusTone = statusTone,
+            markerProgress = ((bmi - 15.0) / 20.0).toFloat().coerceIn(0f, 1f),
+            titleText = title,
+            subtitleText = subtitle
+        )
+    }
 }
+
+private fun kgToLbsFloor1(v: Float): Float =
+    kgToLbs1(v.toDouble()).toFloat()
+

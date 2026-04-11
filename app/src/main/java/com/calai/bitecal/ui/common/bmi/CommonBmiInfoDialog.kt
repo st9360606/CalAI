@@ -38,6 +38,22 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
+data class CommonBmiInfoDialogModel(
+    val title: String,
+    val subtitle: String,
+    val formulaTitle: String,
+    val formulaValue: String,
+    val meaningTitle: String,
+    val meaningBody: String,
+    val underweightText: String,
+    val healthyText: String,
+    val overweightText: String,
+    val obeseText: String,
+    val noteTitle: String,
+    val noteBody: String,
+    val ctaText: String
+)
+
 private val DialogBorder = Color(0xFFD9D9DB)
 private val DialogTitle = Color(0xFF1B1B21)
 private val DialogPrimary = Color(0xFF17171C)
@@ -51,6 +67,7 @@ private val BmiBarRed = Color(0xFFEB5757)
 
 @Composable
 fun CommonBmiInfoDialog(
+    model: CommonBmiInfoDialogModel,
     onDismiss: () -> Unit
 ) {
     Dialog(
@@ -102,7 +119,7 @@ fun CommonBmiInfoDialog(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "What is BMI?",
+                        text = model.title,
                         color = DialogTitle,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
@@ -112,7 +129,7 @@ fun CommonBmiInfoDialog(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Body Mass Index",
+                        text = model.subtitle,
                         color = DialogSecondary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
@@ -129,12 +146,12 @@ fun CommonBmiInfoDialog(
                         Column(
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)
                         ) {
-                            BmiInfoSectionTitle("Formula")
+                            BmiInfoSectionTitle(model.formulaTitle)
 
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
-                                text = "BMI = weight (kg) / height (m²)",
+                                text = model.formulaValue,
                                 color = DialogPrimary,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
@@ -146,12 +163,12 @@ fun CommonBmiInfoDialog(
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    BmiInfoSectionTitle("What it tells you")
+                    BmiInfoSectionTitle(model.meaningTitle)
 
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "BMI helps estimate whether your body weight is in a generally healthy range.",
+                        text = model.meaningBody,
                         color = DialogPrimary,
                         fontSize = 14.sp,
                         lineHeight = 22.sp,
@@ -168,12 +185,12 @@ fun CommonBmiInfoDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         BmiInfoChip(
-                            text = "Underweight",
+                            text = model.underweightText,
                             bg = BmiBarBlue,
                             modifier = Modifier.weight(1f)
                         )
                         BmiInfoChip(
-                            text = "Healthy",
+                            text = model.healthyText,
                             bg = BmiBarGreen,
                             modifier = Modifier.weight(1f)
                         )
@@ -186,12 +203,12 @@ fun CommonBmiInfoDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         BmiInfoChip(
-                            text = "Overweight",
+                            text = model.overweightText,
                             bg = BmiBarYellow,
                             modifier = Modifier.weight(1f)
                         )
                         BmiInfoChip(
-                            text = "Obese",
+                            text = model.obeseText,
                             bg = BmiBarRed,
                             modifier = Modifier.weight(1f)
                         )
@@ -208,7 +225,7 @@ fun CommonBmiInfoDialog(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
                         ) {
                             Text(
-                                text = "Keep in mind",
+                                text = model.noteTitle,
                                 color = Color(0xFF7A5A12),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -217,7 +234,7 @@ fun CommonBmiInfoDialog(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "BMI is a general guide. It does not directly measure body fat, muscle mass, or overall health.",
+                                text = model.noteBody,
                                 color = Color(0xFF7A5A12),
                                 fontSize = 13.sp,
                                 lineHeight = 20.sp
@@ -239,7 +256,7 @@ fun CommonBmiInfoDialog(
                         )
                     ) {
                         Text(
-                            text = "Got it",
+                            text = model.ctaText,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )

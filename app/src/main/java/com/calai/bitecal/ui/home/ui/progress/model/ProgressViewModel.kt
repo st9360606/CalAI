@@ -50,7 +50,7 @@ enum class BmiStatusTone {
 data class ProgressUiState(
     val loading: Boolean = true,
     val selectedWeekOffset: Int = 0,
-    val totalCaloriesText: String = "0 cals",
+    val totalCaloriesText: String = "0.0",
     val deltaText: String = "--",
     val deltaDirection: String = "NONE",
     val days: List<ProgressBarDayUi> = emptyList(),
@@ -166,11 +166,10 @@ private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState
     }
 
     val effectiveTotalCaloriesText = String.format(
-        Locale.US,
-        "%.1f cals",
+        Locale.getDefault(),
+        "%.1f",
         displayDay.totalKcal.toDouble()
     )
-
     return ProgressUiState(
         loading = false,
         selectedWeekOffset = weekOffset,
@@ -223,7 +222,7 @@ private fun Double?.toDeltaText(): String {
         else -> ""
     }
 
-    val rounded = String.format(Locale.US, "%.1f", abs(this))
+    val rounded = String.format(Locale.getDefault(), "%.1f", abs(this))
     return "$prefix$rounded%"
 }
 
@@ -268,8 +267,8 @@ private fun UserProfileDto.toBmiCardUi(): BmiCardUi {
     val tone = resolveBmiTone(bmiValue)
 
     return BmiCardUi(
-        bmiText = bmiValue?.let { String.format(Locale.US, "%.2f", it) } ?: "--.--",
-        statusText = tone.toDisplayText(),
+        bmiText = bmiValue?.let { String.format(Locale.getDefault(), "%.2f", it) } ?: "--.--",
+        statusText = "",
         statusTone = tone,
         markerProgress = bmiValue
             ?.let { ((it - 15.0) / 20.0).toFloat().coerceIn(0f, 1f) }
@@ -316,12 +315,4 @@ private fun UserProfileDto.resolveBmiTone(bmiValue: Double?): BmiStatusTone {
             else -> BmiStatusTone.Obese
         }
     }
-}
-
-private fun BmiStatusTone.toDisplayText(): String = when (this) {
-    BmiStatusTone.Underweight -> "Underweight"
-    BmiStatusTone.Healthy -> "Healthy"
-    BmiStatusTone.Overweight -> "Overweight"
-    BmiStatusTone.Obese -> "Obese"
-    BmiStatusTone.Unknown -> "--"
 }
