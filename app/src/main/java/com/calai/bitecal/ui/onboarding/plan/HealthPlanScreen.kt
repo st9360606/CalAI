@@ -574,14 +574,14 @@ private fun BmiCard(
         String.format(Locale.US, "%.2f", bmi)
     }
 
-    val statusText = when (klass) {
+    val statusText = when (BmiClass.Overweight) {
         BmiClass.Underweight -> "Underweight"
         BmiClass.Normal -> "Healthy"
         BmiClass.Overweight -> "Overweight"
         BmiClass.Obesity -> "Obese"
     }
 
-    val statusTone = when (klass) {
+    val statusTone = when (BmiClass.Overweight) {
         BmiClass.Underweight -> HealthPlanBmiStatusTone.Underweight
         BmiClass.Normal -> HealthPlanBmiStatusTone.Healthy
         BmiClass.Overweight -> HealthPlanBmiStatusTone.Overweight
@@ -632,37 +632,31 @@ private fun BmiCard(
                     color = PlanBmiSecondaryText,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    maxLines = 1
+                    maxLines = 1,
+                    modifier = Modifier.widthIn(min = 92.dp)
                 )
-            }
 
-            Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(6.dp))
 
-            Row(
-                modifier = Modifier.offset(x = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
                 HealthPlanBmiStatusPill(
                     text = statusText,
                     tone = statusTone
                 )
+            }
 
-                Box(
-                    modifier = Modifier
-                        .offset(x = 2.dp)
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .clickable { showBmiInfoDialog = true },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.HelpOutline,
-                        contentDescription = "BMI info",
-                        tint = PlanBmiHelpTint,
-                        modifier = Modifier.size(23.dp)
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .clip(CircleShape)
+                    .clickable { showBmiInfoDialog = true },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.HelpOutline,
+                    contentDescription = "BMI info",
+                    tint = PlanBmiHelpTint,
+                    modifier = Modifier.size(23.dp)
+                )
             }
         }
 
@@ -747,8 +741,9 @@ private fun HealthPlanBmiStatusPill(
 
     Box(
         modifier = Modifier
+            .widthIn(max = 96.dp)
             .background(bg, RoundedCornerShape(999.dp))
-            .padding(horizontal = 9.dp, vertical = 5.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -756,7 +751,8 @@ private fun HealthPlanBmiStatusPill(
             color = Color.White,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
