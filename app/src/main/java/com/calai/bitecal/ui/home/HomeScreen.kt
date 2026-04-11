@@ -13,6 +13,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -52,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -769,7 +772,9 @@ private fun Avatar(
     avatarSize: Dp = 40.dp,
     touchSize: Dp = 48.dp,
     startPadding: Dp = 0.dp,
-    onClick: (() -> Unit)? = null, // ✅ NEW
+    onClick: (() -> Unit)? = null,
+    fallbackCircleSize: Dp = 43.dp,   // ✅ 對齊 Setting 的 visualSize
+    fallbackIconSize: Dp = 45.dp      // ✅ spoon icon 大小
 ) {
     val interaction = remember { MutableInteractionSource() }
 
@@ -784,21 +789,28 @@ private fun Avatar(
                         indication = null,
                         role = Role.Button
                     ) { onClick() }
-                } else Modifier
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
-        val avatarModifier = Modifier
-            .size(avatarSize)
-            .clip(CircleShape)
-
         if (url == null) {
-            Image(
-                painter = painterResource(R.drawable.profile),
-                contentDescription = "avatar",
-                modifier = avatarModifier,
-                contentScale = ContentScale.Crop
-            )
+            Box(
+                modifier = Modifier
+                    .size(fallbackCircleSize)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .border(1.25.dp, Color(0x26000000), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_focus_spoon_foreground),
+                    contentDescription = "avatar",
+                    modifier = Modifier.size(fallbackIconSize),
+                    contentScale = ContentScale.Fit
+                )
+            }
         } else {
             val ctx = LocalContext.current
             val request = remember(url) {
@@ -808,10 +820,13 @@ private fun Avatar(
                     .allowHardware(true)
                     .build()
             }
+
             AsyncImage(
                 model = request,
                 contentDescription = "avatar",
-                modifier = avatarModifier,
+                modifier = Modifier
+                    .size(avatarSize)
+                    .clip(CircleShape),
                 contentScale = ContentScale.Crop,
                 error = painterResource(R.drawable.profile)
             )
