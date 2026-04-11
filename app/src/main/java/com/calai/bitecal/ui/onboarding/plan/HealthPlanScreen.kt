@@ -79,7 +79,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.R
 import com.calai.bitecal.core.health.BmiClass
 import com.calai.bitecal.core.health.Gender
-import com.calai.bitecal.core.health.HealthCalc
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import com.calai.bitecal.core.health.MacroPlan
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1 // ★ 共用轉換工具
@@ -272,7 +273,7 @@ fun HealthPlanScreen(
                 displayGoal = ui.goalWeightDisplay
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(14.dp))
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
@@ -293,10 +294,10 @@ fun HealthPlanScreen(
                 klass = plan.bmiClass,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 20.dp)
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
 
             Text(
                 text = stringResource(R.string.plan_disclaimer),
@@ -567,6 +568,8 @@ private fun BmiCard(
     klass: BmiClass,
     modifier: Modifier = Modifier
 ) {
+    var showBmiInfoDialog by rememberSaveable { mutableStateOf(false) }
+
     val bmiText = remember(bmi) {
         String.format(Locale.US, "%.2f", bmi)
     }
@@ -594,12 +597,12 @@ private fun BmiCard(
             .fillMaxWidth()
             .background(PlanBmiCardBg, RoundedCornerShape(28.dp))
             .border(1.dp, PlanBmiCardBorder, RoundedCornerShape(28.dp))
-            .padding(horizontal = 26.dp, vertical = 26.dp)
+            .padding(horizontal = 22.dp, vertical = 28.dp)
     ) {
         Text(
             text = "Your BMI",
             color = PlanBmiTitleColor,
-            fontSize = 20.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
 
@@ -609,47 +612,67 @@ private fun BmiCard(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = bmiText,
-                color = PlanBmiPrimaryText,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 36.sp
-            )
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = bmiText,
+                    color = PlanBmiPrimaryText,
+                    fontSize = 35.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 35.sp,
+                    maxLines = 1
+                )
 
-            Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-            Text(
-                text = "Your weight is",
-                color = PlanBmiSecondaryText,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
+                Text(
+                    text = "Your weight is",
+                    color = PlanBmiSecondaryText,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1
+                )
+            }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
 
-            HealthPlanBmiStatusPill(
-                text = statusText,
-                tone = statusTone
-            )
+            Row(
+                modifier = Modifier.offset(x = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                HealthPlanBmiStatusPill(
+                    text = statusText,
+                    tone = statusTone
+                )
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Icon(
-                imageVector = Icons.Outlined.HelpOutline,
-                contentDescription = "BMI info",
-                tint = PlanBmiHelpTint,
-                modifier = Modifier.size(24.dp)
-            )
+                Box(
+                    modifier = Modifier
+                        .offset(x = 2.dp)
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .clickable { showBmiInfoDialog = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.HelpOutline,
+                        contentDescription = "BMI info",
+                        tint = PlanBmiHelpTint,
+                        modifier = Modifier.size(23.dp)
+                    )
+                }
+            }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         HealthPlanBmiRangeBar(
             markerProgress = markerProgress
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -673,6 +696,40 @@ private fun BmiCard(
             )
         }
     }
+
+    if (showBmiInfoDialog) {
+        HealthPlanBmiInfoDialog(
+            onDismiss = { showBmiInfoDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun HealthPlanBmiInfoDialog(
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "What is BMI?",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = "BMI stands for Body Mass Index. It is calculated using your weight and height.\n\n" +
+                        "BMI = weight (kg) / height (m²)\n\n" +
+                        "It is a general indicator used to estimate whether your body weight is in a healthy range. " +
+                        "It does not directly measure body fat, muscle mass, or overall health."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Got it")
+            }
+        }
+    )
 }
 
 @Composable
@@ -691,13 +748,13 @@ private fun HealthPlanBmiStatusPill(
     Box(
         modifier = Modifier
             .background(bg, RoundedCornerShape(999.dp))
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .padding(horizontal = 9.dp, vertical = 5.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             color = Color.White,
-            fontSize = 16.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1
         )
@@ -711,6 +768,7 @@ private fun HealthPlanBmiRangeBar(
 ) {
     val clamped = markerProgress.coerceIn(0f, 1f)
     val markerWidth = 3.dp
+    val markerHeight = 24.dp
 
     BoxWithConstraints(
         modifier = modifier
@@ -738,9 +796,10 @@ private fun HealthPlanBmiRangeBar(
 
         Box(
             modifier = Modifier
+                .align(Alignment.CenterStart)
                 .offset(x = (maxWidth - markerWidth) * clamped)
                 .width(markerWidth)
-                .height(34.dp)
+                .height(markerHeight)
                 .background(PlanBmiMarkerColor, RoundedCornerShape(999.dp))
         )
     }
@@ -849,7 +908,7 @@ fun GoalsHowToSection(
             iconSize = 56.dp
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(15.dp))
 
         ResearchSourcesBlock(
             bookIconRes = bookIconRes,
