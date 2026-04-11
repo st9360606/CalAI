@@ -313,38 +313,39 @@ private fun BmiRangeBar(
     modifier: Modifier = Modifier
 ) {
     val clamped = markerProgress.coerceIn(0f, 1f)
-    val markerWidth = 3.dp
 
-    BoxWithConstraints(
+    Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(34.dp),
-        contentAlignment = Alignment.CenterStart
+            .height(34.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(12.dp)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colorStops = arrayOf(
-                            0.00f to BmiBarBlue,
-                            0.34f to BmiBarGreen,
-                            0.64f to BmiBarYellow,
-                            0.82f to BmiBarOrange,
-                            1.00f to BmiBarRed
-                        )
-                    ),
-                    shape = CircleShape
+        val trackHeight = 12.dp.toPx()
+        val markerWidth = 3.dp.toPx()
+        val markerHeight = size.height
+
+        val trackTop = (size.height - trackHeight) / 2f
+        val markerLeft = (size.width - markerWidth) * clamped
+
+        drawRoundRect(
+            brush = Brush.horizontalGradient(
+                colorStops = arrayOf(
+                    0.00f to BmiBarBlue,
+                    0.34f to BmiBarGreen,
+                    0.64f to BmiBarYellow,
+                    0.82f to BmiBarOrange,
+                    1.00f to BmiBarRed
                 )
+            ),
+            topLeft = Offset(0f, trackTop),
+            size = Size(size.width, trackHeight),
+            cornerRadius = CornerRadius(trackHeight / 2f, trackHeight / 2f)
         )
 
-        Box(
-            modifier = Modifier
-                .offset(x = (maxWidth - markerWidth) * clamped)
-                .width(markerWidth)
-                .height(34.dp)
-                .background(BmiMarkerColor, RoundedCornerShape(999.dp))
+        drawRoundRect(
+            color = BmiMarkerColor,
+            topLeft = Offset(markerLeft, 0f),
+            size = Size(markerWidth, markerHeight),
+            cornerRadius = CornerRadius(markerWidth / 2f, markerWidth / 2f)
         )
     }
 }

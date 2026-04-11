@@ -271,11 +271,19 @@ fun BiteCalNavHost(
 
     val localeController = LocalLocaleController.current
 
-    // Token 逾期：帶到 Gate，成功後回 HOME
-    LaunchedEffect(Unit) {
+    LaunchedEffect(nav) {
         SessionBus.expired.collect {
+            val currentRoute = nav.currentBackStackEntry?.destination?.route
+
+            // onboarding / app entry / auth flow 中都不要再被全域 gate 打斷
+            if (isOnboardingRoute(currentRoute) || isAuthOrEntryRoute(currentRoute)) {
+                return@collect
+            }
+
             nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}") {
                 popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+                restoreState = false
             }
         }
     }
@@ -568,25 +576,36 @@ fun BiteCalNavHost(
             val routeScope = rememberCoroutineScope()
             HealthPlanScreen(
                 vm = vm,
+                startEnabled = isSignedIn != null,
                 onStart = {
                     val goal = Routes.HOME
                     routeScope.launch {
-                        if (isSignedIn == true) {
-                            // ✅ 已登入：補 upsert + baseline + flush，再進 HOME
-                            withContext(Dispatchers.IO) {
-                                runCatching { profileRepo.upsertFromLocalForOnboarding() }
-                                runCatching { store.setHasServerProfile(true) }
-                                runCatching { weightRepo.ensureBaseline() }
+                        when (isSignedIn) {
+                            true -> {
+                                withContext(Dispatchers.IO) {
+                                    runCatching { profileRepo.upsertFromLocalForOnboarding() }
+                                    runCatching { store.setHasServerProfile(true) }
+                                    runCatching { weightRepo.ensureBaseline() }
+                                }
+
+                                nav.navigate(goal) {
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
                             }
 
-                            nav.navigate(goal) {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
-                                restoreState = false
+                            false -> {
+                                nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$goal&auto=true&uploadLocal=true") {
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
                             }
-                        } else {
-                            // ✅ 未登入：先存 pending（上面已做），再進 Gate 自動彈 Sheet
-                            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$goal&auto=true&uploadLocal=true")
+
+                            null -> {
+                                // auth state 還沒 ready，這時按鈕本來就應該是 disabled
+                                return@launch
+                            }
                         }
                     }
                 }
@@ -643,6 +662,7 @@ fun BiteCalNavHost(
                         }
                     }
                 },
+                showSkip = !uploadLocal,
                 snackBarHostState = snackbarHostState
             )
 
@@ -2079,4 +2099,30 @@ private fun openSupportEmail(ctx: Context) {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     runCatching { ctx.startActivity(intent) }
+}
+
+private fun isOnboardingRoute(route: String?): Boolean {
+    if (route.isNullOrBlank()) return false
+    return route == Routes.LANDING ||
+            route == Routes.ONBOARD_GENDER ||
+            route == Routes.ONBOARD_REFERRAL ||
+            route == Routes.ONBOARD_AGE ||
+            route == Routes.ONBOARD_HEIGHT ||
+            route == Routes.ONBOARD_WEIGHT ||
+            route == Routes.ONBOARD_GOAL_WEIGHT ||
+            route == Routes.ONBOARD_EXERCISE_FREQ ||
+            route == Routes.ONBOARD_GOAL ||
+            route == Routes.ONBOARD_NOTIF ||
+            route == Routes.ONBOARD_HEALTH_CONNECT ||
+            route == Routes.PLAN_PROGRESS ||
+            route == Routes.ROUTE_PLAN
+}
+
+private fun isAuthOrEntryRoute(route: String?): Boolean {
+    if (route.isNullOrBlank()) return false
+
+    return route == Routes.APP_ENTRY ||
+            route.startsWith(Routes.REQUIRE_SIGN_IN) ||
+            route.startsWith(Routes.SIGN_IN_EMAIL_ENTER) ||
+            route.startsWith(Routes.SIGN_IN_EMAIL_CODE)
 }

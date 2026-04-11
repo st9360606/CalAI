@@ -632,18 +632,15 @@ private fun NumberWheel(
 
     // ✅ 只在「使用者滑動結束」那一刻回呼（true -> false）
     LaunchedEffect(range) {
-        snapshotFlow { state.isScrollInProgress }
+        snapshotFlow {
+            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+        }
             .distinctUntilChanged()
-            .filter { inProgress -> !inProgress } // 只要 idle
-            .collect {
+            .collect { centerValue ->
                 if (ignoreNextIdleCallback) {
                     ignoreNextIdleCallback = false
                     return@collect
                 }
-
-                val centerValue = padded.getOrNull(
-                    (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
-                )
 
                 if (centerValue != null) {
                     latestOnValueChange(centerValue)

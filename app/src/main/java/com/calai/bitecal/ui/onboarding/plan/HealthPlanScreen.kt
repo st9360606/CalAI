@@ -87,6 +87,10 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material3.Icon
 
 // === Colors（保持你的設定） ===
 val NeutralText = Color(0xFF6B7280)
@@ -98,6 +102,22 @@ val WaterColor = Color(0xFF3B82F6)   // 水量藍
 val WeightColor = Color(0xFF6366F1)  // 體重紫
 val BmiBorder = Color(0xFFDCEFE0)
 
+//BMI Card 顏色
+private val PlanBmiCardBg = Color.White
+private val PlanBmiCardBorder = Color(0xFFD9D9DB)
+private val PlanBmiTitleColor = Color(0xFF1B1B21)
+private val PlanBmiPrimaryText = Color(0xFF17171C)
+private val PlanBmiSecondaryText = Color(0xFF74747A)
+private val PlanBmiHelpTint = Color(0xFF2B2E34)
+private val PlanBmiUnknownPill = Color(0xFFB8BDC7)
+
+private val PlanBmiBarBlue = Color(0xFF2D9CDB)
+private val PlanBmiBarGreen = Color(0xFF35C36C)
+private val PlanBmiBarYellow = Color(0xFFF2C94C)
+private val PlanBmiBarOrange = Color(0xFFF2994A)
+private val PlanBmiBarRed = Color(0xFFEB5757)
+private val PlanBmiMarkerColor = Color(0xFF17171C)
+
 // === 圓環粗細 ===
 private const val DONUT_STROKE_PX = 80f     // 大圓
 private const val MINI_RING_STROKE_PX = 20f // 小圓
@@ -105,6 +125,7 @@ private const val MINI_RING_STROKE_PX = 20f // 小圓
 @Composable
 fun HealthPlanScreen(
     vm: HealthPlanViewModel,
+    startEnabled: Boolean = true,
     onStart: () -> Unit
 ) {
     val ui = vm.ui.collectAsStateWithLifecycle().value
@@ -150,7 +171,7 @@ fun HealthPlanScreen(
                                 .onFailure { starting = false }
                         }
                     },
-                    enabled = !starting,
+                    enabled = startEnabled && !starting,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
@@ -158,7 +179,11 @@ fun HealthPlanScreen(
                         .fillMaxWidth()
                         .height(64.dp)
                         .semantics {
-                            stateDescription = if (starting) "loading" else "idle"
+                            stateDescription = when {
+                                starting -> "loading"
+                                !startEnabled -> "disabled"
+                                else -> "idle"
+                            }
                         },
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -262,12 +287,37 @@ fun HealthPlanScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+
             BmiCard(
                 bmi = plan.bmi,
                 klass = plan.bmiClass,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 26.dp)
+                    .padding(horizontal = 16.dp)
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                text = stringResource(R.string.plan_disclaimer),
+                color = Color(0xFF9AA3AF),
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 48.dp)
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            GoalsHowToSection(
+                trackMealsIconRes = R.drawable.ic_dish2,
+                mealBalanceIconRes = R.drawable.ic_meal_balance,
+                bookIconRes = R.drawable.ic_book,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 34.dp),
+                onSeeMore = { /* TODO */ }
             )
 
             Spacer(Modifier.height(24.dp))
@@ -503,125 +553,222 @@ private fun MacroRingItem(
     }
 }
 
+private enum class HealthPlanBmiStatusTone {
+    Underweight,
+    Healthy,
+    Overweight,
+    Obese,
+    Unknown
+}
+
 @Composable
 private fun BmiCard(
     bmi: Double,
     klass: BmiClass,
     modifier: Modifier = Modifier
 ) {
-    val labelRes = when (klass) {
-        BmiClass.Underweight -> R.string.plan_bmi_label_underweight
-        BmiClass.Normal -> R.string.plan_bmi_label_normal
-        BmiClass.Overweight -> R.string.plan_bmi_label_overweight
-        BmiClass.Obesity -> R.string.plan_bmi_label_obesity
-    }
-    val baseLabel = stringResource(labelRes)
-    val valueTone = BmiScale.colorAt(bmi)
-    val klassTone = BmiPalette.colorOf(klass)
-
-    val obesityStage = HealthCalc.obesityClass(bmi)
-    val displayLabel = if (klass == BmiClass.Obesity && obesityStage != null) {
-        val roman = when (obesityStage) {
-            1 -> "I"
-            2 -> "II"
-            3 -> "III"
-            else -> obesityStage.toString()
-        }
-        "$baseLabel class $roman"
-    } else {
-        baseLabel
+    val bmiText = remember(bmi) {
+        String.format(Locale.US, "%.2f", bmi)
     }
 
-    val bmiBgBlue = Color(0xFFF3F8FF)
+    val statusText = when (klass) {
+        BmiClass.Underweight -> "Underweight"
+        BmiClass.Normal -> "Healthy"
+        BmiClass.Overweight -> "Overweight"
+        BmiClass.Obesity -> "Obese"
+    }
+
+    val statusTone = when (klass) {
+        BmiClass.Underweight -> HealthPlanBmiStatusTone.Underweight
+        BmiClass.Normal -> HealthPlanBmiStatusTone.Healthy
+        BmiClass.Overweight -> HealthPlanBmiStatusTone.Overweight
+        BmiClass.Obesity -> HealthPlanBmiStatusTone.Obese
+    }
+
+    val markerProgress = remember(bmi) {
+        ((bmi - 15.0) / 20.0).toFloat().coerceIn(0f, 1f)
+    }
 
     Column(
-        modifier
-            .clip(RoundedCornerShape(16.dp))
-            .border(1.dp, BmiBorder, RoundedCornerShape(16.dp))
-            .background(bmiBgBlue)
-            .padding(18.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .background(PlanBmiCardBg, RoundedCornerShape(28.dp))
+            .border(1.dp, PlanBmiCardBorder, RoundedCornerShape(28.dp))
+            .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
         Text(
-            text = stringResource(R.string.plan_bmi_index),
+            text = "Your BMI",
+            color = PlanBmiTitleColor,
             fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
         )
-        Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                val bmiText = remember(bmi) { String.format(Locale.getDefault(), "%.1f", bmi) }
-                Text(
-                    bmiText,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = valueTone
-                )
-                Text(
-                    displayLabel,
-                    color = valueTone,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(klassTone.copy(alpha = 0.15f))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            ) {
-                val lower = displayLabel.lowercase(Locale.getDefault())
-                Text(
-                    text = stringResource(R.string.plan_bmi_classified_as, lower),
-                    color = klassTone,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = bmiText,
+                color = PlanBmiPrimaryText,
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 36.sp
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(
+                text = "Your weight is",
+                color = PlanBmiSecondaryText,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            HealthPlanBmiStatusPill(
+                text = statusText,
+                tone = statusTone
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Icon(
+                imageVector = Icons.Outlined.HelpOutline,
+                contentDescription = "BMI info",
+                tint = PlanBmiHelpTint,
+                modifier = Modifier.size(24.dp)
+            )
         }
 
-        Spacer(Modifier.height(10.dp))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(10.dp)
-                .clip(RoundedCornerShape(999.dp))
-                .background(BmiScale.brush())
+        Spacer(modifier = Modifier.height(24.dp))
+
+        HealthPlanBmiRangeBar(
+            markerProgress = markerProgress
         )
-        Spacer(Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            listOf("15", "20", "25", "30", "35").forEach { m ->
-                Text(
-                    text = m,
-                    color = NeutralText,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            HealthPlanBmiLegendItem(
+                color = PlanBmiBarBlue,
+                label = "Underweight"
+            )
+            HealthPlanBmiLegendItem(
+                color = PlanBmiBarGreen,
+                label = "Healthy"
+            )
+            HealthPlanBmiLegendItem(
+                color = PlanBmiBarYellow,
+                label = "Overweight"
+            )
+            HealthPlanBmiLegendItem(
+                color = PlanBmiBarRed,
+                label = "Obese"
+            )
         }
     }
+}
 
-    Spacer(Modifier.height(22.dp))
-    Text(
-        text = stringResource(R.string.plan_disclaimer),
-        color = Color(0xFF9AA3AF),
-        fontSize = 12.sp,
-        textAlign = TextAlign.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 48.dp) // 原本 32.dp → 改更大
-    )
+@Composable
+private fun HealthPlanBmiStatusPill(
+    text: String,
+    tone: HealthPlanBmiStatusTone
+) {
+    val bg = when (tone) {
+        HealthPlanBmiStatusTone.Underweight -> PlanBmiBarBlue
+        HealthPlanBmiStatusTone.Healthy -> PlanBmiBarGreen
+        HealthPlanBmiStatusTone.Overweight -> PlanBmiBarYellow
+        HealthPlanBmiStatusTone.Obese -> PlanBmiBarRed
+        HealthPlanBmiStatusTone.Unknown -> PlanBmiUnknownPill
+    }
 
-    Spacer(Modifier.height(20.dp))
-    GoalsHowToSection(
-        trackMealsIconRes = R.drawable.ic_dish2,
-        mealBalanceIconRes = R.drawable.ic_meal_balance,
-        bookIconRes = R.drawable.ic_book,
+    Box(
         modifier = Modifier
+            .background(bg, RoundedCornerShape(999.dp))
+            .padding(horizontal = 14.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun HealthPlanBmiRangeBar(
+    markerProgress: Float,
+    modifier: Modifier = Modifier
+) {
+    val clamped = markerProgress.coerceIn(0f, 1f)
+    val markerWidth = 3.dp
+
+    BoxWithConstraints(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 34.dp),
-        onSeeMore = { /* TODO */ }
-    )
+            .height(34.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(12.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colorStops = arrayOf(
+                            0.00f to PlanBmiBarBlue,
+                            0.34f to PlanBmiBarGreen,
+                            0.64f to PlanBmiBarYellow,
+                            0.82f to PlanBmiBarOrange,
+                            1.00f to PlanBmiBarRed
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .offset(x = (maxWidth - markerWidth) * clamped)
+                .width(markerWidth)
+                .height(34.dp)
+                .background(PlanBmiMarkerColor, RoundedCornerShape(999.dp))
+        )
+    }
+}
+
+@Composable
+private fun HealthPlanBmiLegendItem(
+    color: Color,
+    label: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(color, CircleShape)
+        )
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        Text(
+            text = label,
+            color = Color(0xFF6F727A),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
 
 // ✅ 修正：modifier 應該放「可選參數」的第一個（且通常放最後參數列中第一個）
@@ -702,7 +849,7 @@ fun GoalsHowToSection(
             iconSize = 56.dp
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         ResearchSourcesBlock(
             bookIconRes = bookIconRes,
