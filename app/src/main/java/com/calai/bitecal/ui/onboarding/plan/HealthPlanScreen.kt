@@ -11,7 +11,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,11 +50,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -79,19 +76,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.R
 import com.calai.bitecal.core.health.BmiClass
 import com.calai.bitecal.core.health.Gender
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import com.calai.bitecal.core.health.MacroPlan
 import com.calai.bitecal.data.profile.repo.UserProfileStore
-import com.calai.bitecal.data.profile.repo.kgToLbs1 // ★ 共用轉換工具
+import com.calai.bitecal.data.profile.repo.kgToLbs1
+import com.calai.bitecal.ui.common.bmi.CommonBmiCard
+import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
+import com.calai.bitecal.ui.common.bmi.CommonBmiTone
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.HelpOutline
-import androidx.compose.material3.Icon
 
 // === Colors（保持你的設定） ===
 val NeutralText = Color(0xFF6B7280)
@@ -101,23 +95,6 @@ val ProteinColor = Color(0xFFEA4335) // Salmon/Red 400-500
 val FatColor = Color(0xFF34A853)     // Emerald 500
 val WaterColor = Color(0xFF3B82F6)   // 水量藍
 val WeightColor = Color(0xFF6366F1)  // 體重紫
-val BmiBorder = Color(0xFFDCEFE0)
-
-//BMI Card 顏色
-private val PlanBmiCardBg = Color.White
-private val PlanBmiCardBorder = Color(0xFFD9D9DB)
-private val PlanBmiTitleColor = Color(0xFF1B1B21)
-private val PlanBmiPrimaryText = Color(0xFF17171C)
-private val PlanBmiSecondaryText = Color(0xFF74747A)
-private val PlanBmiHelpTint = Color(0xFF2B2E34)
-private val PlanBmiUnknownPill = Color(0xFFB8BDC7)
-
-private val PlanBmiBarBlue = Color(0xFF2D9CDB)
-private val PlanBmiBarGreen = Color(0xFF35C36C)
-private val PlanBmiBarYellow = Color(0xFFF2C94C)
-private val PlanBmiBarOrange = Color(0xFFF2994A)
-private val PlanBmiBarRed = Color(0xFFEB5757)
-private val PlanBmiMarkerColor = Color(0xFF17171C)
 
 // === 圓環粗細 ===
 private const val DONUT_STROKE_PX = 80f     // 大圓
@@ -289,9 +266,13 @@ fun HealthPlanScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            BmiCard(
-                bmi = plan.bmi,
-                klass = plan.bmiClass,
+            CommonBmiCard(
+                model = remember(plan.bmi, plan.bmiClass) {
+                    healthPlanBmiCardModel(
+                        bmi = plan.bmi,
+                        klass = plan.bmiClass
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -551,278 +532,6 @@ private fun MacroRingItem(
         }
         Spacer(Modifier.height(6.dp))
         Text(title, color = NeutralText, fontSize = 12.sp, textAlign = TextAlign.Center)
-    }
-}
-
-private enum class HealthPlanBmiStatusTone {
-    Underweight,
-    Healthy,
-    Overweight,
-    Obese,
-    Unknown
-}
-
-@Composable
-private fun BmiCard(
-    bmi: Double,
-    klass: BmiClass,
-    modifier: Modifier = Modifier
-) {
-    var showBmiInfoDialog by rememberSaveable { mutableStateOf(false) }
-
-    val bmiText = remember(bmi) {
-        String.format(Locale.US, "%.2f", bmi)
-    }
-
-    val statusText = when (klass) {
-        BmiClass.Underweight -> "Underweight"
-        BmiClass.Normal -> "Healthy"
-        BmiClass.Overweight -> "Overweight"
-        BmiClass.Obesity -> "Obese"
-    }
-
-    val statusTone = when (klass) {
-        BmiClass.Underweight -> HealthPlanBmiStatusTone.Underweight
-        BmiClass.Normal -> HealthPlanBmiStatusTone.Healthy
-        BmiClass.Overweight -> HealthPlanBmiStatusTone.Overweight
-        BmiClass.Obesity -> HealthPlanBmiStatusTone.Obese
-    }
-
-    val markerProgress = remember(bmi) {
-        ((bmi - 15.0) / 20.0).toFloat().coerceIn(0f, 1f)
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(PlanBmiCardBg, RoundedCornerShape(28.dp))
-            .border(1.dp, PlanBmiCardBorder, RoundedCornerShape(28.dp))
-            .padding(horizontal = 22.dp, vertical = 28.dp)
-    ) {
-        Text(
-            text = "Your BMI",
-            color = PlanBmiTitleColor,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = bmiText,
-                    color = PlanBmiPrimaryText,
-                    fontSize = 35.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 35.sp,
-                    maxLines = 1
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Your weight is",
-                    color = PlanBmiSecondaryText,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    modifier = Modifier.widthIn(min = 92.dp)
-                )
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                HealthPlanBmiStatusPill(
-                    text = statusText,
-                    tone = statusTone
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(30.dp)
-                    .clip(CircleShape)
-                    .clickable { showBmiInfoDialog = true },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.HelpOutline,
-                    contentDescription = "BMI info",
-                    tint = PlanBmiHelpTint,
-                    modifier = Modifier.size(23.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        HealthPlanBmiRangeBar(
-            markerProgress = markerProgress
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            HealthPlanBmiLegendItem(
-                color = PlanBmiBarBlue,
-                label = "Underweight"
-            )
-            HealthPlanBmiLegendItem(
-                color = PlanBmiBarGreen,
-                label = "Healthy"
-            )
-            HealthPlanBmiLegendItem(
-                color = PlanBmiBarYellow,
-                label = "Overweight"
-            )
-            HealthPlanBmiLegendItem(
-                color = PlanBmiBarRed,
-                label = "Obese"
-            )
-        }
-    }
-
-    if (showBmiInfoDialog) {
-        HealthPlanBmiInfoDialog(
-            onDismiss = { showBmiInfoDialog = false }
-        )
-    }
-}
-
-@Composable
-private fun HealthPlanBmiInfoDialog(
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "What is BMI?",
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Text(
-                text = "BMI stands for Body Mass Index. It is calculated using your weight and height.\n\n" +
-                        "BMI = weight (kg) / height (m²)\n\n" +
-                        "It is a general indicator used to estimate whether your body weight is in a healthy range. " +
-                        "It does not directly measure body fat, muscle mass, or overall health."
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Got it")
-            }
-        }
-    )
-}
-
-@Composable
-private fun HealthPlanBmiStatusPill(
-    text: String,
-    tone: HealthPlanBmiStatusTone
-) {
-    val bg = when (tone) {
-        HealthPlanBmiStatusTone.Underweight -> PlanBmiBarBlue
-        HealthPlanBmiStatusTone.Healthy -> PlanBmiBarGreen
-        HealthPlanBmiStatusTone.Overweight -> PlanBmiBarYellow
-        HealthPlanBmiStatusTone.Obese -> PlanBmiBarRed
-        HealthPlanBmiStatusTone.Unknown -> PlanBmiUnknownPill
-    }
-
-    Box(
-        modifier = Modifier
-            .widthIn(max = 96.dp)
-            .background(bg, RoundedCornerShape(999.dp))
-            .padding(horizontal = 8.dp, vertical = 5.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun HealthPlanBmiRangeBar(
-    markerProgress: Float,
-    modifier: Modifier = Modifier
-) {
-    val clamped = markerProgress.coerceIn(0f, 1f)
-    val markerWidth = 3.dp
-    val markerHeight = 24.dp
-
-    BoxWithConstraints(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(34.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(12.dp)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colorStops = arrayOf(
-                            0.00f to PlanBmiBarBlue,
-                            0.34f to PlanBmiBarGreen,
-                            0.64f to PlanBmiBarYellow,
-                            0.82f to PlanBmiBarOrange,
-                            1.00f to PlanBmiBarRed
-                        )
-                    ),
-                    shape = CircleShape
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .offset(x = (maxWidth - markerWidth) * clamped)
-                .width(markerWidth)
-                .height(markerHeight)
-                .background(PlanBmiMarkerColor, RoundedCornerShape(999.dp))
-        )
-    }
-}
-
-@Composable
-private fun HealthPlanBmiLegendItem(
-    color: Color,
-    label: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(color, CircleShape)
-        )
-
-        Spacer(modifier = Modifier.width(6.dp))
-
-        Text(
-            text = label,
-            color = Color(0xFF6F727A),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium
-        )
     }
 }
 
@@ -1099,53 +808,28 @@ fun ResearchSourcesBlock(
 private fun kgToLbsFloor1(v: Float): Float =
     kgToLbs1(v.toDouble()).toFloat()
 
-object BmiPalette {
-    val Under = Color(0xFF60A5FA)
-    val Normal = Color(0xFF69BC8E)
-    val Over = Color(0xFFF9AE30)
-    val Obese = Color(0xFFE83E56)
-
-    fun colorOf(klass: BmiClass): Color = when (klass) {
-        BmiClass.Underweight -> Under
-        BmiClass.Normal -> Normal
-        BmiClass.Overweight -> Over
-        BmiClass.Obesity -> Obese
+private fun healthPlanBmiCardModel(
+    bmi: Double,
+    klass: BmiClass
+): CommonBmiCardModel {
+    val statusText = when (klass) {
+        BmiClass.Underweight -> "Underweight"
+        BmiClass.Normal -> "Healthy"
+        BmiClass.Overweight -> "Overweight"
+        BmiClass.Obesity -> "Obese"
     }
-}
 
-private object BmiScale {
-    private const val MIN = 15f
-    private const val MAX = 35f
+    val statusTone = when (klass) {
+        BmiClass.Underweight -> CommonBmiTone.Underweight
+        BmiClass.Normal -> CommonBmiTone.Healthy
+        BmiClass.Overweight -> CommonBmiTone.Overweight
+        BmiClass.Obesity -> CommonBmiTone.Obese
+    }
 
-    private val stops: List<Pair<Float, Color>> = listOf(
-        15f to Color(0xFF60A5FA),
-        20f to Color(0xFF69BC8E),
-        25f to Color(0xFFF9AE30),
-        30f to Color(0xFFE87A3C),
-        35f to Color(0xFFE83E56)
+    return CommonBmiCardModel(
+        bmiText = String.format(Locale.US, "%.2f", bmi),
+        statusText = statusText,
+        statusTone = statusTone,
+        markerProgress = ((bmi - 15.0) / 20.0).toFloat().coerceIn(0f, 1f)
     )
-
-    fun brush(): Brush {
-        val colorStops = stops
-            .map { (value, color) ->
-                val p = ((value - MIN) / (MAX - MIN)).coerceIn(0f, 1f)
-                p to color
-            }
-            .toTypedArray()
-
-        return Brush.horizontalGradient(colorStops = colorStops)
-    }
-
-    fun colorAt(bmi: Double): Color {
-        val v = bmi.toFloat().coerceIn(MIN, MAX)
-
-        val idx = stops.indexOfLast { it.first <= v }.coerceAtLeast(0)
-        if (idx >= stops.lastIndex) return stops.last().second
-
-        val (aV, aC) = stops[idx]
-        val (bV, bC) = stops[idx + 1]
-
-        val t = ((v - aV) / (bV - aV)).coerceIn(0f, 1f)
-        return lerp(aC, bC, t)
-    }
 }

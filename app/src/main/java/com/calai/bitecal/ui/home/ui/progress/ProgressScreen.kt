@@ -10,7 +10,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,14 +19,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.HelpOutline
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,7 +36,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -52,6 +45,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.ui.common.bmi.CommonBmiCard
+import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
+import com.calai.bitecal.ui.common.bmi.CommonBmiTone
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.progress.model.BmiCardUi
@@ -85,18 +81,6 @@ private val ChartGridColor = Color(0xFFBDBDBD)
 private val ChartXAxisIdleColor = Color(0xFF8A8A8E)
 private val ChartXAxisActiveColor = Color(0xFF666A73)
 
-private val BmiTitleColor = Color(0xFF1B1B21)
-private val BmiPrimaryText = Color(0xFF17171C)
-private val BmiSecondaryText = Color(0xFF74747A)
-private val BmiHelpTint = Color(0xFF2B2E34)
-private val BmiUnknownPill = Color(0xFFB8BDC7)
-
-private val BmiBarBlue = Color(0xFF2D9CDB)
-private val BmiBarGreen = Color(0xFF35C36C)
-private val BmiBarYellow = Color(0xFFF2C94C)
-private val BmiBarOrange = Color(0xFFF2994A)
-private val BmiBarRed = Color(0xFFEB5757)
-private val BmiMarkerColor = Color(0xFF17171C)
 
 @Composable
 fun ProgressScreen(
@@ -129,8 +113,8 @@ fun ProgressScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                BmiCard(
-                    bmiCard = ui.bmiCard,
+                CommonBmiCard(
+                    model = ui.bmiCard.toCommonBmiCardModel(),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
@@ -184,194 +168,6 @@ fun ProgressScreen(
 
             item { Spacer(modifier = Modifier.height(5.dp)) }
         }
-    }
-}
-
-@Composable
-private fun BmiCard(
-    bmiCard: BmiCardUi,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(CardBg, RoundedCornerShape(28.dp))
-            .border(1.dp, Color(0xFFD9D9DB), RoundedCornerShape(28.dp))
-            .padding(horizontal = 26.dp, vertical = 26.dp)
-    ) {
-        Text(
-            text = "Your BMI",
-            color = BmiTitleColor,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = bmiCard.bmiText,
-                color = BmiPrimaryText,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 36.sp
-            )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = "Your weight is",
-                color = BmiSecondaryText,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            BmiStatusPill(
-                text = bmiCard.statusText,
-                tone = bmiCard.statusTone
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Icon(
-                imageVector = Icons.Outlined.HelpOutline,
-                contentDescription = "BMI info",
-                tint = BmiHelpTint,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        BmiRangeBar(
-            markerProgress = bmiCard.markerProgress
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            BmiLegendItem(
-                color = BmiBarBlue,
-                label = "Underweight"
-            )
-            BmiLegendItem(
-                color = BmiBarGreen,
-                label = "Healthy"
-            )
-            BmiLegendItem(
-                color = BmiBarYellow,
-                label = "Overweight"
-            )
-            BmiLegendItem(
-                color = BmiBarRed,
-                label = "Obese"
-            )
-        }
-    }
-}
-
-@Composable
-private fun BmiStatusPill(
-    text: String,
-    tone: BmiStatusTone
-) {
-    val bg = when (tone) {
-        BmiStatusTone.Underweight -> BmiBarBlue
-        BmiStatusTone.Healthy -> BmiBarGreen
-        BmiStatusTone.Overweight -> BmiBarYellow
-        BmiStatusTone.Obese -> BmiBarRed
-        BmiStatusTone.Unknown -> BmiUnknownPill
-    }
-
-    Box(
-        modifier = Modifier
-            .background(bg, RoundedCornerShape(999.dp))
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1
-        )
-    }
-}
-
-@Composable
-private fun BmiRangeBar(
-    markerProgress: Float,
-    modifier: Modifier = Modifier
-) {
-    val clamped = markerProgress.coerceIn(0f, 1f)
-
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(34.dp)
-    ) {
-        val trackHeight = 12.dp.toPx()
-        val markerWidth = 3.dp.toPx()
-        val markerHeight = size.height
-
-        val trackTop = (size.height - trackHeight) / 2f
-        val markerLeft = (size.width - markerWidth) * clamped
-
-        drawRoundRect(
-            brush = Brush.horizontalGradient(
-                colorStops = arrayOf(
-                    0.00f to BmiBarBlue,
-                    0.34f to BmiBarGreen,
-                    0.64f to BmiBarYellow,
-                    0.82f to BmiBarOrange,
-                    1.00f to BmiBarRed
-                )
-            ),
-            topLeft = Offset(0f, trackTop),
-            size = Size(size.width, trackHeight),
-            cornerRadius = CornerRadius(trackHeight / 2f, trackHeight / 2f)
-        )
-
-        drawRoundRect(
-            color = BmiMarkerColor,
-            topLeft = Offset(markerLeft, 0f),
-            size = Size(markerWidth, markerHeight),
-            cornerRadius = CornerRadius(markerWidth / 2f, markerWidth / 2f)
-        )
-    }
-}
-
-@Composable
-private fun BmiLegendItem(
-    color: Color,
-    label: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(color, CircleShape)
-        )
-
-        Spacer(modifier = Modifier.width(6.dp))
-
-        Text(
-            text = label,
-            color = Color(0xFF6F727A),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium
-        )
     }
 }
 
@@ -1067,5 +863,24 @@ private fun resolveDeltaColor(resolvedDeltaText: String): Color {
         normalized.startsWith("↑") -> Color(0xFFE56C6C)
         normalized.startsWith("↓") -> Color(0xFF329A3F)
         else -> Color(0xFF74747A)
+    }
+}
+
+private fun BmiCardUi.toCommonBmiCardModel(): CommonBmiCardModel {
+    return CommonBmiCardModel(
+        bmiText = bmiText,
+        statusText = statusText,
+        statusTone = statusTone.toCommonBmiTone(),
+        markerProgress = markerProgress
+    )
+}
+
+private fun BmiStatusTone.toCommonBmiTone(): CommonBmiTone {
+    return when (this) {
+        BmiStatusTone.Underweight -> CommonBmiTone.Underweight
+        BmiStatusTone.Healthy -> CommonBmiTone.Healthy
+        BmiStatusTone.Overweight -> CommonBmiTone.Overweight
+        BmiStatusTone.Obese -> CommonBmiTone.Obese
+        BmiStatusTone.Unknown -> CommonBmiTone.Unknown
     }
 }
