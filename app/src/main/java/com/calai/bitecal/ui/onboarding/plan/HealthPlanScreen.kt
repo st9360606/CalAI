@@ -574,14 +574,14 @@ private fun BmiCard(
         String.format(Locale.US, "%.2f", bmi)
     }
 
-    val statusText = when (BmiClass.Overweight) {
+    val statusText = when (klass) {
         BmiClass.Underweight -> "Underweight"
         BmiClass.Normal -> "Healthy"
         BmiClass.Overweight -> "Overweight"
         BmiClass.Obesity -> "Obese"
     }
 
-    val statusTone = when (BmiClass.Overweight) {
+    val statusTone = when (klass) {
         BmiClass.Underweight -> HealthPlanBmiStatusTone.Underweight
         BmiClass.Normal -> HealthPlanBmiStatusTone.Healthy
         BmiClass.Overweight -> HealthPlanBmiStatusTone.Overweight

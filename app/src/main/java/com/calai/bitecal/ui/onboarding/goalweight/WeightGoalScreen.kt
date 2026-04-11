@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,7 +68,7 @@ import com.calai.bitecal.data.profile.repo.roundKg1
 import com.calai.bitecal.i18n.LocalLocaleController
 import com.calai.bitecal.ui.common.OnboardingProgress
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -99,49 +100,34 @@ fun WeightGoalScreen(
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()
     val weightLbs by vm.weightLbsState.collectAsState()
-
-    // ✅ 是否有 user_profiles（由 VM / Store 提供）
     val hasProfile by vm.hasProfileState.collectAsState()
 
-    // kg 範圍
     val kgMin = 20.0
     val kgMax = 800.0
 
-    // lbs 範圍（由 kg 範圍換算）
     val lbsTenthsMin = kgToLbsTenths(kgMin)
     val lbsTenthsMax = kgToLbsTenths(kgMax)
     val lbsIntMin = lbsTenthsMin / 10
     val lbsIntMax = lbsTenthsMax / 10
 
-    // ✅ 預設：154.0 lbs
-    val defaultLbsTenths = 1540 // 154.0 lbs
+    val defaultLbsTenths = 1540
     val defaultKg = lbsTenthsToKgFloor1(defaultLbsTenths).coerceIn(kgMin, kgMax)
 
-    // ✅ 防止使用者手動切換後，被 flow 更新覆蓋
     var didUserToggleUnit by rememberSaveable { mutableStateOf(false) }
-
-    // ✅ UI 顯示單位（false=LBS, true=KG）
     var useMetric by rememberSaveable { mutableStateOf(false) }
 
-    // ✅ 跟 WeightSelectionScreen 一樣：沒 weight 就先強制顯示 LBS（154.0 lbs）
     val hasAnyWeight = (weightKg > 0f) || (weightLbs > 0f)
 
     LaunchedEffect(hasProfile, savedUnit, hasAnyWeight) {
         if (!didUserToggleUnit) {
             useMetric = when {
-                // ✅ 沒 weight：先強制 LBS
                 !hasAnyWeight -> false
-
-                // ✅ 沒 profile：一律 LBS
                 !hasProfile -> false
-
-                // ✅ 有 weight + 有 profile：才套 DB unit_preference
                 else -> savedUnit == UserProfileStore.WeightUnit.KG
             }
         }
     }
 
-    // === 初始化 kg / lbs（kg 用於計算，lbsTenths 記錄使用者原始 lbs） ===
     data class Initial(val kg: Double, val lbsTenths: Int)
 
     val initial = remember(weightKg, weightLbs) {
@@ -149,41 +135,33 @@ fun WeightGoalScreen(
         val hasKg = weightKg > 0f
 
         if (hasLbs) {
-            // 有 lbs → 以 lbs 為主
             val lbsVal = weightLbs.toDouble()
             val lbsTenths = (lbsVal * 10.0).roundToInt()
                 .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
             val kgVal = if (hasKg) {
-                weightKg.toDouble()
+                normalizeKg1(weightKg.toDouble())
             } else {
                 lbsToKgPrecise(lbsVal)
             }.coerceIn(kgMin, kgMax)
 
             Initial(kgVal, lbsTenths)
-
         } else if (hasKg) {
-            // 只有 kg → 由 kg 推 lbsTenths
-            val kgVal = weightKg.toDouble().coerceIn(kgMin, kgMax)
+            val kgVal = normalizeKg1(weightKg.toDouble())
+                .coerceIn(kgMin, kgMax)
             val lbsTenths = kgToLbsTenths(kgVal)
                 .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
             Initial(kgVal, lbsTenths)
-
         } else {
-            // ✅ 完全沒資料：預設 154.0 lbs
             Initial(defaultKg, defaultLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax))
         }
     }
 
-    // ✅ 提交中 freeze：避免 Continue 時 Flow 回來導致 wheel 重設 + scrollToItem 跳一下
     var isSaving by rememberSaveable { mutableStateOf(false) }
-
-    // ✅ wheel 的 SSOT：用 saveable 本地狀態
     var valueKg by rememberSaveable { mutableDoubleStateOf(initial.kg) }
     var valueLbsTenths by rememberSaveable { mutableIntStateOf(initial.lbsTenths) }
 
-    // ✅ 只在「非提交中」才從 Flow seed
     LaunchedEffect(initial.kg, initial.lbsTenths, isSaving) {
         if (!isSaving) {
             valueKg = initial.kg
@@ -191,13 +169,11 @@ fun WeightGoalScreen(
         }
     }
 
-    // --- kg wheel 選中值（整數＋小數） ---
-    val kgTenths = (floor1(valueKg) * 10.0).toInt()
+    val kgTenths = (normalizeKg1(valueKg) * 10.0).roundToInt()
         .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
     val kgIntSel = kgTenths / 10
     val kgDecSel = kgTenths % 10
 
-    // --- lbs wheel 選中值（整數＋小數） ---
     val lbsTenthsClamped = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
     val lbsIntSel = lbsTenthsClamped / 10
     val lbsDecSel = lbsTenthsClamped % 10
@@ -206,6 +182,17 @@ fun WeightGoalScreen(
     val subtitleToUnitSpacing = if (isZh) 60.dp else 25.dp
 
     val scope = rememberCoroutineScope()
+
+    val kgIntWheelState = rememberLazyListState()
+    val kgDecWheelState = rememberLazyListState()
+    val lbsIntWheelState = rememberLazyListState()
+    val lbsDecWheelState = rememberLazyListState()
+
+    val isWheelScrolling = if (useMetric) {
+        kgIntWheelState.isScrollInProgress || kgDecWheelState.isScrollInProgress
+    } else {
+        lbsIntWheelState.isScrollInProgress || lbsDecWheelState.isScrollInProgress
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -253,30 +240,64 @@ fun WeightGoalScreen(
             Box {
                 Button(
                     onClick = {
-                        if (isSaving) return@Button
+                        if (isSaving || isWheelScrolling) return@Button
 
                         scope.launch {
                             isSaving = true
                             try {
-                                val kgToSave = roundKg1(valueKg)
-                                    .coerceIn(kgMin.toFloat(), kgMax.toFloat())
-
-                                val lbsToSaveOrNull: Float? = if (!useMetric) {
-                                    (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
-                                } else null
-
-                                // ✅ 你的 VM 目前是分開存：照原本行為，但用跟 WeightSelectionScreen 一樣的提交節奏
-                                vm.saveWeightKg(kgToSave)
+                                val kgToSave: Float
+                                val lbsToSaveOrNull: Float?
+                                val lbsTenthsForUi: Int
 
                                 if (useMetric) {
-                                    vm.saveWeightUnit(UserProfileStore.WeightUnit.KG)
-                                    vm.clearGoalWeightLbs()
+                                    val intNow = centeredWheelValue(
+                                        state = kgIntWheelState,
+                                        range = kgMin.toInt()..kgMax.toInt()
+                                    )
+                                    val decNow = centeredWheelValue(
+                                        state = kgDecWheelState,
+                                        range = 0..9
+                                    )
+
+                                    val kgTenthsNow = (intNow * 10 + decNow)
+                                        .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
+
+                                    kgToSave = (kgTenthsNow / 10f)
+                                        .coerceIn(kgMin.toFloat(), kgMax.toFloat())
+
+                                    lbsToSaveOrNull = null
+                                    lbsTenthsForUi = kgToLbsTenths(kgToSave.toDouble())
+                                        .coerceIn(lbsTenthsMin, lbsTenthsMax)
                                 } else {
-                                    vm.saveWeightUnit(UserProfileStore.WeightUnit.LBS)
-                                    if (lbsToSaveOrNull != null) {
-                                        vm.saveGoalWeightLbs(lbsToSaveOrNull)
-                                    }
+                                    val intNow = centeredWheelValue(
+                                        state = lbsIntWheelState,
+                                        range = lbsIntMin..lbsIntMax
+                                    )
+                                    val decNow = centeredWheelValue(
+                                        state = lbsDecWheelState,
+                                        range = 0..9
+                                    )
+
+                                    val lbsTenthsNow = (intNow * 10 + decNow)
+                                        .coerceIn(lbsTenthsMin, lbsTenthsMax)
+
+                                    val lbsNow = lbsTenthsNow / 10f
+                                    lbsToSaveOrNull = lbsNow
+
+                                    kgToSave = roundKg1(lbsToKgPrecise(lbsNow.toDouble()))
+                                        .coerceIn(kgMin.toFloat(), kgMax.toFloat())
+
+                                    lbsTenthsForUi = lbsTenthsNow
                                 }
+
+                                valueKg = kgToSave.toDouble()
+                                valueLbsTenths = lbsTenthsForUi
+
+                                vm.saveAll(
+                                    kgToSave = kgToSave,
+                                    useMetric = useMetric,
+                                    lbsToSaveOrNull = lbsToSaveOrNull
+                                )
 
                                 onNext()
                             } finally {
@@ -284,7 +305,7 @@ fun WeightGoalScreen(
                             }
                         }
                     },
-                    enabled = valueKg > 0.0,
+                    enabled = valueKg > 0.0 && !isSaving && !isWheelScrolling,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
@@ -351,12 +372,10 @@ fun WeightGoalScreen(
                     didUserToggleUnit = true
 
                     if (newUseMetric) {
-                        // ✅ LBS → KG：無條件捨去到 0.1
                         val tenths = valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)
                         valueKg = lbsTenthsToKgFloor1(tenths).coerceIn(kgMin, kgMax)
                     } else {
-                        // ✅ KG → LBS：無條件捨去到 0.1
-                        valueLbsTenths = kgToLbsTenths(floor1(valueKg))
+                        valueLbsTenths = kgToLbsTenths(normalizeKg1(valueKg))
                             .coerceIn(lbsTenthsMin, lbsTenthsMax)
                     }
                     useMetric = newUseMetric
@@ -373,6 +392,7 @@ fun WeightGoalScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
+                        listState = kgIntWheelState,
                         range = kgMin.toInt()..kgMax.toInt(),
                         value = kgIntSel,
                         onValueChange = { newInt ->
@@ -401,6 +421,7 @@ fun WeightGoalScreen(
                     }
 
                     NumberWheel(
+                        listState = kgDecWheelState,
                         range = 0..9,
                         value = kgDecSel,
                         onValueChange = { newDec ->
@@ -429,6 +450,7 @@ fun WeightGoalScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
+                        listState = lbsIntWheelState,
                         range = lbsIntMin..lbsIntMax,
                         value = lbsIntSel,
                         onValueChange = { newInt ->
@@ -460,6 +482,7 @@ fun WeightGoalScreen(
                     }
 
                     NumberWheel(
+                        listState = lbsDecWheelState,
                         range = 0..9,
                         value = lbsDecSel,
                         onValueChange = { newDec ->
@@ -499,7 +522,6 @@ fun WeightGoalScreen(
     }
 }
 
-/** 分段切換（lbs / kg） */
 @Composable
 private fun WeightUnitSegmented(
     useMetric: Boolean,
@@ -573,10 +595,18 @@ private fun SegItem(
     }
 }
 
-/** 通用數字滾輪（初始化置中 + 程式定位不回呼 + 只在使用者滑動結束回呼） */
+private fun centeredWheelValue(
+    state: LazyListState,
+    range: IntRange
+): Int {
+    return (range.first + state.firstVisibleItemIndex)
+        .coerceIn(range.first, range.last)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
+    listState: LazyListState,
     range: IntRange,
     value: Int,
     onValueChange: (Int) -> Unit,
@@ -599,52 +629,47 @@ private fun NumberWheel(
 
     val selectedIdx = (value - range.first).coerceIn(0, count - 1)
 
-    val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(
-        lazyListState = state,
+        lazyListState = listState,
         snapPosition = SnapPosition.Center
     )
 
-    val centerListIndex by remember {
+    val centerListIndex by remember(listState, padded) {
         derivedStateOf {
-            (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
+            (listState.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
         }
     }
 
     val latestOnValueChange by rememberUpdatedState(onValueChange)
 
-    // ✅ 忽略「程式定位」造成的 idle 回呼
-    var ignoreNextIdleCallback by remember { mutableStateOf(true) }
+    var ignoreNextCenterCallback by remember { mutableStateOf(true) }
 
-    // 初始化定位：程式 scrollToItem
     LaunchedEffect(range) {
-        ignoreNextIdleCallback = true
-        state.scrollToItem(selectedIdx)
+        ignoreNextCenterCallback = true
+        listState.scrollToItem(selectedIdx)
     }
 
-    // 外部 value 改變：程式定位（不回呼）
     LaunchedEffect(range, value) {
-        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
-            ignoreNextIdleCallback = true
-            state.scrollToItem(selectedIdx)
+        if (!listState.isScrollInProgress && listState.firstVisibleItemIndex != selectedIdx) {
+            ignoreNextCenterCallback = true
+            listState.scrollToItem(selectedIdx)
         }
     }
 
-    // ✅ 只在「使用者滑動結束」那一刻回呼（true -> false）
     LaunchedEffect(range) {
         snapshotFlow {
-            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+            padded.getOrNull(
+                (listState.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
+            )
         }
+            .filterNotNull()
             .distinctUntilChanged()
             .collect { centerValue ->
-                if (ignoreNextIdleCallback) {
-                    ignoreNextIdleCallback = false
+                if (ignoreNextCenterCallback) {
+                    ignoreNextCenterCallback = false
                     return@collect
                 }
-
-                if (centerValue != null) {
-                    latestOnValueChange(centerValue)
-                }
+                latestOnValueChange(centerValue)
             }
     }
 
@@ -654,7 +679,7 @@ private fun NumberWheel(
             .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
-            state = state,
+            state = listState,
             flingBehavior = fling,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
@@ -722,22 +747,21 @@ private fun NumberWheel(
     }
 }
 
-/* ---------------------------- 換算工具（精準 + 無條件捨去到 0.1） ---------------------------- */
+private fun normalizeKg1(v: Double): Double =
+    (v * 10.0).roundToInt() / 10.0
+
 private const val KG_PER_LB = 0.45359237
 private const val LBS_PER_KG = 1.0 / KG_PER_LB
 private const val EPS = 1e-9
 
-// 無條件捨去到 0.1（避免浮點誤差導致 69.799999 -> 69.7）
 private fun floor1(v: Double): Double =
     kotlin.math.floor((v + EPS) * 10.0) / 10.0
 
 private fun lbsToKgPrecise(lbs: Double): Double =
     lbs * KG_PER_LB
 
-// 154.0 lbs -> 69.8 kg（floor 0.1）
 private fun lbsTenthsToKgFloor1(lbsTenths: Int): Double =
     floor1((lbsTenths / 10.0) * KG_PER_LB)
 
-// 70.0 kg -> 154.3 lbs（floor 0.1） => 回傳 1543
 private fun kgToLbsTenths(kg: Double): Int =
     ((kg * LBS_PER_KG + EPS) * 10.0).toInt()
