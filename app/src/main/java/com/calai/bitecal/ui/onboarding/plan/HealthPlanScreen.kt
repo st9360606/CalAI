@@ -204,7 +204,7 @@ fun HealthPlanScreen(
                 .verticalScroll(scroll),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(3.dp))
+            Spacer(Modifier.height(20.dp))
 
             Text(
                 text = stringResource(R.string.plan_title_congrats),
@@ -227,7 +227,7 @@ fun HealthPlanScreen(
                 )
             }
 
-            Box(Modifier.offset(y = (-10).dp)) {
+            Box(Modifier.offset(y = (-8).dp)) {
                 DonutMacros(
                     kcal = plan.kcal,
                     carbs = plan.carbsGrams,
@@ -240,7 +240,7 @@ fun HealthPlanScreen(
                 MacrosRings(plan)
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(10.dp))
 
             HydrationAndWeightRings(
                 weightKg = inputs.weightKg,
@@ -250,14 +250,14 @@ fun HealthPlanScreen(
                 displayGoal = ui.goalWeightDisplay
             )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(18.dp))
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = stringResource(R.string.plan_edit_anytime),
-                    color = NeutralText.copy(alpha = 0.85f),
+                    color = NeutralText,
                     fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(0.55f),
                     textAlign = TextAlign.Center
@@ -288,7 +288,7 @@ fun HealthPlanScreen(
                     .padding(horizontal = 48.dp)
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
 
             GoalsHowToSection(
                 trackMealsIconRes = R.drawable.ic_dish2,

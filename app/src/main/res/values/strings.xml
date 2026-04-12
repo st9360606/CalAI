@@ -390,4 +390,29 @@
     <string name="progress_day_sat">Sat</string>
 
 
+
+
+    <!-- ComputationProgressScreen -->
+    <string name="progress_hero_title">Creating your personalized plan</string>
+    <string name="progress_hero_subtitle">We’re using your goals, body data, and preferences to tailor your daily targets.</string>
+    <string name="progress_center_caption">Preparing your results</string>
+
+    <string name="progress_phase_pill_1">Reviewing your profile</string>
+    <string name="progress_phase_pill_2">Calculating your calorie target</string>
+    <string name="progress_phase_pill_3">Balancing your daily macros</string>
+    <string name="progress_phase_pill_4">Finalizing your health insights</string>
+
+    <string name="progress_card_title_v2">Setting up your plan</string>
+
+    <string name="progress_row_calorie_target">Daily calorie target</string>
+    <string name="progress_row_carb_distribution">Carb distribution</string>
+    <string name="progress_row_protein_recommendation">Protein recommendation</string>
+    <string name="progress_row_fat_recommendation">Fat recommendation</string>
+    <string name="progress_row_health_score_estimate">Health score estimate</string>
+
+    <string name="progress_footer_hint">This takes just a moment</string>
+
+
+
+
 </resources>

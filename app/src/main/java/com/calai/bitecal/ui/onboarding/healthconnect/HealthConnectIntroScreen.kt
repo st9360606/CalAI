@@ -38,7 +38,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -59,13 +58,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
-import androidx.core.net.toUri
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
@@ -135,8 +134,6 @@ fun HealthConnectIntroScreen(
         bottomBar = {
             val scope = rememberCoroutineScope()
             val client = remember { HealthConnectClient.getOrCreate(ctx) }
-
-            // ✅ 防呆：owner 為 null 時不要建立 launcher（避免某些容器/Preview 閃退）
             val owner = LocalActivityResultRegistryOwner.current
 
             if (owner != null) {
@@ -157,8 +154,11 @@ fun HealthConnectIntroScreen(
                 HCBottomBar(
                     onPrimary = {
                         scope.launch {
-                            val status = runCatching { HealthConnectClient.getSdkStatus(ctx, HC_PROVIDER) }
-                                .getOrElse { HealthConnectClient.getSdkStatus(ctx) }
+                            val status = runCatching {
+                                HealthConnectClient.getSdkStatus(ctx, HC_PROVIDER)
+                            }.getOrElse {
+                                HealthConnectClient.getSdkStatus(ctx)
+                            }
                             Log.d(TAG, "getSdkStatus=$status")
 
                             if (status == HealthConnectClient.SDK_UNAVAILABLE ||
@@ -168,7 +168,8 @@ fun HealthConnectIntroScreen(
                                 return@launch
                             }
 
-                            val grantedNow: Set<String> = client.permissionController.getGrantedPermissions()
+                            val grantedNow: Set<String> =
+                                client.permissionController.getGrantedPermissions()
                             Log.d(TAG, "granted(now)=${grantedNow.joinToString()}")
                             Log.d(TAG, "required=${requiredPermissions.joinToString()}")
 
@@ -183,17 +184,14 @@ fun HealthConnectIntroScreen(
                                 launcher.launch(missing)
                             }
                         }
-                    },
-                    onSkip = onSkip
+                    }
                 )
             } else {
-                // ✅ 極少數：拿不到 registry owner（Preview/特殊容器）→ 直接提供可繼續路徑
                 HCBottomBar(
                     onPrimary = {
                         Log.d(TAG, "No ActivityResultRegistryOwner. Skip permission request.")
                         onSkip()
-                    },
-                    onSkip = onSkip
+                    }
                 )
             }
         }
@@ -204,7 +202,6 @@ fun HealthConnectIntroScreen(
                 .padding(inner)
                 .verticalScroll(rememberScrollState())
         ) {
-
             Spacer(Modifier.height(100.dp))
 
             val cardCorner = 28.dp
@@ -334,19 +331,14 @@ fun HealthConnectIntroScreen(
 @Composable
 private fun HCBottomBar(
     onPrimary: () -> Unit,
-    onSkip: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(start = 20.dp, end = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+    Box {
         Button(
             onClick = onPrimary,
             modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                 .fillMaxWidth()
                 .height(64.dp),
             shape = RoundedCornerShape(999.dp),
@@ -362,19 +354,7 @@ private fun HCBottomBar(
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.2.sp
                 ),
-            )
-        }
-
-        // ✅ 新增：讓使用者永遠能下一步
-        TextButton(onClick = onSkip) {
-            Text(
-                text = stringResource(R.string.skip_text),
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.2.sp
-                ),
-                color = Color(0xFF111114).copy(alpha = 0.65f)
+                textAlign = TextAlign.Center
             )
         }
     }

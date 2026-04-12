@@ -388,4 +388,25 @@
     <string name="progress_day_sat">六</string>
 
 
+    <!-- ComputationProgressScreen -->
+    <string name="progress_hero_title">正在建立你的個人化計畫</string>
+    <string name="progress_hero_subtitle">我們會根據你的目標、身體資料與偏好，為你設定每日營養目標。</string>
+    <string name="progress_center_caption">正在準備結果</string>
+
+    <string name="progress_phase_pill_1">正在整理你的個人資料</string>
+    <string name="progress_phase_pill_2">正在計算每日卡路里目標</string>
+    <string name="progress_phase_pill_3">正在平衡每日三大營養素</string>
+    <string name="progress_phase_pill_4">正在完成健康評分分析</string>
+
+    <string name="progress_card_title_v2">正在為你設定計畫</string>
+
+    <string name="progress_row_calorie_target">每日卡路里目標</string>
+    <string name="progress_row_carb_distribution">碳水分配建議</string>
+    <string name="progress_row_protein_recommendation">蛋白質建議</string>
+    <string name="progress_row_fat_recommendation">脂肪建議</string>
+    <string name="progress_row_health_score_estimate">健康分數預估</string>
+
+    <string name="progress_footer_hint">只需要一點點時間</string>
+
+
 </resources>
