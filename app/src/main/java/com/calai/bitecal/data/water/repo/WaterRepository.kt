@@ -3,6 +3,7 @@ package com.calai.bitecal.data.water.repo
 import com.calai.bitecal.data.water.api.AdjustRequest
 import com.calai.bitecal.data.water.api.WaterApi
 import com.calai.bitecal.data.water.api.WaterSummaryDto
+import com.calai.bitecal.data.water.api.WaterWeeklyChartDto
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,4 +20,6 @@ class WaterRepository @Inject constructor(
             req = AdjustRequest(cupsDelta = delta)
         )
     }
+
+    suspend fun loadWeeklyChart(): WaterWeeklyChartDto = api.weekly()
 }

@@ -169,6 +169,31 @@ fun ProgressScreen(
                 }
             }
 
+            item {
+                when {
+                    ui.waterLoading && ui.waterChart.days.isEmpty() -> {
+                        WaterLoadingCard(
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+
+                    ui.waterError != null && ui.waterChart.days.isEmpty() -> {
+                        WaterErrorCard(
+                            message = ui.waterError ?: "Load water chart failed",
+                            onRetry = vm::retryWater,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+
+                    else -> {
+                        WaterChartCard(
+                            chart = ui.waterChart,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+            }
+
             item { Spacer(modifier = Modifier.height(5.dp)) }
         }
     }

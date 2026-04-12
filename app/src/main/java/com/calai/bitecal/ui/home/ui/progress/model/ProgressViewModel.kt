@@ -7,6 +7,9 @@ import com.calai.bitecal.data.foodlog.model.ProgressDayDto
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
 import com.calai.bitecal.data.profile.api.UserProfileDto
 import com.calai.bitecal.data.profile.repo.ProfileRepository
+import com.calai.bitecal.data.water.api.WaterSummaryDto
+import com.calai.bitecal.data.water.api.WaterWeeklyChartDto
+import com.calai.bitecal.data.water.repo.WaterRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -15,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.util.Locale
 import javax.inject.Inject
@@ -31,6 +35,23 @@ data class ProgressBarDayUi(
     val totalG: Float,
     val totalKcal: Int
 )
+
+data class WaterProgressDayUi(
+    val date: String,
+    val dayLabel: String,
+    val ml: Int
+)
+
+data class WaterChartUi(
+    val todayMl: Int = 0,
+    val goalMl: Int = 2000,
+    val averageMl: Int = 0,
+    val remainingMl: Int = 2000,
+    val days: List<WaterProgressDayUi> = emptyList()
+) {
+    val reachedGoalToday: Boolean
+        get() = goalMl > 0 && todayMl >= goalMl
+}
 
 data class BmiCardUi(
     val bmiText: String = "--.--",
@@ -56,7 +77,11 @@ data class ProgressUiState(
     val days: List<ProgressBarDayUi> = emptyList(),
     val periodLabel: String = "This Week",
     val bmiCard: BmiCardUi = BmiCardUi(),
-    val error: String? = null
+    val error: String? = null,
+
+    val waterLoading: Boolean = true,
+    val waterChart: WaterChartUi = WaterChartUi(),
+    val waterError: String? = null
 ) {
     val isEmpty: Boolean
         get() = !loading && error == null && days.all { it.totalG <= 0f && it.totalKcal <= 0 }
@@ -65,36 +90,79 @@ data class ProgressUiState(
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
     private val repo: FoodLogsRepository,
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val waterRepository: WaterRepository
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(ProgressUiState())
     val ui: StateFlow<ProgressUiState> = _ui.asStateFlow()
 
-    private var loaded = false
+    private var progressLoaded = false
+    private var waterLoaded = false
 
     fun loadIfNeeded() {
-        if (loaded) return
-        refresh(0)
+        when {
+            !progressLoaded -> refresh(weekOffset = 0, refreshWater = !waterLoaded)
+            !waterLoaded -> retryWater()
+        }
     }
 
     fun selectWeek(weekOffset: Int) {
         val safe = weekOffset.coerceIn(0, 3)
-        if (_ui.value.selectedWeekOffset == safe && loaded) return
-        refresh(safe)
+        if (_ui.value.selectedWeekOffset == safe && progressLoaded) return
+        refresh(weekOffset = safe, refreshWater = false)
     }
 
     fun retry() {
-        refresh(_ui.value.selectedWeekOffset)
+        refresh(
+            weekOffset = _ui.value.selectedWeekOffset,
+            refreshWater = !waterLoaded
+        )
     }
 
-    private fun refresh(weekOffset: Int) {
+    fun retryWater() {
+        viewModelScope.launch {
+            _ui.update {
+                it.copy(
+                    waterLoading = true,
+                    waterError = null
+                )
+            }
+
+            runCatching { waterRepository.loadWeeklyChart().toWaterChartUi() }
+                .onSuccess { chartUi ->
+                    waterLoaded = true
+                    _ui.update {
+                        it.copy(
+                            waterLoading = false,
+                            waterChart = chartUi,
+                            waterError = null
+                        )
+                    }
+                }
+                .onFailure { t ->
+                    _ui.update {
+                        it.copy(
+                            waterLoading = false,
+                            waterError = t.message ?: "Load water chart failed"
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun refresh(
+        weekOffset: Int,
+        refreshWater: Boolean
+    ) {
         viewModelScope.launch {
             _ui.update {
                 it.copy(
                     loading = true,
                     selectedWeekOffset = weekOffset,
-                    error = null
+                    error = null,
+                    waterLoading = if (refreshWater) true else it.waterLoading,
+                    waterError = if (refreshWater) null else it.waterError
                 )
             }
 
@@ -109,13 +177,51 @@ class ProgressViewModel @Inject constructor(
                     }
                 }
 
+                val waterDeferred = if (refreshWater) {
+                    async {
+                        runCatching { waterRepository.loadWeeklyChart().toWaterChartUi() }
+                    }
+                } else {
+                    null
+                }
+
                 val progressResult = progressDeferred.await()
                 val bmiCard = bmiDeferred.await().getOrElse { _ui.value.bmiCard }
+                val waterResult = waterDeferred?.await()
+
+                if (refreshWater && waterResult != null) {
+                    waterResult
+                        .onSuccess { chartUi ->
+                            waterLoaded = true
+                            _ui.update {
+                                it.copy(
+                                    waterLoading = false,
+                                    waterChart = chartUi,
+                                    waterError = null
+                                )
+                            }
+                        }
+                        .onFailure { t ->
+                            _ui.update {
+                                it.copy(
+                                    waterLoading = false,
+                                    waterError = t.message ?: "Load water chart failed"
+                                )
+                            }
+                        }
+                }
 
                 progressResult
                     .onSuccess { dto ->
-                        loaded = true
-                        _ui.value = dto.toUiState(weekOffset).copy(bmiCard = bmiCard)
+                        progressLoaded = true
+                        _ui.update { current ->
+                            dto.toUiState(weekOffset).copy(
+                                bmiCard = bmiCard,
+                                waterLoading = current.waterLoading,
+                                waterChart = current.waterChart,
+                                waterError = current.waterError
+                            )
+                        }
                     }
                     .onFailure { t ->
                         _ui.update {
@@ -170,6 +276,7 @@ private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState
         "%.1f",
         displayDay.totalKcal.toDouble()
     )
+
     return ProgressUiState(
         loading = false,
         selectedWeekOffset = weekOffset,
@@ -179,6 +286,43 @@ private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState
         days = normalizedDayUis,
         periodLabel = period.label.toPrettyLabel(),
         error = null
+    )
+}
+
+private fun WaterWeeklyChartDto.toWaterChartUi(): WaterChartUi {
+    val dayUis = days.map { it.toWaterUi() }
+    val resolvedGoalMl = goalMl.takeIf { it > 0 } ?: 2000
+    val todayMl = dayUis.lastOrNull()?.ml ?: 0
+    val averageMl = if (dayUis.isEmpty()) 0 else dayUis.sumOf { it.ml } / dayUis.size
+    val remainingMl = (resolvedGoalMl - todayMl).coerceAtLeast(0)
+
+    return WaterChartUi(
+        todayMl = todayMl,
+        goalMl = resolvedGoalMl,
+        averageMl = averageMl,
+        remainingMl = remainingMl,
+        days = dayUis
+    )
+}
+
+private fun WaterSummaryDto.toWaterUi(): WaterProgressDayUi {
+    val parsedDate = runCatching { LocalDate.parse(date) }.getOrNull()
+
+    val dayLabel = when (parsedDate?.dayOfWeek) {
+        DayOfWeek.SUNDAY -> "Sun"
+        DayOfWeek.MONDAY -> "Mon"
+        DayOfWeek.TUESDAY -> "Tue"
+        DayOfWeek.WEDNESDAY -> "Wed"
+        DayOfWeek.THURSDAY -> "Thu"
+        DayOfWeek.FRIDAY -> "Fri"
+        DayOfWeek.SATURDAY -> "Sat"
+        null -> ""
+    }
+
+    return WaterProgressDayUi(
+        date = date,
+        dayLabel = dayLabel,
+        ml = ml
     )
 }
 

@@ -32,6 +32,12 @@ data class AdjustRequest(
     val cupsDelta: Int
 )
 
+@Serializable
+data class WaterWeeklyChartDto(
+    val goalMl: Int,
+    val days: List<WaterSummaryDto>
+)
+
 interface WaterApi {
     @GET("/water/today")
     suspend fun today(
@@ -43,4 +49,9 @@ interface WaterApi {
         @Header("X-Client-Timezone") tz: String = ZoneId.systemDefault().id,
         @Body req: AdjustRequest
     ): WaterSummaryDto
+
+    @GET("/water/weekly")
+    suspend fun weekly(
+        @Header("X-Client-Timezone") tz: String = ZoneId.systemDefault().id
+    ): WaterWeeklyChartDto
 }
