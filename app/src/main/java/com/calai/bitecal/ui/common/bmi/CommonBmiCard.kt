@@ -23,10 +23,10 @@ import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,7 +85,7 @@ fun CommonBmiCard(
             .fillMaxWidth()
             .background(CardBg, RoundedCornerShape(28.dp))
             .border(1.dp, CardBorder, RoundedCornerShape(28.dp))
-            .padding(horizontal = 22.dp, vertical = 28.dp)
+            .padding(start = 22.dp, top = 28.dp, end = 22.dp, bottom = 20.dp)
     ) {
         Text(
             text = model.titleText,
@@ -158,23 +158,28 @@ fun CommonBmiCard(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
             CommonBmiLegendItem(
                 color = BarBlue,
-                label = stringResource(R.string.bmi_status_underweight)
+                label = stringResource(R.string.bmi_status_underweight),
+                rangeText = stringResource(R.string.bmi_range_underweight)
             )
             CommonBmiLegendItem(
                 color = BarGreen,
-                label = stringResource(R.string.bmi_status_healthy)
+                label = stringResource(R.string.bmi_status_healthy),
+                rangeText = stringResource(R.string.bmi_range_healthy)
             )
             CommonBmiLegendItem(
                 color = BarYellow,
-                label = stringResource(R.string.bmi_status_overweight)
+                label = stringResource(R.string.bmi_status_overweight),
+                rangeText = stringResource(R.string.bmi_range_overweight)
             )
             CommonBmiLegendItem(
                 color = BarRed,
-                label = stringResource(R.string.bmi_status_obese)
+                label = stringResource(R.string.bmi_status_obese),
+                rangeText = stringResource(R.string.bmi_range_obese)
             )
         }
     }
@@ -314,24 +319,48 @@ private fun CommonBmiRangeBar(
 @Composable
 private fun CommonBmiLegendItem(
     color: Color,
-    label: String
+    label: String,
+    rangeText: String,
+    modifier: Modifier = Modifier
 ) {
+    val dotSize = 8.dp
+    val dotGap = 4.dp
+
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier,
+        verticalAlignment = Alignment.Top
     ) {
         Box(
             modifier = Modifier
-                .size(10.dp)
+                .padding(top = 2.dp)
+                .size(dotSize)
                 .background(color, CircleShape)
         )
 
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(dotGap))
 
-        Text(
-            text = label,
-            color = Color(0xFF6F727A),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium
-        )
+        Column {
+            Text(
+                text = label,
+                color = Color(0xFF6F727A),
+                fontSize = 12.sp,
+                lineHeight = 14.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Clip
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = rangeText,
+                color = Color(0xFF8A8F98),
+                fontSize = 11.sp,
+                lineHeight = 13.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
+            )
+        }
     }
 }

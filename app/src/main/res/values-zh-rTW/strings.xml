@@ -386,6 +386,10 @@
     <string name="progress_day_thu">四</string>
     <string name="progress_day_fri">五</string>
     <string name="progress_day_sat">六</string>
+    <string name="bmi_range_underweight">&lt;18.5</string>
+    <string name="bmi_range_healthy">18.5–24.9</string>
+    <string name="bmi_range_overweight">25.0–29.9</string>
+    <string name="bmi_range_obese">&gt;30.0</string>
 
 
     <!-- ComputationProgressScreen -->
