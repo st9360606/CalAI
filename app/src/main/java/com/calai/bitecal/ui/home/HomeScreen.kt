@@ -774,7 +774,7 @@ private fun Avatar(
     startPadding: Dp = 0.dp,
     onClick: (() -> Unit)? = null,
     fallbackCircleSize: Dp = 43.dp,   // ✅ 對齊 Setting 的 visualSize
-    fallbackIconSize: Dp = 45.dp      // ✅ spoon icon 大小
+    fallbackIconSize: Dp = 43.dp      // ✅ spoon icon 大小
 ) {
     val interaction = remember { MutableInteractionSource() }
 
@@ -801,7 +801,7 @@ private fun Avatar(
                     .size(fallbackCircleSize)
                     .clip(CircleShape)
                     .background(Color.White)
-                    .border(1.25.dp, Color(0x26000000), CircleShape),
+                    .border(1.25.dp, Color(0xFFCDD5DF), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
