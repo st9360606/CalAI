@@ -73,7 +73,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.fasting.model.FastingPlan
 import com.calai.bitecal.ui.common.CalaiCenteredTopBar
-import com.calai.bitecal.ui.common.components.CalaiPrimaryActionButton
+import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel

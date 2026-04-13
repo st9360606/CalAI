@@ -63,7 +63,7 @@ import coil.compose.AsyncImage
 import com.calai.bitecal.R
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
-import com.calai.bitecal.ui.common.components.CalaiPrimaryActionButton
+import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel

@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.common.bmi
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -272,6 +273,7 @@ private fun CommonBmiStatusPill(
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun CommonBmiRangeBar(
     markerProgress: Float,

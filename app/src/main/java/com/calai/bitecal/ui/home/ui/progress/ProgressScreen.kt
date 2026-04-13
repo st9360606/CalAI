@@ -159,7 +159,7 @@ fun ProgressScreen(
 
                 else -> {
                     item {
-                        ChartCard(
+                            ChartCard(
                             totalCaloriesText = ui.totalCaloriesText,
                             deltaText = ui.deltaText,
                             days = ui.days,
@@ -300,7 +300,7 @@ private fun StackedBarChart(
 
     val chartAreaHeight = 184.dp
     val chartRowHeight = 184.dp
-    val xAxisGap = 10.dp
+    val xAxisGap = 6.dp
     val yAxisWidth = 36.dp
     val yAxisToChartGap = 2.dp
     val plotVerticalInset = 10.dp

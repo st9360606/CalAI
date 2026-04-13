@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.common.components
+package com.calai.bitecal.ui.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height

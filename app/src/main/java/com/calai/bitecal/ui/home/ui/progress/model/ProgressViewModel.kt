@@ -47,6 +47,7 @@ data class WaterChartUi(
     val goalMl: Int = 2000,
     val averageMl: Int = 0,
     val remainingMl: Int = 2000,
+    val deltaText: String = "--",
     val days: List<WaterProgressDayUi> = emptyList()
 ) {
     val reachedGoalToday: Boolean
@@ -290,18 +291,38 @@ private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState
 }
 
 private fun WaterWeeklyChartDto.toWaterChartUi(): WaterChartUi {
-    val dayUis = days.map { it.toWaterUi() }
+    val rawDayUis = days.map { it.toWaterUi() }
+    val normalizedDayUis = rawDayUis.normalizeWaterWeekDays()
     val resolvedGoalMl = goalMl.takeIf { it > 0 } ?: 2000
-    val todayMl = dayUis.lastOrNull()?.ml ?: 0
-    val averageMl = if (dayUis.isEmpty()) 0 else dayUis.sumOf { it.ml } / dayUis.size
+
+    val today = LocalDate.now()
+    val yesterday = today.minusDays(1)
+
+    val todayMl = normalizedDayUis.firstOrNull { it.date == today.toString() }?.ml
+        ?: rawDayUis.lastOrNull()?.ml
+        ?: 0
+
+    val yesterdayMl = normalizedDayUis.firstOrNull { it.date == yesterday.toString() }?.ml ?: 0
+
+    val averageMl = if (rawDayUis.isEmpty()) {
+        0
+    } else {
+        rawDayUis.sumOf { it.ml } / rawDayUis.size
+    }
+
     val remainingMl = (resolvedGoalMl - todayMl).coerceAtLeast(0)
+    val deltaValue = calculateDayDeltaPercent(
+        todayCalories = todayMl,
+        yesterdayCalories = yesterdayMl
+    )
 
     return WaterChartUi(
         todayMl = todayMl,
         goalMl = resolvedGoalMl,
         averageMl = averageMl,
         remainingMl = remainingMl,
-        days = dayUis
+        deltaText = deltaValue.toDeltaText(),
+        days = normalizedDayUis
     )
 }
 
@@ -458,5 +479,17 @@ private fun UserProfileDto.resolveBmiTone(bmiValue: Double?): BmiStatusTone {
             bmiValue < 30.0 -> BmiStatusTone.Overweight
             else -> BmiStatusTone.Obese
         }
+    }
+}
+
+private fun List<WaterProgressDayUi>.normalizeWaterWeekDays(): List<WaterProgressDayUi> {
+    val dayMap = associateBy { it.dayLabel.take(3) }
+
+    return ORDERED_WEEK_LABELS.map { label ->
+        dayMap[label] ?: WaterProgressDayUi(
+            date = "",
+            dayLabel = label,
+            ml = 0
+        )
     }
 }
