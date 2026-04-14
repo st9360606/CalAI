@@ -12,7 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.res.stringResource
@@ -355,52 +359,81 @@ private fun WorkoutBarChart(
     val yAxisMax = computeWorkoutAxisMax(maxValue)
     val yTicks = buildWorkoutYAxisTicks(yAxisMax, 4)
 
+    // 跟 WaterBarChart 完全對齊
+    val chartAreaHeight = 184.dp
+    val chartRowHeight = 184.dp
+    val xAxisGap = 8.dp
+    val yAxisWidth = 36.dp
+    val yAxisToChartGap = 2.dp
+    val plotTopInset = 10.dp
+    val plotBottomInset = 0.dp
+    val yLabelHalfHeight = 9.dp
+    val plotHeightDp = chartAreaHeight - plotTopInset - plotBottomInset
+    val plotEndPadding = 8.dp
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp),
+                .height(chartRowHeight),
             verticalAlignment = Alignment.Bottom
         ) {
-            Column(
-                modifier = Modifier.width(38.dp).height(200.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.End
+            Box(
+                modifier = Modifier
+                    .width(yAxisWidth)
+                    .height(chartAreaHeight)
             ) {
                 yTicks.asReversed().forEach { tick ->
+                    val ratio = if (yAxisMax == 0f) 0f else tick / yAxisMax
+                    val tickY = chartAreaHeight - plotBottomInset - (plotHeightDp * ratio)
+
                     Text(
                         text = tick.roundToInt().toString(),
                         color = WorkoutAxisIdleColor,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(
+                                x = (-8).dp,
+                                y = tickY - yLabelHalfHeight
+                            )
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(yAxisToChartGap))
 
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(200.dp)
+                    .height(chartAreaHeight)
+                    .padding(end = plotEndPadding)
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val dash = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                    val strokeWidth = 2f
+
+                    val plotTop = plotTopInset.toPx()
+                    val plotBottom = size.height - plotBottomInset.toPx()
+                    val plotHeight = (plotBottom - plotTop).coerceAtLeast(0f)
 
                     yTicks.forEach { tick ->
                         val ratio = if (yAxisMax == 0f) 0f else tick / yAxisMax
-                        val y = size.height - (ratio * size.height)
+                        val y = plotBottom - (ratio * plotHeight)
+
                         drawLine(
                             color = WorkoutGridColor,
                             start = Offset(0f, y),
                             end = Offset(size.width, y),
-                            strokeWidth = 2f,
+                            strokeWidth = strokeWidth,
                             pathEffect = dash
                         )
                     }
 
                     val goalRatio = if (yAxisMax == 0f) 0f else goalKcal / yAxisMax
-                    val goalY = size.height - (goalRatio * size.height)
+                    val goalY = plotBottom - (goalRatio * plotHeight)
+
                     drawLine(
                         color = WorkoutGoalLineColor,
                         start = Offset(0f, goalY),
@@ -426,18 +459,42 @@ private fun WorkoutBarChart(
                                     .width(34.dp)
                                     .fillMaxHeight()
                             ) {
+                                val plotTop = plotTopInset.toPx()
+                                val plotBottom = size.height - plotBottomInset.toPx()
+                                val plotHeight = (plotBottom - plotTop).coerceAtLeast(0f)
+
                                 if (!showBars || day.kcal <= 0 || yAxisMax <= 0f) return@Canvas
 
                                 val barWidth = size.width * 0.84f
                                 val left = (size.width - barWidth) / 2f
-                                val barHeight = (size.height * (day.kcal / yAxisMax)).coerceAtLeast(0f)
-                                val top = size.height - barHeight
+                                val barHeight = (plotHeight * (day.kcal / yAxisMax)).coerceAtLeast(0f)
+                                val top = plotBottom - barHeight
 
-                                drawRoundRect(
+                                val resolvedRadius = minOf(
+                                    8.dp.toPx(),
+                                    barWidth / 2f,
+                                    barHeight / 2f
+                                )
+
+                                val path = Path().apply {
+                                    addRoundRect(
+                                        RoundRect(
+                                            left = left,
+                                            top = top,
+                                            right = left + barWidth,
+                                            bottom = top + barHeight,
+                                            topLeftCornerRadius = CornerRadius(resolvedRadius, resolvedRadius),
+                                            topRightCornerRadius = CornerRadius(resolvedRadius, resolvedRadius),
+                                            bottomRightCornerRadius = CornerRadius(0f, 0f),
+                                            bottomLeftCornerRadius = CornerRadius(0f, 0f)
+                                        )
+                                    )
+                                }
+
+                                drawPath(
+                                    path = path,
                                     color = WorkoutBarColor,
-                                    topLeft = Offset(left, top),
-                                    size = androidx.compose.ui.geometry.Size(barWidth, barHeight),
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                                    style = Fill
                                 )
                             }
                         }
@@ -446,12 +503,15 @@ private fun WorkoutBarChart(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(xAxisGap))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 46.dp)
+                .padding(
+                    start = yAxisWidth + yAxisToChartGap,
+                    end = plotEndPadding
+                )
         ) {
             chartDays.forEach { day ->
                 val active = showBars && day.kcal > 0
