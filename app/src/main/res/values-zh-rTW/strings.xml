@@ -412,5 +412,13 @@
 
     <string name="progress_footer_hint">只需要一點點時間</string>
 
+    <!-- WorkoutChartCard -->
+    <string name="workout_chart_title">運動消耗</string>
+    <string name="workout_chart_unit_kcal">大卡</string>
+    <string name="workout_chart_goal">目標</string>
+    <string name="workout_chart_7day_avg">7 日平均</string>
+    <string name="workout_chart_goal_reached">今天已達成目標</string>
+    <string name="workout_chart_goal_left">距離今日目標還差 %1$d 大卡</string>
+    <string name="workout_chart_loading">載入中...</string>
 
 </resources>

@@ -171,6 +171,31 @@ fun ProgressScreen(
 
             item {
                 when {
+                    ui.workoutLoading && ui.workoutChart.days.isEmpty() -> {
+                        WorkoutLoadingCard(
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+
+                    ui.workoutError != null && ui.workoutChart.days.isEmpty() -> {
+                        WorkoutErrorCard(
+                            message = ui.workoutError ?: "Load workout chart failed",
+                            onRetry = vm::retryWorkout,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+
+                    else -> {
+                        WorkoutChartCard(
+                            chart = ui.workoutChart,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+            }
+
+            item {
+                when {
                     ui.waterLoading && ui.waterChart.days.isEmpty() -> {
                         WaterLoadingCard(
                             modifier = Modifier.padding(horizontal = 16.dp)

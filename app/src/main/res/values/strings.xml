@@ -416,7 +416,14 @@
 
     <string name="progress_footer_hint">This takes just a moment</string>
 
-
+    <!-- WorkoutChartCard -->
+    <string name="workout_chart_title">Workout burn</string>
+    <string name="workout_chart_unit_kcal">kcal</string>
+    <string name="workout_chart_goal">Goal</string>
+    <string name="workout_chart_7day_avg">7-day avg</string>
+    <string name="workout_chart_goal_reached">Goal reached today</string>
+    <string name="workout_chart_goal_left">%1$d kcal left to hit today’s goal</string>
+    <string name="workout_chart_loading">Loading...</string>
 
 
 </resources>

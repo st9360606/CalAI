@@ -10,6 +10,8 @@ import com.calai.bitecal.data.profile.repo.ProfileRepository
 import com.calai.bitecal.data.water.api.WaterSummaryDto
 import com.calai.bitecal.data.water.api.WaterWeeklyChartDto
 import com.calai.bitecal.data.water.repo.WaterRepository
+import com.calai.bitecal.data.workout.model.WorkoutWeeklyProgressDto
+import com.calai.bitecal.data.workout.repo.WorkoutRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -82,17 +84,40 @@ data class ProgressUiState(
 
     val waterLoading: Boolean = true,
     val waterChart: WaterChartUi = WaterChartUi(),
-    val waterError: String? = null
+    val waterError: String? = null,
+
+    val workoutLoading: Boolean = true,
+    val workoutChart: WorkoutChartUi = WorkoutChartUi(),
+    val workoutError: String? = null
 ) {
     val isEmpty: Boolean
         get() = !loading && error == null && days.all { it.totalG <= 0f && it.totalKcal <= 0 }
+}
+
+data class WorkoutProgressDayUi(
+    val date: String,
+    val dayLabel: String,
+    val kcal: Int
+)
+
+data class WorkoutChartUi(
+    val todayBurnedKcal: Int = 0,
+    val goalKcal: Int = 450,
+    val averageKcal: Int = 0,
+    val remainingKcal: Int = 450,
+    val deltaText: String = "--",
+    val days: List<WorkoutProgressDayUi> = emptyList()
+) {
+    val reachedGoalToday: Boolean
+        get() = goalKcal > 0 && todayBurnedKcal >= goalKcal
 }
 
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
     private val repo: FoodLogsRepository,
     private val profileRepository: ProfileRepository,
-    private val waterRepository: WaterRepository
+    private val waterRepository: WaterRepository,
+    private val workoutRepository: WorkoutRepository
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(ProgressUiState())
@@ -100,24 +125,36 @@ class ProgressViewModel @Inject constructor(
 
     private var progressLoaded = false
     private var waterLoaded = false
+    private var workoutLoaded = false
 
     fun loadIfNeeded() {
         when {
-            !progressLoaded -> refresh(weekOffset = 0, refreshWater = !waterLoaded)
+            !progressLoaded -> refresh(
+                weekOffset = 0,
+                refreshWater = !waterLoaded,
+                refreshWorkout = !workoutLoaded
+            )
             !waterLoaded -> retryWater()
+            !workoutLoaded -> retryWorkout()
         }
     }
-
     fun selectWeek(weekOffset: Int) {
         val safe = weekOffset.coerceIn(0, 3)
         if (_ui.value.selectedWeekOffset == safe && progressLoaded) return
-        refresh(weekOffset = safe, refreshWater = false)
+
+        // Workout chart 不跟 WeekTabs 綁定，所以切週時不重抓 workout
+        refresh(
+            weekOffset = safe,
+            refreshWater = false,
+            refreshWorkout = false
+        )
     }
 
     fun retry() {
         refresh(
             weekOffset = _ui.value.selectedWeekOffset,
-            refreshWater = !waterLoaded
+            refreshWater = !waterLoaded,
+            refreshWorkout = !workoutLoaded
         )
     }
 
@@ -152,9 +189,42 @@ class ProgressViewModel @Inject constructor(
         }
     }
 
+    fun retryWorkout() {
+        viewModelScope.launch {
+            _ui.update {
+                it.copy(
+                    workoutLoading = true,
+                    workoutError = null
+                )
+            }
+
+            runCatching { workoutRepository.loadWeeklyProgress().toWorkoutChartUi() }
+                .onSuccess { chartUi ->
+                    workoutLoaded = true
+                    _ui.update {
+                        it.copy(
+                            workoutLoading = false,
+                            workoutChart = chartUi,
+                            workoutError = null
+                        )
+                    }
+                }
+                .onFailure { t ->
+                    _ui.update {
+                        it.copy(
+                            workoutLoading = false,
+                            workoutError = t.message ?: "Load workout chart failed"
+                        )
+                    }
+                }
+        }
+    }
+
+
     private fun refresh(
         weekOffset: Int,
-        refreshWater: Boolean
+        refreshWater: Boolean,
+        refreshWorkout: Boolean
     ) {
         viewModelScope.launch {
             _ui.update {
@@ -162,8 +232,12 @@ class ProgressViewModel @Inject constructor(
                     loading = true,
                     selectedWeekOffset = weekOffset,
                     error = null,
+
                     waterLoading = if (refreshWater) true else it.waterLoading,
-                    waterError = if (refreshWater) null else it.waterError
+                    waterError = if (refreshWater) null else it.waterError,
+
+                    workoutLoading = if (refreshWorkout) true else it.workoutLoading,
+                    workoutError = if (refreshWorkout) null else it.workoutError
                 )
             }
 
@@ -186,9 +260,18 @@ class ProgressViewModel @Inject constructor(
                     null
                 }
 
+                val workoutDeferred = if (refreshWorkout) {
+                    async {
+                        runCatching { workoutRepository.loadWeeklyProgress().toWorkoutChartUi() }
+                    }
+                } else {
+                    null
+                }
+
                 val progressResult = progressDeferred.await()
                 val bmiCard = bmiDeferred.await().getOrElse { _ui.value.bmiCard }
                 val waterResult = waterDeferred?.await()
+                val workoutResult = workoutDeferred?.await()
 
                 if (refreshWater && waterResult != null) {
                     waterResult
@@ -212,15 +295,44 @@ class ProgressViewModel @Inject constructor(
                         }
                 }
 
+                if (refreshWorkout && workoutResult != null) {
+                    workoutResult
+                        .onSuccess { chartUi ->
+                            workoutLoaded = true
+                            _ui.update {
+                                it.copy(
+                                    workoutLoading = false,
+                                    workoutChart = chartUi,
+                                    workoutError = null
+                                )
+                            }
+                        }
+                        .onFailure { t ->
+                            _ui.update {
+                                it.copy(
+                                    workoutLoading = false,
+                                    workoutError = t.message ?: "Load workout chart failed"
+                                )
+                            }
+                        }
+                }
+
                 progressResult
                     .onSuccess { dto ->
                         progressLoaded = true
                         _ui.update { current ->
                             dto.toUiState(weekOffset).copy(
                                 bmiCard = bmiCard,
+
+                                // 保留 water state
                                 waterLoading = current.waterLoading,
                                 waterChart = current.waterChart,
-                                waterError = current.waterError
+                                waterError = current.waterError,
+
+                                // 保留 workout state
+                                workoutLoading = current.workoutLoading,
+                                workoutChart = current.workoutChart,
+                                workoutError = current.workoutError
                             )
                         }
                     }
@@ -344,6 +456,36 @@ private fun WaterSummaryDto.toWaterUi(): WaterProgressDayUi {
         date = date,
         dayLabel = dayLabel,
         ml = ml
+    )
+}
+
+private fun WorkoutWeeklyProgressDto.toWorkoutChartUi(): WorkoutChartUi {
+    val rawDayUis = days.map { day ->
+        WorkoutProgressDayUi(
+            date = day.date,
+            dayLabel = day.dayOfWeek.take(3),
+            kcal = day.totalBurnedKcal.roundToInt()
+        )
+    }
+
+    val normalizedDayUis = ORDERED_WEEK_LABELS.map { label ->
+        rawDayUis.firstOrNull { it.dayLabel == label }
+            ?: WorkoutProgressDayUi(date = "", dayLabel = label, kcal = 0)
+    }
+
+    val today = LocalDate.now()
+    val todayKcal = normalizedDayUis.firstOrNull { it.date == today.toString() }?.kcal
+        ?: summary.todayBurnedKcal.roundToInt()
+
+    val remaining = (summary.goalKcal - todayKcal).coerceAtLeast(0)
+
+    return WorkoutChartUi(
+        todayBurnedKcal = todayKcal,
+        goalKcal = summary.goalKcal,
+        averageKcal = summary.averageKcal,
+        remainingKcal = remaining,
+        deltaText = summary.deltaPercent.toDeltaText(),
+        days = normalizedDayUis
     )
 }
 

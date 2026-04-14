@@ -3,9 +3,7 @@ package com.calai.bitecal.data.water.api
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
-import java.time.ZoneId
 
 /**
  * 後端回傳今天喝水的摘要
@@ -13,6 +11,7 @@ import java.time.ZoneId
  * - cups: 幾杯
  * - ml: 總毫升
  * - flOz: 總美制液量盎司 (fluid ounce)
+ * - X-Client-Timezone 一律由 BaseHeadersInterceptor 統一帶。
  */
 @Serializable
 data class WaterSummaryDto(
@@ -40,18 +39,13 @@ data class WaterWeeklyChartDto(
 
 interface WaterApi {
     @GET("/water/today")
-    suspend fun today(
-        @Header("X-Client-Timezone") tz: String = ZoneId.systemDefault().id
-    ): WaterSummaryDto
+    suspend fun today(): WaterSummaryDto
 
     @POST("/water/increment")
     suspend fun increment(
-        @Header("X-Client-Timezone") tz: String = ZoneId.systemDefault().id,
         @Body req: AdjustRequest
     ): WaterSummaryDto
 
     @GET("/water/weekly")
-    suspend fun weekly(
-        @Header("X-Client-Timezone") tz: String = ZoneId.systemDefault().id
-    ): WaterWeeklyChartDto
+    suspend fun weekly(): WaterWeeklyChartDto
 }

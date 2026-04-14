@@ -218,8 +218,7 @@ private fun WaterChartCardFrame(
             .border(1.dp, WaterBorderColor, RoundedCornerShape(28.dp))
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
-        val metricChipWidth = (maxWidth * 0.5f).coerceIn(132.dp, 148.dp)
-
+        val metricChipWidth = (maxWidth * 0.30f).coerceIn(88.dp, 102.dp)
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -278,9 +277,8 @@ private fun WaterChartCardFrame(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(
-                    modifier = Modifier.offset(x = 4.dp),
                     horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     WaterMetricChip(
                         label = goalText,
@@ -382,24 +380,23 @@ private fun WaterMetricChip(
             }
         }
 
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
-        Text(
-            text = label,
-            color = labelColor,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold
-        )
+        Column {
+            Text(
+                text = label,
+                color = labelColor,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold
+            )
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        Text(
-            text = value,
-            color = valueColor,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.End
-        )
+            Text(
+                text = value,
+                color = valueColor,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
     }
 }
 
@@ -717,10 +714,6 @@ private fun buildYAxisTicks(
     return (0..segments).map { index ->
         max * index / segments.toFloat()
     }
-}
-
-private fun formatMl(value: Int): String {
-    return String.format(Locale.getDefault(), "%,d", value)
 }
 
 private fun formatMlPlain(value: Int): String {

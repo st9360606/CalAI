@@ -1,7 +1,13 @@
 package com.calai.bitecal.data.workout.repo
 
-import com.calai.bitecal.data.workout.api.*
-import java.util.TimeZone
+import com.calai.bitecal.data.workout.api.EstimateRequest
+import com.calai.bitecal.data.workout.api.EstimateResponse
+import com.calai.bitecal.data.workout.api.LogWorkoutRequest
+import com.calai.bitecal.data.workout.api.LogWorkoutResponse
+import com.calai.bitecal.data.workout.api.PresetWorkoutDto
+import com.calai.bitecal.data.workout.api.TodayWorkoutResponse
+import com.calai.bitecal.data.workout.api.WorkoutApi
+import com.calai.bitecal.data.workout.model.WorkoutWeeklyProgressDto
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -9,10 +15,6 @@ import javax.inject.Singleton
 class WorkoutRepository @Inject constructor(
     private val api: WorkoutApi
 ) {
-
-    // 把目前裝置時區當成「你現在在哪」
-    private fun deviceTz(): String = TimeZone.getDefault().id
-    // 例: "Asia/Taipei", "America/Los_Angeles"
 
     suspend fun estimateFreeText(text: String): EstimateResponse {
         return api.estimate(EstimateRequest(text = text))
@@ -28,10 +30,7 @@ class WorkoutRepository @Inject constructor(
             minutes = minutes,
             kcal = kcal
         )
-        return api.log(
-            body = req,
-            tz = deviceTz()            // ★ 把 X-Client-Timezone 帶出去
-        )
+        return api.log(req)
     }
 
     suspend fun loadPresets(): List<PresetWorkoutDto> {
@@ -39,13 +38,14 @@ class WorkoutRepository @Inject constructor(
     }
 
     suspend fun loadToday(): TodayWorkoutResponse {
-        return api.today(
-            tz = deviceTz()            // ★ 同樣帶出去
-        )
+        return api.today()
     }
 
-    // ★ 新增：從後端拿目前用戶體重(kg)，供 fallback 動態計算
     suspend fun loadMyWeightKg(): Double {
         return api.myWeight().kg
+    }
+
+    suspend fun loadWeeklyProgress(): WorkoutWeeklyProgressDto {
+        return api.weeklyProgress()
     }
 }
