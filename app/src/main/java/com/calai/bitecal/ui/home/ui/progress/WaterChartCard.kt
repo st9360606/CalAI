@@ -239,37 +239,35 @@ private fun WaterChartCardFrame(
                         fontWeight = FontWeight.Bold
                     )
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    Row(
+                        verticalAlignment = Alignment.Bottom
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            Text(
-                                text = headlineValue,
-                                color = WaterValueColor,
-                                fontSize = 36.sp,
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 36.sp
-                            )
+                        Text(
+                            text = headlineValue,
+                            color = WaterValueColor,
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 36.sp
+                        )
 
-                            Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
 
-                            Text(
-                                text = unitText,
-                                color = WaterMetaColor,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                        }
+                        Text(
+                            text = unitText,
+                            color = WaterMetaColor,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
                             text = resolvedDeltaText,
                             color = resolvedDeltaColor,
                             fontSize = 17.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(start = 2.dp)
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
                 }
@@ -310,11 +308,11 @@ private fun WaterChartCardFrame(
 
             chartContent()
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             WaterLegendRow()
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Box(
                 modifier = Modifier
@@ -486,12 +484,13 @@ private fun WaterBarChart(
     // ✅ 跟 ChartCard 完全對齊
     val chartAreaHeight = 184.dp
     val chartRowHeight = 184.dp
-    val xAxisGap = 6.dp
+    val xAxisGap = 8.dp
     val yAxisWidth = 36.dp
     val yAxisToChartGap = 2.dp
-    val plotVerticalInset = 10.dp
+    val plotTopInset = 10.dp
+    val plotBottomInset = 0.dp
     val yLabelHalfHeight = 9.dp
-    val plotHeightDp = chartAreaHeight - (plotVerticalInset * 2)
+    val plotHeightDp = chartAreaHeight - plotTopInset - plotBottomInset
     val plotEndPadding = 8.dp
 
     val animProgressList = remember {
@@ -535,7 +534,7 @@ private fun WaterBarChart(
             ) {
                 yTicks.asReversed().forEach { tick ->
                     val ratio = if (yAxisMax == 0f) 0f else tick / yAxisMax
-                    val tickY = chartAreaHeight - plotVerticalInset - (plotHeightDp * ratio)
+                    val tickY = chartAreaHeight - plotBottomInset - (plotHeightDp * ratio)
 
                     Text(
                         text = tick.roundToInt().toString(),
@@ -566,8 +565,8 @@ private fun WaterBarChart(
                     val dash = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                     val strokeWidth = 2f
 
-                    val plotTop = plotVerticalInset.toPx()
-                    val plotBottom = size.height - plotVerticalInset.toPx()
+                    val plotTop = plotTopInset.toPx()
+                    val plotBottom = size.height - plotBottomInset.toPx()
                     val plotHeight = (plotBottom - plotTop).coerceAtLeast(0f)
 
                     yTicks.forEach { tick ->
@@ -614,8 +613,8 @@ private fun WaterBarChart(
                                     .width(34.dp)
                                     .fillMaxHeight()
                             ) {
-                                val plotTop = plotVerticalInset.toPx()
-                                val plotBottom = size.height - plotVerticalInset.toPx()
+                                val plotTop = plotTopInset.toPx()
+                                val plotBottom = size.height - plotBottomInset.toPx()
                                 val plotHeight = (plotBottom - plotTop).coerceAtLeast(0f)
 
                                 if (!showBars) return@Canvas

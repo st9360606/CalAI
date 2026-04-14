@@ -197,7 +197,9 @@ private fun WorkoutChartCardFrame(
                 verticalAlignment = Alignment.Top
             ) {
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = title,
@@ -205,8 +207,6 @@ private fun WorkoutChartCardFrame(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
-
-                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
@@ -226,16 +226,17 @@ private fun WorkoutChartCardFrame(
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = resolvedDeltaText,
+                            color = resolvedDeltaColor,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = resolvedDeltaText,
-                        color = resolvedDeltaColor,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -264,7 +265,7 @@ private fun WorkoutChartCardFrame(
 
             chartContent()
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Box(
                 modifier = Modifier
