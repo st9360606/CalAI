@@ -236,7 +236,8 @@ private fun WaterChartCardFrame(
                         text = title,
                         color = WaterTitleColor,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
 
                     Row(

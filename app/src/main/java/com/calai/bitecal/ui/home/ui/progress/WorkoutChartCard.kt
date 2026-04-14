@@ -209,7 +209,8 @@ private fun WorkoutChartCardFrame(
                         text = title,
                         color = WorkoutTitleColor,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
 
                     Row(verticalAlignment = Alignment.Bottom) {
