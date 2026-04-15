@@ -718,7 +718,7 @@ private fun ProgressDayTooltip(
 
         Text(
             text = localizedDayLabel(day.dayLabel),
-            color = Color(0xFF7D7D84),
+            color = Color(0xFF74747A),
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
@@ -753,7 +753,7 @@ private fun TooltipMetricRow(
 
         Text(
             text = label,
-            color = Color(0xFF17171C),
+            color = Color(0xFF525866),
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
@@ -764,7 +764,7 @@ private fun TooltipMetricRow(
 
         Text(
             text = value,
-            color = Color(0xFF17171C),
+            color = Color(0xFF333947),
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
