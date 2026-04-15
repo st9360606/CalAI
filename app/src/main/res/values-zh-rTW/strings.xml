@@ -122,19 +122,21 @@
     <string name="hc_connect_body">在 BiteCal AI 與健康應用間同步日常活動，取得更完整的紀錄與分析。</string>
     <string name="skip_text">暫不</string>
 
-    <!-- progress -->
-    <string name="progress_title_percent">%1$d%%</string>
-    <string name="progress_title_heading">正在建立你的每日計畫</string>
-    <string name="progress_phase_1">正在估算你的代謝年齡…</string>
-    <string name="progress_phase_2">正在計算營養目標…</string>
-    <string name="progress_phase_3">正在建立每日建議…</string>
-    <string name="progress_phase_4">正在完成結果分析…</string>
-    <string name="progress_card_title">每日建議項目</string>
-    <string name="progress_item_calories">卡路里</string>
-    <string name="progress_item_carbs">碳水化合物</string>
-    <string name="progress_item_protein">蛋白質</string>
-    <string name="progress_item_fats">脂肪</string>
-    <string name="progress_item_health_score">健康分數</string>
+    <!-- ComputationProgressScreen -->
+    <string name="progress_hero_title">正在建立你的個人化計畫</string>
+    <string name="progress_hero_subtitle">我們會根據你的目標、身體資料與偏好，為你設定每日營養目標。</string>
+    <string name="progress_center_caption">正在準備結果</string>
+    <string name="progress_phase_pill_1">正在整理你的個人資料</string>
+    <string name="progress_phase_pill_2">正在計算每日卡路里目標</string>
+    <string name="progress_phase_pill_3">正在平衡每日三大營養素</string>
+    <string name="progress_phase_pill_4">正在完成健康評分分析</string>
+    <string name="progress_card_title_v2">正在為你設定計畫</string>
+    <string name="progress_row_calorie_target">每日卡路里目標</string>
+    <string name="progress_row_carb_distribution">碳水分配建議</string>
+    <string name="progress_row_protein_recommendation">蛋白質建議</string>
+    <string name="progress_row_fat_recommendation">脂肪建議</string>
+    <string name="progress_row_health_score_estimate">健康分數預估</string>
+    <string name="progress_footer_hint">只需要一點點時間</string>
 
     <!-- plan -->
     <string name="plan_title_congrats">恭喜!</string>
@@ -305,14 +307,12 @@
     <string name="foodlog_detail_load_failed">讀取失敗</string>
     <string name="foodlog_unknown_food">未知食物</string>
     <string name="foodlog_no_image">無圖片</string>
-
     <string name="foodlog_detail_title">營養資訊</string>
     <string name="foodlog_detail_back">返回</string>
     <string name="foodlog_detail_delete">刪除</string>
     <string name="foodlog_detail_save">保存</string>
     <string name="foodlog_detail_minus">減少</string>
     <string name="foodlog_detail_plus">增加</string>
-
     <string name="foodlog_detail_calories">卡路里</string>
     <string name="foodlog_detail_protein">蛋白質</string>
     <string name="foodlog_detail_carbs">碳水</string>
@@ -322,34 +322,35 @@
     <string name="foodlog_detail_sodium">鈉</string>
     <string name="foodlog_detail_health_score">健康分數</string>
     <string name="foodlog_detail_done">完成</string>
-
     <string name="foodlog_detail_health_icon_desc">健康圖示</string>
-
 
     <!-- DeleteFoodLogDialog -->
     <string name="foodlog_delete_dialog_title">刪除紀錄？</string>
     <string name="foodlog_delete_dialog_message">你確定要永久刪除這筆餐點紀錄嗎？此操作無法復原。</string>
     <string name="foodlog_delete_dialog_confirm">刪除</string>
-
     <string name="saved_foods_unsave_content_description">從已儲存餐點中移除</string>
     <string name="saved_foods_unsave_dialog_title">移除已儲存餐點？</string>
     <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已儲存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
     <string name="saved_foods_unsave_dialog_confirm">移除</string>
 
-
-    <!-- BMI Card -->
+    <!-- =========================
+         BMI Card / BMI Info Dialog
+         ========================= -->
     <string name="bmi_card_title">你的 BMI</string>
     <string name="bmi_card_subtitle">你的體重屬於</string>
     <string name="bmi_card_info_cd">BMI 說明</string>
 
-    <!-- BMI Status -->
     <string name="bmi_status_underweight">體重過輕</string>
     <string name="bmi_status_healthy">健康</string>
     <string name="bmi_status_overweight">過重</string>
     <string name="bmi_status_obese">肥胖</string>
     <string name="bmi_status_unknown">未知</string>
 
-    <!-- BMI Info Dialog -->
+    <string name="bmi_range_underweight">&lt;18.5</string>
+    <string name="bmi_range_healthy">18.5–24.9</string>
+    <string name="bmi_range_overweight">25.0–29.9</string>
+    <string name="bmi_range_obese">&gt;30.0</string>
+
     <string name="bmi_info_title">什麼是 BMI？</string>
     <string name="bmi_info_subtitle">身體質量指數</string>
     <string name="bmi_info_formula_title">計算公式</string>
@@ -360,7 +361,9 @@
     <string name="bmi_info_note_body">BMI 只是一般性的參考指標，不能直接反映體脂肪、肌肉量或整體健康狀況。</string>
     <string name="bmi_info_cta">我知道了</string>
 
-    <!-- Progress screen -->
+    <!-- =========================
+         Progress Screen
+         ========================= -->
     <string name="progress_screen_title">進度</string>
     <string name="progress_tab_this_week">本週</string>
     <string name="progress_tab_last_week">上週</string>
@@ -373,6 +376,9 @@
     <string name="workout_chart_error_load_failed">載入運動圖表失敗</string>
     <string name="water_chart_error_load_failed">載入喝水圖表失敗</string>
 
+    <!-- =========================
+         Nutrition Chart
+         ========================= -->
     <string name="progress_chart_total_calories">總卡路里</string>
     <string name="progress_chart_cals">卡</string>
 
@@ -380,7 +386,7 @@
     <string name="progress_legend_carbs">碳水</string>
     <string name="progress_legend_fats">脂肪</string>
 
-    <string name="progress_keep_it_up">繼續保持！開始永遠是最難的一步！</string>
+    <string name="progress_keep_it_up">繼續保持！最難的是開始，而你已經做到了！</string>
 
     <string name="progress_day_sun">週日</string>
     <string name="progress_day_mon">週一</string>
@@ -389,29 +395,7 @@
     <string name="progress_day_thu">週四</string>
     <string name="progress_day_fri">週五</string>
     <string name="progress_day_sat">週六</string>
-    <string name="bmi_range_underweight">&lt;18.5</string>
-    <string name="bmi_range_healthy">18.5–24.9</string>
-    <string name="bmi_range_overweight">25.0–29.9</string>
-    <string name="bmi_range_obese">&gt;30.0</string>
 
-
-    <!-- ComputationProgressScreen -->
-    <string name="progress_hero_title">正在建立你的個人化計畫</string>
-    <string name="progress_hero_subtitle">我們會根據你的目標、身體資料與偏好，為你設定每日營養目標。</string>
-    <string name="progress_center_caption">正在準備結果</string>
-    <string name="progress_phase_pill_1">正在整理你的個人資料</string>
-    <string name="progress_phase_pill_2">正在計算每日卡路里目標</string>
-    <string name="progress_phase_pill_3">正在平衡每日三大營養素</string>
-    <string name="progress_phase_pill_4">正在完成健康評分分析</string>
-    <string name="progress_card_title_v2">正在為你設定計畫</string>
-    <string name="progress_row_calorie_target">每日卡路里目標</string>
-    <string name="progress_row_carb_distribution">碳水分配建議</string>
-    <string name="progress_row_protein_recommendation">蛋白質建議</string>
-    <string name="progress_row_fat_recommendation">脂肪建議</string>
-    <string name="progress_row_health_score_estimate">健康分數預估</string>
-    <string name="progress_footer_hint">只需要一點點時間</string>
-
-    <!-- NutritionChartCard.kt -->
     <string name="progress_tooltip_calories">熱量</string>
     <string name="progress_tooltip_protein">蛋白質</string>
     <string name="progress_tooltip_carbs">碳水</string>
@@ -419,12 +403,15 @@
     <string name="progress_tooltip_label_format">%1$s：</string>
     <string name="progress_tooltip_grams_value">%1$d g</string>
     <string name="progress_tooltip_plain_value">%1$d</string>
+
     <string name="progress_chart_loading_total_calories_text">--.- 卡</string>
     <string name="progress_chart_empty_total_calories_text">0.0 卡</string>
     <string name="progress_chart_loading_delta">↑ --%%</string>
     <string name="progress_chart_delta_placeholder">--%%</string>
 
-    <!-- WorkoutChartCard -->
+    <!-- =========================
+         Workout Chart
+         ========================= -->
     <string name="workout_chart_title">運動消耗</string>
     <string name="workout_chart_unit_kcal">大卡</string>
     <string name="workout_chart_goal">目標</string>
@@ -435,7 +422,9 @@
     <string name="workout_tooltip_burned">消耗</string>
     <string name="workout_tooltip_kcal_value">%1$d 大卡</string>
 
-    <!-- WaterChartCard.kt -->
+    <!-- =========================
+         Water Chart
+         ========================= -->
     <string name="water_chart_title">喝水量</string>
     <string name="water_chart_unit_ml">ml</string>
     <string name="water_chart_goal">目標</string>
@@ -448,5 +437,6 @@
     <string name="water_legend_daily_goal">每日目標</string>
     <string name="water_tooltip_intake">攝取</string>
     <string name="water_tooltip_ml_value">%1$d ml</string>
+
 
 </resources>

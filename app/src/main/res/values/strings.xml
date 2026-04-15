@@ -122,20 +122,21 @@
     <string name="hc_connect_body">Sync your daily activity between BiteCal AI and your health apps for more complete tracking and insights.</string>
     <string name="skip_text">Not now</string>
 
-    <!-- progress -->
-    <string name="progress_title_percent">%1$d%%</string>
-    <string name="progress_title_heading">We\'re building your daily plan</string>
-    <string name="progress_phase_1">Estimating your metabolic age…</string>
-    <string name="progress_phase_2">Crunching nutrition goals…</string>
-    <string name="progress_phase_3">Building daily recommendations…</string>
-    <string name="progress_phase_4">Finalizing results…</string>
-
-    <string name="progress_card_title">Daily recommendation for</string>
-    <string name="progress_item_calories">Calories</string>
-    <string name="progress_item_carbs">Carbs</string>
-    <string name="progress_item_protein">Protein</string>
-    <string name="progress_item_fats">Fats</string>
-    <string name="progress_item_health_score">Health score</string>
+    <!-- ComputationProgressScreen -->
+    <string name="progress_hero_title">Creating your personalized plan</string>
+    <string name="progress_hero_subtitle">We’re using your goals, body data, and preferences to tailor your daily targets.</string>
+    <string name="progress_center_caption">Preparing your results</string>
+    <string name="progress_phase_pill_1">Reviewing your profile</string>
+    <string name="progress_phase_pill_2">Calculating your calorie target</string>
+    <string name="progress_phase_pill_3">Balancing your daily macros</string>
+    <string name="progress_phase_pill_4">Finalizing your health insights</string>
+    <string name="progress_card_title_v2">Setting up your plan</string>
+    <string name="progress_row_calorie_target">Daily calorie target</string>
+    <string name="progress_row_carb_distribution">Carb distribution</string>
+    <string name="progress_row_protein_recommendation">Protein recommendation</string>
+    <string name="progress_row_fat_recommendation">Fat recommendation</string>
+    <string name="progress_row_health_score_estimate">Health score estimate</string>
+    <string name="progress_footer_hint">This takes just a moment</string>
 
     <!-- plan -->
     <string name="plan_title_congrats">Congratulations!</string>
@@ -307,14 +308,12 @@
     <string name="foodlog_detail_load_failed">Load failed</string>
     <string name="foodlog_unknown_food">Unknown Food</string>
     <string name="foodlog_no_image">No Image</string>
-
     <string name="foodlog_detail_title">Nutrition</string>
     <string name="foodlog_detail_back">Back</string>
     <string name="foodlog_detail_delete">Delete</string>
     <string name="foodlog_detail_save">Save</string>
     <string name="foodlog_detail_minus">Minus</string>
     <string name="foodlog_detail_plus">Plus</string>
-
     <string name="foodlog_detail_calories">Calories</string>
     <string name="foodlog_detail_protein">Protein</string>
     <string name="foodlog_detail_carbs">Carbs</string>
@@ -324,34 +323,35 @@
     <string name="foodlog_detail_sodium">Sodium</string>
     <string name="foodlog_detail_health_score">Health Score</string>
     <string name="foodlog_detail_done">Done</string>
-
     <string name="foodlog_detail_health_icon_desc">Health icon</string>
-
 
     <!-- DeleteFoodLogDialog -->
     <string name="foodlog_delete_dialog_title">Delete Record?</string>
     <string name="foodlog_delete_dialog_message">Are you sure you want to permanently delete this meal record? This action cannot be undone.</string>
     <string name="foodlog_delete_dialog_confirm">Delete</string>
-
     <string name="saved_foods_unsave_content_description">Remove from saved foods</string>
     <string name="saved_foods_unsave_dialog_title">Remove from Saved Foods?</string>
     <string name="saved_foods_unsave_dialog_message">This meal will be removed from your Saved Foods list, but it will still remain in your recent records.</string>
     <string name="saved_foods_unsave_dialog_confirm">Remove</string>
 
-
-    <!-- BMI Card -->
+    <!-- =========================
+             BMI Card / BMI Info Dialog
+             ========================= -->
     <string name="bmi_card_title">Your BMI</string>
     <string name="bmi_card_subtitle">Your weight is</string>
     <string name="bmi_card_info_cd">BMI info</string>
 
-    <!-- BMI Status -->
     <string name="bmi_status_underweight">Underweight</string>
     <string name="bmi_status_healthy">Healthy</string>
     <string name="bmi_status_overweight">Overweight</string>
     <string name="bmi_status_obese">Obese</string>
     <string name="bmi_status_unknown">Unknown</string>
 
-    <!-- BMI Info Dialog -->
+    <string name="bmi_range_underweight">&lt;18.5</string>
+    <string name="bmi_range_healthy">18.5–24.9</string>
+    <string name="bmi_range_overweight">25.0–29.9</string>
+    <string name="bmi_range_obese">&gt;30.0</string>
+
     <string name="bmi_info_title">What is BMI?</string>
     <string name="bmi_info_subtitle">Body Mass Index</string>
     <string name="bmi_info_formula_title">Formula</string>
@@ -362,7 +362,9 @@
     <string name="bmi_info_note_body">BMI is a general guide. It does not directly measure body fat, muscle mass, or overall health.</string>
     <string name="bmi_info_cta">Got it</string>
 
-    <!-- Progress screen -->
+    <!-- =========================
+         Progress Screen
+         ========================= -->
     <string name="progress_screen_title">Progress</string>
     <string name="progress_tab_this_week">This Week</string>
     <string name="progress_tab_last_week">Last Week</string>
@@ -375,6 +377,9 @@
     <string name="workout_chart_error_load_failed">Load workout chart failed</string>
     <string name="water_chart_error_load_failed">Load water chart failed</string>
 
+    <!-- =========================
+         Nutrition Chart
+         ========================= -->
     <string name="progress_chart_total_calories">Total calories</string>
     <string name="progress_chart_cals">cals</string>
 
@@ -391,31 +396,7 @@
     <string name="progress_day_thu">Thu</string>
     <string name="progress_day_fri">Fri</string>
     <string name="progress_day_sat">Sat</string>
-    <string name="bmi_range_underweight">&lt;18.5</string>
-    <string name="bmi_range_healthy">18.5–24.9</string>
-    <string name="bmi_range_overweight">25.0–29.9</string>
-    <string name="bmi_range_obese">&gt;30.0</string>
 
-
-
-
-    <!-- ComputationProgressScreen -->
-    <string name="progress_hero_title">Creating your personalized plan</string>
-    <string name="progress_hero_subtitle">We’re using your goals, body data, and preferences to tailor your daily targets.</string>
-    <string name="progress_center_caption">Preparing your results</string>
-    <string name="progress_phase_pill_1">Reviewing your profile</string>
-    <string name="progress_phase_pill_2">Calculating your calorie target</string>
-    <string name="progress_phase_pill_3">Balancing your daily macros</string>
-    <string name="progress_phase_pill_4">Finalizing your health insights</string>
-    <string name="progress_card_title_v2">Setting up your plan</string>
-    <string name="progress_row_calorie_target">Daily calorie target</string>
-    <string name="progress_row_carb_distribution">Carb distribution</string>
-    <string name="progress_row_protein_recommendation">Protein recommendation</string>
-    <string name="progress_row_fat_recommendation">Fat recommendation</string>
-    <string name="progress_row_health_score_estimate">Health score estimate</string>
-    <string name="progress_footer_hint">This takes just a moment</string>
-
-    <!-- NutritionChartCard.kt -->
     <string name="progress_tooltip_calories">Calories</string>
     <string name="progress_tooltip_protein">Protein</string>
     <string name="progress_tooltip_carbs">Carbs</string>
@@ -423,12 +404,15 @@
     <string name="progress_tooltip_label_format">%1$s:</string>
     <string name="progress_tooltip_grams_value">%1$d g</string>
     <string name="progress_tooltip_plain_value">%1$d</string>
+
     <string name="progress_chart_loading_total_calories_text">--.- cals</string>
     <string name="progress_chart_empty_total_calories_text">0.0 cals</string>
     <string name="progress_chart_loading_delta">↑ --%%</string>
     <string name="progress_chart_delta_placeholder">--%%</string>
 
-    <!-- WorkoutChartCard -->
+    <!-- =========================
+         Workout Chart
+         ========================= -->
     <string name="workout_chart_title">Workout burn</string>
     <string name="workout_chart_unit_kcal">kcal</string>
     <string name="workout_chart_goal">Goal</string>
@@ -439,7 +423,9 @@
     <string name="workout_tooltip_burned">Burned</string>
     <string name="workout_tooltip_kcal_value">%1$d kcal</string>
 
-    <!-- WaterChartCard.kt -->
+    <!-- =========================
+         Water Chart
+         ========================= -->
     <string name="water_chart_title">Water intake</string>
     <string name="water_chart_unit_ml">ml</string>
     <string name="water_chart_goal">Goal</string>
@@ -452,5 +438,6 @@
     <string name="water_legend_daily_goal">Daily goal</string>
     <string name="water_tooltip_intake">Intake</string>
     <string name="water_tooltip_ml_value">%1$d ml</string>
+
 
 </resources>
