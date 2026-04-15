@@ -426,4 +426,15 @@
     <string name="workout_chart_loading">Loading...</string>
 
 
+    <!-- NutritionChartCard.kt -->
+    <string name="progress_tooltip_calories">Calories</string>
+    <string name="progress_tooltip_protein">Protein</string>
+    <string name="progress_tooltip_carbs">Carbs</string>
+    <string name="progress_tooltip_fats">Fats</string>
+
+    <string name="progress_tooltip_label_format">%1$s:</string>
+    <string name="progress_tooltip_grams_value">%1$d g</string>
+    <string name="progress_tooltip_plain_value">%1$d</string>
+
+
 </resources>

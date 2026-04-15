@@ -7,9 +7,12 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,13 +22,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -34,12 +42,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.progress.model.ProgressBarDayUi
 import kotlinx.coroutines.launch
@@ -60,6 +77,11 @@ private val ChipSelected = Color(0xFF111114)
 private val ChartGridColor = Color(0xFFBDBDBD)
 private val ChartXAxisIdleColor = Color(0xFF8A8A8E)
 private val ChartXAxisActiveColor = Color(0xFF666A73)
+
+private val TooltipEmojiSlotWidth = 18.dp
+private val TooltipEmojiToLabelGap = 4.dp
+private val TooltipLabelToValueGap = 2.dp
+private val TooltipDayLabelStartPadding = TooltipEmojiSlotWidth + TooltipEmojiToLabelGap
 
 @Composable
 internal fun ChartCard(
@@ -271,6 +293,11 @@ private fun ProgressChartCardFrame(
     }
 }
 
+private data class ProgressTooltipUi(
+    val index: Int,
+    val day: ProgressBarDayUi,
+    val pressOffsetInSlotPx: Offset
+)
 @Composable
 private fun StackedBarChart(
     days: List<ProgressBarDayUi>,
@@ -310,7 +337,14 @@ private fun StackedBarChart(
         List(7) { Animatable(0f) }
     }
 
+    var pressedTooltip by remember(chartDays, showBars) {
+        mutableStateOf<ProgressTooltipUi?>(null)
+    }
+
     LaunchedEffect(chartDays.map { it.totalG }, showBars) {
+        // 資料或模式改變時，避免 tooltip 殘留
+        pressedTooltip = null
+
         chartDays.forEachIndexed { index, day ->
             launch {
                 val target = if (!showBars || yAxisMax <= 0f || day.totalG <= 0f) {
@@ -366,12 +400,34 @@ private fun StackedBarChart(
 
             Spacer(modifier = Modifier.width(yAxisToChartGap))
 
-            Box(
+            BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .height(chartAreaHeight)
                     .padding(end = plotEndPadding)
             ) {
+                val density = LocalDensity.current
+                var tooltipSizePx by remember { mutableStateOf(IntSize.Zero) }
+
+                val tooltipMinWidth = 124.dp
+                val slotWidth = maxWidth / chartDays.size.toFloat()
+
+                val chartWidthPx = with(density) { maxWidth.toPx() }
+                val chartHeightPx = with(density) { maxHeight.toPx() }
+                val slotWidthPx = chartWidthPx / chartDays.size.toFloat()
+
+                val fallbackTooltipWidthPx = with(density) { tooltipMinWidth.toPx() }
+                val fallbackTooltipHeightPx = with(density) { 108.dp.toPx() }
+
+                val resolvedTooltipWidthPx = tooltipSizePx.width.takeIf { it > 0 }?.toFloat()
+                    ?: fallbackTooltipWidthPx
+
+                val resolvedTooltipHeightPx = tooltipSizePx.height.takeIf { it > 0 }?.toFloat()
+                    ?: fallbackTooltipHeightPx
+
+                val tooltipGapXPx = with(density) { 18.dp.toPx() }
+                val tooltipFixedTopPx = with(density) { (-92).dp.toPx() }
+                val tooltipEdgePaddingPx = with(density) { 4.dp.toPx() }
                 Canvas(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -407,7 +463,26 @@ private fun StackedBarChart(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxHeight(),
+                                .fillMaxHeight()
+                                .pointerInput(day, showBars) {
+                                    detectTapGestures(
+                                        onPress = { pressOffset ->
+                                            pressedTooltip = ProgressTooltipUi(
+                                                index = index,
+                                                day = day,
+                                                pressOffsetInSlotPx = pressOffset
+                                            )
+
+                                            try {
+                                                tryAwaitRelease()
+                                            } finally {
+                                                if (pressedTooltip?.index == index) {
+                                                    pressedTooltip = null
+                                                }
+                                            }
+                                        }
+                                    )
+                                },
                             contentAlignment = Alignment.BottomCenter
                         ) {
                             Canvas(
@@ -484,6 +559,34 @@ private fun StackedBarChart(
                         }
                     }
                 }
+
+                pressedTooltip?.let { tooltip ->
+                    val tooltipOffset = calculateTooltipOffsetPx(
+                        chartWidthPx = chartWidthPx,
+                        chartHeightPx = chartHeightPx,
+                        slotWidthPx = slotWidthPx,
+                        tooltipWidthPx = resolvedTooltipWidthPx,
+                        tooltipHeightPx = resolvedTooltipHeightPx,
+                        tooltipIndex = tooltip.index,
+                        pressOffsetInSlotPx = tooltip.pressOffsetInSlotPx,
+                        horizontalGapPx = tooltipGapXPx,
+                        fixedTopPx = tooltipFixedTopPx,
+                        edgePaddingPx = tooltipEdgePaddingPx
+                    )
+
+                    ProgressDayTooltip(
+                        day = tooltip.day,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .offset { tooltipOffset }
+                            .onGloballyPositioned { coordinates ->
+                                val newSize = coordinates.size
+                                if (tooltipSizePx != newSize) {
+                                    tooltipSizePx = newSize
+                                }
+                            }
+                    )
+                }
             }
         }
 
@@ -515,6 +618,194 @@ private fun StackedBarChart(
             }
         }
     }
+}
+
+@Composable
+private fun ProgressDayTooltip(
+    day: ProgressBarDayUi,
+    modifier: Modifier = Modifier
+) {
+    val caloriesLabel = stringResource(R.string.progress_tooltip_calories)
+    val proteinLabel = stringResource(R.string.progress_tooltip_protein)
+    val carbsLabel = stringResource(R.string.progress_tooltip_carbs)
+    val fatsLabel = stringResource(R.string.progress_tooltip_fats)
+
+    val metricTextStyle = TextStyle(
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium,
+        color = Color(0xFF17171C)
+    )
+
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+
+    val measuredLabels = listOf(
+        stringResource(R.string.progress_tooltip_label_format, caloriesLabel),
+        stringResource(R.string.progress_tooltip_label_format, proteinLabel),
+        stringResource(R.string.progress_tooltip_label_format, carbsLabel),
+        stringResource(R.string.progress_tooltip_label_format, fatsLabel)
+    )
+
+    val labelWidth = remember(
+        textMeasurer,
+        density,
+        measuredLabels
+    ) {
+        with(density) {
+            measuredLabels.maxOf { text ->
+                textMeasurer.measure(
+                    text = AnnotatedString(text),
+                    style = metricTextStyle
+                ).size.width
+            }.toDp()
+        }.coerceIn(44.dp, 104.dp)
+    }
+
+    Column(
+        modifier = modifier
+            .zIndex(2f)
+            .width(IntrinsicSize.Max)
+            .widthIn(min = 124.dp, max = 228.dp)
+            .shadow(
+                elevation = 14.dp,
+                shape = RoundedCornerShape(20.dp),
+                clip = false
+            )
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = Color(0xFFE9E9ED),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(
+                start = 11.dp,
+                end = 11.dp,
+                top = 11.dp,
+                bottom = 10.dp
+            ),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        TooltipMetricRow(
+            emoji = "🔥",
+            label = stringResource(R.string.progress_tooltip_label_format, caloriesLabel),
+            value = stringResource(R.string.progress_tooltip_plain_value, day.totalKcal),
+            labelWidth = labelWidth
+        )
+
+        TooltipMetricRow(
+            emoji = "🥩",
+            label = stringResource(R.string.progress_tooltip_label_format, proteinLabel),
+            value = stringResource(R.string.progress_tooltip_grams_value, day.proteinG.roundToInt()),
+            labelWidth = labelWidth
+        )
+
+        TooltipMetricRow(
+            emoji = "🌾",
+            label = stringResource(R.string.progress_tooltip_label_format, carbsLabel),
+            value = stringResource(R.string.progress_tooltip_grams_value, day.carbsG.roundToInt()),
+            labelWidth = labelWidth
+        )
+
+        TooltipMetricRow(
+            emoji = "🥑",
+            label = stringResource(R.string.progress_tooltip_label_format, fatsLabel),
+            value = stringResource(R.string.progress_tooltip_grams_value, day.fatsG.roundToInt()),
+            labelWidth = labelWidth
+        )
+
+        Text(
+            text = localizedDayLabel(day.dayLabel),
+            color = Color(0xFF7D7D84),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = TooltipDayLabelStartPadding,
+                    top = 1.dp
+                )
+        )
+    }
+}
+
+@Composable
+private fun TooltipMetricRow(
+    emoji: String,
+    label: String,
+    value: String,
+    labelWidth: Dp
+) {
+    Row(
+        modifier = Modifier.height(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = emoji,
+            fontSize = 16.sp,
+            modifier = Modifier.width(TooltipEmojiSlotWidth),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.width(TooltipEmojiToLabelGap))
+
+        Text(
+            text = label,
+            color = Color(0xFF17171C),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            modifier = Modifier.width(labelWidth)
+        )
+
+        Spacer(modifier = Modifier.width(TooltipLabelToValueGap))
+
+        Text(
+            text = value,
+            color = Color(0xFF17171C),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            textAlign = TextAlign.Start
+        )
+    }
+}
+
+private fun calculateTooltipOffsetPx(
+    chartWidthPx: Float,
+    chartHeightPx: Float,
+    slotWidthPx: Float,
+    tooltipWidthPx: Float,
+    tooltipHeightPx: Float,
+    tooltipIndex: Int,
+    pressOffsetInSlotPx: Offset,
+    horizontalGapPx: Float,
+    fixedTopPx: Float,
+    edgePaddingPx: Float
+): IntOffset {
+    val anchorX = (slotWidthPx * tooltipIndex) + pressOffsetInSlotPx.x
+
+    var targetX = anchorX + horizontalGapPx
+
+    val maxX = (chartWidthPx - tooltipWidthPx - edgePaddingPx).coerceAtLeast(edgePaddingPx)
+    val minY = fixedTopPx
+    val maxY = (chartHeightPx - tooltipHeightPx - edgePaddingPx).coerceAtLeast(minY)
+
+    val fitsRight = targetX + tooltipWidthPx <= chartWidthPx - edgePaddingPx
+    if (!fitsRight) {
+        targetX = anchorX - tooltipWidthPx - horizontalGapPx
+    }
+
+    targetX = targetX.coerceIn(edgePaddingPx, maxX)
+
+    val targetY = fixedTopPx.coerceIn(minY, maxY)
+
+    return IntOffset(
+        x = targetX.roundToInt(),
+        y = targetY.roundToInt()
+    )
 }
 
 private fun computeNiceAxisMax(rawMax: Float): Float {

@@ -421,4 +421,14 @@
     <string name="workout_chart_goal_left">距離今日目標還差 %1$d 大卡</string>
     <string name="workout_chart_loading">載入中...</string>
 
+    <!-- NutritionChartCard.kt -->
+    <string name="progress_tooltip_calories">熱量</string>
+    <string name="progress_tooltip_protein">蛋白質</string>
+    <string name="progress_tooltip_carbs">碳水</string>
+    <string name="progress_tooltip_fats">脂肪</string>
+
+    <string name="progress_tooltip_label_format">%1$s：</string>
+    <string name="progress_tooltip_grams_value">%1$d g</string>
+    <string name="progress_tooltip_plain_value">%1$d</string>
+
 </resources>
