@@ -372,6 +372,9 @@
     <string name="progress_error_load_failed">Load failed</string>
     <string name="progress_retry">Retry</string>
 
+    <string name="workout_chart_error_load_failed">Load workout chart failed</string>
+    <string name="water_chart_error_load_failed">Load water chart failed</string>
+
     <string name="progress_chart_total_calories">Total calories</string>
     <string name="progress_chart_cals">cals</string>
 
@@ -412,17 +415,6 @@
     <string name="progress_row_health_score_estimate">Health score estimate</string>
     <string name="progress_footer_hint">This takes just a moment</string>
 
-    <!-- WorkoutChartCard -->
-    <string name="workout_chart_title">Workout burn</string>
-    <string name="workout_chart_unit_kcal">kcal</string>
-    <string name="workout_chart_goal">Goal</string>
-    <string name="workout_chart_7day_avg">7-day avg</string>
-    <string name="workout_chart_goal_reached">Goal reached today</string>
-    <string name="workout_chart_goal_left">%1$d kcal left to hit today’s goal</string>
-    <string name="workout_chart_loading">Loading...</string>
-    <string name="workout_tooltip_burned">Burned</string>
-    <string name="workout_tooltip_kcal_value">%1$d kcal</string>
-
     <!-- NutritionChartCard.kt -->
     <string name="progress_tooltip_calories">Calories</string>
     <string name="progress_tooltip_protein">Protein</string>
@@ -431,6 +423,21 @@
     <string name="progress_tooltip_label_format">%1$s:</string>
     <string name="progress_tooltip_grams_value">%1$d g</string>
     <string name="progress_tooltip_plain_value">%1$d</string>
+    <string name="progress_chart_loading_total_calories_text">--.- cals</string>
+    <string name="progress_chart_empty_total_calories_text">0.0 cals</string>
+    <string name="progress_chart_loading_delta">↑ --%%</string>
+    <string name="progress_chart_delta_placeholder">--%%</string>
+
+    <!-- WorkoutChartCard -->
+    <string name="workout_chart_title">Workout burn</string>
+    <string name="workout_chart_unit_kcal">kcal</string>
+    <string name="workout_chart_goal">Goal</string>
+    <string name="workout_chart_7day_avg">7-day avg</string>
+    <string name="workout_chart_goal_reached">Goal reached today</string>
+    <string name="workout_chart_goal_left">%1$d kcal left to hit today\'s goal</string>
+    <string name="workout_chart_loading">Loading...</string>
+    <string name="workout_tooltip_burned">Burned</string>
+    <string name="workout_tooltip_kcal_value">%1$d kcal</string>
 
     <!-- WaterChartCard.kt -->
     <string name="water_chart_title">Water intake</string>
@@ -439,7 +446,7 @@
     <string name="water_chart_7day_avg">7-day avg</string>
     <string name="water_chart_loading">Loading...</string>
     <string name="water_chart_goal_reached">Goal reached for today</string>
-    <string name="water_chart_goal_left_ml">%1$s ml left to reach today's goal</string>
+    <string name="water_chart_goal_left_ml">%1$s ml left to reach today\'s goal</string>
     <string name="water_chart_value_ml">%1$s ml</string>
     <string name="water_legend_intake">Intake</string>
     <string name="water_legend_daily_goal">Daily goal</string>

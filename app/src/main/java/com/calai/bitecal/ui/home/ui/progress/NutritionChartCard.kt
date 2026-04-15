@@ -94,9 +94,9 @@ internal fun LoadingCard(
     modifier: Modifier = Modifier
 ) {
     ProgressChartCardFrame(
-        totalCaloriesText = "--.- cals",
+        totalCaloriesText = stringResource(R.string.progress_chart_loading_total_calories_text),
         deltaText = "--",
-        deltaDisplayText = "↑ --%",
+        deltaDisplayText = stringResource(R.string.progress_chart_loading_delta),
         deltaColorOverride = Color(0xFF33A144),
         modifier = modifier
     ) {
@@ -109,7 +109,7 @@ internal fun EmptyCard(
     modifier: Modifier = Modifier
 ) {
     ProgressChartCardFrame(
-        totalCaloriesText = "0.0 cals",
+        totalCaloriesText = stringResource(R.string.progress_chart_empty_total_calories_text),
         deltaText = "--",
         modifier = modifier
     ) {
@@ -159,7 +159,18 @@ internal fun ErrorCard(
         }
     }
 }
+@Composable
+private fun resolveCaloriesValueText(totalCaloriesText: String): String {
+    val localizedCals = stringResource(R.string.progress_chart_cals).trim()
 
+    return remember(totalCaloriesText, localizedCals) {
+        totalCaloriesText
+            .removeSuffix(localizedCals)
+            .removeSuffix("cals")
+            .removeSuffix("cal")
+            .trim()
+    }
+}
 @Composable
 private fun ProgressChartCardFrame(
     totalCaloriesText: String,
@@ -169,10 +180,10 @@ private fun ProgressChartCardFrame(
     deltaColorOverride: Color? = null,
     chartContent: @Composable () -> Unit
 ) {
-    val valueText = totalCaloriesText.removeSuffix(" cals").trim()
+    val valueText = resolveCaloriesValueText(totalCaloriesText)
 
     val resolvedDeltaText = deltaDisplayText ?: if (deltaText == "--") {
-        "--%"
+        stringResource(R.string.progress_chart_delta_placeholder)
     } else {
         deltaText
     }
@@ -694,7 +705,15 @@ private fun LegendChip(
 @Composable
 private fun LoadingChartPlaceholder() {
     val yLabels = listOf("8", "6", "4", "2", "0")
-    val xLabels = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+    val xLabels = listOf(
+        stringResource(R.string.progress_day_sun),
+        stringResource(R.string.progress_day_mon),
+        stringResource(R.string.progress_day_tue),
+        stringResource(R.string.progress_day_wed),
+        stringResource(R.string.progress_day_thu),
+        stringResource(R.string.progress_day_fri),
+        stringResource(R.string.progress_day_sat)
+    )
 
     Column(
         modifier = Modifier.fillMaxWidth()

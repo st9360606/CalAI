@@ -143,7 +143,8 @@ fun ProgressScreen(
 
                     ui.workoutError != null && ui.workoutChart.days.isEmpty() -> {
                         WorkoutErrorCard(
-                            message = ui.workoutError ?: "Load workout chart failed",
+                            message = ui.workoutError?.takeIf { it.isNotBlank() }
+                                ?: stringResource(R.string.workout_chart_error_load_failed),
                             onRetry = vm::retryWorkout,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
@@ -168,7 +169,8 @@ fun ProgressScreen(
 
                     ui.waterError != null && ui.waterChart.days.isEmpty() -> {
                         WaterErrorCard(
-                            message = ui.waterError ?: "Load water chart failed",
+                            message = ui.waterError?.takeIf { it.isNotBlank() }
+                                ?: stringResource(R.string.water_chart_error_load_failed),
                             onRetry = vm::retryWater,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )

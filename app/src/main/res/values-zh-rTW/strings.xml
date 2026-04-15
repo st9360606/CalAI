@@ -370,6 +370,9 @@
     <string name="progress_error_load_failed">載入失敗</string>
     <string name="progress_retry">重試</string>
 
+    <string name="workout_chart_error_load_failed">載入運動圖表失敗</string>
+    <string name="water_chart_error_load_failed">載入喝水圖表失敗</string>
+
     <string name="progress_chart_total_calories">總卡路里</string>
     <string name="progress_chart_cals">卡</string>
 
@@ -379,13 +382,13 @@
 
     <string name="progress_keep_it_up">繼續保持！開始永遠是最難的一步！</string>
 
-    <string name="progress_day_sun">日</string>
-    <string name="progress_day_mon">一</string>
-    <string name="progress_day_tue">二</string>
-    <string name="progress_day_wed">三</string>
-    <string name="progress_day_thu">四</string>
-    <string name="progress_day_fri">五</string>
-    <string name="progress_day_sat">六</string>
+    <string name="progress_day_sun">週日</string>
+    <string name="progress_day_mon">週一</string>
+    <string name="progress_day_tue">週二</string>
+    <string name="progress_day_wed">週三</string>
+    <string name="progress_day_thu">週四</string>
+    <string name="progress_day_fri">週五</string>
+    <string name="progress_day_sat">週六</string>
     <string name="bmi_range_underweight">&lt;18.5</string>
     <string name="bmi_range_healthy">18.5–24.9</string>
     <string name="bmi_range_overweight">25.0–29.9</string>
@@ -408,6 +411,19 @@
     <string name="progress_row_health_score_estimate">健康分數預估</string>
     <string name="progress_footer_hint">只需要一點點時間</string>
 
+    <!-- NutritionChartCard.kt -->
+    <string name="progress_tooltip_calories">熱量</string>
+    <string name="progress_tooltip_protein">蛋白質</string>
+    <string name="progress_tooltip_carbs">碳水</string>
+    <string name="progress_tooltip_fats">脂肪</string>
+    <string name="progress_tooltip_label_format">%1$s：</string>
+    <string name="progress_tooltip_grams_value">%1$d g</string>
+    <string name="progress_tooltip_plain_value">%1$d</string>
+    <string name="progress_chart_loading_total_calories_text">--.- 卡</string>
+    <string name="progress_chart_empty_total_calories_text">0.0 卡</string>
+    <string name="progress_chart_loading_delta">↑ --%%</string>
+    <string name="progress_chart_delta_placeholder">--%%</string>
+
     <!-- WorkoutChartCard -->
     <string name="workout_chart_title">運動消耗</string>
     <string name="workout_chart_unit_kcal">大卡</string>
@@ -417,22 +433,13 @@
     <string name="workout_chart_goal_left">距離今日目標還差 %1$d 大卡</string>
     <string name="workout_chart_loading">載入中...</string>
     <string name="workout_tooltip_burned">消耗</string>
-    <string name="workout_tooltip_kcal_value">%1$d kcal</string>
-
-    <!-- NutritionChartCard.kt -->
-    <string name="progress_tooltip_calories">熱量</string>
-    <string name="progress_tooltip_protein">蛋白質</string>
-    <string name="progress_tooltip_carbs">碳水</string>
-    <string name="progress_tooltip_fats">脂肪</string>
-    <string name="progress_tooltip_label_format">%1$s：</string>
-    <string name="progress_tooltip_grams_value">%1$d g</string>
-    <string name="progress_tooltip_plain_value">%1$d</string>
+    <string name="workout_tooltip_kcal_value">%1$d 大卡</string>
 
     <!-- WaterChartCard.kt -->
     <string name="water_chart_title">喝水量</string>
     <string name="water_chart_unit_ml">ml</string>
     <string name="water_chart_goal">目標</string>
-    <string name="water_chart_7day_avg">7日平均</string>
+    <string name="water_chart_7day_avg">7 日平均</string>
     <string name="water_chart_loading">載入中...</string>
     <string name="water_chart_goal_reached">今日已達成目標</string>
     <string name="water_chart_goal_left_ml">距離今日目標還差 %1$s ml</string>
