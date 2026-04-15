@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,32 +26,43 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.progress.model.WaterChartUi
 import com.calai.bitecal.ui.home.ui.progress.model.WaterProgressDayUi
+import com.calai.bitecal.ui.home.ui.progress.tooltip.ChartTooltipCard
+import com.calai.bitecal.ui.home.ui.progress.tooltip.ChartTooltipMetricUi
+import com.calai.bitecal.ui.home.ui.progress.tooltip.ChartTooltipPressState
+import com.calai.bitecal.ui.home.ui.progress.tooltip.calculateChartTooltipOffsetPx
+import com.calai.bitecal.ui.home.ui.progress.tooltip.chartTooltipPressTarget
 import kotlinx.coroutines.launch
-import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.graphics.Path
+
 private val WaterBarColor = Color(0xFF6C93D8)
 private val WaterGoalLineColor = Color(0xFF49B35D)
 
@@ -82,20 +94,29 @@ internal fun WaterChartCard(
     modifier: Modifier = Modifier
 ) {
     val footerText = if (chart.reachedGoalToday) {
-        "Goal reached for today"
+        stringResource(R.string.water_chart_goal_reached)
     } else {
-        "${formatMlPlain(chart.remainingMl)} ml left to reach today's goal"
+        stringResource(
+            R.string.water_chart_goal_left_ml,
+            formatMlPlain(chart.remainingMl)
+        )
     }
 
     WaterChartCardFrame(
-        title = "Water intake",
+        title = stringResource(R.string.water_chart_title),
         headlineValue = formatMlPlain(chart.todayMl),
-        unitText = "ml",
+        unitText = stringResource(R.string.water_chart_unit_ml),
         deltaText = chart.deltaText,
-        goalText = "Goal",
-        goalValue = "${formatMlPlain(chart.goalMl)} ml",
-        avgText = "7-day avg",
-        avgValue = "${formatMlPlain(chart.averageMl)} ml",
+        goalText = stringResource(R.string.water_chart_goal),
+        goalValue = stringResource(
+            R.string.water_chart_value_ml,
+            formatMlPlain(chart.goalMl)
+        ),
+        avgText = stringResource(R.string.water_chart_7day_avg),
+        avgValue = stringResource(
+            R.string.water_chart_value_ml,
+            formatMlPlain(chart.averageMl)
+        ),
         footerText = footerText,
         footerBackground = if (chart.reachedGoalToday) WaterFooterReachedBg else WaterFooterPendingBg,
         footerTextColor = if (chart.reachedGoalToday) WaterFooterReachedText else WaterFooterPendingText,
@@ -114,15 +135,15 @@ internal fun WaterLoadingCard(
     modifier: Modifier = Modifier
 ) {
     WaterChartCardFrame(
-        title = "Water intake",
+        title = stringResource(R.string.water_chart_title),
         headlineValue = "--",
-        unitText = "ml",
+        unitText = stringResource(R.string.water_chart_unit_ml),
         deltaText = "--",
-        goalText = "Goal",
+        goalText = stringResource(R.string.water_chart_goal),
         goalValue = "--",
-        avgText = "7-day avg",
+        avgText = stringResource(R.string.water_chart_7day_avg),
         avgValue = "--",
-        footerText = "Loading...",
+        footerText = stringResource(R.string.water_chart_loading),
         footerBackground = Color(0xFFF2F4F7),
         footerTextColor = Color(0xFF667085),
         modifier = modifier
@@ -149,7 +170,7 @@ internal fun WaterErrorCard(
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
         Text(
-            text = "Water intake",
+            text = stringResource(R.string.water_chart_title),
             color = WaterTitleColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -177,7 +198,7 @@ internal fun WaterErrorCard(
                     .padding(horizontal = 18.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = "Retry",
+                    text = stringResource(R.string.progress_retry),
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -201,7 +222,7 @@ private fun WaterChartCardFrame(
     footerBackground: Color,
     footerTextColor: Color,
     modifier: Modifier = Modifier,
-    chartContent: @Composable () -> Unit
+    chartContent: @Composable BoxWithConstraintsScope.() -> Unit
 ) {
     val resolvedDeltaText = if (deltaText == "--") {
         "--%"
@@ -307,7 +328,7 @@ private fun WaterChartCardFrame(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            chartContent()
+            this@BoxWithConstraints.chartContent()
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -419,7 +440,7 @@ private fun WaterLegendRow() {
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "Intake",
+                text = stringResource(R.string.water_legend_intake),
                 color = WaterValueColor,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
@@ -448,7 +469,7 @@ private fun WaterLegendRow() {
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "Daily goal",
+                text = stringResource(R.string.water_legend_daily_goal),
                 color = WaterValueColor,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
@@ -482,7 +503,6 @@ private fun WaterBarChart(
     val yAxisMax = computeWaterAxisMax(rawMax)
     val yTicks = buildYAxisTicks(yAxisMax, segments = 4)
 
-    // ✅ 跟 ChartCard 完全對齊
     val chartAreaHeight = 184.dp
     val chartRowHeight = 184.dp
     val xAxisGap = 8.dp
@@ -498,7 +518,13 @@ private fun WaterBarChart(
         List(7) { Animatable(0f) }
     }
 
+    var pressedTooltip by remember(chartDays, showBars) {
+        mutableStateOf<ChartTooltipPressState<WaterProgressDayUi>?>(null)
+    }
+
     LaunchedEffect(chartDays.map { it.ml }, showBars, goalMl) {
+        pressedTooltip = null
+
         chartDays.forEachIndexed { index, day ->
             launch {
                 val target = if (!showBars || yAxisMax <= 0f || day.ml <= 0) {
@@ -554,12 +580,35 @@ private fun WaterBarChart(
 
             Spacer(modifier = Modifier.width(yAxisToChartGap))
 
-            Box(
+            BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .height(chartAreaHeight)
                     .padding(end = plotEndPadding)
             ) {
+                val density = LocalDensity.current
+                var tooltipSizePx by remember { mutableStateOf(IntSize.Zero) }
+
+                val tooltipMinWidth = 124.dp
+                val slotCount = if (chartDays.isEmpty()) 7 else chartDays.size
+
+                val chartWidthPx = with(density) { maxWidth.toPx() }
+                val chartHeightPx = with(density) { maxHeight.toPx() }
+                val slotWidthPx = chartWidthPx / slotCount.toFloat()
+
+                val fallbackTooltipWidthPx = with(density) { tooltipMinWidth.toPx() }
+                val fallbackTooltipHeightPx = with(density) { 86.dp.toPx() }
+
+                val resolvedTooltipWidthPx = tooltipSizePx.width.takeIf { it > 0 }?.toFloat()
+                    ?: fallbackTooltipWidthPx
+
+                val resolvedTooltipHeightPx = tooltipSizePx.height.takeIf { it > 0 }?.toFloat()
+                    ?: fallbackTooltipHeightPx
+
+                val tooltipGapXPx = with(density) { 18.dp.toPx() }
+                val tooltipFixedTopPx = with(density) { (-18).dp.toPx() }
+                val tooltipEdgePaddingPx = with(density) { 4.dp.toPx() }
+
                 Canvas(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -603,10 +652,19 @@ private fun WaterBarChart(
                         val animatedProgress = animProgressList[index].value
                         val hasData = day.ml > 0
 
+                        val barPressModifier =
+                            Modifier.chartTooltipPressTarget(
+                                enabled = showBars && day.ml > 0,
+                                index = index,
+                                payload = day,
+                                onTooltipChange = { pressedTooltip = it }
+                            )
+
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxHeight(),
+                                .fillMaxHeight()
+                                .then(barPressModifier),
                             contentAlignment = Alignment.BottomCenter
                         ) {
                             Canvas(
@@ -621,7 +679,6 @@ private fun WaterBarChart(
                                 if (!showBars) return@Canvas
                                 if (!hasData || animatedProgress <= 0f || yAxisMax <= 0f) return@Canvas
 
-                                // ✅ 跟 ChartCard 柱體寬度一致
                                 val barWidth = size.width * 0.84f
                                 val left = (size.width - barWidth) / 2f
                                 val barHeight = (plotHeight * animatedProgress).coerceAtLeast(0f)
@@ -657,6 +714,34 @@ private fun WaterBarChart(
                         }
                     }
                 }
+
+                pressedTooltip?.let { tooltip ->
+                    val tooltipOffset = calculateChartTooltipOffsetPx(
+                        chartWidthPx = chartWidthPx,
+                        chartHeightPx = chartHeightPx,
+                        slotWidthPx = slotWidthPx,
+                        tooltipWidthPx = resolvedTooltipWidthPx,
+                        tooltipHeightPx = resolvedTooltipHeightPx,
+                        tooltipIndex = tooltip.index,
+                        pressOffsetInSlotPx = tooltip.pressOffsetInSlotPx,
+                        horizontalGapPx = tooltipGapXPx,
+                        fixedTopPx = tooltipFixedTopPx,
+                        edgePaddingPx = tooltipEdgePaddingPx
+                    )
+
+                    WaterDayTooltip(
+                        day = tooltip.payload,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .offset { tooltipOffset }
+                            .onGloballyPositioned { coordinates ->
+                                val newSize = coordinates.size
+                                if (tooltipSizePx != newSize) {
+                                    tooltipSizePx = newSize
+                                }
+                            }
+                    )
+                }
             }
         }
 
@@ -688,6 +773,27 @@ private fun WaterBarChart(
             }
         }
     }
+}
+
+@Composable
+private fun WaterDayTooltip(
+    day: WaterProgressDayUi,
+    modifier: Modifier = Modifier
+) {
+    val intakeLabel = stringResource(R.string.water_tooltip_intake)
+
+    ChartTooltipCard(
+        metrics = listOf(
+            ChartTooltipMetricUi(
+                emoji = "💧",
+                label = stringResource(R.string.progress_tooltip_label_format, intakeLabel),
+                value = stringResource(R.string.water_tooltip_ml_value, day.ml)
+            )
+        ),
+        dayLabel = localizedWaterDayLabel(day.dayLabel),
+        modifier = modifier,
+        maxWidth = 196.dp
+    )
 }
 
 private fun computeWaterAxisMax(rawMax: Float): Float {

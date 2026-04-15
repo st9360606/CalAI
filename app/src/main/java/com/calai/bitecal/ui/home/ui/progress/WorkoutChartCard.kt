@@ -5,13 +5,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -22,7 +20,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -40,20 +36,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.progress.model.WorkoutChartUi
 import com.calai.bitecal.ui.home.ui.progress.model.WorkoutProgressDayUi
+import com.calai.bitecal.ui.home.ui.progress.tooltip.ChartTooltipCard
+import com.calai.bitecal.ui.home.ui.progress.tooltip.ChartTooltipMetricUi
+import com.calai.bitecal.ui.home.ui.progress.tooltip.ChartTooltipPressState
+import com.calai.bitecal.ui.home.ui.progress.tooltip.calculateChartTooltipOffsetPx
+import com.calai.bitecal.ui.home.ui.progress.tooltip.chartTooltipPressTarget
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
@@ -74,17 +72,6 @@ private val WorkoutMetricChipBg = Color(0xFFF7F9FC)
 private val WorkoutMetricChipBorder = Color(0xFFE6EBF2)
 private val WorkoutMetricChipLabelColor = Color(0xFF7F8794)
 private val WorkoutMetricChipValueColor = Color(0xFF364152)
-
-private val WorkoutTooltipBorderColor = Color(0xFFE9E9ED)
-private val WorkoutTooltipLabelTextColor = Color(0xFF525866)
-private val WorkoutTooltipValueTextColor = Color(0xFF333947)
-private val WorkoutTooltipDayLabelColor = Color(0xFF74747A)
-
-private val WorkoutTooltipEmojiSlotWidth = 18.dp
-private val WorkoutTooltipEmojiToLabelGap = 4.dp
-private val WorkoutTooltipLabelToValueGap = 1.dp
-private val WorkoutTooltipDayLabelStartPadding =
-    WorkoutTooltipEmojiSlotWidth + WorkoutTooltipEmojiToLabelGap
 
 @Composable
 internal fun WorkoutChartCard(
@@ -378,11 +365,6 @@ private fun WorkoutMetricChip(
         }
     }
 }
-private data class WorkoutTooltipUi(
-    val index: Int,
-    val day: WorkoutProgressDayUi,
-    val pressOffsetInSlotPx: Offset
-)
 @Composable
 private fun WorkoutBarChart(
     days: List<WorkoutProgressDayUi>,
@@ -413,7 +395,7 @@ private fun WorkoutBarChart(
     val plotEndPadding = 8.dp
 
     var pressedTooltip by remember(chartDays, showBars) {
-        mutableStateOf<WorkoutTooltipUi?>(null)
+        mutableStateOf<ChartTooltipPressState<WorkoutProgressDayUi>?>(null)
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -475,7 +457,7 @@ private fun WorkoutBarChart(
                     ?: fallbackTooltipHeightPx
 
                 val tooltipGapXPx = with(density) { 18.dp.toPx() }
-                val tooltipFixedTopPx = with(density) { (-42).dp.toPx() }
+                val tooltipFixedTopPx = with(density) { (-18).dp.toPx() }
                 val tooltipEdgePaddingPx = with(density) { 4.dp.toPx() }
 
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -517,30 +499,12 @@ private fun WorkoutBarChart(
                 ) {
                     chartDays.forEachIndexed { index, day ->
                         val barPressModifier =
-                            if (showBars && day.kcal > 0) {
-                                Modifier.pointerInput(day.kcal, day.dayLabel, showBars) {
-                                    detectTapGestures(
-                                        onPress = { pressOffset ->
-                                            pressedTooltip = WorkoutTooltipUi(
-                                                index = index,
-                                                day = day,
-                                                pressOffsetInSlotPx = pressOffset
-                                            )
-
-                                            try {
-                                                tryAwaitRelease()
-                                            } finally {
-                                                if (pressedTooltip?.index == index) {
-                                                    pressedTooltip = null
-                                                }
-                                            }
-                                        }
-                                    )
-                                }
-                            } else {
-                                Modifier
-                            }
-
+                            Modifier.chartTooltipPressTarget(
+                                enabled = showBars && day.kcal > 0,
+                                index = index,
+                                payload = day,
+                                onTooltipChange = { pressedTooltip = it }
+                            )
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -596,7 +560,7 @@ private fun WorkoutBarChart(
                 }
 
                 pressedTooltip?.let { tooltip ->
-                    val tooltipOffset = calculateWorkoutTooltipOffsetPx(
+                    val tooltipOffset = calculateChartTooltipOffsetPx(
                         chartWidthPx = chartWidthPx,
                         chartHeightPx = chartHeightPx,
                         slotWidthPx = slotWidthPx,
@@ -610,7 +574,7 @@ private fun WorkoutBarChart(
                     )
 
                     WorkoutDayTooltip(
-                        day = tooltip.day,
+                        day = tooltip.payload,
                         modifier = Modifier
                             .align(Alignment.TopStart)
                             .offset { tooltipOffset }
@@ -660,126 +624,17 @@ private fun WorkoutDayTooltip(
 ) {
     val burnedLabel = stringResource(R.string.workout_tooltip_burned)
 
-    Column(
-        modifier = modifier
-            .zIndex(2f)
-            .width(IntrinsicSize.Max)
-            .widthIn(min = 124.dp, max = 196.dp)
-            .shadow(
-                elevation = 14.dp,
-                shape = RoundedCornerShape(20.dp),
-                clip = false
+    ChartTooltipCard(
+        metrics = listOf(
+            ChartTooltipMetricUi(
+                emoji = "🔥",
+                label = stringResource(R.string.progress_tooltip_label_format, burnedLabel),
+                value = stringResource(R.string.workout_tooltip_kcal_value, day.kcal)
             )
-            .background(
-                color = Color.White,
-                shape = RoundedCornerShape(20.dp)
-            )
-            .border(
-                width = 1.dp,
-                color = WorkoutTooltipBorderColor,
-                shape = RoundedCornerShape(20.dp)
-            )
-            .padding(
-                start = 11.dp,
-                end = 11.dp,
-                top = 11.dp,
-                bottom = 10.dp
-            ),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        WorkoutTooltipMetricRow(
-            emoji = "🔥",
-            label = stringResource(R.string.progress_tooltip_label_format, burnedLabel),
-            value = stringResource(R.string.workout_tooltip_kcal_value, day.kcal)
-        )
-
-        Text(
-            text = localizedWorkoutDayLabel(day.dayLabel),
-            color = WorkoutTooltipDayLabelColor,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = WorkoutTooltipDayLabelStartPadding,
-                    top = 1.dp
-                )
-        )
-    }
-}
-
-@Composable
-private fun WorkoutTooltipMetricRow(
-    emoji: String,
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.height(20.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = emoji,
-            fontSize = 16.sp,
-            modifier = Modifier.width(WorkoutTooltipEmojiSlotWidth),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.width(WorkoutTooltipEmojiToLabelGap))
-
-        Text(
-            text = label,
-            color = WorkoutTooltipLabelTextColor,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1
-        )
-
-        Spacer(modifier = Modifier.width(WorkoutTooltipLabelToValueGap))
-
-        Text(
-            text = value,
-            color = WorkoutTooltipValueTextColor,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            textAlign = TextAlign.Start
-        )
-    }
-}
-
-private fun calculateWorkoutTooltipOffsetPx(
-    chartWidthPx: Float,
-    chartHeightPx: Float,
-    slotWidthPx: Float,
-    tooltipWidthPx: Float,
-    tooltipHeightPx: Float,
-    tooltipIndex: Int,
-    pressOffsetInSlotPx: Offset,
-    horizontalGapPx: Float,
-    fixedTopPx: Float,
-    edgePaddingPx: Float
-): IntOffset {
-    val anchorX = (slotWidthPx * tooltipIndex) + pressOffsetInSlotPx.x
-
-    var targetX = anchorX + horizontalGapPx
-
-    val maxX = (chartWidthPx - tooltipWidthPx - edgePaddingPx).coerceAtLeast(edgePaddingPx)
-    val minY = fixedTopPx
-    val maxY = (chartHeightPx - tooltipHeightPx - edgePaddingPx).coerceAtLeast(minY)
-
-    val fitsRight = targetX + tooltipWidthPx <= chartWidthPx - edgePaddingPx
-    if (!fitsRight) {
-        targetX = anchorX - tooltipWidthPx - horizontalGapPx
-    }
-
-    targetX = targetX.coerceIn(edgePaddingPx, maxX)
-
-    val targetY = fixedTopPx.coerceIn(minY, maxY)
-
-    return IntOffset(
-        x = targetX.roundToInt(),
-        y = targetY.roundToInt()
+        ),
+        dayLabel = localizedWorkoutDayLabel(day.dayLabel),
+        modifier = modifier,
+        maxWidth = 196.dp
     )
 }
 

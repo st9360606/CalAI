@@ -400,20 +400,16 @@
     <string name="progress_hero_title">Creating your personalized plan</string>
     <string name="progress_hero_subtitle">We’re using your goals, body data, and preferences to tailor your daily targets.</string>
     <string name="progress_center_caption">Preparing your results</string>
-
     <string name="progress_phase_pill_1">Reviewing your profile</string>
     <string name="progress_phase_pill_2">Calculating your calorie target</string>
     <string name="progress_phase_pill_3">Balancing your daily macros</string>
     <string name="progress_phase_pill_4">Finalizing your health insights</string>
-
     <string name="progress_card_title_v2">Setting up your plan</string>
-
     <string name="progress_row_calorie_target">Daily calorie target</string>
     <string name="progress_row_carb_distribution">Carb distribution</string>
     <string name="progress_row_protein_recommendation">Protein recommendation</string>
     <string name="progress_row_fat_recommendation">Fat recommendation</string>
     <string name="progress_row_health_score_estimate">Health score estimate</string>
-
     <string name="progress_footer_hint">This takes just a moment</string>
 
     <!-- WorkoutChartCard -->
@@ -424,17 +420,30 @@
     <string name="workout_chart_goal_reached">Goal reached today</string>
     <string name="workout_chart_goal_left">%1$d kcal left to hit today’s goal</string>
     <string name="workout_chart_loading">Loading...</string>
-
+    <string name="workout_tooltip_burned">Burned</string>
+    <string name="workout_tooltip_kcal_value">%1$d kcal</string>
 
     <!-- NutritionChartCard.kt -->
     <string name="progress_tooltip_calories">Calories</string>
     <string name="progress_tooltip_protein">Protein</string>
     <string name="progress_tooltip_carbs">Carbs</string>
     <string name="progress_tooltip_fats">Fats</string>
-
     <string name="progress_tooltip_label_format">%1$s:</string>
     <string name="progress_tooltip_grams_value">%1$d g</string>
     <string name="progress_tooltip_plain_value">%1$d</string>
 
+    <!-- WaterChartCard.kt -->
+    <string name="water_chart_title">Water intake</string>
+    <string name="water_chart_unit_ml">ml</string>
+    <string name="water_chart_goal">Goal</string>
+    <string name="water_chart_7day_avg">7-day avg</string>
+    <string name="water_chart_loading">Loading...</string>
+    <string name="water_chart_goal_reached">Goal reached for today</string>
+    <string name="water_chart_goal_left_ml">%1$s ml left to reach today's goal</string>
+    <string name="water_chart_value_ml">%1$s ml</string>
+    <string name="water_legend_intake">Intake</string>
+    <string name="water_legend_daily_goal">Daily goal</string>
+    <string name="water_tooltip_intake">Intake</string>
+    <string name="water_tooltip_ml_value">%1$d ml</string>
 
 </resources>
