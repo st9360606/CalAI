@@ -23,12 +23,20 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
+import kotlin.math.roundToInt
 import javax.inject.Inject
 
 sealed interface HomeCardPollResult {
     data class Terminal(val env: FoodLogEnvelopeDto) : HomeCardPollResult
     data class StillPending(val last: FoodLogEnvelopeDto) : HomeCardPollResult
 }
+
+data class HomeTodayNutritionSummary(
+    val eatenKcal: Int = 0,
+    val eatenProteinG: Int = 0,
+    val eatenCarbsG: Int = 0,
+    val eatenFatsG: Int = 0
+)
 
 class FoodLogsRepository @Inject constructor(
     private val api: FoodLogsApi
@@ -101,6 +109,20 @@ class FoodLogsRepository @Inject constructor(
 
     suspend fun getWeeklyProgress(weekOffset: Int = 0): FoodLogWeeklyProgressDto =
         safeCall { api.getWeeklyProgress(weekOffset.coerceIn(0, 3)) }
+
+    suspend fun getTodayNutritionSummary(
+        zoneId: ZoneId = ZoneId.systemDefault()
+    ): HomeTodayNutritionSummary {
+        val today = LocalDate.now(zoneId).toString()
+        val day = getWeeklyProgress(weekOffset = 0).days.firstOrNull { it.date == today }
+
+        return HomeTodayNutritionSummary(
+            eatenKcal = day?.totalKcal?.roundToInt()?.coerceAtLeast(0) ?: 0,
+            eatenProteinG = day?.proteinG?.roundToInt()?.coerceAtLeast(0) ?: 0,
+            eatenCarbsG = day?.carbsG?.roundToInt()?.coerceAtLeast(0) ?: 0,
+            eatenFatsG = day?.fatsG?.roundToInt()?.coerceAtLeast(0) ?: 0
+        )
+    }
 
     suspend fun listSaved(
         fromLocalDate: String,

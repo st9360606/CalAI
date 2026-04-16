@@ -365,6 +365,7 @@ private fun WorkoutMetricChip(
         }
     }
 }
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun WorkoutBarChart(
     days: List<WorkoutProgressDayUi>,

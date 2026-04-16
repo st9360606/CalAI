@@ -1,6 +1,12 @@
 package com.calai.bitecal.ui.home.components
 
 import android.os.Build
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -58,6 +64,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.activity.model.DailyActivityStatus
 import com.calai.bitecal.data.activity.util.ActivityKcalEstimator
+import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.bitecal.ui.home.ui.fasting.components.WeightCardNew
@@ -78,7 +85,10 @@ private object ActivityRingColors {
 
 @Composable
 fun CaloriesCardModern(
-    caloriesLeft: Int,
+    goalKcal: Int,
+    eatenKcal: Int,
+    showTodayProgress: Boolean,
+    onClick: () -> Unit,
     progress: Float,
     modifier: Modifier = Modifier,
     cardHeight: Dp = PanelHeights.Metric,   // ★ 新增：固定高度
@@ -88,10 +98,23 @@ fun CaloriesCardModern(
     contentPaddingH: Dp = 16.dp,
     contentPaddingV: Dp = 12.dp,
 ) {
+    val valueText = if (showTodayProgress) {
+        stringResource(R.string.home_nutrition_ratio_plain, eatenKcal.coerceAtLeast(0), goalKcal.coerceAtLeast(0))
+    } else {
+        goalKcal.coerceAtLeast(0).toString()
+    }
+
+    val labelText = if (showTodayProgress) {
+        stringResource(R.string.home_calories_eaten_label)
+    } else {
+        stringResource(R.string.home_calories_goal_label)
+    }
+
     Card(
         modifier = modifier
             .height(cardHeight)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
+            .clickable(role = Role.Button, onClick = onClick),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -104,13 +127,14 @@ fun CaloriesCardModern(
                 .padding(horizontal = contentPaddingH, vertical = contentPaddingV),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = "$caloriesLeft",
-                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold)
-                )
-                Text("Calories left", style = MaterialTheme.typography.bodyMedium, color = Color.Black)
-            }
+            AnimatedMetricTextBlock(
+                valueText = valueText,
+                labelText = labelText,
+                valueStyle = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
+                labelStyle = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+
             Box(Modifier.size(ringSize), contentAlignment = Alignment.Center) {
                 GaugeRing(
                     progress = progress,
@@ -122,12 +146,11 @@ fun CaloriesCardModern(
                     tickColor = Color(0xFF111827)
                 )
                 Surface(
-                    color = RingColors.CenterFill, // ★ 使用統一更淺的顏色
+                    color = RingColors.CenterFill,
                     shape = CircleShape,
                     modifier = Modifier.size(centerDisk),
                     content = {}
                 )
-                // 🔥 圖片：火焰 icon 疊在灰圓上
                 Image(
                     painter = painterResource(R.drawable.fire),
                     contentDescription = "Fire",
@@ -141,16 +164,40 @@ fun CaloriesCardModern(
 @Composable
 fun MacroRowModern(
     s: HomeSummary,
+    todayNutrition: HomeTodayNutritionSummary,
+    showTodayProgress: Boolean,
+    onClick: () -> Unit,
     cardHeight: Dp = PanelHeights.Metric
 ) {
+    val proteinProgress = progressOfInt(
+        current = todayNutrition.eatenProteinG,
+        goal = s.proteinG
+    )
+    val carbsProgress = progressOfInt(
+        current = todayNutrition.eatenCarbsG,
+        goal = s.carbsG
+    )
+    val fatsProgress = progressOfInt(
+        current = todayNutrition.eatenFatsG,
+        goal = s.fatG
+    )
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)// ★ 更新：間距由 12.dp -> 8.dp，再更緊一點
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         MacroStatCardModern(
-            value = "${s.proteinG}g",
-            label = "Protein left",
+            goalValueText = "${s.proteinG}g",
+            progressValueText = stringResource(
+                R.string.home_nutrition_ratio_grams,
+                todayNutrition.eatenProteinG.coerceAtLeast(0),
+                s.proteinG.coerceAtLeast(0)
+            ),
+            goalLabel = stringResource(R.string.home_protein_goal_label),
+            progressLabel = stringResource(R.string.home_protein_eaten_label),
+            showTodayProgress = showTodayProgress,
             ringColor = Color(0xFFEF4444),
+            progress = proteinProgress,
             icon = {
                 Icon(
                     imageVector = Icons.Filled.EggAlt,
@@ -160,12 +207,22 @@ fun MacroRowModern(
                 )
             },
             modifier = Modifier.weight(1f),
-            cardHeight = cardHeight
+            cardHeight = cardHeight,
+            onClick = onClick
         )
+
         MacroStatCardModern(
-            value = "${s.carbsG}g",
-            label = "Carbs left",
+            goalValueText = "${s.carbsG}g",
+            progressValueText = stringResource(
+                R.string.home_nutrition_ratio_grams,
+                todayNutrition.eatenCarbsG.coerceAtLeast(0),
+                s.carbsG.coerceAtLeast(0)
+            ),
+            goalLabel = stringResource(R.string.home_carbs_goal_label),
+            progressLabel = stringResource(R.string.home_carbs_eaten_label),
+            showTodayProgress = showTodayProgress,
             ringColor = Color(0xFFF59E0B),
+            progress = carbsProgress,
             icon = {
                 Icon(
                     imageVector = Icons.Filled.BakeryDining,
@@ -175,12 +232,22 @@ fun MacroRowModern(
                 )
             },
             modifier = Modifier.weight(1f),
-            cardHeight = cardHeight
+            cardHeight = cardHeight,
+            onClick = onClick
         )
+
         MacroStatCardModern(
-            value = "${s.fatG}g",
-            label = "Fats left",
+            goalValueText = "${s.fatG}g",
+            progressValueText = stringResource(
+                R.string.home_nutrition_ratio_grams,
+                todayNutrition.eatenFatsG.coerceAtLeast(0),
+                s.fatG.coerceAtLeast(0)
+            ),
+            goalLabel = stringResource(R.string.home_fats_goal_label),
+            progressLabel = stringResource(R.string.home_fats_eaten_label),
+            showTodayProgress = showTodayProgress,
             ringColor = Color(0xFF22C55E),
+            progress = fatsProgress,
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Opacity,
@@ -190,20 +257,25 @@ fun MacroRowModern(
                 )
             },
             modifier = Modifier.weight(1f),
-            cardHeight = cardHeight
+            cardHeight = cardHeight,
+            onClick = onClick
         )
     }
 }
 
 @Composable
 private fun MacroStatCardModern(
-    value: String,
-    label: String,
+    goalValueText: String,
+    progressValueText: String,
+    goalLabel: String,
+    progressLabel: String,
+    showTodayProgress: Boolean,
     ringColor: Color,
     icon: @Composable () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     progress: Float = 0f,
-    cardHeight: Dp = PanelHeights.Metric, // ← 改成固定高度參數
+    cardHeight: Dp = PanelHeights.Metric,
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
@@ -212,7 +284,8 @@ private fun MacroStatCardModern(
     Card(
         modifier = modifier
             .height(cardHeight)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
+            .clickable(role = Role.Button, onClick = onClick),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border,
@@ -223,16 +296,11 @@ private fun MacroStatCardModern(
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Color(0xFF0F172A)
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Black
+            AnimatedMetricTextBlock(
+                valueText = if (showTodayProgress) progressValueText else goalValueText,
+                labelText = if (showTodayProgress) progressLabel else goalLabel,
+                valueStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                labelStyle = MaterialTheme.typography.bodySmall
             )
             Spacer(Modifier.height(spacingTop))
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -246,7 +314,7 @@ private fun MacroStatCardModern(
                     tickColor = ringColor
                 )
                 Surface(
-                    color = RingColors.CenterFill, // ★ 更淺
+                    color = RingColors.CenterFill,
                     shape = CircleShape,
                     modifier = Modifier.size(centerDisk)
                 ) {}
@@ -256,9 +324,42 @@ private fun MacroStatCardModern(
     }
 }
 
+@Composable
+private fun AnimatedMetricTextBlock(
+    valueText: String,
+    labelText: String,
+    valueStyle: TextStyle,
+    labelStyle: TextStyle,
+    modifier: Modifier = Modifier
+) {
+    AnimatedContent(
+        targetState = valueText to labelText,
+        transitionSpec = {
+            (slideInVertically(initialOffsetY = { it / 3 }) + fadeIn()) togetherWith
+                    (slideOutVertically(targetOffsetY = { -it / 3 }) + fadeOut())
+        },
+        label = "home_metric_swap",
+        modifier = modifier
+    ) { (currentValue, currentLabel) ->
+        Column {
+            Text(
+                text = currentValue,
+                style = valueStyle,
+                color = Color(0xFF0F172A)
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = currentLabel,
+                style = labelStyle,
+                color = Color.Black
+            )
+        }
+    }
+}
+
 private fun progressOfLong(current: Long?, goal: Long?): Float {
     val c = current ?: return 0f
-    val g = (goal ?: 0L)
+    val g = goal ?: return 0f
     if (g <= 0L) return 0f
     return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
 }

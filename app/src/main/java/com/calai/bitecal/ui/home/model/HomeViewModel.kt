@@ -14,6 +14,7 @@ import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
 import com.calai.bitecal.data.foodlog.repo.HomeCardPollResult
+import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.health.HealthConnectRepository
 import com.calai.bitecal.data.home.repo.HomeRepository
 import com.calai.bitecal.data.home.repo.HomeSummary
@@ -44,6 +45,7 @@ import kotlin.math.roundToInt
 data class HomeUiState(
     val loading: Boolean = true,
     val summary: HomeSummary? = null,
+    val todayNutrition: HomeTodayNutritionSummary = HomeTodayNutritionSummary(),
     val error: String? = null,
     val selectedDayOffset: Int = 0 // 0=今天，-1=昨天...
 )
@@ -649,6 +651,34 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+
+    private suspend fun loadTodayNutritionSummary(): HomeTodayNutritionSummary {
+        return runCatching {
+            withContext(Dispatchers.IO) { foodLogsRepository.getTodayNutritionSummary(zoneId) }
+        }.getOrElse { t ->
+            Log.w(
+                TAG,
+                "loadTodayNutritionSummary failed: ${t.javaClass.simpleName}: ${t.message}",
+                t
+            )
+            HomeTodayNutritionSummary()
+        }
+    }
+
+    private fun applyTodayNutrition(todayNutrition: HomeTodayNutritionSummary) {
+        _ui.update { current ->
+            if (current.todayNutrition == todayNutrition) {
+                current.copy(loading = false, error = null)
+            } else {
+                current.copy(
+                    loading = false,
+                    todayNutrition = todayNutrition,
+                    error = null
+                )
+            }
+        }
+    }
+
     fun refresh() = viewModelScope.launch {
         _ui.update { it.copy(loading = true, error = null) }
 
@@ -661,6 +691,7 @@ class HomeViewModel @Inject constructor(
 
         if (first.isSuccess) {
             applySummary(first.getOrThrow())
+            applyTodayNutrition(loadTodayNutritionSummary())
             return@launch
         }
 
@@ -676,6 +707,7 @@ class HomeViewModel @Inject constructor(
                 }
                 if (second.isSuccess) {
                     applySummary(second.getOrThrow())
+                    applyTodayNutrition(loadTodayNutritionSummary())
                     return@launch
                 }
                 _ui.update {

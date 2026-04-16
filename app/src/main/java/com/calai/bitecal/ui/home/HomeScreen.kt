@@ -81,6 +81,7 @@ import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPref
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionProxyActivity
 import com.calai.bitecal.data.activity.model.DailyActivityStatus
 import com.calai.bitecal.data.fasting.notifications.NotificationPermission
+import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
@@ -553,6 +554,7 @@ fun HomeScreen(
 
                 TwoPagePager(
                     summary = s,
+                    todayNutrition = ui.todayNutrition,
                     topSwap = topSwap,
                     bottomSwap = bottomSwap,
                     baseHeight = baseHeight,
@@ -834,10 +836,21 @@ private fun Avatar(
     }
 }
 
+private fun uiSafeTodayNutritionValue(value: Int?): Int =
+    (value ?: 0).coerceAtLeast(0)
+
+private fun nutritionProgress(current: Int?, goal: Int?): Float {
+    val c = (current ?: 0).coerceAtLeast(0)
+    val g = (goal ?: 0).coerceAtLeast(0)
+    if (g <= 0) return 0f
+    return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TwoPagePager(
     summary: HomeSummary,
+    todayNutrition: HomeTodayNutritionSummary,
     modifier: Modifier = Modifier,
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
@@ -860,6 +873,13 @@ private fun TwoPagePager(
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
+    var showTodayNutritionProgress by rememberSaveable { mutableStateOf(false) }
+    val toggleNutritionMode = { showTodayNutritionProgress = !showTodayNutritionProgress }
+
+    val caloriesProgress = nutritionProgress(
+        current = todayNutrition.eatenKcal,
+        goal = summary.tdee
+    )
 
     // 固定頁面總高度
     val spacerV = verticalGap
@@ -886,23 +906,29 @@ private fun TwoPagePager(
             pageSpacing = 38.dp,
             beyondViewportPageCount = 1
         ) { page ->
-            // ★ 外層留白 + 陰影強化分頁感
-            Box(modifier = Modifier.fillMaxSize())
-            {
+            Box(modifier = Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize()) {
                     when (page) {
                         0 -> {
                             CaloriesCardModern(
-                                caloriesLeft = summary.tdee,
-                                progress = 0f,
+                                goalKcal = summary.tdee,
+                                eatenKcal = uiSafeTodayNutritionValue(todayNutrition.eatenKcal),
+                                showTodayProgress = showTodayNutritionProgress,
+                                onClick = toggleNutritionMode,
+                                progress = caloriesProgress,
                                 cardHeight = caloriesH,
                                 ringSize = 76.dp,
                                 centerDisk = 38.dp,
                                 ringStroke = 6.dp
                             )
+
                             Spacer(Modifier.height(spacerV))
+
                             MacroRowModern(
                                 s = summary,
+                                todayNutrition = todayNutrition,
+                                showTodayProgress = showTodayNutritionProgress,
+                                onClick = toggleNutritionMode,
                                 cardHeight = macroH
                             )
                         }
@@ -925,13 +951,12 @@ private fun TwoPagePager(
 
                             Spacer(Modifier.height(spacerV))
 
-                            // ★ 取代原本的 ExerciseDiaryCard
                             WaterIntakeCard(
                                 cardHeight = workoutH,
                                 state = waterState,
                                 onPlus = onWaterPlus,
                                 onMinus = onWaterMinus,
-                                onToggleUnit = onToggleUnit // ← 用 switch 切 ml/oz
+                                onToggleUnit = onToggleUnit
                             )
                         }
                     }
@@ -941,7 +966,6 @@ private fun TwoPagePager(
 
         Spacer(Modifier.height(10.dp))
 
-        // 分頁圓點
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center

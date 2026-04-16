@@ -439,5 +439,17 @@
     <string name="water_tooltip_intake">Intake</string>
     <string name="water_tooltip_ml_value">%1$d ml</string>
 
+    <!-- HomeCards -->
+    <string name="home_calories_goal_label">Calories goal</string>
+    <string name="home_calories_eaten_label">Calories eaten</string>
+    <string name="home_protein_goal_label">Protein goal</string>
+    <string name="home_protein_eaten_label">Protein eaten</string>
+    <string name="home_carbs_goal_label">Carbs goal</string>
+    <string name="home_carbs_eaten_label">Carbs eaten</string>
+    <string name="home_fats_goal_label">Fats goal</string>
+    <string name="home_fats_eaten_label">Fats eaten</string>
+    <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
+    <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
+
 
 </resources>
