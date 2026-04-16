@@ -917,11 +917,13 @@ private fun TwoPagePager(
                                 onClick = toggleNutritionMode,
                                 progress = caloriesProgress,
                                 cardHeight = caloriesH,
-                                ringSize = 76.dp,
-                                centerDisk = 38.dp,
-                                ringStroke = 6.dp
+                                ringSize = 82.dp,
+                                centerDisk = 40.dp,
+                                ringStroke = 6.dp,
+                                valueFontSize = 38.sp,
+                                labelFontSize = 13.sp,
+                                fireIconSize = 26.dp
                             )
-
                             Spacer(Modifier.height(spacerV))
 
                             MacroRowModern(
@@ -929,7 +931,16 @@ private fun TwoPagePager(
                                 todayNutrition = todayNutrition,
                                 showTodayProgress = showTodayNutritionProgress,
                                 onClick = toggleNutritionMode,
-                                cardHeight = macroH
+                                cardHeight = macroH,
+                                valueFontSize = 18.sp,
+                                labelFontSize = 11.sp,
+                                ringSize = 68.dp,
+                                centerDisk = 34.dp,
+                                ringStroke = 5.dp,
+                                spacingTop = 10.dp,
+                                proteinIconSize = 22.dp,
+                                carbsIconSize = 28.dp,
+                                fatsIconSize = 23.dp
                             )
                         }
 

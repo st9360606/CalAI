@@ -91,15 +91,24 @@ fun CaloriesCardModern(
     onClick: () -> Unit,
     progress: Float,
     modifier: Modifier = Modifier,
-    cardHeight: Dp = PanelHeights.Metric,   // ★ 新增：固定高度
+    cardHeight: Dp = PanelHeights.Metric,
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
     contentPaddingH: Dp = 16.dp,
     contentPaddingV: Dp = 12.dp,
+
+    // ✅ 新增：可調尺寸
+    valueFontSize: androidx.compose.ui.unit.TextUnit = 34.sp,
+    labelFontSize: androidx.compose.ui.unit.TextUnit = 12.sp,
+    fireIconSize: Dp = 24.dp,
 ) {
     val valueText = if (showTodayProgress) {
-        stringResource(R.string.home_nutrition_ratio_plain, eatenKcal.coerceAtLeast(0), goalKcal.coerceAtLeast(0))
+        stringResource(
+            R.string.home_nutrition_ratio_plain,
+            eatenKcal.coerceAtLeast(0),
+            goalKcal.coerceAtLeast(0)
+        )
     } else {
         goalKcal.coerceAtLeast(0).toString()
     }
@@ -130,8 +139,13 @@ fun CaloriesCardModern(
             AnimatedMetricTextBlock(
                 valueText = valueText,
                 labelText = labelText,
-                valueStyle = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
-                labelStyle = MaterialTheme.typography.bodyMedium,
+                valueStyle = MaterialTheme.typography.displaySmall.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = valueFontSize
+                ),
+                labelStyle = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = labelFontSize
+                ),
                 modifier = Modifier.weight(1f)
             )
 
@@ -154,7 +168,7 @@ fun CaloriesCardModern(
                 Image(
                     painter = painterResource(R.drawable.fire),
                     contentDescription = "Fire",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(fireIconSize)
                 )
             }
         }
@@ -167,7 +181,18 @@ fun MacroRowModern(
     todayNutrition: HomeTodayNutritionSummary,
     showTodayProgress: Boolean,
     onClick: () -> Unit,
-    cardHeight: Dp = PanelHeights.Metric
+    cardHeight: Dp = PanelHeights.Metric,
+
+    // ✅ 新增：集中控制三張卡的尺寸
+    valueFontSize: androidx.compose.ui.unit.TextUnit = 20.sp,
+    labelFontSize: androidx.compose.ui.unit.TextUnit = 12.sp,
+    ringSize: Dp = RingDefaults.Size,
+    ringStroke: Dp = RingDefaults.Stroke,
+    centerDisk: Dp = RingDefaults.CenterDisk,
+    spacingTop: Dp = 12.dp,
+    proteinIconSize: Dp = 21.dp,
+    carbsIconSize: Dp = 30.dp,
+    fatsIconSize: Dp = 24.dp
 ) {
     val proteinProgress = progressOfInt(
         current = todayNutrition.eatenProteinG,
@@ -198,12 +223,18 @@ fun MacroRowModern(
             showTodayProgress = showTodayProgress,
             ringColor = Color(0xFFEF4444),
             progress = proteinProgress,
+            valueFontSize = valueFontSize,
+            labelFontSize = labelFontSize,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk,
+            spacingTop = spacingTop,
             icon = {
                 Icon(
                     imageVector = Icons.Filled.EggAlt,
                     contentDescription = null,
                     tint = Color(0xFFEF4444),
-                    modifier = Modifier.size(21.dp)
+                    modifier = Modifier.size(proteinIconSize)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -223,12 +254,18 @@ fun MacroRowModern(
             showTodayProgress = showTodayProgress,
             ringColor = Color(0xFFF59E0B),
             progress = carbsProgress,
+            valueFontSize = valueFontSize,
+            labelFontSize = labelFontSize,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk,
+            spacingTop = spacingTop,
             icon = {
                 Icon(
                     imageVector = Icons.Filled.BakeryDining,
                     contentDescription = null,
                     tint = Color(0xFFF59E0B),
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.size(carbsIconSize)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -248,12 +285,18 @@ fun MacroRowModern(
             showTodayProgress = showTodayProgress,
             ringColor = Color(0xFF22C55E),
             progress = fatsProgress,
+            valueFontSize = valueFontSize,
+            labelFontSize = labelFontSize,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk,
+            spacingTop = spacingTop,
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Opacity,
                     contentDescription = null,
                     tint = Color(0xFF22C55E),
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(fatsIconSize)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -279,7 +322,11 @@ private fun MacroStatCardModern(
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
-    spacingTop: Dp = 12.dp
+    spacingTop: Dp = 12.dp,
+
+    // ✅ 新增
+    valueFontSize: androidx.compose.ui.unit.TextUnit = 20.sp,
+    labelFontSize: androidx.compose.ui.unit.TextUnit = 12.sp,
 ) {
     Card(
         modifier = modifier
@@ -299,11 +346,21 @@ private fun MacroStatCardModern(
             AnimatedMetricTextBlock(
                 valueText = if (showTodayProgress) progressValueText else goalValueText,
                 labelText = if (showTodayProgress) progressLabel else goalLabel,
-                valueStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                labelStyle = MaterialTheme.typography.bodySmall
+                valueStyle = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = valueFontSize
+                ),
+                labelStyle = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = labelFontSize
+                )
             )
+
             Spacer(Modifier.height(spacingTop))
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
                 GaugeRing(
                     progress = progress,
                     sizeDp = ringSize,

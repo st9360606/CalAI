@@ -439,16 +439,16 @@
     <string name="water_tooltip_ml_value">%1$d ml</string>
 
     <!-- HomeCards -->
-    <string name="home_calories_goal_label">今日可消耗</string>
-    <string name="home_calories_eaten_label">今日已消耗</string>
-    <string name="home_protein_goal_label">蛋白質可攝取</string>
-    <string name="home_protein_eaten_label">蛋白質已攝取</string>
-    <string name="home_carbs_goal_label">碳水可攝取</string>
-    <string name="home_carbs_eaten_label">碳水已攝取</string>
-    <string name="home_fats_goal_label">脂肪可攝取</string>
-    <string name="home_fats_eaten_label">脂肪已攝取</string>
+    <string name="home_calories_goal_label">剩餘卡路里</string>
+    <string name="home_calories_eaten_label">已攝取卡路里</string>
+    <string name="home_protein_goal_label">剩餘蛋白質</string>
+    <string name="home_protein_eaten_label">已攝取蛋白質</string>
+    <string name="home_carbs_goal_label">剩餘碳水</string>
+    <string name="home_carbs_eaten_label">已攝取碳水</string>
+    <string name="home_fats_goal_label">剩餘脂肪</string>
+    <string name="home_fats_eaten_label">已攝取脂肪</string>
     <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
-    <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
+    <string name="home_nutrition_ratio_grams">%1$d / %2$d克</string>
 
 
 </resources>
