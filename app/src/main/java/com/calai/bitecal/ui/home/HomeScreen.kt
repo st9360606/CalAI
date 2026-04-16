@@ -921,8 +921,8 @@ private fun TwoPagePager(
                                 centerDisk = 40.dp,
                                 ringStroke = 6.dp,
                                 valueFontSize = 38.sp,
-                                labelFontSize = 13.sp,
-                                fireIconSize = 26.dp
+                                labelFontSize = 12.sp,
+                                fireIconSize = 22.dp
                             )
                             Spacer(Modifier.height(spacerV))
 
@@ -932,13 +932,13 @@ private fun TwoPagePager(
                                 showTodayProgress = showTodayNutritionProgress,
                                 onClick = toggleNutritionMode,
                                 cardHeight = macroH,
-                                valueFontSize = 18.sp,
-                                labelFontSize = 11.sp,
+                                valueFontSize = 15.sp,
+                                labelFontSize = 12.sp,
                                 ringSize = 68.dp,
                                 centerDisk = 34.dp,
                                 ringStroke = 5.dp,
                                 spacingTop = 10.dp,
-                                proteinIconSize = 22.dp,
+                                proteinIconSize = 20.dp,
                                 carbsIconSize = 28.dp,
                                 fatsIconSize = 23.dp
                             )

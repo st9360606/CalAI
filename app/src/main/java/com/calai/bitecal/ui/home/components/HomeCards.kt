@@ -2,13 +2,13 @@ package com.calai.bitecal.ui.home.components
 
 import android.os.Build
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -54,11 +54,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
@@ -97,11 +101,9 @@ fun CaloriesCardModern(
     centerDisk: Dp = RingDefaults.CenterDisk,
     contentPaddingH: Dp = 16.dp,
     contentPaddingV: Dp = 12.dp,
-
-    // ✅ 新增：可調尺寸
-    valueFontSize: androidx.compose.ui.unit.TextUnit = 34.sp,
-    labelFontSize: androidx.compose.ui.unit.TextUnit = 12.sp,
-    fireIconSize: Dp = 24.dp,
+    valueFontSize: TextUnit = 38.sp,
+    labelFontSize: TextUnit = 12.sp,
+    fireIconSize: Dp = 22.dp,
 ) {
     val valueText = if (showTodayProgress) {
         stringResource(
@@ -140,13 +142,26 @@ fun CaloriesCardModern(
                 valueText = valueText,
                 labelText = labelText,
                 valueStyle = MaterialTheme.typography.displaySmall.copy(
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize = valueFontSize
                 ),
-                labelStyle = MaterialTheme.typography.bodySmall.copy(
-                    fontSize = labelFontSize
+                labelStyle = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = labelFontSize,
+                    lineHeight = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 0.sp
                 ),
-                modifier = Modifier.weight(1f)
+                valueColor = Color(0xFF0F172A),
+                valueSuffixColor = Color(0xFF7C7C85),
+                valueSuffixFontSize = 20.sp,
+                valueSuffixWeight = FontWeight.Medium,
+                valueSuffixOffsetX = 6.dp,
+                valueSuffixOffsetY = 4.dp,
+                valueToLabelSpacing = 0.dp,
+                labelOffsetY = 0.dp,
+                modifier = Modifier
+                    .weight(1f)
+                    .offset(x = 12.dp)
             )
 
             Box(Modifier.size(ringSize), contentAlignment = Alignment.Center) {
@@ -184,8 +199,8 @@ fun MacroRowModern(
     cardHeight: Dp = PanelHeights.Metric,
 
     // ✅ 新增：集中控制三張卡的尺寸
-    valueFontSize: androidx.compose.ui.unit.TextUnit = 20.sp,
-    labelFontSize: androidx.compose.ui.unit.TextUnit = 12.sp,
+    valueFontSize: TextUnit = 17.sp,
+    labelFontSize: TextUnit = 12.sp,
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
@@ -323,10 +338,8 @@ private fun MacroStatCardModern(
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
     spacingTop: Dp = 12.dp,
-
-    // ✅ 新增
-    valueFontSize: androidx.compose.ui.unit.TextUnit = 20.sp,
-    labelFontSize: androidx.compose.ui.unit.TextUnit = 12.sp,
+    valueFontSize: TextUnit = 34.sp,
+    labelFontSize: TextUnit = 12.sp,
 ) {
     Card(
         modifier = modifier
@@ -351,8 +364,18 @@ private fun MacroStatCardModern(
                     fontSize = valueFontSize
                 ),
                 labelStyle = MaterialTheme.typography.bodySmall.copy(
-                    fontSize = labelFontSize
-                )
+                    fontSize = labelFontSize,
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = 0.sp
+                ),
+                valueColor = Color(0xFF0F172A),
+                valueSuffixColor = Color(0xFF7C7C85),
+                valueSuffixFontSize = 11.sp,
+                valueSuffixWeight = FontWeight.Medium,
+                valueSuffixOffsetX = 3.dp,
+                valueSuffixOffsetY = 2.dp,
+                valueToLabelSpacing = 0.dp
             )
 
             Spacer(Modifier.height(spacingTop))
@@ -387,7 +410,18 @@ private fun AnimatedMetricTextBlock(
     labelText: String,
     valueStyle: TextStyle,
     labelStyle: TextStyle,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    valueColor: Color = Color(0xFF0F172A),
+    valueSuffixColor: Color = Color(0xFF71717A),
+    valueSuffixFontSize: TextUnit = 16.sp,
+    valueSuffixWeight: FontWeight = FontWeight.Medium,
+    valueSuffixOffsetX: Dp = 0.dp,
+    valueSuffixOffsetY: Dp = 0.dp,
+    valueToLabelSpacing: Dp = 0.dp,
+    labelOffsetY: Dp = 0.dp,
+    labelColor: Color = Color(0xFF3F3F46),
+    labelEmphasisColor: Color = Color(0xFF18181B),
+    labelEmphasisWeight: FontWeight = FontWeight.Medium, //eaten的粗細
 ) {
     AnimatedContent(
         targetState = valueText to labelText,
@@ -399,21 +433,151 @@ private fun AnimatedMetricTextBlock(
         modifier = modifier
     ) { (currentValue, currentLabel) ->
         Column {
-            Text(
+            MetricValueText(
                 text = currentValue,
-                style = valueStyle,
-                color = Color(0xFF0F172A)
+                baseStyle = valueStyle,
+                primaryColor = valueColor,
+                suffixColor = valueSuffixColor,
+                suffixFontSize = valueSuffixFontSize,
+                suffixWeight = valueSuffixWeight,
+                suffixOffsetX = valueSuffixOffsetX,
+                suffixOffsetY = valueSuffixOffsetY
             )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = currentLabel,
-                style = labelStyle,
-                color = Color.Black
-            )
+
+            Spacer(Modifier.height(valueToLabelSpacing))
+
+            Box(
+                modifier = Modifier.offset(y = labelOffsetY)
+            ) {
+                MetricStatusLabel(
+                    text = currentLabel,
+                    baseStyle = labelStyle,
+                    labelColor = labelColor,
+                    emphasisColor = labelEmphasisColor,
+                    emphasisWeight = labelEmphasisWeight
+                )
+            }
         }
     }
 }
+@Composable
+private fun MetricValueText(
+    text: String,
+    baseStyle: TextStyle,
+    primaryColor: Color,
+    suffixColor: Color,
+    suffixFontSize: TextUnit,
+    suffixWeight: FontWeight,
+    suffixOffsetX: Dp,
+    suffixOffsetY: Dp
+) {
+    val slashIndex = text.indexOf('/')
 
+    if (slashIndex <= 0) {
+        Text(
+            text = text,
+            style = baseStyle,
+            color = primaryColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        return
+    }
+
+    val prefix = text.take(slashIndex).trimEnd()
+    val slash = "/"
+    val rest = text.substring(slashIndex + 1) // 只拿 slash 後面的字
+
+    Row(verticalAlignment = Alignment.Bottom) {
+        Text(
+            text = prefix,
+            style = baseStyle,
+            color = primaryColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Text(
+            text = slash,
+            style = baseStyle.copy(
+                fontSize = suffixFontSize,
+                fontWeight = FontWeight.Black   // ✅ 只有 / 變粗
+            ),
+            color = suffixColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.offset(
+                x = suffixOffsetX,
+                y = suffixOffsetY
+            )
+        )
+
+        Text(
+            text = rest,
+            style = baseStyle.copy(
+                fontSize = suffixFontSize,
+                fontWeight = suffixWeight      // ✅ 數字維持原本較輕
+            ),
+            color = suffixColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.offset(
+                x = suffixOffsetX,
+                y = suffixOffsetY
+            )
+        )
+    }
+}
+@Composable
+private fun MetricStatusLabel(
+    text: String,
+    baseStyle: TextStyle,
+    labelColor: Color,
+    emphasisColor: Color,
+    emphasisWeight: FontWeight
+) {
+    val splitIndex = text.lastIndexOf(' ')
+
+    if (splitIndex <= 0 || splitIndex >= text.lastIndex) {
+        Text(
+            text = text,
+            style = baseStyle,
+            color = labelColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        return
+    }
+
+    val prefix = text.substring(0, splitIndex)
+    val emphasis = text.substring(splitIndex + 1)
+
+    Text(
+        text = buildAnnotatedString {
+            withStyle(
+                SpanStyle(
+                    color = labelColor,
+                    fontWeight = FontWeight.Normal
+                )
+            ) {
+                append(prefix)
+                append(" ")
+            }
+
+            withStyle(
+                SpanStyle(
+                    color = emphasisColor,
+                    fontWeight = emphasisWeight
+                )
+            ) {
+                append(emphasis)
+            }
+        },
+        style = baseStyle,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+}
 private fun progressOfLong(current: Long?, goal: Long?): Float {
     val c = current ?: return 0f
     val g = goal ?: return 0f
