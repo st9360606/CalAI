@@ -34,7 +34,9 @@ import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
-
+import com.calai.bitecal.data.membership.api.MembershipApi
+import com.calai.bitecal.data.notifications.api.NotificationInboxApi
+import com.calai.bitecal.data.referral.api.ReferralApi
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -161,4 +163,18 @@ object NetworkModule {
     fun provideEntitlementApi(@Named("apiRetrofit") retrofit: Retrofit): EntitlementApi =
         retrofit.create(EntitlementApi::class.java)
 
+    @Provides
+    @Singleton
+    fun provideReferralApi(@Named("apiRetrofit") retrofit: Retrofit): ReferralApi =
+        retrofit.create(ReferralApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMembershipApi(@Named("apiRetrofit") retrofit: Retrofit): MembershipApi =
+        retrofit.create(MembershipApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideNotificationInboxApi(@Named("apiRetrofit") retrofit: Retrofit): NotificationInboxApi =
+        retrofit.create(NotificationInboxApi::class.java)
 }

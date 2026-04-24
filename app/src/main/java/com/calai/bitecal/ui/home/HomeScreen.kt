@@ -138,7 +138,9 @@ fun HomeScreen(
     fastingVm: FastingPlanViewModel,
     onOpenWeight: () -> Unit,
     onQuickLogWeight: () -> Unit,
-    onOpenRecentUploadDetail: (foodLogId: String, previewUri: String?, timeText: String) -> Unit
+    onOpenRecentUploadDetail: (foodLogId: String, previewUri: String?, timeText: String) -> Unit,
+    canUseScan: Boolean = false,
+    onOpenSubscription: () -> Unit = {},
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -360,10 +362,15 @@ fun HomeScreen(
     var recentUploadDeleteTargetId by rememberSaveable { mutableStateOf<String?>(null) }
     var recentUploadDeleteRequested by rememberSaveable { mutableStateOf(false) }
 
-    val onFabClick: () -> Unit = remember {
-        { showQuickAddMenu = true }
+    val onFabClick: () -> Unit = remember(canUseScan, onOpenSubscription) {
+        {
+            if (canUseScan) {
+                showQuickAddMenu = true
+            } else {
+                onOpenSubscription()
+            }
+        }
     }
-
     // 有 owner 才能用 launcher；沒有就 null（你已有 ProxyActivity 兜底）
     val requestCameraPermLauncher =
         if (registryOwner != null) {

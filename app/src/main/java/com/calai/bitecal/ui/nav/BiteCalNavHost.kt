@@ -73,6 +73,8 @@ import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.home.ui.foodlog.FoodLogTimeResolver
 import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadDetailScreen
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
+import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
+import com.calai.bitecal.ui.home.ui.membership.MembershipViewModel
 import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
@@ -98,6 +100,10 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewMod
 import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
 import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
 import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
+import com.calai.bitecal.ui.home.ui.settings.premium.PremiumRewardsScreen
+import com.calai.bitecal.ui.home.ui.settings.premium.model.PremiumRewardsViewModel
+import com.calai.bitecal.ui.home.ui.settings.referral.ReferralScreen
+import com.calai.bitecal.ui.home.ui.settings.referral.model.ReferralViewModel
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
 import com.calai.bitecal.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.bitecal.ui.home.ui.weight.RecordWeightScreen
@@ -165,6 +171,8 @@ object Routes {
     const val CAMERA = "camera"
     const val SAVED_FOODS = "saved_foods"
     const val REMINDERS = "reminders"
+    const val REFERRALS = "referrals"
+    const val PREMIUM_REWARDS = "premium_rewards"
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
@@ -715,6 +723,17 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
+            val membershipVm: MembershipViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val membershipUi by membershipVm.ui.collectAsState()
+            val display = MembershipUiMapper.map(
+                status = membershipUi.premiumStatus,
+                until = membershipUi.currentPremiumUntil,
+                trialDaysLeft = membershipUi.trialDaysLeft
+            )
+
             // ✅ 讓 HOME 也能顯示「上一頁回傳」的 toast（例如 QuickLogWeight 回來）
             val successFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
@@ -768,7 +787,14 @@ fun BiteCalNavHost(
                         nav.navigate(Routes.recentUploadDetail(foodLogId)) {
                             launchSingleTop = true
                         }
-                    }
+                    },
+                    canUseScan = membershipUi.canUseScan,
+                    onOpenSubscription = {
+                        nav.navigate(Routes.ROUTE_PLAN) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                 )
 
                 when {
@@ -1012,6 +1038,23 @@ fun BiteCalNavHost(
             val featureUrl = stringResource(R.string.url_feature_request)
             val supportMailUrl = stringResource(R.string.url_support_email)
 
+            val membershipVm: MembershipViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val membershipUi by membershipVm.ui.collectAsState()
+
+            LaunchedEffect(Unit) {
+                membershipVm.refresh()
+            }
+
+            val membershipDisplay = MembershipUiMapper.map(
+                status = membershipUi.premiumStatus,
+                until = membershipUi.currentPremiumUntil?.take(10),
+                trialDaysLeft = membershipUi.trialDaysLeft
+            )
+
             Box(Modifier.fillMaxSize()) {
                 SettingsScreen(
                     avatarUrl = avatar,
@@ -1055,6 +1098,22 @@ fun BiteCalNavHost(
                         }
                     },
                     onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
+
+                    premiumStatusText = membershipDisplay.title,
+                    premiumUntilText = membershipDisplay.subtitle,
+                    canUseScan = membershipUi.canUseScan,
+                    onOpenSubscription = {
+                        nav.navigate(Routes.ROUTE_PLAN) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onOpenReferral = {
+                        nav.navigate(Routes.REFERRALS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
 
                     // ✅ Terms / Privacy / Support / Feature
                     onOpenTerms = { uriHandler.openUri(termsUrl) },
@@ -1116,6 +1175,23 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
+
+            val premiumRewardsVm: PremiumRewardsViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            LaunchedEffect(Unit) {
+                premiumRewardsVm.refresh()
+            }
+
+            val premiumUi by premiumRewardsVm.ui.collectAsState()
+
+            val premiumStatusText = premiumUi.summary?.premiumStatus ?: "FREE"
+            val premiumUntilText = premiumUi.summary?.currentPremiumUntil
+                ?.take(10)
+                ?: "—"
+
             LaunchedEffect(Unit) {
                 settingsVm.refreshProfileOnly()
                 weightVm.initIfNeeded()
@@ -1152,6 +1228,14 @@ fun BiteCalNavHost(
                     onEditStartingWeight = { nav.navigate(Routes.EDIT_STARTING_WEIGHT) },
                     onEditDailyWaterGoal = { nav.navigate(Routes.EDIT_WATER_GOAL) },
                     onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) },
+                    premiumStatusText = premiumStatusText,
+                    premiumUntilText = premiumUntilText,
+                    onOpenPremiumRewards = {
+                        nav.navigate(Routes.PREMIUM_REWARDS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
                 when {
                     !navError.isNullOrBlank() -> {
@@ -2072,6 +2156,52 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = goBackHome,
                 onOpenTab = onOpenTab
+            )
+        }
+        composable(Routes.REFERRALS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: ReferralViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            val ui by vm.ui.collectAsState()
+            val summary = ui.summary
+
+            ReferralScreen(
+                promoCode = summary?.promoCode ?: "—",
+                successCount = summary?.successCount ?: 0L,
+                pendingCount = summary?.pendingVerificationCount ?: 0L,
+                rejectedCount = summary?.rejectedCount ?: 0L,
+                recentClaims = summary?.recentClaims.orEmpty(),
+                claimInFlight = ui.claimInFlight,
+                error = ui.error,
+                onBack = { nav.popBackStack() },
+                onSubmitClaim = { code ->
+                    vm.claim(code) {
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(NavResults.SUCCESS_TOAST, "Referral code submitted")
+                    }
+                }
+            )
+        }
+
+        composable(Routes.PREMIUM_REWARDS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: PremiumRewardsViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            val ui by vm.ui.collectAsState()
+
+            PremiumRewardsScreen(
+                summary = ui.summary,
+                rewards = ui.rewards,
+                onBack = { nav.popBackStack() }
             )
         }
 

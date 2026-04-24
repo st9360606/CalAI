@@ -89,6 +89,11 @@ fun SettingsScreen(
     onOpenAdjustMacros: () -> Unit = {},
     onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
+    premiumStatusText: String = "FREE",
+    premiumUntilText: String = "Upgrade to unlock",
+    canUseScan: Boolean = false,
+    onOpenSubscription: () -> Unit = {},
+    onOpenReferral: () -> Unit = {},
     onOpenLanguage: () -> Unit = {},
     onOpenTerms: () -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
@@ -101,7 +106,17 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        floatingActionButton = { ScanFab(onClick = onOpenCamera) },
+        floatingActionButton = {
+            ScanFab(
+                onClick = {
+                    if (canUseScan) {
+                        onOpenCamera()
+                    } else {
+                        onOpenSubscription()
+                    }
+                }
+            )
+        },
         bottomBar = { MainBottomBar(current = currentTab, onOpenTab = onOpenTab) }
     ) { inner ->
         SettingsContent(
@@ -116,6 +131,9 @@ fun SettingsScreen(
             onOpenAdjustMacros = onOpenAdjustMacros,
             onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
             onOpenWeightHistory = onOpenWeightHistory,
+            premiumStatusText = premiumStatusText,
+            premiumUntilText = premiumUntilText,
+            onOpenReferral = onOpenReferral,
             onOpenLanguage = onOpenLanguage,
             onOpenTerms = onOpenTerms,
             onOpenPrivacy = onOpenPrivacy,
@@ -138,6 +156,9 @@ private fun SettingsContent(
     onOpenAdjustMacros: () -> Unit,
     onOpenGoalAndCurrentWeight: () -> Unit,
     onOpenWeightHistory: () -> Unit,
+    premiumStatusText: String,
+    premiumUntilText: String,
+    onOpenReferral: () -> Unit,
     onOpenLanguage: () -> Unit,
     onOpenTerms: () -> Unit,
     onOpenPrivacy: () -> Unit,
@@ -193,11 +214,13 @@ private fun SettingsContent(
             avatarUrl = avatarUrl,
             name = profileName,
             subtitle = ageText,
+            premiumStatus = premiumStatusText,
+            premiumUntil = premiumUntilText,
             onClick = onOpenEditName
         )
 
         Spacer(Modifier.height(14.dp))
-        InviteFriendsCard()
+        InviteFriendsCard(onClick = onOpenReferral)
         Spacer(Modifier.height(16.dp))
 
         SettingsListCard {
@@ -253,6 +276,8 @@ private fun ProfileCard(
     avatarUrl: Uri?,
     name: String,
     subtitle: String,
+    premiumStatus: String,
+    premiumUntil: String,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(22.dp)
@@ -294,6 +319,23 @@ private fun ProfileCard(
                     )
                 )
             }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = premiumStatus,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF111114)
+                    )
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = premiumUntil,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF6B7280)
+                    )
+                )
+            }
         }
     }
 }
@@ -330,7 +372,9 @@ private fun ProfileAvatar(url: Uri?) {
 
 
 @Composable
-private fun InviteFriendsCard() {
+private fun InviteFriendsCard(
+    onClick: () -> Unit
+) {
     val shape = RoundedCornerShape(22.dp)
     Card(
         shape = shape,
@@ -378,7 +422,7 @@ private fun InviteFriendsCard() {
                     }
 
                     Button(
-                        onClick = { /* TODO: referral flow */ },
+                        onClick = onClick,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.White,
                             contentColor = Color(0xFF111114)
