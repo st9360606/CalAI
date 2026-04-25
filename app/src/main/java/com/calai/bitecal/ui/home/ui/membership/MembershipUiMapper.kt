@@ -14,12 +14,11 @@ object MembershipUiMapper {
         until: String?,
         trialDaysLeft: Int?
     ): MembershipDisplay {
-
         return when (status) {
             PremiumStatus.FREE -> {
                 MembershipDisplay(
                     title = "FREE",
-                    subtitle = "Upgrade to unlock"
+                    subtitle = "Upgrade"
                 )
             }
 
@@ -33,9 +32,16 @@ object MembershipUiMapper {
             PremiumStatus.PREMIUM -> {
                 MembershipDisplay(
                     title = "PREMIUM",
-                    subtitle = "Until ${until ?: "—"}"
+                    subtitle = "Until ${formatDate(until)}"
                 )
             }
         }
+    }
+
+    fun formatDate(raw: String?): String {
+        return raw
+            ?.takeIf { it.isNotBlank() }
+            ?.take(10)
+            ?: "—"
     }
 }

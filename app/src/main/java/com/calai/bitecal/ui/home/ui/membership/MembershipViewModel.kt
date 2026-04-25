@@ -2,8 +2,8 @@ package com.calai.bitecal.ui.home.ui.membership
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.calai.bitecal.data.entitlement.api.EntitlementApi
 import com.calai.bitecal.data.entitlement.model.PremiumStatus
+import com.calai.bitecal.data.membership.repo.MembershipRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +24,7 @@ data class MembershipUiState(
 
 @HiltViewModel
 class MembershipViewModel @Inject constructor(
-    private val api: EntitlementApi
+    private val membershipRepository: MembershipRepository
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(MembershipUiState())
@@ -36,15 +36,18 @@ class MembershipViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
+            _ui.value = _ui.value.copy(loading = true, error = null)
+
             runCatching {
-                api.me()
+                membershipRepository.getSummary()
             }.onSuccess { dto ->
                 _ui.value = MembershipUiState(
                     loading = false,
                     premiumStatus = PremiumStatus.from(dto.premiumStatus),
                     currentPremiumUntil = dto.currentPremiumUntil,
                     trialEndsAt = dto.trialEndsAt,
-                    trialDaysLeft = dto.trialDaysLeft
+                    trialDaysLeft = dto.trialDaysLeft,
+                    error = null
                 )
             }.onFailure { e ->
                 _ui.value = _ui.value.copy(

@@ -64,6 +64,9 @@ fun SignInSheetHost(
             runCatching { store.setHasServerProfile(true) }
             runCatching { weightRepo.ensureBaseline() }
 
+            // onboarding 完成後才開始 3 天 trial，避免使用者還沒完成設定就開始扣時間
+            runCatching { entitlementSyncer.grantTrialIfEligibleSilently() }
+
             withContext(Dispatchers.Main) {
                 navController.navigate(Routes.HOME) {
                     popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }

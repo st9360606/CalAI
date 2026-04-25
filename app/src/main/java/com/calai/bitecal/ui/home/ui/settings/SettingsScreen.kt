@@ -90,7 +90,7 @@ fun SettingsScreen(
     onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
     premiumStatusText: String = "FREE",
-    premiumUntilText: String = "Upgrade to unlock",
+    premiumUntilText: String = "Upgrade",
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
     onOpenReferral: () -> Unit = {},

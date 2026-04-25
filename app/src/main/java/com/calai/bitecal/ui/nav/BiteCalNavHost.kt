@@ -45,6 +45,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.calai.bitecal.R
 import com.calai.bitecal.data.auth.net.SessionBus
+import com.calai.bitecal.data.entitlement.model.PremiumStatus
 import com.calai.bitecal.data.foodlog.model.ClientAction
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
@@ -135,6 +136,8 @@ import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
+import com.calai.bitecal.ui.subscription.SubscriptionScreen
+import com.calai.bitecal.ui.subscription.SubscriptionViewModel
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -162,6 +165,8 @@ object Routes {
     const val ONBOARD_HEALTH_CONNECT = "onboard_health_connect"
     const val PLAN_PROGRESS = "plan_progress"
     const val ROUTE_PLAN = "plan"
+    const val SUBSCRIPTION = "subscription"
+    const val MEMBERSHIP_REFRESH_TICK = "membership_refresh_tick"
     const val REQUIRE_SIGN_IN = "require_sign_in"
     const val HOME = "home"
     const val APP_ENTRY = "app_entry"
@@ -384,11 +389,13 @@ fun BiteCalNavHost(
                         val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
                             if (uploadLocal) {
-                                // ★ 從 ROUTE_PLAN 帶上來：一定 upsert 本機資料（不管 exists）
                                 runCatching { store.setLocaleTag(currentTag) }
                                 runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                 runCatching { store.setHasServerProfile(true) }
-                                runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
+                                runCatching { weightRepo.ensureBaseline() }
+                                // onboarding 完成後才開始 3 天 trial
+                                runCatching { entitlementSyncer.grantTrialIfEligibleSilently() }
+
                                 Routes.HOME
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
@@ -581,6 +588,7 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
+            val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
             val routeScope = rememberCoroutineScope()
             HealthPlanScreen(
                 vm = vm,
@@ -594,6 +602,10 @@ fun BiteCalNavHost(
                                     runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                     runCatching { store.setHasServerProfile(true) }
                                     runCatching { weightRepo.ensureBaseline() }
+
+                                    // 已登入用戶完成 onboarding 時，也要嘗試發 3 天 Trial。
+                                    // 後端負責判斷是否已領過、已付費或不符合資格。
+                                    runCatching { entitlementSyncer.grantTrialIfEligibleSilently() }
                                 }
 
                                 nav.navigate(goal) {
@@ -728,11 +740,18 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
             val membershipUi by membershipVm.ui.collectAsState()
-            val display = MembershipUiMapper.map(
-                status = membershipUi.premiumStatus,
-                until = membershipUi.currentPremiumUntil,
-                trialDaysLeft = membershipUi.trialDaysLeft
-            )
+
+            val membershipRefreshTickFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<Long>(
+                    Routes.MEMBERSHIP_REFRESH_TICK,
+                    0L
+                )
+            }
+            val membershipRefreshTick by membershipRefreshTickFlow.collectAsState()
+
+            LaunchedEffect(membershipRefreshTick) {
+                membershipVm.refresh()
+            }
 
             // ✅ 讓 HOME 也能顯示「上一頁回傳」的 toast（例如 QuickLogWeight 回來）
             val successFlow = remember(backStackEntry) {
@@ -745,7 +764,10 @@ fun BiteCalNavHost(
             val navError by errorFlow.collectAsState(initial = null)
 
             LaunchedEffect(isSignedIn) {
-                if (isSignedIn == true) vm.refreshAfterLogin()
+                if (isSignedIn == true) {
+                    vm.refreshAfterLogin()
+                    membershipVm.refresh()
+                }
             }
 
             Box(Modifier.fillMaxSize()) {
@@ -790,9 +812,9 @@ fun BiteCalNavHost(
                     },
                     canUseScan = membershipUi.canUseScan,
                     onOpenSubscription = {
-                        nav.navigate(Routes.ROUTE_PLAN) {
+                        nav.navigate(Routes.SUBSCRIPTION) {
                             launchSingleTop = true
-                            restoreState = true
+                            restoreState = false
                         }
                     },
                 )
@@ -1103,9 +1125,9 @@ fun BiteCalNavHost(
                     premiumUntilText = membershipDisplay.subtitle,
                     canUseScan = membershipUi.canUseScan,
                     onOpenSubscription = {
-                        nav.navigate(Routes.ROUTE_PLAN) {
+                        nav.navigate(Routes.SUBSCRIPTION) {
                             launchSingleTop = true
-                            restoreState = true
+                            restoreState = false
                         }
                     },
                     onOpenReferral = {
@@ -1187,10 +1209,14 @@ fun BiteCalNavHost(
 
             val premiumUi by premiumRewardsVm.ui.collectAsState()
 
-            val premiumStatusText = premiumUi.summary?.premiumStatus ?: "FREE"
-            val premiumUntilText = premiumUi.summary?.currentPremiumUntil
-                ?.take(10)
-                ?: "—"
+            val personalMembershipDisplay = MembershipUiMapper.map(
+                status = PremiumStatus.from(premiumUi.summary?.premiumStatus),
+                until = premiumUi.summary?.currentPremiumUntil,
+                trialDaysLeft = premiumUi.summary?.trialDaysLeft
+            )
+
+            val premiumStatusText = personalMembershipDisplay.title
+            val premiumUntilText = personalMembershipDisplay.subtitle
 
             LaunchedEffect(Unit) {
                 settingsVm.refreshProfileOnly()
@@ -2188,6 +2214,44 @@ fun BiteCalNavHost(
             )
         }
 
+        composable(Routes.SUBSCRIPTION) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            SubscriptionScreen(
+                vm = vm,
+                activity = activity,
+                onBack = {
+                    nav.popBackStack()
+                },
+                onPurchased = {
+                    runCatching {
+                        nav.getBackStackEntry(Routes.HOME)
+                            .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                    }
+
+                    val popped = nav.popBackStack(
+                        route = Routes.HOME,
+                        inclusive = false
+                    )
+
+                    if (!popped) {
+                        nav.navigate(Routes.HOME) {
+                            popUpTo(Routes.SUBSCRIPTION) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
+                }
+            )
+        }
+
         composable(Routes.PREMIUM_REWARDS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
@@ -2199,8 +2263,11 @@ fun BiteCalNavHost(
             val ui by vm.ui.collectAsState()
 
             PremiumRewardsScreen(
+                loading = ui.loading,
+                error = ui.error,
                 summary = ui.summary,
                 rewards = ui.rewards,
+                onRetry = { vm.refresh() },
                 onBack = { nav.popBackStack() }
             )
         }

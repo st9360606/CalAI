@@ -15,6 +15,8 @@ interface MembershipApi {
 data class MembershipSummaryDto(
     val premiumStatus: String,
     val currentPremiumUntil: String? = null,
+    val trialEndsAt: String? = null,
+    val trialDaysLeft: Int? = null,
     val latestRewardSource: String? = null,
     val latestOldPremiumUntil: String? = null,
     val latestNewPremiumUntil: String? = null,
