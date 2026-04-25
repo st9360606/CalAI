@@ -64,11 +64,10 @@ fun SignInSheetHost(
             runCatching { store.setHasServerProfile(true) }
             runCatching { weightRepo.ensureBaseline() }
 
-            // onboarding 完成後才開始 3 天 trial，避免使用者還沒完成設定就開始扣時間
-            runCatching { entitlementSyncer.grantTrialIfEligibleSilently() }
-
+            // Trial 不在登入成功時自動發放。
+            // Onboarding 完成後導到訂閱頁，讓使用者明確選擇 Trial 或付費訂閱。
             withContext(Dispatchers.Main) {
-                navController.navigate(Routes.HOME) {
+                navController.navigate(Routes.ONBOARD_SUBSCRIPTION) {
                     popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false

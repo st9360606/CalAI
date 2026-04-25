@@ -22,10 +22,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,13 +39,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
+import com.calai.bitecal.data.entitlement.api.TrialGrantResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscriptionScreen(
     vm: SubscriptionViewModel,
     activity: Activity,
+    showBack: Boolean = true,
     onBack: () -> Unit,
+    onTrialStarted: (TrialGrantResponse) -> Unit,
     onPurchased: (EntitlementSyncResponse) -> Unit
 ) {
     val ui by vm.ui.collectAsState()
@@ -51,16 +56,18 @@ fun SubscriptionScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Upgrade to Premium") },
+                title = { Text("Choose your plan") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        enabled = !ui.purchasing
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                    if (showBack) {
+                        IconButton(
+                            onClick = onBack,
+                            enabled = !ui.busy
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
                     }
                 }
             )
@@ -73,7 +80,7 @@ fun SubscriptionScreen(
                         onSuccess = onPurchased
                     )
                 },
-                enabled = !ui.purchasing,
+                enabled = !ui.busy,
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
@@ -87,7 +94,7 @@ fun SubscriptionScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Continue")
+                    Text("Subscribe now")
                 }
             }
         }
@@ -109,15 +116,33 @@ fun SubscriptionScreen(
             )
 
             Text(
-                text = "Choose a plan. Payment, renewal, and cancellation are handled securely by Google Play.",
+                text = "Start with a 3-day free trial or subscribe now. Payment, renewal, and cancellation are handled securely by Google Play.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            TrialCard(
+                loading = ui.startingTrial,
+                enabled = !ui.busy,
+                onClick = {
+                    vm.startTrial(onSuccess = onTrialStarted)
+                }
+            )
+
+            HorizontalDivider()
+
+            Text(
+                text = "Subscription plans",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                )
             )
 
             PlanOptionCard(
                 title = "Monthly",
                 subtitle = "Flexible monthly access",
                 selected = ui.selectedProductId == BiteCalBillingProducts.MONTHLY,
+                enabled = !ui.busy,
                 onClick = {
                     vm.selectProduct(BiteCalBillingProducts.MONTHLY)
                 }
@@ -127,6 +152,7 @@ fun SubscriptionScreen(
                 title = "Yearly",
                 subtitle = "Best value for long-term tracking",
                 selected = ui.selectedProductId == BiteCalBillingProducts.YEARLY,
+                enabled = !ui.busy,
                 onClick = {
                     vm.selectProduct(BiteCalBillingProducts.YEARLY)
                 }
@@ -148,10 +174,64 @@ fun SubscriptionScreen(
             }
 
             Text(
-                text = "Premium starts only after payment is verified. You can cancel anytime in Google Play subscriptions.",
+                text = "Premium starts only after payment is verified. Trials and subscriptions can be managed in Google Play subscriptions.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun TrialCard(
+    loading: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(22.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "3-day free trial",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+
+            Text(
+                text = "Try food scanning, macro tracking, and premium features before subscribing.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+
+            OutlinedButton(
+                onClick = onClick,
+                enabled = enabled,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(999.dp)
+            ) {
+                if (loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Start 3-day free trial")
+                }
+            }
         }
     }
 }
@@ -161,12 +241,16 @@ private fun PlanOptionCard(
     title: String,
     subtitle: String,
     selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
     OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(
+                enabled = enabled,
+                onClick = onClick
+            ),
         border = BorderStroke(
             width = if (selected) 2.dp else 1.dp,
             color = if (selected) {

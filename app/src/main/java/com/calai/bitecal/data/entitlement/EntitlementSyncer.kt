@@ -55,6 +55,19 @@ class EntitlementSyncer(
     }
 
     /**
+     * 使用者在訂閱頁明確按下「Start 3-day free trial」時呼叫。
+     *
+     * 這個方法不吞錯，讓 UI 能顯示：
+     * - TRIAL_ALREADY_USED
+     * - EMAIL_ALREADY_USED
+     * - DEVICE_ALREADY_USED
+     * - DEVICE_ID_REQUIRED
+     */
+    suspend fun grantTrial() = withContext(Dispatchers.IO) {
+        api.grantTrial()
+    }
+
+    /**
      * 訂閱頁付款成功後，立刻同步後端 entitlement。
      *
      * 正確順序：

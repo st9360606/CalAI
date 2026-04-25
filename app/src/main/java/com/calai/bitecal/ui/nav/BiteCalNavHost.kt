@@ -165,6 +165,16 @@ object Routes {
     const val ONBOARD_HEALTH_CONNECT = "onboard_health_connect"
     const val PLAN_PROGRESS = "plan_progress"
     const val ROUTE_PLAN = "plan"
+
+    /**
+     * Onboarding 完成後專用訂閱頁。
+     *
+     * 跟一般 Routes.SUBSCRIPTION 分開，是為了：
+     * 1. Onboarding 訂閱頁不能 back 繞過
+     * 2. Settings / Home 開啟的一般訂閱頁仍可返回
+     */
+    const val ONBOARD_SUBSCRIPTION = "onboard_subscription"
+
     const val SUBSCRIPTION = "subscription"
     const val MEMBERSHIP_REFRESH_TICK = "membership_refresh_tick"
     const val REQUIRE_SIGN_IN = "require_sign_in"
@@ -393,10 +403,10 @@ fun BiteCalNavHost(
                                 runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }
-                                // onboarding 完成後才開始 3 天 trial
-                                runCatching { entitlementSyncer.grantTrialIfEligibleSilently() }
 
-                                Routes.HOME
+                                // Onboarding 完成後先進訂閱頁。
+                                // Trial 不在這裡自動發放，必須由使用者在訂閱頁明確點選。
+                                Routes.ONBOARD_SUBSCRIPTION
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
@@ -581,20 +591,18 @@ fun BiteCalNavHost(
             )
         }
 
-        // ROUTE_PLAN：未登入 → Gate(禁止 Skip)；已登入 → 先 upsert 再進 HOME
+        // ROUTE_PLAN：未登入 → Gate(禁止 Skip)；已登入 → 先 upsert 再進 Onboarding 訂閱頁
         composable(Routes.ROUTE_PLAN) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: HealthPlanViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
-            val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
             val routeScope = rememberCoroutineScope()
             HealthPlanScreen(
                 vm = vm,
                 startEnabled = isSignedIn != null,
                 onStart = {
-                    val goal = Routes.HOME
                     routeScope.launch {
                         when (isSignedIn) {
                             true -> {
@@ -602,13 +610,9 @@ fun BiteCalNavHost(
                                     runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                     runCatching { store.setHasServerProfile(true) }
                                     runCatching { weightRepo.ensureBaseline() }
-
-                                    // 已登入用戶完成 onboarding 時，也要嘗試發 3 天 Trial。
-                                    // 後端負責判斷是否已領過、已付費或不符合資格。
-                                    runCatching { entitlementSyncer.grantTrialIfEligibleSilently() }
                                 }
 
-                                nav.navigate(goal) {
+                                nav.navigate(Routes.ONBOARD_SUBSCRIPTION) {
                                     popUpTo(0) { inclusive = true }
                                     launchSingleTop = true
                                     restoreState = false
@@ -616,7 +620,7 @@ fun BiteCalNavHost(
                             }
 
                             false -> {
-                                nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$goal&auto=true&uploadLocal=true") {
+                                nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true&uploadLocal=true") {
                                     launchSingleTop = true
                                     restoreState = false
                                 }
@@ -2214,6 +2218,47 @@ fun BiteCalNavHost(
             )
         }
 
+        composable(Routes.ONBOARD_SUBSCRIPTION) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            fun goHomeAfterOnboardingSubscription() {
+                runCatching {
+                    nav.getBackStackEntry(Routes.HOME)
+                        .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                }
+
+                nav.navigate(Routes.HOME) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                    restoreState = false
+                }
+            }
+
+            BackHandler(enabled = true) {
+                // Onboarding 訂閱頁不能返回繞過。
+            }
+
+            SubscriptionScreen(
+                vm = vm,
+                activity = activity,
+                showBack = false,
+                onBack = {
+                    // Onboarding 訂閱頁不允許返回。
+                },
+                onTrialStarted = {
+                    goHomeAfterOnboardingSubscription()
+                },
+                onPurchased = {
+                    goHomeAfterOnboardingSubscription()
+                }
+            )
+        }
+
         composable(Routes.SUBSCRIPTION) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
@@ -2225,8 +2270,30 @@ fun BiteCalNavHost(
             SubscriptionScreen(
                 vm = vm,
                 activity = activity,
+                showBack = true,
                 onBack = {
                     nav.popBackStack()
+                },
+                onTrialStarted = {
+                    runCatching {
+                        nav.getBackStackEntry(Routes.HOME)
+                            .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                    }
+
+                    val popped = nav.popBackStack(
+                        route = Routes.HOME,
+                        inclusive = false
+                    )
+
+                    if (!popped) {
+                        nav.navigate(Routes.HOME) {
+                            popUpTo(Routes.SUBSCRIPTION) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    }
                 },
                 onPurchased = {
                     runCatching {

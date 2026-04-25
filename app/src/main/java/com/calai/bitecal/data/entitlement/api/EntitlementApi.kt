@@ -41,6 +41,7 @@ data class EntitlementSyncResponse(
 @Serializable
 data class TrialGrantResponse(
     val ok: Boolean,
+    val premiumStatus: String = "TRIAL",
     val tier: String,
     val validToUtc: String
 )
