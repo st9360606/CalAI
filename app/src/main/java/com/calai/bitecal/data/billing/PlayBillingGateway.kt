@@ -2,6 +2,7 @@ package com.calai.bitecal.data.billing
 
 import android.app.Activity
 import android.app.Application
+import android.util.Log
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -20,6 +21,10 @@ import java.util.concurrent.atomic.AtomicReference
 class PlayBillingGateway(
     private val app: Application
 ) : BillingGateway {
+
+    private companion object {
+        const val TAG = "PlayBillingGateway"
+    }
 
     private val pendingPurchaseResult =
         AtomicReference<CompletableDeferred<BillingPurchaseResult>?>(null)
@@ -49,6 +54,10 @@ class PlayBillingGateway(
         val (billingResult, purchases) = queryPurchasesAsyncSuspend(params)
 
         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+            Log.w(
+                TAG,
+                "queryActiveSubscriptions failed. code=${billingResult.responseCode}, msg=${billingResult.debugMessage}"
+            )
             return emptyList()
         }
 
@@ -70,20 +79,41 @@ class PlayBillingGateway(
 
     override suspend fun launchSubscriptionPurchase(
         activity: Activity,
-        productId: String
+        productId: String,
+        offerTag: String?
     ): BillingPurchaseResult {
         val ok = startConnectionIfNeeded()
         if (!ok) {
             return BillingPurchaseResult.Error("Billing service is not ready")
         }
 
-        val productDetails = querySubscriptionProductDetails(productId)
-            ?: return BillingPurchaseResult.Error("Subscription product not found: $productId")
+        Log.d(
+            TAG,
+            "launchSubscriptionPurchase package=${app.packageName}, productId=$productId, offerTag=$offerTag"
+        )
 
-        val offerToken = productDetails.subscriptionOfferDetails
-            ?.firstOrNull()
-            ?.offerToken
-            ?: return BillingPurchaseResult.Error("No subscription offer found: $productId")
+        val productDetails = querySubscriptionProductDetails(productId)
+            ?: return BillingPurchaseResult.Error(
+                "Subscription product not found. package=${app.packageName}, productId=$productId. " +
+                        "請確認你正在跑 prodDebug，且 Play Console 有建立這個 subscription product。"
+            )
+
+        val offerDetails = productDetails.subscriptionOfferDetails.orEmpty()
+
+        Log.d(
+            TAG,
+            "available offers for productId=$productId => ${describeOffers(offerDetails)}"
+        )
+
+        val matchedOffer = pickOffer(
+            offerDetails = offerDetails,
+            requestedOfferTag = offerTag
+        ) ?: return BillingPurchaseResult.Error(
+            "No subscription offer found. package=${app.packageName}, productId=$productId, requestedOfferTag=$offerTag, " +
+                    "available=${describeOffers(offerDetails)}"
+        )
+
+        val offerToken = matchedOffer.offerToken
 
         val deferred = CompletableDeferred<BillingPurchaseResult>()
 
@@ -104,8 +134,9 @@ class PlayBillingGateway(
 
         if (launchResult.responseCode != BillingClient.BillingResponseCode.OK) {
             pendingPurchaseResult.compareAndSet(deferred, null)
+
             return BillingPurchaseResult.Error(
-                launchResult.debugMessage.ifBlank { "Failed to launch billing flow" }
+                "Failed to launch billing flow. code=${launchResult.responseCode}, msg=${launchResult.debugMessage}"
             )
         }
 
@@ -130,11 +161,65 @@ class PlayBillingGateway(
         }
     }
 
+    private fun pickOffer(
+        offerDetails: List<ProductDetails.SubscriptionOfferDetails>,
+        requestedOfferTag: String?
+    ): ProductDetails.SubscriptionOfferDetails? {
+        if (offerDetails.isEmpty()) return null
+
+        /**
+         * 圖2：原價訂閱 sheet
+         *
+         * 不指定 offerTag 時，優先挑 regular base plan。
+         * regular base plan 的 offerId 通常是 null。
+         */
+        if (requestedOfferTag.isNullOrBlank()) {
+            return offerDetails.firstOrNull { details ->
+                details.offerId.isNullOrBlank()
+            } ?: offerDetails.firstOrNull()
+        }
+
+        /**
+         * 圖6：discount / trial offer
+         *
+         * Play Console 可能用：
+         * - offerTags
+         * - offerId
+         * - basePlanId
+         *
+         * 所以三種都支援，避免只靠 offerTags 找不到。
+         */
+        return offerDetails.firstOrNull { details ->
+            details.offerTags.contains(requestedOfferTag) ||
+                    details.offerId == requestedOfferTag ||
+                    details.basePlanId == requestedOfferTag
+        }
+    }
+
+    private fun describeOffers(
+        offerDetails: List<ProductDetails.SubscriptionOfferDetails>
+    ): String {
+        if (offerDetails.isEmpty()) return "[]"
+
+        return offerDetails.joinToString(
+            prefix = "[",
+            postfix = "]",
+            separator = " | "
+        ) { details ->
+            "basePlanId=${details.basePlanId}, offerId=${details.offerId}, tags=${details.offerTags}"
+        }
+    }
+
     private fun handlePurchaseUpdated(
         billingResult: BillingResult,
         purchases: MutableList<Purchase>?
     ) {
         val deferred = pendingPurchaseResult.getAndSet(null) ?: return
+
+        Log.d(
+            TAG,
+            "purchase updated. code=${billingResult.responseCode}, msg=${billingResult.debugMessage}, purchases=${purchases?.size ?: 0}"
+        )
 
         when (billingResult.responseCode) {
             BillingClient.BillingResponseCode.OK -> {
@@ -215,6 +300,11 @@ class PlayBillingGateway(
         val billingResult = resultPair.first
         val products = resultPair.second
 
+        Log.d(
+            TAG,
+            "queryProductDetails productId=$productId, package=${app.packageName}, code=${billingResult.responseCode}, msg=${billingResult.debugMessage}, count=${products.size}"
+        )
+
         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
             return null
         }
@@ -229,12 +319,19 @@ class PlayBillingGateway(
             client.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(result: BillingResult) {
                     if (!cont.isActive) return
+
+                    Log.d(
+                        TAG,
+                        "Billing setup finished. code=${result.responseCode}, msg=${result.debugMessage}"
+                    )
+
                     cont.resume(
                         result.responseCode == BillingClient.BillingResponseCode.OK
                     ) { _ -> }
                 }
 
                 override fun onBillingServiceDisconnected() {
+                    Log.w(TAG, "Billing service disconnected")
                     if (!cont.isActive) return
                     cont.resume(false) { _ -> }
                 }

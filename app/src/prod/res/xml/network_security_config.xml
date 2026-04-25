@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+        TEMP ONLY:
+        給 Google Play Internal testing 的 prodRelease 暫時連本機 HTTP 後端使用。
+
+        正式上架前必須改回 HTTPS：
+        - API_BASE_URL 改成 https://...
+        - 刪掉這個 prod overlay
+        - 或改成 cleartextTrafficPermitted="false"
+    -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

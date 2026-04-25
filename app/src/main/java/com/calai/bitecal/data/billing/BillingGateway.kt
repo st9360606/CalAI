@@ -24,10 +24,15 @@ interface BillingGateway {
 
     /**
      * 訂閱頁點擊方案後，啟動 Google Play Billing Sheet。
+     *
+     * @param productId Google Play subscription product id.
+     * @param offerTag 若指定，會優先使用符合 offerTag 的 subscription offer。
+     *                 若 null，會 fallback 到第一個可用 offer。
      */
     suspend fun launchSubscriptionPurchase(
         activity: Activity,
-        productId: String
+        productId: String,
+        offerTag: String? = null
     ): BillingPurchaseResult
 
     /**

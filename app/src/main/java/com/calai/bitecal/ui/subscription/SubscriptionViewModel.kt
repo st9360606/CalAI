@@ -84,14 +84,32 @@ class SubscriptionViewModel @Inject constructor(
 
     fun purchase(
         activity: Activity,
-        onSuccess: (EntitlementSyncResponse) -> Unit
+        offerTag: String? = null,
+        onSuccess: (EntitlementSyncResponse) -> Unit,
+        onCancelled: (() -> Unit)? = null
     ) {
-        val productId = _ui.value.selectedProductId
+        purchaseProduct(
+            activity = activity,
+            productId = _ui.value.selectedProductId,
+            offerTag = offerTag,
+            onSuccess = onSuccess,
+            onCancelled = onCancelled
+        )
+    }
+
+    fun purchaseProduct(
+        activity: Activity,
+        productId: String,
+        offerTag: String? = null,
+        onSuccess: (EntitlementSyncResponse) -> Unit,
+        onCancelled: (() -> Unit)? = null
+    ) {
         if (_ui.value.busy) return
 
         viewModelScope.launch {
             _ui.update {
                 it.copy(
+                    selectedProductId = productId,
                     purchasing = true,
                     error = null
                 )
@@ -99,7 +117,8 @@ class SubscriptionViewModel @Inject constructor(
 
             val result = entitlementSyncer.purchaseSubscriptionAndSync(
                 activity = activity,
-                productId = productId
+                productId = productId,
+                offerTag = offerTag
             )
 
             if (result.success && result.response != null) {
@@ -110,16 +129,29 @@ class SubscriptionViewModel @Inject constructor(
                     )
                 }
                 onSuccess(result.response)
-            } else {
-                _ui.update {
-                    it.copy(
-                        purchasing = false,
-                        error = result.message ?: "Purchase failed"
-                    )
-                }
+                return@launch
+            }
+
+            _ui.update {
+                it.copy(
+                    purchasing = false,
+                    error = result.message ?: "Purchase failed"
+                )
+            }
+
+            if (isPurchaseCancelledMessage(result.message)) {
+                onCancelled?.invoke()
             }
         }
     }
+
+    private fun isPurchaseCancelledMessage(message: String?): Boolean {
+        val raw = message.orEmpty()
+
+        return raw.contains("cancel", ignoreCase = true) ||
+                raw.contains("USER_CANCELED", ignoreCase = true)
+    }
+
 
     private fun Throwable.toTrialMessage(): String {
         val raw = when (this) {

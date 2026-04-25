@@ -67,23 +67,15 @@ class EntitlementSyncer(
         api.grantTrial()
     }
 
-    /**
-     * 訂閱頁付款成功後，立刻同步後端 entitlement。
-     *
-     * 正確順序：
-     * 1. 啟動 Google Play Billing Sheet
-     * 2. 收到 purchaseToken
-     * 3. 呼叫 backend /api/v1/entitlements/sync
-     * 4. backend 回 PREMIUM 後才 acknowledge
-     * 5. UI refresh membership
-     */
     suspend fun purchaseSubscriptionAndSync(
         activity: Activity,
-        productId: String
+        productId: String,
+        offerTag: String? = null
     ): PurchaseEntitlementResult {
         val purchaseResult = billing.launchSubscriptionPurchase(
             activity = activity,
-            productId = productId
+            productId = productId,
+            offerTag = offerTag
         )
 
         return when (purchaseResult) {
@@ -124,17 +116,19 @@ class EntitlementSyncer(
                     )
                 }
 
-                val openedPremium =
-                    response.status == "ACTIVE" &&
-                            response.premiumStatus == "PREMIUM" &&
+                val premiumStatus = response.premiumStatus.uppercase()
+
+                val openedEntitlement =
+                    response.status.equals("ACTIVE", ignoreCase = true) &&
+                            (premiumStatus == "PREMIUM" || premiumStatus == "TRIAL") &&
                             !response.entitlementType.isNullOrBlank() &&
                             response.currentPremiumUntil != null
 
-                if (!openedPremium) {
+                if (!openedEntitlement) {
                     return PurchaseEntitlementResult(
                         success = false,
                         response = response,
-                        message = "Payment verified, but Premium was not activated. Please try restoring purchases."
+                        message = "Payment verified, but entitlement was not activated. premiumStatus=${response.premiumStatus}, status=${response.status}"
                     )
                 }
 

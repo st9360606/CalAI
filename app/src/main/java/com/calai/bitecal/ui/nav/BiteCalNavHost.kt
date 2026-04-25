@@ -136,6 +136,7 @@ import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
+import com.calai.bitecal.ui.subscription.OnboardSubscriptionScreen
 import com.calai.bitecal.ui.subscription.SubscriptionScreen
 import com.calai.bitecal.ui.subscription.SubscriptionViewModel
 import dagger.hilt.android.EntryPointAccessors
@@ -666,16 +667,11 @@ fun BiteCalNavHost(
                 },
                 onSkip = {
                     if (uploadLocal) {
-                        // 來自 ROUTE_PLAN：允許返回 ROUTE_PLAN（不登入先回規劃頁）
-                        val popped = nav.popBackStack(Routes.ROUTE_PLAN, inclusive = false)
-                        if (!popped) {
-                            nav.navigate(Routes.ROUTE_PLAN) {
-                                launchSingleTop = true
-                                restoreState = false
-                            }
+                        nav.navigate(Routes.ONBOARD_SUBSCRIPTION) {
+                            launchSingleTop = true
+                            restoreState = false
                         }
                     } else {
-                        // 其他情境（例如從 Landing 來）：維持原本邏輯
                         val popped = nav.safePopBackStack()
                         if (!popped) {
                             nav.navigate(redirect) {
@@ -686,7 +682,7 @@ fun BiteCalNavHost(
                         }
                     }
                 },
-                showSkip = !uploadLocal,
+                showSkip = true,
                 snackBarHostState = snackbarHostState
             )
 
@@ -2239,19 +2235,38 @@ fun BiteCalNavHost(
                 }
             }
 
-            BackHandler(enabled = true) {
-                // Onboarding 訂閱頁不能返回繞過。
+            fun closeToSignInAsFree() {
+                /**
+                 * 使用者在 onboarding paywall 明確關閉：
+                 * - 不開 trial
+                 * - 不 premium
+                 * - 回登入頁
+                 *
+                 * 注意：
+                 * 如果目前 back stack 沒有 REQUIRE_SIGN_IN，就補導回去。
+                 */
+                val popped = nav.popBackStack(
+                    route = Routes.REQUIRE_SIGN_IN,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=false&uploadLocal=false") {
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
             }
 
-            SubscriptionScreen(
+            BackHandler(enabled = true) {
+                closeToSignInAsFree()
+            }
+
+            OnboardSubscriptionScreen(
                 vm = vm,
                 activity = activity,
-                showBack = false,
-                onBack = {
-                    // Onboarding 訂閱頁不允許返回。
-                },
-                onTrialStarted = {
-                    goHomeAfterOnboardingSubscription()
+                onCloseToSignIn = {
+                    closeToSignInAsFree()
                 },
                 onPurchased = {
                     goHomeAfterOnboardingSubscription()

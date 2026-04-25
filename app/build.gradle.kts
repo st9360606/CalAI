@@ -19,8 +19,8 @@ android {
         applicationId = "com.calai.bitecal"
         minSdk = 30
         targetSdk = 36
-        versionCode = 10004
-        versionName = "1.0.1"
+        versionCode = 10006
+        versionName = "1.0.3-internal"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 預設 app 顯示名稱（不覆蓋多語字串）
@@ -110,9 +110,9 @@ android {
             versionNameSuffix = "-dev"
             //buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")   //模擬器
             // ✅ 你原本用的（尾巴有 /）
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"") //同WIFI
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"") //同WIFI
             // ✅ 新增給你現在要用的（尾巴不要 /，方便你 concat path）
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
         }
@@ -122,8 +122,8 @@ android {
             applicationIdSuffix = ".devwifi"
             versionNameSuffix = "-devwifi"
 
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
         }
@@ -145,8 +145,8 @@ android {
             dimension = "env"
             // TODO: 之後換正式域名
 
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.9:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.9:8080\"")
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
