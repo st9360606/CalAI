@@ -1,6 +1,9 @@
 package com.calai.bitecal.ui.subscription
 
 import android.app.Activity
+import android.graphics.Paint
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,36 +17,44 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
+import kotlinx.coroutines.delay
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
 
 private enum class OnboardPaywallStep {
     Intro,
@@ -60,8 +71,8 @@ fun OnboardSubscriptionScreen(
 ) {
     val ui by vm.ui.collectAsState()
 
-    var step by remember { mutableStateOf(OnboardPaywallStep.Intro) }
-    var trialEnabled by remember { mutableStateOf(true) }
+    var step by rememberSaveable { mutableStateOf(OnboardPaywallStep.Intro) }
+    var trialEnabled by rememberSaveable { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (step) {
@@ -70,22 +81,26 @@ fun OnboardSubscriptionScreen(
                     purchasing = ui.purchasing,
                     onClose = onCloseToSignIn,
                     onContinue = {
-                        /**
-                         * 圖2：Google Play 原價 yearly plan
-                         *
-                         * 這裡不要傳 DEFAULT_YEARLY offerTag。
-                         * 原價 base plan 通常是 regular base plan，
-                         * 由 PlayBillingGateway 在 offerTag=null 時自動選。
-                         */
-                        vm.purchaseProduct(
-                            activity = activity,
-                            productId = BiteCalBillingProducts.YEARLY,
-                            offerTag = null,
-                            onSuccess = onPurchased,
-                            onCancelled = {
-                                step = OnboardPaywallStep.Spin
-                            }
-                        )
+                        if (shouldBypassInitialGooglePlaywallForDev()) {
+                            step = OnboardPaywallStep.Spin
+                        } else {
+                            /**
+                             * 圖2：Google Play 原價 yearly plan
+                             *
+                             * 這裡不要傳 DEFAULT_YEARLY offerTag。
+                             * 原價 base plan 通常是 regular base plan，
+                             * 由 PlayBillingGateway 在 offerTag=null 時自動選。
+                             */
+                            vm.purchaseProduct(
+                                activity = activity,
+                                productId = BiteCalBillingProducts.YEARLY,
+                                offerTag = null,
+                                onSuccess = onPurchased,
+                                onCancelled = {
+                                    step = OnboardPaywallStep.Spin
+                                }
+                            )
+                        }
                     }
                 )
             }
@@ -149,6 +164,14 @@ fun OnboardSubscriptionScreen(
             )
         }
     }
+}
+
+private fun shouldBypassInitialGooglePlaywallForDev(): Boolean {
+    return BuildConfig.DEBUG && (
+        BuildConfig.APPLICATION_ID.endsWith(".dev") ||
+            BuildConfig.APPLICATION_ID.endsWith(".devwifi") ||
+            BuildConfig.APPLICATION_ID.endsWith(".devusb")
+        )
 }
 
 @Composable
@@ -222,18 +245,40 @@ private fun OnboardSubscriptionIntro(
 private fun OnboardDiscountSpinScreen(
     onContinue: () -> Unit
 ) {
+    val initialRotationDegrees = -120f
+    val finalGiftRotationDegrees = 360f * 6f
+
+    val rotation = remember { Animatable(initialRotationDegrees) }
+    var spinStarted by rememberSaveable { mutableStateOf(false) }
+    var spinFinished by rememberSaveable { mutableStateOf(false) }
+    val unlockedDiscountText = "Gift offer unlocked"
+
+    LaunchedEffect(spinStarted) {
+        if (spinStarted && !spinFinished) {
+            rotation.snapTo(initialRotationDegrees)
+            delay(180)
+            rotation.animateTo(
+                targetValue = finalGiftRotationDegrees,
+                animationSpec = tween(
+                    durationMillis = 4200,
+                    easing = FastOutSlowInEasing
+                )
+            )
+            spinFinished = true
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .clickable(onClick = onContinue)
             .navigationBarsPadding()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp)
-                .padding(top = 130.dp),
+                .padding(top = 110.dp, bottom = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -246,9 +291,105 @@ private fun OnboardDiscountSpinScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(150.dp))
+            Spacer(Modifier.height(30.dp))
 
-            DiscountWheelMock()
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(390.dp)
+            ) {
+                Box(
+                    modifier = Modifier.size(330.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    DiscountWheelMock(
+                        rotationDegrees = rotation.value,
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    DiscountWheelPointerRight(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .offset(x = 30.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(28.dp))
+
+            Text(
+                text = if (spinFinished) unlockedDiscountText else "Spinning...",
+                color = if (spinFinished) Color(0xFFE45F69) else Color(0xFF71717A),
+                fontSize = 24.sp,
+                lineHeight = 28.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            when {
+                !spinStarted -> {
+                    PrimaryBlackButton(
+                        text = "Spin",
+                        loading = false,
+                        onClick = {
+                            spinStarted = true
+                        }
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    Text(
+                        text = "Tap Spin to reveal your exclusive gift.",
+                        color = Color(0xFF71717A),
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                !spinFinished -> {
+                    PrimaryBlackButton(
+                        text = "Spinning...",
+                        loading = true,
+                        onClick = {}
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    Text(
+                        text = "Please wait until the wheel stops.",
+                        color = Color(0xFF71717A),
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                else -> {
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn(animationSpec = tween(280))
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            PrimaryBlackButton(
+                                text = "Continue",
+                                loading = false,
+                                onClick = onContinue
+                            )
+
+                            Spacer(Modifier.height(14.dp))
+
+                            Text(
+                                text = "This offer is revealed after the wheel stops.",
+                                color = Color(0xFF71717A),
+                                fontSize = 16.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -310,14 +451,14 @@ private fun OnboardOneTimeOfferScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "NT$1,010.00",
+                    text = "NT$999.00",
                     color = Color(0xFF9CA3AF),
                     fontSize = 25.sp,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
-                    text = "  NT$50.83 /mo",
+                    text = "  NT$54.08 /mo",
                     color = Color(0xFFE45F69),
                     fontSize = 39.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -460,22 +601,64 @@ private fun PhonePreviewMock() {
 }
 
 @Composable
-private fun DiscountWheelMock() {
-    Canvas(modifier = Modifier.size(330.dp)) {
+private fun DiscountWheelPointerRight(
+    modifier: Modifier = Modifier
+) {
+    Canvas(
+        modifier = modifier.size(width = 54.dp, height = 72.dp)
+    ) {
+        val path = androidx.compose.ui.graphics.Path().apply {
+            // Right-side pointer. The left tip touches the wheel.
+            moveTo(0f, size.height / 2f)
+            lineTo(size.width, 0f)
+            lineTo(size.width, size.height)
+            close()
+        }
+        drawPath(path = path, color = Color(0xFF1C1923))
+    }
+}
+
+@Composable
+private fun DiscountWheelMock(
+    rotationDegrees: Float,
+    modifier: Modifier = Modifier
+) {
+    /**
+     * Important:
+     * - Gift segment is index 1.
+     * - With the arc formula below, index 1 is centered at 0 degrees,
+     *   which is exactly the right-side pointer position.
+     * - OnboardDiscountSpinScreen animates to 360 * N, so the wheel always
+     *   stops with the gift under the pointer.
+     */
+    val segmentLabels = listOf(
+        "70%",
+        "🎁",
+        "60%",
+        "30%",
+        "No luck",
+        "50%"
+    )
+    val segmentColors = listOf(
+        Color.White,
+        Color(0xFF1C1923),
+        Color.White,
+        Color(0xFF1C1923),
+        Color.White,
+        Color(0xFF1C1923)
+    )
+
+    Canvas(
+        modifier = modifier.graphicsLayer {
+            rotationZ = rotationDegrees
+        }
+    ) {
         val radius = size.minDimension / 2f
         val center = Offset(size.width / 2f, size.height / 2f)
-        val colors = listOf(
-            Color(0xFF1C1923),
-            Color.White,
-            Color(0xFF1C1923),
-            Color.White,
-            Color(0xFF1C1923),
-            Color.White
-        )
 
         repeat(6) { index ->
             drawArc(
-                color = colors[index],
+                color = segmentColors[index],
                 startAngle = index * 60f - 90f,
                 sweepAngle = 60f,
                 useCenter = true
@@ -486,12 +669,46 @@ private fun DiscountWheelMock() {
             color = Color(0xFF1C1923),
             radius = radius,
             center = center,
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 18f)
+            style = Stroke(width = 18f)
         )
+
+        val textPaint = Paint().apply {
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
+            textSize = size.minDimension * 0.07f
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+        }
+
+        repeat(6) { index ->
+            val midAngle = Math.toRadians((index * 60f - 60f).toDouble())
+            val textRadius = radius * 0.68f
+            val x = center.x + (kotlin.math.cos(midAngle) * textRadius).toFloat()
+            val y = center.y + (kotlin.math.sin(midAngle) * textRadius).toFloat()
+            textPaint.color = if (segmentColors[index] == Color.White) {
+                android.graphics.Color.BLACK
+            } else {
+                android.graphics.Color.WHITE
+            }
+            textPaint.textSize = if (segmentLabels[index] == "🎁") {
+                size.minDimension * 0.16f
+            } else {
+                size.minDimension * 0.07f
+            }
+            drawContext.canvas.nativeCanvas.save()
+            drawContext.canvas.nativeCanvas.rotate((index * 60f).toFloat(), x, y)
+            drawContext.canvas.nativeCanvas.drawText(segmentLabels[index], x, y, textPaint)
+            drawContext.canvas.nativeCanvas.restore()
+        }
 
         drawCircle(
             color = Color(0xFF1C1923),
             radius = 42f,
+            center = center
+        )
+
+        drawCircle(
+            color = Color.White,
+            radius = 13f,
             center = center
         )
     }
@@ -590,14 +807,14 @@ private fun OfferPlanCard(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = "12mo · NT$610.00",
+                    text = "12mo · NT$649.00",
                     color = Color(0xFF71717A),
                     fontSize = 22.sp
                 )
             }
 
             Text(
-                text = "NT$50.83 /mo",
+                text = "NT$54.08 /mo",
                 color = Color.Black,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.ExtraBold

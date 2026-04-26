@@ -14,6 +14,7 @@ import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -293,6 +294,8 @@ fun BiteCalNavHost(
 
     val store = remember(ep) { ep.userProfileStore() }
 
+    val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
+
     val localeController = LocalLocaleController.current
 
     LaunchedEffect(nav) {
@@ -387,15 +390,17 @@ fun BiteCalNavHost(
 
             val currentTag = localeController.tag.ifBlank { "en" }
             val scope = rememberCoroutineScope()
-            val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
             EmailCodeScreen(
                 vm = vm,
                 email = email,
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
                     scope.launch {
-                        // ✅ 不阻塞導頁：背景自動 sync 訂閱（無 restore 按鈕）
-                        launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                        // ✅ 不阻塞導頁：背景自動 sync 訂閱（無 restore 按鈕）。
+                        // uploadLocal=true 時下面會同步等待 entitlement gate，這裡不要重複打 /sync。
+                        if (!uploadLocal) {
+                            launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                        }
                         // ★ 先印一個 flow log，確定有進來
                         val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
@@ -405,9 +410,10 @@ fun BiteCalNavHost(
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }
 
-                                // Onboarding 完成後先進訂閱頁。
-                                // Trial 不在這裡自動發放，必須由使用者在訂閱頁明確點選。
-                                Routes.ONBOARD_SUBSCRIPTION
+                                // 已經在 Trial / Premium 的使用者重走 onboarding 登入後，不應再看到付費頁。
+                                // 這裡會先 restore/sync Google Play 權益，再 fallback 查後端 /entitlements/me。
+                                val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
+                                if (hasActiveAccess) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
@@ -607,13 +613,17 @@ fun BiteCalNavHost(
                     routeScope.launch {
                         when (isSignedIn) {
                             true -> {
-                                withContext(Dispatchers.IO) {
+                                val destination = withContext(Dispatchers.IO) {
                                     runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                     runCatching { store.setHasServerProfile(true) }
                                     runCatching { weightRepo.ensureBaseline() }
+
+                                    // 已登入使用者重走 onboarding 時，也要套用相同 gate。
+                                    val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
+                                    if (hasActiveAccess) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
                                 }
 
-                                nav.navigate(Routes.ONBOARD_SUBSCRIPTION) {
+                                nav.navigate(destination) {
                                     popUpTo(0) { inclusive = true }
                                     launchSingleTop = true
                                     restoreState = false
@@ -2256,6 +2266,32 @@ fun BiteCalNavHost(
                         restoreState = false
                     }
                 }
+            }
+
+            var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
+            var allowPaywall by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    goHomeAfterOnboardingSubscription()
+                } else {
+                    allowPaywall = true
+                    entitlementGateResolved = true
+                }
+            }
+
+            if (!entitlementGateResolved || !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
             }
 
             BackHandler(enabled = true) {

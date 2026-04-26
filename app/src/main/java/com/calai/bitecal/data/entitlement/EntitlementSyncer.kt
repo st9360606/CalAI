@@ -10,6 +10,7 @@ import com.calai.bitecal.data.entitlement.api.EntitlementApi
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncRequest
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
 import com.calai.bitecal.data.entitlement.api.PurchaseTokenPayload
+import com.calai.bitecal.data.entitlement.model.PremiumStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -28,9 +29,27 @@ class EntitlementSyncer(
 ) {
     suspend fun syncAfterLoginSilently() = withContext(Dispatchers.IO) {
         runCatching {
-            val subs = billing.queryActiveSubscriptions()
-            if (subs.isEmpty()) return@runCatching
+            refreshEntitlementSummary()
+        }.onFailure {
+            Log.w(TAG, "syncAfterLoginSilently failed: ${it.message}")
+        }
+        Unit
+    }
 
+    /**
+     * 登入/Onboarding 完成後用來判斷是否應該略過 paywall。
+     *
+     * 順序：
+     * 1. 先查 Play Billing 本機 active subscriptions。
+     * 2. 若有 active purchase token，送後端 /sync，避免後端 entitlement 狀態過期或尚未建立。
+     * 3. 若本機沒有 active purchase，仍查 /me，支援後端已存在的有效權益。
+     */
+    suspend fun refreshEntitlementSummary(): EntitlementSyncResponse = withContext(Dispatchers.IO) {
+        val subs = runCatching { billing.queryActiveSubscriptions() }
+            .onFailure { Log.w(TAG, "queryActiveSubscriptions failed: ${it.message}") }
+            .getOrDefault(emptyList())
+
+        if (subs.isNotEmpty()) {
             val payload = subs.map {
                 PurchaseTokenPayload(
                     productId = it.productId,
@@ -38,14 +57,33 @@ class EntitlementSyncer(
                 )
             }
 
-            api.sync(EntitlementSyncRequest(purchases = payload))
+            val response = runCatching {
+                api.sync(EntitlementSyncRequest(purchases = payload))
+            }.getOrElse { syncError ->
+                Log.w(TAG, "entitlement sync failed, fallback to /me: ${syncError.message}")
+                api.me()
+            }
 
             // Acknowledge 也放在 restore path：如果前一次 acknowledge 因網路失敗，登入/啟動後還能補償重試。
             subs.filter { !it.acknowledged }
                 .forEach { acknowledgeWithRetry(it.purchaseToken) }
-        }.onFailure {
-            Log.w(TAG, "syncAfterLoginSilently failed: ${it.message}")
+
+            response
+        } else {
+            api.me()
         }
+    }
+
+    suspend fun hasActivePremiumAccess(): Boolean {
+        return runCatching {
+            val response = refreshEntitlementSummary()
+            response.status.equals("ACTIVE", ignoreCase = true) &&
+                    PremiumStatus.from(response.premiumStatus).let {
+                        it == PremiumStatus.TRIAL || it == PremiumStatus.PREMIUM
+                    }
+        }.onFailure {
+            Log.w(TAG, "hasActivePremiumAccess failed: ${it.message}")
+        }.getOrDefault(false)
     }
 
     suspend fun purchaseSubscriptionAndSync(

@@ -64,10 +64,16 @@ fun SignInSheetHost(
             runCatching { store.setHasServerProfile(true) }
             runCatching { weightRepo.ensureBaseline() }
 
-            // Trial 不在登入成功時自動發放。
-            // Onboarding 完成後導到訂閱頁，讓使用者明確選擇 Trial 或付費訂閱。
+            // 已經在 Trial / Premium 的使用者重走 onboarding 登入後，不應再看到付費頁。
+            // 這裡會先 restore/sync Google Play 權益，再 fallback 查後端 /entitlements/me。
+            val destination = if (entitlementSyncer.hasActivePremiumAccess()) {
+                Routes.HOME
+            } else {
+                Routes.ONBOARD_SUBSCRIPTION
+            }
+
             withContext(Dispatchers.Main) {
-                navController.navigate(Routes.ONBOARD_SUBSCRIPTION) {
+                navController.navigate(destination) {
                     popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
@@ -110,10 +116,14 @@ fun SignInSheetHost(
                 // 2. 伺服器登入
                 repo.loginWithGoogle(idToken)
 
-                // 3. 背景自動同步訂閱
-                launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                // 3. 背景自動同步訂閱。
+                // uploadLocalOnLogin=true 時，afterLoginNavigateByServerProfile() 會同步等待 entitlement gate，
+                // 這裡不要重複打 /sync，避免登入當下產生 race。
+                if (!uploadLocalOnLogin) {
+                    launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                }
 
-                // 4. 根據 Profile 導頁
+                // 4. 根據 Profile / Entitlement 導頁
                 afterLoginNavigateByServerProfile()
 
                 loading = false
