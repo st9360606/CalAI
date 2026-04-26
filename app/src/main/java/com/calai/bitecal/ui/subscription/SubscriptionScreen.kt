@@ -25,11 +25,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,7 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
-import com.calai.bitecal.data.entitlement.api.TrialGrantResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +46,6 @@ fun SubscriptionScreen(
     activity: Activity,
     showBack: Boolean = true,
     onBack: () -> Unit,
-    onTrialStarted: (TrialGrantResponse) -> Unit,
     onPurchased: (EntitlementSyncResponse) -> Unit
 ) {
     val ui by vm.ui.collectAsState()
@@ -116,17 +113,9 @@ fun SubscriptionScreen(
             )
 
             Text(
-                text = "Start with a 3-day free trial or subscribe now. Payment, renewal, and cancellation are handled securely by Google Play.",
+                text = "Payment, renewal, cancellation, and any Google Play free trial eligibility are handled securely by Google Play.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            TrialCard(
-                loading = ui.startingTrial,
-                enabled = !ui.busy,
-                onClick = {
-                    vm.startTrial(onSuccess = onTrialStarted)
-                }
             )
 
             HorizontalDivider()
@@ -174,64 +163,10 @@ fun SubscriptionScreen(
             }
 
             Text(
-                text = "Premium starts only after payment is verified. Trials and subscriptions can be managed in Google Play subscriptions.",
+                text = "Premium starts only after Google Play payment is verified. Subscription status can be managed in Google Play subscriptions.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-    }
-}
-
-@Composable
-private fun TrialCard(
-    loading: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        shape = RoundedCornerShape(22.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                text = "3-day free trial",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-
-            Text(
-                text = "Try food scanning, macro tracking, and premium features before subscribing.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-
-            OutlinedButton(
-                onClick = onClick,
-                enabled = enabled,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(999.dp)
-            ) {
-                if (loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Start 3-day free trial")
-                }
-            }
         }
     }
 }

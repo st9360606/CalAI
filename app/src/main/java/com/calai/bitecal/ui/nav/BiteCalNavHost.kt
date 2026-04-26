@@ -2289,27 +2289,6 @@ fun BiteCalNavHost(
                 onBack = {
                     nav.popBackStack()
                 },
-                onTrialStarted = {
-                    runCatching {
-                        nav.getBackStackEntry(Routes.HOME)
-                            .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
-                    }
-
-                    val popped = nav.popBackStack(
-                        route = Routes.HOME,
-                        inclusive = false
-                    )
-
-                    if (!popped) {
-                        nav.navigate(Routes.HOME) {
-                            popUpTo(Routes.SUBSCRIPTION) {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
-                            restoreState = false
-                        }
-                    }
-                },
                 onPurchased = {
                     runCatching {
                         nav.getBackStackEntry(Routes.HOME)

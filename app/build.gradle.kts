@@ -137,17 +137,14 @@ android {
             // 如果你是 adb reverse 8080:8080 才能用這個
             buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:8080/\"")
             buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:8080\"")
-
             manifestPlaceholders["appLabel"] = "BiteCal (devUsb)"
         }
 
         create("prod") {
             dimension = "env"
             // TODO: 之後換正式域名
-
             buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
             buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
-
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
     }

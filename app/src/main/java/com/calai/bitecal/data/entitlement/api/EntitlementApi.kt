@@ -12,9 +12,6 @@ interface EntitlementApi {
 
     @GET("/api/v1/entitlements/me")
     suspend fun me(): EntitlementSyncResponse
-
-    @POST("/api/v1/trial/grant")
-    suspend fun grantTrial(): TrialGrantResponse
 }
 
 @Serializable
@@ -36,12 +33,4 @@ data class EntitlementSyncResponse(
     val currentPremiumUntil: String? = null,
     val trialEndsAt: String? = null,
     val trialDaysLeft: Int? = null
-)
-
-@Serializable
-data class TrialGrantResponse(
-    val ok: Boolean,
-    val premiumStatus: String = "TRIAL",
-    val tier: String,
-    val validToUtc: String
 )
