@@ -24,7 +24,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
@@ -45,6 +48,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -55,6 +59,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,7 +73,7 @@ import com.calai.bitecal.ui.landing.LandingSlideshow
 import com.calai.bitecal.ui.landing.SlideItem
 import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import kotlinx.coroutines.delay
-
+import androidx.compose.ui.graphics.Shape
 private enum class OnboardPaywallStep {
     Intro,
     Spin,
@@ -245,7 +252,7 @@ private fun OnboardSubscriptionIntro(
             ) {
                 PhonePreviewMock(
                     modifier = Modifier
-                        .fillMaxWidth(0.73f)
+                        .fillMaxWidth(0.75f)
                         .aspectRatio(10.5f / 19.5f)
                 )
             }
@@ -422,6 +429,17 @@ private fun OnboardOneTimeOfferScreen(
     onClose: () -> Unit,
     onContinue: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
+    /**
+     * TODO production:
+     * 這些價格未來應該從 Google Play Billing ProductDetails / PricingPhase 取得，
+     * 不要長期 hardcode，避免 Play Console 價格改了但 App 顯示舊價格。
+     */
+    val originalYearlyPrice = "NT$999.00"
+    val offerYearlyPrice = "NT$649.00"
+    val monthlyEquivalent = "NT$54.08/mo"
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -433,37 +451,239 @@ private fun OnboardOneTimeOfferScreen(
             enabled = !purchasing,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(top = 42.dp, start = 20.dp)
+                .padding(top = 60.dp, start = 18.dp)
+                .size(42.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = Color.Black,
-                modifier = Modifier.size(34.dp)
+                tint = Color(0xFF71717A),
+                modifier = Modifier.size(28.dp)
             )
         }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 22.dp)
-                .padding(top = 100.dp, bottom = 24.dp),
+                // bottom 要留給 OnboardPaywallBottomCta，避免內容被底部 CTA 蓋住
+                .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Your one-time offer",
-                color = Color.Black,
-                fontSize = 39.sp,
-                lineHeight = 43.sp,
-                fontWeight = FontWeight.ExtraBold,
+                text = "Gift Unlocked 🎁",
+                color = Color(0xFF111111),
+                fontSize = 30.sp,
+                lineHeight = 34.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                letterSpacing = (-0.5).sp,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            OneTimeOfferHeroCard(
+                originalYearlyPrice = originalYearlyPrice,
+                monthlyEquivalent = monthlyEquivalent
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            OneTimeOfferUrgencyCard()
+
+            Spacer(Modifier.height(12.dp))
+
+            OneTimeOfferTrialCard(
+                trialEnabled = trialEnabled,
+                purchasing = purchasing,
+                offerYearlyPrice = offerYearlyPrice,
+                monthlyEquivalent = monthlyEquivalent,
+                onTrialEnabledChange = onTrialEnabledChange
+            )
+        }
+
+        OnboardPaywallBottomCta(
+            buttonText = if (trialEnabled) {
+                "Start Free Trial"
+            } else {
+                "Continue"
+            },
+            helperText = "No commitment. Cancel anytime.",
+            helperTextColor = Color(0xFF27272A),
+            buttonShape = RoundedCornerShape(14.dp),
+            loading = purchasing,
+            onClick = onContinue
+        )
+    }
+}
+
+@Composable
+private fun OneTimeOfferHeroCard(
+    originalYearlyPrice: String,
+    monthlyEquivalent: String
+) {
+    val monthlyPrice = monthlyEquivalent.substringBefore("/")
+    val monthlyUnit = "/" + monthlyEquivalent.substringAfter("/", missingDelimiterValue = "mo")
+    val shape = RoundedCornerShape(32.dp)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(
+                elevation = 18.dp,
+                shape = shape,
+                ambientColor = Color(0x22000000),
+                spotColor = Color(0x33000000)
+            )
+            .clip(shape)
+            .drawWithCache {
+                val cornerRadius = CornerRadius(32.dp.toPx(), 32.dp.toPx())
+                val maxRadius = maxOf(size.width, size.height)
+
+                /**
+                 * 更接近你給的圖：
+                 * - 左上偏深藍黑
+                 * - 中間偏紫黑
+                 * - 右下偏暖紅棕
+                 */
+                val baseGradient = Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF121521),
+                        Color(0xFF1B1827),
+                        Color(0xFF292232),
+                        Color(0xFF3A2A31)
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width, size.height)
+                )
+
+                /**
+                 * 左上冷色光暈，讓卡片不要死黑。
+                 */
+                val topLeftBlueGlow = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0x3D5868FF),
+                        Color(0x1A5868FF),
+                        Color.Transparent
+                    ),
+                    center = Offset(size.width * 0.10f, size.height * 0.12f),
+                    radius = maxRadius * 0.85f
+                )
+
+                /**
+                 * 右下暖色光暈，呼應優惠價 0xFFE45F69。
+                 */
+                val bottomRightRoseGlow = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0x4DE45F69),
+                        Color(0x22E45F69),
+                        Color.Transparent
+                    ),
+                    center = Offset(size.width * 0.96f, size.height * 0.94f),
+                    radius = maxRadius * 0.85f
+                )
+
+                /**
+                 * 右上淡暖光，模擬你截圖右上那種棕紅霧面感。
+                 */
+                val topRightWarmGlow = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0x2AF59E8B),
+                        Color.Transparent
+                    ),
+                    center = Offset(size.width * 1.02f, size.height * 0.02f),
+                    radius = maxRadius * 0.75f
+                )
+
+                /**
+                 * 斜向柔光，讓整張卡有玻璃霧面層次。
+                 */
+                val diagonalHighlight = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.08f),
+                        Color.White.copy(alpha = 0.025f),
+                        Color.Transparent
+                    ),
+                    start = Offset(size.width * 0.08f, 0f),
+                    end = Offset(size.width * 0.80f, size.height * 0.58f)
+                )
+
+                onDrawBehind {
+                    drawRoundRect(
+                        brush = baseGradient,
+                        cornerRadius = cornerRadius
+                    )
+
+                    drawRoundRect(
+                        brush = topLeftBlueGlow,
+                        cornerRadius = cornerRadius
+                    )
+
+                    drawRoundRect(
+                        brush = bottomRightRoseGlow,
+                        cornerRadius = cornerRadius
+                    )
+
+                    drawRoundRect(
+                        brush = topRightWarmGlow,
+                        cornerRadius = cornerRadius
+                    )
+
+                    drawRoundRect(
+                        brush = diagonalHighlight,
+                        cornerRadius = cornerRadius
+                    )
+                }
+            }
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.11f),
+                shape = shape
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp, vertical = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = Color.White.copy(alpha = 0.10f),
+                        shape = RoundedCornerShape(999.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.13f),
+                        shape = RoundedCornerShape(999.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "GIFT PRICE UNLOCKED",
+                    color = Color(0xFFFFE8A3),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.8.sp
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = "Unlock Premium for only",
+                color = Color(0xFFFFE8A3),
+                fontSize = 18.sp,
+                lineHeight = 23.sp,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(34.dp))
-
-            DiscountCardMock()
-
-            Spacer(Modifier.height(34.dp))
+            Spacer(Modifier.height(5.dp))
 
             Row(
                 verticalAlignment = Alignment.Bottom,
@@ -471,87 +691,240 @@ private fun OnboardOneTimeOfferScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "NT$999.00",
-                    color = Color(0xFF9CA3AF),
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(
-                    text = "  NT$54.08 /mo",
+                    text = monthlyPrice,
                     color = Color(0xFFE45F69),
-                    fontSize = 39.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontSize = 50.sp,
+                    lineHeight = 54.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    letterSpacing = (-1.4).sp
                 )
-            }
 
-            Spacer(Modifier.height(34.dp))
+                Spacer(Modifier.size(4.dp))
 
-            OfferBullet("☕", "Less than a coffee.")
-            OfferBullet("⚠️", "Cancel anytime in Google Play.")
-            OfferBullet("🙋", "Start tracking smarter today.")
-
-            Spacer(Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
                 Text(
-                    text = if (trialEnabled) {
-                        "Free Trial Enabled"
-                    } else {
-                        "Not Sure? Enable Free Trial"
-                    },
-                    color = Color.Black,
-                    fontSize = 27.sp,
-                    fontWeight = FontWeight.Normal,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Switch(
-                    checked = trialEnabled,
-                    onCheckedChange = {
-                        if (!purchasing) onTrialEnabledChange(it)
-                    },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = Color.Black,
-                        uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color(0xFFE5E7EB)
-                    )
+                    text = monthlyUnit,
+                    color = Color(0xFFE45F69),
+                    fontSize = 23.sp,
+                    lineHeight = 30.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(bottom = 5.dp)
                 )
             }
 
-            Spacer(Modifier.height(14.dp))
-
-            OfferPlanCard(
-                header = if (trialEnabled) "FREE TRIAL" else "LOWEST PRICE EVER"
-            )
-
-            Spacer(Modifier.height(22.dp))
-
-            PrimaryDarkPurpleButton(
-                text = if (trialEnabled) "Start Free Trial" else "Continue",
-                loading = purchasing,
-                onClick = onContinue
-            )
-
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(4.dp))
 
             Text(
-                text = "✓  No Commitment - Cancel Anytime",
-                color = Color.Black,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                text = "Scan meals faster. Track macros smarter.\nStay on plan daily.",
+                color = Color(0xFFEDE7FF),
+                fontSize = 13.sp,
+                lineHeight = 17.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = "$originalYearlyPrice/year",
+                color = Color.White,
+                fontSize = 16.sp,
+                lineHeight = 21.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.drawBehind {
+                    val strikeY = size.height * 0.55f
+
+                    drawLine(
+                        color = Color(0xFFE45F69),
+                        start = Offset(0f, strikeY),
+                        end = Offset(size.width, strikeY),
+                        strokeWidth = 3.dp.toPx()
+                    )
+                }
             )
         }
     }
 }
+@Composable
+private fun OneTimeOfferUrgencyCard() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color.White,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        OneTimeOfferUrgencyRow(
+            emoji = "☕",
+            text = "Less than a coffee."
+        )
 
+        OneTimeOfferUrgencyRow(
+            emoji = "⚠️",
+            text = "Close this screen? This price is gone"
+        )
+
+        OneTimeOfferUrgencyRow(
+            emoji = "\uD83D\uDE4B",
+            text = "What are you waiting for?"
+        )
+    }
+}
+@Composable
+private fun OneTimeOfferUrgencyRow(
+    emoji: String,
+    text: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = emoji,
+            fontSize = 24.sp,
+            modifier = Modifier.width(34.dp)
+        )
+
+        Spacer(modifier = Modifier.width(18.dp))
+
+        Text(
+            text = text,
+            color = Color(0xFF111111),
+            fontSize = 17.sp,
+            lineHeight = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+@Composable
+private fun OneTimeOfferTrialCard(
+    trialEnabled: Boolean,
+    purchasing: Boolean,
+    offerYearlyPrice: String,
+    monthlyEquivalent: String,
+    onTrialEnabledChange: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp)
+                .clickable(enabled = !purchasing) {
+                    onTrialEnabledChange(!trialEnabled)
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (trialEnabled) "Free Trial Enabled" else "Not Sure? Enable Free Trial",
+                color = Color(0xFF111111),
+                fontSize = 21.sp,
+                lineHeight = 26.sp,
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.weight(1f)
+            )
+
+            Switch(
+                checked = trialEnabled,
+                onCheckedChange = {
+                    if (!purchasing) onTrialEnabledChange(it)
+                },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Color.Black,
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color(0xFFD4D4D8),
+                    uncheckedBorderColor = Color.Transparent
+                )
+            )
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, RoundedCornerShape(18.dp))
+                .border(
+                    width = 2.dp,
+                    color = Color(0xFF1C1923),
+                    shape = RoundedCornerShape(18.dp)
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(28.dp)
+                    .background(
+                        color = Color(0xFF1C1923),
+                        shape = RoundedCornerShape(
+                            topStart = 18.dp,
+                            topEnd = 18.dp
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (trialEnabled) "FREE TRIAL" else "LOWEST PRICE EVER",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    lineHeight = 17.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = TextAlign.Center,
+                    letterSpacing = 0.4.sp
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp, vertical = 15.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Yearly Plan",
+                        color = Color(0xFF111111),
+                        fontSize = 19.sp,
+                        lineHeight = 23.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        text = "12mo · $offerYearlyPrice",
+                        color = Color(0xFF71717A),
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                Text(
+                    text = monthlyEquivalent,
+                    color = Color(0xFF111111),
+                    fontSize = 20.sp,
+                    lineHeight = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.End
+                )
+            }
+        }
+    }
+}
 @Composable
 private fun PhonePreviewMock(
     modifier: Modifier = Modifier
@@ -708,121 +1081,14 @@ private fun DiscountWheelMock(
         )
     }
 }
-
-@Composable
-private fun DiscountCardMock() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.62f)
-            .height(138.dp)
-            .background(Color(0xFF1C1923), RoundedCornerShape(28.dp))
-            .border(2.dp, Color.White, RoundedCornerShape(28.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "80% OFF\nFOREVER",
-            color = Color(0xFFE5E7EB),
-            fontSize = 38.sp,
-            lineHeight = 42.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun OfferBullet(
-    emoji: String,
-    text: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 52.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = emoji,
-            fontSize = 28.sp,
-            modifier = Modifier.size(42.dp)
-        )
-
-        Text(
-            text = text,
-            color = Color.Black,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-private fun OfferPlanCard(
-    header: String
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp)
-            .border(2.dp, Color(0xFF1C1923), RoundedCornerShape(18.dp))
-            .background(Color.White, RoundedCornerShape(18.dp))
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(28.dp)
-                .background(
-                    color = Color(0xFF1C1923),
-                    shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = header,
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = "Yearly Plan",
-                    color = Color.Black,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Text(
-                    text = "12mo · NT$649.00",
-                    color = Color(0xFF71717A),
-                    fontSize = 22.sp
-                )
-            }
-
-            Text(
-                text = "NT$54.08 /mo",
-                color = Color.Black,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-    }
-}
 @Composable
 private fun BoxScope.OnboardPaywallBottomCta(
     buttonText: String,
     helperText: String,
     loading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    helperTextColor: Color = Color(0xFF71717A),
+    buttonShape: Shape = RoundedCornerShape(999.dp)
 ) {
     Column(
         modifier = Modifier
@@ -836,6 +1102,7 @@ private fun BoxScope.OnboardPaywallBottomCta(
             text = buttonText,
             loading = loading,
             onClick = onClick,
+            shape = buttonShape,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(68.dp)
@@ -845,13 +1112,13 @@ private fun BoxScope.OnboardPaywallBottomCta(
 
         Text(
             text = helperText,
-            color = Color(0xFF71717A),
-            fontSize = 15.sp,
-            lineHeight = 18.sp,
+            color = helperTextColor,
+            fontSize = 14.sp,
+            lineHeight = 17.sp,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.height(18.dp)
+            modifier = Modifier.height(17.dp)
         )
     }
 }
@@ -860,13 +1127,14 @@ private fun PrimaryBlackButton(
     text: String,
     loading: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(999.dp)
 ) {
     Button(
         onClick = onClick,
         enabled = !loading,
         modifier = modifier,
-        shape = RoundedCornerShape(999.dp),
+        shape = shape,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Black,
             contentColor = Color.White,
@@ -885,41 +1153,9 @@ private fun PrimaryBlackButton(
             Text(
                 text = text,
                 color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-private fun PrimaryDarkPurpleButton(
-    text: String,
-    loading: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(68.dp)
-            .padding(horizontal = 18.dp)
-            .background(Color(0xFF1C1923), RoundedCornerShape(18.dp))
-            .clickable(enabled = !loading, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        if (loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                color = Color.White,
-                strokeWidth = 2.dp
-            )
-        } else {
-            Text(
-                text = text,
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.ExtraBold
             )
         }
     }

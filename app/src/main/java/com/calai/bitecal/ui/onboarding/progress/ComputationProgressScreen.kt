@@ -150,8 +150,8 @@ fun ComputationProgressScreen(
 
             Text(
                 text = stringResource(R.string.progress_footer_hint),
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
+                fontSize = 15.sp,
+                lineHeight = 22.sp,
                 color = TextSecondary,
                 textAlign = TextAlign.Center
             )
@@ -204,7 +204,7 @@ private fun HeroProgressRing(
             Text(
                 text = stringResource(R.string.progress_center_caption),
                 color = TextSecondary,
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 lineHeight = 18.sp,
                 textAlign = TextAlign.Center
             )
@@ -231,8 +231,8 @@ private fun PhasePill(
             text = text,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             color = ProgressPrimary,
-            fontSize = 13.sp,
-            lineHeight = 16.sp,
+            fontSize = 14.sp,
+            lineHeight = 17.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
