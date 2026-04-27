@@ -56,8 +56,6 @@ import kotlinx.coroutines.delay
 private val ProgressPrimary = Color(0xFF5BCB72)
 private val ProgressPrimarySoft = Color(0x1A5BCB72)
 private val ProgressTrack = Color(0xFFE5E7EB)
-private val PageBgTop = Color(0xFFF7FFF8)
-private val PageBgBottom = Color(0xFFFFFFFF)
 private val TextPrimary = Color(0xFF111827)
 private val TextSecondary = Color(0xFF6B7280)
 private val CardBg = Color(0xFFF8FAFC)
@@ -94,11 +92,7 @@ fun ComputationProgressScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(PageBgTop, PageBgBottom)
-                )
-            )
+            .background(Color.White)
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {

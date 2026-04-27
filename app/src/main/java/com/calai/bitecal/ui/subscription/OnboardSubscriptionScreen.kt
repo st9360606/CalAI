@@ -2,17 +2,21 @@ package com.calai.bitecal.ui.subscription
 
 import android.app.Activity
 import android.graphics.Paint
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +27,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,26 +45,27 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.BuildConfig
+import com.calai.bitecal.R
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
+import com.calai.bitecal.ui.landing.LandingSlideshow
+import com.calai.bitecal.ui.landing.SlideItem
+import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import kotlinx.coroutines.delay
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.material3.Button
-import androidx.compose.ui.graphics.Path
 
 private enum class OnboardPaywallStep {
     Intro,
@@ -184,6 +191,8 @@ private fun OnboardSubscriptionIntro(
     onClose: () -> Unit,
     onContinue: () -> Unit
 ) {
+    val heroGap = 32.dp
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -194,59 +203,60 @@ private fun OnboardSubscriptionIntro(
             enabled = !purchasing,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 42.dp, end = 24.dp)
+                .padding(top = 66.dp, end = 28.dp)
+                .size(42.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                tint = Color(0xFF9CA3AF),
-                modifier = Modifier.size(34.dp)
+                tint = Color(0xFFA1A1AA),
+                modifier = Modifier.size(28.dp)
             )
         }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp)
-                .padding(top = 110.dp, bottom = 160.dp),
+                .padding(horizontal = 24.dp)
+                // ✅ 跟 OnboardDiscountSpinScreen 的標題高度一致
+                .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Unlock CalAI to reach\nyour goals faster.",
+                text = "Unlock BiteCal AI to\nreach your goals faster.",
                 color = Color.Black,
-                fontSize = 35.sp,
-                lineHeight = 41.sp,
+                fontSize = 32.sp,
+                lineHeight = 38.sp,
                 fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                letterSpacing = (-0.6).sp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp)
             )
 
-            Spacer(Modifier.height(92.dp))
+            Spacer(Modifier.height(heroGap))
 
-            PhonePreviewMock()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                PhonePreviewMock(
+                    modifier = Modifier
+                        .fillMaxWidth(0.73f)
+                        .aspectRatio(10.5f / 19.5f)
+                )
+            }
         }
 
-        Text(
-            text = "Just NT$999.00 per 年 (NT$83.25/mo)",
-            color = Color(0xFF71717A),
-            fontSize = 18.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 116.dp)
-                .fillMaxWidth()
-        )
-
-        PrimaryBlackButton(
-            text = "Continue",
+        // ✅ 跟 OnboardDiscountSpinScreen 的 PrimaryBlackButton 位置完全對齊
+        OnboardPaywallBottomCta(
+            buttonText = "Continue",
+            helperText = "Just NT$999.00 per 年 (NT$83.25/mo)",
             loading = purchasing,
-            onClick = onContinue,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
-                .fillMaxWidth()
-                .height(68.dp)
+            onClick = onContinue
         )
     }
 }
@@ -395,32 +405,12 @@ private fun OnboardDiscountSpinScreen(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp)
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            PrimaryBlackButton(
-                text = buttonText,
-                loading = buttonLoading,
-                onClick = buttonOnClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(68.dp)
-            )
-
-            Spacer(Modifier.height(14.dp))
-
-            Text(
-                text = helperText,
-                color = Color(0xFF71717A),
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center
-            )
-        }
+        OnboardPaywallBottomCta(
+            buttonText = buttonText,
+            helperText = helperText,
+            loading = buttonLoading,
+            onClick = buttonOnClick
+        )
     }
 }
 
@@ -563,70 +553,41 @@ private fun OnboardOneTimeOfferScreen(
 }
 
 @Composable
-private fun PhonePreviewMock() {
-    Box(
-        modifier = Modifier
-            .size(width = 290.dp, height = 430.dp)
-            .border(8.dp, Color(0xFF18181B), RoundedCornerShape(42.dp))
-            .padding(22.dp)
+private fun PhonePreviewMock(
+    modifier: Modifier = Modifier
+) {
+    DeviceFrameIPhone(
+        modifier = modifier,
+        frameColor = Color(0xFFE3E5EA),
+        bezelColor = Color(0xFF09090B),
+        cornerRadius = 42.dp,
+        frameThickness = 3.dp,
+        bezelThickness = 8.dp,
+        islandWidthFraction = 0.32f,
+        islandHeight = 17.dp,
+        islandTopOffset = 0.dp,
+        islandStrokeWidth = 1.dp,
+        islandStrokeAlpha = 0.16f,
+        islandStrokeColor = Color.White,
+        frontCameraDotAlignRight = true,
+        frontCameraDotRightInset = 5.dp,
+        contentTopExtraPadding = 9.dp,
+        contentBottomExtraPadding = 2.dp,
+        powerButtonLengthFraction = 0.10f,
+        volumeButtonsCenterBias = 0.20f,
+        powerButtonCenterBias = 0.20f,
+        showFrontCameraDot = true
     ) {
-        Column(
+        LandingSlideshow(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "🍎 Cal AI",
-                color = Color(0xFF18181B),
-                fontWeight = FontWeight.Bold,
-                fontSize = 21.sp
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(78.dp)
-                    .background(Color(0xFFF8F8FA), RoundedCornerShape(18.dp))
-                    .padding(18.dp)
-            ) {
-                Text(
-                    text = "2199\nCalories left",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    lineHeight = 23.sp
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                repeat(3) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(92.dp)
-                            .background(Color(0xFFF8F8FA), RoundedCornerShape(16.dp))
-                    )
-                }
-            }
-
-            Text(
-                text = "Recently eaten",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(88.dp)
-                    .background(Color(0xFFF8F8FA), RoundedCornerShape(16.dp))
-            ) {
-                Text(
-                    text = "Analyzing food...",
-                    modifier = Modifier.align(Alignment.Center),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
-        }
+            slides = listOf(
+                SlideItem(R.drawable.meal_1, contentDescription = "onboard_intro_slide_1"),
+                SlideItem(R.drawable.meal_2, contentDescription = "onboard_intro_slide_2"),
+                SlideItem(R.drawable.meal_3, contentDescription = "onboard_intro_slide_3")
+            ),
+            autoPlay = true,
+            autoPlayIntervalMs = 2800L
+        )
     }
 }
 
@@ -856,7 +817,44 @@ private fun OfferPlanCard(
         }
     }
 }
+@Composable
+private fun BoxScope.OnboardPaywallBottomCta(
+    buttonText: String,
+    helperText: String,
+    loading: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .navigationBarsPadding()
+            .padding(start = 20.dp, end = 20.dp, bottom = 28.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        PrimaryBlackButton(
+            text = buttonText,
+            loading = loading,
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(68.dp)
+        )
 
+        Spacer(Modifier.height(14.dp))
+
+        Text(
+            text = helperText,
+            color = Color(0xFF71717A),
+            fontSize = 15.sp,
+            lineHeight = 18.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.height(18.dp)
+        )
+    }
+}
 @Composable
 private fun PrimaryBlackButton(
     text: String,
