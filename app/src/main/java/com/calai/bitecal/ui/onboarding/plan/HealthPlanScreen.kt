@@ -155,7 +155,7 @@ fun HealthPlanScreen(
                         .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .height(68.dp)
                         .semantics {
                             stateDescription = when {
                                 starting -> "loading"
@@ -177,7 +177,7 @@ fun HealthPlanScreen(
                     ) {
                         if (starting) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
+                                modifier = Modifier.size(19.dp),
                                 strokeWidth = 2.dp,
                                 color = Color.White
                             )
@@ -185,7 +185,7 @@ fun HealthPlanScreen(
                             Text(
                                 text = stringResource(R.string.plan_cta_start),
                                 style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontSize = 18.sp,
+                                    fontSize = 19.sp,
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.2.sp
                                 ),

@@ -54,7 +54,11 @@ import kotlinx.coroutines.delay
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material3.Button
+import androidx.compose.ui.graphics.Path
 
 private enum class OnboardPaywallStep {
     Intro,
@@ -184,7 +188,6 @@ private fun OnboardSubscriptionIntro(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .navigationBarsPadding()
     ) {
         IconButton(
             onClick = onClose,
@@ -205,7 +208,7 @@ private fun OnboardSubscriptionIntro(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp)
-                .padding(top = 118.dp, bottom = 26.dp),
+                .padding(top = 110.dp, bottom = 160.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -220,24 +223,31 @@ private fun OnboardSubscriptionIntro(
             Spacer(Modifier.height(92.dp))
 
             PhonePreviewMock()
-
-            Spacer(Modifier.weight(1f))
-
-            PrimaryBlackButton(
-                text = "Continue",
-                loading = purchasing,
-                onClick = onContinue
-            )
-
-            Spacer(Modifier.height(22.dp))
-
-            Text(
-                text = "Just NT$1,020.00 per 年 (NT$85.00/mo)",
-                color = Color(0xFF71717A),
-                fontSize = 21.sp,
-                textAlign = TextAlign.Center
-            )
         }
+
+        Text(
+            text = "Just NT$999.00 per 年 (NT$83.25/mo)",
+            color = Color(0xFF71717A),
+            fontSize = 18.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, bottom = 116.dp)
+                .fillMaxWidth()
+        )
+
+        PrimaryBlackButton(
+            text = "Continue",
+            loading = purchasing,
+            onClick = onContinue,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
+                .fillMaxWidth()
+                .height(68.dp)
+        )
     }
 }
 
@@ -246,7 +256,37 @@ private fun OnboardDiscountSpinScreen(
     onContinue: () -> Unit
 ) {
     val initialRotationDegrees = -120f
-    val finalGiftRotationDegrees = 360f * 6f
+
+    /**
+     * Wheel angle convention:
+     * - 0 degrees   = right
+     * - 90 degrees  = bottom
+     * - 180 degrees = left
+     * - -90 degrees = top
+     *
+     * Gift segment is currently index 1 in segmentLabels:
+     * listOf("80% off", "🎁", "50% off", "35% off", "No luck", "20% off")
+     *
+     * With drawArc(startAngle = index * 60f - 90f, sweepAngle = 60f),
+     * segment center = index * 60f - 90f + 30f.
+     * Gift index 1 center = 1 * 60 - 90 + 30 = 0 degrees.
+     *
+     * Since the pointer is now at the top (-90 degrees),
+     * final rotation must move the gift center from 0 degrees to -90 degrees.
+     */
+    val fullTurns = 6f
+    val segmentSweepDegrees = 60f
+    val wheelStartOffsetDegrees = -90f
+    val topPointerAngleDegrees = -90f
+    val giftSegmentIndex = 1f
+
+    val giftNaturalCenterDegrees =
+        giftSegmentIndex * segmentSweepDegrees +
+                wheelStartOffsetDegrees +
+                segmentSweepDegrees / 2f
+
+    val finalGiftRotationDegrees =
+        360f * fullTurns + (topPointerAngleDegrees - giftNaturalCenterDegrees)
 
     val rotation = remember { Animatable(initialRotationDegrees) }
     var spinStarted by rememberSaveable { mutableStateOf(false) }
@@ -268,30 +308,53 @@ private fun OnboardDiscountSpinScreen(
         }
     }
 
+    val helperText = when {
+        !spinStarted -> "Tap Spin to reveal your exclusive gift."
+        !spinFinished -> "Please wait until the wheel stops."
+        else -> "This offer is revealed after the wheel stops."
+    }
+
+    val buttonText = when {
+        !spinStarted -> "Spin"
+        !spinFinished -> "Spinning..."
+        else -> "Continue"
+    }
+
+    val buttonLoading = spinStarted && !spinFinished
+
+    val buttonOnClick: () -> Unit = when {
+        !spinStarted -> {
+            { spinStarted = true }
+        }
+        !spinFinished -> {
+            { }
+        }
+        else -> onContinue
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .navigationBarsPadding()
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp)
-                .padding(top = 110.dp, bottom = 26.dp),
+                .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Spin to unlock an\nexclusive discount",
                 color = Color.Black,
-                fontSize = 38.sp,
-                lineHeight = 46.sp,
+                fontSize = 32.sp,
+                lineHeight = 38.sp,
                 fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Start,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(36.dp))
 
             Box(
                 contentAlignment = Alignment.Center,
@@ -300,7 +363,9 @@ private fun OnboardDiscountSpinScreen(
                     .height(390.dp)
             ) {
                 Box(
-                    modifier = Modifier.size(330.dp),
+                    modifier = Modifier
+                        .size(330.dp)
+                        .offset(y = 30.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     DiscountWheelMock(
@@ -308,88 +373,53 @@ private fun OnboardDiscountSpinScreen(
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    DiscountWheelPointerRight(
+                    DiscountWheelPointerTop(
                         modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .offset(x = 30.dp)
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-38).dp)
                     )
                 }
             }
 
-            Spacer(Modifier.height(28.dp))
+            Spacer(Modifier.height(24.dp))
 
-            Text(
-                text = if (spinFinished) unlockedDiscountText else "Spinning...",
-                color = if (spinFinished) Color(0xFFE45F69) else Color(0xFF71717A),
-                fontSize = 24.sp,
-                lineHeight = 28.sp,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
+            if (spinStarted) {
+                Text(
+                    text = if (spinFinished) unlockedDiscountText else "Spinning...",
+                    color = if (spinFinished) Color(0xFFE45F69) else Color(0xFF71717A),
+                    fontSize = 22.sp,
+                    lineHeight = 26.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            PrimaryBlackButton(
+                text = buttonText,
+                loading = buttonLoading,
+                onClick = buttonOnClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(68.dp)
             )
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(14.dp))
 
-            when {
-                !spinStarted -> {
-                    PrimaryBlackButton(
-                        text = "Spin",
-                        loading = false,
-                        onClick = {
-                            spinStarted = true
-                        }
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    Text(
-                        text = "Tap Spin to reveal your exclusive gift.",
-                        color = Color(0xFF71717A),
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                !spinFinished -> {
-                    PrimaryBlackButton(
-                        text = "Spinning...",
-                        loading = true,
-                        onClick = {}
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    Text(
-                        text = "Please wait until the wheel stops.",
-                        color = Color(0xFF71717A),
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                else -> {
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn(animationSpec = tween(280))
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            PrimaryBlackButton(
-                                text = "Continue",
-                                loading = false,
-                                onClick = onContinue
-                            )
-
-                            Spacer(Modifier.height(14.dp))
-
-                            Text(
-                                text = "This offer is revealed after the wheel stops.",
-                                color = Color(0xFF71717A),
-                                fontSize = 16.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                }
-            }
+            Text(
+                text = helperText,
+                color = Color(0xFF71717A),
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -601,20 +631,24 @@ private fun PhonePreviewMock() {
 }
 
 @Composable
-private fun DiscountWheelPointerRight(
+private fun DiscountWheelPointerTop(
     modifier: Modifier = Modifier
 ) {
     Canvas(
-        modifier = modifier.size(width = 54.dp, height = 72.dp)
+        modifier = modifier.size(width = 44.dp, height = 30.dp)
     ) {
-        val path = androidx.compose.ui.graphics.Path().apply {
-            // Right-side pointer. The left tip touches the wheel.
-            moveTo(0f, size.height / 2f)
+        val path = Path().apply {
+            // Top pointer. The bottom tip points to the wheel.
+            moveTo(size.width / 2f, size.height)
+            lineTo(0f, 0f)
             lineTo(size.width, 0f)
-            lineTo(size.width, size.height)
             close()
         }
-        drawPath(path = path, color = Color(0xFF1C1923))
+
+        drawPath(
+            path = path,
+            color = Color(0xFF1C1923)
+        )
     }
 }
 
@@ -632,12 +666,12 @@ private fun DiscountWheelMock(
      *   stops with the gift under the pointer.
      */
     val segmentLabels = listOf(
-        "70%",
+        "80% off",
         "🎁",
-        "60%",
-        "30%",
+        "50% off",
+        "35% off",
         "No luck",
-        "50%"
+        "20% off"
     )
     val segmentColors = listOf(
         Color.White,
@@ -675,7 +709,7 @@ private fun DiscountWheelMock(
         val textPaint = Paint().apply {
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
-            textSize = size.minDimension * 0.07f
+            textSize = size.minDimension * 0.08f
             typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
         }
 
@@ -690,7 +724,7 @@ private fun DiscountWheelMock(
                 android.graphics.Color.WHITE
             }
             textPaint.textSize = if (segmentLabels[index] == "🎁") {
-                size.minDimension * 0.16f
+                size.minDimension * 0.11f
             } else {
                 size.minDimension * 0.07f
             }
@@ -827,15 +861,21 @@ private fun OfferPlanCard(
 private fun PrimaryBlackButton(
     text: String,
     loading: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(86.dp)
-            .background(Color.Black, RoundedCornerShape(24.dp))
-            .clickable(enabled = !loading, onClick = onClick),
-        contentAlignment = Alignment.Center
+    Button(
+        onClick = onClick,
+        enabled = !loading,
+        modifier = modifier,
+        shape = RoundedCornerShape(999.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Black,
+            contentColor = Color.White,
+            disabledContainerColor = Color.Black,
+            disabledContentColor = Color.White
+        ),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp)
     ) {
         if (loading) {
             CircularProgressIndicator(
@@ -847,8 +887,9 @@ private fun PrimaryBlackButton(
             Text(
                 text = text,
                 color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.ExtraBold
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -863,7 +904,7 @@ private fun PrimaryDarkPurpleButton(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(76.dp)
+            .height(68.dp)
             .padding(horizontal = 18.dp)
             .background(Color(0xFF1C1923), RoundedCornerShape(18.dp))
             .clickable(enabled = !loading, onClick = onClick),

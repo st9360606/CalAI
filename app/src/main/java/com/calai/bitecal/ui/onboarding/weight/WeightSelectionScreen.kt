@@ -338,7 +338,7 @@ fun WeightSelectionScreen(
                         .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
-                        .height(64.dp),
+                        .height(68.dp),
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
@@ -352,7 +352,7 @@ fun WeightSelectionScreen(
                         Text(
                             text = stringResource(R.string.continue_text),
                             style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 18.sp,
+                                fontSize = 19.sp,
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 0.2.sp
                             ),

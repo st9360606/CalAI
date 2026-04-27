@@ -306,7 +306,7 @@ private fun NotifBottomBar(
                 .navigationBarsPadding()
                 .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(68.dp),
             shape = RoundedCornerShape(999.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Black,
@@ -317,7 +317,7 @@ private fun NotifBottomBar(
                 text = if (granted) verifyTitle(R.string.continue_text, "Continue")
                 else verifyTitle(R.string.allow_notifications_cta, "Allow Notifications"),
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 18.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.2.sp
                 ),
