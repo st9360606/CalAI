@@ -296,6 +296,10 @@ fun BiteCalNavHost(
 
     val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
 
+    // 只記錄本次 App / 本輪 onboarding 是否已經關閉過 onboarding paywall。
+    // 不寫入 DataStore：重新開 App 或重新開始 onboarding 時會重算。
+    var onboardingPaywallRejectedOnce by remember { mutableStateOf(false) }
+
     val localeController = LocalLocaleController.current
 
     LaunchedEffect(nav) {
@@ -330,7 +334,10 @@ fun BiteCalNavHost(
 
             LandingScreen(
                 navController = nav,
-                onStart = { nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true } },
+                onStart = {
+                    onboardingPaywallRejectedOnce = false
+                    nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true }
+                },
                 onLogin = {
                     // 使用者主動點「登入」：自動開啟 Sheet
                     nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true")
@@ -402,6 +409,7 @@ fun BiteCalNavHost(
                             launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
                         }
                         // ★ 先印一個 flow log，確定有進來
+                        val allowHomeAfterRejectedPaywall = onboardingPaywallRejectedOnce
                         val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
                             if (uploadLocal) {
@@ -413,7 +421,7 @@ fun BiteCalNavHost(
                                 // 已經在 Trial / Premium 的使用者重走 onboarding 登入後，不應再看到付費頁。
                                 // 這裡會先 restore/sync Google Play 權益，再 fallback 查後端 /entitlements/me。
                                 val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
-                                if (hasActiveAccess) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
+                                if (hasActiveAccess || allowHomeAfterRejectedPaywall) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
@@ -439,6 +447,7 @@ fun BiteCalNavHost(
 
         // ===== Onboarding：性別 → ... → Plan =====
         composable(Routes.ONBOARD_GENDER) { backStackEntry ->
+            LaunchedEffect(Unit) { onboardingPaywallRejectedOnce = false }
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: GenderSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -598,7 +607,7 @@ fun BiteCalNavHost(
             )
         }
 
-        // ROUTE_PLAN：未登入 → Gate(禁止 Skip)；已登入 → 先 upsert 再進 Onboarding 訂閱頁
+        // ROUTE_PLAN：未登入 → SignIn Gate；已登入 → 先 upsert 再進 Onboarding 訂閱頁
         composable(Routes.ROUTE_PLAN) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: HealthPlanViewModel = viewModel(
@@ -613,6 +622,7 @@ fun BiteCalNavHost(
                     routeScope.launch {
                         when (isSignedIn) {
                             true -> {
+                                val allowHomeAfterRejectedPaywall = onboardingPaywallRejectedOnce
                                 val destination = withContext(Dispatchers.IO) {
                                     runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                     runCatching { store.setHasServerProfile(true) }
@@ -620,7 +630,7 @@ fun BiteCalNavHost(
 
                                     // 已登入使用者重走 onboarding 時，也要套用相同 gate。
                                     val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
-                                    if (hasActiveAccess) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
+                                    if (hasActiveAccess || allowHomeAfterRejectedPaywall) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
                                 }
 
                                 nav.navigate(destination) {
@@ -647,7 +657,7 @@ fun BiteCalNavHost(
             )
         }
 
-        // Gate：支援 auto + uploadLocal，且可禁止 Skip
+        // Gate：支援 auto + uploadLocal；SignIn 不再提供 Skip
         composable(
             route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}&auto={auto}&uploadLocal={uploadLocal}",
             arguments = listOf(
@@ -675,24 +685,6 @@ fun BiteCalNavHost(
                 onEmailClick = {
                     showSheet.value = true
                 },
-                onSkip = {
-                    if (uploadLocal) {
-                        nav.navigate(Routes.ONBOARD_SUBSCRIPTION) {
-                            launchSingleTop = true
-                            restoreState = false
-                        }
-                    } else {
-                        val popped = nav.safePopBackStack()
-                        if (!popped) {
-                            nav.navigate(redirect) {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
-                                restoreState = false
-                            }
-                        }
-                    }
-                },
-                showSkip = true,
                 snackBarHostState = snackbarHostState
             )
 
@@ -705,6 +697,7 @@ fun BiteCalNavHost(
                     onDismiss = { showSheet.value = false },
 
                     uploadLocalOnLogin = uploadLocal,
+                    allowHomeAfterOnboardingPaywallRejected = onboardingPaywallRejectedOnce,
 
                     onGoogle = {
                         showSheet.value = false
@@ -2246,6 +2239,7 @@ fun BiteCalNavHost(
             }
 
             fun closeToSignInAsFree() {
+                onboardingPaywallRejectedOnce = true
                 /**
                  * 使用者在 onboarding paywall 明確關閉：
                  * - 不開 trial
@@ -2261,7 +2255,7 @@ fun BiteCalNavHost(
                 )
 
                 if (!popped) {
-                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=false&uploadLocal=false") {
+                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=false&uploadLocal=true") {
                         launchSingleTop = true
                         restoreState = false
                     }

@@ -510,8 +510,8 @@ private fun OnboardOneTimeOfferScreen(
             } else {
                 "Continue"
             },
-            helperText = "No commitment. Cancel anytime.",
-            helperTextColor = Color(0xFF27272A),
+            helperText = "No Commitment - Cancel Anytime",
+            helperTextColor = Color(0xFF52525B),
             buttonShape = RoundedCornerShape(14.dp),
             loading = purchasing,
             onClick = onContinue

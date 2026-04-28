@@ -121,7 +121,20 @@ class EntitlementSyncer(
 
             is BillingPurchaseResult.Success -> {
                 val sub = purchaseResult.sub
+                //devDebug下 fake purchase 後 HOME 用戶狀態會變PREMIUM嗎?
+                /**
+                會，但只是在 App 當下記憶體裡變成 PREMIUM / TRIAL。
 
+                devDebug fake purchase 後：
+                如果 trialEnabled = true
+                App 會收到 fake response：premiumStatus = "TRIAL"
+                會導到 HOME
+                        如果 trialEnabled = false
+                App 會收到 fake response：premiumStatus = "PREMIUM"
+                會導到 HOME
+
+                但重點是：不會真的寫入後端 DB。下次重新登入、重開 App、或重新查 /entitlements/me，還是會以後端資料為準。
+                */
                 if (billing is FakeBillingGateway) {
                     if (!sub.acknowledged) {
                         acknowledgeWithRetry(sub.purchaseToken)

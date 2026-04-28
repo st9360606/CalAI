@@ -61,8 +61,6 @@ fun RequireSignInScreen(
     onBack: () -> Unit,
     onGoogleClick: () -> Unit,
     onEmailClick: () -> Unit,
-    onSkip: () -> Unit,
-    showSkip: Boolean = true,
     snackBarHostState: SnackbarHostState,
     ctaVerticalOffset: Dp = (-24).dp
 ) {
@@ -312,31 +310,6 @@ fun RequireSignInScreen(
 
                     Spacer(Modifier.height(12.dp))
 
-                    // --- Skip ---
-                    if (showSkip) {
-                        Spacer(Modifier.height(12.dp))
-
-                        OutlinedButton(
-                            onClick = onSkip,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(64.dp),
-                            shape = RoundedCornerShape(100.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.common_skip),
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = ink,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                    }
                 }
             }
             Spacer(Modifier.navigationBarsPadding())

@@ -35,6 +35,7 @@ fun SignInSheetHost(
     onShowError: (CharSequence) -> Unit = {},
     // ★ 從 ROUTE_PLAN 來要把本機資料（剛填的表單）寫到伺服器
     uploadLocalOnLogin: Boolean = false,
+    allowHomeAfterOnboardingPaywallRejected: Boolean = false,
 ) {
     if (!visible) return
 
@@ -66,7 +67,8 @@ fun SignInSheetHost(
 
             // 已經在 Trial / Premium 的使用者重走 onboarding 登入後，不應再看到付費頁。
             // 這裡會先 restore/sync Google Play 權益，再 fallback 查後端 /entitlements/me。
-            val destination = if (entitlementSyncer.hasActivePremiumAccess()) {
+            val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
+            val destination = if (hasActiveAccess || allowHomeAfterOnboardingPaywallRejected) {
                 Routes.HOME
             } else {
                 Routes.ONBOARD_SUBSCRIPTION
