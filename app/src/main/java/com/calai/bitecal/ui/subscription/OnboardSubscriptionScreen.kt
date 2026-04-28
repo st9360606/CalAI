@@ -74,6 +74,8 @@ import com.calai.bitecal.ui.landing.SlideItem
 import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.zIndex
+
 private enum class OnboardPaywallStep {
     Intro,
     Spin,
@@ -205,27 +207,10 @@ private fun OnboardSubscriptionIntro(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        IconButton(
-            onClick = onClose,
-            enabled = !purchasing,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 66.dp, end = 28.dp)
-                .size(42.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color(0xFFA1A1AA),
-                modifier = Modifier.size(28.dp)
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                // ✅ 跟 OnboardDiscountSpinScreen 的標題高度一致
                 .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -258,13 +243,29 @@ private fun OnboardSubscriptionIntro(
             }
         }
 
-        // ✅ 跟 OnboardDiscountSpinScreen 的 PrimaryBlackButton 位置完全對齊
         OnboardPaywallBottomCta(
             buttonText = "Continue",
             helperText = "Just NT$999.00 per 年 (NT$83.25/mo)",
             loading = purchasing,
             onClick = onContinue
         )
+
+        IconButton(
+            onClick = onClose,
+            enabled = !purchasing,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 66.dp, end = 28.dp)
+                .size(42.dp)
+                .zIndex(10f)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color(0xFFA1A1AA),
+                modifier = Modifier.size(28.dp)
+            )
+        }
     }
 }
 
@@ -420,7 +421,6 @@ private fun OnboardDiscountSpinScreen(
         )
     }
 }
-
 @Composable
 private fun OnboardOneTimeOfferScreen(
     purchasing: Boolean,
@@ -446,28 +446,11 @@ private fun OnboardOneTimeOfferScreen(
             .background(Color.White)
             .navigationBarsPadding()
     ) {
-        IconButton(
-            onClick = onClose,
-            enabled = !purchasing,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(top = 60.dp, start = 18.dp)
-                .size(42.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color(0xFF71717A),
-                modifier = Modifier.size(28.dp)
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = 22.dp)
-                // bottom 要留給 OnboardPaywallBottomCta，避免內容被底部 CTA 蓋住
                 .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -516,6 +499,23 @@ private fun OnboardOneTimeOfferScreen(
             loading = purchasing,
             onClick = onContinue
         )
+
+        IconButton(
+            onClick = onClose,
+            enabled = !purchasing,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 60.dp, start = 18.dp)
+                .size(42.dp)
+                .zIndex(10f)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color(0xFF71717A),
+                modifier = Modifier.size(28.dp)
+            )
+        }
     }
 }
 

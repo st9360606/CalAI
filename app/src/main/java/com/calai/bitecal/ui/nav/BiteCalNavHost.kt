@@ -2240,25 +2240,23 @@ fun BiteCalNavHost(
 
             fun closeToSignInAsFree() {
                 onboardingPaywallRejectedOnce = true
+
                 /**
                  * 使用者在 onboarding paywall 明確關閉：
                  * - 不開 trial
                  * - 不 premium
                  * - 回登入頁
+                 * - 清掉 ONBOARD_SUBSCRIPTION，避免 SignIn 按返回又回到 paywall
                  *
-                 * 注意：
-                 * 如果目前 back stack 沒有 REQUIRE_SIGN_IN，就補導回去。
+                 * 正確 back stack:
+                 * HealthPlanScreen -> SignIn
                  */
-                val popped = nav.popBackStack(
-                    route = Routes.REQUIRE_SIGN_IN,
-                    inclusive = false
-                )
-
-                if (!popped) {
-                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=false&uploadLocal=true") {
-                        launchSingleTop = true
-                        restoreState = false
+                nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=false&uploadLocal=true") {
+                    popUpTo(Routes.ONBOARD_SUBSCRIPTION) {
+                        inclusive = true
                     }
+                    launchSingleTop = true
+                    restoreState = false
                 }
             }
 
@@ -2403,7 +2401,8 @@ private fun isOnboardingRoute(route: String?): Boolean {
             route == Routes.ONBOARD_NOTIF ||
             route == Routes.ONBOARD_HEALTH_CONNECT ||
             route == Routes.PLAN_PROGRESS ||
-            route == Routes.ROUTE_PLAN
+            route == Routes.ROUTE_PLAN ||
+            route == Routes.ONBOARD_SUBSCRIPTION
 }
 
 private fun isAuthOrEntryRoute(route: String?): Boolean {
