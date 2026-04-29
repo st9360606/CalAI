@@ -46,7 +46,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.calai.bitecal.R
 import com.calai.bitecal.data.auth.net.SessionBus
-import com.calai.bitecal.data.entitlement.model.PremiumStatus
 import com.calai.bitecal.data.foodlog.model.ClientAction
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
@@ -138,7 +137,6 @@ import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
 import com.calai.bitecal.ui.subscription.OnboardSubscriptionScreen
-import com.calai.bitecal.ui.subscription.SubscriptionScreen
 import com.calai.bitecal.ui.subscription.SubscriptionViewModel
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
@@ -177,7 +175,25 @@ object Routes {
      */
     const val ONBOARD_SUBSCRIPTION = "onboard_subscription"
 
-    const val SUBSCRIPTION = "subscription"
+    /**
+     * Home ScanFab 專用付費牆。
+     *
+     * 不要直接共用 ONBOARD_SUBSCRIPTION route，因為 Home 進來時：
+     * - close/back 應該回 HOME
+     * - 不應該回 SignIn
+     * - 不應該標記 onboarding paywall rejected once
+     */
+    const val HOME_SCAN_SUBSCRIPTION = "home_scan_subscription"
+
+    /**
+     * Settings ScanFab 專用付費牆。
+     *
+     * 跟 HOME_SCAN_SUBSCRIPTION 使用同一套 OnboardSubscriptionScreen UI，
+     * 但 close/back 行為不同：
+     * - close/back 應該回 SETTINGS
+     * - 付款成功後回 HOME 並刷新會員狀態
+     */
+    const val SETTINGS_SCAN_SUBSCRIPTION = "settings_scan_subscription"
     const val MEMBERSHIP_REFRESH_TICK = "membership_refresh_tick"
     const val REQUIRE_SIGN_IN = "require_sign_in"
     const val HOME = "home"
@@ -215,7 +231,6 @@ object Routes {
     /**
      * Camera Snapshots food log detail
      */
-    const val FOOD_LOG_DETAIL = "foodLog/{id}"
     fun foodLogDetail(id: String) = "foodLog/$id"
 
     const val RECENT_UPLOAD_DETAIL = "recentUploadDetail/{id}"
@@ -273,6 +288,17 @@ private tailrec fun Context.findActivity(): Activity? =
 
 private fun NavController.safePopBackStack(): Boolean =
     previousBackStackEntry != null && popBackStack()
+
+private fun NavController.resolveCameraFallbackPaywallRoute(): String {
+    val previousRoute = previousBackStackEntry?.destination?.route
+
+    return when (previousRoute) {
+        Routes.SETTINGS,
+        Routes.SETTINGS_SCAN_SUBSCRIPTION -> Routes.SETTINGS_SCAN_SUBSCRIPTION
+
+        else -> Routes.HOME_SCAN_SUBSCRIPTION
+    }
+}
 
 @Composable
 fun BiteCalNavHost(
@@ -773,6 +799,8 @@ fun BiteCalNavHost(
                 }
             }
 
+            val homeScope = rememberCoroutineScope()
+
             Box(Modifier.fillMaxSize()) {
                 HomeScreen(
                     vm = vm,
@@ -780,7 +808,27 @@ fun BiteCalNavHost(
                     workoutVm = workoutVm,
                     fastingVm = fastingVm,
                     weightVm = weightVm,
-                    onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
+                    onOpenCamera = {
+                        homeScope.launch {
+                            val hasActiveAccess = withContext(Dispatchers.IO) {
+                                entitlementSyncer.hasActivePremiumAccess()
+                            }
+
+                            membershipVm.refresh()
+
+                            if (hasActiveAccess) {
+                                nav.navigate(Routes.CAMERA) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            } else {
+                                nav.navigate(Routes.HOME_SCAN_SUBSCRIPTION) {
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
+                            }
+                        }
+                    },
                     onOpenSavedFoods = {
                         nav.navigate(Routes.SAVED_FOODS) {
                             launchSingleTop = true
@@ -815,10 +863,17 @@ fun BiteCalNavHost(
                     },
                     canUseScan = membershipUi.canUseScan,
                     onOpenSubscription = {
-                        nav.navigate(Routes.SUBSCRIPTION) {
+                        nav.navigate(Routes.HOME_SCAN_SUBSCRIPTION) {
                             launchSingleTop = true
                             restoreState = false
                         }
+                    },
+                    onCheckCanUseScan = {
+                        val hasActiveAccess = withContext(Dispatchers.IO) {
+                            entitlementSyncer.hasActivePremiumAccess()
+                        }
+                        membershipVm.refresh()
+                        hasActiveAccess
                     },
                 )
 
@@ -1015,6 +1070,9 @@ fun BiteCalNavHost(
 
         composable(Routes.SETTINGS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val owner: ActivityResultRegistryOwner =
+                (activity as? ActivityResultRegistryOwner) ?: hostActivity
+
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
             val scope = rememberCoroutineScope()
             val accountRepo = remember(ep) { ep.accountRepository() }
@@ -1081,87 +1139,118 @@ fun BiteCalNavHost(
             )
 
             Box(Modifier.fillMaxSize()) {
-                SettingsScreen(
-                    avatarUrl = avatar,
-                    profileName = nameText,
-                    ageText = ageText,
-                    currentTab = HomeTab.Personal,
-                    onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
-                    onOpenTab = { tab ->
-                        when (tab) {
-                            HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Personal -> Unit
-                        }
-                    },
-                    onOpenEditName = {
-                        backStackEntry.savedStateHandle[Routes.EDIT_NAME_INITIAL] = (pUi.name ?: "").trim()
-                        nav.navigate(Routes.EDIT_NAME) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onOpenAdjustMacros = {
-                        nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
-                            launchSingleTop = true
-                            restoreState = false
-                        }
-                    },
-                    onOpenGoalAndCurrentWeight = {
-                        nav.navigate(Routes.PERSONAL_DETAILS) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onOpenWeightHistory = {
-                        nav.navigate(Routes.WEIGHT) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
-
-                    premiumStatusText = membershipDisplay.title,
-                    premiumUntilText = membershipDisplay.subtitle,
-                    canUseScan = membershipUi.canUseScan,
-                    onOpenSubscription = {
-                        nav.navigate(Routes.SUBSCRIPTION) {
-                            launchSingleTop = true
-                            restoreState = false
-                        }
-                    },
-                    onOpenReferral = {
-                        nav.navigate(Routes.REFERRALS) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-
-                    // ✅ Terms / Privacy / Support / Feature
-                    onOpenTerms = { uriHandler.openUri(termsUrl) },
-                    onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
-                    onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
-                    onOpenFeatureRequest = { uriHandler.openUri(featureUrl) },
-
-                    onDeleteAccount = {
-                        scope.launch {
-                            val r = accountRepo.deleteAccount()
-                            if (r.isSuccess) {
-                                nav.navigate(Routes.LANDING) {
-                                    popUpTo(0) { inclusive = true }
-                                    launchSingleTop = true
-                                    restoreState = false
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                    SettingsScreen(
+                        avatarUrl = avatar,
+                        profileName = nameText,
+                        ageText = ageText,
+                        currentTab = HomeTab.Personal,
+                        onOpenCamera = {
+                            scope.launch {
+                                val hasActiveAccess = withContext(Dispatchers.IO) {
+                                    entitlementSyncer.hasActivePremiumAccess()
                                 }
-                            } else {
-                                backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] =
-                                    (r.exceptionOrNull()?.message ?: "Delete account failed")
+
+                                membershipVm.refresh()
+
+                                if (hasActiveAccess) {
+                                    nav.navigate(Routes.CAMERA) {
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                } else {
+                                    nav.navigate(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
+                                }
+                            }
+                        },
+                        onCheckCanUseScan = {
+                            val hasActiveAccess = withContext(Dispatchers.IO) {
+                                entitlementSyncer.hasActivePremiumAccess()
+                            }
+                            membershipVm.refresh()
+                            hasActiveAccess
+                        },
+                        onOpenSavedFoods = {
+                            nav.navigate(Routes.SAVED_FOODS) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenTab = { tab ->
+                            when (tab) {
+                                HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Personal -> Unit
+                            }
+                        },
+                        onOpenEditName = {
+                            backStackEntry.savedStateHandle[Routes.EDIT_NAME_INITIAL] = (pUi.name ?: "").trim()
+                            nav.navigate(Routes.EDIT_NAME) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenAdjustMacros = {
+                            nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        },
+                        onOpenGoalAndCurrentWeight = {
+                            nav.navigate(Routes.PERSONAL_DETAILS) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenWeightHistory = {
+                            nav.navigate(Routes.WEIGHT) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
+                        premiumStatusText = membershipDisplay.title,
+                        premiumUntilText = membershipDisplay.subtitle,
+                        canUseScan = membershipUi.canUseScan,
+                        onOpenSubscription = {
+                            nav.navigate(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        },
+                        onOpenReferral = {
+                            nav.navigate(Routes.REFERRALS) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenTerms = { uriHandler.openUri(termsUrl) },
+                        onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
+                        onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
+                        onOpenFeatureRequest = { uriHandler.openUri(featureUrl) },
+                        onDeleteAccount = {
+                            scope.launch {
+                                val r = accountRepo.deleteAccount()
+                                if (r.isSuccess) {
+                                    nav.navigate(Routes.LANDING) {
+                                        popUpTo(0) { inclusive = true }
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
+                                } else {
+                                    backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] =
+                                        (r.exceptionOrNull()?.message ?: "Delete account failed")
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
 
                 when {
                     !navError.isNullOrBlank() -> {
@@ -1171,6 +1260,7 @@ fun BiteCalNavHost(
                             backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
                         }
                     }
+
                     !navSuccess.isNullOrBlank() -> {
                         SuccessTopToast(
                             message = navSuccess!!,
@@ -1191,7 +1281,7 @@ fun BiteCalNavHost(
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
 
-            val settingsVm: SettingsViewModel  = viewModel(
+            val settingsVm: SettingsViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
@@ -1201,30 +1291,34 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            val premiumRewardsVm: PremiumRewardsViewModel = viewModel(
+            /**
+             * ✅ 關鍵修正：
+             * PersonalDetails 不再使用 PremiumRewardsViewModel 自己讀 membership summary。
+             *
+             * 改成跟 Home / Settings 共用 Home scope 的 MembershipViewModel，
+             * 這樣付款成功、trial、過期、退款撤銷後，三個畫面的訂閱狀態會一致。
+             */
+            val membershipVm: MembershipViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            LaunchedEffect(Unit) {
-                premiumRewardsVm.refresh()
-            }
-
-            val premiumUi by premiumRewardsVm.ui.collectAsState()
-
-            val personalMembershipDisplay = MembershipUiMapper.map(
-                status = PremiumStatus.from(premiumUi.summary?.premiumStatus),
-                until = premiumUi.summary?.currentPremiumUntil,
-                trialDaysLeft = premiumUi.summary?.trialDaysLeft
-            )
-
-            val premiumStatusText = personalMembershipDisplay.title
-            val premiumUntilText = personalMembershipDisplay.subtitle
+            val membershipUi by membershipVm.ui.collectAsState()
 
             LaunchedEffect(Unit) {
                 settingsVm.refreshProfileOnly()
                 weightVm.initIfNeeded()
+                membershipVm.refresh()
             }
+
+            val personalMembershipDisplay = MembershipUiMapper.map(
+                status = membershipUi.premiumStatus,
+                until = membershipUi.currentPremiumUntil?.take(10),
+                trialDaysLeft = membershipUi.trialDaysLeft
+            )
+
+            val premiumStatusText = personalMembershipDisplay.title
+            val premiumUntilText = personalMembershipDisplay.subtitle
 
             val pUi by settingsVm.ui.collectAsState()
             val wUi by weightVm.ui.collectAsState()
@@ -1266,6 +1360,7 @@ fun BiteCalNavHost(
                         }
                     }
                 )
+
                 when {
                     !navError.isNullOrBlank() -> {
                         ErrorTopToast(
@@ -1746,6 +1841,45 @@ fun BiteCalNavHost(
             val ctx = LocalContext.current
             val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
             val owner: ActivityResultRegistryOwner = activity
+
+            val cameraFallbackPaywallRoute = remember(backStackEntry) {
+                nav.resolveCameraFallbackPaywallRoute()
+            }
+
+            var cameraGateResolved by rememberSaveable { mutableStateOf(false) }
+            var cameraAllowed by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    cameraAllowed = true
+                    cameraGateResolved = true
+                } else {
+                    cameraAllowed = false
+                    cameraGateResolved = true
+
+                    nav.navigate(cameraFallbackPaywallRoute) {
+                        popUpTo(Routes.CAMERA) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            if (!cameraGateResolved || !cameraAllowed) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
 
             val cameraOwner = backStackEntry
             val flowVm: FoodLogFlowViewModel = viewModel(
@@ -2302,7 +2436,7 @@ fun BiteCalNavHost(
             )
         }
 
-        composable(Routes.SUBSCRIPTION) { backStackEntry ->
+        composable(Routes.HOME_SCAN_SUBSCRIPTION) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
             val vm: SubscriptionViewModel = viewModel(
@@ -2310,33 +2444,173 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
-            SubscriptionScreen(
+            fun goHomeAfterHomeScanSubscription() {
+                runCatching {
+                    nav.getBackStackEntry(Routes.HOME)
+                        .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                }
+
+                val popped = nav.popBackStack(
+                    route = Routes.HOME,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME_SCAN_SUBSCRIPTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
+            var allowPaywall by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    goHomeAfterHomeScanSubscription()
+                } else {
+                    allowPaywall = true
+                    entitlementGateResolved = true
+                }
+            }
+
+            if (!entitlementGateResolved || !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            BackHandler(enabled = true) {
+                goHomeAfterHomeScanSubscription()
+            }
+
+            OnboardSubscriptionScreen(
                 vm = vm,
                 activity = activity,
-                showBack = true,
-                onBack = {
-                    nav.popBackStack()
+                onCloseToSignIn = {
+                    // Home ScanFab 進來的付費牆，關閉後回 HOME；不變更使用者權益。
+                    goHomeAfterHomeScanSubscription()
                 },
                 onPurchased = {
-                    runCatching {
-                        nav.getBackStackEntry(Routes.HOME)
-                            .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
-                    }
+                    // Google Play 付款 / trial 成功後，刷新 HOME membership 後回 HOME。
+                    goHomeAfterHomeScanSubscription()
+                }
+            )
+        }
 
-                    val popped = nav.popBackStack(
-                        route = Routes.HOME,
-                        inclusive = false
-                    )
+        composable(Routes.SETTINGS_SCAN_SUBSCRIPTION) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
-                    if (!popped) {
-                        nav.navigate(Routes.HOME) {
-                            popUpTo(Routes.SUBSCRIPTION) {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
-                            restoreState = false
+            val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            fun goSettingsAfterSettingsScanSubscription() {
+                val popped = nav.popBackStack(
+                    route = Routes.SETTINGS,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.SETTINGS) {
+                        popUpTo(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                            inclusive = true
                         }
+                        launchSingleTop = true
+                        restoreState = false
                     }
+                }
+            }
+
+            fun goCameraAfterSettingsScanGate() {
+                nav.navigate(Routes.CAMERA) {
+                    popUpTo(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+
+            fun goHomeAfterSettingsScanPurchase() {
+                runCatching {
+                    nav.getBackStackEntry(Routes.HOME)
+                        .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                }
+
+                val popped = nav.popBackStack(
+                    route = Routes.HOME,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.HOME) {
+                        popUpTo(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
+            var allowPaywall by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    // 理論上 active user 不該進到這個 route。
+                    // 但若 membershipUi stale 導致誤進，直接讓他使用 Scan。
+                    goCameraAfterSettingsScanGate()
+                } else {
+                    allowPaywall = true
+                    entitlementGateResolved = true
+                }
+            }
+
+            if (!entitlementGateResolved || !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            BackHandler(enabled = true) {
+                goSettingsAfterSettingsScanSubscription()
+            }
+
+            OnboardSubscriptionScreen(
+                vm = vm,
+                activity = activity,
+                onCloseToSignIn = {
+                    // Settings ScanFab 進來的付費牆：
+                    // close 後回 Settings，不改使用者權益。
+                    goSettingsAfterSettingsScanSubscription()
+                },
+                onPurchased = {
+                    // 付款成功 / trial 成功：
+                    // 更新會員狀態後回 HOME。
+                    goHomeAfterSettingsScanPurchase()
                 }
             )
         }

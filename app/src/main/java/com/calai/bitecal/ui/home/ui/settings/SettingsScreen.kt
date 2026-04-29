@@ -69,7 +69,18 @@ import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.scan.ScanFab
 import com.calai.bitecal.ui.home.ui.settings.delete.DeleteAccountDialog
 import kotlinx.coroutines.launch
-
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.core.content.ContextCompat
+import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
+import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 /**
  * ✅ Personal => Settings（你圖上的那個）
  * - 內容可捲動
@@ -93,6 +104,8 @@ fun SettingsScreen(
     premiumUntilText: String = "Upgrade",
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
+    onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
+    onOpenSavedFoods: () -> Unit = {},
     onOpenReferral: () -> Unit = {},
     onOpenLanguage: () -> Unit = {},
     onOpenTerms: () -> Unit = {},
@@ -102,6 +115,74 @@ fun SettingsScreen(
     onDeleteAccount: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    val ctx = LocalContext.current
+    val registryOwner = LocalActivityResultRegistryOwner.current
+    val scope = rememberCoroutineScope()
+
+    var showQuickAddMenu by rememberSaveable { mutableStateOf(false) }
+    var scanFabGateInFlight by rememberSaveable { mutableStateOf(false) }
+
+    val latestOnOpenCamera = rememberUpdatedState(onOpenCamera)
+    val latestOnOpenSubscription = rememberUpdatedState(onOpenSubscription)
+    val latestOnCheckCanUseScan = rememberUpdatedState(onCheckCanUseScan)
+
+    val requestCameraPermLauncher =
+        if (registryOwner != null) {
+            rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission()
+            ) { granted ->
+                if (granted) {
+                    CameraPermissionPrefs.resetCameraDeniedCount(ctx)
+                    latestOnOpenCamera.value.invoke()
+                } else {
+                    CameraPermissionPrefs.incrementCameraDeniedCount(ctx)
+                }
+            }
+        } else {
+            null
+        }
+
+    fun openScanFoodWithPermissionGate() {
+        val grantedNow =
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
+                    PackageManager.PERMISSION_GRANTED
+
+        if (grantedNow) {
+            CameraPermissionPrefs.resetCameraDeniedCount(ctx)
+            latestOnOpenCamera.value.invoke()
+            return
+        }
+
+        val deniedCount = CameraPermissionPrefs.getCameraDeniedCount(ctx)
+
+        if (deniedCount >= 2) {
+            openCameraPermissionSettings(ctx)
+        } else {
+            requestCameraPermLauncher?.launch(Manifest.permission.CAMERA)
+                ?: CameraPermissionProxyActivity.start(ctx)
+        }
+    }
+
+    fun handleScanFabClick() {
+        if (scanFabGateInFlight) return
+
+        scope.launch {
+            scanFabGateInFlight = true
+
+            val hasActiveAccess = runCatching {
+                latestOnCheckCanUseScan.value.invoke()
+            }.getOrDefault(false)
+
+            scanFabGateInFlight = false
+
+            if (hasActiveAccess) {
+                showQuickAddMenu = true
+            } else {
+                latestOnOpenSubscription.value.invoke()
+            }
+        }
+    }
+
     Box(Modifier.fillMaxSize()) { LightHomeBackground() }
 
     Scaffold(
@@ -109,11 +190,7 @@ fun SettingsScreen(
         floatingActionButton = {
             ScanFab(
                 onClick = {
-                    if (canUseScan) {
-                        onOpenCamera()
-                    } else {
-                        onOpenSubscription()
-                    }
+                    handleScanFabClick()
                 }
             )
         },
@@ -143,6 +220,19 @@ fun SettingsScreen(
             onLogout = onLogout
         )
     }
+
+    HomeQuickActionMenu(
+        visible = showQuickAddMenu,
+        onDismiss = { showQuickAddMenu = false },
+        onSavedFoodsClick = {
+            showQuickAddMenu = false
+            onOpenSavedFoods()
+        },
+        onScanFoodClick = {
+            showQuickAddMenu = false
+            openScanFoodWithPermissionGate()
+        }
+    )
 }
 
 @Composable

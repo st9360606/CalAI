@@ -4,8 +4,6 @@ import android.app.Activity
 import android.util.Log
 import com.calai.bitecal.data.billing.BillingGateway
 import com.calai.bitecal.data.billing.BillingPurchaseResult
-import com.calai.bitecal.data.billing.FakeBillingGateway
-import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.api.EntitlementApi
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncRequest
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
@@ -14,9 +12,7 @@ import com.calai.bitecal.data.entitlement.model.PremiumStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-
+import java.util.Locale
 data class PurchaseEntitlementResult(
     val success: Boolean,
     val response: EntitlementSyncResponse? = null,
@@ -121,58 +117,29 @@ class EntitlementSyncer(
 
             is BillingPurchaseResult.Success -> {
                 val sub = purchaseResult.sub
-                //devDebug下 fake purchase 後 HOME 用戶狀態會變PREMIUM嗎?
-                /**
-                會，但只是在 App 當下記憶體裡變成 PREMIUM / TRIAL。
 
-                devDebug fake purchase 後：
-                如果 trialEnabled = true
-                App 會收到 fake response：premiumStatus = "TRIAL"
-                會導到 HOME
-                        如果 trialEnabled = false
-                App 會收到 fake response：premiumStatus = "PREMIUM"
-                會導到 HOME
-
-                但重點是：不會真的寫入後端 DB。下次重新登入、重開 App、或重新查 /entitlements/me，還是會以後端資料為準。
-                */
-                if (billing is FakeBillingGateway) {
-                    if (!sub.acknowledged) {
-                        acknowledgeWithRetry(sub.purchaseToken)
-                    }
-
-                    val isTrialOffer =
-                        offerTag == BiteCalBillingProducts.OfferTags.ONBOARD_TRIAL_DISCOUNT_YEARLY
-                    val fakeUntil = Instant.now()
-                        .plus(if (isTrialOffer) 3 else 30, ChronoUnit.DAYS)
-                        .toString()
-
-                    return PurchaseEntitlementResult(
-                        success = true,
-                        response = EntitlementSyncResponse(
-                            status = "ACTIVE",
-                            entitlementType = if (isTrialOffer) "TRIAL" else "DEV_FAKE",
-                            premiumStatus = if (isTrialOffer) "TRIAL" else "PREMIUM",
-                            currentPremiumUntil = fakeUntil,
-                            trialEndsAt = if (isTrialOffer) fakeUntil else null,
-                            trialDaysLeft = if (isTrialOffer) 3 else null
-                        )
-                    )
-                }
-
-                val response = withContext(Dispatchers.IO) {
-                    api.sync(
-                        EntitlementSyncRequest(
-                            purchases = listOf(
-                                PurchaseTokenPayload(
-                                    productId = sub.productId,
-                                    purchaseToken = sub.purchaseToken
+                val response = runCatching {
+                    withContext(Dispatchers.IO) {
+                        api.sync(
+                            EntitlementSyncRequest(
+                                purchases = listOf(
+                                    PurchaseTokenPayload(
+                                        productId = sub.productId,
+                                        purchaseToken = sub.purchaseToken
+                                    )
                                 )
                             )
                         )
+                    }
+                }.getOrElse { ex ->
+                    Log.w(TAG, "purchase entitlement sync failed: ${ex.message}")
+                    return PurchaseEntitlementResult(
+                        success = false,
+                        message = "Purchase completed, but entitlement sync failed. Please retry."
                     )
                 }
 
-                val premiumStatus = response.premiumStatus.uppercase()
+                val premiumStatus = response.premiumStatus.uppercase(Locale.US)
 
                 val openedEntitlement =
                     response.status.equals("ACTIVE", ignoreCase = true) &&
@@ -191,8 +158,10 @@ class EntitlementSyncer(
                 if (!sub.acknowledged) {
                     val acknowledged = acknowledgeWithRetry(sub.purchaseToken)
                     if (!acknowledged) {
-                        Log.w(TAG, "acknowledge failed after retry. purchaseToken=${sub.purchaseToken.take(8)}***")
-                        // 不阻斷使用者；syncAfterLoginSilently 會在下次啟動/登入補重試。
+                        Log.w(
+                            TAG,
+                            "acknowledge failed after retry. purchaseToken=${sub.purchaseToken.take(16)}***"
+                        )
                     }
                 }
 

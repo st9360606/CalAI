@@ -48,13 +48,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -114,6 +114,7 @@ import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import com.calai.bitecal.ui.home.ui.workout.WorkoutTrackerHost
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -141,6 +142,7 @@ fun HomeScreen(
     onOpenRecentUploadDetail: (foodLogId: String, previewUri: String?, timeText: String) -> Unit,
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
+    onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -362,12 +364,30 @@ fun HomeScreen(
     var recentUploadDeleteTargetId by rememberSaveable { mutableStateOf<String?>(null) }
     var recentUploadDeleteRequested by rememberSaveable { mutableStateOf(false) }
 
-    val onFabClick: () -> Unit = remember(canUseScan, onOpenSubscription) {
+    val scanFabScope = rememberCoroutineScope()
+    val latestOnOpenSubscription = rememberUpdatedState(onOpenSubscription)
+    val latestOnCheckCanUseScan = rememberUpdatedState(onCheckCanUseScan)
+
+    var scanFabGateInFlight by rememberSaveable { mutableStateOf(false) }
+
+    val onFabClick: () -> Unit = remember {
         {
-            if (canUseScan) {
-                showQuickAddMenu = true
-            } else {
-                onOpenSubscription()
+            if (scanFabGateInFlight) return@remember
+
+            scanFabScope.launch {
+                scanFabGateInFlight = true
+
+                val canOpenScanMenu = runCatching {
+                    latestOnCheckCanUseScan.value.invoke()
+                }.getOrDefault(false)
+
+                scanFabGateInFlight = false
+
+                if (canOpenScanMenu) {
+                    showQuickAddMenu = true
+                } else {
+                    latestOnOpenSubscription.value.invoke()
+                }
             }
         }
     }

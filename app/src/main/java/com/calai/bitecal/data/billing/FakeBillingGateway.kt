@@ -7,7 +7,7 @@ import kotlinx.coroutines.delay
 class FakeBillingGateway : BillingGateway {
 
     override suspend fun queryActiveSubscriptions(): List<ActiveSub> {
-        Log.d(TAG, "queryActiveSubscriptions fake empty")
+        Log.d(TAG, "queryActiveSubscriptions fake empty; backend /entitlements/me is source of truth")
         return emptyList()
     }
 
@@ -20,10 +20,19 @@ class FakeBillingGateway : BillingGateway {
 
         delay(500)
 
+        val phase =
+            if (offerTag == BiteCalBillingProducts.OfferTags.ONBOARD_TRIAL_DISCOUNT_YEARLY) {
+                "trial"
+            } else {
+                "paid"
+            }
+
+        val fakeToken = "fake-dev-sub::$productId::$phase::${System.currentTimeMillis()}"
+
         return BillingPurchaseResult.Success(
             ActiveSub(
                 productId = productId,
-                purchaseToken = "fake-dev-purchase-token-${System.currentTimeMillis()}",
+                purchaseToken = fakeToken,
                 acknowledged = false
             )
         )
