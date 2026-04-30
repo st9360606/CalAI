@@ -4,37 +4,23 @@ import com.calai.bitecal.data.entitlement.model.PremiumStatus
 
 data class MembershipDisplay(
     val title: String,
-    val subtitle: String
+    val subtitle: String = ""
 )
 
 object MembershipUiMapper {
 
     fun map(
         status: PremiumStatus,
-        until: String?,
-        trialDaysLeft: Int?
+        paymentIssue: Boolean = false
     ): MembershipDisplay {
+        if (paymentIssue && status == PremiumStatus.PREMIUM) {
+            return MembershipDisplay(title = "Payment Issue")
+        }
+
         return when (status) {
-            PremiumStatus.FREE -> {
-                MembershipDisplay(
-                    title = "FREE",
-                    subtitle = "Upgrade"
-                )
-            }
-
-            PremiumStatus.TRIAL -> {
-                MembershipDisplay(
-                    title = "TRIAL",
-                    subtitle = "${trialDaysLeft ?: "-"} days left"
-                )
-            }
-
-            PremiumStatus.PREMIUM -> {
-                MembershipDisplay(
-                    title = "PREMIUM",
-                    subtitle = "Until ${formatDate(until)}"
-                )
-            }
+            PremiumStatus.FREE -> MembershipDisplay(title = "FREE")
+            PremiumStatus.TRIAL -> MembershipDisplay(title = "TRIAL")
+            PremiumStatus.PREMIUM -> MembershipDisplay(title = "PREMIUM")
         }
     }
 

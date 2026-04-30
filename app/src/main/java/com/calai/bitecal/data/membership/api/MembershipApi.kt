@@ -17,6 +17,7 @@ data class MembershipSummaryDto(
     val currentPremiumUntil: String? = null,
     val trialEndsAt: String? = null,
     val trialDaysLeft: Int? = null,
+    val paymentIssue: Boolean = false,
     val latestRewardSource: String? = null,
     val latestOldPremiumUntil: String? = null,
     val latestNewPremiumUntil: String? = null,

@@ -101,7 +101,6 @@ fun SettingsScreen(
     onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
     premiumStatusText: String = "FREE",
-    premiumUntilText: String = "Upgrade",
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
     onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
@@ -209,7 +208,6 @@ fun SettingsScreen(
             onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
             onOpenWeightHistory = onOpenWeightHistory,
             premiumStatusText = premiumStatusText,
-            premiumUntilText = premiumUntilText,
             onOpenReferral = onOpenReferral,
             onOpenLanguage = onOpenLanguage,
             onOpenTerms = onOpenTerms,
@@ -247,7 +245,6 @@ private fun SettingsContent(
     onOpenGoalAndCurrentWeight: () -> Unit,
     onOpenWeightHistory: () -> Unit,
     premiumStatusText: String,
-    premiumUntilText: String,
     onOpenReferral: () -> Unit,
     onOpenLanguage: () -> Unit,
     onOpenTerms: () -> Unit,
@@ -305,7 +302,6 @@ private fun SettingsContent(
             name = profileName,
             subtitle = ageText,
             premiumStatus = premiumStatusText,
-            premiumUntil = premiumUntilText,
             onClick = onOpenEditName
         )
 
@@ -367,7 +363,6 @@ private fun ProfileCard(
     name: String,
     subtitle: String,
     premiumStatus: String,
-    premiumUntil: String,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(22.dp)
@@ -416,13 +411,6 @@ private fun ProfileCard(
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF111114)
-                    )
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = premiumUntil,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF6B7280)
                     )
                 )
             }

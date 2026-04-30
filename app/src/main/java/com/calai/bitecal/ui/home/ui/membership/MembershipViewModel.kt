@@ -16,6 +16,7 @@ data class MembershipUiState(
     val currentPremiumUntil: String? = null,
     val trialEndsAt: String? = null,
     val trialDaysLeft: Int? = null,
+    val paymentIssue: Boolean = false,
     val error: String? = null
 ) {
     val canUseScan: Boolean
@@ -47,6 +48,7 @@ class MembershipViewModel @Inject constructor(
                     currentPremiumUntil = dto.currentPremiumUntil,
                     trialEndsAt = dto.trialEndsAt,
                     trialDaysLeft = dto.trialDaysLeft,
+                    paymentIssue = dto.paymentIssue,
                     error = null
                 )
             }.onFailure { e ->

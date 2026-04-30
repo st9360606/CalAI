@@ -1134,8 +1134,7 @@ fun BiteCalNavHost(
 
             val membershipDisplay = MembershipUiMapper.map(
                 status = membershipUi.premiumStatus,
-                until = membershipUi.currentPremiumUntil?.take(10),
-                trialDaysLeft = membershipUi.trialDaysLeft
+                paymentIssue = membershipUi.paymentIssue
             )
 
             Box(Modifier.fillMaxSize()) {
@@ -1216,7 +1215,6 @@ fun BiteCalNavHost(
                         },
                         onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
                         premiumStatusText = membershipDisplay.title,
-                        premiumUntilText = membershipDisplay.subtitle,
                         canUseScan = membershipUi.canUseScan,
                         onOpenSubscription = {
                             nav.navigate(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
@@ -1313,12 +1311,10 @@ fun BiteCalNavHost(
 
             val personalMembershipDisplay = MembershipUiMapper.map(
                 status = membershipUi.premiumStatus,
-                until = membershipUi.currentPremiumUntil?.take(10),
-                trialDaysLeft = membershipUi.trialDaysLeft
+                paymentIssue = membershipUi.paymentIssue
             )
 
             val premiumStatusText = personalMembershipDisplay.title
-            val premiumUntilText = personalMembershipDisplay.subtitle
 
             val pUi by settingsVm.ui.collectAsState()
             val wUi by weightVm.ui.collectAsState()
@@ -1352,7 +1348,6 @@ fun BiteCalNavHost(
                     onEditDailyWaterGoal = { nav.navigate(Routes.EDIT_WATER_GOAL) },
                     onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) },
                     premiumStatusText = premiumStatusText,
-                    premiumUntilText = premiumUntilText,
                     onOpenPremiumRewards = {
                         nav.navigate(Routes.PREMIUM_REWARDS) {
                             launchSingleTop = true

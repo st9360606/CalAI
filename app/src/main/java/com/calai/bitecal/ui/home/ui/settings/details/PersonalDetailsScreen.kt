@@ -73,7 +73,6 @@ fun PersonalDetailsScreen(
     onEditDailyWaterGoal: () -> Unit = {},
     onEditDailyWorkoutGoal: () -> Unit = {},
     premiumStatusText: String = "FREE",
-    premiumUntilText: String = "—",
     onOpenPremiumRewards: () -> Unit = {},
 ) {
     val bg = Color(0xFFF6F7F9)
@@ -204,9 +203,8 @@ fun PersonalDetailsScreen(
                     )
 
                     PersonalDetailsRow(
-                        title = "Premium & Rewards",
+                        title = "Subscription",
                         valueMain = premiumStatusText,
-                        valueSub = premiumUntilText,
                         titleOffsetY = 1.dp,
                         valueOffsetY = 1.dp,
                         titleFontSize = titleSize,
