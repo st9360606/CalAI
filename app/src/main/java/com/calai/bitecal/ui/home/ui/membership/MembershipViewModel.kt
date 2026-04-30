@@ -20,7 +20,8 @@ data class MembershipUiState(
     val error: String? = null
 ) {
     val canUseScan: Boolean
-        get() = premiumStatus == PremiumStatus.TRIAL || premiumStatus == PremiumStatus.PREMIUM
+        get() = premiumStatus == PremiumStatus.TRIAL ||
+                premiumStatus == PremiumStatus.PREMIUM
 }
 
 @HiltViewModel
