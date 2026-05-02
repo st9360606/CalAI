@@ -56,41 +56,12 @@ fun PremiumRewardsScreen(
         }
     ) { inner ->
         when {
-            loading -> {
-                Column(
-                    modifier = Modifier
-                        .padding(inner)
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                    Spacer(Modifier.height(12.dp))
-                    Text("Loading membership...")
-                }
-            }
-
-            error != null -> {
-                Column(
-                    modifier = Modifier
-                        .padding(inner)
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Button(onClick = onRetry) {
-                        Text("Retry")
-                    }
-                }
-            }
-
+            loading -> LoadingState(Modifier.padding(inner))
+            error != null -> ErrorState(
+                modifier = Modifier.padding(inner),
+                error = error,
+                onRetry = onRetry
+            )
             else -> {
                 LazyColumn(
                     modifier = Modifier
@@ -99,14 +70,8 @@ fun PremiumRewardsScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item {
-                        SummaryCard(summary)
-                    }
-
-                    item {
-                        LatestRewardCard(summary)
-                    }
-
+                    item { SummaryCard(summary) }
+                    item { LatestRewardCard(summary) }
                     item {
                         Text(
                             "Reward history",
@@ -115,9 +80,7 @@ fun PremiumRewardsScreen(
                     }
 
                     if (rewards.isEmpty()) {
-                        item {
-                            EmptyRewardHistoryCard()
-                        }
+                        item { EmptyRewardHistoryCard() }
                     } else {
                         items(rewards) { item ->
                             RewardHistoryRow(item)
@@ -130,36 +93,78 @@ fun PremiumRewardsScreen(
 }
 
 @Composable
+private fun LoadingState(modifier: Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator()
+        Spacer(Modifier.height(12.dp))
+        Text("Loading membership...")
+    }
+}
+
+@Composable
+private fun ErrorState(
+    modifier: Modifier,
+    error: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = error,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(Modifier.height(12.dp))
+        Button(onClick = onRetry) {
+            Text("Retry")
+        }
+    }
+}
+
+@Composable
 private fun SummaryCard(summary: MembershipSummaryDto?) {
     val status = PremiumStatus.from(summary?.premiumStatus)
-    val currentUntil = MembershipUiMapper.formatDate(summary?.currentPremiumUntil)
-    val trialEndsAt = MembershipUiMapper.formatDate(summary?.trialEndsAt)
+    val display = MembershipUiMapper.map(
+        status = status,
+        currentPremiumUntil = summary?.currentPremiumUntil,
+        trialDaysLeft = summary?.trialDaysLeft,
+        paymentIssue = summary?.paymentIssue == true
+    )
 
-    Card(shape = RoundedCornerShape(20.dp)) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(Modifier.padding(16.dp)) {
             Text("Premium Status", style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(4.dp))
 
             Text(
-                text = status.name,
+                text = display.title,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
             )
 
-            Spacer(Modifier.height(8.dp))
-
-            if (status == PremiumStatus.TRIAL) {
-                Text("Trial ends at: $trialEndsAt")
-                Spacer(Modifier.height(4.dp))
-            }
-
-            Text("Premium until: $currentUntil")
+            Spacer(Modifier.height(6.dp))
+            Text(display.subtitle.ifBlank { "—" })
         }
     }
 }
 
 @Composable
 private fun LatestRewardCard(summary: MembershipSummaryDto?) {
-    Card(shape = RoundedCornerShape(20.dp)) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 "Latest reward",
@@ -169,6 +174,9 @@ private fun LatestRewardCard(summary: MembershipSummaryDto?) {
             Spacer(Modifier.height(8.dp))
 
             Text("Source: ${summary?.latestRewardSource ?: "—"}")
+            Text("Channel: ${friendlyRewardChannel(summary?.latestRewardChannel)}")
+            Text("Grant status: ${friendlyGrantStatus(summary?.latestRewardGrantStatus)}")
+            Text("Google defer: ${friendlyGoogleDeferStatus(summary?.latestGoogleDeferStatus)}")
             Text("Granted at: ${MembershipUiMapper.formatDate(summary?.latestGrantedAtUtc)}")
             Text("Old expiry: ${MembershipUiMapper.formatDate(summary?.latestOldPremiumUntil)}")
             Text("New expiry: ${MembershipUiMapper.formatDate(summary?.latestNewPremiumUntil)}")
@@ -178,7 +186,10 @@ private fun LatestRewardCard(summary: MembershipSummaryDto?) {
 
 @Composable
 private fun RewardHistoryRow(item: RewardHistoryItemDto) {
-    Card(shape = RoundedCornerShape(18.dp)) {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 item.sourceType,
@@ -187,6 +198,12 @@ private fun RewardHistoryRow(item: RewardHistoryItemDto) {
 
             Spacer(Modifier.height(4.dp))
 
+            Text("Status: ${friendlyGrantStatus(item.grantStatus)}")
+            Text("Channel: ${friendlyRewardChannel(item.rewardChannel)}")
+            Text("Google defer: ${friendlyGoogleDeferStatus(item.googleDeferStatus)}")
+            item.errorCode?.takeIf { it.isNotBlank() }?.let {
+                Text("Error: $it", color = MaterialTheme.colorScheme.error)
+            }
             Text("Days added: ${item.daysAdded}")
             Text("Granted at: ${MembershipUiMapper.formatDate(item.grantedAtUtc)}")
             Text("Old expiry: ${MembershipUiMapper.formatDate(item.oldPremiumUntil)}")
@@ -209,5 +226,33 @@ private fun EmptyRewardHistoryCard() {
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+    }
+}
+
+private fun friendlyRewardChannel(channel: String?): String {
+    return when (channel) {
+        "GOOGLE_PLAY_DEFER" -> "Google Play billing date extended"
+        "BACKEND_ONLY" -> "Premium reward applied"
+        else -> channel ?: "—"
+    }
+}
+
+
+private fun friendlyGrantStatus(status: String?): String {
+    return when (status) {
+        "SUCCESS", "GRANTED" -> "Success"
+        "FAILED_RETRYABLE" -> "Retrying"
+        "FAILED_FINAL" -> "Not granted"
+        else -> status ?: "—"
+    }
+}
+
+private fun friendlyGoogleDeferStatus(status: String?): String {
+    return when (status) {
+        "SUCCESS" -> "Extended by Google Play"
+        "FAILED_RETRYABLE" -> "Retrying"
+        "FAILED_FINAL" -> "Failed"
+        "NOT_REQUIRED" -> "Not required"
+        else -> status ?: "—"
     }
 }

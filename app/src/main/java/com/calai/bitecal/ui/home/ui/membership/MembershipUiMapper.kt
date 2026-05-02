@@ -11,16 +11,32 @@ object MembershipUiMapper {
 
     fun map(
         status: PremiumStatus,
+        currentPremiumUntil: String? = null,
+        trialDaysLeft: Int? = null,
         paymentIssue: Boolean = false
     ): MembershipDisplay {
         if (paymentIssue && status == PremiumStatus.PREMIUM) {
-            return MembershipDisplay(title = "Payment Issue")
+            return MembershipDisplay(
+                title = "Payment Issue",
+                subtitle = "Update payment"
+            )
         }
 
         return when (status) {
-            PremiumStatus.FREE -> MembershipDisplay(title = "FREE")
-            PremiumStatus.TRIAL -> MembershipDisplay(title = "TRIAL")
-            PremiumStatus.PREMIUM -> MembershipDisplay(title = "PREMIUM")
+            PremiumStatus.FREE -> MembershipDisplay(
+                title = "FREE",
+                subtitle = "Upgrade"
+            )
+
+            PremiumStatus.TRIAL -> MembershipDisplay(
+                title = "TRIAL",
+                subtitle = "${trialDaysLeft ?: 0} days left"
+            )
+
+            PremiumStatus.PREMIUM -> MembershipDisplay(
+                title = "PREMIUM",
+                subtitle = "Until ${formatDate(currentPremiumUntil)}"
+            )
         }
     }
 

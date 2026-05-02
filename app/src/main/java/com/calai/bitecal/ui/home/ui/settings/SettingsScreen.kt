@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Settings
@@ -101,11 +102,13 @@ fun SettingsScreen(
     onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
     premiumStatusText: String = "FREE",
+    premiumStatusSubtitle: String = "Upgrade",
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
     onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
     onOpenSavedFoods: () -> Unit = {},
     onOpenReferral: () -> Unit = {},
+    onOpenNotificationInbox: () -> Unit = {},
     onOpenLanguage: () -> Unit = {},
     onOpenTerms: () -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
@@ -208,7 +211,9 @@ fun SettingsScreen(
             onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
             onOpenWeightHistory = onOpenWeightHistory,
             premiumStatusText = premiumStatusText,
+            premiumStatusSubtitle = premiumStatusSubtitle,
             onOpenReferral = onOpenReferral,
+            onOpenNotificationInbox = onOpenNotificationInbox,
             onOpenLanguage = onOpenLanguage,
             onOpenTerms = onOpenTerms,
             onOpenPrivacy = onOpenPrivacy,
@@ -245,7 +250,9 @@ private fun SettingsContent(
     onOpenGoalAndCurrentWeight: () -> Unit,
     onOpenWeightHistory: () -> Unit,
     premiumStatusText: String,
+    premiumStatusSubtitle: String,
     onOpenReferral: () -> Unit,
+    onOpenNotificationInbox: () -> Unit,
     onOpenLanguage: () -> Unit,
     onOpenTerms: () -> Unit,
     onOpenPrivacy: () -> Unit,
@@ -302,6 +309,7 @@ private fun SettingsContent(
             name = profileName,
             subtitle = ageText,
             premiumStatus = premiumStatusText,
+            premiumSubtitle = premiumStatusSubtitle,
             onClick = onOpenEditName
         )
 
@@ -319,6 +327,8 @@ private fun SettingsContent(
             SettingsRow(icon = Icons.Outlined.Widgets, title = "Weight history", onClick = onOpenWeightHistory)
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Language, title = "Language", onClick = onOpenLanguage)
+            DividerThin()
+            SettingsRow(icon = Icons.Outlined.Notifications, title = "Inbox", onClick = onOpenNotificationInbox)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -363,6 +373,7 @@ private fun ProfileCard(
     name: String,
     subtitle: String,
     premiumStatus: String,
+    premiumSubtitle: String,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(22.dp)
@@ -405,12 +416,22 @@ private fun ProfileCard(
                 )
             }
 
+            Spacer(Modifier.weight(1f))
+
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = premiumStatus,
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF111114)
+                    )
+                )
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    text = premiumSubtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF6B7280),
+                        fontWeight = FontWeight.Medium
                     )
                 )
             }

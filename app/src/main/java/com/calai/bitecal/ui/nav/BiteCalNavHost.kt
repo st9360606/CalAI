@@ -76,6 +76,8 @@ import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadDetailScreen
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
 import com.calai.bitecal.ui.home.ui.membership.MembershipViewModel
+import com.calai.bitecal.ui.home.ui.notifications.NotificationInboxScreen
+import com.calai.bitecal.ui.home.ui.notifications.NotificationInboxViewModel
 import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
@@ -206,6 +208,7 @@ object Routes {
     const val REMINDERS = "reminders"
     const val REFERRALS = "referrals"
     const val PREMIUM_REWARDS = "premium_rewards"
+    const val NOTIFICATION_INBOX = "notification_inbox"
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
@@ -1134,6 +1137,8 @@ fun BiteCalNavHost(
 
             val membershipDisplay = MembershipUiMapper.map(
                 status = membershipUi.premiumStatus,
+                currentPremiumUntil = membershipUi.currentPremiumUntil,
+                trialDaysLeft = membershipUi.trialDaysLeft,
                 paymentIssue = membershipUi.paymentIssue
             )
 
@@ -1215,6 +1220,7 @@ fun BiteCalNavHost(
                         },
                         onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
                         premiumStatusText = membershipDisplay.title,
+                        premiumStatusSubtitle = membershipDisplay.subtitle,
                         canUseScan = membershipUi.canUseScan,
                         onOpenSubscription = {
                             nav.navigate(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
@@ -1224,6 +1230,12 @@ fun BiteCalNavHost(
                         },
                         onOpenReferral = {
                             nav.navigate(Routes.REFERRALS) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenNotificationInbox = {
+                            nav.navigate(Routes.NOTIFICATION_INBOX) {
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -1311,10 +1323,13 @@ fun BiteCalNavHost(
 
             val personalMembershipDisplay = MembershipUiMapper.map(
                 status = membershipUi.premiumStatus,
+                currentPremiumUntil = membershipUi.currentPremiumUntil,
+                trialDaysLeft = membershipUi.trialDaysLeft,
                 paymentIssue = membershipUi.paymentIssue
             )
 
             val premiumStatusText = personalMembershipDisplay.title
+            val premiumStatusSubtitle = personalMembershipDisplay.subtitle
 
             val pUi by settingsVm.ui.collectAsState()
             val wUi by weightVm.ui.collectAsState()
@@ -1348,6 +1363,7 @@ fun BiteCalNavHost(
                     onEditDailyWaterGoal = { nav.navigate(Routes.EDIT_WATER_GOAL) },
                     onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) },
                     premiumStatusText = premiumStatusText,
+                    premiumStatusSubtitle = premiumStatusSubtitle,
                     onOpenPremiumRewards = {
                         nav.navigate(Routes.PREMIUM_REWARDS) {
                             launchSingleTop = true
@@ -2627,6 +2643,41 @@ fun BiteCalNavHost(
                 rewards = ui.rewards,
                 onRetry = { vm.refresh() },
                 onBack = { nav.popBackStack() }
+            )
+        }
+
+
+        composable(Routes.NOTIFICATION_INBOX) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: NotificationInboxViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            val ui by vm.ui.collectAsState()
+
+            NotificationInboxScreen(
+                loading = ui.loading,
+                error = ui.error,
+                items = ui.items,
+                onRetry = { vm.refresh() },
+                onBack = { nav.popBackStack() },
+                onNotificationClick = { item ->
+                    when (item.deepLink) {
+                        "bitecal://premium-rewards" -> nav.navigate(Routes.PREMIUM_REWARDS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+
+                        "bitecal://referrals" -> nav.navigate(Routes.REFERRALS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+
+                        else -> Unit
+                    }
+                }
             )
         }
 
