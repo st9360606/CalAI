@@ -63,7 +63,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.text.style.TextAlign
 private val ReferralPageText = Color(0xFF111114)
 private val ReferralMutedText = Color(0xFF7C8490)
-private val ReferralDivider = Color(0xFFE5E7EB)
 private val ReferralCardWhite = Color.White
 private val ReferralBlack = Color(0xFF111114)
 private val ReferralGold = Color(0xFFFFE7A3)
@@ -282,7 +281,7 @@ private fun ReferralHeroCard(
                         Spacer(Modifier.height(3.dp))
 
                         Text(
-                            text = "Get 30 days free",
+                            text = "Earn 30 days free",
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 color = Color.White,
                                 fontWeight = FontWeight.Black,
@@ -489,7 +488,8 @@ private fun ShareReferralButton(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .padding(vertical = 10.dp)
+            .height(58.dp),
         shape = RoundedCornerShape(999.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = ReferralBlack,
@@ -527,7 +527,7 @@ private fun HowReferralWorksCard() {
                 )
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(9.dp))
 
             ReferralStepRow(
                 number = "1",
@@ -535,7 +535,7 @@ private fun HowReferralWorksCard() {
                 subtitle = "Send your code to a friend who wants to track food smarter."
             )
 
-            StepDivider()
+            Spacer(Modifier.height(8.dp))
 
             ReferralStepRow(
                 number = "2",
@@ -543,7 +543,7 @@ private fun HowReferralWorksCard() {
                 subtitle = "They start a paid BiteCal AI subscription using your invite."
             )
 
-            StepDivider()
+            Spacer(Modifier.height(8.dp))
 
             ReferralStepRow(
                 number = "3",
@@ -671,29 +671,6 @@ private fun ReferralStepRow(
         }
     }
 }
-
-@Composable
-private fun StepDivider() {
-    Row(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Spacer(Modifier.size(14.dp))
-
-        Box(
-            modifier = Modifier
-                .padding(vertical = 3.dp)
-                .height(8.dp)
-                .border(
-                    width = 1.dp,
-                    color = ReferralDivider,
-                    shape = RoundedCornerShape(999.dp)
-                )
-        )
-
-        Spacer(Modifier.size(26.dp))
-    }
-}
-
 private fun shareReferral(
     context: Context,
     promoCode: String
