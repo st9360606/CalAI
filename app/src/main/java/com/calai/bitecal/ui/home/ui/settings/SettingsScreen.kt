@@ -75,6 +75,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.content.ContextCompat
@@ -474,51 +475,161 @@ private fun ProfileAvatar(url: Uri?) {
 private fun InviteFriendsCard(
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(22.dp)
+    val outerShape = RoundedCornerShape(24.dp)
+    val bannerShape = RoundedCornerShape(22.dp)
+
     Card(
-        shape = shape,
+        shape = outerShape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Group, contentDescription = null)
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF3F4F6)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Group,
+                        contentDescription = null,
+                        tint = Color(0xFF111114),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
                 Spacer(Modifier.size(10.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Invite friends",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF111114),
+                            fontSize = 17.sp,
+                            lineHeight = 22.sp
+                        )
+                    )
+
+                    Spacer(Modifier.height(2.dp))
+
+                    Text(
+                        text = "Share smarter food tracking",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFF8A9099),
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp
+                        )
+                    )
+                }
+
                 Text(
-                    text = "Invite friends",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    text = "Premium perk",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = Color(0xFF111114),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        lineHeight = 14.sp
+                    ),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xFFFFF3C4))
+                        .padding(horizontal = 9.dp, vertical = 5.dp)
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(14.dp))
 
-            // ✅ Banner：我先用「純色漸層 + 文案」佔位，避免直接拷貝別人照片素材（上架也比較安全）
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(2.2f)
-                    .clip(RoundedCornerShape(18.dp))
+                    .clip(bannerShape)
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color(0xFF111114), Color(0xFF36363A))
-                        )
-                    )
-                    .padding(16.dp)
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Column {
-                        Text(
-                            text = "The journey\nis easier together.",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                            colors = listOf(
+                                Color(0xFF111114),
+                                Color(0xFF24242A),
+                                Color(0xFF3A2F1D)
                             )
                         )
+                    )
+                    .padding(18.dp)
+            ) {
+                InviteRewardVisual(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 4.dp, y = 4.dp)
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(end = 86.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🎁",
+                            fontSize = 20.sp,
+                            lineHeight = 25.sp
+                        )
+
+                        Spacer(Modifier.size(10.dp))
+
+                        Text(
+                            text = "Premium reward",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                color = Color(0xFFFFE7A3),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                lineHeight = 16.sp
+                            ),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color.White.copy(alpha = 0.12f))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
                     }
+
+                    Spacer(Modifier.height(10.dp))
+
+                    Text(
+                        text = "Share BiteCal AI\nwith your friends",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            lineHeight = 26.sp
+                        ),
+                        modifier = Modifier.padding(end = 86.dp)
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        text = "They subscribe. You get 30 days free.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFFE5E7EB),
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(Modifier.height(14.dp))
 
                     Button(
                         onClick = onClick,
@@ -526,13 +637,85 @@ private fun InviteFriendsCard(
                             containerColor = Color.White,
                             contentColor = Color(0xFF111114)
                         ),
-                        shape = RoundedCornerShape(999.dp)
+                        shape = RoundedCornerShape(999.dp),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                        modifier = Modifier.height(44.dp)
                     ) {
-                        Text("Refer a friend to earn $10")
+                        Text(
+                            text = "Get 30 days free",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        )
                     }
                 }
             }
         }
+    }
+}
+@Composable
+private fun InviteRewardVisual(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.size(88.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(82.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.10f))
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.18f),
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "30",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = Color.White.copy(alpha = 0.92f),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 30.sp,
+                        lineHeight = 31.sp
+                    )
+                )
+
+                Text(
+                    text = "DAYS",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = Color(0xFFFFE7A3),
+                        fontWeight = FontWeight.Black,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp
+                    )
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(17.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = (-2).dp, y = 4.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFE7A3).copy(alpha = 0.85f))
+        )
+
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .align(Alignment.BottomStart)
+                .offset(x = 8.dp, y = (-8).dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.28f))
+        )
     }
 }
 
