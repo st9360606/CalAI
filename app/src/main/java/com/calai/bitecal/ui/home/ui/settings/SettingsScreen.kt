@@ -571,7 +571,7 @@ private fun InviteFriendsCard(
                     ),
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
-                        .background(Color(0xFFFFF3C4))
+                        .background(Color(0xFFFFF7D6))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 )
             }
@@ -585,10 +585,10 @@ private fun InviteFriendsCard(
                     .background(
                         Brush.linearGradient(
                             colors = listOf(
-                                Color(0xFF252B55), // deep navy
-                                Color(0xFF3A2B55), // purple
-                                Color(0xFF633A4B), // wine
-                                Color(0xFF7B4446)  // soft burgundy
+                                Color(0xFF252B55),
+                                Color(0xFF3A2B55),
+                                Color(0xFF633A4B),
+                                Color(0xFF603844)
                             )
                         )
                     )
@@ -694,7 +694,6 @@ private fun InviteFriendsCard(
                             .height(44.dp)
                             .clip(RoundedCornerShape(999.dp))
                             .background(Color.White)
-                            .clickable(onClick = onClick)
                             .padding(horizontal = 18.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -742,10 +741,10 @@ private fun InviteRewardVisual(
             modifier = Modifier
                 .size(86.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.12f))
+                .background(Color.White.copy(alpha = 0.16f))
                 .border(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.22f),
+                    color = Color.White.copy(alpha = 0.28f),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -757,7 +756,7 @@ private fun InviteRewardVisual(
                     .background(Color(0xFF111114))
                     .border(
                         width = 1.dp,
-                        color = Color.White.copy(alpha = 0.16f),
+                        color = Color.White.copy(alpha = 0.18f),
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
