@@ -55,7 +55,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.data.referral.api.ReferralClaimItemDto
 import com.calai.bitecal.ui.home.components.LightHomeBackground
-
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.text.style.TextAlign
 private val ReferralPageText = Color(0xFF111114)
 private val ReferralMutedText = Color(0xFF7C8490)
 private val ReferralDivider = Color(0xFFE5E7EB)
@@ -64,6 +69,7 @@ private val ReferralBlack = Color(0xFF111114)
 private val ReferralGold = Color(0xFFFFE7A3)
 private val ReferralSoftGold = Color(0xFFFFF7D6)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Suppress("UNUSED_PARAMETER")
 @Composable
 fun ReferralScreen(
@@ -78,12 +84,45 @@ fun ReferralScreen(
     onSubmitClaim: (String) -> Unit
 ) {
     val context = LocalContext.current
+    val bg = Color(0xFFF6F7F9)
 
     Box(Modifier.fillMaxSize()) {
         LightHomeBackground()
 
         Scaffold(
-            containerColor = Color.Transparent
+            containerColor = Color.Transparent,
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = "Referral",
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF111114),
+                            textAlign = TextAlign.Center
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                                .height(48.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                modifier = Modifier.height(28.dp)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = bg
+                    ),
+                    modifier = Modifier.statusBarsPadding()
+                )
+            }
         ) { inner ->
             LazyColumn(
                 modifier = Modifier
@@ -92,18 +131,11 @@ fun ReferralScreen(
                 contentPadding = PaddingValues(
                     start = 20.dp,
                     end = 20.dp,
-                    top = 10.dp,
+                    top = 8.dp,
                     bottom = 32.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                item {
-                    ReferralTopBar(
-                        title = "Referral",
-                        onBack = onBack
-                    )
-                }
-
                 item {
                     ReferralHeroCard(
                         promoCode = promoCode
@@ -132,46 +164,6 @@ fun ReferralScreen(
         }
     }
 }
-
-@Composable
-private fun ReferralTopBar(
-    title: String,
-    onBack: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(Color.White)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = ReferralPageText
-            )
-        }
-
-        Spacer(Modifier.size(12.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                color = ReferralPageText,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                lineHeight = 30.sp
-            )
-        )
-    }
-}
-
 @Composable
 private fun ReferralHeroCard(
     promoCode: String
