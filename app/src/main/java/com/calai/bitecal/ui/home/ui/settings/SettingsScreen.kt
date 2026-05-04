@@ -71,13 +71,16 @@ import com.calai.bitecal.ui.home.components.scan.ScanFab
 import com.calai.bitecal.ui.home.ui.settings.delete.DeleteAccountDialog
 import kotlinx.coroutines.launch
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.content.ContextCompat
 import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
@@ -471,12 +474,13 @@ private fun ProfileAvatar(url: Uri?) {
 }
 
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun InviteFriendsCard(
     onClick: () -> Unit
 ) {
     val outerShape = RoundedCornerShape(24.dp)
-    val bannerShape = RoundedCornerShape(22.dp)
+    val panelShape = RoundedCornerShape(22.dp)
 
     Card(
         shape = outerShape,
@@ -494,7 +498,7 @@ private fun InviteFriendsCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
                         .background(Color(0xFFF3F4F6)),
                     contentAlignment = Alignment.Center
@@ -507,7 +511,7 @@ private fun InviteFriendsCard(
                     )
                 }
 
-                Spacer(Modifier.size(10.dp))
+                Spacer(Modifier.size(12.dp))
 
                 Column(
                     modifier = Modifier.weight(1f)
@@ -546,7 +550,7 @@ private fun InviteFriendsCard(
                     modifier = Modifier
                         .clip(RoundedCornerShape(999.dp))
                         .background(Color(0xFFFFF3C4))
-                        .padding(horizontal = 9.dp, vertical = 5.dp)
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 )
             }
 
@@ -555,91 +559,110 @@ private fun InviteFriendsCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(bannerShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF111114),
-                                Color(0xFF24242A),
-                                Color(0xFF3A2F1D)
-                            )
-                        )
+                    .clip(panelShape)
+                    .background(Color(0xFFF8FAFC))
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFFE7EDF3),
+                        shape = panelShape
                     )
-                    .padding(18.dp)
+                    .padding(16.dp)
             ) {
-                InviteRewardVisual(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = 4.dp, y = 4.dp)
-                )
-
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(end = 86.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "🎁",
-                            fontSize = 20.sp,
-                            lineHeight = 25.sp
-                        )
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "🎁",
+                                    fontSize = 19.sp,
+                                    lineHeight = 23.sp
+                                )
 
-                        Spacer(Modifier.size(10.dp))
+                                Spacer(Modifier.size(8.dp))
 
-                        Text(
-                            text = "Premium reward",
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                color = Color(0xFFFFE7A3),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                lineHeight = 16.sp
-                            ),
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(Color.White.copy(alpha = 0.12f))
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                Text(
+                                    text = "Premium reward",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        color = Color(0xFF8A5A00),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        lineHeight = 15.sp
+                                    ),
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(999.dp))
+                                        .background(Color(0xFFFFF3C4))
+                                        .padding(horizontal = 9.dp, vertical = 5.dp)
+                                )
+                            }
+
+                            Spacer(Modifier.height(10.dp))
+
+                            Text(
+                                text = "Share BiteCal AI\nwith your friends",
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF111114),
+                                    fontSize = 22.sp,
+                                    lineHeight = 26.sp
+                                )
+                            )
+                        }
+
+                        Spacer(Modifier.size(12.dp))
+
+                        InviteRewardVisual(
+                            modifier = Modifier.size(82.dp)
                         )
                     }
 
-                    Spacer(Modifier.height(10.dp))
-
-                    Text(
-                        text = "Share BiteCal AI\nwith your friends",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Black,
-                            color = Color.White,
-                            fontSize = 22.sp,
-                            lineHeight = 26.sp
-                        ),
-                        modifier = Modifier.padding(end = 86.dp)
-                    )
-
                     Spacer(Modifier.height(12.dp))
 
-                    Text(
-                        text = "They subscribe. You get 30 days free.",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color(0xFFE5E7EB),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                            lineHeight = 16.sp
-                        ),
+                    BoxWithConstraints(
                         modifier = Modifier.fillMaxWidth()
-                    )
+                    ) {
+                        val rewardDescFontSize = when {
+                            maxWidth < 300.dp -> 10.sp
+                            maxWidth < 340.dp -> 11.sp
+                            else -> 12.sp
+                        }
+
+                        Text(
+                            text = "They subscribe. You get 30 days free.",
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Clip,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Color(0xFF5E6673),
+                                fontWeight = FontWeight.Medium,
+                                fontSize = rewardDescFontSize,
+                                lineHeight = 16.sp
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
 
                     Spacer(Modifier.height(14.dp))
 
                     Button(
                         onClick = onClick,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF111114)
+                            containerColor = Color(0xFF111114),
+                            contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(999.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-                        modifier = Modifier.height(44.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
                     ) {
                         Text(
                             text = "Get 30 days free",
@@ -659,63 +682,74 @@ private fun InviteRewardVisual(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.size(88.dp),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .size(82.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.10f))
+                .background(Color.White)
                 .border(
                     width = 1.dp,
-                    color = Color.White.copy(alpha = 0.18f),
+                    color = Color(0xFFE5E7EB),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF111114)),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "30",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        color = Color.White.copy(alpha = 0.92f),
-                        fontWeight = FontWeight.Black,
-                        fontSize = 30.sp,
-                        lineHeight = 31.sp
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "30",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            color = Color.White,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 27.sp,
+                            lineHeight = 28.sp
+                        )
                     )
-                )
 
-                Text(
-                    text = "DAYS",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = Color(0xFFFFE7A3),
-                        fontWeight = FontWeight.Black,
-                        fontSize = 10.sp,
-                        lineHeight = 12.sp
+                    Text(
+                        text = "DAYS",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Color(0xFFFFE7A3),
+                            fontWeight = FontWeight.Black,
+                            fontSize = 9.sp,
+                            lineHeight = 11.sp
+                        )
                     )
-                )
+                }
             }
         }
 
         Box(
             modifier = Modifier
-                .size(17.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (-2).dp, y = 4.dp)
+                .size(25.dp)
+                .align(Alignment.BottomEnd)
+                .offset(x = 1.dp, y = 1.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFE7A3).copy(alpha = 0.85f))
-        )
-
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .align(Alignment.BottomStart)
-                .offset(x = 8.dp, y = (-8).dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.28f))
-        )
+                .background(Color(0xFFFFF3C4))
+                .border(
+                    width = 1.dp,
+                    color = Color.White,
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "🎁",
+                fontSize = 13.sp,
+                lineHeight = 15.sp
+            )
+        }
     }
 }
 
