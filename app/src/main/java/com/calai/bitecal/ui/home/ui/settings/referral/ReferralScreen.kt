@@ -71,7 +71,10 @@ private val ReferralMutedText = Color(0xFF7C8490)
 private val ReferralCardWhite = Color.White
 private val ReferralBlack = Color(0xFF111114)
 private val ReferralGold = Color(0xFFFFE7A3)
-private val ReferralSoftGold = Color(0xFFFFF7D6)
+private val ReferralNoticeGray = Color(0xFFF3F4F6)
+private val ReferralNoticeBorder = Color(0xFFE5E7EB)
+private val ReferralNoticeText = Color(0xFF6B7280)
+private val ReferralNoticeIcon = Color(0xFF979DA7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("UNUSED_PARAMETER")
@@ -162,6 +165,7 @@ fun ReferralScreen(
 
                 item {
                     ShareReferralButton(
+                        modifier = Modifier.padding(bottom = 4.dp),
                         onClick = {
                             shareReferral(
                                 context = context,
@@ -318,7 +322,7 @@ private fun ReferralHeroCard(
                     )
                 }
 
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(16.dp))
 
                 PromoCodePanel(
                     promoCode = promoCode,
@@ -479,7 +483,7 @@ private fun PromoCodePanel(
                 color = Color.White.copy(alpha = 0.16f),
                 shape = RoundedCornerShape(22.dp)
             )
-            .padding(14.dp),
+            .padding(horizontal = 14.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
@@ -544,11 +548,12 @@ private fun PromoCodePanel(
 
 @Composable
 private fun ShareReferralButton(
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
         shape = RoundedCornerShape(999.dp),
@@ -619,59 +624,20 @@ private fun HowReferralWorksCard() {
 @Composable
 private fun RewardRuleNoticeCard() {
     Card(
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = ReferralSoftGold),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = ReferralCardWhite),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.Top
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.78f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "i",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = ReferralBlack,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 15.sp
-                    )
-                )
-            }
-
-            Spacer(Modifier.size(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "Reward rule",
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        color = ReferralPageText,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        lineHeight = 18.sp
-                    )
-                )
-
-                Spacer(Modifier.height(3.dp))
-
-                Text(
-                    text = "You’ll receive the reward only after your invited friend subscribes and does not request a refund.",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF6B5A24),
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp
-                    )
-                )
-            }
+            ReferralStepRow(
+                number = "i",
+                title = "Reward rule",
+                subtitle = "You’ll receive the reward only after your invited friend subscribes and does not request a refund.",
+                circleColor = Color(0xFF52525B)
+            )
         }
     }
 }
@@ -680,7 +646,8 @@ private fun RewardRuleNoticeCard() {
 private fun ReferralStepRow(
     number: String,
     title: String,
-    subtitle: String
+    subtitle: String,
+    circleColor: Color = ReferralBlack
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -690,7 +657,7 @@ private fun ReferralStepRow(
             modifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background(ReferralBlack),
+                .background(circleColor),
             contentAlignment = Alignment.Center
         ) {
             Text(
