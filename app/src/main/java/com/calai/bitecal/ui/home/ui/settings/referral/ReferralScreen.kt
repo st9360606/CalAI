@@ -1,5 +1,8 @@
 package com.calai.bitecal.ui.home.ui.settings.referral
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -25,6 +28,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -42,6 +47,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,6 +77,8 @@ fun ReferralScreen(
     onBack: () -> Unit,
     onSubmitClaim: (String) -> Unit
 ) {
+    val context = LocalContext.current
+
     Box(Modifier.fillMaxSize()) {
         LightHomeBackground()
 
@@ -98,8 +106,18 @@ fun ReferralScreen(
 
                 item {
                     ReferralHeroCard(
-                        promoCode = promoCode,
-                        successCount = successCount
+                        promoCode = promoCode
+                    )
+                }
+
+                item {
+                    ShareReferralButton(
+                        onClick = {
+                            shareReferral(
+                                context = context,
+                                promoCode = promoCode
+                            )
+                        }
                     )
                 }
 
@@ -156,8 +174,7 @@ private fun ReferralTopBar(
 
 @Composable
 private fun ReferralHeroCard(
-    promoCode: String,
-    successCount: Long
+    promoCode: String
 ) {
     val clipboardManager = LocalClipboardManager.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -473,6 +490,31 @@ private fun PromoCodePanel(
 }
 
 @Composable
+private fun ShareReferralButton(
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(999.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = ReferralBlack,
+            contentColor = Color.White
+        )
+    ) {
+        Text(
+            text = "Share",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+        )
+    }
+}
+
+@Composable
 private fun HowReferralWorksCard() {
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -657,6 +699,42 @@ private fun StepDivider() {
         )
 
         Spacer(Modifier.size(26.dp))
+    }
+}
+
+private fun shareReferral(
+    context: Context,
+    promoCode: String
+) {
+    val safePromoCode = promoCode.trim().ifBlank { "BITE-CAL" }
+
+    val appUrl = "https://play.google.com/store/apps/details?id=${context.packageName}"
+
+    val shareText = buildString {
+        appendLine("Join me on BiteCal AI! My referral code is:")
+        appendLine(safePromoCode)
+        appendLine()
+        append(appUrl)
+    }
+
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, "Join me on BiteCal AI")
+        putExtra(Intent.EXTRA_TEXT, shareText)
+    }
+
+    val chooserIntent = Intent.createChooser(shareIntent, "Share via").apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    runCatching {
+        context.startActivity(chooserIntent)
+    }.onFailure {
+        Toast.makeText(
+            context.applicationContext,
+            "Unable to open share options.",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
 
