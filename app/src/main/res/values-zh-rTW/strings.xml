@@ -451,4 +451,31 @@
     <string name="home_nutrition_ratio_grams">%1$d / %2$d克</string>
 
 
+    <!-- Referral Screen -->
+    <string name="referral_title">邀請好友</string>
+    <string name="common_back">返回</string>
+
+    <string name="referral_premium_reward">Premium 獎勵</string>
+    <string name="referral_invite_friends">邀請好友</string>
+    <string name="referral_earn_30_days_free">獲得 30 天免費</string>
+    <string name="referral_reward_unlocks_after_no_refund">好友訂閱且沒有退款後，即可解鎖獎勵。</string>
+
+    <string name="referral_code_copied">邀請碼已複製。</string>
+    <string name="referral_your_promo_code">你的邀請碼</string>
+    <string name="referral_copy">複製</string>
+    <string name="referral_share">分享</string>
+
+    <string name="referral_how_it_works">如何獲得獎勵</string>
+    <string name="referral_step_1_title">分享你的邀請碼</string>
+    <string name="referral_step_1_subtitle">把邀請碼傳給想更聰明記錄飲食的朋友。</string>
+    <string name="referral_step_2_title">好友完成訂閱</string>
+    <string name="referral_step_2_subtitle">好友使用你的邀請碼開始 BiteCal AI 付費訂閱。</string>
+    <string name="referral_step_3_title">未退款後發放獎勵</string>
+    <string name="referral_step_3_subtitle">訂閱驗證完成且未退款後，你的 Premium 期間將會延長。</string>
+
+    <string name="referral_share_subject">一起使用 BiteCal AI</string>
+    <string name="referral_share_chooser_title">選擇分享方式</string>
+    <string name="referral_share_text">一起使用 BiteCal AI！我的邀請碼是：\n%1$s\n\n%2$s</string>
+    <string name="referral_unable_to_open_share_options">無法開啟分享選項。</string>
+
 </resources>

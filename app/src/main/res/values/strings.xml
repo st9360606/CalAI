@@ -451,5 +451,32 @@
     <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
     <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
 
+    <!-- Referral Screen -->
+    <string name="referral_title">Referral</string>
+    <string name="common_back">Back</string>
+
+    <string name="referral_premium_reward">Premium reward</string>
+    <string name="referral_invite_friends">Invite friends</string>
+    <string name="referral_earn_30_days_free">Earn 30 days free</string>
+    <string name="referral_reward_unlocks_after_no_refund">Reward unlocks after your friend subscribes with no refund.</string>
+
+    <string name="referral_code_copied">Referral code copied.</string>
+    <string name="referral_your_promo_code">Your promo code</string>
+    <string name="referral_copy">Copy</string>
+    <string name="referral_share">Share</string>
+
+    <string name="referral_how_it_works">How it works</string>
+    <string name="referral_step_1_title">Share your promo code</string>
+    <string name="referral_step_1_subtitle">Send your code to a friend who wants to track food smarter.</string>
+    <string name="referral_step_2_title">Your friend subscribes</string>
+    <string name="referral_step_2_subtitle">They start a paid BiteCal AI subscription using your invite.</string>
+    <string name="referral_step_3_title">No refund, then reward</string>
+    <string name="referral_step_3_subtitle">After the subscription is verified with no refund, your premium period is extended.</string>
+
+    <string name="referral_share_subject">Join me on BiteCal AI</string>
+    <string name="referral_share_chooser_title">Share via</string>
+    <string name="referral_share_text">Join me on BiteCal AI! My referral code is:\n%1$s\n\n%2$s</string>
+    <string name="referral_unable_to_open_share_options">Unable to open share options.</string>
+
 
 </resources>

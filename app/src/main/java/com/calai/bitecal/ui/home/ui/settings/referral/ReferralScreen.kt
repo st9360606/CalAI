@@ -3,25 +3,23 @@ package com.calai.bitecal.ui.home.ui.settings.referral
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,49 +30,45 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
 import com.calai.bitecal.data.referral.api.ReferralClaimItemDto
 import com.calai.bitecal.ui.home.components.LightHomeBackground
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.ClipboardManager
-import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.delay
 private val ReferralPageText = Color(0xFF111114)
 private val ReferralMutedText = Color(0xFF7C8490)
 private val ReferralCardWhite = Color.White
 private val ReferralBlack = Color(0xFF111114)
 private val ReferralGold = Color(0xFFFFE7A3)
-private val ReferralNoticeGray = Color(0xFFF3F4F6)
-private val ReferralNoticeBorder = Color(0xFFE5E7EB)
-private val ReferralNoticeText = Color(0xFF6B7280)
-private val ReferralNoticeIcon = Color(0xFF979DA7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("UNUSED_PARAMETER")
@@ -94,7 +88,7 @@ fun ReferralScreen(
     val bg = Color(0xFFF6F7F9)
 
     var showCopyTopToast by remember { mutableStateOf(false) }
-    var copyToastTick by remember { mutableStateOf(0) }
+    var copyToastTick by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(copyToastTick) {
         if (copyToastTick > 0) {
@@ -114,7 +108,7 @@ fun ReferralScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Referral",
+                            text = stringResource(R.string.referral_title),
                             fontSize = 19.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF111114),
@@ -130,7 +124,7 @@ fun ReferralScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = stringResource(R.string.common_back),
                                 modifier = Modifier.height(28.dp)
                             )
                         }
@@ -165,7 +159,7 @@ fun ReferralScreen(
 
                 item {
                     ShareReferralButton(
-                        modifier = Modifier.padding(bottom = 4.dp),
+                        modifier = Modifier.padding(top = 10.dp, bottom = 12.dp),
                         onClick = {
                             shareReferral(
                                 context = context,
@@ -174,13 +168,8 @@ fun ReferralScreen(
                         }
                     )
                 }
-
                 item {
                     HowReferralWorksCard()
-                }
-
-                item {
-                    RewardRuleNoticeCard()
                 }
             }
         }
@@ -261,7 +250,7 @@ private fun ReferralHeroCard(
                             Spacer(Modifier.size(8.dp))
 
                             Text(
-                                text = "Premium reward",
+                                text = stringResource(R.string.referral_premium_reward),
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     color = ReferralGold,
                                     fontWeight = FontWeight.Bold,
@@ -283,7 +272,7 @@ private fun ReferralHeroCard(
                         Spacer(Modifier.height(14.dp))
 
                         Text(
-                            text = "Invite friends",
+                            text = stringResource(R.string.referral_invite_friends),
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 color = Color.White,
                                 fontWeight = FontWeight.Black,
@@ -295,7 +284,7 @@ private fun ReferralHeroCard(
                         Spacer(Modifier.height(3.dp))
 
                         Text(
-                            text = "Earn 30 days free",
+                            text = stringResource(R.string.referral_earn_30_days_free),
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 color = Color.White,
                                 fontWeight = FontWeight.Black,
@@ -307,7 +296,7 @@ private fun ReferralHeroCard(
                         Spacer(Modifier.height(8.dp))
 
                         Text(
-                            text = "Reward unlocks after your friend subscribes with no refund.",
+                            text = stringResource(R.string.referral_reward_unlocks_after_no_refund),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = Color.White.copy(alpha = 0.82f),
                                 fontWeight = FontWeight.Medium,
@@ -376,7 +365,7 @@ private fun CopyTopToast(
         Spacer(Modifier.size(8.dp))
 
         Text(
-            text = "Referral code copied.",
+            text = stringResource(R.string.referral_code_copied),
             style = MaterialTheme.typography.labelLarge.copy(
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
@@ -490,7 +479,7 @@ private fun PromoCodePanel(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = "Your promo code",
+                text = stringResource(R.string.referral_your_promo_code),
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = Color.White.copy(alpha = 0.72f),
                     fontWeight = FontWeight.SemiBold,
@@ -527,7 +516,7 @@ private fun PromoCodePanel(
         ) {
             Icon(
                 imageVector = Icons.Outlined.ContentCopy,
-                contentDescription = "Copy",
+                contentDescription = stringResource(R.string.referral_copy),
                 tint = ReferralBlack,
                 modifier = Modifier.size(17.dp)
             )
@@ -535,7 +524,7 @@ private fun PromoCodePanel(
             Spacer(Modifier.size(7.dp))
 
             Text(
-                text = "Copy",
+                text = stringResource(R.string.referral_copy),
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = ReferralBlack,
                     fontWeight = FontWeight.Bold,
@@ -564,7 +553,7 @@ private fun ShareReferralButton(
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         Text(
-            text = "Share",
+            text = stringResource(R.string.referral_share),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
@@ -585,7 +574,7 @@ private fun HowReferralWorksCard() {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "How it works",
+                text = stringResource(R.string.referral_how_it_works),
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = ReferralPageText,
                     fontWeight = FontWeight.Bold,
@@ -594,53 +583,34 @@ private fun HowReferralWorksCard() {
                 )
             )
 
-            Spacer(Modifier.height(9.dp))
+            Spacer(Modifier.height(12.dp))
 
             ReferralStepRow(
                 number = "1",
-                title = "Share your promo code",
-                subtitle = "Send your code to a friend who wants to track food smarter."
+                title = stringResource(R.string.referral_step_1_title),
+                subtitle = stringResource(R.string.referral_step_1_subtitle)
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
             ReferralStepRow(
                 number = "2",
-                title = "Your friend subscribes",
-                subtitle = "They start a paid BiteCal AI subscription using your invite."
+                title = stringResource(R.string.referral_step_2_title),
+                subtitle = stringResource(R.string.referral_step_2_subtitle)
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
             ReferralStepRow(
                 number = "3",
-                title = "No refund, then reward",
-                subtitle = "After the subscription is verified with no refund, your premium period is extended."
+                title = stringResource(R.string.referral_step_3_title),
+                subtitle = stringResource(R.string.referral_step_3_subtitle)
             )
         }
     }
 }
 
-@Composable
-private fun RewardRuleNoticeCard() {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = ReferralCardWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            ReferralStepRow(
-                number = "i",
-                title = "Reward rule",
-                subtitle = "You’ll receive the reward only after your invited friend subscribes and does not request a refund.",
-                circleColor = Color(0xFF52525B)
-            )
-        }
-    }
-}
+
 
 @Composable
 private fun ReferralStepRow(
@@ -655,7 +625,7 @@ private fun ReferralStepRow(
     ) {
         Box(
             modifier = Modifier
-                .size(28.dp)
+                .size(24.dp)
                 .clip(CircleShape)
                 .background(circleColor),
             contentAlignment = Alignment.Center
@@ -665,8 +635,8 @@ private fun ReferralStepRow(
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = Color.White,
                     fontWeight = FontWeight.Black,
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp
+                    fontSize = 11.sp,
+                    lineHeight = 13.sp
                 )
             )
         }
@@ -708,20 +678,25 @@ private fun shareReferral(
 
     val appUrl = "https://play.google.com/store/apps/details?id=${context.packageName}"
 
-    val shareText = buildString {
-        appendLine("Join me on BiteCal AI! My referral code is:")
-        appendLine(safePromoCode)
-        appendLine()
-        append(appUrl)
-    }
+    val shareText = context.getString(
+        R.string.referral_share_text,
+        safePromoCode,
+        appUrl
+    )
 
     val shareIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_SUBJECT, "Join me on BiteCal AI")
+        putExtra(
+            Intent.EXTRA_SUBJECT,
+            context.getString(R.string.referral_share_subject)
+        )
         putExtra(Intent.EXTRA_TEXT, shareText)
     }
 
-    val chooserIntent = Intent.createChooser(shareIntent, "Share via").apply {
+    val chooserIntent = Intent.createChooser(
+        shareIntent,
+        context.getString(R.string.referral_share_chooser_title)
+    ).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
@@ -730,7 +705,7 @@ private fun shareReferral(
     }.onFailure {
         Toast.makeText(
             context.applicationContext,
-            "Unable to open share options.",
+            context.getString(R.string.referral_unable_to_open_share_options),
             Toast.LENGTH_SHORT
         ).show()
     }
