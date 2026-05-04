@@ -60,7 +60,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
 private val ReferralPageText = Color(0xFF111114)
 private val ReferralMutedText = Color(0xFF7C8490)
 private val ReferralCardWhite = Color.White
@@ -84,6 +89,17 @@ fun ReferralScreen(
 ) {
     val context = LocalContext.current
     val bg = Color(0xFFF6F7F9)
+
+    var showCopyTopToast by remember { mutableStateOf(false) }
+    var copyToastTick by remember { mutableStateOf(0) }
+
+    LaunchedEffect(copyToastTick) {
+        if (copyToastTick > 0) {
+            showCopyTopToast = true
+            delay(1600)
+            showCopyTopToast = false
+        }
+    }
 
     Box(Modifier.fillMaxSize()) {
         LightHomeBackground()
@@ -137,7 +153,10 @@ fun ReferralScreen(
             ) {
                 item {
                     ReferralHeroCard(
-                        promoCode = promoCode
+                        promoCode = promoCode,
+                        onCopied = {
+                            copyToastTick += 1
+                        }
                     )
                 }
 
@@ -161,38 +180,29 @@ fun ReferralScreen(
                 }
             }
         }
+
+        if (showCopyTopToast) {
+            CopyTopToast(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 50.dp)
+            )
+        }
     }
 }
 @Composable
 private fun ReferralHeroCard(
-    promoCode: String
+    promoCode: String,
+    onCopied: () -> Unit
 ) {
     val clipboardManager = LocalClipboardManager.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val cardScale by animateFloatAsState(
-        targetValue = if (pressed) 0.985f else 1f,
-        animationSpec = spring(
-            dampingRatio = 0.78f,
-            stiffness = 520f
-        ),
-        label = "ReferralHeroCardScale"
-    )
 
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(cardScale)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = {
-                    clipboardManager.setText(AnnotatedString(promoCode))
-                }
-            )
+        modifier = Modifier.fillMaxWidth()
     ) {
         Box(
             modifier = Modifier
@@ -313,11 +323,63 @@ private fun ReferralHeroCard(
                 PromoCodePanel(
                     promoCode = promoCode,
                     onCopy = {
-                        clipboardManager.setText(AnnotatedString(promoCode))
+                        copyReferralCode(
+                            clipboardManager = clipboardManager,
+                            promoCode = promoCode
+                        )
+                        onCopied()
                     }
                 )
             }
         }
+    }
+}
+
+private fun copyReferralCode(
+    clipboardManager: ClipboardManager,
+    promoCode: String
+) {
+    val safePromoCode = promoCode.trim().ifBlank { "BITE-CAL" }
+
+    clipboardManager.setText(
+        AnnotatedString(safePromoCode)
+    )
+}
+
+@Composable
+private fun CopyTopToast(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(ReferralBlack.copy(alpha = 0.94f))
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(999.dp)
+            )
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ContentCopy,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
+        )
+
+        Spacer(Modifier.size(8.dp))
+
+        Text(
+            text = "Referral code copied.",
+            style = MaterialTheme.typography.labelLarge.copy(
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                lineHeight = 16.sp
+            )
+        )
     }
 }
 
@@ -488,13 +550,13 @@ private fun ShareReferralButton(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
-            .height(58.dp),
+            .height(56.dp),
         shape = RoundedCornerShape(999.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = ReferralBlack,
             contentColor = Color.White
-        )
+        ),
+        contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         Text(
             text = "Share",
