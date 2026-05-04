@@ -71,10 +71,7 @@ fun PersonalDetailsScreen(
     onEditDailyStepGoal: () -> Unit = {},
     onEditStartingWeight: () -> Unit = {},
     onEditDailyWaterGoal: () -> Unit = {},
-    onEditDailyWorkoutGoal: () -> Unit = {},
-    premiumStatusText: String = "FREE",
-    premiumStatusSubtitle: String = "Upgrade",
-    onOpenPremiumRewards: () -> Unit = {},
+    onEditDailyWorkoutGoal: () -> Unit = {}
 ) {
     val bg = Color(0xFFF6F7F9)
     val cardShape = RoundedCornerShape(22.dp)
@@ -202,18 +199,6 @@ fun PersonalDetailsScreen(
                         lbs = currentLbsFromTimeseries ?: profile?.weightLbs,
                         unit = unit
                     )
-
-                    PersonalDetailsRow(
-                        title = "Subscription",
-                        valueMain = premiumStatusText,
-                        valueSub = premiumStatusSubtitle,
-                        titleOffsetY = 1.dp,
-                        valueOffsetY = 1.dp,
-                        titleFontSize = titleSize,
-                        onClick = onOpenPremiumRewards
-                    )
-
-                    PersonalRowDivider(outline)
 
                     PersonalDetailsRow(
                         title = "Current Weight",

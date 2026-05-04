@@ -1289,7 +1289,9 @@ fun BiteCalNavHost(
 
         composable(Routes.PERSONAL_DETAILS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val homeBackStackEntry = remember(backStackEntry) {
+                nav.getBackStackEntry(Routes.HOME)
+            }
 
             val settingsVm: SettingsViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
@@ -1301,35 +1303,10 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            /**
-             * ✅ 關鍵修正：
-             * PersonalDetails 不再使用 PremiumRewardsViewModel 自己讀 membership summary。
-             *
-             * 改成跟 Home / Settings 共用 Home scope 的 MembershipViewModel，
-             * 這樣付款成功、trial、過期、退款撤銷後，三個畫面的訂閱狀態會一致。
-             */
-            val membershipVm: MembershipViewModel = viewModel(
-                viewModelStoreOwner = homeBackStackEntry,
-                factory = HiltViewModelFactory(activity, homeBackStackEntry)
-            )
-
-            val membershipUi by membershipVm.ui.collectAsState()
-
             LaunchedEffect(Unit) {
                 settingsVm.refreshProfileOnly()
                 weightVm.initIfNeeded()
-                membershipVm.refresh()
             }
-
-            val personalMembershipDisplay = MembershipUiMapper.map(
-                status = membershipUi.premiumStatus,
-                currentPremiumUntil = membershipUi.currentPremiumUntil,
-                trialDaysLeft = membershipUi.trialDaysLeft,
-                paymentIssue = membershipUi.paymentIssue
-            )
-
-            val premiumStatusText = personalMembershipDisplay.title
-            val premiumStatusSubtitle = personalMembershipDisplay.subtitle
 
             val pUi by settingsVm.ui.collectAsState()
             val wUi by weightVm.ui.collectAsState()
@@ -1340,11 +1317,11 @@ fun BiteCalNavHost(
             val errorFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.ERROR_TOAST, null)
             }
+
             val navSuccess by successFlow.collectAsState(initial = null)
             val navError by errorFlow.collectAsState(initial = null)
 
             Box(Modifier.fillMaxSize()) {
-
                 PersonalDetailsScreen(
                     profile = pUi.profile,
                     unit = wUi.unit,
@@ -1361,15 +1338,7 @@ fun BiteCalNavHost(
                     onEditDailyStepGoal = { nav.navigate(Routes.EDIT_DAILY_STEP_GOAL) },
                     onEditStartingWeight = { nav.navigate(Routes.EDIT_STARTING_WEIGHT) },
                     onEditDailyWaterGoal = { nav.navigate(Routes.EDIT_WATER_GOAL) },
-                    onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) },
-                    premiumStatusText = premiumStatusText,
-                    premiumStatusSubtitle = premiumStatusSubtitle,
-                    onOpenPremiumRewards = {
-                        nav.navigate(Routes.PREMIUM_REWARDS) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) }
                 )
 
                 when {
@@ -1378,6 +1347,7 @@ fun BiteCalNavHost(
                             message = navError!!,
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
+
                         LaunchedEffect(navError) {
                             delay(2_000)
                             backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
@@ -1391,6 +1361,7 @@ fun BiteCalNavHost(
                             minWidth = 150.dp,
                             minHeight = 30.dp
                         )
+
                         LaunchedEffect(navSuccess) {
                             delay(2_000)
                             backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
