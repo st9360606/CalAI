@@ -583,7 +583,7 @@ private fun HowReferralWorksCard() {
                 )
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(15.dp))
 
             ReferralStepRow(
                 number = "1",
@@ -591,7 +591,7 @@ private fun HowReferralWorksCard() {
                 subtitle = stringResource(R.string.referral_step_1_subtitle)
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(15.dp))
 
             ReferralStepRow(
                 number = "2",
@@ -599,7 +599,7 @@ private fun HowReferralWorksCard() {
                 subtitle = stringResource(R.string.referral_step_2_subtitle)
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(15.dp))
 
             ReferralStepRow(
                 number = "3",
@@ -663,8 +663,8 @@ private fun ReferralStepRow(
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = ReferralMutedText,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
                 )
             )
         }

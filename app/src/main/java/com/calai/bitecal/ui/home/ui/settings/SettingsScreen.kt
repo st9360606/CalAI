@@ -518,22 +518,14 @@ private fun InviteFriendsCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFF3F4F6)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Group,
-                        contentDescription = null,
-                        tint = Color(0xFF111114),
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.Group,
+                    contentDescription = null,
+                    tint = Color(0xFF111114),
+                    modifier = Modifier.size(22.dp)
+                )
 
-                Spacer(Modifier.size(12.dp))
+                Spacer(Modifier.size(8.dp))
 
                 Column(
                     modifier = Modifier.weight(1f)
@@ -547,36 +539,10 @@ private fun InviteFriendsCard(
                             lineHeight = 22.sp
                         )
                     )
-
-                    Spacer(Modifier.height(2.dp))
-
-                    Text(
-                        text = "Share smarter food tracking",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color(0xFF8A9099),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                            lineHeight = 16.sp
-                        )
-                    )
                 }
-
-                Text(
-                    text = "Premium perk",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = Color(0xFF111114),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        lineHeight = 14.sp
-                    ),
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Color(0xFFFFF7D6))
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                )
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
 
             Box(
                 modifier = Modifier
