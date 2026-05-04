@@ -76,10 +76,16 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.core.content.ContextCompat
 import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
@@ -482,13 +488,29 @@ private fun InviteFriendsCard(
     val outerShape = RoundedCornerShape(24.dp)
     val panelShape = RoundedCornerShape(22.dp)
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val cardScale by animateFloatAsState(
+        targetValue = if (pressed) 0.985f else 1f,
+        animationSpec = spring(
+            dampingRatio = 0.78f,
+            stiffness = 520f
+        ),
+        label = "InviteFriendsCardScale"
+    )
+
     Card(
         shape = outerShape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .scale(cardScale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -560,10 +582,19 @@ private fun InviteFriendsCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(panelShape)
-                    .background(Color(0xFFF8FAFC))
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF252B55), // deep navy
+                                Color(0xFF3A2B55), // purple
+                                Color(0xFF633A4B), // wine
+                                Color(0xFF7B4446)  // soft burgundy
+                            )
+                        )
+                    )
                     .border(
                         width = 1.dp,
-                        color = Color(0xFFE7EDF3),
+                        color = Color.White.copy(alpha = 0.14f),
                         shape = panelShape
                     )
                     .padding(16.dp)
@@ -592,14 +623,19 @@ private fun InviteFriendsCard(
                                 Text(
                                     text = "Premium reward",
                                     style = MaterialTheme.typography.labelLarge.copy(
-                                        color = Color(0xFF8A5A00),
+                                        color = Color(0xFFFFE7A3),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 12.sp,
                                         lineHeight = 15.sp
                                     ),
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(999.dp))
-                                        .background(Color(0xFFFFF3C4))
+                                        .background(Color.White.copy(alpha = 0.13f))
+                                        .border(
+                                            width = 1.dp,
+                                            color = Color.White.copy(alpha = 0.16f),
+                                            shape = RoundedCornerShape(999.dp)
+                                        )
                                         .padding(horizontal = 9.dp, vertical = 5.dp)
                                 )
                             }
@@ -610,7 +646,7 @@ private fun InviteFriendsCard(
                                 text = "Share BiteCal AI\nwith your friends",
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontWeight = FontWeight.Black,
-                                    color = Color(0xFF111114),
+                                    color = Color.White,
                                     fontSize = 22.sp,
                                     lineHeight = 26.sp
                                 )
@@ -620,7 +656,7 @@ private fun InviteFriendsCard(
                         Spacer(Modifier.size(12.dp))
 
                         InviteRewardVisual(
-                            modifier = Modifier.size(82.dp)
+                            modifier = Modifier.size(86.dp)
                         )
                     }
 
@@ -641,7 +677,7 @@ private fun InviteFriendsCard(
                             softWrap = false,
                             overflow = TextOverflow.Clip,
                             style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color(0xFF5E6673),
+                                color = Color.White.copy(alpha = 0.84f),
                                 fontWeight = FontWeight.Medium,
                                 fontSize = rewardDescFontSize,
                                 lineHeight = 16.sp
@@ -652,25 +688,42 @@ private fun InviteFriendsCard(
 
                     Spacer(Modifier.height(14.dp))
 
-                    Button(
-                        onClick = onClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF111114),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(999.dp),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(44.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color.White)
+                            .clickable(onClick = onClick)
+                            .padding(horizontal = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
                             text = "Get 30 days free",
                             style = MaterialTheme.typography.labelLarge.copy(
+                                color = Color(0xFF111114),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
                         )
+
+                        Spacer(Modifier.size(8.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF111114)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -687,21 +740,26 @@ private fun InviteRewardVisual(
     ) {
         Box(
             modifier = Modifier
-                .size(82.dp)
+                .size(86.dp)
                 .clip(CircleShape)
-                .background(Color.White)
+                .background(Color.White.copy(alpha = 0.12f))
                 .border(
                     width = 1.dp,
-                    color = Color(0xFFE5E7EB),
+                    color = Color.White.copy(alpha = 0.22f),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(68.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF111114)),
+                    .background(Color(0xFF111114))
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.16f),
+                        shape = CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -712,15 +770,15 @@ private fun InviteRewardVisual(
                         style = MaterialTheme.typography.headlineMedium.copy(
                             color = Color.White,
                             fontWeight = FontWeight.Black,
-                            fontSize = 27.sp,
-                            lineHeight = 28.sp
+                            fontSize = 29.sp,
+                            lineHeight = 30.sp
                         )
                     )
 
                     Text(
                         text = "DAYS",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color(0xFFFFE7A3),
+                            color = Color.White.copy(alpha = 0.92f),
                             fontWeight = FontWeight.Black,
                             fontSize = 9.sp,
                             lineHeight = 11.sp
@@ -732,24 +790,33 @@ private fun InviteRewardVisual(
 
         Box(
             modifier = Modifier
-                .size(25.dp)
+                .size(27.dp)
                 .align(Alignment.BottomEnd)
                 .offset(x = 1.dp, y = 1.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFF3C4))
+                .background(Color(0xFFFFE7A3))
                 .border(
                     width = 1.dp,
-                    color = Color.White,
+                    color = Color.White.copy(alpha = 0.75f),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "🎁",
-                fontSize = 13.sp,
-                lineHeight = 15.sp
+                fontSize = 14.sp,
+                lineHeight = 16.sp
             )
         }
+
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = (-5).dp, y = 8.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.34f))
+        )
     }
 }
 
