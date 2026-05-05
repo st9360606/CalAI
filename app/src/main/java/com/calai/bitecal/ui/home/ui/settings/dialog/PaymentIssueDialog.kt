@@ -113,7 +113,7 @@ fun PaymentIssueDialog(
 
                     Text(
                         text = "Update your Google Play payment method to avoid losing AI scan and Premium features.",
-                        color = Color(0xFF7A4A52),
+                        color = Color(0xFF71717A),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
                         fontWeight = FontWeight.Medium,
@@ -208,17 +208,23 @@ private fun DialogHeader(
         IconButton(
             onClick = onDismiss,
             modifier = Modifier
-                .size(34.dp)
+                .size(40.dp)
                 .align(Alignment.CenterEnd)
-                .clip(CircleShape)
-                .background(Color(0xFFF4F4F5))
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color(0xFF3F3F46),
-                modifier = Modifier.size(17.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF4F4F5)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF3F3F46),
+                    modifier = Modifier.size(17.dp)
+                )
+            }
         }
     }
 }
@@ -232,14 +238,14 @@ private fun PaymentIssueHero() {
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFFFFF1F2),
-                        Color(0xFFFFF7ED)
+                        Color(0xFFF8FAFC),
+                        Color(0xFFE5E7EB)
                     )
                 )
             )
             .border(
                 width = 1.dp,
-                color = Color(0xFFFFD6DD),
+                color = Color(0xFFE5E7EB),
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
@@ -251,7 +257,7 @@ private fun PaymentIssueHero() {
                 .background(Color.White)
                 .border(
                     width = 1.dp,
-                    color = Color(0xFFFFE4E6),
+                    color = Color(0xFFE5E7EB),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -259,7 +265,7 @@ private fun PaymentIssueHero() {
             Icon(
                 imageVector = Icons.Outlined.CreditCard,
                 contentDescription = null,
-                tint = Color(0xFFB5475A),
+                tint = Color(0xFF111114),
                 modifier = Modifier.size(34.dp)
             )
         }
@@ -280,7 +286,7 @@ private fun PaymentIssueHero() {
             Icon(
                 imageVector = Icons.Outlined.WarningAmber,
                 contentDescription = null,
-                tint = Color(0xFFFFE7A3),
+                tint = Color(0xFF71717A),
                 modifier = Modifier.size(17.dp)
             )
         }
@@ -293,10 +299,10 @@ private fun PaymentIssueStatusPanel() {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFFFFF7F7))
+            .background(Color(0xFFF8FAFC))
             .border(
                 width = 1.dp,
-                color = Color(0xFFFFE1E7),
+                color = Color(0xFFE5E7EB),
                 shape = RoundedCornerShape(20.dp)
             )
             .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -313,7 +319,7 @@ private fun PaymentIssueStatusPanel() {
             icon = Icons.Outlined.CreditCard,
             title = "Next step",
             value = "Update payment",
-            valueColor = Color(0xFFB5475A)
+            valueColor = Color(0xFFE46A6A)
         )
     }
 }
@@ -333,13 +339,18 @@ private fun PaymentIssueInfoRow(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(Color.White),
+                .background(Color.White)
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFE5E7EB),
+                    shape = CircleShape
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color(0xFF71717A),
+                tint = Color(0xFF3F3F46),
                 modifier = Modifier.size(17.dp)
             )
         }
