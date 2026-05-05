@@ -123,8 +123,8 @@ fun HealthConnectIntroScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OnboardingProgress(
-                            stepIndex = 10,
-                            totalSteps = 11,
+                            stepIndex = 11,
+                            totalSteps = 12,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

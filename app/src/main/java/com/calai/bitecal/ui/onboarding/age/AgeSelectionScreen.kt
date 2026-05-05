@@ -104,7 +104,7 @@ fun AgeSelectionScreen(
                     ) {
                         OnboardingProgress(
                             stepIndex = 3,
-                            totalSteps = 11,
+                            totalSteps = 12,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

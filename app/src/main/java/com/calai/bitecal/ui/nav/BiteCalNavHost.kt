@@ -127,6 +127,7 @@ import com.calai.bitecal.ui.onboarding.goal.GoalSelectionViewModel
 import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalScreen
 import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalViewModel
 import com.calai.bitecal.ui.onboarding.healthconnect.HealthConnectIntroScreen
+import com.calai.bitecal.ui.onboarding.comparison.WeightLossComparisonScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionViewModel
 import com.calai.bitecal.ui.onboarding.notifications.NotificationPermissionScreen
@@ -161,6 +162,7 @@ object Routes {
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
     const val ONBOARD_GOAL_WEIGHT = "onboard_goal_weight"
+    const val ONBOARD_WEIGHT_LOSS_COMPARISON = "onboard_weight_loss_comparison"
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
     const val ONBOARD_NOTIF = "onboard_notif"
@@ -614,6 +616,13 @@ fun BiteCalNavHost(
             )
             WeightGoalScreen(
                 vm = vm,
+                onBack = { nav.safePopBackStack() },
+                onNext = { nav.navigate(Routes.ONBOARD_WEIGHT_LOSS_COMPARISON) { launchSingleTop = true } }
+            )
+        }
+
+        composable(Routes.ONBOARD_WEIGHT_LOSS_COMPARISON) {
+            WeightLossComparisonScreen(
                 onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_NOTIF) { launchSingleTop = true } }
             )

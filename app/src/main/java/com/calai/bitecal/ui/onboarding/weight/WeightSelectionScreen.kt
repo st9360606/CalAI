@@ -97,7 +97,7 @@ fun WeightSelectionScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
     stepIndex: Int = 5,
-    totalSteps: Int = 11,
+    totalSteps: Int = 12,
 ) {
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()

@@ -229,7 +229,7 @@ fun WeightGoalScreen(
                     ) {
                         OnboardingProgress(
                             stepIndex = 8,
-                            totalSteps = 11,
+                            totalSteps = 12,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

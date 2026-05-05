@@ -113,7 +113,7 @@ fun GenderSelectionScreen(
                     ) {
                         OnboardingProgress(
                             stepIndex = 1,
-                            totalSteps = 11,
+                            totalSteps = 12,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

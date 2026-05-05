@@ -88,7 +88,7 @@ fun ReferralSourceScreen(
                     ) {
                         OnboardingProgress(
                             stepIndex = 2,
-                            totalSteps = 11,
+                            totalSteps = 12,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

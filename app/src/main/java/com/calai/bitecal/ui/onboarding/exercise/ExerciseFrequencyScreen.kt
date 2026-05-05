@@ -68,7 +68,7 @@ fun ExerciseFrequencyScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
     stepIndex: Int = 6,
-    totalSteps: Int = 11,
+    totalSteps: Int = 12,
 ) {
     val state by vm.uiState.collectAsState()
 

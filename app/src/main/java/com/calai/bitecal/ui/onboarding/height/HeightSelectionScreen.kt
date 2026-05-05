@@ -43,7 +43,7 @@ fun HeightSelectionScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
     stepIndex: Int = 4,
-    totalSteps: Int = 11,
+    totalSteps: Int = 12,
 ) {
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()

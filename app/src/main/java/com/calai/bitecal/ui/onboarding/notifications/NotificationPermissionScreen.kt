@@ -148,8 +148,8 @@ fun NotificationPermissionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OnboardingProgress(
-                            stepIndex = 9,
-                            totalSteps = 11,
+                            stepIndex = 10,
+                            totalSteps = 12,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

@@ -478,4 +478,13 @@
     <string name="referral_share_text">一起使用 BiteCal AI！我的邀請碼是：\n%1$s\n\n%2$s</string>
     <string name="referral_unable_to_open_share_options">無法開啟分享選項。</string>
 
+
+    <!-- WeightLossComparisonScreen -->
+    <string name="onboard_weight_loss_comparison_title">增加 使用BiteCal AI減重效果是自己減重的\n三倍</string>
+    <string name="onboard_weight_loss_comparison_without_ai">沒有\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_with_ai">使用\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_twenty_percent">20%</string>
+    <string name="onboard_weight_loss_comparison_two_times">3X</string>
+    <string name="onboard_weight_loss_comparison_caption">BiteCal AI讓一切變得簡單並且\n讓您負責</string>
+
 </resources>
