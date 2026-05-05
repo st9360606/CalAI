@@ -1,10 +1,22 @@
 package com.calai.bitecal.ui.home.ui.settings
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Flag
@@ -48,50 +61,37 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
-import com.calai.bitecal.ui.home.components.scan.ScanFab
-import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
-import kotlinx.coroutines.launch
-import android.Manifest
-import android.annotation.SuppressLint
-import android.content.pm.PackageManager
-import androidx.activity.compose.LocalActivityResultRegistryOwner
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.border
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.core.content.ContextCompat
 import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
+import com.calai.bitecal.ui.home.components.scan.ScanFab
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
+import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
 import com.calai.bitecal.ui.home.ui.settings.dialog.PaymentIssueDialog
+import kotlinx.coroutines.launch
 
 /**
  * ✅ Personal => Settings（你圖上的那個）
@@ -484,14 +484,13 @@ private fun ProfileCard(
             }
 
             Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.padding(start = 8.dp, end = 22.dp),
+                contentAlignment = Alignment.CenterEnd
             ) {
                 ProfileSubscriptionBadge(
                     kind = premiumStatusKind,
                     subtitle = premiumSubtitle,
                     modifier = Modifier
-                        .offset(x = 35.dp)
                         .clip(RoundedCornerShape(14.dp))
                         .then(subscriptionBadgeClickableModifier)
                         .padding(horizontal = 2.dp, vertical = 2.dp)
@@ -511,12 +510,17 @@ private fun ProfileSubscriptionBadge(
         ProfileSubscriptionVisual.from(kind)
     }
 
+    val dotSize = 8.dp
+    val dotLabelGap = 7.dp
+    val horizontalPadding = 11.dp
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             modifier = Modifier
+                .height(30.dp)
                 .clip(RoundedCornerShape(999.dp))
                 .background(
                     brush = Brush.linearGradient(visual.backgroundColors)
@@ -526,17 +530,19 @@ private fun ProfileSubscriptionBadge(
                     color = visual.borderColor,
                     shape = RoundedCornerShape(999.dp)
                 )
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(horizontal = horizontalPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(7.dp)
-                    .clip(CircleShape)
-                    .background(visual.dotColor)
-            )
+            if (visual.showDot) {
+                Box(
+                    modifier = Modifier
+                        .size(dotSize)
+                        .clip(CircleShape)
+                        .background(visual.dotColor)
+                )
 
-            Spacer(Modifier.size(6.dp))
+                Spacer(Modifier.size(dotLabelGap))
+            }
 
             Text(
                 text = visual.label,
@@ -546,14 +552,14 @@ private fun ProfileSubscriptionBadge(
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Black,
                     color = visual.textColor,
-                    fontSize = 11.sp,
-                    lineHeight = 13.sp,
-                    letterSpacing = 0.3.sp
+                    fontSize = 12.sp,
+                    lineHeight = 14.sp,
+                    letterSpacing = 0.35.sp
                 )
             )
         }
 
-        Spacer(Modifier.height(5.dp))
+        Spacer(Modifier.height(6.dp))
 
         Text(
             text = subtitle.ifBlank { visual.fallbackSubtitle },
@@ -563,8 +569,8 @@ private fun ProfileSubscriptionBadge(
             style = MaterialTheme.typography.bodySmall.copy(
                 color = visual.subtitleColor,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 11.sp,
-                lineHeight = 14.sp
+                fontSize = 12.sp,
+                lineHeight = 15.sp
             )
         )
     }
@@ -577,7 +583,8 @@ private data class ProfileSubscriptionVisual(
     val borderColor: Color,
     val dotColor: Color,
     val textColor: Color,
-    val subtitleColor: Color
+    val subtitleColor: Color,
+    val showDot: Boolean = true
 ) {
     companion object {
         fun from(kind: MembershipDisplayKind): ProfileSubscriptionVisual {
@@ -621,24 +628,28 @@ private data class ProfileSubscriptionVisual(
                             Color(0xFFDCFCE7)
                         ),
                         borderColor = Color(0xFFBBF7D0),
-                        dotColor = Color(0xFF16A34A),
+                        dotColor = Color.Transparent,
                         textColor = Color(0xFF15803D),
-                        subtitleColor = Color(0xFF2F9E5E)
+                        subtitleColor = Color(0xFF2F9E5E),
+
+                        // TRIAL 不顯示 dot，讓 pill 寬度更自然，文字也更容易跟副文字置中
+                        showDot = false
                     )
                 }
-
                 MembershipDisplayKind.FREE -> {
                     ProfileSubscriptionVisual(
                         label = "FREE",
                         fallbackSubtitle = "Upgrade",
                         backgroundColors = listOf(
-                            Color.White,
-                            Color.White
+                            Color(0xFFF4F4F5),
+                            Color(0xFFEFEFF1)
                         ),
-                        borderColor = Color(0xFFD4D4D8),
-                        dotColor = Color(0xFFA1A1AA),
+                        borderColor = Color(0xFFE4E4E7),
+                        dotColor = Color.Transparent,
                         textColor = Color(0xFF3F3F46),
-                        subtitleColor = Color(0xFF71717A)
+                        subtitleColor = Color(0xFF52525B),
+                        // FREE 不是 active 狀態，不顯示 dot，避免 FREE 文字跟 Upgrade 視覺不對齊
+                        showDot = false
                     )
                 }
             }
