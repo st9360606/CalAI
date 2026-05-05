@@ -177,9 +177,9 @@ private fun LatestRewardCard(summary: MembershipSummaryDto?) {
             Text("Channel: ${friendlyRewardChannel(summary?.latestRewardChannel)}")
             Text("Grant status: ${friendlyGrantStatus(summary?.latestRewardGrantStatus)}")
             Text("Google defer: ${friendlyGoogleDeferStatus(summary?.latestGoogleDeferStatus)}")
-            Text("Granted at: ${MembershipUiMapper.formatDate(summary?.latestGrantedAtUtc)}")
-            Text("Old expiry: ${MembershipUiMapper.formatDate(summary?.latestOldPremiumUntil)}")
-            Text("New expiry: ${MembershipUiMapper.formatDate(summary?.latestNewPremiumUntil)}")
+            Text("Granted at: ${MembershipUiMapper.formatDateOrNull(summary?.latestGrantedAtUtc)}")
+            Text("Old expiry: ${MembershipUiMapper.formatDateOrNull(summary?.latestOldPremiumUntil)}")
+            Text("New expiry: ${MembershipUiMapper.formatDateOrNull(summary?.latestNewPremiumUntil)}")
         }
     }
 }
@@ -205,9 +205,9 @@ private fun RewardHistoryRow(item: RewardHistoryItemDto) {
                 Text("Error: $it", color = MaterialTheme.colorScheme.error)
             }
             Text("Days added: ${item.daysAdded}")
-            Text("Granted at: ${MembershipUiMapper.formatDate(item.grantedAtUtc)}")
-            Text("Old expiry: ${MembershipUiMapper.formatDate(item.oldPremiumUntil)}")
-            Text("New expiry: ${MembershipUiMapper.formatDate(item.newPremiumUntil)}")
+            Text("Granted at: ${MembershipUiMapper.formatDateOrNull(item.grantedAtUtc)}")
+            Text("Old expiry: ${MembershipUiMapper.formatDateOrNull(item.oldPremiumUntil)}")
+            Text("New expiry: ${MembershipUiMapper.formatDateOrNull(item.newPremiumUntil)}")
         }
     }
 }

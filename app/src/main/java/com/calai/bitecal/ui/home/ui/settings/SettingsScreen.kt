@@ -92,6 +92,8 @@ import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
+import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
+
 /**
  * ✅ Personal => Settings（你圖上的那個）
  * - 內容可捲動
@@ -111,8 +113,8 @@ fun SettingsScreen(
     onOpenAdjustMacros: () -> Unit = {},
     onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
-    premiumStatusText: String = "FREE",
     premiumStatusSubtitle: String = "Upgrade",
+    premiumStatusKind: MembershipDisplayKind = MembershipDisplayKind.FREE,
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
     onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
@@ -220,8 +222,9 @@ fun SettingsScreen(
             onOpenAdjustMacros = onOpenAdjustMacros,
             onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
             onOpenWeightHistory = onOpenWeightHistory,
-            premiumStatusText = premiumStatusText,
+            premiumStatusKind = premiumStatusKind,
             premiumStatusSubtitle = premiumStatusSubtitle,
+            onOpenSubscription = onOpenSubscription,
             onOpenReferral = onOpenReferral,
             onOpenNotificationInbox = onOpenNotificationInbox,
             onOpenLanguage = onOpenLanguage,
@@ -259,8 +262,9 @@ private fun SettingsContent(
     onOpenAdjustMacros: () -> Unit,
     onOpenGoalAndCurrentWeight: () -> Unit,
     onOpenWeightHistory: () -> Unit,
-    premiumStatusText: String,
+    premiumStatusKind: MembershipDisplayKind,
     premiumStatusSubtitle: String,
+    onOpenSubscription: () -> Unit,
     onOpenReferral: () -> Unit,
     onOpenNotificationInbox: () -> Unit,
     onOpenLanguage: () -> Unit,
@@ -318,9 +322,10 @@ private fun SettingsContent(
             avatarUrl = avatarUrl,
             name = profileName,
             subtitle = ageText,
-            premiumStatus = premiumStatusText,
+            premiumStatusKind = premiumStatusKind,
             premiumSubtitle = premiumStatusSubtitle,
-            onClick = onOpenEditName
+            onProfileClick = onOpenEditName,
+            onSubscriptionClick = onOpenSubscription
         )
 
         Spacer(Modifier.height(14.dp))
@@ -382,68 +387,235 @@ private fun ProfileCard(
     avatarUrl: Uri?,
     name: String,
     subtitle: String,
-    premiumStatus: String,
+    premiumStatusKind: MembershipDisplayKind,
     premiumSubtitle: String,
-    onClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onSubscriptionClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(22.dp)
+    val subscriptionBadgeClickableModifier =
+        if (premiumStatusKind == MembershipDisplayKind.FREE) {
+            Modifier.clickable(onClick = onSubscriptionClick)
+        } else {
+            Modifier
+        }
+
     Card(
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
-            .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ProfileAvatar(url = avatarUrl)
-
-            // ✅ 1) 讓名字/年齡整體往右一點：把間距加大
-            Spacer(Modifier.size(16.dp)) // 原本 12.dp
-
-            Column(
+            Box(
                 modifier = Modifier
-                    .padding(start = 2.dp)
-                    .offset(y = (-1).dp) // ✅ 名字+年齡整組往上 1dp（想更明顯就 -2.dp）
+                    .weight(1f)
+                    .clip(RoundedCornerShape(18.dp))
+                    .clickable(onClick = onProfileClick),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF404A58),
-                        fontSize = 17.sp,     // ✅ 你要的「用 size 控制」
-                        lineHeight = 22.sp    // ✅ 順便控制行高，排版更穩
-                    )
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF1F2937)
-                    )
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ProfileAvatar(url = avatarUrl)
+
+                    Spacer(Modifier.size(16.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 2.dp, end = 8.dp)
+                            .offset(y = (-1).dp)
+                    ) {
+                        Text(
+                            text = name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF404A58),
+                                fontSize = 17.sp,
+                                lineHeight = 22.sp
+                            )
+                        )
+
+                        Spacer(Modifier.height(4.dp))
+
+                        Text(
+                            text = subtitle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Color(0xFF1F2937)
+                            )
+                        )
+                    }
+                }
             }
 
-            Spacer(Modifier.weight(1f))
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                ProfileSubscriptionBadge(
+                    kind = premiumStatusKind,
+                    subtitle = premiumSubtitle,
+                    modifier = Modifier
+                        .offset(x = 35.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .then(subscriptionBadgeClickableModifier)
+                        .padding(horizontal = 2.dp, vertical = 2.dp)
+                )
+            }
+        }
+    }
+}
 
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = premiumStatus,
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF111114)
-                    )
+@Composable
+private fun ProfileSubscriptionBadge(
+    kind: MembershipDisplayKind,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    val visual = remember(kind) {
+        ProfileSubscriptionVisual.from(kind)
+    }
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(
+                    brush = Brush.linearGradient(visual.backgroundColors)
                 )
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    text = premiumSubtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF6B7280),
-                        fontWeight = FontWeight.Medium
-                    )
+                .border(
+                    width = 1.dp,
+                    color = visual.borderColor,
+                    shape = RoundedCornerShape(999.dp)
                 )
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(visual.dotColor)
+            )
+
+            Spacer(Modifier.size(6.dp))
+
+            Text(
+                text = visual.label,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.Black,
+                    color = visual.textColor,
+                    fontSize = 11.sp,
+                    lineHeight = 13.sp,
+                    letterSpacing = 0.3.sp
+                )
+            )
+        }
+
+        Spacer(Modifier.height(5.dp))
+
+        Text(
+            text = subtitle.ifBlank { visual.fallbackSubtitle },
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = visual.subtitleColor,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                lineHeight = 14.sp
+            )
+        )
+    }
+}
+
+private data class ProfileSubscriptionVisual(
+    val label: String,
+    val fallbackSubtitle: String,
+    val backgroundColors: List<Color>,
+    val borderColor: Color,
+    val dotColor: Color,
+    val textColor: Color,
+    val subtitleColor: Color
+) {
+    companion object {
+        fun from(kind: MembershipDisplayKind): ProfileSubscriptionVisual {
+            return when (kind) {
+                MembershipDisplayKind.PAYMENT_ISSUE -> {
+                    ProfileSubscriptionVisual(
+                        label = "PAYMENT",
+                        fallbackSubtitle = "Update payment",
+                        backgroundColors = listOf(
+                            Color(0xFFFFF7F7),
+                            Color(0xFFFFF1F2)
+                        ),
+                        borderColor = Color(0xFFFFD6DD),
+                        dotColor = Color(0xFFE85D75),
+                        textColor = Color(0xFFA94A58),
+                        subtitleColor = Color(0xFFC06F7B)
+                    )
+                }
+
+                MembershipDisplayKind.PREMIUM -> {
+                    ProfileSubscriptionVisual(
+                        label = "PREMIUM",
+                        fallbackSubtitle = "Active member",
+                        backgroundColors = listOf(
+                            Color(0xFF111114),
+                            Color(0xFF18181B)
+                        ),
+                        borderColor = Color(0xFF111114),
+                        dotColor = Color(0xFFE7C873),
+                        textColor = Color.White,
+                        subtitleColor = Color(0xFF71717A)
+                    )
+                }
+
+                MembershipDisplayKind.TRIAL -> {
+                    ProfileSubscriptionVisual(
+                        label = "TRIAL",
+                        fallbackSubtitle = "Access active",
+                        backgroundColors = listOf(
+                            Color(0xFFF0FDF4),
+                            Color(0xFFDCFCE7)
+                        ),
+                        borderColor = Color(0xFFBBF7D0),
+                        dotColor = Color(0xFF16A34A),
+                        textColor = Color(0xFF15803D),
+                        subtitleColor = Color(0xFF2F9E5E)
+                    )
+                }
+
+                MembershipDisplayKind.FREE -> {
+                    ProfileSubscriptionVisual(
+                        label = "FREE",
+                        fallbackSubtitle = "Upgrade",
+                        backgroundColors = listOf(
+                            Color.White,
+                            Color.White
+                        ),
+                        borderColor = Color(0xFFD4D4D8),
+                        dotColor = Color(0xFFA1A1AA),
+                        textColor = Color(0xFF3F3F46),
+                        subtitleColor = Color(0xFF71717A)
+                    )
+                }
             }
         }
     }

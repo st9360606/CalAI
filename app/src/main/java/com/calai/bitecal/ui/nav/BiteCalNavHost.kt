@@ -1219,8 +1219,8 @@ fun BiteCalNavHost(
                             }
                         },
                         onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
-                        premiumStatusText = membershipDisplay.title,
                         premiumStatusSubtitle = membershipDisplay.subtitle,
+                        premiumStatusKind = membershipDisplay.kind,
                         canUseScan = membershipUi.canUseScan,
                         onOpenSubscription = {
                             nav.navigate(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
