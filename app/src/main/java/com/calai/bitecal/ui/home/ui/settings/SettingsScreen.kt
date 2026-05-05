@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,7 +31,6 @@ import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Widgets
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -68,7 +66,7 @@ import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.scan.ScanFab
-import com.calai.bitecal.ui.home.ui.settings.delete.DeleteAccountDialog
+import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
 import kotlinx.coroutines.launch
 import android.Manifest
 import android.annotation.SuppressLint
@@ -93,6 +91,7 @@ import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
+import com.calai.bitecal.ui.home.ui.settings.dialog.PaymentIssueDialog
 
 /**
  * ✅ Personal => Settings（你圖上的那個）
@@ -117,6 +116,7 @@ fun SettingsScreen(
     premiumStatusKind: MembershipDisplayKind = MembershipDisplayKind.FREE,
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
+    onFixPaymentIssue: () -> Unit = onOpenSubscription,
     onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
     onOpenSavedFoods: () -> Unit = {},
     onOpenReferral: () -> Unit = {},
@@ -225,6 +225,7 @@ fun SettingsScreen(
             premiumStatusKind = premiumStatusKind,
             premiumStatusSubtitle = premiumStatusSubtitle,
             onOpenSubscription = onOpenSubscription,
+            onFixPaymentIssue = onFixPaymentIssue,
             onOpenReferral = onOpenReferral,
             onOpenNotificationInbox = onOpenNotificationInbox,
             onOpenLanguage = onOpenLanguage,
@@ -265,6 +266,7 @@ private fun SettingsContent(
     premiumStatusKind: MembershipDisplayKind,
     premiumStatusSubtitle: String,
     onOpenSubscription: () -> Unit,
+    onFixPaymentIssue: () -> Unit,
     onOpenReferral: () -> Unit,
     onOpenNotificationInbox: () -> Unit,
     onOpenLanguage: () -> Unit,
@@ -279,6 +281,7 @@ private fun SettingsContent(
     val scope = rememberCoroutineScope()
 
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showPaymentIssueDialog by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
 
     // ✅ Dialog 放外層（不受 scroll 影響）
@@ -304,6 +307,17 @@ private fun SettingsContent(
         }
     )
 
+    PaymentIssueDialog(
+        visible = showPaymentIssueDialog,
+        onDismiss = {
+            showPaymentIssueDialog = false
+        },
+        onUpdatePaymentMethod = {
+            showPaymentIssueDialog = false
+            onFixPaymentIssue()
+        }
+    )
+
     Column(
         modifier = modifier
             .verticalScroll(scroll)
@@ -325,7 +339,8 @@ private fun SettingsContent(
             premiumStatusKind = premiumStatusKind,
             premiumSubtitle = premiumStatusSubtitle,
             onProfileClick = onOpenEditName,
-            onSubscriptionClick = onOpenSubscription
+            onSubscriptionClick = onOpenSubscription,
+            onPaymentIssueClick = { showPaymentIssueDialog = true }
         )
 
         Spacer(Modifier.height(14.dp))
@@ -390,14 +405,24 @@ private fun ProfileCard(
     premiumStatusKind: MembershipDisplayKind,
     premiumSubtitle: String,
     onProfileClick: () -> Unit,
-    onSubscriptionClick: () -> Unit
+    onSubscriptionClick: () -> Unit,
+    onPaymentIssueClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(22.dp)
     val subscriptionBadgeClickableModifier =
-        if (premiumStatusKind == MembershipDisplayKind.FREE) {
-            Modifier.clickable(onClick = onSubscriptionClick)
-        } else {
-            Modifier
+        when (premiumStatusKind) {
+            MembershipDisplayKind.FREE -> {
+                Modifier.clickable(onClick = onSubscriptionClick)
+            }
+
+            MembershipDisplayKind.PAYMENT_ISSUE -> {
+                Modifier.clickable(onClick = onPaymentIssueClick)
+            }
+
+            MembershipDisplayKind.TRIAL,
+            MembershipDisplayKind.PREMIUM -> {
+                Modifier
+            }
         }
 
     Card(

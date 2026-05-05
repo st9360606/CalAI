@@ -292,6 +292,43 @@ private tailrec fun Context.findActivity(): Activity? =
 private fun NavController.safePopBackStack(): Boolean =
     previousBackStackEntry != null && popBackStack()
 
+private fun openGooglePlaySubscriptionManagement(
+    context: Context,
+    productId: String? = null
+) {
+    val packageName = context.packageName
+
+    val uri = if (productId.isNullOrBlank()) {
+        Uri.parse("https://play.google.com/store/account/subscriptions")
+    } else {
+        Uri.parse(
+            "https://play.google.com/store/account/subscriptions" +
+                    "?sku=$productId&package=$packageName"
+        )
+    }
+
+    val playStoreIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+        setPackage("com.android.vending")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    val browserFallbackIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    runCatching {
+        context.startActivity(playStoreIntent)
+    }.recoverCatching {
+        context.startActivity(browserFallbackIntent)
+    }.onFailure {
+        Toast.makeText(
+            context,
+            "Unable to open Google Play subscriptions.",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+}
+
 private fun NavController.resolveCameraFallbackPaywallRoute(): String {
     val previousRoute = previousBackStackEntry?.destination?.route
 
@@ -1227,6 +1264,9 @@ fun BiteCalNavHost(
                                 launchSingleTop = true
                                 restoreState = false
                             }
+                        },
+                        onFixPaymentIssue = {
+                            openGooglePlaySubscriptionManagement(activity)
                         },
                         onOpenReferral = {
                             nav.navigate(Routes.REFERRALS) {

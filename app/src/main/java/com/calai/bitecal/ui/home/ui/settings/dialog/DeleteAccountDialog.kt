@@ -1,5 +1,5 @@
 // app/src/main/java/com/calai/app/ui/home/ui/settings/delete/DeleteAccountDialog.kt
-package com.calai.bitecal.ui.home.ui.settings.delete
+package com.calai.bitecal.ui.home.ui.settings.dialog
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
