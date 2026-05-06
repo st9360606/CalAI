@@ -42,7 +42,6 @@ fun SignInSheetHost(
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
 
-    val msgCancelled      = stringResource(R.string.err_google_cancelled)
     val tipNoAccount      = stringResource(R.string.err_google_no_account_hint)
     val fallbackSignInErr = stringResource(R.string.err_google_signin_failed)
 
@@ -76,7 +75,9 @@ fun SignInSheetHost(
 
             withContext(Dispatchers.Main) {
                 navController.navigate(destination) {
-                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                    popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                        inclusive = true
+                    }
                     launchSingleTop = true
                     restoreState = false
                 }
@@ -86,20 +87,29 @@ fun SignInSheetHost(
 
         if (exists) {
             val changedThisSession = LanguageSessionFlag.consumeChanged()
-            if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(localeTag) }
+            if (changedThisSession) {
+                runCatching { profileRepo.updateLocaleOnly(localeTag) }
+            }
+
             runCatching { store.setHasServerProfile(true) }
+
             withContext(Dispatchers.Main) {
                 navController.navigate(Routes.HOME) {
-                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                    popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                        inclusive = true
+                    }
                     launchSingleTop = true
                     restoreState = false
                 }
             }
         } else {
             runCatching { store.setHasServerProfile(false) }
+
             withContext(Dispatchers.Main) {
                 navController.navigate(Routes.ONBOARD_GENDER) {
-                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                    popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                        inclusive = true
+                    }
                     launchSingleTop = true
                     restoreState = false
                 }

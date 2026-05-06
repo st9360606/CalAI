@@ -200,6 +200,18 @@ object Routes {
     const val SETTINGS_SCAN_SUBSCRIPTION = "settings_scan_subscription"
     const val MEMBERSHIP_REFRESH_TICK = "membership_refresh_tick"
     const val REQUIRE_SIGN_IN = "require_sign_in"
+
+    const val REQUIRE_SIGN_IN_ROUTE =
+        "$REQUIRE_SIGN_IN?redirect={redirect}&auto={auto}&uploadLocal={uploadLocal}"
+
+    fun requireSignInRoute(
+        redirect: String = HOME,
+        auto: Boolean = false,
+        uploadLocal: Boolean = false
+    ): String {
+        return "$REQUIRE_SIGN_IN?redirect=$redirect&auto=$auto&uploadLocal=$uploadLocal"
+    }
+
     const val HOME = "home"
     const val APP_ENTRY = "app_entry"
     const val PROGRESS = "progress"
@@ -294,6 +306,39 @@ private tailrec fun Context.findActivity(): Activity? =
 private fun NavController.safePopBackStack(): Boolean =
     previousBackStackEntry != null && popBackStack()
 
+private fun NavController.backFromRequireSignIn(
+    uploadLocal: Boolean
+) {
+    if (uploadLocal) {
+        val poppedToPlan = popBackStack(
+            route = Routes.ROUTE_PLAN,
+            inclusive = false
+        )
+
+        if (poppedToPlan) return
+
+        navigate(Routes.ROUTE_PLAN) {
+            popUpTo(0) {
+                inclusive = true
+            }
+            launchSingleTop = true
+            restoreState = false
+        }
+        return
+    }
+
+    val popped = safePopBackStack()
+    if (!popped) {
+        navigate(Routes.LANDING) {
+            popUpTo(0) {
+                inclusive = true
+            }
+            launchSingleTop = true
+            restoreState = false
+        }
+    }
+}
+
 private fun openGooglePlaySubscriptionManagement(
     context: Context,
     productId: String? = null
@@ -379,7 +424,13 @@ fun BiteCalNavHost(
                 return@collect
             }
 
-            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}") {
+            nav.navigate(
+                Routes.requireSignInRoute(
+                    redirect = Routes.HOME,
+                    auto = false,
+                    uploadLocal = false
+                )
+            ) {
                 popUpTo(0) { inclusive = true }
                 launchSingleTop = true
                 restoreState = false
@@ -408,7 +459,13 @@ fun BiteCalNavHost(
                 },
                 onLogin = {
                     // 使用者主動點「登入」：自動開啟 Sheet
-                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true")
+                    nav.navigate(
+                        Routes.requireSignInRoute(
+                            redirect = Routes.HOME,
+                            auto = true,
+                            uploadLocal = false
+                        )
+                    )
                 },
                 onSetLocale = { tag ->
                     localeControllerLocal.set(tag)
@@ -441,7 +498,12 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onSent = { email ->
-                    nav.navigate("${Routes.SIGN_IN_EMAIL_CODE}?email=$email&redirect=$redirect&uploadLocal=$uploadLocal")
+                    val encodedEmail = Uri.encode(email)
+                    val encodedRedirect = Uri.encode(redirect)
+
+                    nav.navigate(
+                        "${Routes.SIGN_IN_EMAIL_CODE}?email=$encodedEmail&redirect=$encodedRedirect&uploadLocal=$uploadLocal"
+                    )
                 }
             )
         }
@@ -504,7 +566,9 @@ fun BiteCalNavHost(
                         }
 
                         nav.navigate(dest) {
-                            popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                            popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                                inclusive = true
+                            }
                             launchSingleTop = true
                             restoreState = false
                         }
@@ -716,7 +780,13 @@ fun BiteCalNavHost(
                             }
 
                             false -> {
-                                nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true&uploadLocal=true") {
+                                nav.navigate(
+                                    Routes.requireSignInRoute(
+                                        redirect = Routes.HOME,
+                                        auto = false,
+                                        uploadLocal = true
+                                    )
+                                ) {
                                     launchSingleTop = true
                                     restoreState = false
                                 }
@@ -734,7 +804,7 @@ fun BiteCalNavHost(
 
         // Gate：支援 auto + uploadLocal；SignIn 不再提供 Skip
         composable(
-            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}&auto={auto}&uploadLocal={uploadLocal}",
+            route = Routes.REQUIRE_SIGN_IN_ROUTE,
             arguments = listOf(
                 navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME },
                 navArgument("auto") { type = NavType.BoolType; defaultValue = false },
@@ -753,7 +823,9 @@ fun BiteCalNavHost(
             val showSheet = remember { mutableStateOf(auto) }
 
             RequireSignInScreen(
-                onBack = { nav.safePopBackStack() },
+                onBack = {
+                    nav.backFromRequireSignIn(uploadLocal = uploadLocal)
+                },
                 onGoogleClick = {
                     showSheet.value = true
                 },
@@ -779,7 +851,12 @@ fun BiteCalNavHost(
                     },
                     onEmail = {
                         showSheet.value = false
-                        nav.navigate("${Routes.SIGN_IN_EMAIL_ENTER}?redirect=$redirect&uploadLocal=$uploadLocal")
+
+                        val encodedRedirect = Uri.encode(redirect)
+
+                        nav.navigate(
+                            "${Routes.SIGN_IN_EMAIL_ENTER}?redirect=$encodedRedirect&uploadLocal=$uploadLocal"
+                        )
                     },
                     onShowError = { msg ->
                         showSheet.value = false
@@ -2416,7 +2493,13 @@ fun BiteCalNavHost(
                  * 正確 back stack:
                  * HealthPlanScreen -> SignIn
                  */
-                nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=false&uploadLocal=true") {
+                nav.navigate(
+                    Routes.requireSignInRoute(
+                        redirect = Routes.HOME,
+                        auto = false,
+                        uploadLocal = true
+                    )
+                ) {
                     popUpTo(Routes.ONBOARD_SUBSCRIPTION) {
                         inclusive = true
                     }
