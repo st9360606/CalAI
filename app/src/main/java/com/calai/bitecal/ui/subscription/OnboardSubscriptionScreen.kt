@@ -91,8 +91,27 @@ fun OnboardSubscriptionScreen(
 ) {
     val ui by vm.ui.collectAsState()
 
+    LaunchedEffect(Unit) {
+        vm.loadTrialEligibility()
+    }
+
     var step by rememberSaveable { mutableStateOf(OnboardPaywallStep.Intro) }
-    var trialEnabled by rememberSaveable { mutableStateOf(true) }
+    var trialEnabled by rememberSaveable { mutableStateOf(false) }
+    var trialToggleTouched by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(ui.trialEligibilityLoaded, ui.trialEligible) {
+        if (!ui.trialEligibilityLoaded) return@LaunchedEffect
+
+        if (!ui.trialEligible) {
+            trialEnabled = false
+            trialToggleTouched = false
+            return@LaunchedEffect
+        }
+
+        if (!trialToggleTouched) {
+            trialEnabled = true
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (step) {
@@ -137,10 +156,20 @@ fun OnboardSubscriptionScreen(
                 OnboardOneTimeOfferScreen(
                     purchasing = ui.purchasing,
                     trialEnabled = trialEnabled,
-                    onTrialEnabledChange = { trialEnabled = it },
+                    trialEligible = ui.trialEligible,
+                    trialEligibilityLoaded = ui.trialEligibilityLoaded,
+                    onTrialEnabledChange = { enabled ->
+                        if (!ui.trialEligible) {
+                            trialEnabled = false
+                            trialToggleTouched = false
+                        } else {
+                            trialEnabled = enabled
+                            trialToggleTouched = true
+                        }
+                    },
                     onClose = onCloseToSignIn,
                     onContinue = {
-                        val offerTag = if (trialEnabled) {
+                        val offerTag = if (trialEnabled && ui.trialEligible) {
                             BiteCalBillingProducts.OfferTags.ONBOARD_TRIAL_DISCOUNT_YEARLY
                         } else {
                             BiteCalBillingProducts.OfferTags.ONBOARD_DISCOUNT_YEARLY
@@ -166,12 +195,7 @@ fun OnboardSubscriptionScreen(
         }
 
         if (!ui.error.isNullOrBlank()) {
-            Text(
-                text = ui.error!!,
-                color = Color(0xFFB91C1C),
-                fontSize = 13.sp,
-                lineHeight = 17.sp,
-                fontWeight = FontWeight.SemiBold,
+            Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 78.dp)
@@ -180,8 +204,40 @@ fun OnboardSubscriptionScreen(
                         color = Color(0xFFFFEBEE),
                         shape = RoundedCornerShape(12.dp)
                     )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-            )
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = ui.error!!,
+                    color = Color(0xFFB91C1C),
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
+
+                if (ui.canRestorePurchase) {
+                    Spacer(Modifier.height(8.dp))
+
+                    Button(
+                        onClick = { vm.restorePurchase(onPurchased) },
+                        enabled = !ui.purchasing,
+                        shape = RoundedCornerShape(999.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF111111),
+                            contentColor = Color.White
+                        ),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "Restore purchase",
+                            fontSize = 13.sp,
+                            lineHeight = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -425,6 +481,8 @@ private fun OnboardDiscountSpinScreen(
 private fun OnboardOneTimeOfferScreen(
     purchasing: Boolean,
     trialEnabled: Boolean,
+    trialEligible: Boolean,
+    trialEligibilityLoaded: Boolean,
     onTrialEnabledChange: (Boolean) -> Unit,
     onClose: () -> Unit,
     onContinue: () -> Unit
@@ -480,6 +538,8 @@ private fun OnboardOneTimeOfferScreen(
 
             OneTimeOfferTrialCard(
                 trialEnabled = trialEnabled,
+                trialEligible = trialEligible,
+                trialEligibilityLoaded = trialEligibilityLoaded,
                 purchasing = purchasing,
                 offerYearlyPrice = offerYearlyPrice,
                 monthlyEquivalent = monthlyEquivalent,
@@ -488,7 +548,7 @@ private fun OnboardOneTimeOfferScreen(
         }
 
         OnboardPaywallBottomCta(
-            buttonText = if (trialEnabled) {
+            buttonText = if (trialEnabled && trialEligible) {
                 "Start Free Trial"
             } else {
                 "Continue"
@@ -806,6 +866,8 @@ private fun OneTimeOfferUrgencyRow(
 @Composable
 private fun OneTimeOfferTrialCard(
     trialEnabled: Boolean,
+    trialEligible: Boolean,
+    trialEligibilityLoaded: Boolean,
     purchasing: Boolean,
     offerYearlyPrice: String,
     monthlyEquivalent: String,
@@ -818,13 +880,18 @@ private fun OneTimeOfferTrialCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp)
-                .clickable(enabled = !purchasing) {
+                .clickable(enabled = !purchasing && trialEligible && trialEligibilityLoaded) {
                     onTrialEnabledChange(!trialEnabled)
                 },
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (trialEnabled) "Free Trial Enabled" else "Not Sure? Enable Free Trial",
+                text = when {
+                    !trialEligibilityLoaded -> "Checking trial eligibility..."
+                    !trialEligible -> "Trial already used"
+                    trialEnabled -> "Free Trial Enabled"
+                    else -> "Not Sure? Enable Free Trial"
+                },
                 color = Color(0xFF111111),
                 fontSize = 21.sp,
                 lineHeight = 26.sp,
@@ -834,15 +901,28 @@ private fun OneTimeOfferTrialCard(
 
             Switch(
                 checked = trialEnabled,
+                enabled = !purchasing && trialEligible && trialEligibilityLoaded,
                 onCheckedChange = {
-                    if (!purchasing) onTrialEnabledChange(it)
+                    if (!purchasing && trialEligible && trialEligibilityLoaded) {
+                        onTrialEnabledChange(it)
+                    }
                 },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = Color.Black,
+                    checkedBorderColor = Color.Transparent,
+
                     uncheckedThumbColor = Color.White,
                     uncheckedTrackColor = Color(0xFFD4D4D8),
-                    uncheckedBorderColor = Color.Transparent
+                    uncheckedBorderColor = Color.Transparent,
+
+                    disabledCheckedThumbColor = Color.White,
+                    disabledCheckedTrackColor = Color(0xFF18181B),
+                    disabledCheckedBorderColor = Color.Transparent,
+
+                    disabledUncheckedThumbColor = Color(0xFFA1A1AA),
+                    disabledUncheckedTrackColor = Color(0xFFE5E7EB),
+                    disabledUncheckedBorderColor = Color.Transparent
                 )
             )
         }
@@ -873,7 +953,7 @@ private fun OneTimeOfferTrialCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (trialEnabled) "FREE TRIAL" else "LOWEST PRICE EVER",
+                    text = if (trialEnabled && trialEligible) "FREE TRIAL" else "LOWEST PRICE EVER",
                     color = Color.White,
                     fontSize = 14.sp,
                     lineHeight = 17.sp,

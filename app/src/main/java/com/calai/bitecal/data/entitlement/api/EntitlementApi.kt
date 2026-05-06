@@ -33,5 +33,6 @@ data class EntitlementSyncResponse(
     val currentPremiumUntil: String? = null,
     val trialEndsAt: String? = null,
     val trialDaysLeft: Int? = null,
+    val trialEligible: Boolean = false,
     val paymentIssue: Boolean = false
 )

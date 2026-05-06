@@ -133,21 +133,28 @@ class EntitlementSyncer(
                     }
                 }.getOrElse { ex ->
                     Log.w(TAG, "purchase entitlement sync failed: ${ex.message}")
+
+                    val restored = runCatching {
+                        refreshEntitlementSummary()
+                    }.onFailure { restoreEx ->
+                        Log.w(TAG, "post-purchase restore failed: ${restoreEx.message}")
+                    }.getOrNull()
+
+                    if (isOpenedEntitlement(restored)) {
+                        return PurchaseEntitlementResult(
+                            success = true,
+                            response = restored
+                        )
+                    }
+
                     return PurchaseEntitlementResult(
                         success = false,
+                        response = restored,
                         message = "Purchase completed, but entitlement sync failed. Please retry."
                     )
                 }
 
-                val premiumStatus = response.premiumStatus.uppercase(Locale.US)
-
-                val openedEntitlement =
-                    response.status.equals("ACTIVE", ignoreCase = true) &&
-                            (premiumStatus == "PREMIUM" || premiumStatus == "TRIAL") &&
-                            !response.entitlementType.isNullOrBlank() &&
-                            response.currentPremiumUntil != null
-
-                if (!openedEntitlement) {
+                if (!isOpenedEntitlement(response)) {
                     return PurchaseEntitlementResult(
                         success = false,
                         response = response,
@@ -171,6 +178,17 @@ class EntitlementSyncer(
                 )
             }
         }
+    }
+
+    private fun isOpenedEntitlement(response: EntitlementSyncResponse?): Boolean {
+        if (response == null) return false
+
+        val premiumStatus = response.premiumStatus.uppercase(Locale.US)
+
+        return response.status.equals("ACTIVE", ignoreCase = true) &&
+                (premiumStatus == "PREMIUM" || premiumStatus == "TRIAL") &&
+                !response.entitlementType.isNullOrBlank() &&
+                response.currentPremiumUntil != null
     }
 
     private suspend fun acknowledgeWithRetry(
