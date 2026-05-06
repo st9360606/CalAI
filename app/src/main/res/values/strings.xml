@@ -481,7 +481,7 @@
 
 
     <!-- WeightLossComparisonScreen -->
-    <string name="onboard_weight_loss_comparison_title">Using BiteCal AI triples your weight loss results</string>
+    <string name="onboard_weight_loss_comparison_title">Using BiteCal AI can\ntriple your weight loss efficiency</string>
     <string name="onboard_weight_loss_comparison_without_ai">Without\nBiteCal AI</string>
     <string name="onboard_weight_loss_comparison_with_ai">With\nBiteCal AI</string>
     <string name="onboard_weight_loss_comparison_twenty_percent">20%</string>
