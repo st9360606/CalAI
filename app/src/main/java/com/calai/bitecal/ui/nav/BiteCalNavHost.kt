@@ -2480,29 +2480,18 @@ fun BiteCalNavHost(
                 }
             }
 
-            fun closeToSignInAsFree() {
+            fun closeOnboardingSubscriptionAsFree() {
                 onboardingPaywallRejectedOnce = true
 
                 /**
                  * 使用者在 onboarding paywall 明確關閉：
                  * - 不開 trial
                  * - 不 premium
-                 * - 回登入頁
-                 * - 清掉 ONBOARD_SUBSCRIPTION，避免 SignIn 按返回又回到 paywall
-                 *
-                 * 正確 back stack:
-                 * HealthPlanScreen -> SignIn
+                 * - 直接以 FREE 身分進 HOME
+                 * - 清掉整個 onboarding / paywall back stack，避免返回又回到訂閱頁
                  */
-                nav.navigate(
-                    Routes.requireSignInRoute(
-                        redirect = Routes.HOME,
-                        auto = false,
-                        uploadLocal = true
-                    )
-                ) {
-                    popUpTo(Routes.ONBOARD_SUBSCRIPTION) {
-                        inclusive = true
-                    }
+                nav.navigate(Routes.HOME) {
+                    popUpTo(0) { inclusive = true }
                     launchSingleTop = true
                     restoreState = false
                 }
@@ -2535,14 +2524,14 @@ fun BiteCalNavHost(
             }
 
             BackHandler(enabled = true) {
-                closeToSignInAsFree()
+                closeOnboardingSubscriptionAsFree()
             }
 
             OnboardSubscriptionScreen(
                 vm = vm,
                 activity = activity,
                 onCloseToSignIn = {
-                    closeToSignInAsFree()
+                    closeOnboardingSubscriptionAsFree()
                 },
                 onPurchased = {
                     goHomeAfterOnboardingSubscription()
