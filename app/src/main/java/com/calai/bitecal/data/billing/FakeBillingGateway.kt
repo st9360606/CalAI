@@ -11,6 +11,28 @@ class FakeBillingGateway : BillingGateway {
         return emptyList()
     }
 
+
+    override suspend fun querySubscriptionOfferPrice(
+        productId: String,
+        offerTag: String?
+    ): SubscriptionOfferPriceText? {
+        Log.d(TAG, "FAKE querySubscriptionOfferPrice productId=$productId, offerTag=$offerTag")
+
+        if (productId != BiteCalBillingProducts.YEARLY) {
+            return null
+        }
+
+        val isDiscountOffer = offerTag == BiteCalBillingProducts.OfferTags.ONBOARD_DISCOUNT_YEARLY ||
+                offerTag == BiteCalBillingProducts.OfferTags.ONBOARD_TRIAL_DISCOUNT_YEARLY
+
+        return SubscriptionOfferPriceText(
+            productId = productId,
+            offerTag = offerTag,
+            formattedPrice = if (isDiscountOffer) "NT$649.00" else "NT$999.00",
+            formattedMonthlyEquivalent = if (isDiscountOffer) "NT$54.08/mo" else "NT$83.25/mo"
+        )
+    }
+
     override suspend fun launchSubscriptionPurchase(
         activity: Activity,
         productId: String,

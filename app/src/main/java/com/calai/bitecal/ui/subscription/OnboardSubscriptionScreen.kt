@@ -93,6 +93,7 @@ fun OnboardSubscriptionScreen(
 
     LaunchedEffect(Unit) {
         vm.loadTrialEligibility()
+        vm.loadSubscriptionOfferPrices()
     }
 
     var step by rememberSaveable { mutableStateOf(OnboardPaywallStep.Intro) }
@@ -118,6 +119,7 @@ fun OnboardSubscriptionScreen(
             OnboardPaywallStep.Intro -> {
                 OnboardSubscriptionIntro(
                     purchasing = ui.purchasing,
+                    helperText = "Just ${ui.yearlyBasePrice} per 年 (${ui.yearlyBaseMonthlyEquivalent})",
                     onClose = onCloseToSignIn,
                     onContinue = {
                         if (shouldBypassInitialGooglePlaywallForDev()) {
@@ -158,6 +160,17 @@ fun OnboardSubscriptionScreen(
                     trialEnabled = trialEnabled,
                     trialEligible = ui.trialEligible,
                     trialEligibilityLoaded = ui.trialEligibilityLoaded,
+                    originalYearlyPrice = ui.yearlyBasePrice,
+                    offerYearlyPrice = if (trialEnabled && ui.trialEligible) {
+                        ui.yearlyTrialDiscountPrice
+                    } else {
+                        ui.yearlyDiscountPrice
+                    },
+                    monthlyEquivalent = if (trialEnabled && ui.trialEligible) {
+                        ui.yearlyTrialDiscountMonthlyEquivalent
+                    } else {
+                        ui.yearlyDiscountMonthlyEquivalent
+                    },
                     onTrialEnabledChange = { enabled ->
                         if (!ui.trialEligible) {
                             trialEnabled = false
@@ -253,6 +266,7 @@ private fun shouldBypassInitialGooglePlaywallForDev(): Boolean {
 @Composable
 private fun OnboardSubscriptionIntro(
     purchasing: Boolean,
+    helperText: String,
     onClose: () -> Unit,
     onContinue: () -> Unit
 ) {
@@ -301,7 +315,7 @@ private fun OnboardSubscriptionIntro(
 
         OnboardPaywallBottomCta(
             buttonText = "Continue",
-            helperText = "Just NT$999.00 per 年 (NT$83.25/mo)",
+            helperText = helperText,
             loading = purchasing,
             onClick = onContinue
         )
@@ -483,20 +497,14 @@ private fun OnboardOneTimeOfferScreen(
     trialEnabled: Boolean,
     trialEligible: Boolean,
     trialEligibilityLoaded: Boolean,
+    originalYearlyPrice: String,
+    offerYearlyPrice: String,
+    monthlyEquivalent: String,
     onTrialEnabledChange: (Boolean) -> Unit,
     onClose: () -> Unit,
     onContinue: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-
-    /**
-     * TODO production:
-     * 這些價格未來應該從 Google Play Billing ProductDetails / PricingPhase 取得，
-     * 不要長期 hardcode，避免 Play Console 價格改了但 App 顯示舊價格。
-     */
-    val originalYearlyPrice = "NT$999.00"
-    val offerYearlyPrice = "NT$649.00"
-    val monthlyEquivalent = "NT$54.08/mo"
 
     Box(
         modifier = Modifier

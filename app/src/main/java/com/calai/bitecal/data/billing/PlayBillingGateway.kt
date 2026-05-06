@@ -15,6 +15,11 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.NumberFormat
+import java.util.Currency
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -75,6 +80,26 @@ class PlayBillingGateway(
                 }
             }
             .toList()
+    }
+
+    override suspend fun querySubscriptionOfferPrice(
+        productId: String,
+        offerTag: String?
+    ): SubscriptionOfferPriceText? {
+        val ok = startConnectionIfNeeded()
+        if (!ok) return null
+
+        val productDetails = querySubscriptionProductDetails(productId) ?: return null
+        val matchedOffer = pickOffer(
+            offerDetails = productDetails.subscriptionOfferDetails.orEmpty(),
+            requestedOfferTag = offerTag
+        ) ?: return null
+
+        return extractPriceText(
+            productId = productId,
+            offerTag = offerTag,
+            offerDetails = matchedOffer
+        )
     }
 
     override suspend fun launchSubscriptionPurchase(
@@ -208,6 +233,79 @@ class PlayBillingGateway(
         ) { details ->
             "basePlanId=${details.basePlanId}, offerId=${details.offerId}, tags=${details.offerTags}"
         }
+    }
+
+    private fun extractPriceText(
+        productId: String,
+        offerTag: String?,
+        offerDetails: ProductDetails.SubscriptionOfferDetails
+    ): SubscriptionOfferPriceText? {
+        val paidPhase = offerDetails.pricingPhases.pricingPhaseList
+            .firstOrNull { it.priceAmountMicros > 0L }
+            ?: offerDetails.pricingPhases.pricingPhaseList.firstOrNull()
+            ?: return null
+
+        val formattedPrice = paidPhase.formattedPrice.takeIf { it.isNotBlank() }
+            ?: return null
+
+        return SubscriptionOfferPriceText(
+            productId = productId,
+            offerTag = offerTag,
+            formattedPrice = formattedPrice,
+            formattedMonthlyEquivalent = formatMonthlyEquivalent(
+                priceAmountMicros = paidPhase.priceAmountMicros,
+                currencyCode = paidPhase.priceCurrencyCode,
+                billingPeriod = paidPhase.billingPeriod,
+                fallbackFormattedPrice = formattedPrice
+            )
+        )
+    }
+
+    private fun formatMonthlyEquivalent(
+        priceAmountMicros: Long,
+        currencyCode: String,
+        billingPeriod: String,
+        fallbackFormattedPrice: String
+    ): String? {
+        if (priceAmountMicros <= 0L) return null
+
+        val months = monthsFromBillingPeriod(billingPeriod)
+        if (months <= BigDecimal.ZERO) return null
+
+        if (months.compareTo(BigDecimal.ONE) == 0) {
+            return "$fallbackFormattedPrice/mo"
+        }
+
+        val monthlyAmount = BigDecimal.valueOf(priceAmountMicros)
+            .divide(BigDecimal.valueOf(1_000_000L), 8, RoundingMode.HALF_UP)
+            .divide(months, 2, RoundingMode.HALF_UP)
+
+        return runCatching {
+            val formatter = NumberFormat.getCurrencyInstance(Locale.getDefault()).apply {
+                currency = Currency.getInstance(currencyCode)
+                minimumFractionDigits = 2
+                maximumFractionDigits = 2
+            }
+            "${formatter.format(monthlyAmount)}/mo"
+        }.getOrNull()
+    }
+
+    private fun monthsFromBillingPeriod(billingPeriod: String): BigDecimal {
+        val years = Regex("""(\d+)Y""").find(billingPeriod)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.toLongOrNull()
+            ?: 0L
+
+        val months = Regex("""(\d+)M""").find(billingPeriod)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.toLongOrNull()
+            ?: 0L
+
+        return BigDecimal.valueOf(years * 12L + months)
+            .takeIf { it > BigDecimal.ZERO }
+            ?: BigDecimal.ONE
     }
 
     private fun handlePurchaseUpdated(

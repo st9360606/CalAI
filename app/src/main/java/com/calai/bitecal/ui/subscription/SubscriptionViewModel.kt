@@ -3,6 +3,7 @@ package com.calai.bitecal.ui.subscription
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.calai.bitecal.data.billing.BillingGateway
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.EntitlementSyncer
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
@@ -21,7 +22,13 @@ data class SubscriptionUiState(
     val error: String? = null,
     val canRestorePurchase: Boolean = false,
     val trialEligible: Boolean = false,
-    val trialEligibilityLoaded: Boolean = false
+    val trialEligibilityLoaded: Boolean = false,
+    val yearlyBasePrice: String = "NT$999.00",
+    val yearlyBaseMonthlyEquivalent: String = "NT$83.25/mo",
+    val yearlyDiscountPrice: String = "NT$649.00",
+    val yearlyDiscountMonthlyEquivalent: String = "NT$54.08/mo",
+    val yearlyTrialDiscountPrice: String = "NT$649.00",
+    val yearlyTrialDiscountMonthlyEquivalent: String = "NT$54.08/mo"
 ) {
     val busy: Boolean
         get() = purchasing
@@ -30,7 +37,8 @@ data class SubscriptionUiState(
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
     private val entitlementSyncer: EntitlementSyncer,
-    private val membershipRepository: MembershipRepository
+    private val membershipRepository: MembershipRepository,
+    private val billingGateway: BillingGateway
 ) : ViewModel() {
 
     private val _ui = MutableStateFlow(SubscriptionUiState())
@@ -40,14 +48,61 @@ class SubscriptionViewModel @Inject constructor(
         if (_ui.value.trialEligibilityLoaded) return
 
         viewModelScope.launch {
-            val summary = runCatching {
+            runCatching {
                 membershipRepository.getSummary()
+            }.onSuccess { summary ->
+                _ui.update {
+                    it.copy(
+                        trialEligible = summary.trialEligible,
+                        trialEligibilityLoaded = true,
+                        error = null
+                    )
+                }
+            }.onFailure { ex ->
+                _ui.update {
+                    it.copy(
+                        trialEligible = false,
+                        trialEligibilityLoaded = false,
+                        error = ex.message ?: "Unable to check trial eligibility. Please try again."
+                    )
+                }
+            }
+        }
+    }
+
+    fun loadSubscriptionOfferPrices() {
+        viewModelScope.launch {
+            val base = runCatching {
+                billingGateway.querySubscriptionOfferPrice(
+                    productId = BiteCalBillingProducts.YEARLY,
+                    offerTag = null
+                )
+            }.getOrNull()
+
+            val discount = runCatching {
+                billingGateway.querySubscriptionOfferPrice(
+                    productId = BiteCalBillingProducts.YEARLY,
+                    offerTag = BiteCalBillingProducts.OfferTags.ONBOARD_DISCOUNT_YEARLY
+                )
+            }.getOrNull()
+
+            val trialDiscount = runCatching {
+                billingGateway.querySubscriptionOfferPrice(
+                    productId = BiteCalBillingProducts.YEARLY,
+                    offerTag = BiteCalBillingProducts.OfferTags.ONBOARD_TRIAL_DISCOUNT_YEARLY
+                )
             }.getOrNull()
 
             _ui.update {
                 it.copy(
-                    trialEligible = summary?.trialEligible == true,
-                    trialEligibilityLoaded = true
+                    yearlyBasePrice = base?.formattedPrice ?: it.yearlyBasePrice,
+                    yearlyBaseMonthlyEquivalent = base?.formattedMonthlyEquivalent ?: it.yearlyBaseMonthlyEquivalent,
+                    yearlyDiscountPrice = discount?.formattedPrice ?: it.yearlyDiscountPrice,
+                    yearlyDiscountMonthlyEquivalent = discount?.formattedMonthlyEquivalent ?: it.yearlyDiscountMonthlyEquivalent,
+                    yearlyTrialDiscountPrice = trialDiscount?.formattedPrice ?: discount?.formattedPrice ?: it.yearlyTrialDiscountPrice,
+                    yearlyTrialDiscountMonthlyEquivalent = trialDiscount?.formattedMonthlyEquivalent
+                        ?: discount?.formattedMonthlyEquivalent
+                        ?: it.yearlyTrialDiscountMonthlyEquivalent
                 )
             }
         }
