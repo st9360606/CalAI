@@ -10,12 +10,19 @@ interface ReferralApi {
     suspend fun me(): ReferralSummaryDto
 
     @POST("/api/v1/referrals/claim")
-    suspend fun claim(@Body request: ClaimReferralRequest)
+    suspend fun claim(@Body request: ClaimReferralRequest): ClaimReferralResponse
 }
 
 @Serializable
 data class ClaimReferralRequest(
     val promoCode: String
+)
+
+@Serializable
+data class ClaimReferralResponse(
+    val applied: Boolean = false,
+    val alreadyApplied: Boolean = false,
+    val claimStatus: String? = null,
 )
 
 @Serializable

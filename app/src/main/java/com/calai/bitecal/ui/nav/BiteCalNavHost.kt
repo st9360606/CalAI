@@ -49,6 +49,7 @@ import com.calai.bitecal.data.auth.net.SessionBus
 import com.calai.bitecal.data.foodlog.model.ClientAction
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
+import com.calai.bitecal.data.onboarding.repo.OnboardingRepository
 import com.calai.bitecal.di.AppEntryPoint
 import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.LanguageSessionFlag
@@ -136,6 +137,8 @@ import com.calai.bitecal.ui.onboarding.plan.HealthPlanViewModel
 import com.calai.bitecal.ui.onboarding.progress.ComputationProgressScreen
 import com.calai.bitecal.ui.onboarding.progress.ComputationProgressViewModel
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceScreen
+import com.calai.bitecal.ui.onboarding.referralcode.OnboardReferralCodeRoute
+import com.calai.bitecal.ui.onboarding.referralcode.OnboardReferralCodeViewModel
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
@@ -158,6 +161,7 @@ object Routes {
     const val SIGN_IN_EMAIL_CODE = "signin_email_code"
     const val ONBOARD_GENDER = "onboard_gender"
     const val ONBOARD_REFERRAL = "onboard_referral"
+    const val ONBOARD_REFERRAL_CODE = "onboard_referral_code"
     const val ONBOARD_AGE = "onboard_age"
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
@@ -409,6 +413,10 @@ fun BiteCalNavHost(
 
     val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
 
+    val onboardingRepo: OnboardingRepository = remember(ep) {
+        ep.onboardingRepository()
+    }
+
     // 只記錄本次 App / 本輪 onboarding 是否已經關閉過 onboarding paywall。
     // 不寫入 DataStore：重新開 App 或重新開始 onboarding 時會重算。
     var onboardingPaywallRejectedOnce by remember { mutableStateOf(false) }
@@ -548,10 +556,12 @@ fun BiteCalNavHost(
                                 runCatching { store.setHasServerProfile(true) }
                                 runCatching { weightRepo.ensureBaseline() }
 
-                                // 已經在 Trial / Premium 的使用者重走 onboarding 登入後，不應再看到付費頁。
-                                // 這裡會先 restore/sync Google Play 權益，再 fallback 查後端 /entitlements/me。
-                                val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
-                                if (hasActiveAccess || allowHomeAfterRejectedPaywall) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
+                                // SignIn 後依照後端 bootstrap 決定下一頁；App 不自行猜 referral eligibility。
+                                resolveOnboardingDestination(
+                                    entitlementSyncer = entitlementSyncer,
+                                    onboardingRepository = onboardingRepo,
+                                    allowHomeAfterRejectedPaywall = allowHomeAfterRejectedPaywall,
+                                )
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
@@ -767,9 +777,12 @@ fun BiteCalNavHost(
                                     runCatching { store.setHasServerProfile(true) }
                                     runCatching { weightRepo.ensureBaseline() }
 
-                                    // 已登入使用者重走 onboarding 時，也要套用相同 gate。
-                                    val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
-                                    if (hasActiveAccess || allowHomeAfterRejectedPaywall) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
+                                    // 已登入使用者重走 onboarding 時，也要走後端 bootstrap，避免 App 自行推論 referral eligibility。
+                                    resolveOnboardingDestination(
+                                        entitlementSyncer = entitlementSyncer,
+                                        onboardingRepository = onboardingRepo,
+                                        allowHomeAfterRejectedPaywall = allowHomeAfterRejectedPaywall,
+                                    )
                                 }
 
                                 nav.navigate(destination) {
@@ -864,6 +877,29 @@ fun BiteCalNavHost(
                     },
                 )
             }
+        }
+
+        composable(Routes.ONBOARD_REFERRAL_CODE) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: OnboardReferralCodeViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            OnboardReferralCodeRoute(
+                vm = vm,
+                onBack = { nav.safePopBackStack() },
+                onNext = {
+                    nav.navigate(Routes.ONBOARD_SUBSCRIPTION) {
+                        popUpTo(Routes.ONBOARD_REFERRAL_CODE) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            )
         }
 
         composable(Routes.HOME) { backStackEntry ->
@@ -2804,6 +2840,7 @@ private fun isOnboardingRoute(route: String?): Boolean {
     return route == Routes.LANDING ||
             route == Routes.ONBOARD_GENDER ||
             route == Routes.ONBOARD_REFERRAL ||
+            route == Routes.ONBOARD_REFERRAL_CODE ||
             route == Routes.ONBOARD_AGE ||
             route == Routes.ONBOARD_HEIGHT ||
             route == Routes.ONBOARD_WEIGHT ||

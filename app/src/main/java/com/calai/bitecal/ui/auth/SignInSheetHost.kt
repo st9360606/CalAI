@@ -13,11 +13,14 @@ import com.calai.bitecal.data.auth.GoogleAuthService
 import com.calai.bitecal.di.AppEntryPoint
 import com.calai.bitecal.i18n.LanguageSessionFlag
 import com.calai.bitecal.ui.nav.Routes
+import com.calai.bitecal.ui.nav.resolveOnboardingDestination
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.calai.bitecal.R
+import com.calai.bitecal.data.onboarding.repo.OnboardingRepository
+
 private fun hasGoogleAccount(context: Context): Boolean =
     try { AccountManager.get(context).getAccountsByType("com.google").isNotEmpty() }
     catch (_: Exception) { false }
@@ -51,6 +54,9 @@ fun SignInSheetHost(
     val weightRepo = remember(ep) { ep.weightRepository() }
     val store = remember(ep) { ep.userProfileStore() }
     val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
+    val onboardingRepo: OnboardingRepository = remember(ep) {
+        ep.onboardingRepository()
+    }
     var loading by remember { mutableStateOf(false) }
     val scope = remember(activity) { activity.lifecycleScope }
 
@@ -64,14 +70,12 @@ fun SignInSheetHost(
             runCatching { store.setHasServerProfile(true) }
             runCatching { weightRepo.ensureBaseline() }
 
-            // 已經在 Trial / Premium 的使用者重走 onboarding 登入後，不應再看到付費頁。
-            // 這裡會先 restore/sync Google Play 權益，再 fallback 查後端 /entitlements/me。
-            val hasActiveAccess = entitlementSyncer.hasActivePremiumAccess()
-            val destination = if (hasActiveAccess || allowHomeAfterOnboardingPaywallRejected) {
-                Routes.HOME
-            } else {
-                Routes.ONBOARD_SUBSCRIPTION
-            }
+            // SignIn 後依照後端 bootstrap 決定下一頁；App 不自行猜 referral eligibility。
+            val destination = resolveOnboardingDestination(
+                entitlementSyncer = entitlementSyncer,
+                onboardingRepository = onboardingRepo,
+                allowHomeAfterRejectedPaywall = allowHomeAfterOnboardingPaywallRejected,
+            )
 
             withContext(Dispatchers.Main) {
                 navController.navigate(destination) {

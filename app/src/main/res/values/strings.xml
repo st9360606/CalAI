@@ -488,4 +488,24 @@
     <string name="onboard_weight_loss_comparison_two_times">3X</string>
     <string name="onboard_weight_loss_comparison_caption">BiteCal AI makes everything simple\nand keeps you accountable</string>
 
+
+    <!-- Onboarding Referral Code -->
+    <string name="onboard_referral_code_title">Enter referral code\n(optional)</string>
+    <string name="onboard_referral_code_subtitle">You can skip this step</string>
+    <string name="onboard_referral_code_input_label">Referral Code</string>
+    <string name="onboard_referral_code_placeholder">Referral Code</string>
+    <string name="onboard_referral_code_submit">Submit</string>
+    <string name="onboard_referral_code_submitting">Submitting…</string>
+    <string name="onboard_referral_code_applied">Referral Code Applied !</string>
+    <string name="onboard_referral_code_skip_and_continue">Skip and continue</string>
+    <string name="onboard_referral_code_error_invalid_format">Use letters and numbers only.</string>
+    <string name="onboard_referral_code_error_invalid">We couldn\'t find this referral code.</string>
+    <string name="onboard_referral_code_error_self_referral">You can\'t use your own referral code.</string>
+    <string name="onboard_referral_code_error_already_claimed">This account has already applied a referral code.</string>
+    <string name="onboard_referral_code_error_already_subscribed">Subscribed accounts can\'t apply a referral code.</string>
+    <string name="onboard_referral_code_error_disabled">Referral is temporarily unavailable.</string>
+    <string name="onboard_referral_code_error_risk">We can\'t apply a referral code right now.</string>
+    <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
+    <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now. Please try again later.</string>
+
 </resources>

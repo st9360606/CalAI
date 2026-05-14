@@ -6,6 +6,7 @@ import com.calai.bitecal.data.auth.repo.TokenStore
 import com.calai.bitecal.data.auth.state.AuthState
 import com.calai.bitecal.data.entitlement.EntitlementSyncer
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
+import com.calai.bitecal.data.onboarding.repo.OnboardingRepository
 import com.calai.bitecal.data.profile.repo.AutoGoalsRepository
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.ProfileRepository
@@ -30,4 +31,5 @@ interface AppEntryPoint {
     fun foodLogsRepository(): FoodLogsRepository
     fun accountRepository(): AccountRepository
     fun entitlementSyncer(): EntitlementSyncer
+    fun onboardingRepository(): OnboardingRepository
 }

@@ -487,4 +487,24 @@
     <string name="onboard_weight_loss_comparison_two_times">3X</string>
     <string name="onboard_weight_loss_comparison_caption">BiteCal AI讓一切變得簡單並且\n讓您負責</string>
 
+
+    <!-- Onboarding Referral Code -->
+    <string name="onboard_referral_code_title">輸入推薦碼（可選）</string>
+    <string name="onboard_referral_code_subtitle">您可以跳過此步驟</string>
+    <string name="onboard_referral_code_input_label">推薦碼</string>
+    <string name="onboard_referral_code_placeholder">推薦碼</string>
+    <string name="onboard_referral_code_submit">提交</string>
+    <string name="onboard_referral_code_submitting">提交中…</string>
+    <string name="onboard_referral_code_applied">推薦碼已套用！</string>
+    <string name="onboard_referral_code_skip_and_continue">跳過並繼續</string>
+    <string name="onboard_referral_code_error_invalid_format">僅能輸入英文字母與數字。</string>
+    <string name="onboard_referral_code_error_invalid">找不到這組推薦碼。</string>
+    <string name="onboard_referral_code_error_self_referral">不能輸入自己的推薦碼。</string>
+    <string name="onboard_referral_code_error_already_claimed">此帳號已經套用過推薦碼。</string>
+    <string name="onboard_referral_code_error_already_subscribed">已訂閱過的帳號無法套用推薦碼。</string>
+    <string name="onboard_referral_code_error_disabled">推薦活動目前暫停。</string>
+    <string name="onboard_referral_code_error_risk">目前無法套用推薦碼。</string>
+    <string name="onboard_referral_code_error_network">目前無法套用推薦碼，請稍後再試。</string>
+    <string name="onboard_referral_code_error_unknown">推薦碼目前無法套用，請稍後再試。</string>
+
 </resources>

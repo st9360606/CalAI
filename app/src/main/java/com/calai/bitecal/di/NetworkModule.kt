@@ -36,6 +36,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 import com.calai.bitecal.data.membership.api.MembershipApi
 import com.calai.bitecal.data.notifications.api.NotificationInboxApi
+import com.calai.bitecal.data.onboarding.api.OnboardingApi
 import com.calai.bitecal.data.referral.api.ReferralApi
 @Module
 @InstallIn(SingletonComponent::class)
@@ -162,6 +163,11 @@ object NetworkModule {
     @Singleton
     fun provideEntitlementApi(@Named("apiRetrofit") retrofit: Retrofit): EntitlementApi =
         retrofit.create(EntitlementApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideOnboardingApi(@Named("apiRetrofit") retrofit: Retrofit): OnboardingApi =
+        retrofit.create(OnboardingApi::class.java)
 
     @Provides
     @Singleton
