@@ -7,10 +7,26 @@ import org.junit.Test
 class NotificationDeepLinkRoutesTest {
 
     @Test
-    fun premiumRewardsDeepLink_mapsToPremiumRewardsRoute() {
+    fun referralsDeepLink_mapsToReferralsRoute() {
         assertEquals(
-            Routes.PREMIUM_REWARDS,
+            Routes.REFERRALS,
+            NotificationDeepLinkRoutes.routeFor("bitecal://referrals")
+        )
+    }
+
+    @Test
+    fun premiumRewardsDeepLink_mapsToReferralsRouteForBackwardCompatibility() {
+        assertEquals(
+            Routes.REFERRALS,
             NotificationDeepLinkRoutes.routeFor("bitecal://premium-rewards")
+        )
+    }
+
+    @Test
+    fun deepLinkWithExtraSpaces_isTrimmedBeforeMapping() {
+        assertEquals(
+            Routes.REFERRALS,
+            NotificationDeepLinkRoutes.routeFor("  bitecal://referrals  ")
         )
     }
 

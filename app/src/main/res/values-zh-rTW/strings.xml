@@ -115,6 +115,10 @@
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
     <string name="open_notification_settings">開啟通知設定</string>
+    <string name="notification_inbox_title">通知收件匣</string>
+    <string name="notification_inbox_loading">正在載入通知...</string>
+    <string name="notification_inbox_empty_title">目前沒有通知</string>
+    <string name="notification_inbox_empty_body">推薦獎勵更新會顯示在這裡。</string>
 
     <!-- HealthConnect -->
     <string name="hc_connect_title_prefix">連接到</string>

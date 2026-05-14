@@ -2792,18 +2792,11 @@ fun BiteCalNavHost(
                 onRetry = { vm.refresh() },
                 onBack = { nav.popBackStack() },
                 onNotificationClick = { item ->
-                    when (item.deepLink) {
-                        "bitecal://premium-rewards" -> nav.navigate(Routes.PREMIUM_REWARDS) {
+                    NotificationDeepLinkRoutes.routeFor(item.deepLink)?.let { route ->
+                        nav.navigate(route) {
                             launchSingleTop = true
                             restoreState = true
                         }
-
-                        "bitecal://referrals" -> nav.navigate(Routes.REFERRALS) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-
-                        else -> Unit
                     }
                 }
             )

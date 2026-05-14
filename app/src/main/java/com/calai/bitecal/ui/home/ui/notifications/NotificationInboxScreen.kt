@@ -27,8 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 import com.calai.bitecal.data.notifications.api.NotificationItemDto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,10 +46,13 @@ fun NotificationInboxScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Inbox") },
+                title = { Text(stringResource(R.string.notification_inbox_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.common_back)
+                        )
                     }
                 }
             )
@@ -64,7 +69,7 @@ fun NotificationInboxScreen(
                 ) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(12.dp))
-                    Text("Loading inbox...")
+                    Text(stringResource(R.string.notification_inbox_loading))
                 }
             }
 
@@ -84,7 +89,7 @@ fun NotificationInboxScreen(
                     )
                     Spacer(Modifier.height(12.dp))
                     Button(onClick = onRetry) {
-                        Text("Retry")
+                        Text(stringResource(R.string.cta_retry))
                     }
                 }
             }
@@ -99,12 +104,12 @@ fun NotificationInboxScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "No notifications yet",
+                        text = stringResource(R.string.notification_inbox_empty_title),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = "Referral reward updates will appear here.",
+                        text = stringResource(R.string.notification_inbox_empty_body),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

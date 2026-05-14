@@ -39,9 +39,9 @@ class NotificationInboxViewModelTest {
         val notification = NotificationItemDto(
             id = 1L,
             type = "REFERRAL_REWARD_GRANTED",
-            title = "Premium reward granted",
-            message = "Your referral reward was applied.",
-            deepLink = "bitecal://premium-rewards",
+            title = "Referral reward granted",
+            message = "Your Premium has been extended by 30 days.",
+            deepLink = "bitecal://referrals",
             createdAtUtc = "2026-05-15T01:02:03Z",
             read = false
         )

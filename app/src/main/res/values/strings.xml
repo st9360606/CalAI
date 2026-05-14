@@ -115,6 +115,10 @@
     <string name="onb_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
     <string name="onb_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
     <string name="open_notification_settings">Open notification settings</string>
+    <string name="notification_inbox_title">Inbox</string>
+    <string name="notification_inbox_loading">Loading inbox...</string>
+    <string name="notification_inbox_empty_title">No notifications yet</string>
+    <string name="notification_inbox_empty_body">Referral reward updates will appear here.</string>
 
     <!-- HealthConnect -->
     <string name="hc_connect_title_prefix">Connect to</string>
