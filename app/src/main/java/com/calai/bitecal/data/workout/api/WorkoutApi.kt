@@ -1,13 +1,15 @@
 package com.calai.bitecal.data.workout.api
 
+import com.calai.bitecal.data.workout.model.WorkoutWeeklyProgressDto
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 
 /**
  * Workout / Activity tracking API
+ *
+ * X-Client-Timezone 一律由 BaseHeadersInterceptor 統一帶。
  */
 interface WorkoutApi {
 
@@ -18,21 +20,20 @@ interface WorkoutApi {
 
     @POST("/api/v1/workouts/log")
     suspend fun log(
-        @Body body: LogWorkoutRequest,
-        @Header("X-Client-Timezone") tz: String
+        @Body body: LogWorkoutRequest
     ): LogWorkoutResponse
 
     @GET("/api/v1/workouts/presets")
     suspend fun presets(): PresetListResponse
 
     @GET("/api/v1/workouts/today")
-    suspend fun today(
-        @Header("X-Client-Timezone") tz: String
-    ): TodayWorkoutResponse
+    suspend fun today(): TodayWorkoutResponse
 
-    // ★ 取得目前使用者體重(kg)，供 fallback 計算使用
     @GET("/api/v1/workouts/me/weight")
     suspend fun myWeight(): WeightDto
+
+    @GET("/api/v1/workouts/progress/weekly")
+    suspend fun weeklyProgress(): WorkoutWeeklyProgressDto
 }
 
 /** 使用者自由輸入的句子 */
@@ -49,7 +50,7 @@ data class EstimateResponse(
     val kcal: Int? = null
 )
 
-/** 寫入實際運動紀錄。 */
+/** 寫入實際運動紀錄 */
 @Serializable
 data class LogWorkoutRequest(
     val activityId: Long,
@@ -64,7 +65,6 @@ data class LogWorkoutResponse(
     val today: TodayWorkoutResponse
 )
 
-/** 給列表下半部（Walking / Running ...） */
 @Serializable
 data class PresetListResponse(
     val presets: List<PresetWorkoutDto>
@@ -78,7 +78,6 @@ data class PresetWorkoutDto(
     val iconKey: String
 )
 
-/** 今日紀錄 + 總和，for History(4.jpg) & Home card */
 @Serializable
 data class TodayWorkoutResponse(
     val totalKcalToday: Int,
@@ -94,7 +93,6 @@ data class WorkoutSessionDto(
     val timeLabel: String
 )
 
-// ★ 新增：使用者體重（kg）
 @Serializable
 data class WeightDto(
     val kg: Double

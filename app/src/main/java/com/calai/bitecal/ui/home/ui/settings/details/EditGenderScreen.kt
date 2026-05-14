@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -20,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
 import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
-
+import com.calai.bitecal.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditGenderScreen(
@@ -85,7 +86,7 @@ fun EditGenderScreen(
                             )
                         } else {
                             Text(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.2.sp

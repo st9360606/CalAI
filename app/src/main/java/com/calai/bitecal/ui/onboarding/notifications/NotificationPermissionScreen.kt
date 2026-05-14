@@ -46,6 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -87,6 +88,7 @@ import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.OnboardingProgress
 
+
 private const val TAG_NOTIF = "NotifPerm"
 
 /**
@@ -94,6 +96,12 @@ private const val TAG_NOTIF = "NotifPerm"
  * 直接用字串避免 minSdk Lint 問題。
  */
 private const val PERM_POST_NOTIFICATIONS = "android.permission.POST_NOTIFICATIONS"
+
+private enum class NotificationPermissionUiState {
+    GRANTED,
+    CAN_REQUEST,
+    CANNOT_REQUEST
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -148,8 +156,8 @@ fun NotificationPermissionScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OnboardingProgress(
-                            stepIndex = 9,
-                            totalSteps = 11,
+                            stepIndex = 10,
+                            totalSteps = 12,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -166,22 +174,21 @@ fun NotificationPermissionScreen(
             val effectiveOwner: ActivityResultRegistryOwner? =
                 ownerFromLocal ?: ownerFromLifecycle ?: bottomActivity
 
-            val shouldRequest =
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        isPermissionInManifest(bottomCtx, PERM_POST_NOTIFICATIONS) &&
-                        ContextCompat.checkSelfPermission(bottomCtx, PERM_POST_NOTIFICATIONS) !=
-                        PackageManager.PERMISSION_GRANTED
+            val permissionUiState = resolveNotificationPermissionUiState(bottomCtx)
 
             if (BuildConfig.DEBUG) {
                 Log.d(
                     TAG_NOTIF,
-                    "shouldRequest=$shouldRequest, owner=${effectiveOwner != null}, " +
-                            "granted=${isNotificationsEnabled(bottomCtx)}, sdk=${Build.VERSION.SDK_INT}"
+                    "permissionUiState=$permissionUiState, owner=${effectiveOwner != null}, " +
+                            "sdk=${Build.VERSION.SDK_INT}, " +
+                            "hasManifest=${isPermissionInManifest(bottomCtx, PERM_POST_NOTIFICATIONS)}, " +
+                            "granted=${isNotificationsEnabled(bottomCtx)}"
                 )
             }
 
             when {
-                shouldRequest && effectiveOwner != null -> {
+                permissionUiState == NotificationPermissionUiState.CAN_REQUEST &&
+                        effectiveOwner != null -> {
                     CompositionLocalProvider(LocalActivityResultRegistryOwner provides effectiveOwner) {
                         val launcher = rememberLauncherForActivityResult(
                             contract = ActivityResultContracts.RequestPermission()
@@ -190,16 +197,18 @@ fun NotificationPermissionScreen(
                         }
 
                         NotifBottomBar(
-                            granted = isNotificationsEnabled(bottomCtx),
-                            onClick = { launcher.launch(PERM_POST_NOTIFICATIONS) }
+                            permissionUiState = permissionUiState,
+                            onClick = { launcher.launch(PERM_POST_NOTIFICATIONS) },
+                            onSkip = { onNext() }
                         )
                     }
                 }
 
                 else -> {
                     NotifBottomBar(
-                        granted = isNotificationsEnabled(bottomCtx),
-                        onClick = { onNext() }
+                        permissionUiState = permissionUiState,
+                        onClick = { onNext() },
+                        onSkip = { onNext() }
                     )
                 }
             }
@@ -252,7 +261,7 @@ fun NotificationPermissionScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(18.dp))
 
                     val titleStyle = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 42.sp,
@@ -294,19 +303,30 @@ fun NotificationPermissionScreen(
 
 @Composable
 private fun NotifBottomBar(
-    granted: Boolean,
-    onClick: () -> Unit
+    permissionUiState: NotificationPermissionUiState,
+    onClick: () -> Unit,
+    onSkip: () -> Unit
 ) {
-    Box {
+    val granted = permissionUiState == NotificationPermissionUiState.GRANTED
+    val canRequest = permissionUiState == NotificationPermissionUiState.CAN_REQUEST
+
+    Column(
+        modifier = Modifier
+            .navigationBarsPadding()
+            .padding(
+                start = 20.dp,
+                end = 20.dp,
+                bottom = if (granted) 40.dp else 8.dp
+            )
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Button(
             onClick = onClick,
             enabled = true,
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                 .fillMaxWidth()
-                .height(64.dp),
+                .height(68.dp),
             shape = RoundedCornerShape(999.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Black,
@@ -314,15 +334,40 @@ private fun NotifBottomBar(
             )
         ) {
             Text(
-                text = if (granted) verifyTitle(R.string.continue_text, "Continue")
-                else verifyTitle(R.string.allow_notifications_cta, "Allow Notifications"),
+                text = when {
+                    granted -> verifyTitle(R.string.continue_text, "Continue")
+                    canRequest -> verifyTitle(R.string.allow_notifications_cta, "Allow Notifications")
+                    else -> verifyTitle(R.string.continue_text, "Continue")
+                },
                 style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 18.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.2.sp
                 ),
                 textAlign = TextAlign.Center
             )
+        }
+
+        if (!granted) {
+            Spacer(Modifier.height(8.dp))
+
+            TextButton(
+                onClick = onSkip,
+                modifier = Modifier.height(44.dp),
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFF8F98A3)
+                )
+            ) {
+                Text(
+                    text = verifyTitle(R.string.common_skip, "Skip"),
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 0.1.sp
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -755,4 +800,24 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null
+}
+
+private fun resolveNotificationPermissionUiState(context: Context): NotificationPermissionUiState {
+    val granted = isNotificationsEnabled(context)
+
+    if (granted) {
+        return NotificationPermissionUiState.GRANTED
+    }
+
+    val canRequestRuntimePermission =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                isPermissionInManifest(context, PERM_POST_NOTIFICATIONS) &&
+                ContextCompat.checkSelfPermission(context, PERM_POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+
+    return if (canRequestRuntimePermission) {
+        NotificationPermissionUiState.CAN_REQUEST
+    } else {
+        NotificationPermissionUiState.CANNOT_REQUEST
+    }
 }

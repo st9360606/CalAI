@@ -43,12 +43,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
 import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
 import kotlinx.coroutines.flow.collectLatest
@@ -180,7 +182,7 @@ fun EditWorkoutGoalScreen(
                         disabledContentColor = Color.White.copy(alpha = 0.7f)
                     )
                 ) {
-                    Text(text = "Save", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                    Text(text = stringResource(R.string.save), fontSize = 15.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }

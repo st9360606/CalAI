@@ -67,6 +67,7 @@ import kotlin.math.roundToInt
 import com.calai.bitecal.i18n.LocalLocaleController
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.gestures.snapping.SnapPosition
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -96,7 +97,7 @@ fun WeightSelectionScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
     stepIndex: Int = 5,
-    totalSteps: Int = 11,
+    totalSteps: Int = 12,
 ) {
     val weightKg by vm.weightKgState.collectAsState()
     val savedUnit by vm.weightUnitState.collectAsState()
@@ -161,7 +162,7 @@ fun WeightSelectionScreen(
                 .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
             val kgVal = if (hasKg) {
-                weightKg.toDouble()
+                normalizeKg1(weightKg.toDouble())
             } else {
                 lbsToKgPrecise(lbsVal)
             }.coerceIn(kgMin, kgMax)
@@ -169,7 +170,7 @@ fun WeightSelectionScreen(
             Initial(kgVal, lbsTenths)
 
         } else if (hasKg) {
-            val kgVal = weightKg.toDouble().coerceIn(kgMin, kgMax)
+            val kgVal = normalizeKg1(weightKg.toDouble()).coerceIn(kgMin, kgMax)
             val lbsTenths = kgToLbsTenths(kgVal)
                 .coerceIn(lbsTenthsMin, lbsTenthsMax)
 
@@ -193,7 +194,7 @@ fun WeightSelectionScreen(
     }
 
     // --- kg wheel 選中值（整數＋小數） ---
-    val kgTenths = (floor1(valueKg) * 10.0).toInt()
+    val kgTenths = (normalizeKg1(valueKg) * 10.0).roundToInt()
         .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
     val kgIntSel = kgTenths / 10
     val kgDecSel = kgTenths % 10
@@ -207,6 +208,17 @@ fun WeightSelectionScreen(
     val subtitleToUnitSpacing = if (isZh) 60.dp else 25.dp
 
     val scope = rememberCoroutineScope()
+
+    val kgIntWheelState = rememberLazyListState()
+    val kgDecWheelState = rememberLazyListState()
+    val lbsIntWheelState = rememberLazyListState()
+    val lbsDecWheelState = rememberLazyListState()
+
+    val isWheelScrolling = if (useMetric) {
+        kgIntWheelState.isScrollInProgress || kgDecWheelState.isScrollInProgress
+    } else {
+        lbsIntWheelState.isScrollInProgress || lbsDecWheelState.isScrollInProgress
+    }
 
     Scaffold(
         containerColor = Color.White,
@@ -254,19 +266,60 @@ fun WeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        if (isSaving) return@Button
+                        if (isSaving || isWheelScrolling) return@Button
 
                         scope.launch {
                             isSaving = true
                             try {
-                                val kgToSave = roundKg1(valueKg)
-                                    .coerceIn(kgMin.toFloat(), kgMax.toFloat())
+                                val kgToSave: Float
+                                val lbsToSaveOrNull: Float?
+                                val lbsTenthsForUi: Int
 
-                                val lbsToSaveOrNull: Float? = if (!useMetric) {
-                                    (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax) / 10.0).toFloat()
-                                } else null
+                                if (useMetric) {
+                                    val intNow = centeredWheelValue(
+                                        state = kgIntWheelState,
+                                        range = kgMin.toInt()..kgMax.toInt()
+                                    )
+                                    val decNow = centeredWheelValue(
+                                        state = kgDecWheelState,
+                                        range = 0..9
+                                    )
 
-                                // ✅ 存完再跳頁（關鍵）
+                                    val kgTenthsNow = (intNow * 10 + decNow)
+                                        .coerceIn((kgMin * 10).toInt(), (kgMax * 10).toInt())
+
+                                    kgToSave = (kgTenthsNow / 10f)
+                                        .coerceIn(kgMin.toFloat(), kgMax.toFloat())
+
+                                    lbsToSaveOrNull = null
+                                    lbsTenthsForUi = kgToLbsTenths(kgToSave.toDouble())
+                                        .coerceIn(lbsTenthsMin, lbsTenthsMax)
+                                } else {
+                                    val intNow = centeredWheelValue(
+                                        state = lbsIntWheelState,
+                                        range = lbsIntMin..lbsIntMax
+                                    )
+                                    val decNow = centeredWheelValue(
+                                        state = lbsDecWheelState,
+                                        range = 0..9
+                                    )
+
+                                    val lbsTenthsNow = (intNow * 10 + decNow)
+                                        .coerceIn(lbsTenthsMin, lbsTenthsMax)
+
+                                    val lbsNow = lbsTenthsNow / 10f
+                                    lbsToSaveOrNull = lbsNow
+
+                                    kgToSave = roundKg1(lbsToKgPrecise(lbsNow.toDouble()))
+                                        .coerceIn(kgMin.toFloat(), kgMax.toFloat())
+
+                                    lbsTenthsForUi = lbsTenthsNow
+                                }
+
+                                // ✅ 先同步本地 UI state，避免畫面跳回舊值
+                                valueKg = kgToSave.toDouble()
+                                valueLbsTenths = lbsTenthsForUi
+
                                 vm.saveAll(
                                     kgToSave = kgToSave,
                                     useMetric = useMetric,
@@ -279,13 +332,13 @@ fun WeightSelectionScreen(
                             }
                         }
                     },
-                    enabled = valueKg > 0.0,
+                    enabled = valueKg > 0.0 && !isSaving && !isWheelScrolling,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
-                        .height(64.dp),
+                        .height(68.dp),
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
@@ -299,7 +352,7 @@ fun WeightSelectionScreen(
                         Text(
                             text = stringResource(R.string.continue_text),
                             style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 18.sp,
+                                fontSize = 19.sp,
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 0.2.sp
                             ),
@@ -354,7 +407,7 @@ fun WeightSelectionScreen(
                         // 例：154.0 lbs -> 69.8 kg
                     } else {
                         // ✅ KG → LBS：無條件捨去到 0.1
-                        valueLbsTenths = kgToLbsTenths(floor1(valueKg))
+                        valueLbsTenths = kgToLbsTenths(normalizeKg1(valueKg))
                             .coerceIn(lbsTenthsMin, lbsTenthsMax)
                         // 例：70.0 kg -> 154.3 lbs
                     }
@@ -372,6 +425,7 @@ fun WeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
+                        listState = kgIntWheelState,
                         range = kgMin.toInt()..kgMax.toInt(),
                         value = kgIntSel,
                         onValueChange = { newInt ->
@@ -399,6 +453,7 @@ fun WeightSelectionScreen(
                     }
 
                     NumberWheel(
+                        listState = kgDecWheelState,
                         range = 0..9,
                         value = kgDecSel,
                         onValueChange = { newDec ->
@@ -426,6 +481,7 @@ fun WeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
+                        listState = lbsIntWheelState,
                         range = lbsIntMin..lbsIntMax,
                         value = lbsIntSel,
                         onValueChange = { newInt ->
@@ -457,6 +513,7 @@ fun WeightSelectionScreen(
                     }
 
                     NumberWheel(
+                        listState = lbsDecWheelState,
                         range = 0..9,
                         value = lbsDecSel,
                         onValueChange = { newDec ->
@@ -570,10 +627,19 @@ private fun SegItem(
     }
 }
 
+private fun centeredWheelValue(
+    state: LazyListState,
+    range: IntRange
+): Int {
+    return (range.first + state.firstVisibleItemIndex)
+        .coerceIn(range.first, range.last)
+}
+
 /** 通用數字滾輪（程式定位不回呼 + 使用者滑動停止才回呼） */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
+    listState: LazyListState,
     range: IntRange,
     value: Int,
     onValueChange: (Int) -> Unit,
@@ -596,42 +662,42 @@ private fun NumberWheel(
 
     val selectedIdx = (value - range.first).coerceIn(0, count - 1)
 
-    val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(
-        lazyListState = state,
+        lazyListState = listState,
         snapPosition = SnapPosition.Center
     )
 
-    val centerListIndex by remember {
+    val centerListIndex by remember(listState, padded) {
         derivedStateOf {
-            (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
+            (listState.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
         }
     }
 
     val latestOnValueChange by rememberUpdatedState(onValueChange)
 
-    // ✅ 忽略下一次「中心值變動」回呼：用來擋程式 scrollToItem 造成的回呼
+    // 忽略程式 scrollToItem 造成的下一次 callback
     var ignoreNextCenterCallback by remember { mutableStateOf(true) }
 
-    // ✅ 初始化定位（程式定位要忽略回呼）
+    // 初始化定位
     LaunchedEffect(range) {
         ignoreNextCenterCallback = true
-        state.scrollToItem(selectedIdx)
+        listState.scrollToItem(selectedIdx)
     }
 
-    // ✅ 外部 value 改變（例如切換單位、initial 更新）：程式定位要忽略回呼
+    // 外部 value 改變（例如切換單位、初始值更新）
     LaunchedEffect(range, value) {
-        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
+        if (!listState.isScrollInProgress && listState.firstVisibleItemIndex != selectedIdx) {
             ignoreNextCenterCallback = true
-            state.scrollToItem(selectedIdx)
+            listState.scrollToItem(selectedIdx)
         }
     }
 
-    // ✅ 只在「停止滑動」那一刻才會得到 centerValue（滑動中回傳 null）
+    // 中央值一變就同步回父層
     LaunchedEffect(range) {
         snapshotFlow {
-            if (state.isScrollInProgress) null
-            else padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+            padded.getOrNull(
+                (listState.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
+            )
         }
             .filterNotNull()
             .distinctUntilChanged()
@@ -650,7 +716,7 @@ private fun NumberWheel(
             .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
-            state = state,
+            state = listState,
             flingBehavior = fling,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
@@ -726,6 +792,9 @@ private const val EPS = 1e-9
 // 無條件捨去到 0.1（避免浮點誤差導致 69.799999 -> 69.7）
 private fun floor1(v: Double): Double =
     kotlin.math.floor((v + EPS) * 10.0) / 10.0
+
+private fun normalizeKg1(v: Double): Double =
+    (v * 10.0).roundToInt() / 10.0
 
 private fun lbsToKgPrecise(lbs: Double): Double =
     lbs * KG_PER_LB

@@ -58,11 +58,9 @@ fun SignInSheet(
             LaunchedEffect(selectedProvider) {
                 when (selectedProvider) {
                     SheetAuthProvider.Google -> {
-                        // 讓黑底狀態顯示一下下
                         onGoogle()
                     }
                     SheetAuthProvider.Email -> {
-                        delay(120)
                         onEmail()
                     }
                     null -> Unit
@@ -71,7 +69,7 @@ fun SignInSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.30f)    // 30% 螢幕高度，你可以視覺再調整
+                    .fillMaxHeight(0.33f)    // 30% 螢幕高度，你可以視覺再調整
                     .navigationBarsPadding()
                     .imePadding()
                     .padding(horizontal = 20.dp)

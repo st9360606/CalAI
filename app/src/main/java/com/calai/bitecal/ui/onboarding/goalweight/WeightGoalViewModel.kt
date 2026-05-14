@@ -17,8 +17,7 @@ class WeightGoalViewModel @Inject constructor(
 ) : ViewModel() {
 
     /**
-     * ✅ 你要的「是否有 user_profiles」：
-     * 用 DataStore 的 HAS_SERVER_PROFILE 當作是否存在 profile 的旗標。
+     * 是否已有 user_profiles：
      * - true  => user_profiles 存在（可用 unit_preference）
      * - false => user_profiles 不存在（初始一律顯示 LBS）
      */
@@ -26,29 +25,65 @@ class WeightGoalViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     /**
-     * ✅ 注意：不要用 65.0f 當預設，否則 UI 會永遠以為有 kg，
-     * 你 154.0 lbs 的預設分支就永遠不會被走到。
+     * 目標體重 kg
+     * null -> 0f，代表未設定
      */
     val weightKgState = usr.goalWeightKgFlow
         .map { it ?: 0f }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
 
     /**
-     * ✅ 沒值時預設 LBS（更符合「沒 profile 一律顯示 LBS」的需求）
-     * 有 profile 時會由 Screen 用 hasProfileState + savedUnit 來決定。
+     * 目標體重單位
+     * null -> LBS，符合「沒 profile 一律顯示 LBS」的需求
      */
     val weightUnitState = usr.goalWeightUnitFlow
         .map { it ?: WeightUnit.LBS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WeightUnit.LBS)
 
-    // 新增：目標體重 lbs 狀態（null → 0f，視為沒設定）
+    /**
+     * 目標體重 lbs
+     * null -> 0f，代表未設定
+     */
     val weightLbsState = usr.goalWeightLbsFlow
         .map { it ?: 0f }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
 
-    fun saveWeightKg(kg: Float) = viewModelScope.launch { usr.setGoalWeightKg(kg) }
-    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch { usr.setGoalWeightUnit(u) }
+    /**
+     * 給 Continue 用：
+     * - kg 一律存（SSOT）
+     * - useMetric=true  => unit=KG、清 lbs
+     * - useMetric=false => unit=LBS、存 lbs
+     */
+    suspend fun saveAll(
+        kgToSave: Float,
+        useMetric: Boolean,
+        lbsToSaveOrNull: Float?
+    ) {
+        usr.setGoalWeightKg(kgToSave)
 
-    fun saveGoalWeightLbs(lbs: Float) = viewModelScope.launch { usr.setGoalWeightLbs(lbs) }
-    fun clearGoalWeightLbs() = viewModelScope.launch { usr.clearGoalWeightLbs() }
+        if (useMetric) {
+            usr.setGoalWeightUnit(WeightUnit.KG)
+            usr.clearGoalWeightLbs()
+        } else {
+            usr.setGoalWeightUnit(WeightUnit.LBS)
+            usr.setGoalWeightLbs(lbsToSaveOrNull ?: 0f)
+        }
+    }
+
+    // 保留舊 API，避免其他地方壞掉
+    fun saveWeightKg(kg: Float) = viewModelScope.launch {
+        usr.setGoalWeightKg(kg)
+    }
+
+    fun saveWeightUnit(u: WeightUnit) = viewModelScope.launch {
+        usr.setGoalWeightUnit(u)
+    }
+
+    fun saveGoalWeightLbs(lbs: Float) = viewModelScope.launch {
+        usr.setGoalWeightLbs(lbs)
+    }
+
+    fun clearGoalWeightLbs() = viewModelScope.launch {
+        usr.clearGoalWeightLbs()
+    }
 }

@@ -28,12 +28,14 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.cmToFeetInches1
 import com.calai.bitecal.data.profile.repo.feetInchesToCm1
-import com.calai.bitecal.data.profile.repo.roundCm1
 import com.calai.bitecal.ui.common.OnboardingProgress
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import com.calai.bitecal.R
+import androidx.compose.foundation.lazy.LazyListState
+import kotlin.math.roundToInt
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HeightSelectionScreen(
@@ -41,7 +43,7 @@ fun HeightSelectionScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
     stepIndex: Int = 4,
-    totalSteps: Int = 11,
+    totalSteps: Int = 12,
 ) {
     val heightCm by vm.heightCmState.collectAsState()
     val savedUnit by vm.heightUnitState.collectAsState()
@@ -61,12 +63,23 @@ fun HeightSelectionScreen(
     val scope = rememberCoroutineScope()
     var isSaving by rememberSaveable { mutableStateOf(false) }
 
-    // ====== 使用者是否真的有操作（用 wheel 的 isScrollInProgress 判斷）======
+// ====== 使用者是否真的有操作（用 wheel 的 isScrollInProgress 判斷）======
     var didUserEdit by rememberSaveable { mutableStateOf(false) }
     var didUserToggleUnit by rememberSaveable { mutableStateOf(false) }
 
-    // ====== 單位顯示（不綁 flow 當 key；且儲存中不更新；使用者手動切換後不覆蓋）======
+// ====== 單位顯示（不綁 flow 當 key；且儲存中不更新；使用者手動切換後不覆蓋）======
     var useMetric by rememberSaveable { mutableStateOf(false) }
+
+    val cmIntWheelState = rememberLazyListState()
+    val cmDecWheelState = rememberLazyListState()
+    val ftWheelState = rememberLazyListState()
+    val inWheelState = rememberLazyListState()
+
+    val isWheelScrolling = if (useMetric) {
+        cmIntWheelState.isScrollInProgress || cmDecWheelState.isScrollInProgress
+    } else {
+        ftWheelState.isScrollInProgress || inWheelState.isScrollInProgress
+    }
     LaunchedEffect(savedUnit, isSaving) {
         if (!isSaving && !didUserToggleUnit) {
             useMetric = (savedUnit == UserProfileStore.HeightUnit.CM)
@@ -75,7 +88,7 @@ fun HeightSelectionScreen(
 
     // ====== 從 flow 計算「應 seed 的初始值」======
     val initialCm = remember(heightCm, cmMin, cmMax) {
-        roundCm1(heightCm.toDouble()).toDouble().coerceIn(cmMin, cmMax)
+        normalizeCm1(heightCm.toDouble()).toDouble().coerceIn(cmMin, cmMax)
     }
     val initialFtIn = remember(initialCm) { cmToFeetInches1(initialCm) }
 
@@ -139,15 +152,14 @@ fun HeightSelectionScreen(
             Box {
                 Button(
                     onClick = {
-                        if (isSaving) return@Button
+                        if (isSaving || isWheelScrolling) return@Button
 
                         scope.launch {
                             isSaving = true
                             try {
-                                // ✅ 一律存 cm（1 位小數）
-                                val cmToSave = roundCm1(cmVal)
+                                val cmToSave = (cmToTenths(cmVal) / 10f)
+                                    .coerceIn(cmMin.toFloat(), cmMax.toFloat())
 
-                                // ✅ 存完再跳頁（關鍵）
                                 vm.saveAll(
                                     cm = cmToSave,
                                     useMetric = useMetric,
@@ -161,12 +173,13 @@ fun HeightSelectionScreen(
                             }
                         }
                     },
+                    enabled = !isSaving && !isWheelScrolling,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
-                        .height(64.dp),
+                        .height(68.dp),
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
@@ -180,7 +193,7 @@ fun HeightSelectionScreen(
                         Text(
                             text = stringResource(R.string.continue_text),
                             style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 18.sp,
+                                fontSize = 19.sp,
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 0.2.sp
                             ),
@@ -243,8 +256,8 @@ fun HeightSelectionScreen(
 
             if (useMetric) {
                 // ===== CM：整數位 + 小數位 =====
-                val cmTenths = (cmVal * 10.0).toInt()
-                    .coerceIn((cmMin * 10).toInt(), (cmMax * 10).toInt())
+                val cmTenths = cmToTenths(cmVal)
+                    .coerceIn(cmToTenths(cmMin), cmToTenths(cmMax))
                 val cmIntSel = cmTenths / 10
                 val cmDecSel = cmTenths % 10
 
@@ -256,6 +269,7 @@ fun HeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
+                        listState = cmIntWheelState,
                         range = cmMin.toInt()..cmMax.toInt(),
                         value = cmIntSel,
                         onValueChange = { newInt ->
@@ -286,6 +300,7 @@ fun HeightSelectionScreen(
                     }
 
                     NumberWheel(
+                        listState = cmDecWheelState,
                         range = 0..9,
                         value = cmDecSel,
                         onValueChange = { newDec ->
@@ -323,6 +338,7 @@ fun HeightSelectionScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     NumberWheel(
+                        listState = ftWheelState,
                         range = feetRange,
                         value = feet.coerceIn(feetRange.first, feetRange.last),
                         onValueChange = { newFeet ->
@@ -345,6 +361,7 @@ fun HeightSelectionScreen(
                     Spacer(Modifier.width(11.dp))
 
                     NumberWheel(
+                        listState = inWheelState,
                         range = 0..11,
                         value = inches.coerceIn(0, 11),
                         onValueChange = { newIn ->
@@ -472,6 +489,7 @@ private fun SegItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun NumberWheel(
+    listState: LazyListState,
     range: IntRange,
     value: Int,
     onValueChange: (Int) -> Unit,
@@ -496,37 +514,33 @@ private fun NumberWheel(
 
     val selectedIdx = ((value - range.first).coerceIn(0, count - 1))
 
-    val state = rememberLazyListState()
     val fling = rememberSnapFlingBehavior(
-        lazyListState = state,
+        lazyListState = listState,
         snapPosition = SnapPosition.Center
     )
 
-    // 初次 / range 變更：定位
     LaunchedEffect(range) {
-        state.scrollToItem(selectedIdx)
+        listState.scrollToItem(selectedIdx)
     }
 
-    // 外部 value 被程式更新：同步位置（使用者正在滑就不動）
     LaunchedEffect(range, value) {
-        if (!state.isScrollInProgress && state.firstVisibleItemIndex != selectedIdx) {
-            state.scrollToItem(selectedIdx)
+        if (!listState.isScrollInProgress && listState.firstVisibleItemIndex != selectedIdx) {
+            listState.scrollToItem(selectedIdx)
         }
     }
 
-    val centerListIndex by remember {
+    val centerListIndex by remember(listState, padded) {
         derivedStateOf {
-            (state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
+            (listState.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
         }
     }
 
     val latestOnValueChange by rememberUpdatedState(onValueChange)
     val latestOnUserScroll by rememberUpdatedState(onUserScroll)
 
-    // ✅ 只有真的開始「手勢滑動」才回呼，避免初次 layout emit 被誤判成 user edit
     LaunchedEffect(range) {
         if (onUserScroll != null) {
-            snapshotFlow { state.isScrollInProgress }
+            snapshotFlow { listState.isScrollInProgress }
                 .distinctUntilChanged()
                 .collect { inProgress ->
                     if (inProgress) latestOnUserScroll?.invoke()
@@ -534,10 +548,9 @@ private fun NumberWheel(
         }
     }
 
-    // ✅ 中心值變化（包含初次 layout）
     LaunchedEffect(range) {
         snapshotFlow {
-            padded.getOrNull((state.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
+            padded.getOrNull((listState.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex))
         }
             .filterNotNull()
             .distinctUntilChanged()
@@ -550,7 +563,7 @@ private fun NumberWheel(
             .height(rowHeight * visibleCount)
     ) {
         LazyColumn(
-            state = state,
+            state = listState,
             flingBehavior = fling,
             horizontalAlignment = Alignment.CenterHorizontally,
             userScrollEnabled = userScrollEnabled,
@@ -575,7 +588,6 @@ private fun NumberWheel(
                         return@Row
                     }
 
-                    // 單位只在中心顯示（沿用你的設計）
                     if (unitLabel != null && isCenter) Spacer(Modifier.width(16.dp))
 
                     Text(
@@ -620,4 +632,12 @@ private fun NumberWheel(
                 .background(lineColor)
         )
     }
+}
+
+private fun normalizeCm1(value: Double): Float {
+    return ((value * 10.0).roundToInt()) / 10f
+}
+
+private fun cmToTenths(value: Double): Int {
+    return (value * 10.0).roundToInt()
 }

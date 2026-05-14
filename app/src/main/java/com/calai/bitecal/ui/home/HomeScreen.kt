@@ -3,6 +3,7 @@ package com.calai.bitecal.ui.home
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -12,6 +13,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -37,7 +40,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +48,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,15 +62,26 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.StepsRecord
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.calai.bitecal.R
+import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
+import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
+import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionProxyActivity
+import com.calai.bitecal.data.activity.model.DailyActivityStatus
 import com.calai.bitecal.data.fasting.notifications.NotificationPermission
+import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
@@ -74,16 +89,23 @@ import com.calai.bitecal.ui.home.components.CalendarStrip
 import com.calai.bitecal.ui.home.components.CaloriesCardModern
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MacroRowModern
+import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.MealCard
 import com.calai.bitecal.ui.home.components.PagerDots
 import com.calai.bitecal.ui.home.components.PanelHeights
+import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
 import com.calai.bitecal.ui.home.components.StepsWorkoutRowModern
 import com.calai.bitecal.ui.home.components.WeightFastingRowModern
-import com.calai.bitecal.ui.home.model.HomeViewModel
-import com.calai.bitecal.ui.home.components.MainBottomBar
+import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
 import com.calai.bitecal.ui.home.components.scan.ScanFab
 import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
+import com.calai.bitecal.ui.home.model.HomeViewModel
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
+import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadCard
+import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
@@ -92,6 +114,7 @@ import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import com.calai.bitecal.ui.home.ui.workout.WorkoutTrackerHost
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -99,20 +122,6 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
-import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.StepsRecord
-import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionProxyActivity
-import com.calai.bitecal.data.activity.model.DailyActivityStatus
-import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
-import androidx.compose.ui.semantics.Role
-import android.content.pm.PackageManager
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.core.content.ContextCompat
-import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
-import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
-import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
-import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
-import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -123,16 +132,21 @@ fun HomeScreen(
     workoutVm: WorkoutViewModel,
     weightVm: WeightViewModel,
     onOpenCamera: () -> Unit,
+    onOpenSavedFoods: () -> Unit,
     onOpenTab: (HomeTab) -> Unit,
     onOpenFastingPlans: () -> Unit,
     onOpenActivityHistory: () -> Unit,
     fastingVm: FastingPlanViewModel,
-    // ★ 新增這兩個參數
     onOpenWeight: () -> Unit,
-    onQuickLogWeight: () -> Unit
+    onQuickLogWeight: () -> Unit,
+    onOpenRecentUploadDetail: (foodLogId: String, previewUri: String?, timeText: String) -> Unit,
+    canUseScan: Boolean = false,
+    onOpenSubscription: () -> Unit = {},
+    onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
+    val recentUploads by vm.recentUploads.collectAsState()
 
     // ====== Fasting VM 狀態 / 權限設定 ======
     val fastingUi by fastingVm.state.collectAsState()
@@ -207,6 +221,7 @@ fun HomeScreen(
     val stepsToday by vm.dailyStepsToday.collectAsState()
     val activeKcalToday by vm.dailyActiveKcalToday.collectAsState()
     val dailyStatus by vm.dailyStatus.collectAsState()
+    val dailyReady by vm.dailyReady.collectAsState()
 
     val ctx = LocalContext.current
     val timeFmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
@@ -345,6 +360,37 @@ fun HomeScreen(
     val pendingOpenCamera by vm.pendingOpenCamera.collectAsState()
     val latestOnOpenCamera = rememberUpdatedState(onOpenCamera)
 
+    var showQuickAddMenu by rememberSaveable { mutableStateOf(false) }
+    var recentUploadDeleteTargetId by rememberSaveable { mutableStateOf<String?>(null) }
+    var recentUploadDeleteRequested by rememberSaveable { mutableStateOf(false) }
+
+    val scanFabScope = rememberCoroutineScope()
+    val latestOnOpenSubscription = rememberUpdatedState(onOpenSubscription)
+    val latestOnCheckCanUseScan = rememberUpdatedState(onCheckCanUseScan)
+
+    var scanFabGateInFlight by rememberSaveable { mutableStateOf(false) }
+
+    val onFabClick: () -> Unit = remember {
+        {
+            if (scanFabGateInFlight) return@remember
+
+            scanFabScope.launch {
+                scanFabGateInFlight = true
+
+                val canOpenScanMenu = runCatching {
+                    latestOnCheckCanUseScan.value.invoke()
+                }.getOrDefault(false)
+
+                scanFabGateInFlight = false
+
+                if (canOpenScanMenu) {
+                    showQuickAddMenu = true
+                } else {
+                    latestOnOpenSubscription.value.invoke()
+                }
+            }
+        }
+    }
     // 有 owner 才能用 launcher；沒有就 null（你已有 ProxyActivity 兜底）
     val requestCameraPermLauncher =
         if (registryOwner != null) {
@@ -384,8 +430,10 @@ fun HomeScreen(
         }
     }
 
-    // FAB 點擊：第 1、2 次都 request；第 3 次才導設定
-    val onFabClick: () -> Unit = remember(ctx, requestCameraPermLauncher,
+    // 掃描食物：第 1、2 次都 request；第 3 次才導設定
+    val onScanFoodClick: () -> Unit = remember(
+        ctx,
+        requestCameraPermLauncher,
         onOpenCamera,
         vm
     ) {
@@ -394,17 +442,15 @@ fun HomeScreen(
             val grantedNow =
                 ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
                         PackageManager.PERMISSION_GRANTED
+
             if (grantedNow) {
                 CameraPermissionPrefs.resetCameraDeniedCount(ctx)
                 onOpenCamera()
             } else {
-                // 沒授權：先標記 pending（你原本流程 OK）
                 vm.markPendingOpenCamera()
                 if (deniedCount >= 2) {
-                    // ✅ 第三次（count >= 2）才導設定頁
                     openCameraPermissionSettings(ctx)
                 } else {
-                    // ✅ 第 1、2 次：request（owner=null 用 ProxyActivity 兜底）
                     if (requestCameraPermLauncher != null) {
                         requestCameraPermLauncher.launch(Manifest.permission.CAMERA)
                     } else {
@@ -526,7 +572,7 @@ fun HomeScreen(
 
                 // ★ 兩邊總高度控制（共同升降）
                 val baseHeight = 128.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
-                val verticalGap = 10.dp    // ← 上下卡的間距
+                val verticalGap = 14.dp    // ← 上下卡的間距
 
                 // 將 VM 狀態轉為卡片顯示字串
                 val planName = fastingUi.selected.code
@@ -535,6 +581,7 @@ fun HomeScreen(
 
                 TwoPagePager(
                     summary = s,
+                    todayNutrition = ui.todayNutrition,
                     topSwap = topSwap,
                     bottomSwap = bottomSwap,
                     baseHeight = baseHeight,
@@ -567,6 +614,7 @@ fun HomeScreen(
                     activeKcalOverride = activeKcalToday,
                     weightKgLatest = weightUi.current,
                     dailyStatus = dailyStatus,
+                    dailyReady = dailyReady,
                     onDailyCtaClick = onStepsCardClick,
                     stepsGoalOverride = stepsGoal,
                     workoutGoalKcalOverride = workoutGoalKcal,
@@ -578,28 +626,130 @@ fun HomeScreen(
                     onWorkoutCardClick = { onOpenActivityHistory() }
                 )
                 // ===== Fourth block: 最近上傳
-                Spacer(Modifier.height(24.dp))
+                val recentSectionTopGap = 18.dp
+                val recentSectionTitleBottomGap = 16.dp
+                val recentSectionTitleStart = 2.dp
 
-                if (s.recentMeals.isEmpty()) {
-                    // ✅ 空狀態：跟截圖一樣
-                    RecentlyUploadedEmptySection(
-                        cardHeight = 100.dp // 你想更大就改這裡
-                    )
-                } else {
-                    // ✅ 有資料：沿用你原本的列表（先不動）
-                    Text(
-                        text = stringResource(R.string.recently_uploaded),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    for (m in s.recentMeals) {
-                        MealCard(m)
-                        Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(recentSectionTopGap))
+
+                when {
+                    recentUploads.isNotEmpty() -> {
+                        Text(
+                            text = stringResource(R.string.recently_uploaded),
+                            style = TextStyle(
+                                fontSize = 22.sp,
+                                lineHeight = 30.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(
+                                start = recentSectionTitleStart,
+                                bottom = recentSectionTitleBottomGap
+                            )
+                        )
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            recentUploads.forEachIndexed { index, item ->
+                                RecentUploadCard(
+                                    item = item,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = {
+                                        onOpenRecentUploadDetail(
+                                            item.foodLogId,
+                                            item.previewUri,
+                                            item.timeText
+                                        )
+                                    },
+                                    onDeleteClick = {
+                                        recentUploadDeleteTargetId = item.foodLogId
+                                    }
+                                )
+                                if (index != recentUploads.lastIndex) {
+                                    Spacer(Modifier.height(20.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    s.recentMeals.isEmpty() -> {
+                        RecentlyUploadedEmptySection(
+                            cardHeight = 120.dp,
+                            titleStartPadding = recentSectionTitleStart,
+                            titleBottomPadding = recentSectionTitleBottomGap,
+                            titleFontSize = 22.sp,
+                            lineHeight = 30.sp,
+                            titleFontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            text = stringResource(R.string.recently_uploaded),
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                lineHeight = 28.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            modifier = Modifier.padding(
+                                start = recentSectionTitleStart,
+                                bottom = recentSectionTitleBottomGap
+                            )
+                        )
+
+                        for (m in s.recentMeals) {
+                            MealCard(m)
+                            Spacer(Modifier.height(12.dp))
+                        }
                     }
                 }
                 Spacer(Modifier.height(70.dp))
             }
         }
+        DeleteFoodLogDialog(
+            visible = recentUploadDeleteTargetId != null,
+            onDismiss = {
+                if (!recentUploadDeleteRequested) {
+                    recentUploadDeleteTargetId = null
+                }
+            },
+            onCancel = {
+                if (!recentUploadDeleteRequested) {
+                    recentUploadDeleteTargetId = null
+                }
+            },
+            onDelete = {
+                val targetId = recentUploadDeleteTargetId ?: return@DeleteFoodLogDialog
+                if (recentUploadDeleteRequested) return@DeleteFoodLogDialog
+
+                recentUploadDeleteRequested = true
+                vm.deleteRecentUpload(
+                    foodLogId = targetId,
+                    onSuccess = {
+                        recentUploadDeleteRequested = false
+                        recentUploadDeleteTargetId = null
+                    },
+                    onFailure = {
+                        recentUploadDeleteRequested = false
+                    }
+                )
+            },
+            deleting = recentUploadDeleteRequested
+        )
+
+        HomeQuickActionMenu(
+            visible = showQuickAddMenu,
+            onDismiss = { showQuickAddMenu = false },
+            onSavedFoodsClick = {
+                showQuickAddMenu = false
+                onOpenSavedFoods()
+            },
+            onScanFoodClick = {
+                showQuickAddMenu = false
+                onScanFoodClick()
+            }
+        )
+
         // ===== ✅ Toast 疊加層（先顯示 Fasting，再顯示 Workout） =====
         val canShowWorkoutToast = !showWorkoutSheet.value
         val workoutToast = workoutUi.toastMessage
@@ -651,7 +801,9 @@ private fun Avatar(
     avatarSize: Dp = 40.dp,
     touchSize: Dp = 48.dp,
     startPadding: Dp = 0.dp,
-    onClick: (() -> Unit)? = null, // ✅ NEW
+    onClick: (() -> Unit)? = null,
+    fallbackCircleSize: Dp = 43.dp,   // ✅ 對齊 Setting 的 visualSize
+    fallbackIconSize: Dp = 43.dp      // ✅ spoon icon 大小
 ) {
     val interaction = remember { MutableInteractionSource() }
 
@@ -666,21 +818,28 @@ private fun Avatar(
                         indication = null,
                         role = Role.Button
                     ) { onClick() }
-                } else Modifier
+                } else {
+                    Modifier
+                }
             ),
         contentAlignment = Alignment.Center
     ) {
-        val avatarModifier = Modifier
-            .size(avatarSize)
-            .clip(CircleShape)
-
         if (url == null) {
-            Image(
-                painter = painterResource(R.drawable.profile),
-                contentDescription = "avatar",
-                modifier = avatarModifier,
-                contentScale = ContentScale.Crop
-            )
+            Box(
+                modifier = Modifier
+                    .size(fallbackCircleSize)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .border(1.25.dp, Color(0xFFCDD5DF), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_focus_spoon_foreground),
+                    contentDescription = "avatar",
+                    modifier = Modifier.size(fallbackIconSize),
+                    contentScale = ContentScale.Fit
+                )
+            }
         } else {
             val ctx = LocalContext.current
             val request = remember(url) {
@@ -690,10 +849,13 @@ private fun Avatar(
                     .allowHardware(true)
                     .build()
             }
+
             AsyncImage(
                 model = request,
                 contentDescription = "avatar",
-                modifier = avatarModifier,
+                modifier = Modifier
+                    .size(avatarSize)
+                    .clip(CircleShape),
                 contentScale = ContentScale.Crop,
                 error = painterResource(R.drawable.profile)
             )
@@ -701,15 +863,26 @@ private fun Avatar(
     }
 }
 
+private fun uiSafeTodayNutritionValue(value: Int?): Int =
+    (value ?: 0).coerceAtLeast(0)
+
+private fun nutritionProgress(current: Int?, goal: Int?): Float {
+    val c = (current ?: 0).coerceAtLeast(0)
+    val g = (goal ?: 0).coerceAtLeast(0)
+    if (g <= 0) return 0f
+    return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TwoPagePager(
     summary: HomeSummary,
+    todayNutrition: HomeTodayNutritionSummary,
     modifier: Modifier = Modifier,
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
     baseHeight: Dp = PanelHeights.Metric,
-    verticalGap: Dp = 10.dp,
+    verticalGap: Dp = 14.dp,
     onOpenFastingPlans: () -> Unit = {},
     planOverride: String? = null,
     fastingStartText: String? = null,
@@ -727,6 +900,13 @@ private fun TwoPagePager(
 ) {
     val pageCount = 2
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
+    var showTodayNutritionProgress by rememberSaveable { mutableStateOf(false) }
+    val toggleNutritionMode = { showTodayNutritionProgress = !showTodayNutritionProgress }
+
+    val caloriesProgress = nutritionProgress(
+        current = todayNutrition.eatenKcal,
+        goal = summary.tdee
+    )
 
     // 固定頁面總高度
     val spacerV = verticalGap
@@ -753,24 +933,41 @@ private fun TwoPagePager(
             pageSpacing = 38.dp,
             beyondViewportPageCount = 1
         ) { page ->
-            // ★ 外層留白 + 陰影強化分頁感
-            Box(modifier = Modifier.fillMaxSize())
-            {
+            Box(modifier = Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize()) {
                     when (page) {
                         0 -> {
                             CaloriesCardModern(
-                                caloriesLeft = summary.tdee,
-                                progress = 0f,
+                                goalKcal = summary.tdee,
+                                eatenKcal = uiSafeTodayNutritionValue(todayNutrition.eatenKcal),
+                                showTodayProgress = showTodayNutritionProgress,
+                                onClick = toggleNutritionMode,
+                                progress = caloriesProgress,
                                 cardHeight = caloriesH,
-                                ringSize = 76.dp,
-                                centerDisk = 38.dp,
-                                ringStroke = 6.dp
+                                ringSize = 82.dp,
+                                centerDisk = 40.dp,
+                                ringStroke = 6.dp,
+                                valueFontSize = 38.sp,
+                                labelFontSize = 12.sp,
+                                fireIconSize = 22.dp
                             )
                             Spacer(Modifier.height(spacerV))
+
                             MacroRowModern(
                                 s = summary,
-                                cardHeight = macroH
+                                todayNutrition = todayNutrition,
+                                showTodayProgress = showTodayNutritionProgress,
+                                onClick = toggleNutritionMode,
+                                cardHeight = macroH,
+                                valueFontSize = 15.sp,
+                                labelFontSize = 12.sp,
+                                ringSize = 68.dp,
+                                centerDisk = 34.dp,
+                                ringStroke = 5.dp,
+                                spacingTop = 10.dp,
+                                proteinIconSize = 20.dp,
+                                carbsIconSize = 28.dp,
+                                fatsIconSize = 23.dp
                             )
                         }
 
@@ -792,13 +989,12 @@ private fun TwoPagePager(
 
                             Spacer(Modifier.height(spacerV))
 
-                            // ★ 取代原本的 ExerciseDiaryCard
                             WaterIntakeCard(
                                 cardHeight = workoutH,
                                 state = waterState,
                                 onPlus = onWaterPlus,
                                 onMinus = onWaterMinus,
-                                onToggleUnit = onToggleUnit // ← 用 switch 切 ml/oz
+                                onToggleUnit = onToggleUnit
                             )
                         }
                     }
@@ -808,7 +1004,6 @@ private fun TwoPagePager(
 
         Spacer(Modifier.height(10.dp))
 
-        // 分頁圓點
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center

@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.home.ui.workout
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -15,20 +17,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -39,11 +36,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.data.workout.api.WorkoutSessionDto
+import com.calai.bitecal.ui.common.CalaiCenteredTopBar
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutHistoryScreen(
     vm: WorkoutViewModel,
@@ -62,12 +59,11 @@ fun WorkoutHistoryScreen(
     val total = today?.totalKcalToday ?: 0
     val list = today?.sessions ?: emptyList()
 
-    // ✅ Saving 一開始就回 HOME（Toast 交給 HOME 顯示）
     LaunchedEffect(ui.saving) {
         if (ui.saving) onBack()
     }
 
-    val surface = Color.White
+    val surface = Color(0xFFF5F5F5)
     val onSurface = Color(0xFF111114)
     val onSurfaceSecondary = Color(0xFF6B7280)
     val divider = Color(0xFFE5E7EB)
@@ -75,52 +71,39 @@ fun WorkoutHistoryScreen(
     Scaffold(
         containerColor = surface,
         topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = surface,
-                    navigationIconContentColor = onSurface,
-                    titleContentColor = onSurface,
-                    actionIconContentColor = onSurface
-                ),
-                navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.padding(top = 6.dp)) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "back"
-                        )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(surface)
+            ) {
+                CalaiCenteredTopBar(
+                    title = "Workout History",
+                    onBack = onBack,
+                    backBackgroundColor = surface,
+                    action = {
+                        FilledIconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .offset(x = (-8).dp, y = 2.dp)
+                                .size(32.dp)
+                                .clip(CircleShape),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = Color(0xFF111114),
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "close",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
-                },
-                title = {
-                    Text(
-                        text = "Workout History",
-                        modifier = Modifier.padding(top = 6.dp),
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                },
-                actions = {
-                    FilledIconButton(
-                        onClick = onBack,
-                        modifier = Modifier
-                            .padding(end = 14.dp, top = 10.dp)
-                            .size(32.dp)
-                            .clip(CircleShape),
-                        shape = CircleShape,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = Color(0xFF111114),
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "close",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-            )
+                )
+            }
         },
-        // ✅ 底部固定導航
         bottomBar = {
             MainBottomBar(
                 current = currentTab,
@@ -130,8 +113,9 @@ fun WorkoutHistoryScreen(
     ) { inner ->
         Column(
             modifier = Modifier
-                .padding(inner) // ✅ 會自動扣掉 topBar/bottomBar
+                .padding(inner)
                 .fillMaxSize()
+                .background(surface)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             Text(

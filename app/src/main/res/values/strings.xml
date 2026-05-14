@@ -19,7 +19,8 @@
 
     <!-- common -->
     <string name="close">Close</string>
-
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
     <!-- Email -->
     <string name="sign_in_title">Sign In</string>
     <string name="email_label">Email</string>
@@ -99,7 +100,7 @@
     <string name="ex_freq_7_plus_title">7+</string>
     <string name="ex_freq_7_plus_sub">Very high activity</string>
 
-    <!-- exercise -->
+    <!-- goal -->
     <string name="onboard_goal_title">What’s your goal ?</string>
     <string name="onboard_goal_subtitle">This helps us tailor your calorie plan.</string>
     <string name="goal_lose">Lose weight</string>
@@ -121,20 +122,21 @@
     <string name="hc_connect_body">Sync your daily activity between BiteCal AI and your health apps for more complete tracking and insights.</string>
     <string name="skip_text">Not now</string>
 
-    <!-- progress -->
-    <string name="progress_title_percent">%1$d%%</string>
-    <string name="progress_title_heading">We\'re building your daily plan</string>
-    <string name="progress_phase_1">Estimating your metabolic age…</string>
-    <string name="progress_phase_2">Crunching nutrition goals…</string>
-    <string name="progress_phase_3">Building daily recommendations…</string>
-    <string name="progress_phase_4">Finalizing results…</string>
-
-    <string name="progress_card_title">Daily recommendation for</string>
-    <string name="progress_item_calories">Calories</string>
-    <string name="progress_item_carbs">Carbs</string>
-    <string name="progress_item_protein">Protein</string>
-    <string name="progress_item_fats">Fats</string>
-    <string name="progress_item_health_score">Health score</string>
+    <!-- ComputationProgressScreen -->
+    <string name="progress_hero_title">Creating your personalized plan</string>
+    <string name="progress_hero_subtitle">We’re using your goals, body data, and preferences to tailor your daily targets.</string>
+    <string name="progress_center_caption">Preparing your results</string>
+    <string name="progress_phase_pill_1">Reviewing your profile</string>
+    <string name="progress_phase_pill_2">Calculating your calorie target</string>
+    <string name="progress_phase_pill_3">Balancing your daily macros</string>
+    <string name="progress_phase_pill_4">Finalizing your health insights</string>
+    <string name="progress_card_title_v2">Setting up your plan</string>
+    <string name="progress_row_calorie_target">Daily calorie target</string>
+    <string name="progress_row_carb_distribution">Carb distribution</string>
+    <string name="progress_row_protein_recommendation">Protein recommendation</string>
+    <string name="progress_row_fat_recommendation">Fat recommendation</string>
+    <string name="progress_row_health_score_estimate">Health score estimate</string>
+    <string name="progress_footer_hint">This takes just a moment</string>
 
     <!-- plan -->
     <string name="plan_title_congrats">Congratulations!</string>
@@ -180,23 +182,15 @@
     <string name="msg_login_success">Sign-in successful</string>
     <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
 
-
-
-
-    <string name="recently_uploaded">Recently uploaded</string>
-    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
-    <string name="quick_add_log_workout">Log workout</string>
-    <string name="quick_add_scan_food">Scan food</string>
-
-
-    <!-- res/values/strings.xml（節錄） -->
+    <!-- Fasting -->
     <string name="fasting_plan_title">Fasting Plan</string>
     <string name="fasting_plans">Fasting Plans</string>
     <string name="choose_fasting_plan">Choose fasting plan</string>
-    <string name="start_time">start time</string>
-    <string name="end_time">end time</string>
+    <string name="start_time">Start time</string>
+    <string name="end_time">End time</string>
     <string name="enable_reminders">Enable reminders</string>
-    <string name="fasting_plan_save">Save</string>
+    <string name="fasting_picker_title">Set your fasting start time</string>
+    <string name="fasting_picker_subtitle">We’ll remind you at this time each day when your eating window starts.</string>
 
     <!-- Fasting notifications -->
     <string name="fasting_window_started">Eating window started</string>
@@ -205,19 +199,12 @@
     <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
     <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
 
-
-
-    <!-- Fasting notifications 通知內容 -->
     <string name="fasting_start_title">Today’s %1$s starts 🍽️</string>
     <string name="fasting_start_body">Your eating window is open (%1$s–%2$s). If you eat, remember to log it.</string>
     <string name="fasting_endsoon_title">Eating window ends soon ⏰</string>
     <string name="fasting_endsoon_body">1 hour left (until %1$s). If you have a last meal, take it slow and log it.</string>
 
-
-
-
-
-    <!-- Steps Card  -->
+    <!-- Steps Card -->
     <string name="steps_hint_connect_google_health">Connect Google Health to track your steps</string>
     <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
     <string name="steps_hint_no_source_app">Enable a health app in Health Connect to sync steps</string>
@@ -233,26 +220,16 @@
     <string name="steps_secondary_connect">Connect</string>
     <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
 
-
-
-
-
-    <!-- ================= Camera ======================= -->
-    <!-- Camera modes -->
+    <!-- Camera -->
     <string name="camera_mode_food">Scan Food</string>
     <string name="camera_mode_barcode">Barcode</string>
     <string name="camera_mode_label">Food Label</string>
     <string name="camera_mode_album">Photos</string>
 
-    <!-- Camera titles -->
     <string name="camera_barcode_title">Barcode Scanner</string>
     <string name="camera_label_title">Label Scanner</string>
 
-    <!-- Camera permission -->
     <string name="camera_need_permission">Camera permission is required to scan</string>
-
-
-
 
     <!-- SettingScreen privacy policy -->
     <string name="url_terms">https://YOUR_DOMAIN/terms</string>
@@ -261,6 +238,274 @@
     <string name="support_email">support@YOUR_DOMAIN</string>
     <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
 
+    <!-- foodlog error msg -->
+    <string name="err_barcode_not_found_title">Product not found</string>
+    <string name="err_barcode_not_found_msg">We couldn’t find this barcode. Try taking a photo of the nutrition label.</string>
 
+    <string name="err_barcode_lookup_failed_title">Lookup failed</string>
+    <string name="err_barcode_lookup_failed_msg">We couldn’t reach the product database. Check your connection and try again.</string>
+
+    <string name="err_generic_title">Something went wrong</string>
+    <string name="err_generic_msg">Please try again.</string>
+
+    <string name="err_network_title">Network issue</string>
+    <string name="err_network_msg">Please check your internet connection and try again.</string>
+
+    <string name="err_photo_title">Photo needed</string>
+    <string name="err_photo_msg">Try taking the photo again with better lighting.</string>
+
+    <string name="err_manual_title">Enter manually</string>
+    <string name="err_manual_msg">You can enter details manually.</string>
+
+    <string name="err_support_title">Contact support</string>
+    <string name="err_support_msg">Please contact support if the issue persists.</string>
+
+    <!-- image / upload specific -->
+    <string name="err_image_too_large_title">Image too large</string>
+    <string name="err_image_too_large_msg">This image is too large to upload. Please retake it or choose a smaller photo.</string>
+
+    <string name="err_image_format_title">Unsupported image</string>
+    <string name="err_image_format_msg">We couldn’t read this image. Please retake the photo or choose a different one.</string>
+
+    <!-- CTA -->
+    <string name="cta_try_label">Scan nutrition label</string>
+    <string name="cta_enter_manually">Enter manually</string>
+    <string name="cta_retry">Retry</string>
+    <string name="cta_check_network">Check network</string>
+    <string name="cta_retake">Retake</string>
+    <string name="cta_contact_support">Contact support</string>
+    <string name="cta_rescan_barcode">Rescan barcode</string>
+
+    <string name="foodlog_pending_analysis">Analyzing your food...</string>
+    <string name="foodlog_analysis_done">Analysis complete</string>
+
+
+    <string name="recently_uploaded">Recently uploaded</string>
+    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
+    <string name="recent_upload_kcal_text">🔥 %1$d calories</string>
+    <string name="recent_upload_protein_text">🥩 %1$dg</string>
+    <string name="recent_upload_carbs_text">🌾 %1$dg</string>
+    <string name="recent_upload_fat_text">🥑 %1$dg</string>
+    <string name="quick_add_log_workout">Log workout</string>
+    <string name="quick_add_scan_food">Scan food</string>
+    <string name="quick_add_saved_foods">Saved foods</string>
+    <string name="saved_foods_record_today">Record today</string>
+    <string name="health_score">Health Score</string>
+
+    <!-- SavedFoodsScreen -->
+    <string name="saved_foods_title">Saved foods</string>
+    <string name="saved_foods_detail">Detail</string>
+    <string name="saved_foods_keep_15_days_hint">Saved foods from the last 15 days.</string>
+    <string name="saved_foods_empty_title">No saved foods yet</string>
+    <string name="saved_foods_empty_body">Foods you save will appear here.</string>
+    <string name="saved_foods_kcal">🔥 %1$d calories</string>
+    <string name="saved_foods_protein">🥩 %1$dg</string>
+    <string name="saved_foods_carbs">🌾 %1$dg</string>
+    <string name="saved_foods_fat">🥑 %1$dg</string>
+
+
+    <!-- RecentUploadDetailScreen -->
+    <string name="foodlog_detail_load_failed">Load failed</string>
+    <string name="foodlog_unknown_food">Unknown Food</string>
+    <string name="foodlog_no_image">No Image</string>
+    <string name="foodlog_detail_title">Nutrition</string>
+    <string name="foodlog_detail_back">Back</string>
+    <string name="foodlog_detail_delete">Delete</string>
+    <string name="foodlog_detail_save">Save</string>
+    <string name="foodlog_detail_minus">Minus</string>
+    <string name="foodlog_detail_plus">Plus</string>
+    <string name="foodlog_detail_calories">Calories</string>
+    <string name="foodlog_detail_protein">Protein</string>
+    <string name="foodlog_detail_carbs">Carbs</string>
+    <string name="foodlog_detail_fats">Fats</string>
+    <string name="foodlog_detail_fiber">Fiber</string>
+    <string name="foodlog_detail_sugar">Sugar</string>
+    <string name="foodlog_detail_sodium">Sodium</string>
+    <string name="foodlog_detail_health_score">Health Score</string>
+    <string name="foodlog_detail_done">Done</string>
+    <string name="foodlog_detail_health_icon_desc">Health icon</string>
+
+    <!-- DeleteFoodLogDialog -->
+    <string name="foodlog_delete_dialog_title">Delete Record?</string>
+    <string name="foodlog_delete_dialog_message">Are you sure you want to permanently delete this meal record? This action cannot be undone.</string>
+    <string name="foodlog_delete_dialog_confirm">Delete</string>
+    <string name="saved_foods_unsave_content_description">Remove from saved foods</string>
+    <string name="saved_foods_unsave_dialog_title">Remove from Saved Foods?</string>
+    <string name="saved_foods_unsave_dialog_message">This meal will be removed from your Saved Foods list, but it will still remain in your recent records.</string>
+    <string name="saved_foods_unsave_dialog_confirm">Remove</string>
+
+    <!-- =========================
+             BMI Card / BMI Info Dialog
+             ========================= -->
+    <string name="bmi_card_title">Your BMI</string>
+    <string name="bmi_card_subtitle">Your weight is</string>
+    <string name="bmi_card_info_cd">BMI info</string>
+
+    <string name="bmi_status_underweight">Underweight</string>
+    <string name="bmi_status_healthy">Healthy</string>
+    <string name="bmi_status_overweight">Overweight</string>
+    <string name="bmi_status_obese">Obese</string>
+    <string name="bmi_status_unknown">Unknown</string>
+
+    <string name="bmi_range_underweight">&lt;18.5</string>
+    <string name="bmi_range_healthy">18.5–24.9</string>
+    <string name="bmi_range_overweight">25.0–29.9</string>
+    <string name="bmi_range_obese">&gt;30.0</string>
+
+    <string name="bmi_info_title">What is BMI?</string>
+    <string name="bmi_info_subtitle">Body Mass Index</string>
+    <string name="bmi_info_formula_title">Formula</string>
+    <string name="bmi_info_formula_value">BMI = weight (kg) / height (m²)</string>
+    <string name="bmi_info_meaning_title">What it tells you</string>
+    <string name="bmi_info_meaning_body">BMI helps estimate whether your body weight is in a generally healthy range.</string>
+    <string name="bmi_info_note_title">Keep in mind</string>
+    <string name="bmi_info_note_body">BMI is a general guide. It does not directly measure body fat, muscle mass, or overall health.</string>
+    <string name="bmi_info_cta">Got it</string>
+
+    <!-- =========================
+         Progress Screen
+         ========================= -->
+    <string name="progress_screen_title">Progress</string>
+    <string name="progress_tab_this_week">This Week</string>
+    <string name="progress_tab_last_week">Last Week</string>
+    <string name="progress_tab_two_weeks_ago">2 wks. ago</string>
+    <string name="progress_tab_three_weeks_ago">3 wks. ago</string>
+
+    <string name="progress_error_load_failed">Load failed</string>
+    <string name="progress_retry">Retry</string>
+
+    <string name="workout_chart_error_load_failed">Load workout chart failed</string>
+    <string name="water_chart_error_load_failed">Load water chart failed</string>
+
+    <!-- =========================
+         Nutrition Chart
+         ========================= -->
+    <string name="progress_chart_total_calories">Total calories</string>
+    <string name="progress_chart_cals">cals</string>
+
+    <string name="progress_legend_protein">Protein</string>
+    <string name="progress_legend_carbs">Carbs</string>
+    <string name="progress_legend_fats">Fats</string>
+
+    <string name="progress_keep_it_up">Keep it up! Getting started is the hardest part!</string>
+
+    <string name="progress_day_sun">Sun</string>
+    <string name="progress_day_mon">Mon</string>
+    <string name="progress_day_tue">Tue</string>
+    <string name="progress_day_wed">Wed</string>
+    <string name="progress_day_thu">Thu</string>
+    <string name="progress_day_fri">Fri</string>
+    <string name="progress_day_sat">Sat</string>
+
+    <string name="progress_tooltip_calories">Calories</string>
+    <string name="progress_tooltip_protein">Protein</string>
+    <string name="progress_tooltip_carbs">Carbs</string>
+    <string name="progress_tooltip_fats">Fats</string>
+    <string name="progress_tooltip_label_format">%1$s:</string>
+    <string name="progress_tooltip_grams_value">%1$d g</string>
+    <string name="progress_tooltip_plain_value">%1$d</string>
+
+    <string name="progress_chart_loading_total_calories_text">--.- cals</string>
+    <string name="progress_chart_empty_total_calories_text">0.0 cals</string>
+    <string name="progress_chart_loading_delta">↑ --%%</string>
+    <string name="progress_chart_delta_placeholder">--%%</string>
+
+    <!-- =========================
+         Workout Chart
+         ========================= -->
+    <string name="workout_chart_title">Workout burn</string>
+    <string name="workout_chart_unit_kcal">kcal</string>
+    <string name="workout_chart_goal">Goal</string>
+    <string name="workout_chart_7day_avg">7-day avg</string>
+    <string name="workout_chart_goal_reached">Goal reached today</string>
+    <string name="workout_chart_goal_left">%1$d kcal left to hit today\'s goal</string>
+    <string name="workout_chart_loading">Loading...</string>
+    <string name="workout_tooltip_burned">Burned</string>
+    <string name="workout_tooltip_kcal_value">%1$d kcal</string>
+
+    <!-- =========================
+         Water Chart
+         ========================= -->
+    <string name="water_chart_title">Water intake</string>
+    <string name="water_chart_unit_ml">ml</string>
+    <string name="water_chart_goal">Goal</string>
+    <string name="water_chart_7day_avg">7-day avg</string>
+    <string name="water_chart_loading">Loading...</string>
+    <string name="water_chart_goal_reached">Goal reached for today</string>
+    <string name="water_chart_goal_left_ml">%1$s ml left to reach today\'s goal</string>
+    <string name="water_chart_value_ml">%1$s ml</string>
+    <string name="water_legend_intake">Intake</string>
+    <string name="water_legend_daily_goal">Daily goal</string>
+    <string name="water_tooltip_intake">Intake</string>
+    <string name="water_tooltip_ml_value">%1$d ml</string>
+
+    <!-- HomeCards -->
+    <string name="home_calories_goal_label">Calories left</string>
+    <string name="home_calories_eaten_label">Calories eaten</string>
+    <string name="home_protein_goal_label">Protein left</string>
+    <string name="home_protein_eaten_label">Protein eaten</string>
+    <string name="home_carbs_goal_label">Carbs left</string>
+    <string name="home_carbs_eaten_label">Carbs eaten</string>
+    <string name="home_fats_goal_label">Fats left</string>
+    <string name="home_fats_eaten_label">Fats eaten</string>
+    <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
+    <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
+
+    <!-- Referral Screen -->
+    <string name="referral_title">Referral</string>
+    <string name="common_back">Back</string>
+
+    <string name="referral_premium_reward">Premium reward</string>
+    <string name="referral_invite_friends">Invite friends</string>
+    <string name="referral_earn_30_days_free">Earn 30 days free</string>
+    <string name="referral_reward_unlocks_after_no_refund">Reward unlocks after your friend subscribes with no refund.</string>
+
+    <string name="referral_code_copied">Referral code copied.</string>
+    <string name="referral_your_promo_code">Your promo code</string>
+    <string name="referral_copy">Copy</string>
+    <string name="referral_share">Share</string>
+
+    <string name="referral_how_it_works">How it works</string>
+    <string name="referral_step_1_title">Share your promo code</string>
+    <string name="referral_step_1_subtitle">Send your code to a friend who wants to track food smarter.</string>
+    <string name="referral_step_2_title">Your friend subscribes</string>
+    <string name="referral_step_2_subtitle">They start a paid BiteCal AI subscription using your invite.</string>
+    <string name="referral_step_3_title">No refund, then reward</string>
+    <string name="referral_step_3_subtitle">After the subscription is verified with no refund, your premium period is extended.</string>
+
+    <string name="referral_share_subject">Join me on BiteCal AI</string>
+    <string name="referral_share_chooser_title">Share via</string>
+    <string name="referral_share_text">Join me on BiteCal AI! My referral code is:\n%1$s\n\n%2$s</string>
+    <string name="referral_unable_to_open_share_options">Unable to open share options.</string>
+
+
+
+    <!-- WeightLossComparisonScreen -->
+    <string name="onboard_weight_loss_comparison_title">Using BiteCal AI can\ntriple your weight loss efficiency</string>
+    <string name="onboard_weight_loss_comparison_without_ai">Without\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_with_ai">With\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_twenty_percent">20%</string>
+    <string name="onboard_weight_loss_comparison_two_times">3X</string>
+    <string name="onboard_weight_loss_comparison_caption">BiteCal AI makes everything simple\nand keeps you accountable</string>
+
+
+    <!-- Onboarding Referral Code -->
+    <string name="onboard_referral_code_title">Enter referral code\n(optional)</string>
+    <string name="onboard_referral_code_subtitle">You can skip this step</string>
+    <string name="onboard_referral_code_input_label">Referral Code</string>
+    <string name="onboard_referral_code_placeholder">Referral Code</string>
+    <string name="onboard_referral_code_submit">Submit</string>
+    <string name="onboard_referral_code_submitting">Submitting…</string>
+    <string name="onboard_referral_code_applied">Referral Code Applied !</string>
+    <string name="onboard_referral_code_skip_and_continue">Skip and continue</string>
+    <string name="onboard_referral_code_error_invalid_format">Use letters and numbers only.</string>
+    <string name="onboard_referral_code_error_invalid">We couldn\'t find this referral code.</string>
+    <string name="onboard_referral_code_error_self_referral">You can\'t use your own referral code.</string>
+    <string name="onboard_referral_code_error_already_claimed">This account has already applied a referral code.</string>
+    <string name="onboard_referral_code_error_already_subscribed">Subscribed accounts can\'t apply a referral code.</string>
+    <string name="onboard_referral_code_error_disabled">Referral is temporarily unavailable.</string>
+    <string name="onboard_referral_code_error_risk">We can\'t apply a referral code right now.</string>
+    <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
+    <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now. Please try again later.</string>
 
 </resources>

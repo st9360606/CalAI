@@ -1,5 +1,8 @@
+import android.app.Activity
 import com.calai.bitecal.data.billing.ActiveSub
 import com.calai.bitecal.data.billing.BillingGateway
+import com.calai.bitecal.data.billing.BillingPurchaseResult
+import com.calai.bitecal.data.billing.SubscriptionOfferPriceText
 import com.calai.bitecal.data.entitlement.EntitlementSyncer
 import com.calai.bitecal.data.entitlement.api.EntitlementApi
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncRequest
@@ -13,33 +16,56 @@ import org.junit.Test
 class EntitlementSyncerTest {
 
     @Test
-    fun sync_whenNoSubs_shouldNotCallApi() = runBlocking {
-        val billing = object : BillingGateway {
-            override suspend fun queryActiveSubscriptions(): List<ActiveSub> = emptyList()
+    fun sync_whenNoSubs_shouldNotCallSyncButShouldCallMe() = runBlocking {
+        val billing = FakeBillingGateway(
+            activeSubs = emptyList()
+        )
+
+        val api = mockk<EntitlementApi>()
+
+        coEvery { api.me() } returns EntitlementSyncResponse(
+            status = "INACTIVE",
+            entitlementType = null,
+            premiumStatus = "FREE"
+        )
+
+        val syncer = EntitlementSyncer(billing, api)
+
+        syncer.syncAfterLoginSilently()
+
+        coVerify(exactly = 0) {
+            api.sync(any())
         }
-        val api = mockk<EntitlementApi>(relaxed = true)
 
-        val s = EntitlementSyncer(billing, api)
-        s.syncAfterLoginSilently()
-
-        coVerify(exactly = 0) { api.sync(any()) }
+        coVerify(exactly = 1) {
+            api.me()
+        }
     }
 
     @Test
-    fun sync_whenHasSubs_shouldCallApiOnce() = runBlocking {
-        val billing = object : BillingGateway {
-            override suspend fun queryActiveSubscriptions(): List<ActiveSub> =
-                listOf(ActiveSub(productId = "monthly", purchaseToken = "tok123"))
-        }
+    fun sync_whenHasSubs_shouldCallSyncOnceAndNotCallMe() = runBlocking {
+        val billing = FakeBillingGateway(
+            activeSubs = listOf(
+                ActiveSub(
+                    productId = "monthly",
+                    purchaseToken = "tok123",
+                    acknowledged = true
+                )
+            )
+        )
+
         val api = mockk<EntitlementApi>()
 
         coEvery { api.sync(any()) } returns EntitlementSyncResponse(
             status = "ACTIVE",
-            entitlementType = "MONTHLY"
+            entitlementType = "MONTHLY",
+            premiumStatus = "PREMIUM",
+            currentPremiumUntil = "2026-12-31T00:00:00Z"
         )
 
-        val s = EntitlementSyncer(billing, api)
-        s.syncAfterLoginSilently()
+        val syncer = EntitlementSyncer(billing, api)
+
+        syncer.syncAfterLoginSilently()
 
         coVerify(exactly = 1) {
             api.sync(match { req: EntitlementSyncRequest ->
@@ -47,6 +73,40 @@ class EntitlementSyncerTest {
                         req.purchases[0].productId == "monthly" &&
                         req.purchases[0].purchaseToken == "tok123"
             })
+        }
+
+        coVerify(exactly = 0) {
+            api.me()
+        }
+    }
+
+    private class FakeBillingGateway(
+        private val activeSubs: List<ActiveSub> = emptyList()
+    ) : BillingGateway {
+
+        override suspend fun queryActiveSubscriptions(): List<ActiveSub> {
+            return activeSubs
+        }
+
+        override suspend fun querySubscriptionOfferPrice(
+            productId: String,
+            offerTag: String?
+        ): SubscriptionOfferPriceText? {
+            return null
+        }
+
+        override suspend fun launchSubscriptionPurchase(
+            activity: Activity,
+            productId: String,
+            offerTag: String?
+        ): BillingPurchaseResult {
+            return BillingPurchaseResult.Error("Not used in EntitlementSyncerTest")
+        }
+
+        override suspend fun acknowledgePurchase(
+            purchaseToken: String
+        ): Boolean {
+            return true
         }
     }
 }

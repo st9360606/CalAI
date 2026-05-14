@@ -1,14 +1,28 @@
-// app/src/main/java/com/calai/app/ui/home/ui/settings/delete/DeleteAccountDialog.kt
-package com.calai.bitecal.ui.home.ui.settings.delete
+package com.calai.bitecal.ui.common
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,27 +35,34 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 @Composable
-fun DeleteAccountDialog(
+fun CalaiConfirmDialog(
     visible: Boolean,
     onDismiss: () -> Unit,
     onCancel: () -> Unit,
-    onDelete: () -> Unit,
-    deleting: Boolean = false
+    onConfirm: () -> Unit,
+    title: String,
+    message: String,
+    confirmText: String,
+    cancelText: String,
+    loading: Boolean = false,
+    confirmButtonColor: Color = Color(0xFFE46A6A),
+    confirmContentColor: Color = Color.White
 ) {
     if (!visible) return
 
     Dialog(
-        onDismissRequest = { if (!deleting) onDismiss() },
+        onDismissRequest = { if (!loading) onDismiss() },
         properties = DialogProperties(
-            dismissOnBackPress = !deleting,
-            dismissOnClickOutside = !deleting,
+            dismissOnBackPress = !loading,
+            dismissOnClickOutside = !loading,
             usePlatformDefaultWidth = false
         )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp),
+                .padding(horizontal = 18.dp)
+                .offset(y = (-28).dp),
             contentAlignment = Alignment.Center
         ) {
             Surface(
@@ -52,23 +73,20 @@ fun DeleteAccountDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    // ✅ 四邊距離框更大一點點（但總高度不變：下面 Spacer 會縮）
                     modifier = Modifier.padding(horizontal = 26.dp, vertical = 24.dp)
                 ) {
-                    // Title row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Delete Account?",
+                            text = title,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF111114),
                             modifier = Modifier.weight(1f)
                         )
 
-                        // Close (X) in light circle
                         Box(
                             modifier = Modifier
                                 .size(33.dp)
@@ -76,8 +94,8 @@ fun DeleteAccountDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             IconButton(
-                                onClick = { if (!deleting) onDismiss() },
-                                enabled = !deleting,
+                                onClick = { if (!loading) onDismiss() },
+                                enabled = !loading,
                                 modifier = Modifier.size(16.dp)
                             ) {
                                 Icon(
@@ -89,11 +107,12 @@ fun DeleteAccountDialog(
                         }
                     }
 
-                    // ✅ 原本 20.dp → 18.dp（抵消 padding 變大造成的高度增加）
-                    Spacer(Modifier.height(18.dp))
+                    Spacer(
+                        modifier = Modifier.height(18.dp)
+                    )
 
                     Text(
-                        text = "Are you sure want to permanently delete\nyour account?",
+                        text = message,
                         fontSize = 16.sp,
                         lineHeight = 20.sp,
                         letterSpacing = 0.5.sp,
@@ -102,16 +121,17 @@ fun DeleteAccountDialog(
                         textAlign = TextAlign.Start
                     )
 
-                    // ✅ 原本 24.dp → 22.dp（同上）
-                    Spacer(Modifier.height(22.dp))
+                    Spacer(
+                        modifier = Modifier.height(22.dp)
+                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { if (!deleting) onCancel() },
-                            enabled = !deleting,
+                            onClick = { if (!loading) onCancel() },
+                            enabled = !loading,
                             shape = RoundedCornerShape(999.dp),
                             border = BorderStroke(0.8.dp, Color(0xFF24252A)),
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -122,22 +142,30 @@ fun DeleteAccountDialog(
                                 .weight(1f)
                                 .height(47.dp)
                         ) {
-                            Text("Cancel", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = cancelText,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
 
                         Button(
-                            onClick = { if (!deleting) onDelete() },
-                            enabled = !deleting,
+                            onClick = { if (!loading) onConfirm() },
+                            enabled = !loading,
                             shape = RoundedCornerShape(999.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE46A6A),
-                                contentColor = Color.White
+                                containerColor = confirmButtonColor,
+                                contentColor = confirmContentColor
                             ),
                             modifier = Modifier
                                 .weight(1f)
                                 .height(47.dp)
                         ) {
-                            Text("Delete", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = confirmText,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }

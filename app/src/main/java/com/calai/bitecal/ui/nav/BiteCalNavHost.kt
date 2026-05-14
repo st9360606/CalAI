@@ -1,33 +1,59 @@
 package com.calai.bitecal.ui.nav
 
-import com.calai.bitecal.R
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.HiltViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.calai.bitecal.R
 import com.calai.bitecal.data.auth.net.SessionBus
+import com.calai.bitecal.data.foodlog.model.ClientAction
+import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
+import com.calai.bitecal.data.foodlog.model.FoodLogStatus
+import com.calai.bitecal.data.onboarding.repo.OnboardingRepository
 import com.calai.bitecal.di.AppEntryPoint
-import com.calai.bitecal.i18n.LocalLocaleController
+import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.LanguageSessionFlag
+import com.calai.bitecal.i18n.LocalLocaleController
 import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.appentry.AppEntryRoute
 import com.calai.bitecal.ui.auth.RequireSignInScreen
@@ -37,22 +63,59 @@ import com.calai.bitecal.ui.auth.email.EmailEnterScreen
 import com.calai.bitecal.ui.auth.email.EmailSignInViewModel
 import com.calai.bitecal.ui.home.HomeScreen
 import com.calai.bitecal.ui.home.HomeTab
+import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
+import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
 import com.calai.bitecal.ui.home.model.HomeViewModel
+import com.calai.bitecal.ui.home.ui.camera.CameraMode
+import com.calai.bitecal.ui.home.ui.camera.CameraScreen
+import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorCard
+import com.calai.bitecal.ui.home.ui.camera.common.ApiErrorUiMapper
 import com.calai.bitecal.ui.home.ui.fasting.FastingPlansScreen
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.bitecal.ui.home.ui.foodlog.FoodLogTimeResolver
+import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadDetailScreen
+import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
+import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
+import com.calai.bitecal.ui.home.ui.membership.MembershipViewModel
+import com.calai.bitecal.ui.home.ui.notifications.NotificationInboxScreen
+import com.calai.bitecal.ui.home.ui.notifications.NotificationInboxViewModel
+import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
+import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
+import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
+import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditAgeScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditDailyStepGoalScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditGenderScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditHeightScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditNutritionGoalsRoute
+import com.calai.bitecal.ui.home.ui.settings.details.EditStartingWeightScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditWaterGoalScreen
+import com.calai.bitecal.ui.home.ui.settings.details.EditWorkoutGoalScreen
 import com.calai.bitecal.ui.home.ui.settings.details.PersonalDetailsScreen
+import com.calai.bitecal.ui.home.ui.settings.details.model.AutoGenerateGoalsCalcViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditAgeViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditHeightViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditStartingWeightViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditWaterGoalViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
+import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
+import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
+import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
+import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
+import com.calai.bitecal.ui.home.ui.settings.premium.PremiumRewardsScreen
+import com.calai.bitecal.ui.home.ui.settings.premium.model.PremiumRewardsViewModel
+import com.calai.bitecal.ui.home.ui.settings.referral.ReferralScreen
+import com.calai.bitecal.ui.home.ui.settings.referral.model.ReferralViewModel
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
+import com.calai.bitecal.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.bitecal.ui.home.ui.weight.RecordWeightScreen
+import com.calai.bitecal.ui.home.ui.weight.WeightScreen
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import com.calai.bitecal.ui.home.ui.workout.WorkoutHistoryScreen
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.bitecal.ui.landing.LandingScreen
-import com.calai.bitecal.ui.onboarding.notifications.NotificationPermissionScreen
-import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import com.calai.bitecal.ui.home.ui.weight.WeightScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionViewModel
 import com.calai.bitecal.ui.onboarding.exercise.ExerciseFrequencyScreen
@@ -62,58 +125,35 @@ import com.calai.bitecal.ui.onboarding.gender.GenderSelectionScreen
 import com.calai.bitecal.ui.onboarding.gender.GenderSelectionViewModel
 import com.calai.bitecal.ui.onboarding.goal.GoalSelectionScreen
 import com.calai.bitecal.ui.onboarding.goal.GoalSelectionViewModel
+import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalScreen
+import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalViewModel
 import com.calai.bitecal.ui.onboarding.healthconnect.HealthConnectIntroScreen
+import com.calai.bitecal.ui.onboarding.comparison.WeightLossComparisonScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionViewModel
+import com.calai.bitecal.ui.onboarding.notifications.NotificationPermissionScreen
 import com.calai.bitecal.ui.onboarding.plan.HealthPlanScreen
 import com.calai.bitecal.ui.onboarding.plan.HealthPlanViewModel
 import com.calai.bitecal.ui.onboarding.progress.ComputationProgressScreen
 import com.calai.bitecal.ui.onboarding.progress.ComputationProgressViewModel
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceScreen
+import com.calai.bitecal.ui.onboarding.referralcode.OnboardReferralCodeRoute
+import com.calai.bitecal.ui.onboarding.referralcode.OnboardReferralCodeViewModel
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
-import com.calai.bitecal.i18n.LanguageManager
+import com.calai.bitecal.ui.subscription.OnboardSubscriptionScreen
+import com.calai.bitecal.ui.subscription.SubscriptionViewModel
+import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
-import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
-import com.calai.bitecal.ui.home.ui.settings.details.EditAgeScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditDailyStepGoalScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditGenderScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditHeightScreen
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditAgeViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditHeightViewModel
-import com.calai.bitecal.ui.home.ui.weight.EditGoalWeightScreen
-import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalScreen
-import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalViewModel
-import androidx.core.net.toUri
-import com.calai.bitecal.ui.home.ui.settings.details.EditNutritionGoalsRoute
-import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
-import androidx.navigation.compose.navigation
-import com.calai.bitecal.ui.home.ui.camera.CameraScreen
-import com.calai.bitecal.ui.home.ui.foodlog.FoodLogDetailScreen
-import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
-import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
-import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditStartingWeightScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditWaterGoalScreen
-import com.calai.bitecal.ui.home.ui.settings.details.EditWorkoutGoalScreen
-import com.calai.bitecal.ui.home.ui.settings.details.model.AutoGenerateGoalsCalcViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditStartingWeightViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditWaterGoalViewModel
-import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
-import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
-import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
-import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import kotlinx.coroutines.flow.collectLatest
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 object Routes {
     const val LANDING = "landing"
@@ -121,24 +161,72 @@ object Routes {
     const val SIGN_IN_EMAIL_CODE = "signin_email_code"
     const val ONBOARD_GENDER = "onboard_gender"
     const val ONBOARD_REFERRAL = "onboard_referral"
+    const val ONBOARD_REFERRAL_CODE = "onboard_referral_code"
     const val ONBOARD_AGE = "onboard_age"
     const val ONBOARD_HEIGHT = "onboard_height"
     const val ONBOARD_WEIGHT = "onboard_weight"
     const val ONBOARD_GOAL_WEIGHT = "onboard_goal_weight"
+    const val ONBOARD_WEIGHT_LOSS_COMPARISON = "onboard_weight_loss_comparison"
     const val ONBOARD_EXERCISE_FREQ = "onboard_exercise_freq"
     const val ONBOARD_GOAL = "onboard_goal"
     const val ONBOARD_NOTIF = "onboard_notif"
     const val ONBOARD_HEALTH_CONNECT = "onboard_health_connect"
     const val PLAN_PROGRESS = "plan_progress"
     const val ROUTE_PLAN = "plan"
+
+    /**
+     * Onboarding 完成後專用訂閱頁。
+     *
+     * 跟一般 Routes.SUBSCRIPTION 分開，是為了：
+     * 1. Onboarding 訂閱頁不能 back 繞過
+     * 2. Settings / Home 開啟的一般訂閱頁仍可返回
+     */
+    const val ONBOARD_SUBSCRIPTION = "onboard_subscription"
+
+    /**
+     * Home ScanFab 專用付費牆。
+     *
+     * 不要直接共用 ONBOARD_SUBSCRIPTION route，因為 Home 進來時：
+     * - close/back 應該回 HOME
+     * - 不應該回 SignIn
+     * - 不應該標記 onboarding paywall rejected once
+     */
+    const val HOME_SCAN_SUBSCRIPTION = "home_scan_subscription"
+
+    /**
+     * Settings ScanFab 專用付費牆。
+     *
+     * 跟 HOME_SCAN_SUBSCRIPTION 使用同一套 OnboardSubscriptionScreen UI，
+     * 但 close/back 行為不同：
+     * - close/back 應該回 SETTINGS
+     * - 付款成功後回 HOME 並刷新會員狀態
+     */
+    const val SETTINGS_SCAN_SUBSCRIPTION = "settings_scan_subscription"
+    const val MEMBERSHIP_REFRESH_TICK = "membership_refresh_tick"
     const val REQUIRE_SIGN_IN = "require_sign_in"
+
+    const val REQUIRE_SIGN_IN_ROUTE =
+        "$REQUIRE_SIGN_IN?redirect={redirect}&auto={auto}&uploadLocal={uploadLocal}"
+
+    fun requireSignInRoute(
+        redirect: String = HOME,
+        auto: Boolean = false,
+        uploadLocal: Boolean = false
+    ): String {
+        return "$REQUIRE_SIGN_IN?redirect=$redirect&auto=$auto&uploadLocal=$uploadLocal"
+    }
+
     const val HOME = "home"
     const val APP_ENTRY = "app_entry"
     const val PROGRESS = "progress"
     const val FASTING = "fasting"
     const val SETTINGS = "settings"
     const val CAMERA = "camera"
+    const val SAVED_FOODS = "saved_foods"
     const val REMINDERS = "reminders"
+    const val REFERRALS = "referrals"
+    const val PREMIUM_REWARDS = "premium_rewards"
+    const val NOTIFICATION_INBOX = "notification_inbox"
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
@@ -164,8 +252,14 @@ object Routes {
     /**
      * Camera Snapshots food log detail
      */
-    const val FOOD_LOG_DETAIL = "foodLog/{id}"
     fun foodLogDetail(id: String) = "foodLog/$id"
+
+    const val RECENT_UPLOAD_DETAIL = "recentUploadDetail/{id}"
+    fun recentUploadDetail(id: String) = "recentUploadDetail/$id"
+
+    const val RECENT_UPLOAD_PREVIEW_URI = "recent_upload_preview_uri"
+    const val RECENT_UPLOAD_TIME_TEXT = "recent_upload_time_text"
+    const val RECENT_UPLOAD_SOURCE = "recent_upload_source"
 }
 
 object NavResults {
@@ -193,6 +287,19 @@ private fun toHttpUriOrNull(raw: String?): Uri? {
     return uri.takeIf { it.scheme == "http" || it.scheme == "https" }
 }
 
+private fun resolveFoodLogTimeText(
+    env: FoodLogEnvelopeDto,
+    fallbackTimeText: String = ""
+): String {
+    return FoodLogTimeResolver.resolveDisplayTimeText(
+        zoneId = ZoneId.systemDefault(),
+        updatedAtUtc = env.updatedAtUtc,
+        serverReceivedAtUtc = env.serverReceivedAtUtc,
+        capturedAtUtc = env.capturedAtUtc,
+        capturedLocalDate = env.capturedLocalDate
+    ).ifBlank { fallbackTimeText }
+}
+
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -202,6 +309,87 @@ private tailrec fun Context.findActivity(): Activity? =
 
 private fun NavController.safePopBackStack(): Boolean =
     previousBackStackEntry != null && popBackStack()
+
+private fun NavController.backFromRequireSignIn(
+    uploadLocal: Boolean
+) {
+    if (uploadLocal) {
+        val poppedToPlan = popBackStack(
+            route = Routes.ROUTE_PLAN,
+            inclusive = false
+        )
+
+        if (poppedToPlan) return
+
+        navigate(Routes.ROUTE_PLAN) {
+            popUpTo(0) {
+                inclusive = true
+            }
+            launchSingleTop = true
+            restoreState = false
+        }
+        return
+    }
+
+    val popped = safePopBackStack()
+    if (!popped) {
+        navigate(Routes.LANDING) {
+            popUpTo(0) {
+                inclusive = true
+            }
+            launchSingleTop = true
+            restoreState = false
+        }
+    }
+}
+
+private fun openGooglePlaySubscriptionManagement(
+    context: Context,
+    productId: String? = null
+) {
+    val packageName = context.packageName
+
+    val uri = if (productId.isNullOrBlank()) {
+        Uri.parse("https://play.google.com/store/account/subscriptions")
+    } else {
+        Uri.parse(
+            "https://play.google.com/store/account/subscriptions" +
+                    "?sku=$productId&package=$packageName"
+        )
+    }
+
+    val playStoreIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+        setPackage("com.android.vending")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    val browserFallbackIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    runCatching {
+        context.startActivity(playStoreIntent)
+    }.recoverCatching {
+        context.startActivity(browserFallbackIntent)
+    }.onFailure {
+        Toast.makeText(
+            context,
+            "Unable to open Google Play subscriptions.",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+}
+
+private fun NavController.resolveCameraFallbackPaywallRoute(): String {
+    val previousRoute = previousBackStackEntry?.destination?.route
+
+    return when (previousRoute) {
+        Routes.SETTINGS,
+        Routes.SETTINGS_SCAN_SUBSCRIPTION -> Routes.SETTINGS_SCAN_SUBSCRIPTION
+
+        else -> Routes.HOME_SCAN_SUBSCRIPTION
+    }
+}
 
 @Composable
 fun BiteCalNavHost(
@@ -223,13 +411,37 @@ fun BiteCalNavHost(
 
     val store = remember(ep) { ep.userProfileStore() }
 
+    val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
+
+    val onboardingRepo: OnboardingRepository = remember(ep) {
+        ep.onboardingRepository()
+    }
+
+    // 只記錄本次 App / 本輪 onboarding 是否已經關閉過 onboarding paywall。
+    // 不寫入 DataStore：重新開 App 或重新開始 onboarding 時會重算。
+    var onboardingPaywallRejectedOnce by remember { mutableStateOf(false) }
+
     val localeController = LocalLocaleController.current
 
-    // Token 逾期：帶到 Gate，成功後回 HOME
-    LaunchedEffect(Unit) {
+    LaunchedEffect(nav) {
         SessionBus.expired.collect {
-            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}") {
+            val currentRoute = nav.currentBackStackEntry?.destination?.route
+
+            // onboarding / app entry / auth flow 中都不要再被全域 gate 打斷
+            if (isOnboardingRoute(currentRoute) || isAuthOrEntryRoute(currentRoute)) {
+                return@collect
+            }
+
+            nav.navigate(
+                Routes.requireSignInRoute(
+                    redirect = Routes.HOME,
+                    auto = false,
+                    uploadLocal = false
+                )
+            ) {
                 popUpTo(0) { inclusive = true }
+                launchSingleTop = true
+                restoreState = false
             }
         }
     }
@@ -249,10 +461,19 @@ fun BiteCalNavHost(
 
             LandingScreen(
                 navController = nav,
-                onStart = { nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true } },
+                onStart = {
+                    onboardingPaywallRejectedOnce = false
+                    nav.navigate(Routes.ONBOARD_GENDER) { launchSingleTop = true }
+                },
                 onLogin = {
                     // 使用者主動點「登入」：自動開啟 Sheet
-                    nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=${Routes.HOME}&auto=true")
+                    nav.navigate(
+                        Routes.requireSignInRoute(
+                            redirect = Routes.HOME,
+                            auto = true,
+                            uploadLocal = false
+                        )
+                    )
                 },
                 onSetLocale = { tag ->
                     localeControllerLocal.set(tag)
@@ -285,7 +506,12 @@ fun BiteCalNavHost(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
                 onSent = { email ->
-                    nav.navigate("${Routes.SIGN_IN_EMAIL_CODE}?email=$email&redirect=$redirect&uploadLocal=$uploadLocal")
+                    val encodedEmail = Uri.encode(email)
+                    val encodedRedirect = Uri.encode(redirect)
+
+                    nav.navigate(
+                        "${Routes.SIGN_IN_EMAIL_CODE}?email=$encodedEmail&redirect=$encodedRedirect&uploadLocal=$uploadLocal"
+                    )
                 }
             )
         }
@@ -309,25 +535,33 @@ fun BiteCalNavHost(
 
             val currentTag = localeController.tag.ifBlank { "en" }
             val scope = rememberCoroutineScope()
-            val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
             EmailCodeScreen(
                 vm = vm,
                 email = email,
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
                     scope.launch {
-                        // ✅ 不阻塞導頁：背景自動 sync 訂閱（無 restore 按鈕）
-                        launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                        // ✅ 不阻塞導頁：背景自動 sync 訂閱（無 restore 按鈕）。
+                        // uploadLocal=true 時下面會同步等待 entitlement gate，這裡不要重複打 /sync。
+                        if (!uploadLocal) {
+                            launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                        }
                         // ★ 先印一個 flow log，確定有進來
+                        val allowHomeAfterRejectedPaywall = onboardingPaywallRejectedOnce
                         val dest = withContext(Dispatchers.IO) {
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
                             if (uploadLocal) {
-                                // ★ 從 ROUTE_PLAN 帶上來：一定 upsert 本機資料（不管 exists）
                                 runCatching { store.setLocaleTag(currentTag) }
                                 runCatching { profileRepo.upsertFromLocalForOnboarding() }
                                 runCatching { store.setHasServerProfile(true) }
-                                runCatching { weightRepo.ensureBaseline() }   // ← 在這裡打 /baseline
-                                Routes.HOME
+                                runCatching { weightRepo.ensureBaseline() }
+
+                                // SignIn 後依照後端 bootstrap 決定下一頁；App 不自行猜 referral eligibility。
+                                resolveOnboardingDestination(
+                                    entitlementSyncer = entitlementSyncer,
+                                    onboardingRepository = onboardingRepo,
+                                    allowHomeAfterRejectedPaywall = allowHomeAfterRejectedPaywall,
+                                )
                             } else if (exists) {
                                 // 既有用戶從 Landing 登入：只需補語系改變（若本次有變）
                                 val changedThisSession = LanguageSessionFlag.consumeChanged()
@@ -342,7 +576,9 @@ fun BiteCalNavHost(
                         }
 
                         nav.navigate(dest) {
-                            popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                            popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                                inclusive = true
+                            }
                             launchSingleTop = true
                             restoreState = false
                         }
@@ -353,6 +589,7 @@ fun BiteCalNavHost(
 
         // ===== Onboarding：性別 → ... → Plan =====
         composable(Routes.ONBOARD_GENDER) { backStackEntry ->
+            LaunchedEffect(Unit) { onboardingPaywallRejectedOnce = false }
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: GenderSelectionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
@@ -454,6 +691,13 @@ fun BiteCalNavHost(
             WeightGoalScreen(
                 vm = vm,
                 onBack = { nav.safePopBackStack() },
+                onNext = { nav.navigate(Routes.ONBOARD_WEIGHT_LOSS_COMPARISON) { launchSingleTop = true } }
+            )
+        }
+
+        composable(Routes.ONBOARD_WEIGHT_LOSS_COMPARISON) {
+            WeightLossComparisonScreen(
+                onBack = { nav.safePopBackStack() },
                 onNext = { nav.navigate(Routes.ONBOARD_NOTIF) { launchSingleTop = true } }
             )
         }
@@ -512,7 +756,7 @@ fun BiteCalNavHost(
             )
         }
 
-        // ROUTE_PLAN：未登入 → Gate(禁止 Skip)；已登入 → 先 upsert 再進 HOME
+        // ROUTE_PLAN：未登入 → SignIn Gate；已登入 → 先 upsert 再進 Onboarding 訂閱頁
         composable(Routes.ROUTE_PLAN) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
             val vm: HealthPlanViewModel = viewModel(
@@ -522,34 +766,58 @@ fun BiteCalNavHost(
             val routeScope = rememberCoroutineScope()
             HealthPlanScreen(
                 vm = vm,
+                startEnabled = isSignedIn != null,
                 onStart = {
-                    val goal = Routes.HOME
                     routeScope.launch {
-                        if (isSignedIn == true) {
-                            // ✅ 已登入：補 upsert + baseline + flush，再進 HOME
-                            withContext(Dispatchers.IO) {
-                                runCatching { profileRepo.upsertFromLocalForOnboarding() }
-                                runCatching { store.setHasServerProfile(true) }
-                                runCatching { weightRepo.ensureBaseline() }
+                        when (isSignedIn) {
+                            true -> {
+                                val allowHomeAfterRejectedPaywall = onboardingPaywallRejectedOnce
+                                val destination = withContext(Dispatchers.IO) {
+                                    runCatching { profileRepo.upsertFromLocalForOnboarding() }
+                                    runCatching { store.setHasServerProfile(true) }
+                                    runCatching { weightRepo.ensureBaseline() }
+
+                                    // 已登入使用者重走 onboarding 時，也要走後端 bootstrap，避免 App 自行推論 referral eligibility。
+                                    resolveOnboardingDestination(
+                                        entitlementSyncer = entitlementSyncer,
+                                        onboardingRepository = onboardingRepo,
+                                        allowHomeAfterRejectedPaywall = allowHomeAfterRejectedPaywall,
+                                    )
+                                }
+
+                                nav.navigate(destination) {
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
                             }
 
-                            nav.navigate(goal) {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
-                                restoreState = false
+                            false -> {
+                                nav.navigate(
+                                    Routes.requireSignInRoute(
+                                        redirect = Routes.HOME,
+                                        auto = false,
+                                        uploadLocal = true
+                                    )
+                                ) {
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
                             }
-                        } else {
-                            // ✅ 未登入：先存 pending（上面已做），再進 Gate 自動彈 Sheet
-                            nav.navigate("${Routes.REQUIRE_SIGN_IN}?redirect=$goal&auto=true&uploadLocal=true")
+
+                            null -> {
+                                // auth state 還沒 ready，這時按鈕本來就應該是 disabled
+                                return@launch
+                            }
                         }
                     }
                 }
             )
         }
 
-        // Gate：支援 auto + uploadLocal，且可禁止 Skip
+        // Gate：支援 auto + uploadLocal；SignIn 不再提供 Skip
         composable(
-            route = "${Routes.REQUIRE_SIGN_IN}?redirect={redirect}&auto={auto}&uploadLocal={uploadLocal}",
+            route = Routes.REQUIRE_SIGN_IN_ROUTE,
             arguments = listOf(
                 navArgument("redirect") { type = NavType.StringType; defaultValue = Routes.HOME },
                 navArgument("auto") { type = NavType.BoolType; defaultValue = false },
@@ -568,34 +836,14 @@ fun BiteCalNavHost(
             val showSheet = remember { mutableStateOf(auto) }
 
             RequireSignInScreen(
-                onBack = { nav.safePopBackStack() },
+                onBack = {
+                    nav.backFromRequireSignIn(uploadLocal = uploadLocal)
+                },
                 onGoogleClick = {
                     showSheet.value = true
                 },
                 onEmailClick = {
                     showSheet.value = true
-                },
-                onSkip = {
-                    if (uploadLocal) {
-                        // 來自 ROUTE_PLAN：允許返回 ROUTE_PLAN（不登入先回規劃頁）
-                        val popped = nav.popBackStack(Routes.ROUTE_PLAN, inclusive = false)
-                        if (!popped) {
-                            nav.navigate(Routes.ROUTE_PLAN) {
-                                launchSingleTop = true
-                                restoreState = false
-                            }
-                        }
-                    } else {
-                        // 其他情境（例如從 Landing 來）：維持原本邏輯
-                        val popped = nav.safePopBackStack()
-                        if (!popped) {
-                            nav.navigate(redirect) {
-                                popUpTo(0) { inclusive = true }
-                                launchSingleTop = true
-                                restoreState = false
-                            }
-                        }
-                    }
                 },
                 snackBarHostState = snackbarHostState
             )
@@ -609,13 +857,19 @@ fun BiteCalNavHost(
                     onDismiss = { showSheet.value = false },
 
                     uploadLocalOnLogin = uploadLocal,
+                    allowHomeAfterOnboardingPaywallRejected = onboardingPaywallRejectedOnce,
 
                     onGoogle = {
                         showSheet.value = false
                     },
                     onEmail = {
                         showSheet.value = false
-                        nav.navigate("${Routes.SIGN_IN_EMAIL_ENTER}?redirect=$redirect&uploadLocal=$uploadLocal")
+
+                        val encodedRedirect = Uri.encode(redirect)
+
+                        nav.navigate(
+                            "${Routes.SIGN_IN_EMAIL_ENTER}?redirect=$encodedRedirect&uploadLocal=$uploadLocal"
+                        )
                     },
                     onShowError = { msg ->
                         showSheet.value = false
@@ -623,6 +877,29 @@ fun BiteCalNavHost(
                     },
                 )
             }
+        }
+
+        composable(Routes.ONBOARD_REFERRAL_CODE) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: OnboardReferralCodeViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            OnboardReferralCodeRoute(
+                vm = vm,
+                onBack = { nav.safePopBackStack() },
+                onNext = {
+                    nav.navigate(Routes.ONBOARD_SUBSCRIPTION) {
+                        popUpTo(Routes.ONBOARD_REFERRAL_CODE) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            )
         }
 
         composable(Routes.HOME) { backStackEntry ->
@@ -649,6 +926,24 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
+            val membershipVm: MembershipViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val membershipUi by membershipVm.ui.collectAsState()
+
+            val membershipRefreshTickFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<Long>(
+                    Routes.MEMBERSHIP_REFRESH_TICK,
+                    0L
+                )
+            }
+            val membershipRefreshTick by membershipRefreshTickFlow.collectAsState()
+
+            LaunchedEffect(membershipRefreshTick) {
+                membershipVm.refresh()
+            }
+
             // ✅ 讓 HOME 也能顯示「上一頁回傳」的 toast（例如 QuickLogWeight 回來）
             val successFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
@@ -660,8 +955,13 @@ fun BiteCalNavHost(
             val navError by errorFlow.collectAsState(initial = null)
 
             LaunchedEffect(isSignedIn) {
-                if (isSignedIn == true) vm.refreshAfterLogin()
+                if (isSignedIn == true) {
+                    vm.refreshAfterLogin()
+                    membershipVm.refresh()
+                }
             }
+
+            val homeScope = rememberCoroutineScope()
 
             Box(Modifier.fillMaxSize()) {
                 HomeScreen(
@@ -670,7 +970,32 @@ fun BiteCalNavHost(
                     workoutVm = workoutVm,
                     fastingVm = fastingVm,
                     weightVm = weightVm,
-                    onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
+                    onOpenCamera = {
+                        homeScope.launch {
+                            val hasActiveAccess = withContext(Dispatchers.IO) {
+                                entitlementSyncer.hasActivePremiumAccess()
+                            }
+
+                            membershipVm.refresh()
+
+                            if (hasActiveAccess) {
+                                nav.navigate(Routes.CAMERA) {
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            } else {
+                                nav.navigate(Routes.HOME_SCAN_SUBSCRIPTION) {
+                                    launchSingleTop = true
+                                    restoreState = false
+                                }
+                            }
+                        }
+                    },
+                    onOpenSavedFoods = {
+                        nav.navigate(Routes.SAVED_FOODS) {
+                            launchSingleTop = true
+                        }
+                    },
                     onOpenTab = { tab ->
                         when (tab) {
                             HomeTab.Home -> Unit
@@ -684,7 +1009,34 @@ fun BiteCalNavHost(
                     onOpenFastingPlans = { nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true } },
                     onOpenActivityHistory = { nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true } },
                     onOpenWeight = { nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true } },
-                    onQuickLogWeight = { nav.navigate(Routes.RECORD_WEIGHT) { launchSingleTop = true; restoreState = true } }
+                    onQuickLogWeight = { nav.navigate(Routes.RECORD_WEIGHT) { launchSingleTop = true; restoreState = true } },
+                    onOpenRecentUploadDetail = { foodLogId, previewUri, timeText ->
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(Routes.RECENT_UPLOAD_PREVIEW_URI, previewUri)
+
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, timeText)
+
+                        nav.navigate(Routes.recentUploadDetail(foodLogId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    canUseScan = membershipUi.canUseScan,
+                    onOpenSubscription = {
+                        nav.navigate(Routes.HOME_SCAN_SUBSCRIPTION) {
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    },
+                    onCheckCanUseScan = {
+                        val hasActiveAccess = withContext(Dispatchers.IO) {
+                            entitlementSyncer.hasActivePremiumAccess()
+                        }
+                        membershipVm.refresh()
+                        hasActiveAccess
+                    },
                 )
 
                 when {
@@ -710,8 +1062,6 @@ fun BiteCalNavHost(
                 }
             }
         }
-
-        composable(Routes.PROGRESS) { SimplePlaceholder("Progress") }
 
         composable(Routes.FASTING) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
@@ -882,6 +1232,9 @@ fun BiteCalNavHost(
 
         composable(Routes.SETTINGS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val owner: ActivityResultRegistryOwner =
+                (activity as? ActivityResultRegistryOwner) ?: hostActivity
+
             val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
             val scope = rememberCoroutineScope()
             val accountRepo = remember(ep) { ep.accountRepository() }
@@ -930,72 +1283,146 @@ fun BiteCalNavHost(
             val featureUrl = stringResource(R.string.url_feature_request)
             val supportMailUrl = stringResource(R.string.url_support_email)
 
+            val membershipVm: MembershipViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+
+            val membershipUi by membershipVm.ui.collectAsState()
+
+            LaunchedEffect(Unit) {
+                membershipVm.refresh()
+            }
+
+            val membershipDisplay = MembershipUiMapper.map(
+                status = membershipUi.premiumStatus,
+                currentPremiumUntil = membershipUi.currentPremiumUntil,
+                trialDaysLeft = membershipUi.trialDaysLeft,
+                paymentIssue = membershipUi.paymentIssue
+            )
+
             Box(Modifier.fillMaxSize()) {
-                SettingsScreen(
-                    avatarUrl = avatar,
-                    profileName = nameText,
-                    ageText = ageText,
-                    currentTab = HomeTab.Personal,
-                    onOpenCamera = { nav.navigate(Routes.CAMERA) { launchSingleTop = true; restoreState = true } },
-                    onOpenTab = { tab ->
-                        when (tab) {
-                            HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
-                            HomeTab.Personal -> Unit
-                        }
-                    },
-                    onOpenEditName = {
-                        backStackEntry.savedStateHandle[Routes.EDIT_NAME_INITIAL] = (pUi.name ?: "").trim()
-                        nav.navigate(Routes.EDIT_NAME) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onOpenAdjustMacros = {
-                        nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
-                            launchSingleTop = true
-                            restoreState = false
-                        }
-                    },
-                    onOpenGoalAndCurrentWeight = {
-                        nav.navigate(Routes.PERSONAL_DETAILS) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onOpenWeightHistory = {
-                        nav.navigate(Routes.WEIGHT) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
-
-                    // ✅ Terms / Privacy / Support / Feature
-                    onOpenTerms = { uriHandler.openUri(termsUrl) },
-                    onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
-                    onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
-                    onOpenFeatureRequest = { uriHandler.openUri(featureUrl) },
-
-                    onDeleteAccount = {
-                        scope.launch {
-                            val r = accountRepo.deleteAccount()
-                            if (r.isSuccess) {
-                                nav.navigate(Routes.LANDING) {
-                                    popUpTo(0) { inclusive = true }
-                                    launchSingleTop = true
-                                    restoreState = false
+                CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
+                    SettingsScreen(
+                        avatarUrl = avatar,
+                        profileName = nameText,
+                        ageText = ageText,
+                        currentTab = HomeTab.Personal,
+                        onOpenCamera = {
+                            scope.launch {
+                                val hasActiveAccess = withContext(Dispatchers.IO) {
+                                    entitlementSyncer.hasActivePremiumAccess()
                                 }
-                            } else {
-                                backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] =
-                                    (r.exceptionOrNull()?.message ?: "Delete account failed")
+
+                                membershipVm.refresh()
+
+                                if (hasActiveAccess) {
+                                    nav.navigate(Routes.CAMERA) {
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                } else {
+                                    nav.navigate(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
+                                }
+                            }
+                        },
+                        onCheckCanUseScan = {
+                            val hasActiveAccess = withContext(Dispatchers.IO) {
+                                entitlementSyncer.hasActivePremiumAccess()
+                            }
+                            membershipVm.refresh()
+                            hasActiveAccess
+                        },
+                        onOpenSavedFoods = {
+                            nav.navigate(Routes.SAVED_FOODS) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenTab = { tab ->
+                            when (tab) {
+                                HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Personal -> Unit
+                            }
+                        },
+                        onOpenEditName = {
+                            backStackEntry.savedStateHandle[Routes.EDIT_NAME_INITIAL] = (pUi.name ?: "").trim()
+                            nav.navigate(Routes.EDIT_NAME) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenAdjustMacros = {
+                            nav.navigate(Routes.EDIT_NUTRITION_GOALS) {
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        },
+                        onOpenGoalAndCurrentWeight = {
+                            nav.navigate(Routes.PERSONAL_DETAILS) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenWeightHistory = {
+                            nav.navigate(Routes.WEIGHT) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
+                        premiumStatusSubtitle = membershipDisplay.subtitle,
+                        premiumStatusKind = membershipDisplay.kind,
+                        canUseScan = membershipUi.canUseScan,
+                        onOpenSubscription = {
+                            nav.navigate(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        },
+                        onFixPaymentIssue = {
+                            openGooglePlaySubscriptionManagement(activity)
+                        },
+                        onOpenReferral = {
+                            nav.navigate(Routes.REFERRALS) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenNotificationInbox = {
+                            nav.navigate(Routes.NOTIFICATION_INBOX) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onOpenTerms = { uriHandler.openUri(termsUrl) },
+                        onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
+                        onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
+                        onOpenFeatureRequest = { uriHandler.openUri(featureUrl) },
+                        onDeleteAccount = {
+                            scope.launch {
+                                val r = accountRepo.deleteAccount()
+                                if (r.isSuccess) {
+                                    nav.navigate(Routes.LANDING) {
+                                        popUpTo(0) { inclusive = true }
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
+                                } else {
+                                    backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] =
+                                        (r.exceptionOrNull()?.message ?: "Delete account failed")
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
 
                 when {
                     !navError.isNullOrBlank() -> {
@@ -1005,6 +1432,7 @@ fun BiteCalNavHost(
                             backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
                         }
                     }
+
                     !navSuccess.isNullOrBlank() -> {
                         SuccessTopToast(
                             message = navSuccess!!,
@@ -1023,9 +1451,11 @@ fun BiteCalNavHost(
 
         composable(Routes.PERSONAL_DETAILS) { backStackEntry ->
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
-            val homeBackStackEntry = remember(backStackEntry) { nav.getBackStackEntry(Routes.HOME) }
+            val homeBackStackEntry = remember(backStackEntry) {
+                nav.getBackStackEntry(Routes.HOME)
+            }
 
-            val settingsVm: SettingsViewModel  = viewModel(
+            val settingsVm: SettingsViewModel = viewModel(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
@@ -1034,6 +1464,7 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = homeBackStackEntry,
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
+
             LaunchedEffect(Unit) {
                 settingsVm.refreshProfileOnly()
                 weightVm.initIfNeeded()
@@ -1048,11 +1479,11 @@ fun BiteCalNavHost(
             val errorFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.ERROR_TOAST, null)
             }
+
             val navSuccess by successFlow.collectAsState(initial = null)
             val navError by errorFlow.collectAsState(initial = null)
 
             Box(Modifier.fillMaxSize()) {
-
                 PersonalDetailsScreen(
                     profile = pUi.profile,
                     unit = wUi.unit,
@@ -1069,14 +1500,16 @@ fun BiteCalNavHost(
                     onEditDailyStepGoal = { nav.navigate(Routes.EDIT_DAILY_STEP_GOAL) },
                     onEditStartingWeight = { nav.navigate(Routes.EDIT_STARTING_WEIGHT) },
                     onEditDailyWaterGoal = { nav.navigate(Routes.EDIT_WATER_GOAL) },
-                    onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) },
+                    onEditDailyWorkoutGoal = { nav.navigate(Routes.EDIT_WORKOUT_GOAL) }
                 )
+
                 when {
                     !navError.isNullOrBlank() -> {
                         ErrorTopToast(
                             message = navError!!,
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
+
                         LaunchedEffect(navError) {
                             delay(2_000)
                             backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
@@ -1090,6 +1523,7 @@ fun BiteCalNavHost(
                             minWidth = 150.dp,
                             minHeight = 30.dp
                         )
+
                         LaunchedEffect(navSuccess) {
                             delay(2_000)
                             backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
@@ -1552,46 +1986,828 @@ fun BiteCalNavHost(
             val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
             val owner: ActivityResultRegistryOwner = activity
 
+            val cameraFallbackPaywallRoute = remember(backStackEntry) {
+                nav.resolveCameraFallbackPaywallRoute()
+            }
+
+            var cameraGateResolved by rememberSaveable { mutableStateOf(false) }
+            var cameraAllowed by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    cameraAllowed = true
+                    cameraGateResolved = true
+                } else {
+                    cameraAllowed = false
+                    cameraGateResolved = true
+
+                    nav.navigate(cameraFallbackPaywallRoute) {
+                        popUpTo(Routes.CAMERA) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            if (!cameraGateResolved || !cameraAllowed) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            val cameraOwner = backStackEntry
             val flowVm: FoodLogFlowViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
+                viewModelStoreOwner = cameraOwner,
+                factory = HiltViewModelFactory(activity, cameraOwner)
             )
 
+            // ✅ 取得 HomeViewModel（讓 Camera 成功後可以把 recent upload 狀態交給 Home）
+            val homeEntry = remember(nav) {
+                runCatching { nav.getBackStackEntry(Routes.HOME) }.getOrNull()
+            }
+            val homeVm: HomeViewModel? = homeEntry?.let { entry ->
+                viewModel(
+                    viewModelStoreOwner = entry,
+                    factory = HiltViewModelFactory(activity, entry)
+                )
+            }
+
+            // ✅ 外部要求切模式（Detail 回來）
+            var initialMode by rememberSaveable { mutableStateOf(CameraMode.FOOD) }
+            val modeReqFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>("camera_mode", null)
+            }
+            val modeReqRaw by modeReqFlow.collectAsState(initial = null)
+
+            LaunchedEffect(modeReqRaw) {
+                val raw = modeReqRaw ?: return@LaunchedEffect
+                val req = runCatching { CameraMode.valueOf(raw) }.getOrNull()
+                backStackEntry.savedStateHandle.remove<String>("camera_mode") // consume
+                if (req != null) {
+                    flowVm.reset()
+                    initialMode = req
+                }
+            }
+
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner) {
-                CameraScreen(
-                    onClose = { nav.popBackStack() },
-                    onImagePicked = { uri ->
-                        flowVm.submitAlbum(ctx, uri) { foodLogId ->
-                            nav.navigate(Routes.foodLogDetail(foodLogId)) {
+                val st by flowVm.state.collectAsState()
+
+                // ✅ toast 2 秒後自動清掉（不動 envelope）
+                LaunchedEffect(st.cooldown, st.refused, st.error) {
+                    val hasToast = st.cooldown != null || st.refused != null || !st.error.isNullOrBlank()
+                    if (hasToast) {
+                        delay(2_000)
+                        flowVm.clearTransient()
+                    }
+                }
+
+                // ✅ 只在 FAILED/DELETED 且 error != null 時顯示卡片
+                val apiErrUi = remember(st.envelope?.error, st.apiError) {
+                    ApiErrorUiMapper.map(st.apiError ?: st.envelope?.error)
+                }
+                val showApiCard = apiErrUi != null && (
+                        st.apiError != null ||
+                        st.envelope?.status == FoodLogStatus.FAILED ||
+                        st.envelope?.status == FoodLogStatus.DELETED
+                )
+
+                fun handleClientAction(action: ClientAction) {
+                    when (action) {
+                        ClientAction.TRY_LABEL -> {
+                            flowVm.reset()
+                            initialMode = CameraMode.LABEL
+                        }
+
+                        ClientAction.SCAN_AGAIN,
+                        ClientAction.TRY_BARCODE -> {
+                            flowVm.reset()
+                            initialMode = CameraMode.BARCODE
+                        }
+
+                        ClientAction.TRY_PHOTO,
+                        ClientAction.RETAKE_PHOTO -> {
+                            flowVm.reset()
+                            initialMode = CameraMode.FOOD
+                        }
+
+                        ClientAction.RETRY_LATER -> {
+                            flowVm.reset()
+                        }
+
+                        ClientAction.CHECK_NETWORK -> {
+                            openNetworkSettings(ctx)
+                        }
+
+                        ClientAction.CONTACT_SUPPORT -> {
+                            openSupportEmail(ctx)
+                        }
+
+                        ClientAction.ENTER_MANUALLY -> {
+                            Toast.makeText(ctx, "手動輸入尚未實作，先改用標籤辨識", Toast.LENGTH_SHORT).show()
+                            flowVm.reset()
+                            initialMode = CameraMode.LABEL
+                        }
+                    }
+                }
+
+                // ✅ 回 Home：優先 pop 回既有 Home；沒有再 navigate
+                fun goHome() {
+                    val popped = nav.popBackStack(Routes.HOME, false)
+                    if (!popped) {
+                        nav.navigate(Routes.HOME) {
+                            launchSingleTop = true
+                        }
+                    }
+                }
+
+                // ✅ Home 第四區塊右上角時間，例如 11:10
+                fun nowHm(): String =
+                    LocalTime.now()
+                        .format(DateTimeFormatter.ofPattern("HH:mm"))
+
+                fun handleCreatedFoodLog(
+                    env: FoodLogEnvelopeDto,
+                    previewUri: String?
+                ) {
+                    val latestTimeText = resolveFoodLogTimeText(
+                        env = env,
+                        fallbackTimeText = nowHm()
+                    )
+
+                    homeVm?.onFoodLogCreated(
+                        env = env,
+                        previewUri = previewUri,
+                        timeText = latestTimeText
+                    )
+
+                    when (env.status) {
+                        FoodLogStatus.DRAFT,
+                        FoodLogStatus.SAVED,
+                        FoodLogStatus.PENDING -> {
+                            flowVm.reset()
+                            goHome()
+                        }
+
+                        FoodLogStatus.FAILED,
+                        FoodLogStatus.DELETED -> {
+                            nav.navigate(Routes.foodLogDetail(env.foodLogId)) {
                                 launchSingleTop = true
                             }
                         }
                     }
-                )
+                }
+
+                // ✅ FOOD / LABEL 要先複製 preview，因為原始 file 之後會被 finally 刪掉
+                fun createPreviewCopy(src: File): String? = runCatching {
+                    val preview = File(ctx.cacheDir, "recent_preview_${System.currentTimeMillis()}.jpg")
+                    src.copyTo(preview, overwrite = true)
+                    Uri.fromFile(preview).toString()
+                }.getOrNull()
+
+                // ✅ ALBUM
+                fun copyUriToPreviewFile(ctx: Context, srcUri: Uri): String? = runCatching {
+                    val preview = File(ctx.cacheDir, "recent_preview_${System.currentTimeMillis()}.jpg")
+                    ctx.contentResolver.openInputStream(srcUri)?.use { input ->
+                        preview.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    } ?: return null
+                    Uri.fromFile(preview).toString()
+                }.getOrNull()
+
+                Box(Modifier.fillMaxSize()) {
+                    CameraScreen(
+                        onClose = {
+                            flowVm.reset()
+                            nav.popBackStack()
+                        },
+                        busy = st.loading,
+                        initialMode = initialMode,
+
+                        // ✅ ALBUM 一律走 album，不再看當前 mode
+                        onAlbumPicked = { uri ->
+                            val previewUri = copyUriToPreviewFile(ctx, uri)
+                            flowVm.submitAlbum(ctx, uri) { env ->
+                                handleCreatedFoodLog(
+                                    env = env,
+                                    previewUri = previewUri
+                                )
+                            }
+                        },
+
+                        onShutterCaptured = { mode, file ->
+                            when (mode) {
+                                CameraMode.FOOD -> {
+                                    val previewUri = createPreviewCopy(file)
+                                    flowVm.submitPhotoFile(file) { env ->
+                                        handleCreatedFoodLog(
+                                            env = env,
+                                            previewUri = previewUri
+                                        )
+                                    }
+                                }
+
+                                CameraMode.LABEL -> {
+                                    val previewUri = createPreviewCopy(file)
+                                    flowVm.submitLabelFile(file) { env ->
+                                        handleCreatedFoodLog(
+                                            env = env,
+                                            previewUri = previewUri
+                                        )
+                                    }
+                                }
+
+                                CameraMode.BARCODE -> Unit
+                            }
+                        },
+
+                        onBarcodeScanned = { code ->
+                            if (st.loading) return@CameraScreen
+
+                            flowVm.submitBarcode(code) { env ->
+                                when (env.status) {
+                                    FoodLogStatus.DRAFT,
+                                    FoodLogStatus.SAVED -> {
+                                        val latestTimeText = resolveFoodLogTimeText(
+                                            env = env,
+                                            fallbackTimeText = nowHm()
+                                        )
+
+                                        homeVm?.onFoodLogCreated(
+                                            env = env,
+                                            previewUri = null,
+                                            timeText = latestTimeText
+                                        )
+                                        flowVm.reset()
+                                        goHome()
+                                    }
+
+                                    FoodLogStatus.PENDING -> {
+                                        val latestTimeText = resolveFoodLogTimeText(
+                                            env = env,
+                                            fallbackTimeText = nowHm()
+                                        )
+
+                                        homeVm?.onFoodLogCreated(
+                                            env = env,
+                                            previewUri = null,
+                                            timeText = latestTimeText
+                                        )
+                                        flowVm.reset()
+                                        goHome()
+                                    }
+
+                                    FoodLogStatus.FAILED,
+                                    FoodLogStatus.DELETED -> {
+                                        // 留在 Camera：ApiErrorCard 會顯示（用 st.envelope?.error / st.apiError）
+                                    }
+                                }
+                            }
+                        }
+                    )
+
+                    if (showApiCard && apiErrUi != null) {
+                        ApiErrorCard(
+                            ui = apiErrUi,
+                            onAction = ::handleClientAction,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 200.dp) // 避開底部 tiles/shutter
+                        )
+                    }
+
+                    when {
+                        st.cooldown != null -> ErrorTopToast(
+                            message = "冷卻中：${st.cooldown?.cooldownSeconds ?: "-"}s",
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+
+                        st.refused != null -> ErrorTopToast(
+                            message = st.refused?.hint ?: "無法識別，請只拍攝食物",
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+
+                        !st.error.isNullOrBlank() -> ErrorTopToast(
+                            message = st.error!!,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                    }
+                }
             }
         }
 
-        composable(Routes.FOOD_LOG_DETAIL) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id") ?: return@composable
-            val ctx = LocalContext.current
-            val activity: ComponentActivity = (ctx.findActivity() as? ComponentActivity) ?: hostActivity
+        composable(Routes.SAVED_FOODS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val homeBackStackEntry = remember(backStackEntry) {
+                nav.getBackStackEntry(Routes.HOME)
+            }
 
-            val flowVm: FoodLogFlowViewModel = viewModel(
-                viewModelStoreOwner = backStackEntry,
-                factory = HiltViewModelFactory(activity, backStackEntry)
+            val savedFoodsVm: SavedFoodsViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            FoodLogDetailScreen(
-                foodLogId = id,
-                vm = flowVm,
-                onBack = { nav.popBackStack() },
-                onOpenEditor = { foodLogId ->
-                    // TODO: 導到你的可編輯頁（EditFoodLog）
-                    // nav.navigate(Routes.EDIT_FOOD_LOG(foodLogId))
+            SavedFoodsScreen(
+                vm = savedFoodsVm,
+                onBack = { nav.safePopBackStack() },
+                onOpenDetail = { foodLogId, previewUri, timeText ->
+                    nav.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_PREVIEW_URI, previewUri)
+
+                    nav.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, timeText)
+
+                    nav.currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_SOURCE, Routes.SAVED_FOODS)
+
+                    nav.navigate(Routes.recentUploadDetail(foodLogId)) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
 
+        composable(Routes.RECENT_UPLOAD_DETAIL) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val recentUploadOwner = backStackEntry
+
+            val flowVm: FoodLogFlowViewModel = viewModel(
+                viewModelStoreOwner = recentUploadOwner,
+                factory = HiltViewModelFactory(activity, recentUploadOwner)
+            )
+
+            val homeEntry = remember(nav) {
+                runCatching { nav.getBackStackEntry(Routes.HOME) }.getOrNull()
+            }
+
+            val homeVm: HomeViewModel? = homeEntry?.let { entry ->
+                viewModel(
+                    viewModelStoreOwner = entry,
+                    factory = HiltViewModelFactory(activity, entry)
+                )
+            }
+
+            val id = backStackEntry.arguments?.getString("id").orEmpty()
+
+            val previewUri = remember(backStackEntry) {
+                nav.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<String>(Routes.RECENT_UPLOAD_PREVIEW_URI)
+            }
+
+            val timeText = remember(backStackEntry) {
+                nav.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<String>(Routes.RECENT_UPLOAD_TIME_TEXT)
+                    .orEmpty()
+            }
+
+            val savedFoodsVm: SavedFoodsViewModel? = homeEntry?.let { entry ->
+                viewModel(
+                    viewModelStoreOwner = entry,
+                    factory = HiltViewModelFactory(activity, entry)
+                )
+            }
+
+            val source = remember(backStackEntry) {
+                nav.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<String>(Routes.RECENT_UPLOAD_SOURCE)
+            }
+
+            RecentUploadDetailScreen(
+                foodLogId = id,
+                previewUri = previewUri,
+                timeText = timeText,
+                vm = flowVm,
+                onBack = {
+                    if (source == Routes.SAVED_FOODS) {
+                        nav.safePopBackStack()
+                    } else {
+                        nav.goHome()
+                    }
+                },
+                onSave = { updatedEnv ->
+                    val latestTimeText = resolveFoodLogTimeText(
+                        env = updatedEnv,
+                        fallbackTimeText = timeText
+                    )
+
+                    nav.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, latestTimeText)
+
+                    homeVm?.onRecentUploadUpdated(
+                        env = updatedEnv,
+                        previewUri = previewUri
+                    )
+
+                    savedFoodsVm?.onFoodLogUpdatedFromDetail(
+                        env = updatedEnv,
+                        previewUri = previewUri
+                    )
+
+                    if (source == Routes.SAVED_FOODS) {
+                        nav.safePopBackStack()
+                    } else {
+                        nav.goHome()
+                    }
+                },
+                onDeleted = { deletedFoodLogId ->
+                    homeVm?.onRecentUploadDeleted(deletedFoodLogId)
+
+                    if (source == Routes.SAVED_FOODS) {
+                        savedFoodsVm?.refresh()
+                        nav.safePopBackStack()
+                    } else {
+                        nav.goHome()
+                    }
+                }
+            )
+        }
+
+        composable(Routes.PROGRESS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+            val vm: com.calai.bitecal.ui.home.ui.progress.model.ProgressViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val goBackHome = remember(nav) { { nav.goHome() } }
+            val onOpenTab: (HomeTab) -> Unit = remember(nav) {
+                { tab ->
+                    when (tab) {
+                        HomeTab.Home -> nav.goHome()
+                        HomeTab.Progress -> Unit
+                        HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Workout -> nav.navigate(Routes.WORKOUT_HISTORY) { launchSingleTop = true; restoreState = true }
+                        HomeTab.Personal -> nav.navigate(Routes.SETTINGS) { launchSingleTop = true; restoreState = true }
+                    }
+                }
+            }
+            com.calai.bitecal.ui.home.ui.progress.ProgressScreen(
+                vm = vm,
+                onBack = goBackHome,
+                onOpenTab = onOpenTab
+            )
+        }
+        composable(Routes.REFERRALS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: ReferralViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            val ui by vm.ui.collectAsState()
+            val summary = ui.summary
+
+            ReferralScreen(
+                promoCode = summary?.promoCode ?: "—",
+                successCount = summary?.successCount ?: 0L,
+                pendingCount = summary?.pendingVerificationCount ?: 0L,
+                rejectedCount = summary?.rejectedCount ?: 0L,
+                recentClaims = summary?.recentClaims.orEmpty(),
+                claimInFlight = ui.claimInFlight,
+                error = ui.error,
+                onBack = { nav.popBackStack() },
+                onSubmitClaim = { code ->
+                    vm.claim(code) {
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(NavResults.SUCCESS_TOAST, "Referral code submitted")
+                    }
+                }
+            )
+        }
+
+        composable(Routes.ONBOARD_SUBSCRIPTION) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            fun goHomeAfterOnboardingSubscription() {
+                runCatching {
+                    nav.getBackStackEntry(Routes.HOME)
+                        .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                }
+
+                nav.navigate(Routes.HOME) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                    restoreState = false
+                }
+            }
+
+            fun closeOnboardingSubscriptionAsFree() {
+                onboardingPaywallRejectedOnce = true
+
+                /**
+                 * 使用者在 onboarding paywall 明確關閉：
+                 * - 不開 trial
+                 * - 不 premium
+                 * - 直接以 FREE 身分進 HOME
+                 * - 清掉整個 onboarding / paywall back stack，避免返回又回到訂閱頁
+                 */
+                nav.navigate(Routes.HOME) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                    restoreState = false
+                }
+            }
+
+            var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
+            var allowPaywall by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    goHomeAfterOnboardingSubscription()
+                } else {
+                    allowPaywall = true
+                    entitlementGateResolved = true
+                }
+            }
+
+            if (!entitlementGateResolved || !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            BackHandler(enabled = true) {
+                closeOnboardingSubscriptionAsFree()
+            }
+
+            OnboardSubscriptionScreen(
+                vm = vm,
+                activity = activity,
+                onCloseToSignIn = {
+                    closeOnboardingSubscriptionAsFree()
+                },
+                onPurchased = {
+                    goHomeAfterOnboardingSubscription()
+                }
+            )
+        }
+
+        composable(Routes.HOME_SCAN_SUBSCRIPTION) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            fun goHomeAfterHomeScanSubscription() {
+                runCatching {
+                    nav.getBackStackEntry(Routes.HOME)
+                        .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                }
+
+                val popped = nav.popBackStack(
+                    route = Routes.HOME,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME_SCAN_SUBSCRIPTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
+            var allowPaywall by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    goHomeAfterHomeScanSubscription()
+                } else {
+                    allowPaywall = true
+                    entitlementGateResolved = true
+                }
+            }
+
+            if (!entitlementGateResolved || !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            BackHandler(enabled = true) {
+                goHomeAfterHomeScanSubscription()
+            }
+
+            OnboardSubscriptionScreen(
+                vm = vm,
+                activity = activity,
+                onCloseToSignIn = {
+                    // Home ScanFab 進來的付費牆，關閉後回 HOME；不變更使用者權益。
+                    goHomeAfterHomeScanSubscription()
+                },
+                onPurchased = {
+                    // Google Play 付款 / trial 成功後，刷新 HOME membership 後回 HOME。
+                    goHomeAfterHomeScanSubscription()
+                }
+            )
+        }
+
+        composable(Routes.SETTINGS_SCAN_SUBSCRIPTION) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            fun goSettingsAfterSettingsScanSubscription() {
+                val popped = nav.popBackStack(
+                    route = Routes.SETTINGS,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.SETTINGS) {
+                        popUpTo(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            fun goCameraAfterSettingsScanGate() {
+                nav.navigate(Routes.CAMERA) {
+                    popUpTo(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+
+            fun goHomeAfterSettingsScanPurchase() {
+                runCatching {
+                    nav.getBackStackEntry(Routes.HOME)
+                        .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                }
+
+                val popped = nav.popBackStack(
+                    route = Routes.HOME,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.HOME) {
+                        popUpTo(Routes.SETTINGS_SCAN_SUBSCRIPTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
+            var allowPaywall by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    // 理論上 active user 不該進到這個 route。
+                    // 但若 membershipUi stale 導致誤進，直接讓他使用 Scan。
+                    goCameraAfterSettingsScanGate()
+                } else {
+                    allowPaywall = true
+                    entitlementGateResolved = true
+                }
+            }
+
+            if (!entitlementGateResolved || !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            BackHandler(enabled = true) {
+                goSettingsAfterSettingsScanSubscription()
+            }
+
+            OnboardSubscriptionScreen(
+                vm = vm,
+                activity = activity,
+                onCloseToSignIn = {
+                    // Settings ScanFab 進來的付費牆：
+                    // close 後回 Settings，不改使用者權益。
+                    goSettingsAfterSettingsScanSubscription()
+                },
+                onPurchased = {
+                    // 付款成功 / trial 成功：
+                    // 更新會員狀態後回 HOME。
+                    goHomeAfterSettingsScanPurchase()
+                }
+            )
+        }
+
+        composable(Routes.PREMIUM_REWARDS) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: PremiumRewardsViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            val ui by vm.ui.collectAsState()
+
+            PremiumRewardsScreen(
+                loading = ui.loading,
+                error = ui.error,
+                summary = ui.summary,
+                rewards = ui.rewards,
+                onRetry = { vm.refresh() },
+                onBack = { nav.popBackStack() }
+            )
+        }
+
+
+        composable(Routes.NOTIFICATION_INBOX) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: NotificationInboxViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            val ui by vm.ui.collectAsState()
+
+            NotificationInboxScreen(
+                loading = ui.loading,
+                error = ui.error,
+                items = ui.items,
+                onRetry = { vm.refresh() },
+                onBack = { nav.popBackStack() },
+                onNotificationClick = { item ->
+                    when (item.deepLink) {
+                        "bitecal://premium-rewards" -> nav.navigate(Routes.PREMIUM_REWARDS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+
+                        "bitecal://referrals" -> nav.navigate(Routes.REFERRALS) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+
+                        else -> Unit
+                    }
+                }
+            )
+        }
 
         composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
 
@@ -1601,4 +2817,48 @@ fun BiteCalNavHost(
 @Composable
 private fun SimplePlaceholder(title: String) {
     Text(modifier = Modifier.padding(24.dp), text = "TODO: $title page")
+}
+
+private fun openNetworkSettings(ctx: Context) {
+    val intent = Intent(Settings.ACTION_WIFI_SETTINGS).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { ctx.startActivity(intent) }
+}
+
+private fun openSupportEmail(ctx: Context) {
+    val intent = Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:support@bitcalai.example")
+        putExtra(Intent.EXTRA_SUBJECT, "BiteCal Support")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { ctx.startActivity(intent) }
+}
+
+private fun isOnboardingRoute(route: String?): Boolean {
+    if (route.isNullOrBlank()) return false
+    return route == Routes.LANDING ||
+            route == Routes.ONBOARD_GENDER ||
+            route == Routes.ONBOARD_REFERRAL ||
+            route == Routes.ONBOARD_REFERRAL_CODE ||
+            route == Routes.ONBOARD_AGE ||
+            route == Routes.ONBOARD_HEIGHT ||
+            route == Routes.ONBOARD_WEIGHT ||
+            route == Routes.ONBOARD_GOAL_WEIGHT ||
+            route == Routes.ONBOARD_EXERCISE_FREQ ||
+            route == Routes.ONBOARD_GOAL ||
+            route == Routes.ONBOARD_NOTIF ||
+            route == Routes.ONBOARD_HEALTH_CONNECT ||
+            route == Routes.PLAN_PROGRESS ||
+            route == Routes.ROUTE_PLAN ||
+            route == Routes.ONBOARD_SUBSCRIPTION
+}
+
+private fun isAuthOrEntryRoute(route: String?): Boolean {
+    if (route.isNullOrBlank()) return false
+
+    return route == Routes.APP_ENTRY ||
+            route.startsWith(Routes.REQUIRE_SIGN_IN) ||
+            route.startsWith(Routes.SIGN_IN_EMAIL_ENTER) ||
+            route.startsWith(Routes.SIGN_IN_EMAIL_CODE)
 }

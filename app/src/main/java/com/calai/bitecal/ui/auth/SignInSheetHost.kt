@@ -13,11 +13,14 @@ import com.calai.bitecal.data.auth.GoogleAuthService
 import com.calai.bitecal.di.AppEntryPoint
 import com.calai.bitecal.i18n.LanguageSessionFlag
 import com.calai.bitecal.ui.nav.Routes
+import com.calai.bitecal.ui.nav.resolveOnboardingDestination
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.calai.bitecal.R
+import com.calai.bitecal.data.onboarding.repo.OnboardingRepository
+
 private fun hasGoogleAccount(context: Context): Boolean =
     try { AccountManager.get(context).getAccountsByType("com.google").isNotEmpty() }
     catch (_: Exception) { false }
@@ -35,13 +38,13 @@ fun SignInSheetHost(
     onShowError: (CharSequence) -> Unit = {},
     // ★ 從 ROUTE_PLAN 來要把本機資料（剛填的表單）寫到伺服器
     uploadLocalOnLogin: Boolean = false,
+    allowHomeAfterOnboardingPaywallRejected: Boolean = false,
 ) {
     if (!visible) return
 
     val ctx = LocalContext.current
     val appCtx = ctx.applicationContext
 
-    val msgCancelled      = stringResource(R.string.err_google_cancelled)
     val tipNoAccount      = stringResource(R.string.err_google_no_account_hint)
     val fallbackSignInErr = stringResource(R.string.err_google_signin_failed)
 
@@ -51,6 +54,9 @@ fun SignInSheetHost(
     val weightRepo = remember(ep) { ep.weightRepository() }
     val store = remember(ep) { ep.userProfileStore() }
     val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
+    val onboardingRepo: OnboardingRepository = remember(ep) {
+        ep.onboardingRepository()
+    }
     var loading by remember { mutableStateOf(false) }
     val scope = remember(activity) { activity.lifecycleScope }
 
@@ -64,9 +70,18 @@ fun SignInSheetHost(
             runCatching { store.setHasServerProfile(true) }
             runCatching { weightRepo.ensureBaseline() }
 
+            // SignIn 後依照後端 bootstrap 決定下一頁；App 不自行猜 referral eligibility。
+            val destination = resolveOnboardingDestination(
+                entitlementSyncer = entitlementSyncer,
+                onboardingRepository = onboardingRepo,
+                allowHomeAfterRejectedPaywall = allowHomeAfterOnboardingPaywallRejected,
+            )
+
             withContext(Dispatchers.Main) {
-                navController.navigate(Routes.HOME) {
-                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                navController.navigate(destination) {
+                    popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                        inclusive = true
+                    }
                     launchSingleTop = true
                     restoreState = false
                 }
@@ -76,20 +91,29 @@ fun SignInSheetHost(
 
         if (exists) {
             val changedThisSession = LanguageSessionFlag.consumeChanged()
-            if (changedThisSession) runCatching { profileRepo.updateLocaleOnly(localeTag) }
+            if (changedThisSession) {
+                runCatching { profileRepo.updateLocaleOnly(localeTag) }
+            }
+
             runCatching { store.setHasServerProfile(true) }
+
             withContext(Dispatchers.Main) {
                 navController.navigate(Routes.HOME) {
-                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                    popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                        inclusive = true
+                    }
                     launchSingleTop = true
                     restoreState = false
                 }
             }
         } else {
             runCatching { store.setHasServerProfile(false) }
+
             withContext(Dispatchers.Main) {
                 navController.navigate(Routes.ONBOARD_GENDER) {
-                    popUpTo(Routes.REQUIRE_SIGN_IN) { inclusive = true }
+                    popUpTo(Routes.REQUIRE_SIGN_IN_ROUTE) {
+                        inclusive = true
+                    }
                     launchSingleTop = true
                     restoreState = false
                 }
@@ -108,10 +132,14 @@ fun SignInSheetHost(
                 // 2. 伺服器登入
                 repo.loginWithGoogle(idToken)
 
-                // 3. 背景自動同步訂閱
-                launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                // 3. 背景自動同步訂閱。
+                // uploadLocalOnLogin=true 時，afterLoginNavigateByServerProfile() 會同步等待 entitlement gate，
+                // 這裡不要重複打 /sync，避免登入當下產生 race。
+                if (!uploadLocalOnLogin) {
+                    launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
+                }
 
-                // 4. 根據 Profile 導頁
+                // 4. 根據 Profile / Entitlement 導頁
                 afterLoginNavigateByServerProfile()
 
                 loading = false

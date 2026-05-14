@@ -71,7 +71,7 @@ fun PersonalDetailsScreen(
     onEditDailyStepGoal: () -> Unit = {},
     onEditStartingWeight: () -> Unit = {},
     onEditDailyWaterGoal: () -> Unit = {},
-    onEditDailyWorkoutGoal: () -> Unit = {},
+    onEditDailyWorkoutGoal: () -> Unit = {}
 ) {
     val bg = Color(0xFFF6F7F9)
     val cardShape = RoundedCornerShape(22.dp)

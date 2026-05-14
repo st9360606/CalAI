@@ -12,6 +12,7 @@ import com.calai.bitecal.data.fasting.api.FastingApi
 import com.calai.bitecal.data.fasting.notifications.FastingAlarmScheduler
 import com.calai.bitecal.data.fasting.repo.FastingRepository
 import com.calai.bitecal.data.foodlog.api.FoodLogsApi
+import com.calai.bitecal.data.net.BaseHeadersInterceptor
 import com.calai.bitecal.data.profile.api.AutoGoalsApi
 import com.calai.bitecal.data.profile.api.ProfileApi
 import com.calai.bitecal.data.users.api.UsersApi
@@ -25,7 +26,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
-import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,7 +34,10 @@ import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
-
+import com.calai.bitecal.data.membership.api.MembershipApi
+import com.calai.bitecal.data.notifications.api.NotificationInboxApi
+import com.calai.bitecal.data.onboarding.api.OnboardingApi
+import com.calai.bitecal.data.referral.api.ReferralApi
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -45,15 +48,6 @@ object NetworkModule {
         encodeDefaults = false
     }
     private fun contentType() = "application/json".toMediaType()
-
-    // ★ 所有請求一律帶上使用者本地時區（IANA）
-    private fun tzHeaderInterceptor(): Interceptor = Interceptor { chain ->
-        val tz = ZoneId.systemDefault().id
-        val req = chain.request().newBuilder()
-            .header("X-Client-Timezone", tz)
-            .build()
-        chain.proceed(req)
-    }
 
     private fun logging(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
@@ -66,24 +60,27 @@ object NetworkModule {
     }
 
     @Provides @Singleton @Named("authClient")
-    fun provideAuthOkHttp(): OkHttpClient =
+    fun provideAuthOkHttp(
+        baseHeadersInterceptor: BaseHeadersInterceptor
+    ): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(tzHeaderInterceptor())
-            .addInterceptor(logging())              // ← 改用封裝好的 logging()
+            .addInterceptor(baseHeadersInterceptor)  // ✅ NEW：deviceId/lang/tz
+            .addInterceptor(logging())
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .build()
 
     @Provides @Singleton @Named("apiClient")
     fun provideApiOkHttp(
+        baseHeadersInterceptor: BaseHeadersInterceptor,
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(tzHeaderInterceptor())
+            .addInterceptor(baseHeadersInterceptor)  // ✅ NEW：deviceId/lang/tz
             .addInterceptor(authInterceptor)
             .authenticator(tokenAuthenticator)
-            .addInterceptor(logging())              // ← 同上
+            .addInterceptor(logging())
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .build()
@@ -167,4 +164,23 @@ object NetworkModule {
     fun provideEntitlementApi(@Named("apiRetrofit") retrofit: Retrofit): EntitlementApi =
         retrofit.create(EntitlementApi::class.java)
 
+    @Provides
+    @Singleton
+    fun provideOnboardingApi(@Named("apiRetrofit") retrofit: Retrofit): OnboardingApi =
+        retrofit.create(OnboardingApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideReferralApi(@Named("apiRetrofit") retrofit: Retrofit): ReferralApi =
+        retrofit.create(ReferralApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMembershipApi(@Named("apiRetrofit") retrofit: Retrofit): MembershipApi =
+        retrofit.create(MembershipApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideNotificationInboxApi(@Named("apiRetrofit") retrofit: Retrofit): NotificationInboxApi =
+        retrofit.create(NotificationInboxApi::class.java)
 }

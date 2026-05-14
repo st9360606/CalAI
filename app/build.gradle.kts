@@ -19,8 +19,8 @@ android {
         applicationId = "com.calai.bitecal"
         minSdk = 30
         targetSdk = 36
-        versionCode = 10001
-        versionName = "1.0.0"
+        versionCode = 10006
+        versionName = "1.0.3-internal"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 預設 app 顯示名稱（不覆蓋多語字串）
@@ -32,6 +32,9 @@ android {
          */
         buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+        testOptions {
+            unitTests.isIncludeAndroidResources = true
+        }
     }
 
     // ── 讀取 keystore.properties（兩個常見路徑；找不到就跳過簽章） ──
@@ -78,14 +81,17 @@ android {
             signingConfigs.findByName("release")?.let { signingConfig = it }
             isMinifyEnabled = true
             isShrinkResources = true
+
+            // ✅ Play Console 建議的「原生程式碼偵錯符號」
+            // 產生 native debug symbols，幫助 Crash/ANR 符號化
+            ndk {
+                debugSymbolLevel = "FULL" // 可選：SYMBOL_TABLE / FULL
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 file("proguard-rules.pro")
             )
             manifestPlaceholders["appLabel"] = "BiteCal"
-
-            // （可選）release 也能再覆蓋一次，但通常用 flavor 控就夠
-            // buildConfigField("String", "API_BASE_URL", "\"https://api.yourdomain.com\"")
         }
         getByName("debug") {
             isMinifyEnabled = false
@@ -131,17 +137,14 @@ android {
             // 如果你是 adb reverse 8080:8080 才能用這個
             buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:8080/\"")
             buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:8080\"")
-
             manifestPlaceholders["appLabel"] = "BiteCal (devUsb)"
         }
 
         create("prod") {
             dimension = "env"
             // TODO: 之後換正式域名
-
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
-
+            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
             manifestPlaceholders["appLabel"] = "BiteCal"
         }
     }
@@ -233,25 +236,38 @@ dependencies {
     // ===== WorkManager + Hilt =====
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
-
     // ===== 測試 =====
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    testImplementation("androidx.test:core-ktx:1.7.0")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+
+    androidTestImplementation("androidx.test:core:1.7.0")
+    androidTestImplementation("androidx.test:core-ktx:1.7.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:rules:1.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test.ext:junit-ktx:1.3.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
 
     // Baseline Profile
     baselineProfile(project(":baselineprofile"))
 
     // CameraX
+    implementation("androidx.camera:camera-core:1.4.0")
     implementation("androidx.camera:camera-camera2:1.4.1")
     implementation("androidx.camera:camera-lifecycle:1.4.1")
     implementation("androidx.camera:camera-view:1.4.1")
 
     // Google Play Billing (KTX) ✅ 一定要有，不然 com.android.billingclient.* 全紅
     implementation("com.android.billingclient:billing-ktx:7.1.1")
+
+    // ML Kit Barcode :barcode-scanning
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    // ML Kit Text Recognition（On-device）
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 
 }
 

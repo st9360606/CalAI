@@ -46,7 +46,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +61,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -71,7 +71,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,6 +79,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -94,6 +94,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
+import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.launch
@@ -360,7 +361,10 @@ private fun RecordWeightScreenContent(
                     .navigationBarsPadding()
                     .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
             ) {
-                Button(
+                CalaiPrimaryActionButton(
+                    text = stringResource(R.string.save),
+                    enabled = valueKg > 0.0 && !ui.saving,
+                    loading = ui.saving,
                     onClick = {
                         val unitUsed = if (useMetric) {
                             UserProfileStore.WeightUnit.KG
@@ -398,33 +402,8 @@ private fun RecordWeightScreenContent(
                                 }
                             }
                         }
-                    },
-                    enabled = valueKg > 0.0 && !ui.saving,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    )
-                ) {
-                    if (ui.saving) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                    } else {
-                        Text(
-                            text = "Save",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Medium,
-                                letterSpacing = 0.2.sp
-                            )
-                        )
                     }
-                }
+                )
             }
         }
     ) { inner ->
@@ -945,7 +924,7 @@ private fun WeighingDateSheet(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Save", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.save), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
 
                 OutlinedButton(

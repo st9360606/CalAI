@@ -18,11 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.components.ScrollingNumberWheel
-
+import com.calai.bitecal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,7 +146,7 @@ fun DurationPickerSheet(
                         contentColor = Color.White
                     )
                 ) {
-                    Text("Save", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.save), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(Modifier.height(12.dp))

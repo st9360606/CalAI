@@ -1,21 +1,48 @@
 package com.calai.bitecal.ui.onboarding.progress
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -23,180 +50,351 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
 import com.calai.bitecal.R
+import kotlinx.coroutines.delay
+
+private val ProgressPrimary = Color(0xFF5BCB72)
+private val ProgressPrimarySoft = Color(0x1A5BCB72)
+private val ProgressTrack = Color(0xFFE5E7EB)
+private val TextPrimary = Color(0xFF111827)
+private val TextSecondary = Color(0xFF6B7280)
+private val CardBg = Color(0xFFF8FAFC)
+private val PendingDot = Color(0xFFD1D5DB)
+
+private enum class ItemVisualState {
+    DONE, ACTIVE, PENDING
+}
+
 @Composable
 fun ComputationProgressScreen(
     onDone: () -> Unit,
-    vm: ComputationProgressViewModel   // 由 NavHost 建立後傳入
+    vm: ComputationProgressViewModel
 ) {
     val ui by vm.ui.collectAsState()
 
-    // 啟動動畫（整段約 4 秒跑完）
-    LaunchedEffect(Unit) { vm.start(durationMs = 4000L) }
+    LaunchedEffect(Unit) {
+        vm.start(durationMs = 4200L, holdNearCompleteMs = 420L)
+    }
 
-    // 完成後 600ms → onDone()
     LaunchedEffect(ui.done) {
         if (ui.done) {
-            delay(600)
+            delay(850)
             onDone()
         }
     }
 
-    Column(
+    val progress by animateFloatAsState(
+        targetValue = ui.percent.coerceIn(0, 100) / 100f,
+        animationSpec = tween(durationMillis = 450, easing = FastOutSlowInEasing),
+        label = "progress_ring"
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // 往下推一點
-        Spacer(Modifier.height(150.dp))
-
-        // ╭──────────────────── 圓形綠色進度條（含百分比） ────────────────────╮
-        CircularProgressRing(
-            percent = ui.percent,
-            diameter = 210.dp,       // 小一點
-            thickness = 13.dp,
-            progressColor = Color(0xFF66D36E),
-            trackColor = Color(0xFFE6E9EE),
-            percentColor = Color(0xFF111114),
-        )
-        // ╰──────────────────────────────────────────────────────────────────╯
-
-        Spacer(Modifier.height(28.dp))
-
-        // 標題
-        Text(
-            text = stringResource(R.string.progress_title_heading),
-            fontSize = 32.sp,
-            lineHeight = 38.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF222326),
-            textAlign = TextAlign.Center,
-            style = LocalTextStyle.current.copy(
-                platformStyle = PlatformTextStyle(includeFontPadding = false),
-                lineHeightStyle = LineHeightStyle(
-                    alignment = LineHeightStyle.Alignment.Center,
-                    trim = LineHeightStyle.Trim.Both
-                )
-            )
-        )
-
-        Spacer(Modifier.height(15.dp))
-
-        // 階段文案
-        Text(
-            text = when (ui.phase) {
-                ProgressPhase.P1 -> stringResource(R.string.progress_phase_1)
-                ProgressPhase.P2 -> stringResource(R.string.progress_phase_2)
-                ProgressPhase.P3 -> stringResource(R.string.progress_phase_3)
-                ProgressPhase.P4 -> stringResource(R.string.progress_phase_4)
-            },
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 16.sp,
-                color = Color(0xFF222326)
-            ),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(35.dp))
-
-        // 卡片（整體縮小）
-        ProgressCard(ui = ui)
-
-        Spacer(Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun ProgressCard(ui: ProgressUiState) {
-    val shape = RoundedCornerShape(24.dp) // 稍微小一點的圓角
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        shape = shape,
-        color = Color(0xFFF6F7FB),
-        shadowElevation = 10.dp
+            .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp) // 內距縮小
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = stringResource(R.string.progress_card_title),
-                fontSize = 18.sp,                    // 20 → 18
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF222326)
-            )
-            Spacer(Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            ProgressItem(stringResource(R.string.progress_item_calories), ui.checks.calories)
-            ProgressItem(stringResource(R.string.progress_item_carbs), ui.checks.carbs)
-            ProgressItem(stringResource(R.string.progress_item_protein), ui.checks.protein)
-            ProgressItem(stringResource(R.string.progress_item_fats), ui.checks.fats)
-            ProgressItem(stringResource(R.string.progress_item_health_score), ui.checks.healthScore)
+            HeroProgressRing(
+                progress = progress,
+                percent = ui.percent
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = stringResource(R.string.progress_hero_title),
+                fontSize = 28.sp,
+                lineHeight = 34.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary,
+                textAlign = TextAlign.Center,
+                style = LocalTextStyle.current.copy(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    lineHeightStyle = LineHeightStyle(
+                        alignment = LineHeightStyle.Alignment.Center,
+                        trim = LineHeightStyle.Trim.Both
+                    )
+                )
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = stringResource(R.string.progress_hero_subtitle),
+                fontSize = 15.sp,
+                lineHeight = 22.sp,
+                fontWeight = FontWeight.Medium,
+                color = TextSecondary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            PhasePill(phase = ui.phase)
+
+            Spacer(modifier = Modifier.height(22.dp))
+
+            ProgressChecklistCard(ui = ui)
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                text = stringResource(R.string.progress_footer_hint),
+                fontSize = 15.sp,
+                lineHeight = 22.sp,
+                color = TextSecondary,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
 
 @Composable
-private fun ProgressItem(label: String, checked: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),   // 依你前面縮小設定
-        verticalAlignment = Alignment.CenterVertically
+private fun HeroProgressRing(
+    progress: Float,
+    percent: Int
+) {
+    Box(
+        modifier = Modifier.size(214.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val stroke = 14.dp.toPx()
+
+            drawCircle(
+                color = ProgressTrack,
+                style = Stroke(width = stroke)
+            )
+
+            drawArc(
+                color = ProgressPrimary,
+                startAngle = -90f,
+                sweepAngle = 360f * progress,
+                useCenter = false,
+                style = Stroke(
+                    width = stroke,
+                    cap = StrokeCap.Round
+                )
+            )
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "${percent.coerceIn(0, 100)}%",
+                color = TextPrimary,
+                fontSize = 42.sp,
+                lineHeight = 46.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = stringResource(R.string.progress_center_caption),
+                color = TextSecondary,
+                fontSize = 15.sp,
+                lineHeight = 18.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun PhasePill(
+    phase: ProgressPhase
+) {
+    val text = when (phase) {
+        ProgressPhase.P1 -> stringResource(R.string.progress_phase_pill_1)
+        ProgressPhase.P2 -> stringResource(R.string.progress_phase_pill_2)
+        ProgressPhase.P3 -> stringResource(R.string.progress_phase_pill_3)
+        ProgressPhase.P4 -> stringResource(R.string.progress_phase_pill_4)
+    }
+
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = ProgressPrimarySoft
     ) {
         Text(
-            text = "•  $label",
-            fontSize = 16.sp,
-            color = Color(0xFF1F2937),
-            modifier = Modifier.weight(1f)
+            text = text,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            color = ProgressPrimary,
+            fontSize = 14.sp,
+            lineHeight = 17.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
         )
-        AnimatedVisibility(
-            visible = checked,
-            enter = fadeIn() + scaleIn()
+    }
+}
+
+@Composable
+private fun ProgressChecklistCard(
+    ui: ProgressUiState
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        color = CardBg,
+        shadowElevation = 8.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            val green = Color(0xFF66D36E)
-            Box(
-                modifier = Modifier
-                    .size(22.dp)                // 綠圓較小
-                    .clip(CircleShape)
-                    .background(green),
-                contentAlignment = Alignment.Center
-            ) {
-                // ✅ 在 DrawScope 中，用 3.6.dp.toPx()，不要用 LocalDensity.current
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(4.dp)
-                ) {
-                    val w = size.width
-                    val h = size.height
+            Text(
+                text = stringResource(R.string.progress_card_title_v2),
+                fontSize = 16.sp,
+                lineHeight = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
 
-                    // 三個關鍵點（白色粗勾）
-                    val p1 = Offset(w * 0.18f, h * 0.55f)
-                    val p2 = Offset(w * 0.42f, h * 0.75f)
-                    val p3 = Offset(w * 0.80f, h * 0.28f)
-
-                    val stroke = 2.0.dp.toPx()   // ← 關鍵：DrawScope 的 Dp.toPx()
-
-                    drawLine(
-                        color = Color.White,
-                        start = p1, end = p2,
-                        strokeWidth = stroke,
-                        cap = StrokeCap.Round
-                    )
-                    drawLine(
-                        color = Color.White,
-                        start = p2, end = p3,
-                        strokeWidth = stroke,
-                        cap = StrokeCap.Round
-                    )
-                }
+            buildChecklistRows(ui).forEach { row ->
+                ProgressChecklistRow(
+                    title = row.title,
+                    state = row.state
+                )
             }
         }
     }
 }
 
+private data class ChecklistRowUi(
+    val title: String,
+    val state: ItemVisualState
+)
+
+@Composable
+private fun buildChecklistRows(
+    ui: ProgressUiState
+): List<ChecklistRowUi> {
+    val activeIndex = when {
+        !ui.checks.calories -> 0
+        !ui.checks.carbs -> 1
+        !ui.checks.protein -> 2
+        !ui.checks.fats -> 3
+        !ui.checks.healthScore -> 4
+        else -> -1
+    }
+
+    fun stateOf(index: Int, done: Boolean): ItemVisualState {
+        return when {
+            done -> ItemVisualState.DONE
+            index == activeIndex -> ItemVisualState.ACTIVE
+            else -> ItemVisualState.PENDING
+        }
+    }
+
+    return listOf(
+        ChecklistRowUi(
+            title = stringResource(R.string.progress_row_calorie_target),
+            state = stateOf(0, ui.checks.calories)
+        ),
+        ChecklistRowUi(
+            title = stringResource(R.string.progress_row_carb_distribution),
+            state = stateOf(1, ui.checks.carbs)
+        ),
+        ChecklistRowUi(
+            title = stringResource(R.string.progress_row_protein_recommendation),
+            state = stateOf(2, ui.checks.protein)
+        ),
+        ChecklistRowUi(
+            title = stringResource(R.string.progress_row_fat_recommendation),
+            state = stateOf(3, ui.checks.fats)
+        ),
+        ChecklistRowUi(
+            title = stringResource(R.string.progress_row_health_score_estimate),
+            state = stateOf(4, ui.checks.healthScore)
+        )
+    )
+}
+
+@Composable
+private fun ProgressChecklistRow(
+    title: String,
+    state: ItemVisualState
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        when (state) {
+            ItemVisualState.DONE -> {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn() + scaleIn()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(ProgressPrimary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+
+            ItemVisualState.ACTIVE -> {
+                val transition = rememberInfiniteTransition(label = "pulse_transition")
+                val alpha by transition.animateFloat(
+                    initialValue = 0.45f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulse_alpha"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(ProgressPrimary.copy(alpha = alpha))
+                )
+            }
+
+            ItemVisualState.PENDING -> {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(PendingDot)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(12.dp))
+
+        Text(
+            text = title,
+            color = when (state) {
+                ItemVisualState.DONE -> TextPrimary
+                ItemVisualState.ACTIVE -> TextPrimary
+                ItemVisualState.PENDING -> TextSecondary
+            },
+            fontSize = 15.sp,
+            lineHeight = 20.sp,
+            fontWeight = if (state == ItemVisualState.ACTIVE) FontWeight.SemiBold else FontWeight.Medium
+        )
+    }
+}
