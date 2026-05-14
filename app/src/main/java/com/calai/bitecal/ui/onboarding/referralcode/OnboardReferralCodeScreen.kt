@@ -427,9 +427,14 @@ private fun referralErrorMessage(errorCode: String): String {
         "INVALID_PROMO_CODE" -> stringResource(R.string.onboard_referral_code_error_invalid)
         "SELF_REFERRAL" -> stringResource(R.string.onboard_referral_code_error_self_referral)
         "INVITEE_ALREADY_CLAIMED" -> stringResource(R.string.onboard_referral_code_error_already_claimed)
-        "INVITEE_ALREADY_SUBSCRIBED" -> stringResource(R.string.onboard_referral_code_error_already_subscribed)
+        "INVITEE_ALREADY_SUBSCRIBED",
+        "PREMIUM_ACTIVE",
+        "TRIAL_ACTIVE",
+        "PAYMENT_ISSUE",
+        "PAYMENT_RECOVERY_REQUIRED",
+        "HAS_PAID_HISTORY" -> stringResource(R.string.onboard_referral_code_error_already_subscribed)
         "REFERRAL_DISABLED" -> stringResource(R.string.onboard_referral_code_error_disabled)
-        "RISK_REJECTED" -> stringResource(R.string.onboard_referral_code_error_risk)
+        "RISK_REJECTED", "ABUSE_RISK" -> stringResource(R.string.onboard_referral_code_error_risk)
         OnboardReferralCodeViewModel.ERROR_NETWORK -> stringResource(R.string.onboard_referral_code_error_network)
         else -> stringResource(R.string.onboard_referral_code_error_unknown)
     }

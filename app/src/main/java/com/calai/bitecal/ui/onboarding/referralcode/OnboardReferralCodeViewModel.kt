@@ -141,7 +141,12 @@ class OnboardReferralCodeViewModel @Inject constructor(
                 "INVALID_PROMO_CODE" in raw -> "INVALID_PROMO_CODE"
                 "SELF_REFERRAL" in raw -> "SELF_REFERRAL"
                 "INVITEE_ALREADY_CLAIMED" in raw -> "INVITEE_ALREADY_CLAIMED"
-                "INVITEE_ALREADY_SUBSCRIBED" in raw -> "INVITEE_ALREADY_SUBSCRIBED"
+                "INVITEE_ALREADY_SUBSCRIBED" in raw ||
+                        "PREMIUM_ACTIVE" in raw ||
+                        "TRIAL_ACTIVE" in raw ||
+                        "PAYMENT_ISSUE" in raw ||
+                        "PAYMENT_RECOVERY_REQUIRED" in raw ||
+                        "HAS_PAID_HISTORY" in raw -> "INVITEE_ALREADY_SUBSCRIBED"
                 "REFERRAL_DISABLED" in raw -> "REFERRAL_DISABLED"
                 "RISK_REJECTED" in raw || "ABUSE_RISK" in raw -> "RISK_REJECTED"
                 t.code() == 400 || t.code() == 404 -> "INVALID_PROMO_CODE"
