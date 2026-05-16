@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -29,6 +30,7 @@ data class WorkoutUiState(
     val toastMessage: String? = null,                    // 成功儲存吐司
     val errorScanFailed: Boolean = false,                // Scan Failed (7.jpg)
     val saving: Boolean = false,                         // 防止連點送出
+    val subscriptionRequiredOnce: Boolean = false,
 
     // 一次性導航旗標（true 時讓畫面導到歷史頁，之後會被 consume 清回 false）
     val navigateHistoryOnce: Boolean = false
@@ -139,13 +141,25 @@ class WorkoutViewModel @Inject constructor(
             )
 
             // 並行：一邊打 API，一邊確保至少 5 秒
-            val req = async { runCatching { repo.estimateFreeText(text) }.getOrNull() }
+            val req = async { runCatching { repo.estimateFreeText(text) } }
             val minSpinner = async { delay(5_000) }
 
-            val resp = req.await()
+            val respResult = req.await()
             minSpinner.await() // 保證至少 5 秒
 
-            if (resp != null && resp.status == "ok") {
+            val resp = respResult.getOrElse { e ->
+                if (isSubscriptionRequired(e)) {
+                    _ui.value = _ui.value.copy(
+                        estimating = false,
+                        subscriptionRequiredOnce = true
+                    )
+                    return@launch
+                }
+                _ui.value = _ui.value.copy(estimating = false, errorScanFailed = true)
+                return@launch
+            }
+
+            if (resp.status == "ok") {
                 _ui.value = _ui.value.copy(estimating = false, estimateResult = resp)
             } else {
                 _ui.value = _ui.value.copy(estimating = false, errorScanFailed = true)
@@ -165,6 +179,13 @@ class WorkoutViewModel @Inject constructor(
             val logResp = runCatching {
                 repo.saveWorkout(activityId = activityId, minutes = minutes, kcal = null)
             }.getOrElse { e ->
+                if (isSubscriptionRequired(e)) {
+                    _ui.value = _ui.value.copy(
+                        saving = false,
+                        subscriptionRequiredOnce = true
+                    )
+                    return@launch
+                }
                 _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
                 return@launch
             }
@@ -196,6 +217,13 @@ class WorkoutViewModel @Inject constructor(
             val logResp = runCatching {
                 repo.saveWorkout(activityId = preset.activityId, minutes = minutes, kcal = null)
             }.getOrElse { e ->
+                if (isSubscriptionRequired(e)) {
+                    _ui.value = _ui.value.copy(
+                        saving = false,
+                        subscriptionRequiredOnce = true
+                    )
+                    return@launch
+                }
                 _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
                 return@launch
             }
@@ -213,6 +241,10 @@ class WorkoutViewModel @Inject constructor(
     /** 清除一次性導航事件（避免回到 Home 又再次觸發） */
     fun consumeNavigateHistory() {
         _ui.value = _ui.value.copy(navigateHistoryOnce = false)
+    }
+
+    fun consumeSubscriptionRequired() {
+        _ui.value = _ui.value.copy(subscriptionRequiredOnce = false)
     }
 
     fun clearToast() {
@@ -237,5 +269,16 @@ class WorkoutViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    private fun isSubscriptionRequired(error: Throwable): Boolean {
+        if (error !is HttpException) return false
+
+        val errorBody = runCatching {
+            error.response()?.errorBody()?.string()
+        }.getOrNull().orEmpty()
+
+        return errorBody.contains("SUBSCRIPTION_REQUIRED", ignoreCase = true) ||
+                error.message().contains("SUBSCRIPTION_REQUIRED", ignoreCase = true)
     }
 }

@@ -609,6 +609,7 @@ fun StepsWorkoutRowModern(
     centerDisk: Dp = 38.dp,
     ringStroke: Dp = 6.dp,
     onAddWorkoutClick: () -> Unit,
+    workoutAddEnabled: Boolean = true,
     onWorkoutCardClick: () -> Unit = {}
 ) {
     Row(
@@ -769,6 +770,7 @@ fun StepsWorkoutRowModern(
                 Box(modifier = Modifier.offset(x = (-4).dp, y = (2).dp)) {
                     WorkoutAddButton(
                         onClick = onAddWorkoutClick,
+                        enabled = workoutAddEnabled,
                         outerSizeDp = 34.dp,
                         innerSizeDp = 26.dp,
                         iconSizeDp = 21.dp

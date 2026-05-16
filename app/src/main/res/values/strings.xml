@@ -215,6 +215,7 @@
     <string name="steps_hint_hc_unavailable">Health Connect isn’t available on this device</string>
     <string name="steps_hint_retry">Sync failed. Tap to retry</string>
     <string name="common_error">Error</string>
+    <string name="workout_membership_verify_failed">Unable to verify membership. Please try again.</string>
     <string name="common_dash">—</string>
 
     <string name="steps_status_permission_not_granted">Not authorized</string>

@@ -115,6 +115,7 @@ import com.calai.bitecal.ui.home.ui.weight.WeightScreen
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import com.calai.bitecal.ui.home.ui.workout.WorkoutHistoryScreen
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
+import com.calai.bitecal.ui.home.workoutgate.WorkoutSheetOpenRequest
 import com.calai.bitecal.ui.landing.LandingScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionViewModel
@@ -194,6 +195,14 @@ object Routes {
     const val HOME_SCAN_SUBSCRIPTION = "home_scan_subscription"
 
     /**
+     * Home WorkoutAddButton 專用付費牆。
+     *
+     * UI 可以共用既有 subscription screen，但 route 必須保留 Workout 語意，
+     * 讓未來 analytics 與維護能分辨 Scan gate / Workout gate 來源。
+     */
+    const val HOME_WORKOUT_SUBSCRIPTION = "home_workout_subscription"
+
+    /**
      * Settings ScanFab 專用付費牆。
      *
      * 跟 HOME_SCAN_SUBSCRIPTION 使用同一套 OnboardSubscriptionScreen UI，
@@ -203,6 +212,7 @@ object Routes {
      */
     const val SETTINGS_SCAN_SUBSCRIPTION = "settings_scan_subscription"
     const val MEMBERSHIP_REFRESH_TICK = "membership_refresh_tick"
+    const val OPEN_WORKOUT_SHEET_TICK = "open_workout_sheet_tick"
     const val REQUIRE_SIGN_IN = "require_sign_in"
 
     const val REQUIRE_SIGN_IN_ROUTE =
@@ -939,6 +949,13 @@ fun BiteCalNavHost(
                 )
             }
             val membershipRefreshTick by membershipRefreshTickFlow.collectAsState()
+            val openWorkoutSheetTickFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<Long>(
+                    Routes.OPEN_WORKOUT_SHEET_TICK,
+                    0L
+                )
+            }
+            val openWorkoutSheetTick by openWorkoutSheetTickFlow.collectAsState()
 
             LaunchedEffect(membershipRefreshTick) {
                 membershipVm.refresh()
@@ -1036,6 +1053,24 @@ fun BiteCalNavHost(
                         }
                         membershipVm.refresh()
                         hasActiveAccess
+                    },
+                    onOpenWorkoutSubscription = {
+                        nav.navigate(Routes.HOME_WORKOUT_SUBSCRIPTION) {
+                            launchSingleTop = true
+                            restoreState = false
+                        }
+                    },
+                    onCheckCanUseWorkout = {
+                        val hasActiveAccess = withContext(Dispatchers.IO) {
+                            entitlementSyncer.hasActivePremiumAccess()
+                        }
+                        membershipVm.refresh()
+                        hasActiveAccess
+                    },
+                    openWorkoutSheetRequestTick = openWorkoutSheetTick,
+                    onConsumeOpenWorkoutSheetRequest = {
+                        backStackEntry.savedStateHandle[Routes.OPEN_WORKOUT_SHEET_TICK] =
+                            WorkoutSheetOpenRequest.ConsumedTick
                     },
                 )
 
@@ -2645,6 +2680,101 @@ fun BiteCalNavHost(
                 onPurchased = {
                     // Google Play 付款 / trial 成功後，刷新 HOME membership 後回 HOME。
                     goHomeAfterHomeScanSubscription()
+                }
+            )
+        }
+
+        composable(Routes.HOME_WORKOUT_SUBSCRIPTION) { backStackEntry ->
+            val activity = (LocalContext.current.findActivity() ?: hostActivity)
+
+            val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+
+            fun goHomeAfterWorkoutPaywallClose() {
+                runCatching {
+                    nav.getBackStackEntry(Routes.HOME)
+                        .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                }
+
+                val popped = nav.popBackStack(
+                    route = Routes.HOME,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME_WORKOUT_SUBSCRIPTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            fun goHomeAfterWorkoutPurchase() {
+                runCatching {
+                    val homeHandle = nav.getBackStackEntry(Routes.HOME).savedStateHandle
+                    homeHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                    homeHandle[Routes.OPEN_WORKOUT_SHEET_TICK] = System.currentTimeMillis()
+                }
+
+                val popped = nav.popBackStack(
+                    route = Routes.HOME,
+                    inclusive = false
+                )
+
+                if (!popped) {
+                    nav.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME_WORKOUT_SUBSCRIPTION) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            }
+
+            var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
+            var allowPaywall by rememberSaveable { mutableStateOf(false) }
+
+            LaunchedEffect(Unit) {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    goHomeAfterWorkoutPaywallClose()
+                } else {
+                    allowPaywall = true
+                    entitlementGateResolved = true
+                }
+            }
+
+            if (!entitlementGateResolved || !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            BackHandler(enabled = true) {
+                goHomeAfterWorkoutPaywallClose()
+            }
+
+            OnboardSubscriptionScreen(
+                vm = vm,
+                activity = activity,
+                onCloseToSignIn = {
+                    goHomeAfterWorkoutPaywallClose()
+                },
+                onPurchased = {
+                    goHomeAfterWorkoutPurchase()
                 }
             )
         }

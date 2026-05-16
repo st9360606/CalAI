@@ -98,8 +98,12 @@ import com.calai.bitecal.ui.home.components.StepsWorkoutRowModern
 import com.calai.bitecal.ui.home.components.WeightFastingRowModern
 import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
 import com.calai.bitecal.ui.home.components.scan.ScanFab
+import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
 import com.calai.bitecal.ui.home.model.HomeViewModel
+import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGate
+import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGateDecision
+import com.calai.bitecal.ui.home.workoutgate.WorkoutSheetOpenRequest
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
@@ -143,6 +147,10 @@ fun HomeScreen(
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
     onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
+    onOpenWorkoutSubscription: () -> Unit = onOpenSubscription,
+    onCheckCanUseWorkout: suspend () -> Boolean = { false },
+    openWorkoutSheetRequestTick: Long = 0L,
+    onConsumeOpenWorkoutSheetRequest: () -> Unit = {},
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -367,8 +375,19 @@ fun HomeScreen(
     val scanFabScope = rememberCoroutineScope()
     val latestOnOpenSubscription = rememberUpdatedState(onOpenSubscription)
     val latestOnCheckCanUseScan = rememberUpdatedState(onCheckCanUseScan)
+    val latestOnOpenWorkoutSubscription = rememberUpdatedState(onOpenWorkoutSubscription)
+    val latestOnCheckCanUseWorkout = rememberUpdatedState(onCheckCanUseWorkout)
+    val latestOnConsumeOpenWorkoutSheetRequest = rememberUpdatedState(onConsumeOpenWorkoutSheetRequest)
 
     var scanFabGateInFlight by rememberSaveable { mutableStateOf(false) }
+    var workoutGateInFlight by rememberSaveable { mutableStateOf(false) }
+    var showWorkoutGateError by rememberSaveable { mutableStateOf(false) }
+    val workoutGateErrorMessage = stringResource(R.string.workout_membership_verify_failed)
+    val workoutPremiumGate = remember {
+        WorkoutPremiumGate {
+            latestOnCheckCanUseWorkout.value.invoke()
+        }
+    }
 
     val onFabClick: () -> Unit = remember {
         {
@@ -389,6 +408,46 @@ fun HomeScreen(
                     latestOnOpenSubscription.value.invoke()
                 }
             }
+        }
+    }
+
+    val onWorkoutAddClick: () -> Unit = remember(workoutPremiumGate) {
+        {
+            if (workoutGateInFlight) return@remember
+
+            scanFabScope.launch {
+                workoutGateInFlight = true
+
+                when (workoutPremiumGate.check()) {
+                    WorkoutPremiumGateDecision.OpenWorkout -> {
+                        showWorkoutSheet.value = true
+                    }
+                    WorkoutPremiumGateDecision.OpenSubscription -> {
+                        latestOnOpenWorkoutSubscription.value.invoke()
+                    }
+                    WorkoutPremiumGateDecision.VerificationFailed -> {
+                        showWorkoutGateError = true
+                    }
+                    null -> Unit
+                }
+
+                workoutGateInFlight = false
+            }
+        }
+    }
+
+    LaunchedEffect(openWorkoutSheetRequestTick) {
+        if (WorkoutSheetOpenRequest.shouldOpen(openWorkoutSheetRequestTick)) {
+            showWorkoutSheet.value = true
+            latestOnConsumeOpenWorkoutSheetRequest.value.invoke()
+        }
+    }
+
+    LaunchedEffect(workoutUi.subscriptionRequiredOnce) {
+        if (workoutUi.subscriptionRequiredOnce) {
+            showWorkoutSheet.value = false
+            workoutVm.consumeSubscriptionRequired()
+            latestOnOpenWorkoutSubscription.value.invoke()
         }
     }
     // 有 owner 才能用 launcher；沒有就 null（你已有 ProxyActivity 兜底）
@@ -622,7 +681,8 @@ fun HomeScreen(
                     ringSize = 74.dp,
                     centerDisk = 38.dp,
                     ringStroke = 6.dp,
-                    onAddWorkoutClick = { showWorkoutSheet.value = true },
+                    onAddWorkoutClick = onWorkoutAddClick,
+                    workoutAddEnabled = !workoutGateInFlight,
                     onWorkoutCardClick = { onOpenActivityHistory() }
                 )
                 // ===== Fourth block: 最近上傳
@@ -757,6 +817,17 @@ fun HomeScreen(
         Box(Modifier.fillMaxSize()) {
             when {
                 // 1️⃣ 優先顯示 Fasting 儲存結果（不管 Workout 有沒有）
+                showWorkoutGateError -> {
+                    ErrorTopToast(
+                        message = workoutGateErrorMessage,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+                    LaunchedEffect(showWorkoutGateError) {
+                        delay(2000)
+                        showWorkoutGateError = false
+                    }
+                }
+
                 fastingToast != null -> {
                     SuccessTopToast(
                         message = fastingToast,

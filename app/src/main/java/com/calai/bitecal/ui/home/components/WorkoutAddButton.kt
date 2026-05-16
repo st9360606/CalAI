@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun WorkoutAddButton(
     onClick: () -> Unit,
+    enabled: Boolean = true,
     outerSizeDp: Dp = 52.dp,  // ✅ 預設更大、更好按
     innerSizeDp: Dp = 36.dp,  // ✅ 黑圓加大
     iconSizeDp: Dp = 24.dp    // ✅ 白色「＋」加大
@@ -47,7 +48,11 @@ fun WorkoutAddButton(
     Box(
         modifier = Modifier
             .size(outerSizeDp)
-            .clickable(interactionSource = noRipple, indication = null) {
+            .clickable(
+                interactionSource = noRipple,
+                indication = null,
+                enabled = enabled
+            ) {
                 scope.launch {
                     flashAlphaGoal = 0.4f
                     delay(120)

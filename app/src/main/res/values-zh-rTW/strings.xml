@@ -215,6 +215,7 @@
     <string name="steps_hint_hc_unavailable">此裝置無法使用 Health Connect</string>
     <string name="steps_hint_retry">同步失敗，點擊重試</string>
     <string name="common_error">錯誤</string>
+    <string name="workout_membership_verify_failed">無法確認會員狀態，請再試一次。</string>
     <string name="common_dash">—</string>
 
     <string name="steps_status_permission_not_granted">未授權</string>
