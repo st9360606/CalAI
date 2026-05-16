@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Group
@@ -409,6 +410,7 @@ private fun ProfileCard(
     onPaymentIssueClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(22.dp)
+    val displayName = remember(name) { name.trim().ifBlank { "Guest" } }
     val subscriptionBadgeClickableModifier =
         when (premiumStatusKind) {
             MembershipDisplayKind.FREE -> {
@@ -434,7 +436,7 @@ private fun ProfileCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 14.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -449,25 +451,48 @@ private fun ProfileCard(
                 ) {
                     ProfileAvatar(url = avatarUrl)
 
-                    Spacer(Modifier.size(16.dp))
+                    Spacer(Modifier.size(12.dp))
 
                     Column(
                         modifier = Modifier
                             .weight(1f)
                             .padding(start = 2.dp, end = 8.dp)
-                            .offset(y = (-1).dp)
                     ) {
-                        Text(
-                            text = name,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFF404A58),
-                                fontSize = 17.sp,
-                                lineHeight = 22.sp
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = displayName,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(weight = 1f, fill = false),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF404A58),
+                                    fontSize = 17.sp,
+                                    lineHeight = 20.sp
+                                )
                             )
-                        )
+
+                            Spacer(Modifier.size(9.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .offset(y = (-1).dp)
+                                    .size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF4F4F5))
+                                    .clickable(onClick = onProfileClick),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = "Edit name",
+                                    tint = Color(0xFF52525B),
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
 
                         Spacer(Modifier.height(4.dp))
 
@@ -484,7 +509,9 @@ private fun ProfileCard(
             }
 
             Box(
-                modifier = Modifier.padding(start = 8.dp, end = 22.dp),
+                modifier = Modifier
+                    .offset(y = (-2).dp)
+                    .padding(start = 8.dp, end = 12.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 ProfileSubscriptionBadge(
@@ -559,7 +586,7 @@ private fun ProfileSubscriptionBadge(
             )
         }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(5.dp))
 
         Text(
             text = subtitle.ifBlank { visual.fallbackSubtitle },
@@ -570,7 +597,7 @@ private fun ProfileSubscriptionBadge(
                 color = visual.subtitleColor,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 12.sp,
-                lineHeight = 15.sp
+                lineHeight = 14.sp
             )
         )
     }

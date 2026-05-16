@@ -158,7 +158,7 @@ private fun NameField(
             decorationBox = { inner ->
                 if (value.isBlank()) {
                     Text(
-                        text = "Enter name here",
+                        text = "Enter your name",
                         fontSize = 18.sp,
                         color = Color(0xFF737B88),
                         fontWeight = FontWeight.Normal

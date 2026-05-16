@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val NAME_MAX_LENGTH = 40
+
 @HiltViewModel
 class EditNameViewModel @Inject constructor(
     private val usersRepo: UsersRepository
@@ -24,7 +26,10 @@ class EditNameViewModel @Inject constructor(
         val error: String? = null
     ) {
         fun trimmed(): String = input.trim()
-        fun canSave(): Boolean = trimmed().isNotEmpty() && trimmed() != initialName.trim()
+        fun canSave(): Boolean {
+            val value = trimmed()
+            return value.isNotEmpty() && value.length <= NAME_MAX_LENGTH && value != initialName.trim() && !isSaving
+        }
     }
 
     sealed interface Event {
@@ -43,20 +48,31 @@ class EditNameViewModel @Inject constructor(
         val snap = initialFromPersonal?.trim().orEmpty()
         _ui.update { it.copy(initialName = snap, input = snap, error = null) }
 
-        // 再跟 server 對一次（避免 personal 畫面是舊的）
-        val me = usersRepo.meOrNull()
-        val serverName = me?.name?.trim().orEmpty()
+        // 再跟 server 對一次（避免 personal 畫面是舊的）；失敗就保留上一頁快照，避免網路失敗讓畫面卡住。
+        val serverName = runCatching { usersRepo.meOrNull()?.name?.trim().orEmpty() }
+            .getOrDefault(snap)
         if (serverName != snap) {
             _ui.update { it.copy(initialName = serverName, input = serverName) }
         }
     }
 
     fun onInputChange(v: String) {
-        _ui.update { it.copy(input = v, error = null) }
+        val next = v.take(NAME_MAX_LENGTH)
+        _ui.update {
+            it.copy(
+                input = next,
+                error = if (v.length > NAME_MAX_LENGTH) {
+                    "Name can be up to $NAME_MAX_LENGTH characters."
+                } else {
+                    null
+                }
+            )
+        }
     }
 
     fun save() = viewModelScope.launch {
         val cur = _ui.value
+        if (cur.isSaving) return@launch
         if (!cur.canSave()) return@launch
 
         _ui.update { it.copy(isSaving = true, error = null) }

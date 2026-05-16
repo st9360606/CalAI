@@ -1306,7 +1306,7 @@ fun BiteCalNavHost(
             val avatar = avatarFromUsersApi ?: homeUi.summary?.avatarUrl
 
             // ✅ 3) UsersApi 的 name
-            val nameText = pUi.name?.takeIf { it.isNotBlank() } ?: "—"
+            val nameText = pUi.name?.trim()?.takeIf { it.isNotBlank() } ?: "Guest"
 
             // ✅ 4) age 先用 ProfileApi 回來的
             val ageText = pUi.profile?.age?.let { "$it years old" } ?: "—"
