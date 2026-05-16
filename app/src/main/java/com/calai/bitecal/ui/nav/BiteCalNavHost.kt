@@ -2920,15 +2920,7 @@ fun BiteCalNavHost(
                 error = ui.error,
                 items = ui.items,
                 onRetry = { vm.refresh() },
-                onBack = { nav.popBackStack() },
-                onNotificationClick = { item ->
-                    NotificationDeepLinkRoutes.routeFor(item.deepLink)?.let { route ->
-                        nav.navigate(route) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                }
+                onBack = { nav.popBackStack() }
             )
         }
 

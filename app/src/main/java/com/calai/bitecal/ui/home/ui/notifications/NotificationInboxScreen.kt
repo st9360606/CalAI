@@ -1,6 +1,5 @@
 package com.calai.bitecal.ui.home.ui.notifications
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,7 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.notifications.api.NotificationItemDto
 
@@ -40,8 +41,7 @@ fun NotificationInboxScreen(
     error: String?,
     items: List<NotificationItemDto>,
     onRetry: () -> Unit,
-    onBack: () -> Unit,
-    onNotificationClick: (NotificationItemDto) -> Unit
+    onBack: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -105,7 +105,9 @@ fun NotificationInboxScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.notification_inbox_empty_title),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -124,10 +126,7 @@ fun NotificationInboxScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(items) { item ->
-                        NotificationRow(
-                            item = item,
-                            onClick = { onNotificationClick(item) }
-                        )
+                        NotificationRow(item = item)
                     }
                 }
             }
@@ -137,19 +136,18 @@ fun NotificationInboxScreen(
 
 @Composable
 private fun NotificationRow(
-    item: NotificationItemDto,
-    onClick: () -> Unit
+    item: NotificationItemDto
 ) {
     Card(
         shape = RoundedCornerShape(18.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                )
             )
             Spacer(Modifier.height(6.dp))
             Text(
@@ -157,10 +155,23 @@ private fun NotificationRow(
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(8.dp))
-            Text(
-                text = item.createdAtUtc.take(10),
-                style = MaterialTheme.typography.labelMedium
+            NotificationDateText(
+                text = item.createdAtUtc.take(10)
             )
         }
     }
+}
+
+@Composable
+private fun NotificationDateText(
+    text: String
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Clip,
+        letterSpacing = 0.sp
+    )
 }
