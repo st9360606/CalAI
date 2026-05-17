@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.home.ui.workout
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,7 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,22 +52,18 @@ import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import kotlin.math.roundToInt
 
+// --- 精煉後的色彩計畫 (維持原意涵，但微調適用於無邊框設計) ---
 private val WorkoutCardWhite = Color(0xFFFFFFFF)
-private val WorkoutInk = Color(0xFF111114)
-private val WorkoutMuted = Color(0xFF71717A)
-private val WorkoutLine = Color(0xFFE5E7EB)
-private val WorkoutSubtle = Color(0xFFF1F2F4)
-
+private val WorkoutInk = Color(0xFF18181B) // 稍微加深提升對比
+private val WorkoutMuted = Color(0xFFA1A1AA) // 更柔和的次要文字
+private val WorkoutSubtle = Color(0xFFF4F4F5)
 private val WorkoutAccent = Color(0xFFF59E0B)
-private val WorkoutSuccess = Color(0xFF15803D)
-private val WorkoutSuccessSoft = Color(0xFFEAF7EE)
-
-private val WorkoutDurationBlue = Color(0xFF2563EB)
+private val WorkoutTimelineBar = Color(0xFF18181B)
+private val WorkoutDurationBlue = Color(0xFF3B82F6)
 private val WorkoutDurationBlueSoft = Color(0xFFEFF6FF)
-
-private val WorkoutBurnRed = Color(0xFFE11D48)
-private val WorkoutBurnRedSoft = Color(0xFFFFF1F2)
-
+private val WorkoutBurnRed = Color(0xFFF43F5E)
+private val WorkoutAverageSoft = Color(0xFFFFF7ED)
+private val WorkoutAverageInk = Color(0xFFB45309)
 private const val WorkoutHistoryRangeDays = 7
 
 @Composable
@@ -100,15 +96,13 @@ fun WorkoutHistoryScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // 背景保持不變
         LightHomeBackground()
 
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                WorkoutHistoryTopBar(
-                    onBack = onBack,
-                    onClose = onBack
-                )
+                WorkoutHistoryTopBar(onBack = onBack)
             },
             bottomBar = {
                 MainBottomBar(
@@ -122,13 +116,14 @@ fun WorkoutHistoryScreen(
                     .padding(inner)
                     .fillMaxSize(),
                 contentPadding = PaddingValues(
-                    start = 20.dp,
-                    top = 10.dp,
-                    end = 20.dp,
-                    bottom = 26.dp
+                    start = 24.dp, // 稍微增加兩側留白，更具呼吸感
+                    top = 2.dp,
+                    end = 24.dp,
+                    bottom = 32.dp
                 ),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp) // 拉大區塊間距
             ) {
+                // 1. 總覽卡片
                 item {
                     WorkoutHistorySummaryCard(
                         todayTotalKcal = todayTotalKcal,
@@ -137,6 +132,7 @@ fun WorkoutHistoryScreen(
                     )
                 }
 
+                // 2. 狀態或歷史列表
                 when {
                     ui.historyLoading -> {
                         item {
@@ -158,14 +154,14 @@ fun WorkoutHistoryScreen(
                                     Button(
                                         onClick = vm::refreshRecentHistory,
                                         enabled = !ui.historyLoading,
-                                        shape = RoundedCornerShape(999.dp),
+                                        shape = RoundedCornerShape(16.dp), // 更現代的按鈕圓角
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = WorkoutInk,
                                             contentColor = Color.White
                                         ),
-                                        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 12.dp)
+                                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
                                     ) {
-                                        Text(text = stringResource(R.string.cta_retry))
+                                        Text(text = stringResource(R.string.cta_retry), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             )
@@ -193,7 +189,7 @@ fun WorkoutHistoryScreen(
                             items = sessions,
                             key = { session -> session.id }
                         ) { session ->
-                            WorkoutHistorySessionCard(session = session)
+                            WorkoutHistorySessionTile(session = session)
                         }
                     }
                 }
@@ -205,67 +201,65 @@ fun WorkoutHistoryScreen(
 @Composable
 private fun WorkoutHistoryTopBar(
     onBack: () -> Unit,
-    onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 14.dp, vertical = 10.dp)
-            .height(48.dp)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        WorkoutHistoryCircleButton(
+        IconButton(
             onClick = onBack,
-            modifier = Modifier.align(Alignment.CenterStart)
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .size(48.dp)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(R.string.workout_history_back),
                 tint = WorkoutInk,
-                modifier = Modifier.size(21.dp)
+                modifier = Modifier.size(27.dp)
             )
         }
 
         Text(
             text = stringResource(R.string.workout_history_title),
-            modifier = Modifier.align(Alignment.Center),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.ExtraBold,
                 color = WorkoutInk
             ),
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 72.dp)
         )
 
-        WorkoutHistoryCircleButton(
-            onClick = onClose,
-            modifier = Modifier.align(Alignment.CenterEnd)
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp)
+                .size(32.dp)
         ) {
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = stringResource(R.string.workout_history_close),
-                tint = WorkoutInk,
-                modifier = Modifier.size(20.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(WorkoutInk),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.workout_history_close),
+                    tint = Color.White,
+                    modifier = Modifier.size(19.dp)
+                )
+            }
         }
-    }
-}
-
-@Composable
-private fun WorkoutHistoryCircleButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    IconButton(
-        onClick = onClick,
-        modifier = modifier
-            .size(42.dp)
-            .background(WorkoutCardWhite, CircleShape)
-            .border(1.dp, WorkoutLine, CircleShape)
-    ) {
-        content()
     }
 }
 
@@ -275,70 +269,74 @@ private fun WorkoutHistorySummaryCard(
     averageDailyKcal: Int,
     averageKcal: Int
 ) {
-    val cardShape = RoundedCornerShape(32.dp)
+    val cardShape = RoundedCornerShape(28.dp)
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, WorkoutLine, cardShape),
+        modifier = Modifier.fillMaxWidth(),
         shape = cardShape,
         color = WorkoutCardWhite,
-        shadowElevation = 5.dp
+        shadowElevation = 8.dp,
+        tonalElevation = 4.dp // 增加些微層次感
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 22.dp)
+            modifier = Modifier.padding(24.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = stringResource(R.string.workout_history_summary_label),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = WorkoutInk,
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            Text(
+                text = stringResource(R.string.workout_history_summary_label),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = WorkoutInk,
+                    fontWeight = FontWeight.Bold
                 )
+            )
 
-                Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(3.dp))
 
-                Text(
-                    text = stringResource(R.string.workout_history_summary_body),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = WorkoutMuted,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Text(
+                text = stringResource(R.string.workout_history_summary_body),
+                style = MaterialTheme.typography.bodyMedium.copy(color = WorkoutMuted)
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            // 將最重要的今日卡路里與平均數據左右分流
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Today",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = WorkoutBurnRed,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = todayTotalKcal.toString(),
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                color = WorkoutInk,
+                                fontWeight = FontWeight.Black
+                            ),
+                            maxLines = 1
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.workout_history_unit_kcal),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = WorkoutMuted,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(15.dp))
 
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = todayTotalKcal.toString(),
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        color = WorkoutBurnRed,
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    maxLines = 1
-                )
-
-                Spacer(Modifier.width(8.dp))
-
-                Text(
-                    text = stringResource(R.string.workout_history_unit_kcal),
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = WorkoutMuted,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            Spacer(Modifier.height(15.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 WorkoutHistorySummaryMetric(
                     label = stringResource(R.string.workout_history_avg_daily_label),
                     value = stringResource(R.string.workout_history_avg_daily_value, averageDailyKcal),
@@ -350,8 +348,8 @@ private fun WorkoutHistorySummaryCard(
                 WorkoutHistorySummaryMetric(
                     label = stringResource(R.string.workout_history_avg_label),
                     value = stringResource(R.string.workout_history_avg_value, averageKcal),
-                    containerColor = WorkoutBurnRedSoft,
-                    valueColor = WorkoutBurnRed,
+                    containerColor = WorkoutAverageSoft,
+                    valueColor = WorkoutAverageInk,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -369,28 +367,26 @@ private fun WorkoutHistorySummaryMetric(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
-        color = containerColor,
-        contentColor = WorkoutInk
+        shape = RoundedCornerShape(20.dp),
+        color = containerColor
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall.copy(
                     color = WorkoutMuted,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Medium
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-
-            Spacer(Modifier.height(3.dp))
-
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleSmall.copy(
+                style = MaterialTheme.typography.titleMedium.copy(
                     color = valueColor,
                     fontWeight = FontWeight.ExtraBold
                 ),
@@ -402,43 +398,15 @@ private fun WorkoutHistorySummaryMetric(
 }
 
 @Composable
-private fun WorkoutHistorySectionHeader(
-    title: String
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 6.dp, top = 4.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .background(WorkoutAccent, CircleShape)
-            )
-
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    color = WorkoutInk,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            )
-        }
-
-        Spacer(Modifier.height(2.dp))
-
-        Text(
-            text = stringResource(R.string.workout_history_recent_body),
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = WorkoutMuted,
-                fontWeight = FontWeight.Medium
-            )
-        )
-    }
+private fun WorkoutHistorySectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleLarge.copy(
+            color = WorkoutInk,
+            fontWeight = FontWeight.ExtraBold
+        ),
+        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+    )
 }
 
 @Composable
@@ -449,25 +417,19 @@ private fun WorkoutHistoryStateCard(
     modifier: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null
 ) {
-    val cardShape = RoundedCornerShape(28.dp)
-
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, WorkoutLine, cardShape),
-        shape = cardShape,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
         color = WorkoutCardWhite,
-        shadowElevation = 2.dp
+        shadowElevation = 4.dp
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 34.dp),
+            modifier = Modifier.padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .size(58.dp)
+                    .size(64.dp)
                     .background(WorkoutSubtle, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -475,12 +437,10 @@ private fun WorkoutHistoryStateCard(
                     imageVector = Icons.Filled.FitnessCenter,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(32.dp)
                 )
             }
-
             Spacer(Modifier.height(16.dp))
-
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -489,20 +449,16 @@ private fun WorkoutHistoryStateCard(
                 ),
                 textAlign = TextAlign.Center
             )
-
-            Spacer(Modifier.height(7.dp))
-
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = WorkoutMuted,
-                    fontWeight = FontWeight.Medium
+                    color = WorkoutMuted
                 ),
                 textAlign = TextAlign.Center
             )
-
             if (action != null) {
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(24.dp))
                 action()
             }
         }
@@ -510,161 +466,108 @@ private fun WorkoutHistoryStateCard(
 }
 
 @Composable
-private fun WorkoutHistorySessionCard(
+private fun WorkoutHistorySessionTile(
     session: WorkoutHistorySessionDto
 ) {
-    val cardShape = RoundedCornerShape(26.dp)
-
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, WorkoutLine, cardShape),
-        shape = cardShape,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
         color = WorkoutCardWhite,
-        shadowElevation = 3.dp
+        shadowElevation = 2.dp
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(WorkoutTimelineBar)
+            )
+
+            Spacer(Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = session.name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = WorkoutInk,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(Modifier.height(5.dp))
+
+                Text(
+                    text = "${session.dateLabel} • ${session.timeLabel}",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = WorkoutMuted,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.Center
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = session.name,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = WorkoutInk,
-                            fontWeight = FontWeight.ExtraBold
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.fire),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(13.dp)
                     )
 
-                    Spacer(Modifier.height(7.dp))
+                    Spacer(Modifier.width(4.dp))
 
                     Text(
                         text = stringResource(
-                            R.string.workout_history_date_time,
-                            session.dateLabel,
-                            session.timeLabel
+                            R.string.workout_history_kcal_with_unit,
+                            session.kcal
                         ),
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = WorkoutMuted,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Spacer(Modifier.width(12.dp))
-
-                Surface(
-                    shape = RoundedCornerShape(999.dp),
-                    color = WorkoutSuccessSoft,
-                    contentColor = WorkoutSuccess
-                ) {
-                    Text(
-                        text = stringResource(R.string.workout_history_session_completed),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = WorkoutSuccess,
-                            fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = WorkoutInk,
+                            fontWeight = FontWeight.ExtraBold
                         ),
                         maxLines = 1
                     )
                 }
-            }
 
-            Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(5.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                WorkoutHistoryMetricChip(
-                    label = stringResource(R.string.workout_history_duration_label),
-                    value = stringResource(R.string.workout_history_minutes, session.minutes),
-                    modifier = Modifier.weight(1f),
-                    containerColor = WorkoutDurationBlueSoft,
-                    valueColor = WorkoutDurationBlue,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.Schedule,
-                            contentDescription = null,
-                            tint = WorkoutDurationBlue,
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Schedule,
+                        contentDescription = null,
+                        tint = WorkoutDurationBlue,
+                        modifier = Modifier.size(14.dp)
+                    )
 
-                WorkoutHistoryMetricChip(
-                    label = stringResource(R.string.workout_history_burn_label),
-                    value = stringResource(R.string.workout_history_kcal_with_unit, session.kcal),
-                    modifier = Modifier.weight(1f),
-                    containerColor = WorkoutBurnRedSoft,
-                    valueColor = WorkoutBurnRed,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.LocalFireDepartment,
-                            contentDescription = null,
-                            tint = WorkoutBurnRed,
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-                )
-            }
-        }
-    }
-}
+                    Spacer(Modifier.width(4.dp))
 
-@Composable
-private fun WorkoutHistoryMetricChip(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    containerColor: Color = WorkoutSubtle,
-    valueColor: Color = WorkoutInk,
-    leadingIcon: (@Composable () -> Unit)? = null
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
-        color = containerColor,
-        contentColor = WorkoutInk
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            if (leadingIcon != null) {
-                leadingIcon()
-            }
-
-            Column {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        color = WorkoutMuted,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        color = valueColor,
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                    Text(
+                        text = stringResource(
+                            R.string.workout_history_minutes,
+                            session.minutes
+                        ),
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = WorkoutMuted,
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
