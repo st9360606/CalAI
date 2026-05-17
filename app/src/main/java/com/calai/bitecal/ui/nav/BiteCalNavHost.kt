@@ -2919,7 +2919,11 @@ fun BiteCalNavHost(
                 loading = ui.loading,
                 error = ui.error,
                 items = ui.items,
+                markingReadIds = ui.markingReadIds,
                 onRetry = { vm.refresh() },
+                onMarkRead = { notificationId ->
+                    vm.markRead(notificationId)
+                },
                 onBack = { nav.popBackStack() }
             )
         }

@@ -114,11 +114,6 @@
     <string name="notif_subtitle">Enable notifications for gentle reminders to log meals—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
     <string name="onb_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
     <string name="onb_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
-    <string name="open_notification_settings">Open notification settings</string>
-    <string name="notification_inbox_title">Inbox</string>
-    <string name="notification_inbox_loading">Loading inbox...</string>
-    <string name="notification_inbox_empty_title">No notifications yet</string>
-    <string name="notification_inbox_empty_body">Referral reward updates will appear here.</string>
 
     <!-- HealthConnect -->
     <string name="hc_connect_title_prefix">Connect to</string>
@@ -512,5 +507,19 @@
     <string name="onboard_referral_code_error_risk">We can\'t apply a referral code right now.</string>
     <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
     <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now. Please try again later.</string>
+
+    <!-- NotificationInboxScreen Inbox -->
+    <string name="open_notification_settings">Open notification settings</string>
+    <string name="notification_inbox_title">Inbox</string>
+    <string name="notification_inbox_header_title">BiteCal Notifications</string>
+    <string name="notification_inbox_header_body">All platform notifications will appear here.</string>
+    <string name="notification_inbox_loading_title">Loading notifications</string>
+    <string name="notification_inbox_loading">Loading notifications...</string>
+    <string name="notification_inbox_empty_title">No notifications yet</string>
+    <string name="notification_inbox_empty_body">Platform notifications will appear here.</string>
+    <string name="notification_inbox_error_title">Unable to load notifications</string>
+    <string name="notification_inbox_error_body">Please check your connection and try again.</string>
+    <string name="notification_inbox_status_unread">Unread</string>
+    <string name="notification_inbox_status_read">Read</string>
 
 </resources>

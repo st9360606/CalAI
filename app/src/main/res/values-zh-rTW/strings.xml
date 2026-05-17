@@ -114,11 +114,6 @@
     <string name="notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓你的熱量、三大營養素與進度保持在正軌。偶爾忘記很正常；及時提醒能幫你更快回到節奏。</string>
     <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onb_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
-    <string name="open_notification_settings">開啟通知設定</string>
-    <string name="notification_inbox_title">通知收件匣</string>
-    <string name="notification_inbox_loading">正在載入通知...</string>
-    <string name="notification_inbox_empty_title">目前沒有通知</string>
-    <string name="notification_inbox_empty_body">推薦獎勵更新會顯示在這裡。</string>
 
     <!-- HealthConnect -->
     <string name="hc_connect_title_prefix">連接到</string>
@@ -492,7 +487,6 @@
     <string name="onboard_weight_loss_comparison_two_times">3X</string>
     <string name="onboard_weight_loss_comparison_caption">BiteCal AI讓一切變得簡單並且\n讓您負責</string>
 
-
     <!-- Onboarding Referral Code -->
     <string name="onboard_referral_code_title">輸入推薦碼（可選）</string>
     <string name="onboard_referral_code_subtitle">您可以跳過此步驟</string>
@@ -511,5 +505,19 @@
     <string name="onboard_referral_code_error_risk">目前無法套用推薦碼。</string>
     <string name="onboard_referral_code_error_network">目前無法套用推薦碼，請稍後再試。</string>
     <string name="onboard_referral_code_error_unknown">推薦碼目前無法套用，請稍後再試。</string>
+
+    <!-- NotificationInboxScreen Inbox -->
+    <string name="open_notification_settings">開啟通知設定</string>
+    <string name="notification_inbox_title">通知收件匣</string>
+    <string name="notification_inbox_header_title">BiteCal 通知</string>
+    <string name="notification_inbox_header_body">所有平台通知都會集中顯示在這裡。</string>
+    <string name="notification_inbox_loading_title">正在載入通知</string>
+    <string name="notification_inbox_loading">正在載入通知...</string>
+    <string name="notification_inbox_empty_title">目前沒有通知</string>
+    <string name="notification_inbox_empty_body">平台通知會顯示在這裡</string>
+    <string name="notification_inbox_error_title">無法載入通知</string>
+    <string name="notification_inbox_error_body">請確認網路連線後再試一次。</string>
+    <string name="notification_inbox_status_unread">未讀</string>
+    <string name="notification_inbox_status_read">已讀</string>
 
 </resources>
