@@ -55,15 +55,17 @@ import kotlin.math.roundToInt
 // --- 精煉後的色彩計畫 (維持原意涵，但微調適用於無邊框設計) ---
 private val WorkoutCardWhite = Color(0xFFFFFFFF)
 private val WorkoutInk = Color(0xFF18181B) // 稍微加深提升對比
-private val WorkoutMuted = Color(0xFFA1A1AA) // 更柔和的次要文字
+private val WorkoutMuted = Color(0xFF8E8E93) // 更柔和的次要文字
 private val WorkoutSubtle = Color(0xFFF4F4F5)
 private val WorkoutAccent = Color(0xFFF59E0B)
 private val WorkoutTimelineBar = Color(0xFF18181B)
 private val WorkoutDurationBlue = Color(0xFF3B82F6)
-private val WorkoutDurationBlueSoft = Color(0xFFEFF6FF)
 private val WorkoutBurnRed = Color(0xFFF43F5E)
-private val WorkoutAverageSoft = Color(0xFFFFF7ED)
-private val WorkoutAverageInk = Color(0xFFB45309)
+
+private val WorkoutMetricPrimarySoft = Color(0xFFF5F5F6)
+private val WorkoutMetricPrimaryInk = Color(0xFF2F2F33)
+private val WorkoutMetricSecondarySoft = Color(0xFFF5F5F6)
+private val WorkoutMetricSecondaryInk = Color(0xFF2F2F33)
 private const val WorkoutHistoryRangeDays = 7
 
 @Composable
@@ -340,16 +342,16 @@ private fun WorkoutHistorySummaryCard(
                 WorkoutHistorySummaryMetric(
                     label = stringResource(R.string.workout_history_avg_daily_label),
                     value = stringResource(R.string.workout_history_avg_daily_value, averageDailyKcal),
-                    containerColor = WorkoutDurationBlueSoft,
-                    valueColor = WorkoutDurationBlue,
+                    containerColor = WorkoutMetricPrimarySoft,
+                    valueColor = WorkoutMetricPrimaryInk,
                     modifier = Modifier.weight(1f)
                 )
 
                 WorkoutHistorySummaryMetric(
                     label = stringResource(R.string.workout_history_avg_label),
                     value = stringResource(R.string.workout_history_avg_value, averageKcal),
-                    containerColor = WorkoutAverageSoft,
-                    valueColor = WorkoutAverageInk,
+                    containerColor = WorkoutMetricSecondarySoft,
+                    valueColor = WorkoutMetricSecondaryInk,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -386,9 +388,9 @@ private fun WorkoutHistorySummaryMetric(
             Spacer(Modifier.height(4.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
+                style = MaterialTheme.typography.labelLarge.copy(
                     color = valueColor,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.SemiBold
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
