@@ -10,6 +10,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
@@ -31,10 +32,15 @@ fun DurationPickerSheet(
     presetName: String,
     onSaveMinutes: (Int) -> Unit,
     onCancel: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    sheetState: SheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { targetValue ->
+            targetValue != SheetValue.Hidden
+        }
+    )
 ) {
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
-    val maxSheetHeight = (screenHeightDp * 0.75f).dp
+    val sheetHeight = (screenHeightDp * 0.62f).dp
 
     var hours by remember { mutableIntStateOf(0) }
     var minutes by remember { mutableIntStateOf(30) }
@@ -48,6 +54,7 @@ fun DurationPickerSheet(
     ModalBottomSheet(
         sheetState = sheetState,
         onDismissRequest = { onCancel() },
+        dragHandle = null,
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         containerColor = Color.White,
         tonalElevation = 0.dp,
@@ -56,14 +63,14 @@ fun DurationPickerSheet(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = maxSheetHeight)
+                .height(sheetHeight)
         ) {
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .verticalScroll(scrollState)
-                    .padding(start = 24.dp, end = 24.dp, top = 0.dp, bottom = 168.dp),
+                    .padding(start = 24.dp, end = 24.dp, top = 35.dp, bottom = 180.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -95,7 +102,9 @@ fun DurationPickerSheet(
                             .background(Color(0xFFF2F2F2))
                     )
                     Row(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .offset(x = 18.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {

@@ -6,6 +6,7 @@ import com.calai.bitecal.data.workout.api.LogWorkoutRequest
 import com.calai.bitecal.data.workout.api.LogWorkoutResponse
 import com.calai.bitecal.data.workout.api.PresetWorkoutDto
 import com.calai.bitecal.data.workout.api.TodayWorkoutResponse
+import com.calai.bitecal.data.workout.api.WorkoutHistoryResponse
 import com.calai.bitecal.data.workout.api.WorkoutApi
 import com.calai.bitecal.data.workout.model.WorkoutWeeklyProgressDto
 import javax.inject.Inject
@@ -39,6 +40,10 @@ class WorkoutRepository @Inject constructor(
 
     suspend fun loadToday(): TodayWorkoutResponse {
         return api.today()
+    }
+
+    suspend fun loadRecentHistory(): WorkoutHistoryResponse {
+        return api.recentHistory()
     }
 
     suspend fun loadMyWeightKg(): Double {

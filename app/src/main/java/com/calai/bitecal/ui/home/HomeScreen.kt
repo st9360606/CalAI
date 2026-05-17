@@ -224,10 +224,17 @@ fun HomeScreen(
         workoutVm.init()
         workoutVm.refreshToday()
     }
-    val workoutTotalKcalToday: Int? = workoutUi.today?.totalKcalToday
+    val workoutSessionKcalToday: Int? = workoutUi.today?.totalKcalToday
 
     val stepsToday by vm.dailyStepsToday.collectAsState()
     val activeKcalToday by vm.dailyActiveKcalToday.collectAsState()
+    val workoutTotalKcalToday = remember(workoutSessionKcalToday, activeKcalToday) {
+        if (workoutSessionKcalToday == null && activeKcalToday == null) {
+            null
+        } else {
+            (workoutSessionKcalToday ?: 0) + (activeKcalToday ?: 0)
+        }
+    }
     val dailyStatus by vm.dailyStatus.collectAsState()
     val dailyReady by vm.dailyReady.collectAsState()
 

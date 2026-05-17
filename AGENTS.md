@@ -3,7 +3,6 @@
 This file gives coding agents project-specific instructions for the BiteCal Android app.
 It applies to the whole Android client repository unless a deeper `AGENTS.md` overrides it.
 
-> Generated after reviewing `app_v1.88.zip`. The uploaded archive starts at the Android `main/` source tree. In a full Gradle project, treat these paths as `app/src/main/...`.
 
 ---
 

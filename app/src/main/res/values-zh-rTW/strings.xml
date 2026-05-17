@@ -422,6 +422,36 @@
     <string name="workout_tooltip_burned">消耗</string>
     <string name="workout_tooltip_kcal_value">%1$d 大卡</string>
 
+    <string name="workout_history_title">運動紀錄</string>
+    <string name="workout_history_back">返回上一頁</string>
+    <string name="workout_history_close">關閉運動紀錄</string>
+    <string name="workout_history_summary_label">今日運動消耗</string>
+    <string name="workout_history_summary_body">用來追蹤你今天的運動消耗進度</string>
+    <string name="workout_history_avg_daily_label">近 7 天平均 / 天</string>
+    <string name="workout_history_avg_label">近 7 天平均 / 次</string>
+    <string name="workout_history_avg_daily_value">%1$d 大卡</string>
+    <string name="workout_history_avg_value">%1$d 大卡</string>
+    <string name="workout_history_unit_kcal">大卡</string>
+    <string name="workout_history_sessions_label">紀錄</string>
+    <string name="workout_history_sessions_value">%1$d</string>
+    <string name="workout_history_range_label">範圍</string>
+    <string name="workout_history_range_value">7 天</string>
+    <string name="workout_history_duration_label">時間</string>
+    <string name="workout_history_burn_label">消耗</string>
+    <string name="workout_history_loading_title">同步運動紀錄</string>
+    <string name="workout_history_loading">正在載入運動紀錄&#8230;</string>
+    <string name="workout_history_error_title">無法取得紀錄</string>
+    <string name="workout_history_error">無法載入運動紀錄。</string>
+    <string name="workout_history_empty_title">沒有近期運動</string>
+    <string name="workout_history_empty">最近 7 天沒有運動紀錄。</string>
+    <string name="workout_history_minutes">%1$d 分鐘</string>
+    <string name="workout_history_kcal">%1$d</string>
+    <string name="workout_history_date_time">%1$s · %2$s</string>
+    <string name="workout_history_recent_title">近期紀錄</string>
+    <string name="workout_history_recent_body">顯示最近 7 天的運動紀錄</string>
+    <string name="workout_history_kcal_with_unit">%1$d 大卡</string>
+    <string name="workout_history_session_completed">已完成</string>
+
     <!-- =========================
          Water Chart
          ========================= -->

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.workout.api.EstimateResponse
 import com.calai.bitecal.data.workout.api.PresetWorkoutDto
 import com.calai.bitecal.data.workout.api.TodayWorkoutResponse
+import com.calai.bitecal.data.workout.api.WorkoutHistoryResponse
 import com.calai.bitecal.data.workout.repo.WorkoutRepository
 import com.calai.bitecal.data.workout.store.WorkoutTodayStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +23,9 @@ data class WorkoutUiState(
     val textInput: String = "",
     val presets: List<PresetWorkoutDto> = emptyList(),
     val today: TodayWorkoutResponse? = null,
+    val recentHistory: WorkoutHistoryResponse? = null,
+    val historyLoading: Boolean = false,
+    val historyError: String? = null,
 
     // 狀態控制
     val estimating: Boolean = false,
@@ -268,6 +272,29 @@ class WorkoutViewModel @Inject constructor(
                         toastMessage = e.message ?: "Refresh failed"
                     )
                 }
+        }
+    }
+
+    fun refreshRecentHistory() {
+        if (_ui.value.historyLoading) return
+
+        viewModelScope.launch {
+            _ui.value = _ui.value.copy(historyLoading = true, historyError = null)
+
+            val history = runCatching { repo.loadRecentHistory() }
+                .getOrElse { e ->
+                    _ui.value = _ui.value.copy(
+                        historyLoading = false,
+                        historyError = e.message ?: "Refresh failed"
+                    )
+                    return@launch
+                }
+
+            _ui.value = _ui.value.copy(
+                recentHistory = history,
+                historyLoading = false,
+                historyError = null
+            )
         }
     }
 

@@ -29,6 +29,9 @@ interface WorkoutApi {
     @GET("/api/v1/workouts/today")
     suspend fun today(): TodayWorkoutResponse
 
+    @GET("/api/v1/workouts/history/recent")
+    suspend fun recentHistory(): WorkoutHistoryResponse
+
     @GET("/api/v1/workouts/me/weight")
     suspend fun myWeight(): WeightDto
 
@@ -90,6 +93,23 @@ data class WorkoutSessionDto(
     val name: String,
     val minutes: Int,
     val kcal: Int,
+    val timeLabel: String
+)
+
+@Serializable
+data class WorkoutHistoryResponse(
+    val totalKcal: Int,
+    val sessions: List<WorkoutHistorySessionDto>
+)
+
+@Serializable
+data class WorkoutHistorySessionDto(
+    val id: Long,
+    val name: String,
+    val minutes: Int,
+    val kcal: Int,
+    val localDate: String,
+    val dateLabel: String,
     val timeLabel: String
 )
 

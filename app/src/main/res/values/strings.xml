@@ -423,6 +423,36 @@
     <string name="workout_tooltip_burned">Burned</string>
     <string name="workout_tooltip_kcal_value">%1$d kcal</string>
 
+    <string name="workout_history_title">Workout History</string>
+    <string name="workout_history_back">Back to previous screen</string>
+    <string name="workout_history_close">Close workout history</string>
+    <string name="workout_history_summary_label">Today burned</string>
+    <string name="workout_history_summary_body">Track today’s workout burn progress</string>
+    <string name="workout_history_avg_daily_label">7-day avg / day</string>
+    <string name="workout_history_avg_daily_value">%1$d kcal</string>
+    <string name="workout_history_avg_label">7-day avg / session</string>
+    <string name="workout_history_avg_value">%1$d kcal</string>
+    <string name="workout_history_unit_kcal">kcal</string>
+    <string name="workout_history_sessions_label">Sessions</string>
+    <string name="workout_history_sessions_value">%1$d</string>
+    <string name="workout_history_range_label">Range</string>
+    <string name="workout_history_range_value">7 days</string>
+    <string name="workout_history_duration_label">Duration</string>
+    <string name="workout_history_burn_label">Burned</string>
+    <string name="workout_history_loading_title">Syncing workouts</string>
+    <string name="workout_history_loading">Loading workout history&#8230;</string>
+    <string name="workout_history_error_title">History unavailable</string>
+    <string name="workout_history_error">Unable to load workout history.</string>
+    <string name="workout_history_empty_title">No recent workouts</string>
+    <string name="workout_history_empty">No workouts in the last 7 days.</string>
+    <string name="workout_history_minutes">%1$d min</string>
+    <string name="workout_history_kcal">%1$d</string>
+    <string name="workout_history_date_time">%1$s · %2$s</string>
+    <string name="workout_history_recent_title">Recent sessions</string>
+    <string name="workout_history_recent_body">Showing workouts from the last 7 days</string>
+    <string name="workout_history_kcal_with_unit">%1$d kcal</string>
+    <string name="workout_history_session_completed">Completed</string>
+
     <!-- =========================
          Water Chart
          ========================= -->
