@@ -14,7 +14,7 @@ import java.io.IOException
 import javax.inject.Inject
 
 private const val OTP_LEN = 4
-private const val RESEND_SEC = 30
+private const val RESEND_SEC = 60
 
 data class EmailEnterUiState(
     val email: String = "",

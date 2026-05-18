@@ -204,7 +204,7 @@ fun EmailCodeScreen(
                 TextButton(
                     enabled = canResend,
                     onClick = {
-                        localLeft = 30
+                        localLeft = 60
                         vm.resend()
                         scope.launch { delay(80); focus.requestFocus() }
                     },
