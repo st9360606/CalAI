@@ -80,7 +80,7 @@ private val NUM_LOCALE: Locale = Locale.US
 // ----------------------------------------------------------
 val Green = Color(0xFF22C55E)
 @Composable
-fun SummaryCards(ui: WeightViewModel.UiState) {
+fun WeightComponents(ui: WeightViewModel.UiState) {
     val label   = Color.Black.copy(alpha = 0.60f)
     val big     = Color(0xFF111114)
     val divider = Color(0xFFE2E5EA)
@@ -419,16 +419,17 @@ fun FilterTabs(
         if (it >= 0) it else 0
     }
 
+    val tabShape = RoundedCornerShape(999.dp)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(Color(0xFFF1F3F7))
+            .padding(horizontal = 4.dp)
+            .clip(tabShape)
+            .background(Color(0xFFF3F4F6))
             .border(
-                width = 1.dp,
-                color = Color(0xFFE0E2E6),
-                shape = RoundedCornerShape(999.dp)
+                border = CardStyles.Border,
+                shape = tabShape
             )
             .padding(4.dp)
     ) {
@@ -446,13 +447,13 @@ fun FilterTabs(
                         .fillMaxHeight()
                         .padding(horizontal = 2.dp)
                         .clip(RoundedCornerShape(999.dp))
-                        .background(if (isSelected) Color.White else Color.Transparent)
+                        .background(if (isSelected) Color(0xFFFCFCFD) else Color.Transparent)
                         .clickable { onSelect(tab.key) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = tab.label,
-                        color = if (isSelected) Color(0xFF111114) else Color(0xFF6B7280),
+                        color = if (isSelected) Color(0xFF111114) else Color(0xFF7A7F87),
                         fontSize = 13.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                         maxLines = 1,

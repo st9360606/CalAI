@@ -45,7 +45,7 @@ import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.ui.weight.components.FilterTabs
 import com.calai.bitecal.ui.home.ui.weight.components.HistoryRow
 import com.calai.bitecal.ui.home.ui.weight.components.SegmentedButtons
-import com.calai.bitecal.ui.home.ui.weight.components.SummaryCards
+import com.calai.bitecal.ui.home.ui.weight.components.WeightComponents
 import com.calai.bitecal.ui.home.ui.weight.components.WeightChartCard
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.delay
@@ -125,7 +125,7 @@ fun WeightScreen(
                         }
                     }
 
-                    item { SummaryCards(ui = ui) }
+                    item { WeightComponents(ui = ui) }
 
                     item {
                         FilterTabs(
