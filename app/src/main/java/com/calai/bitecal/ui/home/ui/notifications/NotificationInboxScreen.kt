@@ -57,13 +57,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.notifications.api.NotificationItemDto
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationInboxScreen(
     loading: Boolean,
@@ -77,7 +77,6 @@ fun NotificationInboxScreen(
     val colorScheme = MaterialTheme.colorScheme
     val isDark = colorScheme.background.luminanceForUi() < 0.45f
     val bg = if (isDark) colorScheme.background else Color(0xFFF6F7F9)
-    val titleColor = if (isDark) colorScheme.onBackground else Color(0xFF111114)
     val backClick = rememberDebouncedClick(onClick = onBack)
     val retryClick = rememberDebouncedClick(onClick = onRetry)
 
@@ -85,33 +84,9 @@ fun NotificationInboxScreen(
         containerColor = bg,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.notification_inbox_title),
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = titleColor,
-                        textAlign = TextAlign.Center
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = backClick,
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .height(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.common_back),
-                            modifier = Modifier.height(28.dp),
-                            tint = titleColor
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = bg),
-                modifier = Modifier.statusBarsPadding()
+            ProfileEditTopBar(
+                title = stringResource(R.string.notification_inbox_title),
+                onBack = backClick
             )
         }
     ) { inner ->
@@ -163,7 +138,7 @@ private fun NotificationInboxSuccessState(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {

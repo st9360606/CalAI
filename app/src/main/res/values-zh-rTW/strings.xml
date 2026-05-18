@@ -220,6 +220,13 @@
     <string name="steps_secondary_connect">連接</string>
     <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
 
+    <!--WeightScreen-->
+    <string name="weight_title">體重</string>
+    <string name="weight_overview_title">總覽</string>
+    <string name="weight_history_title">歷史紀錄</string>
+    <string name="weight_log_weight">記錄體重</string>
+    <string name="weight_goal_chart_empty_hint">記錄體重後，這裡會顯示你的趨勢</string>
+
     <!-- Camera -->
     <string name="camera_mode_food">掃描食物</string>
     <string name="camera_mode_barcode">條碼</string>

@@ -220,6 +220,13 @@
     <string name="steps_secondary_connect">Connect</string>
     <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
 
+    <!--WeightScreen-->
+    <string name="weight_title">Weight</string>
+    <string name="weight_overview_title">Overview</string>
+    <string name="weight_history_title">History</string>
+    <string name="weight_log_weight">Log Weight</string>
+    <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
+
     <!-- Camera -->
     <string name="camera_mode_food">Scan Food</string>
     <string name="camera_mode_barcode">Barcode</string>

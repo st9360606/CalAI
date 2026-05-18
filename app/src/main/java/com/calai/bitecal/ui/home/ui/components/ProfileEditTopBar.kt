@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -28,42 +29,38 @@ fun ProfileEditTopBar(
     title: String,
     onBack: () -> Unit
 ) {
-    val screenBg = Color(0xFFF5F5F5)
+    val backButtonBg = Color(0xFFEDEFF2)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .height(40.dp)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 22.dp)
+            .height(36.dp)
     ) {
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .size(40.dp)
+                .offset(x = 4.dp)
+                .size(36.dp)
                 .clip(CircleShape)
+                .background(backButtonBg)
                 .clickable(onClick = onBack),
             contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(screenBg),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF151515),
-                    modifier = Modifier.size(26.dp)
-                )
-            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color(0xFF151515),
+                modifier = Modifier.size(24.dp)
+            )
         }
 
         Text(
             text = title,
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = (-2).dp),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             maxLines = 1,

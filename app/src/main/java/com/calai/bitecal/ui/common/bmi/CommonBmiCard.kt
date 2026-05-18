@@ -86,13 +86,16 @@ fun CommonBmiCard(
             .fillMaxWidth()
             .background(CardBg, RoundedCornerShape(28.dp))
             .border(1.dp, CardBorder, RoundedCornerShape(28.dp))
-            .padding(start = 22.dp, top = 28.dp, end = 22.dp, bottom = 20.dp)
+            .padding(horizontal = 22.dp, vertical = 22.dp)
     ) {
         Text(
             text = model.titleText,
             color = TitleColor,
             fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+            lineHeight = 26.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
 
         Spacer(modifier = Modifier.height(12.dp))

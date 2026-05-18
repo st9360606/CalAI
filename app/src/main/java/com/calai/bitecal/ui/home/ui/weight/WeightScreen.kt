@@ -34,14 +34,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.ui.weight.components.FilterTabs
 import com.calai.bitecal.ui.home.ui.weight.components.HistoryRow
-import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.ui.weight.components.SegmentedButtons
 import com.calai.bitecal.ui.home.ui.weight.components.SummaryCards
 import com.calai.bitecal.ui.home.ui.weight.components.WeightChartCard
@@ -71,7 +73,7 @@ fun WeightScreen(
             containerColor = Color(0xFFF5F5F5),
             topBar = {
                 HomeDetailTopBar(
-                    title = "Weight",
+                    title = stringResource(R.string.weight_title),
                     onBack = onBack
                 )
             },
@@ -105,7 +107,7 @@ fun WeightScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Overview",
+                                text = stringResource(R.string.weight_overview_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
@@ -142,7 +144,7 @@ fun WeightScreen(
 
                     item {
                         Text(
-                            text = "History",
+                            text = stringResource(R.string.weight_history_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
@@ -215,7 +217,7 @@ private fun BottomLogWeightBar(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Log Weight",
+                text = stringResource(R.string.weight_log_weight),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )

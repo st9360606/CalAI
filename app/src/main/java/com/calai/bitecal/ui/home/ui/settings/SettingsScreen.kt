@@ -78,9 +78,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
-import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
@@ -687,29 +687,63 @@ private data class ProfileSubscriptionVisual(
 @Composable
 private fun ProfileAvatar(url: Uri?) {
     val ctx = LocalContext.current
-    val modifier = Modifier.size(46.dp).clip(CircleShape)
+
+    val avatarModifier = Modifier
+        .size(46.dp)
+        .clip(CircleShape)
+        .background(Color(0xFFF1F2F4))
 
     if (url == null) {
-        AsyncImage(
-            model = ImageRequest.Builder(ctx).data(R.drawable.profile).build(),
-            contentDescription = "avatar_default",
-            modifier = modifier,
-            contentScale = ContentScale.Crop
+        DefaultProfileAvatarPlaceholder(
+            modifier = avatarModifier
         )
-    } else {
-        val req = remember(url) {
-            ImageRequest.Builder(ctx)
-                .data(url)                 // ✅ url 在這裡一定 non-null
-                .crossfade(false)
-                .allowHardware(true)
-                .build()
+        return
+    }
+
+    val req = remember(url) {
+        ImageRequest.Builder(ctx)
+            .data(url)
+            .crossfade(false)
+            .allowHardware(true)
+            .build()
+    }
+
+    SubcomposeAsyncImage(
+        model = req,
+        contentDescription = "Avatar",
+        modifier = avatarModifier,
+        contentScale = ContentScale.Crop,
+        loading = {
+            DefaultProfileAvatarPlaceholder(
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+        error = {
+            DefaultProfileAvatarPlaceholder(
+                modifier = Modifier.fillMaxSize()
+            )
+        },
+        success = {
+            SubcomposeAsyncImageContent()
         }
-        AsyncImage(
-            model = req,
-            contentDescription = "avatar",
-            modifier = modifier,
-            contentScale = ContentScale.Crop,
-            error = androidx.compose.ui.res.painterResource(R.drawable.profile)
+    )
+}
+
+@Composable
+private fun DefaultProfileAvatarPlaceholder(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(Color(0xFFF1F2F4)),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Person,
+            contentDescription = "Default avatar",
+            tint = Color(0xFF111114),
+            modifier = Modifier.size(25.dp)
         )
     }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -35,22 +36,23 @@ fun HomeDetailTopBar(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .height(40.dp)
+            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 22.dp)
+            .height(36.dp)
     ) {
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .size(40.dp)
+                .offset(x = 4.dp)
+                .size(36.dp)
                 .clip(CircleShape)
                 .clickable(onClick = onBack),
             contentAlignment = Alignment.Center
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.6f)),
+                    .background(Color(0xFFEDEFF2)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -64,7 +66,9 @@ fun HomeDetailTopBar(
 
         Text(
             text = title,
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = (-2).dp),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
