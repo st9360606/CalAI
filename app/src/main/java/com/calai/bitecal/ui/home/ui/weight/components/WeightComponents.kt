@@ -68,6 +68,7 @@ import kotlin.math.max
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
@@ -616,6 +617,41 @@ private val axisDateFormatter: DateTimeFormatter =
 private val tooltipDateFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.ENGLISH)
 
+private fun buildEmptyWeightChartData(
+    unit: UserProfileStore.WeightUnit,
+    currentKg: Double?,
+    goalKg: Double?
+): WeightChartData {
+    val today = LocalDate.now()
+    val axisDates = listOf(
+        today.minusDays(90),
+        today.minusDays(68),
+        today.minusDays(45),
+        today.minusDays(23),
+        today
+    )
+
+    val baseKg = currentKg ?: goalKg ?: 70.0
+    val topKg = baseKg + 10.0
+    val bottomKg = (baseKg - 10.0).coerceAtLeast(1.0)
+
+    val yLabels = buildYAxisLabels(
+        topKg = topKg,
+        bottomKg = bottomKg,
+        unit = unit
+    )
+
+    return WeightChartData(
+        yLabels = yLabels,
+        xLabels = axisDates.map { axisDateFormatter.format(it) },
+        points = emptyList(),
+        dates = emptyList(),
+        weightsKg = emptyList(),
+        weightsLbs = emptyList(),
+        axisDates = axisDates,
+        axisX = listOf(0f, 0.25f, 0.5f, 0.75f, 1f)
+    )
+}
 /**
  * 建立圖表資料
  */
@@ -627,15 +663,10 @@ private fun buildWeightChartData(
     startWeightAllTimeKg: Double? = null
 ): WeightChartData {
     if (series.isEmpty()) {
-        return WeightChartData(
-            yLabels    = emptyList(),
-            xLabels    = emptyList(),
-            points     = emptyList(),
-            dates      = emptyList(),
-            weightsKg  = emptyList(),
-            weightsLbs = emptyList(),   // ★ 一定要補這個
-            axisDates  = emptyList(),
-            axisX      = emptyList()
+        return buildEmptyWeightChartData(
+            unit = unit,
+            currentKg = currentKg,
+            goalKg = goalKg
         )
     }
 
@@ -652,15 +683,10 @@ private fun buildWeightChartData(
     }.sortedBy { it.first }
 
     if (sorted.isEmpty()) {
-        return WeightChartData(
-            yLabels    = emptyList(),
-            xLabels    = emptyList(),
-            points     = emptyList(),
-            dates      = emptyList(),
-            weightsKg  = emptyList(),
-            weightsLbs = emptyList(),   // ★ 這邊也要
-            axisDates  = emptyList(),
-            axisX      = emptyList()
+        return buildEmptyWeightChartData(
+            unit = unit,
+            currentKg = currentKg,
+            goalKg = goalKg
         )
     }
 
@@ -1247,6 +1273,16 @@ private fun GoalProgressChart(
                         }
                     }
             )
+
+            if (chartData.points.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.weight_goal_chart_empty_hint),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF6B7280),
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
 
             // Y 軸標籤
             Column(
