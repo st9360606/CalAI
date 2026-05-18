@@ -41,10 +41,10 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.ui.weight.components.FilterTabs
 import com.calai.bitecal.ui.home.ui.weight.components.HistoryRow
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.ui.weight.components.SegmentedButtons
 import com.calai.bitecal.ui.home.ui.weight.components.SummaryCards
 import com.calai.bitecal.ui.home.ui.weight.components.WeightChartCard
-import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
@@ -70,7 +70,7 @@ fun WeightScreen(
         Scaffold(
             containerColor = Color(0xFFF5F5F5),
             topBar = {
-                WeightTopBar(
+                HomeDetailTopBar(
                     title = "Weight",
                     onBack = onBack
                 )

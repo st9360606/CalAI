@@ -50,9 +50,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.CalaiCenteredTopBar
 import com.calai.bitecal.ui.common.CalaiConfirmDialog
 import com.calai.bitecal.ui.home.components.CardStyles
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 
@@ -217,7 +217,7 @@ fun SavedFoodsScreen(
 private fun SavedFoodsTopBar(
     onBack: () -> Unit
 ) {
-    CalaiCenteredTopBar(
+    HomeDetailTopBar(
         title = stringResource(R.string.saved_foods_title),
         onBack = onBack
     )

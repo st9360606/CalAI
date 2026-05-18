@@ -82,6 +82,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.HomeTab
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
@@ -107,6 +108,7 @@ fun SettingsScreen(
     ageText: String,
     currentTab: HomeTab = HomeTab.Personal,
     onOpenTab: (HomeTab) -> Unit,
+    onBack: () -> Unit = {},
     onOpenCamera: () -> Unit,
     onOpenPersonalDetails: () -> Unit = {},
     onOpenEditName: () -> Unit = {},
@@ -202,6 +204,12 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
+        topBar = {
+            HomeDetailTopBar(
+                title = "Settings",
+                onBack = onBack
+            )
+        },
         floatingActionButton = {
             ScanFab(
                 onClick = {
@@ -323,16 +331,8 @@ private fun SettingsContent(
         modifier = modifier
             .verticalScroll(scroll)
             .padding(horizontal = 20.dp)
-            .padding(top = 14.dp, bottom = 120.dp)
+            .padding(top = 6.dp, bottom = 120.dp)
     ) {
-        Text(
-            text = "Settings",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold),
-            modifier = Modifier
-                .offset(x = 7.dp, y = (-6).dp)
-                .padding(vertical = 10.dp)
-        )
-
         ProfileCard(
             avatarUrl = avatarUrl,
             name = profileName,

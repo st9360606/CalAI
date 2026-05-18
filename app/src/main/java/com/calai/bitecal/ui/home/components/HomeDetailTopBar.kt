@@ -1,8 +1,9 @@
-package com.calai.bitecal.ui.home.ui.weight.components
+package com.calai.bitecal.ui.home.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,14 +25,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun WeightTopBar(
+fun HomeDetailTopBar(
     title: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    action: @Composable BoxScope.() -> Unit = {}
 ) {
-    val screenBg = Color(0xFFF5F5F5)
-
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -49,14 +50,14 @@ fun WeightTopBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(screenBg),
+                    .background(Color.White.copy(alpha = 0.6f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = Color(0xFF151515),
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -64,11 +65,17 @@ fun WeightTopBar(
         Text(
             text = title,
             modifier = Modifier.align(Alignment.Center),
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = Color.Black
+        )
+
+        Box(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            contentAlignment = Alignment.Center,
+            content = action
         )
     }
 }

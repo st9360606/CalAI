@@ -12,14 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Schedule
@@ -49,6 +47,7 @@ import com.calai.bitecal.data.workout.api.WorkoutHistorySessionDto
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import kotlin.math.roundToInt
 
@@ -104,7 +103,31 @@ fun WorkoutHistoryScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                WorkoutHistoryTopBar(onBack = onBack)
+                HomeDetailTopBar(
+                    title = stringResource(R.string.workout_history_title),
+                    onBack = onBack,
+                    action = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(WorkoutInk),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Close,
+                                    contentDescription = stringResource(R.string.workout_history_close),
+                                    tint = Color.White,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
+                        }
+                    }
+                )
             },
             bottomBar = {
                 MainBottomBar(
@@ -195,71 +218,6 @@ fun WorkoutHistoryScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun WorkoutHistoryTopBar(
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.workout_history_back),
-                tint = WorkoutInk,
-                modifier = Modifier.size(27.dp)
-            )
-        }
-
-        Text(
-            text = stringResource(R.string.workout_history_title),
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontWeight = FontWeight.ExtraBold,
-                color = WorkoutInk
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = 72.dp)
-        )
-
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 12.dp)
-                .size(32.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(WorkoutInk),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.workout_history_close),
-                    tint = Color.White,
-                    modifier = Modifier.size(19.dp)
-                )
             }
         }
     }

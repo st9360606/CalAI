@@ -50,13 +50,13 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.data.profile.repo.cmToFeetInches1
 import com.calai.bitecal.data.profile.repo.feetInchesToCm1
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditHeightViewModel
-import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
 import kotlin.math.abs
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -101,7 +101,7 @@ fun EditHeightScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            WeightTopBar(
+            ProfileEditTopBar(
                 title = "Edit Your Height",
                 onBack = onBack
             )

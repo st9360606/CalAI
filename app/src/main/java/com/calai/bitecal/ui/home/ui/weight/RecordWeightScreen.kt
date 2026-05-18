@@ -95,7 +95,7 @@ import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
 import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
-import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.launch
 import java.io.File
@@ -349,7 +349,7 @@ private fun RecordWeightScreenContent(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            WeightTopBar(
+            ProfileEditTopBar(
                 title = "Record Weight",
                 onBack = onBack
             )

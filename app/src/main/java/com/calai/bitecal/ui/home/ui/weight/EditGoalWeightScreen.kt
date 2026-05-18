@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
-import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -65,6 +64,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -134,7 +134,7 @@ fun EditGoalWeightScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            WeightTopBar(
+            ProfileEditTopBar(
                 title = "Edit Goal Weight",
                 onBack = onCancel
             )

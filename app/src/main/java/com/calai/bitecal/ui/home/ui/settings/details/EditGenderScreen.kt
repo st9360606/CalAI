@@ -20,8 +20,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
-import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditGenderScreen(
@@ -46,7 +47,7 @@ fun EditGenderScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            WeightTopBar(
+            ProfileEditTopBar(
                 title = "Edit Your Gender",
                 onBack = onBack
             )

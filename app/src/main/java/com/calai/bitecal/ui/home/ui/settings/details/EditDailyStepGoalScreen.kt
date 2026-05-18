@@ -54,8 +54,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
-import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -82,7 +82,7 @@ fun EditDailyStepGoalScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            WeightTopBar(
+            ProfileEditTopBar(
                 title = "Edit Step Goal",
                 onBack = onBack
             )

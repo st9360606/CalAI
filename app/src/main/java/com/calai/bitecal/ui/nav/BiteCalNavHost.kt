@@ -1387,6 +1387,12 @@ fun BiteCalNavHost(
                                 HomeTab.Personal -> Unit
                             }
                         },
+                        onBack = {
+                            nav.navigate(Routes.HOME) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
                         onOpenEditName = {
                             backStackEntry.savedStateHandle[Routes.EDIT_NAME_INITIAL] = (pUi.name ?: "").trim()
                             nav.navigate(Routes.EDIT_NAME) {

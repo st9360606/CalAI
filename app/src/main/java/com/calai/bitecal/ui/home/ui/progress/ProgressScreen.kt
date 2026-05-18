@@ -38,7 +38,7 @@ import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.progress.model.BmiCardUi
 import com.calai.bitecal.ui.home.ui.progress.model.BmiStatusTone
 import com.calai.bitecal.ui.home.ui.progress.model.ProgressViewModel
-import com.calai.bitecal.ui.home.ui.weight.components.WeightTopBar
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 
 private val ProgressBg = Color(0xFFF5F5F5)
 
@@ -62,7 +62,7 @@ fun ProgressScreen(
     Scaffold(
         containerColor = ProgressBg,
         topBar = {
-            WeightTopBar(
+            HomeDetailTopBar(
                 title = stringResource(R.string.progress_screen_title),
                 onBack = onBack
             )

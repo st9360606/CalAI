@@ -76,6 +76,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsUiState
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
 
@@ -130,46 +131,6 @@ fun EditNutritionGoalsRoute(
         onSodium = vm::onSodium
     )
 }
-
-@Composable
-private fun EditNutritionGoalsTopBar(onBack: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(start = 20.dp, end = 20.dp)
-            .padding(top = 10.dp, bottom = 6.dp)
-    ) {
-        Surface(
-            modifier = Modifier.size(44.dp),
-            shape = CircleShape,
-            color = Color(0xFFF1F3F7)
-        ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.size(44.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF111114)
-                )
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Text(
-            text = "Edit nutrition goals",
-            fontSize = 30.sp,
-            lineHeight = 34.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF111114),
-            style = MaterialTheme.typography.headlineLarge
-        )
-    }
-}
-
 private val GoalRowGap = 16.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -193,7 +154,15 @@ private fun EditNutritionGoalsScreen(
 
     Scaffold(
         containerColor = Color(0xFFF7F7F7),
-        topBar = { EditNutritionGoalsTopBar(onBack = { focusManager.clearFocus(); onBack() }) },
+        topBar = {
+            ProfileEditTopBar(
+                title = "Edit nutrition goals",
+                onBack = {
+                    focusManager.clearFocus()
+                    onBack()
+                }
+            )
+        },
         bottomBar = {
             BottomActionBar(
                 dirty = ui.isDirty,

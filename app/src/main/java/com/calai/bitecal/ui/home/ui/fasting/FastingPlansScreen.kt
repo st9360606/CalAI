@@ -72,11 +72,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.fasting.model.FastingPlan
-import com.calai.bitecal.ui.common.CalaiCenteredTopBar
 import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -114,17 +114,10 @@ fun FastingPlansScreen(
         Scaffold(
             containerColor = ScreenBg,
             topBar = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(ScreenBg)
-                ) {
-                    CalaiCenteredTopBar(
-                        title = stringResource(R.string.fasting_plans),
-                        onBack = onBack,
-                        backBackgroundColor = ScreenBg
-                    )
-                }
+                HomeDetailTopBar(
+                    title = stringResource(R.string.fasting_plans),
+                    onBack = onBack
+                )
             },
             bottomBar = {
                 MainBottomBar(
