@@ -53,6 +53,7 @@ import com.calai.bitecal.data.onboarding.repo.OnboardingRepository
 import com.calai.bitecal.di.AppEntryPoint
 import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.LanguageSessionFlag
+import com.calai.bitecal.i18n.LanguageStore
 import com.calai.bitecal.i18n.LocalLocaleController
 import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.appentry.AppEntryRoute
@@ -420,6 +421,7 @@ fun BiteCalNavHost(
     val weightRepo  = remember(ep) { ep.weightRepository() }
 
     val store = remember(ep) { ep.userProfileStore() }
+    val languageStore = remember(appCtx) { LanguageStore(appCtx) }
 
     val entitlementSyncer = remember(ep) { ep.entitlementSyncer() }
 
@@ -486,11 +488,17 @@ fun BiteCalNavHost(
                     )
                 },
                 onSetLocale = { tag ->
-                    localeControllerLocal.set(tag)
-                    LanguageManager.applyLanguage(tag)
-                    onSetLocale(tag)
+                    val normalizedTag = LanguageManager.normalizeTag(tag)
+
+                    localeControllerLocal.set(normalizedTag)
+                    LanguageManager.applyLanguage(normalizedTag)
+                    onSetLocale(normalizedTag)
+
                     scope.launch {
-                        withContext(Dispatchers.IO) { runCatching { store.setLocaleTag(tag) } }
+                        withContext(Dispatchers.IO) {
+                            runCatching { languageStore.save(normalizedTag) }
+                            runCatching { store.setLocaleTag(normalizedTag) }
+                        }
                     }
                 },
             )
@@ -1345,14 +1353,18 @@ fun BiteCalNavHost(
                         currentTab = HomeTab.Personal,
                         currentLanguageTag = localeController.tag,
                         onLanguageSelected = { tag ->
-                            localeController.set(tag)
-                            LanguageManager.applyLanguage(tag)
+                            val normalizedTag = LanguageManager.normalizeTag(tag)
+
+                            localeController.set(normalizedTag)
+                            LanguageManager.applyLanguage(normalizedTag)
                             LanguageSessionFlag.markChanged()
-                            onSetLocale(tag)
+                            onSetLocale(normalizedTag)
+
                             scope.launch {
                                 withContext(Dispatchers.IO) {
-                                    runCatching { store.setLocaleTag(tag) }
-                                    runCatching { profileRepo.updateLocaleOnly(tag) }
+                                    runCatching { languageStore.save(normalizedTag) }
+                                    runCatching { store.setLocaleTag(normalizedTag) }
+                                    runCatching { profileRepo.updateLocaleOnly(normalizedTag) }
                                 }
                             }
                         },

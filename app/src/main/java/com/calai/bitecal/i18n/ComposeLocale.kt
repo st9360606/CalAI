@@ -35,15 +35,25 @@ fun ProvideComposeLocale(
     val state = remember { mutableStateOf(tag.ifBlank { Locale.getDefault().toLanguageTag() }) }
     LaunchedEffect(tag) { if (tag.isNotBlank() && tag != state.value) state.value = tag }
 
-    // 語系或組態變動時重建 localized context
-    val localized: Context = remember(state.value, baseConf) {
-        val conf = Configuration(baseConf)
-        conf.setLocales(LocaleList(Locale.forLanguageTag(state.value)))
-        outer.createConfigurationContext(conf)
+    // 語系或組態變動時重建 localized context / configuration。
+    // stringResource 會讀 LocalContext 的 Resources，部分 Composable 也會讀 LocalConfiguration；
+    // 兩者必須同步提供，否則畫面可能重組了但文字仍停在舊語系。
+    val normalizedTag = remember(state.value) {
+        LanguageManager.normalizeTag(state.value)
+    }
+    val localizedConfiguration = remember(normalizedTag, baseConf) {
+        Configuration(baseConf).apply {
+            setLocales(LocaleList(Locale.forLanguageTag(normalizedTag)))
+            setLayoutDirection(Locale.forLanguageTag(normalizedTag))
+        }
+    }
+    val localized: Context = remember(outer, localizedConfiguration) {
+        outer.createConfigurationContext(localizedConfiguration)
     }
 
     CompositionLocalProvider(
         LocalContext provides localized,
+        LocalConfiguration provides localizedConfiguration,
         LocalLocaleController provides remember { LocaleController(state) }
     ) {
         content()
@@ -52,5 +62,4 @@ fun ProvideComposeLocale(
 
 /** 目前資源的語系鍵（需要時可用來做 key） */
 @Composable
-fun currentLocaleKey(): String =
-    LocalConfiguration.current.locales.toLanguageTags()
+fun currentLocaleKey(): String = LocalLocaleController.current.tag

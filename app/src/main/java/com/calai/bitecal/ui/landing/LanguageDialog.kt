@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.calai.bitecal.R
+import com.calai.bitecal.i18n.LanguageManager
 
 data class LangItem(val label: String, val tag: String, val flag: String)
 
@@ -98,11 +98,11 @@ fun LanguageDialog(
 ) {
     val screenH = LocalConfiguration.current.screenHeightDp.dp
     val maxHeight = screenH * maxHeightFraction
-    val surface = MaterialTheme.colorScheme.surface
-    val onSurface = MaterialTheme.colorScheme.onSurface
-    val selectedContainer = MaterialTheme.colorScheme.onSurface
-    val selectedContent = MaterialTheme.colorScheme.surface
-    val outline = MaterialTheme.colorScheme.outlineVariant
+    val surface = Color.White
+    val onSurface = Color(0xFF111114)
+    val selectedContainer = Color(0xFF111114)
+    val selectedContent = Color.White
+    val outline = Color(0xFFE5E7EB)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -160,7 +160,11 @@ fun LanguageDialog(
                     contentPadding = PaddingValues(bottom = 8.dp)
                 ) {
                     items(lang) { langItem ->
-                        val selected = langItem.tag.equals(currentTag, ignoreCase = true)
+                        val supported = LanguageManager.isSupported(langItem.tag)
+                        val selected = LanguageManager.isSelectedOption(
+                            optionTag = langItem.tag,
+                            currentTag = currentTag
+                        )
                         val bg = if (selected) selectedContainer else surface
                         val fg = if (selected) selectedContent else onSurface
                         val border = if (selected) Color.Transparent else outline
@@ -172,7 +176,9 @@ fun LanguageDialog(
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(bg)
                                 .border(BorderStroke(1.dp, border), RoundedCornerShape(16.dp))
-                                .clickable { onPick(langItem) }
+                                .clickable(enabled = supported) {
+                                    onPick(langItem)
+                                }
                                 .padding(horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
