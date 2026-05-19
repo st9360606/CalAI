@@ -10,40 +10,41 @@ data class LangOption(
 )
 
 val LANGS: List<LangOption> = listOf(
-    LangOption("en",      "English",         "🇺🇸", "EN"),
-    LangOption("es",      "Español",         "🇪🇸", "ES"),
-    LangOption("ar",      "العربية",          "🇸🇦", "AR"),
-    LangOption("ru",      "Русский",         "🇷🇺", "RU"),
-    LangOption("fr",      "Français",        "🇫🇷", "FR"),
-    LangOption("de",      "Deutsch",         "🇩🇪", "DE"),
-    LangOption("ja",      "日本語",            "🇯🇵", "JP"),
-    LangOption("ko",      "한국어",             "🇰🇷", "KR"),
-    LangOption("vi",      "Tiếng Việt",      "🇻🇳", "VI"),
-    LangOption("th",      "ไทย",              "🇹🇭", "TH"),
-    LangOption("ms",      "Bahasa Melayu",   "🇲🇾", "MS"),
-    LangOption("zh-TW",   "繁體中文",         "🇹🇼", "CH"),
-    LangOption("zh-CN",   "简体中文",         "🇨🇳", "CH"),
+    // Tier 1: 頂級變現市場 (超高規模 / 極高 ARPU)
+    LangOption("en", "English", "🇺🇸", "EN"),
+    LangOption("zh-CN", "简体中文", "🇨🇳", "CH"),
+    LangOption("ja", "日本語", "🇯🇵", "JP"),
+    LangOption("ko", "한국어", "🇰🇷", "KR"),
 
-    // 先前新增
-    LangOption("it",      "Italiano",        "🇮🇹", "IT"),
-    LangOption("nl",      "Nederlands",      "🇳🇱", "NL"),
-    LangOption("sv",      "Svenska",         "🇸🇪", "SV"),
-    LangOption("da",      "Dansk",           "🇩🇰", "DA"),
-    LangOption("nb",      "Norsk (Bokmål)",  "🇳🇴", "NO"),
-    LangOption("he",      "עברית",            "🇮🇱", "HE"),
-    LangOption("tr",      "Türkçe",          "🇹🇷", "TR"),
-    LangOption("pl",      "Polski",          "🇵🇱", "PL"),
-    LangOption("zh-HK",   "繁體中文（香港）",  "🇭🇰", "CH"),
-    LangOption("fil",     "Filipino",        "🇵🇭", "PH"),
+    // Tier 2: 成熟發達市場 (高購買力歐美與亞洲地區)
+    LangOption("de", "Deutsch", "🇩🇪", "DE"),
+    LangOption("fr", "Français", "🇫🇷", "FR"),
+    LangOption("zh-HK", "繁體中文", "🇭🇰", "CH"),
+    LangOption("nl", "Nederlands", "🇳🇱", "NL"),
+    LangOption("sv", "Svenska", "🇸🇪", "SV"),
+    LangOption("nb", "Norsk (Bokmål)", "🇳🇴", "NO"),
+    LangOption("da", "Dansk", "🇩🇰", "DA"),
+    LangOption("fi", "Suomi", "🇫🇮", "FI"),
+    LangOption("it", "Italiano", "🇮🇹", "IT"),
 
-    // 本次必補
-    LangOption("pt-BR",   "Português (Brasil)",   "🇧🇷", "BR"),
-    LangOption("pt-PT",   "Português (Portugal)", "🇵🇹", "PT"),
-    LangOption("fi",      "Suomi",           "🇫🇮", "FI"),
-    LangOption("ro",      "Română",          "🇷🇴", "RO"),
-    LangOption("cs",      "Čeština",         "🇨🇿", "CS"),
-    LangOption("hi",      "हिन्दी",           "🇮🇳", "HI"),
-    LangOption("jv",      "Basa Jawa",       "🇮🇩", "JV")
+    // Tier 3: 中度消費與高潛力市場 (基數大或局部高 ARPU)
+    LangOption("es", "Español", "🇪🇸", "ES"),
+    LangOption("ar", "العربية", "🇸🇦", "AR"),
+    LangOption("pt-BR", "Português (Brasil)", "🇧🇷", "BR"),
+    LangOption("tr", "Türkçe", "🇹🇷", "TR"),
+    LangOption("pl", "Polski", "🇵🇱", "PL"),
+    LangOption("cs", "Čeština", "🇨🇿", "CS"),
+    LangOption("ro", "Română", "🇷🇴", "RO"),
+    LangOption("pt-PT", "Português (Portugal)", "🇵🇹", "PT"),
+    LangOption("ru", "Русский", "🇷🇺", "RU"),
+
+    // Tier 4: 高下載量但訂閱變現率較低市場 (新興市場)
+    LangOption("th", "ไทย", "🇹🇭", "TH"),
+    LangOption("ms", "Bahasa Melayu", "🇲🇾", "MS"),
+    LangOption("vi", "Tiếng Việt", "🇻🇳", "VI"),
+    LangOption("fil", "Filipino", "🇵🇭", "PH"),
+    LangOption("hi", "हिन्दी", "🇮🇳", "HI"),
+    LangOption("jv", "Basa Jawa", "🇮🇩", "JV")
 )
 
 fun langShortLabelFromTag(tag: String): String {
@@ -64,8 +65,6 @@ fun langShortLabelFromTag(tag: String): String {
         t.startsWith("id") -> "ID"
         t.startsWith("ms") -> "MS"
         t.startsWith("zh") -> "CH"
-
-        // 補充
         t.startsWith("it") -> "IT"
         t.startsWith("nl") -> "NL"
         t.startsWith("sv") -> "SV"
@@ -81,7 +80,6 @@ fun langShortLabelFromTag(tag: String): String {
         t.startsWith("cs") -> "CS"
         t.startsWith("hi") -> "HI"
         t.startsWith("fil") || t.startsWith("tl") -> "PH"
-
         else -> t.take(2).uppercase(Locale.ROOT)
     }
 }
@@ -92,23 +90,22 @@ fun flagAndLabelFromTag(tag: String): Pair<String, String> {
 
     val t = tag.replace('_', '-').lowercase(Locale.ROOT)
 
-    // 中文分流
     if (t.startsWith("zh")) {
-        return if (t.contains("hant") || t.contains("tw") || t.contains("hk") || t.contains("mo")) {
-            if (t.contains("hk")) "🇭🇰" to "CH" else "🇹🇼" to "CH"
-        } else {
+        return if (t.contains("cn") || t.contains("sg") || t.contains("hans")) {
             "🇨🇳" to "CH"
+        } else {
+            "🇭🇰" to "CH"
         }
     }
 
-    // 葡萄牙語分流
     if (t.startsWith("pt-")) {
         return if (t.contains("br")) "🇧🇷" to "BR" else "🇵🇹" to "PT"
     }
 
-    // 菲律賓 Tagalog 別名
     if (t.startsWith("tl")) return "🇵🇭" to "PH"
 
-    LANGS.firstOrNull { t.startsWith(it.tag.lowercase(Locale.ROOT)) }?.let { return it.flag to it.label }
+    LANGS.firstOrNull { t.startsWith(it.tag.lowercase(Locale.ROOT)) }?.let {
+        return it.flag to it.label
+    }
     return "🏳️" to t.take(2).uppercase(Locale.ROOT)
 }

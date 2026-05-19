@@ -111,12 +111,12 @@ fun WorkoutHistoryScreen(
                         IconButton(
                             onClick = onBack,
                             modifier = Modifier
-                                .offset(x = (-8).dp)
+                                .offset(x = (-12).dp)
                                 .size(36.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(28.dp)
+                                    .size(30.dp)
                                     .clip(CircleShape)
                                     .background(WorkoutInk),
                                 contentAlignment = Alignment.Center

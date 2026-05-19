@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.LanguageStore
 import com.calai.bitecal.i18n.ProvideComposeLocale
 import com.calai.bitecal.ui.nav.BiteCalNavHost
@@ -43,12 +44,12 @@ fun BiteCalApp(hostActivity: ComponentActivity) {
     }
 
     // 一旦有值：DataStore 優先；再用 AppCompatDelegate；最後用裝置語言
-    val initialTag = when {
+    val initialTag = LanguageManager.normalizeTag(when {
         !savedTagOrNull.isNullOrBlank() -> savedTagOrNull!!
         AppCompatDelegate.getApplicationLocales().toLanguageTags().isNotBlank() ->
             AppCompatDelegate.getApplicationLocales().toLanguageTags()
         else -> Locale.getDefault().toLanguageTag()
-    }
+    })
 
     var composeLocale by remember(initialTag) { mutableStateOf(initialTag) }
 

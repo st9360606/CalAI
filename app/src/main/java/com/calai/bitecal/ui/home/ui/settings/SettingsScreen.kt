@@ -73,6 +73,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -81,6 +82,7 @@ import androidx.core.content.ContextCompat
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
@@ -93,6 +95,8 @@ import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettin
 import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
 import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
 import com.calai.bitecal.ui.home.ui.settings.dialog.PaymentIssueDialog
+import com.calai.bitecal.ui.landing.LanguageDialog
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 /**
@@ -124,7 +128,8 @@ fun SettingsScreen(
     onOpenSavedFoods: () -> Unit = {},
     onOpenReferral: () -> Unit = {},
     onOpenNotificationInbox: () -> Unit = {},
-    onOpenLanguage: () -> Unit = {},
+    currentLanguageTag: String = "",
+    onLanguageSelected: (String) -> Unit = {},
     onOpenTerms: () -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
     onOpenSupportEmail: () -> Unit = {},
@@ -138,10 +143,17 @@ fun SettingsScreen(
 
     var showQuickAddMenu by rememberSaveable { mutableStateOf(false) }
     var scanFabGateInFlight by rememberSaveable { mutableStateOf(false) }
+    var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
+    var languageSwitching by rememberSaveable { mutableStateOf(false) }
 
     val latestOnOpenCamera = rememberUpdatedState(onOpenCamera)
     val latestOnOpenSubscription = rememberUpdatedState(onOpenSubscription)
     val latestOnCheckCanUseScan = rememberUpdatedState(onCheckCanUseScan)
+    val latestOnLanguageSelected = rememberUpdatedState(onLanguageSelected)
+    val effectiveLanguageTag = currentLanguageTag.ifBlank {
+        ctx.resources.configuration.locales[0].toLanguageTag()
+            .ifBlank { Locale.getDefault().toLanguageTag() }
+    }
 
     val requestCameraPermLauncher =
         if (registryOwner != null) {
@@ -206,7 +218,7 @@ fun SettingsScreen(
         containerColor = Color.Transparent,
         topBar = {
             HomeDetailTopBar(
-                title = "Settings",
+                title = stringResource(R.string.settings_title),
                 onBack = onBack
             )
         },
@@ -237,7 +249,7 @@ fun SettingsScreen(
             onFixPaymentIssue = onFixPaymentIssue,
             onOpenReferral = onOpenReferral,
             onOpenNotificationInbox = onOpenNotificationInbox,
-            onOpenLanguage = onOpenLanguage,
+            onOpenLanguage = { if (!languageSwitching) showLanguageDialog = true },
             onOpenTerms = onOpenTerms,
             onOpenPrivacy = onOpenPrivacy,
             onOpenSupportEmail = onOpenSupportEmail,
@@ -259,6 +271,27 @@ fun SettingsScreen(
             openScanFoodWithPermissionGate()
         }
     )
+
+    if (showLanguageDialog) {
+        LanguageDialog(
+            title = stringResource(R.string.choose_language),
+            currentTag = effectiveLanguageTag,
+            onPick = { picked ->
+                if (languageSwitching) return@LanguageDialog
+                languageSwitching = true
+                showLanguageDialog = false
+                if (!picked.tag.equals(effectiveLanguageTag, ignoreCase = true)) {
+                    latestOnLanguageSelected.value(picked.tag)
+                }
+                languageSwitching = false
+            },
+            onDismiss = {
+                if (!languageSwitching) showLanguageDialog = false
+            },
+            widthFraction = 0.92f,
+            maxHeightFraction = 0.60f
+        )
+    }
 }
 
 @Composable
@@ -349,17 +382,17 @@ private fun SettingsContent(
         Spacer(Modifier.height(16.dp))
 
         SettingsListCard {
-            SettingsRow(icon = Icons.Outlined.Person, title = "Personal details", onClick = onOpenPersonalDetails)
+            SettingsRow(icon = Icons.Outlined.Person, title = stringResource(R.string.settings_personal_details), onClick = onOpenPersonalDetails)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Tune, title = "Adjust macronutrients", onClick = onOpenAdjustMacros)
+            SettingsRow(icon = Icons.Outlined.Tune, title = stringResource(R.string.settings_adjust_macronutrients), onClick = onOpenAdjustMacros)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Flag, title = "Goal & current weight", onClick = onOpenGoalAndCurrentWeight)
+            SettingsRow(icon = Icons.Outlined.Flag, title = stringResource(R.string.settings_goal_current_weight), onClick = onOpenGoalAndCurrentWeight)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Widgets, title = "Weight history", onClick = onOpenWeightHistory)
+            SettingsRow(icon = Icons.Outlined.Widgets, title = stringResource(R.string.settings_weight_history), onClick = onOpenWeightHistory)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Language, title = "Language", onClick = onOpenLanguage)
+            SettingsRow(icon = Icons.Outlined.Language, title = stringResource(R.string.settings_language), onClick = onOpenLanguage)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Notifications, title = "Inbox", onClick = onOpenNotificationInbox)
+            SettingsRow(icon = Icons.Outlined.Notifications, title = stringResource(R.string.settings_inbox), onClick = onOpenNotificationInbox)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -369,17 +402,17 @@ private fun SettingsContent(
         Spacer(Modifier.height(18.dp))
 
         SettingsListCard {
-            SettingsRow(icon = Icons.Outlined.Description, title = "Terms and Conditions", onClick = onOpenTerms)
+            SettingsRow(icon = Icons.Outlined.Description, title = stringResource(R.string.settings_terms_conditions), onClick = onOpenTerms)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.PrivacyTip, title = "Privacy Policy", onClick = onOpenPrivacy)
+            SettingsRow(icon = Icons.Outlined.PrivacyTip, title = stringResource(R.string.settings_privacy_policy), onClick = onOpenPrivacy)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Email, title = "Support Email", onClick = onOpenSupportEmail)
+            SettingsRow(icon = Icons.Outlined.Email, title = stringResource(R.string.settings_support_email), onClick = onOpenSupportEmail)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Group, title = "Feature Request", onClick = onOpenFeatureRequest)
+            SettingsRow(icon = Icons.Outlined.Group, title = stringResource(R.string.settings_feature_request), onClick = onOpenFeatureRequest)
             DividerThin()
             SettingsRow(
                 icon = Icons.Outlined.Person,
-                title = "Delete Account?",
+                title = stringResource(R.string.settings_delete_account),
                 onClick = { if (!deleting) showDeleteDialog = true }
             )
         }
@@ -389,7 +422,7 @@ private fun SettingsContent(
 
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "VERSION 1.0.150",
+            text = stringResource(R.string.settings_version, "1.0.150"),
             style = MaterialTheme.typography.labelMedium.copy(color = Color(0xFF9CA3AF)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -1310,7 +1343,7 @@ private fun LogoutButton(onLogout: () -> Unit) {
         Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
         Spacer(Modifier.size(10.dp))
         Text(
-            "Logout",
+            stringResource(R.string.settings_logout),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
         )
     }

@@ -559,4 +559,20 @@
     <string name="notification_inbox_status_unread">Unread</string>
     <string name="notification_inbox_status_read">Read</string>
 
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_personal_details">Personal details</string>
+    <string name="settings_adjust_macronutrients">Adjust macronutrients</string>
+    <string name="settings_goal_current_weight">Goal &amp; current weight</string>
+    <string name="settings_weight_history">Weight history</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_inbox">Inbox</string>
+    <string name="settings_terms_conditions">Terms and Conditions</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_support_email">Support Email</string>
+    <string name="settings_feature_request">Feature Request</string>
+    <string name="settings_delete_account">Delete Account?</string>
+    <string name="settings_version">VERSION %1$s</string>
+    <string name="settings_logout">Logout</string>
+
 </resources>

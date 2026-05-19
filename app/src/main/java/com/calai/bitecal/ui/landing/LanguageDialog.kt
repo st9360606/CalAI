@@ -1,11 +1,23 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.calai.bitecal.ui.landing
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +26,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,48 +43,49 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.calai.bitecal.R
 
-// 語言清單（BCP-47）
 data class LangItem(val label: String, val tag: String, val flag: String)
 
-// ✅ 已加入 it/nl/sv/da/nb/he/tr/pl/zh-HK/fil + 其他
 val LANGS = listOf(
+    // Tier 1: 頂級變現市場 (超大營收規模 / 極高人均付費)
     LangItem("English", "en", "🇺🇸"),
-    LangItem("Español", "es", "🇪🇸"),
-    LangItem("العربية", "ar", "🇸🇦"),
-    LangItem("Русский", "ru", "🇷🇺"),
-    LangItem("Français", "fr", "🇫🇷"),
-    LangItem("Deutsch", "de", "🇩🇪"),
+    LangItem("简体中文", "zh-CN", "🇨🇳"),
     LangItem("日本語", "ja", "🇯🇵"),
     LangItem("한국어", "ko", "🇰🇷"),
-    LangItem("Tiếng Việt", "vi", "🇻🇳"),
-    LangItem("ไทย", "th", "🇹🇭"),
-    LangItem("Bahasa Melayu", "ms", "🇲🇾"),
-    LangItem("繁體中文", "zh-TW", "🇹🇼"),
-    LangItem("简体中文", "zh-CN", "🇨🇳"),
 
-    LangItem("Italiano", "it", "🇮🇹"),
+    // Tier 2: 成熟發達市場 (高購買力、高訂閱轉化率)
+    LangItem("Deutsch", "de", "🇩🇪"),
+    LangItem("Français", "fr", "🇫🇷"),
+    LangItem("繁體中文", "zh-HK", "🇭🇰"),
     LangItem("Nederlands", "nl", "🇳🇱"),
-    LangItem("Svenska", "sv", "🇸🇪"),
-    LangItem("Dansk", "da", "🇩🇰"),
-    LangItem("Norsk (Bokmål)", "nb", "🇳🇴"),
     LangItem("עברית", "he", "🇮🇱"),
+    LangItem("Svenska", "sv", "🇸🇪"),
+    LangItem("Norsk (Bokmål)", "nb", "🇳🇴"),
+    LangItem("Dansk", "da", "🇩🇰"),
+    LangItem("Suomi", "fi", "🇫🇮"),
+    LangItem("Italiano", "it", "🇮🇹"),
+
+    // Tier 3: 中度消費與高潛力市場 (基數龐大或局部高收入)
+    LangItem("Español", "es", "🇪🇸"),
+    LangItem("العربية", "ar", "🇸🇦"),
+    LangItem("Português (Brasil)", "pt-BR", "🇧🇷"),
     LangItem("Türkçe", "tr", "🇹🇷"),
     LangItem("Polski", "pl", "🇵🇱"),
-    LangItem("繁體中文", "zh-HK", "🇭🇰"),
-    LangItem("Filipino", "fil", "🇵🇭"),
-
-    LangItem("Português (Brasil)", "pt-BR", "🇧🇷"),
-    LangItem("Português (Portugal)", "pt-PT", "🇵🇹"),
-    LangItem("Suomi", "fi", "🇫🇮"),
-    LangItem("Română", "ro", "🇷🇴"),
     LangItem("Čeština", "cs", "🇨🇿"),
-    LangItem("हिन्दी", "hi", "🇮🇳"),
+    LangItem("Română", "ro", "🇷🇴"),
+    LangItem("Português (Portugal)", "pt-PT", "🇵🇹"),
+    LangItem("Русский", "ru", "🇷🇺"),
 
+    // Tier 4: 高下載量但低訂閱轉化市場 (以免費或廣告變現為主)
+    LangItem("ไทย", "th", "🇹🇭"),
+    LangItem("Bahasa Melayu", "ms", "🇲🇾"),
+    LangItem("Tiếng Việt", "vi", "🇻🇳"),
+    LangItem("Filipino", "fil", "🇵🇭"),
+    LangItem("हिन्दी", "hi", "🇮🇳"),
     LangItem("Basa Jawa", "jv", "🇮🇩")
 )
 
-/** iOS 風：小卡片 + pill 列表 */
 @Composable
 fun LanguageDialog(
     title: String,
@@ -78,11 +93,16 @@ fun LanguageDialog(
     onPick: (LangItem) -> Unit,
     onDismiss: () -> Unit,
     lang: List<LangItem> = LANGS,
-    widthFraction: Float = 0.92f,     // 用比例控制寬度
-    maxHeightFraction: Float = 0.60f  // 高度用比例
+    widthFraction: Float = 0.92f,
+    maxHeightFraction: Float = 0.60f
 ) {
     val screenH = LocalConfiguration.current.screenHeightDp.dp
     val maxHeight = screenH * maxHeightFraction
+    val surface = MaterialTheme.colorScheme.surface
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val selectedContainer = MaterialTheme.colorScheme.onSurface
+    val selectedContent = MaterialTheme.colorScheme.surface
+    val outline = MaterialTheme.colorScheme.outlineVariant
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -98,13 +118,11 @@ fun LanguageDialog(
                 .fillMaxWidth(widthFraction)
                 .requiredHeightIn(max = maxHeight),
             shape = RoundedCornerShape(22.dp),
-            color = Color.White,
+            color = surface,
             tonalElevation = 0.dp,
             shadowElevation = 8.dp
         ) {
             Column(Modifier.padding(16.dp)) {
-
-                // 標題置中 + 關閉按鈕
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -114,7 +132,7 @@ fun LanguageDialog(
                         text = title,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF111114),
+                        color = onSurface,
                         modifier = Modifier.align(Alignment.Center),
                         textAlign = TextAlign.Center
                     )
@@ -127,7 +145,8 @@ fun LanguageDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "Close"
+                            contentDescription = stringResource(R.string.close),
+                            tint = onSurface
                         )
                     }
                 }
@@ -142,9 +161,9 @@ fun LanguageDialog(
                 ) {
                     items(lang) { langItem ->
                         val selected = langItem.tag.equals(currentTag, ignoreCase = true)
-                        val bg = if (selected) Color(0xFF111114) else Color.White
-                        val fg = if (selected) Color.White else Color(0xFF111114)
-                        val border = if (selected) Color.Transparent else Color(0xFFE5E5EA)
+                        val bg = if (selected) selectedContainer else surface
+                        val fg = if (selected) selectedContent else onSurface
+                        val border = if (selected) Color.Transparent else outline
 
                         Row(
                             modifier = Modifier
@@ -172,7 +191,7 @@ fun LanguageDialog(
                                     modifier = Modifier
                                         .size(8.dp)
                                         .clip(RoundedCornerShape(percent = 50))
-                                        .background(Color.White)
+                                        .background(selectedContent)
                                 )
                             }
                         }

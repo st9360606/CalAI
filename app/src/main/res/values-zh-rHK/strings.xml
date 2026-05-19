@@ -557,4 +557,20 @@
     <string name="notification_inbox_status_unread">未讀</string>
     <string name="notification_inbox_status_read">已讀</string>
 
+    <!-- Settings -->
+    <string name="settings_title">設定</string>
+    <string name="settings_personal_details">個人資料</string>
+    <string name="settings_adjust_macronutrients">調整巨量營養素</string>
+    <string name="settings_goal_current_weight">目標及目前體重</string>
+    <string name="settings_weight_history">體重紀錄</string>
+    <string name="settings_language">語言</string>
+    <string name="settings_inbox">收件匣</string>
+    <string name="settings_terms_conditions">條款及細則</string>
+    <string name="settings_privacy_policy">私隱政策</string>
+    <string name="settings_support_email">客服電郵</string>
+    <string name="settings_feature_request">功能建議</string>
+    <string name="settings_delete_account">刪除帳戶？</string>
+    <string name="settings_version">版本 %1$s</string>
+    <string name="settings_logout">登出</string>
+
 </resources>

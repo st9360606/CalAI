@@ -1343,6 +1343,19 @@ fun BiteCalNavHost(
                         profileName = nameText,
                         ageText = ageText,
                         currentTab = HomeTab.Personal,
+                        currentLanguageTag = localeController.tag,
+                        onLanguageSelected = { tag ->
+                            localeController.set(tag)
+                            LanguageManager.applyLanguage(tag)
+                            LanguageSessionFlag.markChanged()
+                            onSetLocale(tag)
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    runCatching { store.setLocaleTag(tag) }
+                                    runCatching { profileRepo.updateLocaleOnly(tag) }
+                                }
+                            }
+                        },
                         onOpenCamera = {
                             scope.launch {
                                 val hasActiveAccess = withContext(Dispatchers.IO) {
