@@ -1471,7 +1471,6 @@ fun BiteCalNavHost(
                         onOpenTerms = { uriHandler.openUri(termsUrl) },
                         onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
                         onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
-                        onOpenFeatureRequest = { uriHandler.openUri(featureUrl) },
                         onDeleteAccount = {
                             scope.launch {
                                 val r = accountRepo.deleteAccount()

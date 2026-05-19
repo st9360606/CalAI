@@ -74,6 +74,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -132,7 +133,6 @@ fun SettingsScreen(
     onOpenTerms: () -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
     onOpenSupportEmail: () -> Unit = {},
-    onOpenFeatureRequest: () -> Unit = {},
     onDeleteAccount: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
@@ -252,7 +252,6 @@ fun SettingsScreen(
             onOpenTerms = onOpenTerms,
             onOpenPrivacy = onOpenPrivacy,
             onOpenSupportEmail = onOpenSupportEmail,
-            onOpenFeatureRequest = onOpenFeatureRequest,
             onDeleteAccount = onDeleteAccount,
             onLogout = onLogout
         )
@@ -314,7 +313,6 @@ private fun SettingsContent(
     onOpenTerms: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenSupportEmail: () -> Unit,
-    onOpenFeatureRequest: () -> Unit,
     onDeleteAccount: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -390,12 +388,10 @@ private fun SettingsContent(
             SettingsRow(icon = Icons.Outlined.Widgets, title = stringResource(R.string.settings_weight_history), onClick = onOpenWeightHistory)
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Notifications, title = stringResource(R.string.settings_inbox), onClick = onOpenNotificationInbox)
-            DividerThin()
-            SettingsRow(icon = Icons.Outlined.Language, title = stringResource(R.string.settings_language), onClick = onOpenLanguage)
         }
 
-        Spacer(Modifier.height(16.dp))
-        PreferencesCard()
+        Spacer(Modifier.height(18.dp))
+        PreferencesCard(onOpenLanguage = onOpenLanguage)
         Spacer(Modifier.height(18.dp))
         WidgetsSection()
         Spacer(Modifier.height(18.dp))
@@ -407,8 +403,6 @@ private fun SettingsContent(
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Email, title = stringResource(R.string.settings_support_email), onClick = onOpenSupportEmail)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Group, title = stringResource(R.string.settings_feature_request), onClick = onOpenFeatureRequest)
-            DividerThin()
             SettingsRow(
                 icon = Icons.Outlined.Person,
                 title = stringResource(R.string.settings_delete_account),
@@ -416,12 +410,14 @@ private fun SettingsContent(
             )
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(22.dp))
+
         LogoutButton(onLogout = onLogout)
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(20.dp))
         Text(
             text = stringResource(R.string.settings_version, "1.0.150"),
+            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelMedium.copy(color = Color(0xFF9CA3AF)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -1087,7 +1083,9 @@ private fun InviteRewardVisual(
 }
 
 @Composable
-private fun PreferencesCard() {
+private fun PreferencesCard(
+    onOpenLanguage: () -> Unit
+) {
     val appearance = stringResource(R.string.settings_appearance_light)
 
     SettingsListCard {
@@ -1143,6 +1141,14 @@ private fun PreferencesCard() {
                 style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFF6B7280))
             )
         }
+
+        DividerThin()
+
+        SettingsRow(
+            icon = Icons.Outlined.Language,
+            title = stringResource(R.string.settings_language),
+            onClick = onOpenLanguage
+        )
     }
 }
 
@@ -1303,7 +1309,9 @@ private fun LogoutButton(onLogout: () -> Unit) {
             contentColor = Color(0xFF111114)
         ),
         shape = RoundedCornerShape(18.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
     ) {
         Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
         Spacer(Modifier.size(10.dp))
