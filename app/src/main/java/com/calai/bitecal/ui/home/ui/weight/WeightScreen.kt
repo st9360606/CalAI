@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.data.weight.api.WeightItemDto
 import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.ui.weight.components.FilterTabs
@@ -50,6 +51,7 @@ import com.calai.bitecal.ui.home.ui.weight.components.WeightChartCard
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.delay
 import java.time.LocalDate
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,7 +156,13 @@ fun WeightScreen(
                     }
 
                     itemsIndexed(historySorted) { index, item ->
-                        val previous = historySorted.getOrNull(index + 1)
+                        val previousFromHistory = historySorted.getOrNull(index + 1)
+                        val previous = previousFromHistory
+                            ?: buildProfileWeightFallbackPrevious(
+                                ui = ui,
+                                current = item
+                            )
+
                         HistoryRow(
                             item = item,
                             unit = ui.unit,
@@ -179,6 +187,29 @@ fun WeightScreen(
             vm.clearError()
         }
     }
+}
+
+private fun buildProfileWeightFallbackPrevious(
+    ui: WeightViewModel.UiState,
+    current: WeightItemDto
+): WeightItemDto? {
+    val profileWeightKg = ui.profileWeightKg ?: return null
+    val profileWeightLbs = ui.profileWeightLbs
+    val currentWeightLbs = current.weightLbs
+
+    val isSameKg = abs(current.weightKg - profileWeightKg) < 0.05
+    val isSameLbs = currentWeightLbs != null &&
+        profileWeightLbs != null &&
+        abs(currentWeightLbs - profileWeightLbs) < 0.05
+
+    if (isSameKg || isSameLbs) return null
+
+    return WeightItemDto(
+        logDate = current.logDate,
+        weightKg = profileWeightKg,
+        weightLbs = profileWeightLbs,
+        photoUrl = null
+    )
 }
 
 @Composable

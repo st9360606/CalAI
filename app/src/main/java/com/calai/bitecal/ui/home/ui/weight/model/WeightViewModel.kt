@@ -64,9 +64,6 @@ class WeightViewModel @Inject constructor(
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
-    // baseline 只做一次
-    private var baselineEnsured = false
-
     // ✅ 節流：10 秒內重複進頁/重複呼叫 initIfNeeded() 不重打 API
     private val refreshGate = ThrottledRefresher(minIntervalMs = 5_000L)
 
@@ -129,18 +126,16 @@ class WeightViewModel @Inject constructor(
     }
 
     /**
-     * ✅ 節流 + baseline + refresh
+     * ✅ 節流 + refresh
      * - force=false：受節流保護
      * - force=true：一定刷新（例如寫入成功後）
+     *
+     * 注意：不要在 WeightScreen 進頁時自動呼叫 repo.ensureBaseline()。
+     * baseline 只應該由 onboarding / 登入後 uploadLocal 流程建立，避免使用者刪除
+     * weight_history 後，進入體重頁又被自動補回 profile weight。
      */
     fun refreshThrottled(force: Boolean) {
         refreshGate.launch(viewModelScope, force = force) {
-            // baseline 只做一次
-            if (!baselineEnsured) {
-                baselineEnsured = true
-                runCatching { repo.ensureBaseline() }
-                    .onFailure { e -> if (e is CancellationException) throw e }
-            }
             // ✅ 注意：refresh() 本身是 launch 版（會再開 coroutine）
             // 這裡維持你原本寫法，最少改動。
             refresh()
