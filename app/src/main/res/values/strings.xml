@@ -565,8 +565,14 @@
     <string name="settings_adjust_macronutrients">Adjust macronutrients</string>
     <string name="settings_goal_current_weight">Goal &amp; current weight</string>
     <string name="settings_weight_history">Weight history</string>
-    <string name="settings_language">Language</string>
     <string name="settings_inbox">Inbox</string>
+    <string name="settings_language">Language</string>
+
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_appearance_description">Choose light, dark, or system appearance</string>
+    <string name="settings_appearance_light">Light</string>
+
     <string name="settings_terms_conditions">Terms and Conditions</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
     <string name="settings_support_email">Support Email</string>

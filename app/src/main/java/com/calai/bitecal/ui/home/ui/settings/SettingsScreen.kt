@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Settings
@@ -54,8 +55,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -390,9 +389,9 @@ private fun SettingsContent(
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Widgets, title = stringResource(R.string.settings_weight_history), onClick = onOpenWeightHistory)
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Language, title = stringResource(R.string.settings_language), onClick = onOpenLanguage)
-            DividerThin()
             SettingsRow(icon = Icons.Outlined.Notifications, title = stringResource(R.string.settings_inbox), onClick = onOpenNotificationInbox)
+            DividerThin()
+            SettingsRow(icon = Icons.Outlined.Language, title = stringResource(R.string.settings_language), onClick = onOpenLanguage)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -1089,9 +1088,7 @@ private fun InviteRewardVisual(
 
 @Composable
 private fun PreferencesCard() {
-    var appearance by remember { mutableStateOf("Light") }
-    var addBurned by remember { mutableStateOf(false) }
-    var rollover by remember { mutableStateOf(true) }
+    val appearance = stringResource(R.string.settings_appearance_light)
 
     SettingsListCard {
         Row(
@@ -1103,14 +1100,13 @@ private fun PreferencesCard() {
             Icon(Icons.Outlined.Settings, contentDescription = null)
             Spacer(Modifier.size(10.dp))
             Text(
-                text = "Preferences",
+                text = stringResource(R.string.settings_preferences),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
         }
 
         DividerThin()
 
-        // Appearance
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1118,38 +1114,35 @@ private fun PreferencesCard() {
                 .padding(horizontal = 14.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                imageVector = Icons.Outlined.Palette,
+                contentDescription = null,
+                tint = Color(0xFF111114),
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(Modifier.size(12.dp))
+
             Column(Modifier.weight(1f)) {
-                Text("Appearance", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
                 Text(
-                    "Choose light, dark, or system appearance",
+                    text = stringResource(R.string.settings_appearance),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    text = stringResource(R.string.settings_appearance_description),
                     style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF9CA3AF))
                 )
             }
+
             Text(
                 text = appearance,
                 style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFF111114))
             )
-            Text(text = "  ▾", style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFF6B7280)))
+            Text(
+                text = "  ▾",
+                style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFF6B7280))
+            )
         }
-
-        DividerThin()
-
-        // Add burned calories
-        ToggleRow(
-            title = "Add Burned Calories",
-            subtitle = "Add burned calories to daily goal",
-            checked = addBurned,
-            onCheckedChange = { addBurned = it }
-        )
-
-        DividerThin()
-
-        ToggleRow(
-            title = "Rollover calories",
-            subtitle = "Add up to 200 left over calories from yesterday into\ntoday's daily goal",
-            checked = rollover,
-            onCheckedChange = { rollover = it }
-        )
     }
 }
 
@@ -1261,34 +1254,6 @@ private fun MacroMiniRow(value: String, label: String) {
     Column {
         Text(value, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
         Text(label, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF9CA3AF)))
-    }
-}
-
-@Composable
-private fun ToggleRow(
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF9CA3AF)))
-        }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedTrackColor = Color(0xFF111114),
-                uncheckedTrackColor = Color(0xFFE5E7EB)
-            )
-        )
     }
 }
 

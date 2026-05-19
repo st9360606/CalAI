@@ -563,8 +563,14 @@
     <string name="settings_adjust_macronutrients">調整巨量營養素</string>
     <string name="settings_goal_current_weight">目標及目前體重</string>
     <string name="settings_weight_history">體重紀錄</string>
-    <string name="settings_language">語言</string>
     <string name="settings_inbox">收件匣</string>
+    <string name="settings_language">語言</string>
+
+    <string name="settings_preferences">偏好設定</string>
+    <string name="settings_appearance">外觀</string>
+    <string name="settings_appearance_description">選擇淺色、深色或跟隨系統外觀</string>
+    <string name="settings_appearance_light">淺色</string>
+
     <string name="settings_terms_conditions">條款及細則</string>
     <string name="settings_privacy_policy">私隱政策</string>
     <string name="settings_support_email">客服電郵</string>
