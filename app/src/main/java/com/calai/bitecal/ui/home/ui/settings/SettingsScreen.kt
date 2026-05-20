@@ -1281,7 +1281,7 @@ private fun MacroActionsWidgetPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.size(width = 360.dp, height = 155.dp),
+        modifier = modifier.size(width = 368.dp, height = 155.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -1289,7 +1289,7 @@ private fun MacroActionsWidgetPreviewCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 16.dp, top = 14.dp, end = 12.dp, bottom = 14.dp),
+                .padding(start = 16.dp, top = 10.dp, end = 14.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -1304,10 +1304,10 @@ private fun MacroActionsWidgetPreviewCard(
                     modifier = Modifier.size(108.dp)
                 )
 
-                Spacer(Modifier.size(16.dp))
+                Spacer(Modifier.size(12.dp))
 
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
                     WidgetMacroStatRow(
                         icon = Icons.Outlined.EggAlt,
@@ -1333,7 +1333,7 @@ private fun MacroActionsWidgetPreviewCard(
                 }
             }
 
-            Spacer(Modifier.size(12.dp))
+            Spacer(Modifier.size(4.dp))
 
             Box(
                 modifier = Modifier
@@ -1342,11 +1342,11 @@ private fun MacroActionsWidgetPreviewCard(
                     .background(Color(0xFFF1F2F4))
             )
 
-            Spacer(Modifier.size(12.dp))
+            Spacer(Modifier.size(20.dp))
 
             Column(
                 modifier = Modifier.width(88.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(15.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 WidgetActionTile(
@@ -1473,22 +1473,24 @@ private fun WidgetActionTile(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(58.dp)
+            .height(60.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(Color(0xFFF7F7F8))
-            .padding(vertical = 8.dp, horizontal = 6.dp),
+            .padding(vertical = 6.dp, horizontal = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.Center
     ) {
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(32.dp)
                 .clip(CircleShape)
                 .background(Color(0xFFF1F2F4)),
             contentAlignment = Alignment.Center
         ) {
             icon()
         }
+
+        Spacer(Modifier.height(2.dp))
 
         Text(
             text = label,
@@ -1497,71 +1499,70 @@ private fun WidgetActionTile(
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = Color(0xFF111114),
                 fontWeight = FontWeight.Medium,
-                fontSize = 10.sp,
-                lineHeight = 12.sp
+                fontSize = 11.sp,
+                lineHeight = 13.sp
             )
         )
     }
 }
-
 @Composable
 private fun ScanFocusGlyph() {
     val ink = Color(0xFF111114)
 
     Box(
-        modifier = Modifier.size(14.dp)
+        modifier = Modifier.size(16.dp)
     ) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(width = 5.dp, height = 1.6.dp)
+                .size(width = 5.8.dp, height = 1.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(width = 1.6.dp, height = 5.dp)
+                .size(width = 1.8.dp, height = 5.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(width = 5.dp, height = 1.6.dp)
+                .size(width = 5.8.dp, height = 1.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(width = 1.6.dp, height = 5.dp)
+                .size(width = 1.8.dp, height = 5.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .size(width = 5.dp, height = 1.6.dp)
+                .size(width = 5.8.dp, height = 1.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .size(width = 1.6.dp, height = 5.dp)
+                .size(width = 1.8.dp, height = 5.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(width = 5.dp, height = 1.6.dp)
+                .size(width = 5.8.dp, height = 1.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(width = 1.6.dp, height = 5.dp)
+                .size(width = 1.8.dp, height = 5.8.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(4.dp)
+                .size(4.6.dp)
                 .clip(CircleShape)
                 .background(ink)
                 .align(Alignment.Center)
@@ -1574,38 +1575,38 @@ private fun BarcodeGlyph() {
     val ink = Color(0xFF111114)
 
     Row(
-        modifier = Modifier.size(width = 15.dp, height = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        modifier = Modifier.size(width = 18.dp, height = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(width = 1.5.dp, height = 9.dp)
+                .size(width = 1.7.dp, height = 10.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 12.dp)
+                .size(width = 2.2.dp, height = 14.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 1.5.dp, height = 9.dp)
+                .size(width = 1.7.dp, height = 10.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 11.dp)
+                .size(width = 2.2.dp, height = 13.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 1.5.dp, height = 9.dp)
+                .size(width = 1.7.dp, height = 10.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 12.dp)
+                .size(width = 2.2.dp, height = 14.dp)
                 .background(ink)
         )
     }
