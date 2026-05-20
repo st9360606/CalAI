@@ -12,6 +12,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -1155,61 +1156,110 @@ private fun PreferencesCard(
 @Composable
 private fun WidgetsSection() {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Widgets", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         Text(
-            "How to add?",
-            style = MaterialTheme.typography.titleMedium.copy(color = Color(0xFF111114)),
+            text = "Widgets",
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF6B7280),
+                fontSize = 24.sp,
+                lineHeight = 30.sp
+            )
+        )
+        Text(
+            text = "How to add?",
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = Color(0xFF111114),
+                fontWeight = FontWeight.Medium,
+                fontSize = 18.sp,
+                lineHeight = 24.sp
+            ),
             modifier = Modifier.clickable { /* TODO */ }
         )
     }
 
-    Spacer(Modifier.height(14.dp))
+    Spacer(Modifier.height(16.dp))
 
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        WidgetCardLeft(modifier = Modifier.weight(1f))
-        WidgetCardRight(modifier = Modifier.weight(1f))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(22.dp)
+    ) {
+        CaloriesWidgetPreviewCard()
+        MacroActionsWidgetPreviewCard()
     }
 }
 
 @Composable
-private fun WidgetCardLeft(modifier: Modifier = Modifier) {
+private fun CaloriesWidgetPreviewCard(
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(22.dp),
+        modifier = modifier.size(width = 150.dp, height = 162.dp),
+        shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(Modifier.padding(16.dp)) {
-            RingMock(value = "1429", label = "Calories left")
-            Spacer(Modifier.height(12.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp)
+                .padding(top = 10.dp, bottom = 12.dp)
+        ) {
+            WidgetCaloriesRing(
+                value = "1984",
+                label = "calories left",
+                modifier = Modifier
+                    .size(100.dp)
+                    .align(Alignment.TopCenter)
+            )
 
-            // 黑色 pill + 左側白圈加號
             Row(
                 modifier = Modifier
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .height(30.dp)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(Color(0xFF111114))
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .background(Color(0xFF111114)),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(21.dp)
                         .clip(CircleShape)
                         .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("+", color = Color(0xFF111114), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "+",
+                        color = Color(0xFF111114),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 18.sp,
+                            lineHeight = 18.sp
+                        )
+                    )
                 }
-                Spacer(Modifier.size(10.dp))
+
+                Spacer(Modifier.size(6.dp))
+
                 Text(
-                    "Log your food",
+                    text = "Log your food",
                     color = Color.White,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp
+                    )
                 )
             }
         }
@@ -1217,51 +1267,314 @@ private fun WidgetCardLeft(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun WidgetCardRight(modifier: Modifier = Modifier) {
+private fun MacroActionsWidgetPreviewCard(
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(22.dp),
+        modifier = modifier.size(width = 520.dp, height = 162.dp),
+        shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                RingMock(value = "1429", label = "Calories left")
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 14.dp, top = 16.dp, end = 14.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            WidgetCaloriesRing(
+                value = "1984",
+                label = "Calories left",
+                modifier = Modifier.size(100.dp)
+            )
+
+            Spacer(Modifier.size(8.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                WidgetMacroStatRow(
+                    iconText = "●",
+                    iconTint = Color(0xFFD95F6A),
+                    iconBackground = Color(0xFFFDF3F5),
+                    value = "121g",
+                    label = "Protein left"
+                )
+                WidgetMacroStatRow(
+                    iconText = "✦",
+                    iconTint = Color(0xFFD59A55),
+                    iconBackground = Color(0xFFFFF6EA),
+                    value = "164g",
+                    label = "Carbs left"
+                )
+                WidgetMacroStatRow(
+                    iconText = "⌁",
+                    iconTint = Color(0xFF5C9EE7),
+                    iconBackground = Color(0xFFF0F7FF),
+                    value = "42g",
+                    label = "Fats left"
+                )
             }
-            Spacer(Modifier.size(10.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                MacroMiniRow("117g", "Protein left")
-                MacroMiniRow("152g", "Carbs left")
-                MacroMiniRow("40g", "Fats left")
+
+            Spacer(Modifier.size(12.dp))
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                WidgetActionTile(
+                    label = "Scan Food",
+                    icon = { ScanFocusGlyph() }
+                )
+                WidgetActionTile(
+                    label = "Barcode",
+                    icon = { BarcodeGlyph() }
+                )
             }
         }
     }
 }
 
-/** 這裡用「假環」先把 1:1 版型做出來；後續要接你真 macro ring 直接替換即可 */
 @Composable
-private fun RingMock(value: String, label: String) {
+private fun WidgetCaloriesRing(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
-            .size(110.dp)
+        modifier = modifier
             .clip(CircleShape)
-            .background(Color(0xFFF3F4F6)),
+            .background(Color(0xFFF0F1F4)),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(value, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
-            Text(label, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF9CA3AF)))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(6.dp)
+                .clip(CircleShape)
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = Color(0xFF111114),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 26.sp,
+                        lineHeight = 27.sp
+                    )
+                )
+                Text(
+                    text = label,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF8A8F98),
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp
+                    )
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun MacroMiniRow(value: String, label: String) {
-    Column {
-        Text(value, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-        Text(label, style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF9CA3AF)))
+private fun WidgetMacroStatRow(
+    iconText: String,
+    iconTint: Color,
+    iconBackground: Color,
+    value: String,
+    label: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(iconBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = iconText,
+                color = iconTint,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp,
+                    lineHeight = 18.sp
+                )
+            )
+        }
+
+        Spacer(Modifier.size(10.dp))
+
+        Column {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = Color(0xFF111114),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    lineHeight = 13.sp
+                )
+            )
+            Text(
+                text = label,
+                maxLines = 1,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF111114),
+                    fontSize = 10.sp,
+                    lineHeight = 11.sp
+                )
+            )
+        }
     }
 }
+
+@Composable
+private fun WidgetActionTile(
+    label: String,
+    icon: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .size(width = 112.dp, height = 66.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xFFFAFAFB))
+            .padding(top = 10.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        icon()
+        Text(
+            text = label,
+            maxLines = 1,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = Color(0xFF111114),
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                lineHeight = 18.sp
+            )
+        )
+    }
+}
+
+@Composable
+private fun ScanFocusGlyph() {
+    val ink = Color(0xFF111114)
+
+    Box(
+        modifier = Modifier.size(24.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .size(width = 8.dp, height = 2.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .size(width = 2.dp, height = 8.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(width = 8.dp, height = 2.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(width = 2.dp, height = 8.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(width = 8.dp, height = 2.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(width = 2.dp, height = 8.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(width = 8.dp, height = 2.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(width = 2.dp, height = 8.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .size(7.dp)
+                .clip(CircleShape)
+                .background(ink)
+                .align(Alignment.Center)
+        )
+    }
+}
+
+@Composable
+private fun BarcodeGlyph() {
+    val ink = Color(0xFF111114)
+
+    Row(
+        modifier = Modifier.size(width = 28.dp, height = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 2.dp, height = 18.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = 22.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .size(width = 2.dp, height = 16.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .size(width = 3.dp, height = 21.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .size(width = 2.dp, height = 18.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = 22.dp)
+                .background(ink)
+        )
+        Box(
+            modifier = Modifier
+                .size(width = 2.dp, height = 16.dp)
+                .background(ink)
+        )
+    }
+}
+
 
 @Composable
 private fun SettingsListCard(content: @Composable () -> Unit) {
