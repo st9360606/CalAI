@@ -1350,6 +1350,8 @@ fun BiteCalNavHost(
                         avatarUrl = avatar,
                         profileName = nameText,
                         ageText = ageText,
+                        homeSummary = homeUi.summary,
+                        todayNutrition = homeUi.todayNutrition,
                         currentTab = HomeTab.Personal,
                         currentLanguageTag = localeController.tag,
                         onLanguageSelected = { tag ->

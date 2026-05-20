@@ -36,16 +36,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.outlined.BakeryDining
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.EggAlt
-import androidx.compose.material.icons.outlined.Opacity
-import androidx.compose.material.icons.outlined.BakeryDining
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Opacity
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PrivacyTip
@@ -81,12 +81,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -94,8 +92,11 @@ import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import com.calai.bitecal.R
+import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
+import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.CardStyles
+import com.calai.bitecal.ui.home.components.GaugeRing
 import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
@@ -108,8 +109,8 @@ import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
 import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
 import com.calai.bitecal.ui.home.ui.settings.dialog.PaymentIssueDialog
 import com.calai.bitecal.ui.landing.LanguageDialog
-import java.util.Locale
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
  * ✅ Personal => Settings（你圖上的那個）
@@ -122,6 +123,8 @@ fun SettingsScreen(
     avatarUrl: Uri?,
     profileName: String,
     ageText: String,
+    homeSummary: HomeSummary? = null,
+    todayNutrition: HomeTodayNutritionSummary = HomeTodayNutritionSummary(),
     currentTab: HomeTab = HomeTab.Personal,
     onOpenTab: (HomeTab) -> Unit,
     onBack: () -> Unit = {},
@@ -249,6 +252,8 @@ fun SettingsScreen(
             avatarUrl = avatarUrl,
             profileName = profileName,
             ageText = ageText,
+            homeSummary = homeSummary,
+            todayNutrition = todayNutrition,
             onOpenPersonalDetails = onOpenPersonalDetails,
             onOpenEditName = onOpenEditName,
             onOpenAdjustMacros = onOpenAdjustMacros,
@@ -310,6 +315,8 @@ private fun SettingsContent(
     avatarUrl: Uri?,
     profileName: String,
     ageText: String,
+    homeSummary: HomeSummary?,
+    todayNutrition: HomeTodayNutritionSummary,
     onOpenPersonalDetails: () -> Unit,
     onOpenEditName: () -> Unit,
     onOpenAdjustMacros: () -> Unit,
@@ -405,7 +412,10 @@ private fun SettingsContent(
         Spacer(Modifier.height(18.dp))
         PreferencesCard(onOpenLanguage = onOpenLanguage)
         Spacer(Modifier.height(18.dp))
-        WidgetsSection()
+        WidgetsSection(
+            summary = homeSummary,
+            todayNutrition = todayNutrition
+        )
         Spacer(Modifier.height(18.dp))
 
         SettingsListCard {
@@ -1165,7 +1175,10 @@ private fun PreferencesCard(
 }
 
 @Composable
-private fun WidgetsSection() {
+private fun WidgetsSection(
+    summary: HomeSummary?,
+    todayNutrition: HomeTodayNutritionSummary
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1202,15 +1215,31 @@ private fun WidgetsSection() {
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        CaloriesWidgetPreviewCard()
-        MacroActionsWidgetPreviewCard()
+        CaloriesWidgetPreviewCard(
+            summary = summary,
+            todayNutrition = todayNutrition
+        )
+        MacroActionsWidgetPreviewCard(
+            summary = summary,
+            todayNutrition = todayNutrition
+        )
     }
 }
 
 @Composable
 private fun CaloriesWidgetPreviewCard(
+    summary: HomeSummary?,
+    todayNutrition: HomeTodayNutritionSummary,
     modifier: Modifier = Modifier
 ) {
+    val dash = stringResource(R.string.common_dash)
+    val goalKcal = summary?.tdee?.coerceAtLeast(0)
+    val valueText = goalKcal?.toString() ?: dash
+    val progress = widgetNutritionProgress(
+        current = todayNutrition.eatenKcal,
+        goal = goalKcal
+    )
+
     Card(
         modifier = modifier
             .size(width = 148.dp, height = 155.dp)
@@ -1227,8 +1256,10 @@ private fun CaloriesWidgetPreviewCard(
                 .padding(top = 10.dp, bottom = 12.dp)
         ) {
             WidgetCaloriesRing(
-                value = "1984",
-                label = "calories left",
+                value = valueText,
+                label = stringResource(R.string.home_calories_goal_label),
+                progress = progress,
+                ringSize = 94.dp,
                 modifier = Modifier
                     .size(94.dp)
                     .align(Alignment.TopCenter)
@@ -1281,8 +1312,16 @@ private fun CaloriesWidgetPreviewCard(
 
 @Composable
 private fun MacroActionsWidgetPreviewCard(
+    summary: HomeSummary?,
+    todayNutrition: HomeTodayNutritionSummary,
     modifier: Modifier = Modifier
 ) {
+    val dash = stringResource(R.string.common_dash)
+    val goalKcal = summary?.tdee?.coerceAtLeast(0)
+    val proteinGoal = summary?.proteinG?.coerceAtLeast(0)
+    val carbsGoal = summary?.carbsG?.coerceAtLeast(0)
+    val fatsGoal = summary?.fatG?.coerceAtLeast(0)
+
     Card(
         modifier = modifier
             .size(width = 364.dp, height = 155.dp)
@@ -1305,8 +1344,13 @@ private fun MacroActionsWidgetPreviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 WidgetCaloriesRing(
-                    value = "1519",
-                    label = "Calories left",
+                    value = goalKcal?.toString() ?: dash,
+                    label = stringResource(R.string.home_calories_goal_label),
+                    progress = widgetNutritionProgress(
+                        current = todayNutrition.eatenKcal,
+                        goal = goalKcal
+                    ),
+                    ringSize = 108.dp,
                     modifier = Modifier.size(108.dp)
                 )
 
@@ -1319,22 +1363,34 @@ private fun MacroActionsWidgetPreviewCard(
                         icon = Icons.Outlined.EggAlt,
                         iconTint = Color(0xFFE56C6C),
                         iconBackground = Color(0xFFF7F5F7),
-                        value = "121g",
-                        label = "Protein left"
+                        value = proteinGoal?.let { "${it}g" } ?: dash,
+                        label = stringResource(R.string.home_protein_goal_label),
+                        progress = widgetNutritionProgress(
+                            current = todayNutrition.eatenProteinG,
+                            goal = proteinGoal
+                        )
                     )
                     WidgetMacroStatRow(
                         icon = Icons.Outlined.BakeryDining,
                         iconTint = Color(0xFFD89A62),
                         iconBackground = Color(0xFFF8F6F3),
-                        value = "164g",
-                        label = "Carbs left"
+                        value = carbsGoal?.let { "${it}g" } ?: dash,
+                        label = stringResource(R.string.home_carbs_goal_label),
+                        progress = widgetNutritionProgress(
+                            current = todayNutrition.eatenCarbsG,
+                            goal = carbsGoal
+                        )
                     )
                     WidgetMacroStatRow(
                         icon = Icons.Outlined.Opacity,
                         iconTint = Color(0xFF6C93D8),
                         iconBackground = Color(0xFFF3F6FB),
-                        value = "42g",
-                        label = "Fats left"
+                        value = fatsGoal?.let { "${it}g" } ?: dash,
+                        label = stringResource(R.string.home_fats_goal_label),
+                        progress = widgetNutritionProgress(
+                            current = todayNutrition.eatenFatsG,
+                            goal = fatsGoal
+                        )
                     )
                 }
             }
@@ -1372,21 +1428,22 @@ private fun MacroActionsWidgetPreviewCard(
 private fun WidgetCaloriesRing(
     value: String,
     label: String,
+    progress: Float,
+    ringSize: Dp,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape)
-                .border(
-                    width = 7.dp,
-                    color = Color(0xFFEAEAED),
-                    shape = CircleShape
-                )
+        GaugeRing(
+            progress = progress,
+            sizeDp = ringSize,
+            strokeDp = 7.dp,
+            trackColor = Color(0xFFEAEAED),
+            progressColor = Color(0xFF111114),
+            drawTopTick = true,
+            tickColor = Color(0xFF111114)
         )
 
         Column(
@@ -1422,24 +1479,40 @@ private fun WidgetMacroStatRow(
     iconTint: Color,
     iconBackground: Color,
     value: String,
-    label: String
+    label: String,
+    progress: Float
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            modifier = Modifier
-                .size(30.dp)
-                .clip(CircleShape)
-                .background(iconBackground),
+            modifier = Modifier.size(30.dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(18.dp)
+            GaugeRing(
+                progress = progress,
+                sizeDp = 30.dp,
+                strokeDp = 2.dp,
+                trackColor = Color(0xFFEAEAED),
+                progressColor = iconTint,
+                drawTopTick = true,
+                tickColor = iconTint,
+                tickRadiusScale = 0.55f
             )
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(iconBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
 
         Spacer(Modifier.size(10.dp))
@@ -1469,6 +1542,13 @@ private fun WidgetMacroStatRow(
             )
         }
     }
+}
+
+private fun widgetNutritionProgress(current: Int?, goal: Int?): Float {
+    val c = (current ?: 0).coerceAtLeast(0)
+    val g = (goal ?: 0).coerceAtLeast(0)
+    if (g <= 0) return 0f
+    return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
 }
 
 @Composable
