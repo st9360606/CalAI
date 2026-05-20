@@ -1311,21 +1311,21 @@ private fun MacroActionsWidgetPreviewCard(
                 ) {
                     WidgetMacroStatRow(
                         icon = Icons.Outlined.EggAlt,
-                        iconTint = Color(0xFFD96B72),
+                        iconTint = Color(0xFFE56C6C),
                         iconBackground = Color(0xFFF7F5F7),
                         value = "121g",
                         label = "Protein left"
                     )
                     WidgetMacroStatRow(
                         icon = Icons.Outlined.BakeryDining,
-                        iconTint = Color(0xFFD3A063),
+                        iconTint = Color(0xFFD89A62),
                         iconBackground = Color(0xFFF8F6F3),
                         value = "164g",
                         label = "Carbs left"
                     )
                     WidgetMacroStatRow(
                         icon = Icons.Outlined.Opacity,
-                        iconTint = Color(0xFF7D9FDA),
+                        iconTint = Color(0xFF6C93D8),
                         iconBackground = Color(0xFFF3F6FB),
                         value = "42g",
                         label = "Fats left"

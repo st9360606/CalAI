@@ -84,13 +84,13 @@ private object RingDefaults {
 // ✅ Home ring 色票：集中管理 HomeScreen 的主要圓形進度條顏色
 // 設計方向：低飽和、柔和、高級感，避免過亮的 warning / error / success 色。
 private object HomeRingPalette {
-    val Calories = Color(0xFF18181B)     // 柔和黑：比純黑更精緻
-    val Protein = Color(0xFFD96B72)      // 玫瑰紅：蛋白質，溫暖但不刺眼
-    val FiberOrCarbs = Color(0xFFD3A063) // 金棕色：目前 Home 為 Carbs；若未來改 Fiber 也適用
-    val Fats = Color(0xFF7D9FDA)         // 柔和藍：脂肪/油脂圖示更乾淨
-    val Workout = Color(0xFF6D5DF2)      // 紫藍：運動感與品牌感
-    val Steps = Color(0xFF38BDF8)        // 天空藍：步數、移動感
-    val Weight = Color(0xFF34C759)       // 青綠：體重、健康與穩定感
+    val Calories = Color(0xFF1F1A17)
+    val Protein = Color(0xFFE56C6C)      // 活力珊瑚紅：比玫瑰紅更有食慾與能量
+    val FiberOrCarbs = Color(0xFFD89A62) // 活力橘棕：溫暖、食物感，與 CalendarStrip 搭配
+    val Fats = Color(0xFF6C93D8)         // 柔和活力藍：乾淨但不灰
+    val Workout = Color(0xFFA37FE0)      // 柔和活力紫：亮度接近 Protein/Fats，不會太沉
+    val Steps = Color(0xFF6BB8DA)        // 清爽活力藍：比原本不刺眼，亮度更一致
+    val Weight = Color(0xFF5ECB7A)       // 完成綠：保留成功感，亮度與整體色票更一致
 }
 
 // ✅ Steps / Workout 圓環色票

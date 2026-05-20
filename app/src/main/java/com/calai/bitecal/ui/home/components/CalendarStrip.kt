@@ -114,7 +114,7 @@ fun CalendarStrip(
                                 val chipH = size.height
                                 val left = (size.width - chipW) / 2f
                                 drawRoundRect(
-                                    color = CalendarStripColors.SelectedBackground.copy(alpha = 0.8f),
+                                    color = CalendarStripColors.SelectedBackground.copy(alpha = 0.81f),
                                     topLeft = Offset(left, 0f),
                                     size = Size(chipW, chipH),
                                     cornerRadius = CornerRadius(

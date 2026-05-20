@@ -86,7 +86,7 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
     val divider = Color(0xFFE2E5EA)
     val trackColor  = Color(0xFFDCE1E7)
     val stripeColor = Color.White.copy(alpha = 0.35f)
-    val fillColor   = Color(0xFFFF8A33).copy(alpha = 0.85f)
+    val fillColor   = Color(0xFFFF8A33).copy(alpha = 0.81f)
 
     val unit = ui.unit
 

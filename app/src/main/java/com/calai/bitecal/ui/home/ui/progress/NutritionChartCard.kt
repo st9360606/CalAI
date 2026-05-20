@@ -69,12 +69,8 @@ private val FatsColor = Color(0xFF6C93D8)
 private val CardBg = Color.White
 private val BorderColor = Color(0xFFE7E7E7)
 private val ChipSelected = Color(0xFF111114)
-
-private val ChartGridColor = Color(0xFFBDBDBD)
-private val ChartXAxisIdleColor = Color(0xFF8A8A8E)
-private val ChartXAxisActiveColor = Color(0xFF666A73)
 @Composable
-internal fun ChartCard(
+internal fun NutritionChartCard(
     totalCaloriesText: String,
     deltaText: String,
     days: List<ProgressBarDayUi>,
@@ -381,7 +377,7 @@ private fun StackedBarChart(
 
                     Text(
                         text = tick.roundToInt().toString(),
-                        color = ChartXAxisIdleColor,
+                        color = ProgressChartAxisDefaults.IdleLabelColor,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
@@ -438,7 +434,7 @@ private fun StackedBarChart(
                         val y = plotBottom - (ratio * plotHeight)
 
                         drawLine(
-                            color = ChartGridColor,
+                            color = ProgressChartAxisDefaults.GridColor,
                             start = Offset(0f, y),
                             end = Offset(size.width, y),
                             strokeWidth = strokeWidth,
@@ -583,7 +579,10 @@ private fun StackedBarChart(
                 )
         ) {
             chartDays.forEach { day ->
-                val active = showBars && day.totalG > 0f
+                val isToday = ProgressChartAxisDefaults.isToday(
+                    dateIso = day.date,
+                    dayLabel = day.dayLabel
+                )
 
                 Box(
                     modifier = Modifier.weight(1f),
@@ -591,9 +590,17 @@ private fun StackedBarChart(
                 ) {
                     Text(
                         text = localizedDayLabel(day.dayLabel),
-                        color = if (active) ChartXAxisActiveColor else ChartXAxisIdleColor,
+                        color = if (isToday) {
+                            ProgressChartAxisDefaults.TodayLabelColor
+                        } else {
+                            ProgressChartAxisDefaults.IdleLabelColor
+                        },
                         fontSize = 13.sp,
-                        fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
+                        fontWeight = if (isToday) {
+                            ProgressChartAxisDefaults.TodayLabelWeight
+                        } else {
+                            ProgressChartAxisDefaults.IdleLabelWeight
+                        },
                         textAlign = TextAlign.Center
                     )
                 }

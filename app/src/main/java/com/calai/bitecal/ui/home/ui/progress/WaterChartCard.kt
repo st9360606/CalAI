@@ -64,27 +64,23 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 
 private val WaterBarColor = Color(0xFF6C93D8)
-private val WaterGoalLineColor = Color(0xFF49B35D)
+private val WaterGoalLineColor = Color(0xFF3C9E45)
 
 private val WaterCardBg = Color.White
 private val WaterBorderColor = Color(0xFFD9D9DB)
-private val WaterGridColor = Color(0xFFBDBDBD)
-private val WaterXAxisIdleColor = Color(0xFF8A8A8E)
-private val WaterXAxisActiveColor = Color(0xFF666A73)
-
 private val WaterTitleColor = Color(0xFF1B1B21)
 private val WaterValueColor = Color(0xFF17171C)
 private val WaterMetaColor = Color(0xFF74747A)
 
-private val WaterMetricChipBg = Color(0xFFF7F9FC)
-private val WaterMetricChipBorder = Color(0xFFE6EBF2)
-private val WaterMetricChipLabelColor = Color(0xFF7F8794)
-private val WaterMetricChipValueColor = Color(0xFF364152)
+private val WaterMetricChipBg = Color(0xFFF6F9FF)
+private val WaterMetricChipBorder = Color(0xFFDDE8FA)
+private val WaterMetricChipLabelColor = Color(0xFF6E7F9D)
+private val WaterMetricChipValueColor = Color(0xFF33415C)
 
 private val WaterFooterReachedBg = Color(0xFFEAF5E8)
 private val WaterFooterReachedText = Color(0xFF3C9E45)
-private val WaterFooterPendingBg = Color(0xFFEAF3FF)
-private val WaterFooterPendingText = Color(0xFF3274D9)
+private val WaterFooterPendingBg = Color(0xFFEEF5FF)
+private val WaterFooterPendingText = WaterBarColor
 
 private val WaterRetryBg = Color(0xFF111114)
 
@@ -565,7 +561,7 @@ private fun WaterBarChart(
 
                     Text(
                         text = tick.roundToInt().toString(),
-                        color = WaterXAxisIdleColor,
+                        color = ProgressChartAxisDefaults.IdleLabelColor,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
@@ -624,7 +620,7 @@ private fun WaterBarChart(
                         val y = plotBottom - (ratio * plotHeight)
 
                         drawLine(
-                            color = WaterGridColor,
+                            color = ProgressChartAxisDefaults.GridColor,
                             start = Offset(0f, y),
                             end = Offset(size.width, y),
                             strokeWidth = strokeWidth,
@@ -756,7 +752,10 @@ private fun WaterBarChart(
                 )
         ) {
             chartDays.forEach { day ->
-                val active = showBars && day.ml > 0
+                val isToday = ProgressChartAxisDefaults.isToday(
+                    dateIso = day.date,
+                    dayLabel = day.dayLabel
+                )
 
                 Box(
                     modifier = Modifier.weight(1f),
@@ -764,9 +763,17 @@ private fun WaterBarChart(
                 ) {
                     Text(
                         text = localizedWaterDayLabel(day.dayLabel),
-                        color = if (active) WaterXAxisActiveColor else WaterXAxisIdleColor,
+                        color = if (isToday) {
+                            ProgressChartAxisDefaults.TodayLabelColor
+                        } else {
+                            ProgressChartAxisDefaults.IdleLabelColor
+                        },
                         fontSize = 13.sp,
-                        fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
+                        fontWeight = if (isToday) {
+                            ProgressChartAxisDefaults.TodayLabelWeight
+                        } else {
+                            ProgressChartAxisDefaults.IdleLabelWeight
+                        },
                         textAlign = TextAlign.Center
                     )
                 }

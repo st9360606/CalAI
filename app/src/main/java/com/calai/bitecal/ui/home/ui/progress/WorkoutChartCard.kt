@@ -58,20 +58,17 @@ import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-private val WorkoutBarColor = Color(0xFFFF8A50)
-private val WorkoutGoalLineColor = Color(0xFF49B35D)
+private val WorkoutBarColor = Color(0xFFA37FE0)
+private val WorkoutGoalLineColor = Color(0xFF3C9E45)
 private val WorkoutCardBg = Color.White
 private val WorkoutBorderColor = Color(0xFFD9D9DB)
-private val WorkoutGridColor = Color(0xFFBDBDBD)
-private val WorkoutAxisIdleColor = Color(0xFF8A8A8E)
-private val WorkoutAxisActiveColor = Color(0xFF666A73)
 private val WorkoutTitleColor = Color(0xFF1B1B21)
 private val WorkoutValueColor = Color(0xFF17171C)
 private val WorkoutMetaColor = Color(0xFF74747A)
-private val WorkoutMetricChipBg = Color(0xFFF7F9FC)
-private val WorkoutMetricChipBorder = Color(0xFFE6EBF2)
-private val WorkoutMetricChipLabelColor = Color(0xFF7F8794)
-private val WorkoutMetricChipValueColor = Color(0xFF364152)
+private val WorkoutMetricChipBg = Color(0xFFF7F3FF)
+private val WorkoutMetricChipBorder = Color(0xFFE6DDF8)
+private val WorkoutMetricChipLabelColor = Color(0xFF7B6AA0)
+private val WorkoutMetricChipValueColor = Color(0xFF40305F)
 
 @Composable
 internal fun WorkoutChartCard(
@@ -94,8 +91,8 @@ internal fun WorkoutChartCard(
         avgText = stringResource(R.string.workout_chart_7day_avg),
         avgValue = "${chart.averageKcal} kcal",
         footerText = footerText,
-        footerBackground = if (chart.reachedGoalToday) Color(0xFFEAF5E8) else Color(0xFFFFF3E8),
-        footerTextColor = if (chart.reachedGoalToday) Color(0xFF3C9E45) else Color(0xFFD97706),
+        footerBackground = if (chart.reachedGoalToday) Color(0xFFEAF5E8) else Color(0xFFF6F0FF),
+        footerTextColor = if (chart.reachedGoalToday) Color(0xFF3C9E45) else WorkoutBarColor,
         modifier = modifier
     ) {
         WorkoutBarChart(
@@ -417,7 +414,7 @@ private fun WorkoutBarChart(
 
                     Text(
                         text = tick.roundToInt().toString(),
-                        color = WorkoutAxisIdleColor,
+                        color = ProgressChartAxisDefaults.IdleLabelColor,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
@@ -474,7 +471,7 @@ private fun WorkoutBarChart(
                         val y = plotBottom - (ratio * plotHeight)
 
                         drawLine(
-                            color = WorkoutGridColor,
+                            color = ProgressChartAxisDefaults.GridColor,
                             start = Offset(0f, y),
                             end = Offset(size.width, y),
                             strokeWidth = strokeWidth,
@@ -601,16 +598,28 @@ private fun WorkoutBarChart(
                 )
         ) {
             chartDays.forEach { day ->
-                val active = showBars && day.kcal > 0
+                val isToday = ProgressChartAxisDefaults.isToday(
+                    dateIso = day.date,
+                    dayLabel = day.dayLabel
+                )
+
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = localizedWorkoutDayLabel(day.dayLabel),
-                        color = if (active) WorkoutAxisActiveColor else WorkoutAxisIdleColor,
+                        color = if (isToday) {
+                            ProgressChartAxisDefaults.TodayLabelColor
+                        } else {
+                            ProgressChartAxisDefaults.IdleLabelColor
+                        },
                         fontSize = 13.sp,
-                        fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
+                        fontWeight = if (isToday) {
+                            ProgressChartAxisDefaults.TodayLabelWeight
+                        } else {
+                            ProgressChartAxisDefaults.IdleLabelWeight
+                        },
                         textAlign = TextAlign.Center
                     )
                 }

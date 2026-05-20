@@ -123,7 +123,7 @@ fun ProgressScreen(
 
                 else -> {
                     item {
-                        ChartCard(
+                        NutritionChartCard(
                             totalCaloriesText = ui.totalCaloriesText,
                             deltaText = ui.deltaText,
                             days = ui.days,
