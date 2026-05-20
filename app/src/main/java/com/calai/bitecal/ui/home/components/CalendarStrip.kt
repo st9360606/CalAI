@@ -28,6 +28,15 @@ import androidx.compose.ui.unit.sp
 import java.time.LocalDate
 import java.time.DayOfWeek
 
+private object CalendarStripColors {
+    val SelectedBackground = Color(0xFFFF8A33)
+    val TodayBackground = Color.Gray
+    val ActiveText = Color(0xFF111114)
+    val DisabledText = Color(0xFF9CA3AF)
+    val ActiveStroke = Color(0xFF111114)
+    val DisabledStroke = Color(0xFF9CA3AF)
+}
+
 @Composable
 fun CalendarStrip(
     days: List<LocalDate>,
@@ -95,7 +104,7 @@ fun CalendarStrip(
 
             when {
                 isSelected -> {
-                    // 選中的那天：白底填滿
+                    // 選中的那天：使用 HomeRingPalette 相容的金棕色底
                     Box(
                         modifier = baseContainer
                             .clickable { onSelect(d) }
@@ -105,7 +114,7 @@ fun CalendarStrip(
                                 val chipH = size.height
                                 val left = (size.width - chipW) / 2f
                                 drawRoundRect(
-                                    color = Color(0xFFFF8A33).copy(alpha = 0.85f),
+                                    color = CalendarStripColors.SelectedBackground.copy(alpha = 0.8f),
                                     topLeft = Offset(left, 0f),
                                     size = Size(chipW, chipH),
                                     cornerRadius = CornerRadius(
@@ -130,7 +139,7 @@ fun CalendarStrip(
                 }
 
                 isToday && (selected != today) -> {
-                    // ★ ① 今天但未被選：淺白底「填滿」
+                    // 今天但未被選：柔和灰底
                     Box(
                         modifier = baseContainer
                             .clickable(enabled = enabled) { if (enabled) onSelect(d) }
@@ -140,7 +149,7 @@ fun CalendarStrip(
                                 val chipH = size.height
                                 val left = (size.width - chipW) / 2f
                                 drawRoundRect(
-                                    color = Color.Gray.copy(alpha = 0.25f), // 淺白
+                                    color = CalendarStripColors.TodayBackground.copy(alpha = 0.25f),
                                     topLeft = Offset(left, 0f),
                                     size = Size(chipW, chipH),
                                     cornerRadius = CornerRadius(
@@ -200,14 +209,14 @@ private fun DayDot(
     useClickable: Boolean = true,
     isSelected: Boolean = false
 ) {
-    val weekdayColor = Color.Black
-    val dashedStrokeColor = Color(0xFF000000)
-    val disabledStrokeColor = Color(0xFF9CA3AF)
+    val weekdayColor = CalendarStripColors.ActiveText
+    val dashedStrokeColor = CalendarStripColors.ActiveStroke
+    val disabledStrokeColor = CalendarStripColors.DisabledStroke
 
-    val futureStrokeColor = Color(0xFF9CA3AF)
+    val futureStrokeColor = CalendarStripColors.DisabledStroke
     val futureStrokeWidthPx = 5f
 
-    val textColor = if (enabled) Color.Black else Color(0xFF9CA3AF)
+    val textColor = if (enabled) Color.Black else CalendarStripColors.DisabledText
     val alpha = if (enabled) 1f else 0.85f
 
     val dotSize = 34.dp

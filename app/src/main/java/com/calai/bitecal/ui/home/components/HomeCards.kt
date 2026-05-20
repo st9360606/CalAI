@@ -81,10 +81,22 @@ private object RingDefaults {
     val CenterDisk = 34.dp// 圓心淺灰底大小
 }
 
-// ✅ Steps / Workout 圓環色票（依你需求：Steps 淺藍、Workout 深藍）
+// ✅ Home ring 色票：集中管理 HomeScreen 的主要圓形進度條顏色
+// 設計方向：低飽和、柔和、高級感，避免過亮的 warning / error / success 色。
+private object HomeRingPalette {
+    val Calories = Color(0xFF18181B)     // 柔和黑：比純黑更精緻
+    val Protein = Color(0xFFD96B72)      // 玫瑰紅：蛋白質，溫暖但不刺眼
+    val FiberOrCarbs = Color(0xFFD3A063) // 金棕色：目前 Home 為 Carbs；若未來改 Fiber 也適用
+    val Fats = Color(0xFF7D9FDA)         // 柔和藍：脂肪/油脂圖示更乾淨
+    val Workout = Color(0xFF6D5DF2)      // 紫藍：運動感與品牌感
+    val Steps = Color(0xFF38BDF8)        // 天空藍：步數、移動感
+    val Weight = Color(0xFF34C759)       // 青綠：體重、健康與穩定感
+}
+
+// ✅ Steps / Workout 圓環色票
 private object ActivityRingColors {
-    val StepsLightBlue = Color(0xFF60A5FA)  // 淺藍
-    val WorkoutDeepBlue = Color(0xFF2563EB) // 深藍
+    val StepsLightBlue = HomeRingPalette.Steps
+    val WorkoutDeepBlue = HomeRingPalette.Workout
 }
 
 @Composable
@@ -170,9 +182,9 @@ fun CaloriesCardModern(
                     sizeDp = ringSize,
                     strokeDp = ringStroke,
                     trackColor = Color(0xFFEFF0F3),
-                    progressColor = Color(0xFF111827),
+                    progressColor = HomeRingPalette.Calories,
                     drawTopTick = true,
-                    tickColor = Color(0xFF111827)
+                    tickColor = HomeRingPalette.Calories
                 )
                 Surface(
                     color = RingColors.CenterFill,
@@ -236,7 +248,7 @@ fun MacroRowModern(
             goalLabel = stringResource(R.string.home_protein_goal_label),
             progressLabel = stringResource(R.string.home_protein_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = Color(0xFFEF4444),
+            ringColor = HomeRingPalette.Protein,
             progress = proteinProgress,
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -248,7 +260,7 @@ fun MacroRowModern(
                 Icon(
                     imageVector = Icons.Filled.EggAlt,
                     contentDescription = null,
-                    tint = Color(0xFFEF4444),
+                    tint = HomeRingPalette.Protein,
                     modifier = Modifier.size(proteinIconSize)
                 )
             },
@@ -267,7 +279,7 @@ fun MacroRowModern(
             goalLabel = stringResource(R.string.home_carbs_goal_label),
             progressLabel = stringResource(R.string.home_carbs_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = Color(0xFFF59E0B),
+            ringColor = HomeRingPalette.FiberOrCarbs,
             progress = carbsProgress,
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -279,7 +291,7 @@ fun MacroRowModern(
                 Icon(
                     imageVector = Icons.Filled.BakeryDining,
                     contentDescription = null,
-                    tint = Color(0xFFF59E0B),
+                    tint = HomeRingPalette.FiberOrCarbs,
                     modifier = Modifier.size(carbsIconSize)
                 )
             },
@@ -298,7 +310,7 @@ fun MacroRowModern(
             goalLabel = stringResource(R.string.home_fats_goal_label),
             progressLabel = stringResource(R.string.home_fats_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = Color(0xFF22C55E),
+            ringColor = HomeRingPalette.Fats,
             progress = fatsProgress,
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -310,7 +322,7 @@ fun MacroRowModern(
                 Icon(
                     imageVector = Icons.Filled.Opacity,
                     contentDescription = null,
-                    tint = Color(0xFF22C55E),
+                    tint = HomeRingPalette.Fats,
                     modifier = Modifier.size(fatsIconSize)
                 )
             },
@@ -1045,7 +1057,7 @@ fun WeightFastingRowModern(
         WeightCardNew(
             primary = weightPrimary,
             secondary = "to goal",  // "p=${(weightProgress * 100).toInt()}%",
-            ringColor = Color(0xFF06B6D4),
+            ringColor = HomeRingPalette.Weight,
             progress = weightProgress,
             modifier = Modifier
                 .weight(1f)
@@ -1141,7 +1153,7 @@ fun GreenSwitch(
 @Composable
 fun TitlePrefixTriangle(
     side: Dp = 8.dp,                 // ← 想更小/更大改這裡
-    color: Color = Color(0xFF06B6D4) // ← 品牌色/想要的顏色
+    color: Color = HomeRingPalette.Weight // ← 與 Weight 圓形條一致
 ) {
     Canvas(modifier = Modifier.size(side)) {
         val w = size.width
