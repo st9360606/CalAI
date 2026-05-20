@@ -57,29 +57,31 @@ import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 
 private val ScreenBg = Color(0xFFF5F5F5)
-private val TitleColor = Color(0xFF111827)
-private val KcalColor = Color(0xFF0F172A)
-private val MacroColor = Color(0xFF344054)
+private val TitleColor = Color(0xFF18191D)      // 深石墨黑：主資訊，高級但不死黑
+private val KcalColor = Color(0xFF2F3137)       // 中深灰黑：重點數字，穩重不鮮豔
+private val MacroColor = Color(0xFF777C86)      // 柔和灰：輔助資訊，降低視覺壓力
 private val ActionBlack = Color(0xFF0F1115)
 private val SecondaryText = Color(0xFF5D5D66)
+private val SavedFoodCloseButtonBg = Color(0xFFF1F2F4)
+private val SavedFoodCloseIconColor = Color(0xFF5B606A)
 
 private val TitleTextStyle = TextStyle(
-    fontSize = 16.sp,
-    lineHeight = 20.sp,
-    fontWeight = FontWeight.Bold,
+    fontSize = 15.sp,
+    lineHeight = 19.sp,
+    fontWeight = FontWeight.SemiBold,
     color = TitleColor
 )
 
 private val KcalTextStyle = TextStyle(
-    fontSize = 15.sp,
-    lineHeight = 19.sp,
+    fontSize = 14.sp,
+    lineHeight = 18.sp,
     fontWeight = FontWeight.SemiBold,
     color = KcalColor
 )
 
 private val MacroTextStyle = TextStyle(
     fontSize = 13.sp,
-    lineHeight = 18.sp,
+    lineHeight = 14.sp,
     fontWeight = FontWeight.Medium,
     color = MacroColor
 )
@@ -235,7 +237,7 @@ private fun SavedFoodCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(0.70f)
+            .aspectRatio(0.7f)
             .testTag("saved_food_card")
             .clickable(onClick = onOpenDetail),
         shape = RoundedCornerShape(16.dp),
@@ -249,14 +251,19 @@ private fun SavedFoodCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 8.dp)
+                    .padding(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = 12.dp,
+                        bottom = 10.dp
+                    )
             ) {
                 Box(
                     modifier = Modifier
                         .offset(x = (-2).dp, y = (-2).dp)
                         .size(30.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFE8E8ED))
+                        .background(SavedFoodCloseButtonBg)
                         .clickable(onClick = onRemove)
                         .align(Alignment.TopStart)
                         .testTag("saved_food_remove"),
@@ -265,8 +272,8 @@ private fun SavedFoodCard(
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = unsaveContentDescription,
-                        modifier = Modifier.size(16.dp),
-                        tint = Color(0xFF4A4A53)
+                        modifier = Modifier.size(14.dp),
+                        tint = SavedFoodCloseIconColor
                     )
                 }
 
@@ -298,7 +305,7 @@ private fun SavedFoodCard(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Box(
                         modifier = Modifier.height(22.dp),
@@ -312,7 +319,7 @@ private fun SavedFoodCard(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Box(
                         modifier = Modifier.height(20.dp),
@@ -334,7 +341,7 @@ private fun SavedFoodCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             MacroValue(
@@ -378,10 +385,12 @@ private fun SavedFoodCard(
                     Text(
                         text = stringResource(R.string.saved_foods_detail),
                         color = Color.White,
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
+                        lineHeight = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
-                            .padding(start = 10.dp)
+                            .padding(start = 12.dp)
+                            .offset(y = (-1).dp)
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -389,10 +398,10 @@ private fun SavedFoodCard(
                     Text(
                         text = "→",
                         color = Color.White,
-                        fontSize = 18.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .padding(end = 6.dp)
+                            .padding(end = 8.dp)
                             .offset(y = (-1).dp)
                     )
                 }
