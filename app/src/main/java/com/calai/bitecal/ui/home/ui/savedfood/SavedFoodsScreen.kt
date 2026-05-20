@@ -235,7 +235,7 @@ private fun SavedFoodCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(0.7f)
+            .aspectRatio(0.70f)
             .testTag("saved_food_card")
             .clickable(onClick = onOpenDetail),
         shape = RoundedCornerShape(16.dp),
@@ -327,14 +327,14 @@ private fun SavedFoodCard(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Box(
                         modifier = Modifier.height(20.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             MacroValue(
@@ -380,7 +380,8 @@ private fun SavedFoodCard(
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 6.dp)
+                        modifier = Modifier
+                            .padding(start = 10.dp)
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -389,7 +390,10 @@ private fun SavedFoodCard(
                         text = "→",
                         color = Color.White,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .offset(y = (-1).dp)
                     )
                 }
             }
