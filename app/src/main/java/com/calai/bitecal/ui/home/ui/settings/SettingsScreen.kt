@@ -74,6 +74,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -94,6 +95,7 @@ import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.HomeTab
+import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
@@ -1198,7 +1200,7 @@ private fun WidgetsSection() {
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         CaloriesWidgetPreviewCard()
         MacroActionsWidgetPreviewCard()
@@ -1210,10 +1212,13 @@ private fun CaloriesWidgetPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.size(width = 148.dp, height = 155.dp),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        modifier = modifier
+            .size(width = 148.dp, height = 155.dp)
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = CardStyles.Border
     ) {
         Box(
             modifier = Modifier
@@ -1233,7 +1238,7 @@ private fun CaloriesWidgetPreviewCard(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(29.dp)
+                    .height(30.dp)
                     .clip(RoundedCornerShape(999.dp))
                     .background(Color(0xFF111114)),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1241,7 +1246,7 @@ private fun CaloriesWidgetPreviewCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .offset(x = (-4).dp)
+                        .offset(x = (-6).dp)
                         .size(21.dp)
                         .clip(CircleShape)
                         .background(Color.White),
@@ -1257,8 +1262,6 @@ private fun CaloriesWidgetPreviewCard(
                         )
                     )
                 }
-
-                Spacer(Modifier.size(2.dp))
 
                 Text(
                     text = "Log your food",
@@ -1281,15 +1284,18 @@ private fun MacroActionsWidgetPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.size(width = 368.dp, height = 155.dp),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        modifier = modifier
+            .size(width = 364.dp, height = 155.dp)
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = CardStyles.Border
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 16.dp, top = 10.dp, end = 14.dp, bottom = 10.dp),
+                .padding(start = 14.dp, top = 10.dp, end = 14.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -1304,7 +1310,7 @@ private fun MacroActionsWidgetPreviewCard(
                     modifier = Modifier.size(108.dp)
                 )
 
-                Spacer(Modifier.size(12.dp))
+                Spacer(Modifier.size(10.dp))
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(15.dp)
@@ -1339,7 +1345,7 @@ private fun MacroActionsWidgetPreviewCard(
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(1.dp)
-                    .background(Color(0xFFF1F2F4))
+                    .background(Color(0xFFE9EAEE))
             )
 
             Spacer(Modifier.size(20.dp))
