@@ -21,12 +21,14 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -1279,7 +1281,7 @@ private fun MacroActionsWidgetPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.size(width = 320.dp, height = 155.dp),
+        modifier = modifier.size(width = 360.dp, height = 155.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -1287,54 +1289,65 @@ private fun MacroActionsWidgetPreviewCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 14.dp, top = 8.dp, end = 14.dp, bottom = 8.dp),
+                .padding(start = 16.dp, top = 14.dp, end = 12.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            WidgetCaloriesRing(
-                value = "1984",
-                label = "Calories left",
-                modifier = Modifier.size(94.dp)
-            )
-
-            Spacer(Modifier.size(8.dp))
-
-            Column(
-                modifier = Modifier.size(width = 104.dp, height = 122.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                WidgetMacroStatRow(
-                    icon = Icons.Outlined.EggAlt,
-                    iconTint = Color(0xFFD95F6A),
-                    iconBackground = Color(0xFFFDF3F5),
-                    value = "121g",
-                    label = "Protein left"
+                WidgetCaloriesRing(
+                    value = "1519",
+                    label = "Calories left",
+                    modifier = Modifier.size(108.dp)
                 )
-                WidgetMacroStatRow(
-                    icon = Icons.Outlined.Opacity,
-                    iconTint = Color(0xFFD59A55),
-                    iconBackground = Color(0xFFFFF6EA),
-                    value = "164g",
-                    label = "Carbs left"
-                )
-                WidgetMacroStatRow(
-                    icon = Icons.Outlined.BakeryDining,
-                    iconTint = Color(0xFF5C9EE7),
-                    iconBackground = Color(0xFFF0F7FF),
-                    value = "42g",
-                    label = "Fats left"
-                )
+
+                Spacer(Modifier.size(16.dp))
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    WidgetMacroStatRow(
+                        icon = Icons.Outlined.EggAlt,
+                        iconTint = Color(0xFFD96B72),
+                        iconBackground = Color(0xFFF7F5F7),
+                        value = "121g",
+                        label = "Protein left"
+                    )
+                    WidgetMacroStatRow(
+                        icon = Icons.Outlined.BakeryDining,
+                        iconTint = Color(0xFFD3A063),
+                        iconBackground = Color(0xFFF8F6F3),
+                        value = "164g",
+                        label = "Carbs left"
+                    )
+                    WidgetMacroStatRow(
+                        icon = Icons.Outlined.Opacity,
+                        iconTint = Color(0xFF7D9FDA),
+                        iconBackground = Color(0xFFF3F6FB),
+                        value = "42g",
+                        label = "Fats left"
+                    )
+                }
             }
 
-            Spacer(Modifier.size(4.dp))
+            Spacer(Modifier.size(12.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(1.dp)
+                    .background(Color(0xFFF1F2F4))
+            )
+
+            Spacer(Modifier.size(12.dp))
 
             Column(
-                modifier = Modifier
-                    .size(width = 82.dp, height = 139.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFFFAFAFC))
-                    .padding(horizontal = 4.dp, vertical = 5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(7.dp)
+                modifier = Modifier.width(88.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 WidgetActionTile(
                     label = "Scan Food",
@@ -1356,41 +1369,43 @@ private fun WidgetCaloriesRing(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(Color(0xFFF0F1F4)),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(6.dp)
                 .clip(CircleShape)
-                .background(Color.White),
-            contentAlignment = Alignment.Center
+                .border(
+                    width = 7.dp,
+                    color = Color(0xFFEAEAED),
+                    shape = CircleShape
+                )
+        )
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        color = Color(0xFF111114),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
-                        lineHeight = 25.sp
-                    )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = Color(0xFF111114),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    lineHeight = 26.sp
                 )
-                Text(
-                    text = label,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF8A8F98),
-                        fontSize = 9.sp,
-                        lineHeight = 10.sp
-                    )
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = label,
+                maxLines = 1,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF8D9198),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
+                    lineHeight = 12.sp
                 )
-            }
+            )
         }
     }
 }
@@ -1403,24 +1418,12 @@ private fun WidgetMacroStatRow(
     value: String,
     label: String
 ) {
-    val splitIndex = label.lastIndexOf(' ')
-    val nutrientName = if (splitIndex > 0) {
-        label.take(splitIndex)
-    } else {
-        label
-    }
-    val leftSuffix = if (splitIndex > 0) {
-        label.substring(startIndex = splitIndex)
-    } else {
-        ""
-    }
-
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(28.dp)
+                .size(30.dp)
                 .clip(CircleShape)
                 .background(iconBackground),
             contentAlignment = Alignment.Center
@@ -1429,44 +1432,33 @@ private fun WidgetMacroStatRow(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(17.dp)
+                modifier = Modifier.size(16.dp)
             )
         }
 
-        Spacer(Modifier.size(8.dp))
+        Spacer(Modifier.size(10.dp))
 
-        Column {
+        Column(
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = Color(0xFF111114),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    lineHeight = 14.sp
+                    lineHeight = 15.sp
                 )
             )
+            Spacer(Modifier.height(1.dp))
             Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        style = SpanStyle(
-                            fontWeight = FontWeight.Normal
-                        )
-                    ) {
-                        append(nutrientName)
-                    }
-                    withStyle(
-                        style = SpanStyle(
-                            fontWeight = FontWeight.Medium
-                        )
-                    ) {
-                        append(leftSuffix)
-                    }
-                },
+                text = label,
                 maxLines = 1,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color(0xFF111114),
-                    fontSize = 9.sp,
-                    lineHeight = 10.sp
+                    color = Color(0xFF2F3136),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
+                    lineHeight = 12.sp
                 )
             )
         }
@@ -1482,21 +1474,31 @@ private fun WidgetActionTile(
         modifier = Modifier
             .fillMaxWidth()
             .height(58.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .padding(top = 8.dp, bottom = 7.dp),
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xFFF7F7F8))
+            .padding(vertical = 8.dp, horizontal = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        icon()
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFF1F2F4)),
+            contentAlignment = Alignment.Center
+        ) {
+            icon()
+        }
+
         Text(
             text = label,
             maxLines = 1,
+            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = Color(0xFF111114),
                 fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
-                lineHeight = 14.sp
+                fontSize = 10.sp,
+                lineHeight = 12.sp
             )
         )
     }
@@ -1507,59 +1509,59 @@ private fun ScanFocusGlyph() {
     val ink = Color(0xFF111114)
 
     Box(
-        modifier = Modifier.size(22.dp)
+        modifier = Modifier.size(14.dp)
     ) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(width = 7.dp, height = 2.dp)
+                .size(width = 5.dp, height = 1.6.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(width = 2.dp, height = 7.dp)
+                .size(width = 1.6.dp, height = 5.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(width = 7.dp, height = 2.dp)
+                .size(width = 5.dp, height = 1.6.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(width = 2.dp, height = 7.dp)
+                .size(width = 1.6.dp, height = 5.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .size(width = 7.dp, height = 2.dp)
+                .size(width = 5.dp, height = 1.6.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .size(width = 2.dp, height = 7.dp)
+                .size(width = 1.6.dp, height = 5.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(width = 7.dp, height = 2.dp)
+                .size(width = 5.dp, height = 1.6.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(width = 2.dp, height = 7.dp)
+                .size(width = 1.6.dp, height = 5.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(6.dp)
+                .size(4.dp)
                 .clip(CircleShape)
                 .background(ink)
                 .align(Alignment.Center)
@@ -1572,43 +1574,38 @@ private fun BarcodeGlyph() {
     val ink = Color(0xFF111114)
 
     Row(
-        modifier = Modifier.size(width = 24.dp, height = 21.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = Modifier.size(width = 15.dp, height = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 14.dp)
+                .size(width = 1.5.dp, height = 9.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 3.dp, height = 19.dp)
+                .size(width = 2.dp, height = 12.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 14.dp)
+                .size(width = 1.5.dp, height = 9.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 3.dp, height = 18.dp)
+                .size(width = 2.dp, height = 11.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 14.dp)
+                .size(width = 1.5.dp, height = 9.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 3.dp, height = 19.dp)
-                .background(ink)
-        )
-        Box(
-            modifier = Modifier
-                .size(width = 2.dp, height = 14.dp)
+                .size(width = 2.dp, height = 12.dp)
                 .background(ink)
         )
     }
