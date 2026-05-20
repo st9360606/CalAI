@@ -1287,7 +1287,7 @@ private fun MacroActionsWidgetPreviewCard(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 14.dp, top = 16.dp, end = 14.dp, bottom = 16.dp),
+                .padding(start = 14.dp, top = 8.dp, end = 14.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             WidgetCaloriesRing(
@@ -1329,12 +1329,12 @@ private fun MacroActionsWidgetPreviewCard(
 
             Column(
                 modifier = Modifier
-                    .size(width = 82.dp, height = 140.dp)
+                    .size(width = 82.dp, height = 139.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color(0xFFFAFAFC))
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                    .padding(horizontal = 4.dp, vertical = 5.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(7.dp)
             ) {
                 WidgetActionTile(
                     label = "Scan Food",
@@ -1481,10 +1481,10 @@ private fun WidgetActionTile(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(54.dp)
+            .height(58.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .padding(top = 7.dp, bottom = 7.dp),
+            .padding(top = 8.dp, bottom = 7.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
@@ -1495,8 +1495,8 @@ private fun WidgetActionTile(
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = Color(0xFF111114),
                 fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
-                lineHeight = 15.sp
+                fontSize = 12.sp,
+                lineHeight = 14.sp
             )
         )
     }
@@ -1507,59 +1507,59 @@ private fun ScanFocusGlyph() {
     val ink = Color(0xFF111114)
 
     Box(
-        modifier = Modifier.size(24.dp)
+        modifier = Modifier.size(22.dp)
     ) {
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(width = 8.dp, height = 2.dp)
+                .size(width = 7.dp, height = 2.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .size(width = 2.dp, height = 8.dp)
+                .size(width = 2.dp, height = 7.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(width = 8.dp, height = 2.dp)
+                .size(width = 7.dp, height = 2.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(width = 2.dp, height = 8.dp)
+                .size(width = 2.dp, height = 7.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .size(width = 8.dp, height = 2.dp)
+                .size(width = 7.dp, height = 2.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .size(width = 2.dp, height = 8.dp)
+                .size(width = 2.dp, height = 7.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(width = 8.dp, height = 2.dp)
+                .size(width = 7.dp, height = 2.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(width = 2.dp, height = 8.dp)
+                .size(width = 2.dp, height = 7.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(7.dp)
+                .size(6.dp)
                 .clip(CircleShape)
                 .background(ink)
                 .align(Alignment.Center)
@@ -1572,43 +1572,43 @@ private fun BarcodeGlyph() {
     val ink = Color(0xFF111114)
 
     Row(
-        modifier = Modifier.size(width = 28.dp, height = 24.dp),
+        modifier = Modifier.size(width = 24.dp, height = 21.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 18.dp)
+                .size(width = 2.dp, height = 14.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 4.dp, height = 22.dp)
+                .size(width = 3.dp, height = 19.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 16.dp)
+                .size(width = 2.dp, height = 14.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 3.dp, height = 21.dp)
+                .size(width = 3.dp, height = 18.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 18.dp)
+                .size(width = 2.dp, height = 14.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 4.dp, height = 22.dp)
+                .size(width = 3.dp, height = 19.dp)
                 .background(ink)
         )
         Box(
             modifier = Modifier
-                .size(width = 2.dp, height = 16.dp)
+                .size(width = 2.dp, height = 14.dp)
                 .background(ink)
         )
     }
