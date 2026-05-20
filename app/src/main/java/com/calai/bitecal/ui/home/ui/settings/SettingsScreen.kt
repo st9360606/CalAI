@@ -37,6 +37,9 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.EggAlt
+import androidx.compose.material.icons.outlined.Opacity
+import androidx.compose.material.icons.outlined.BakeryDining
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Language
@@ -71,12 +74,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -361,7 +368,7 @@ private fun SettingsContent(
     Column(
         modifier = modifier
             .verticalScroll(scroll)
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 18.dp)
             .padding(top = 6.dp, bottom = 120.dp)
     ) {
         ProfileCard(
@@ -1189,7 +1196,7 @@ private fun WidgetsSection() {
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(22.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         CaloriesWidgetPreviewCard()
         MacroActionsWidgetPreviewCard()
@@ -1201,7 +1208,7 @@ private fun CaloriesWidgetPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.size(width = 150.dp, height = 162.dp),
+        modifier = modifier.size(width = 148.dp, height = 155.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -1216,7 +1223,7 @@ private fun CaloriesWidgetPreviewCard(
                 value = "1984",
                 label = "calories left",
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(94.dp)
                     .align(Alignment.TopCenter)
             )
 
@@ -1224,7 +1231,7 @@ private fun CaloriesWidgetPreviewCard(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(30.dp)
+                    .height(29.dp)
                     .clip(RoundedCornerShape(999.dp))
                     .background(Color(0xFF111114)),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1232,6 +1239,7 @@ private fun CaloriesWidgetPreviewCard(
             ) {
                 Box(
                     modifier = Modifier
+                        .offset(x = (-4).dp)
                         .size(21.dp)
                         .clip(CircleShape)
                         .background(Color.White),
@@ -1242,13 +1250,13 @@ private fun CaloriesWidgetPreviewCard(
                         color = Color(0xFF111114),
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Normal,
-                            fontSize = 18.sp,
-                            lineHeight = 18.sp
+                            fontSize = 19.sp,
+                            lineHeight = 19.sp
                         )
                     )
                 }
 
-                Spacer(Modifier.size(6.dp))
+                Spacer(Modifier.size(2.dp))
 
                 Text(
                     text = "Log your food",
@@ -1271,7 +1279,7 @@ private fun MacroActionsWidgetPreviewCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.size(width = 520.dp, height = 162.dp),
+        modifier = modifier.size(width = 320.dp, height = 155.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -1285,31 +1293,31 @@ private fun MacroActionsWidgetPreviewCard(
             WidgetCaloriesRing(
                 value = "1984",
                 label = "Calories left",
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(94.dp)
             )
 
             Spacer(Modifier.size(8.dp))
 
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.size(width = 104.dp, height = 122.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 WidgetMacroStatRow(
-                    iconText = "●",
+                    icon = Icons.Outlined.EggAlt,
                     iconTint = Color(0xFFD95F6A),
                     iconBackground = Color(0xFFFDF3F5),
                     value = "121g",
                     label = "Protein left"
                 )
                 WidgetMacroStatRow(
-                    iconText = "✦",
+                    icon = Icons.Outlined.Opacity,
                     iconTint = Color(0xFFD59A55),
                     iconBackground = Color(0xFFFFF6EA),
                     value = "164g",
                     label = "Carbs left"
                 )
                 WidgetMacroStatRow(
-                    iconText = "⌁",
+                    icon = Icons.Outlined.BakeryDining,
                     iconTint = Color(0xFF5C9EE7),
                     iconBackground = Color(0xFFF0F7FF),
                     value = "42g",
@@ -1317,10 +1325,16 @@ private fun MacroActionsWidgetPreviewCard(
                 )
             }
 
-            Spacer(Modifier.size(12.dp))
+            Spacer(Modifier.size(4.dp))
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .size(width = 82.dp, height = 140.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFFFAFAFC))
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 WidgetActionTile(
                     label = "Scan Food",
@@ -1362,9 +1376,9 @@ private fun WidgetCaloriesRing(
                     text = value,
                     style = MaterialTheme.typography.headlineMedium.copy(
                         color = Color(0xFF111114),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 26.sp,
-                        lineHeight = 27.sp
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        lineHeight = 25.sp
                     )
                 )
                 Text(
@@ -1372,8 +1386,8 @@ private fun WidgetCaloriesRing(
                     maxLines = 1,
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = Color(0xFF8A8F98),
-                        fontSize = 10.sp,
-                        lineHeight = 12.sp
+                        fontSize = 9.sp,
+                        lineHeight = 10.sp
                     )
                 )
             }
@@ -1383,34 +1397,43 @@ private fun WidgetCaloriesRing(
 
 @Composable
 private fun WidgetMacroStatRow(
-    iconText: String,
+    icon: ImageVector,
     iconTint: Color,
     iconBackground: Color,
     value: String,
     label: String
 ) {
+    val splitIndex = label.lastIndexOf(' ')
+    val nutrientName = if (splitIndex > 0) {
+        label.take(splitIndex)
+    } else {
+        label
+    }
+    val leftSuffix = if (splitIndex > 0) {
+        label.substring(startIndex = splitIndex)
+    } else {
+        ""
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(34.dp)
+                .size(28.dp)
                 .clip(CircleShape)
                 .background(iconBackground),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = iconText,
-                color = iconTint,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Black,
-                    fontSize = 18.sp,
-                    lineHeight = 18.sp
-                )
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(17.dp)
             )
         }
 
-        Spacer(Modifier.size(10.dp))
+        Spacer(Modifier.size(8.dp))
 
         Column {
             Text(
@@ -1418,17 +1441,32 @@ private fun WidgetMacroStatRow(
                 style = MaterialTheme.typography.titleMedium.copy(
                     color = Color(0xFF111114),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    lineHeight = 13.sp
+                    fontSize = 13.sp,
+                    lineHeight = 14.sp
                 )
             )
             Text(
-                text = label,
+                text = buildAnnotatedString {
+                    withStyle(
+                        style = SpanStyle(
+                            fontWeight = FontWeight.Normal
+                        )
+                    ) {
+                        append(nutrientName)
+                    }
+                    withStyle(
+                        style = SpanStyle(
+                            fontWeight = FontWeight.Medium
+                        )
+                    ) {
+                        append(leftSuffix)
+                    }
+                },
                 maxLines = 1,
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = Color(0xFF111114),
-                    fontSize = 10.sp,
-                    lineHeight = 11.sp
+                    fontSize = 9.sp,
+                    lineHeight = 10.sp
                 )
             )
         }
@@ -1442,10 +1480,11 @@ private fun WidgetActionTile(
 ) {
     Column(
         modifier = Modifier
-            .size(width = 112.dp, height = 66.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFFAFAFB))
-            .padding(top = 10.dp, bottom = 8.dp),
+            .fillMaxWidth()
+            .height(54.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White)
+            .padding(top = 7.dp, bottom = 7.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
@@ -1456,8 +1495,8 @@ private fun WidgetActionTile(
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = Color(0xFF111114),
                 fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                lineHeight = 18.sp
+                fontSize = 13.sp,
+                lineHeight = 15.sp
             )
         )
     }
