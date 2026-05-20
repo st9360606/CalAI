@@ -411,7 +411,7 @@ private fun SettingsContent(
 
         Spacer(Modifier.height(18.dp))
         PreferencesCard(onOpenLanguage = onOpenLanguage)
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(22.dp))
         WidgetsSection(
             summary = homeSummary,
             todayNutrition = todayNutrition
@@ -1182,32 +1182,33 @@ private fun WidgetsSection(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 2.dp),
+            .padding(horizontal = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "Widgets",
-            style = MaterialTheme.typography.headlineSmall.copy(
+            style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF6B7280),
-                fontSize = 24.sp,
-                lineHeight = 30.sp
+                color = Color(0xFF5B6472),
+                fontSize = 19.sp,
+                lineHeight = 24.sp
             )
         )
+
         Text(
             text = "How to add?",
             style = MaterialTheme.typography.titleMedium.copy(
-                color = Color(0xFF111114),
-                fontWeight = FontWeight.Medium,
-                fontSize = 18.sp,
+                color = Color(0xFF2F3137),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
                 lineHeight = 24.sp
             ),
             modifier = Modifier.clickable { /* TODO */ }
         )
     }
 
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(12.dp))
 
     Row(
         modifier = Modifier
