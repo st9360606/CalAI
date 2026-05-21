@@ -65,6 +65,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -95,6 +96,7 @@ import coil.request.ImageRequest
 import com.calai.bitecal.R
 import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
+import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.GaugeRing
@@ -139,6 +141,7 @@ fun SettingsScreen(
     premiumStatusKind: MembershipDisplayKind = MembershipDisplayKind.FREE,
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
+    onManageSubscription: () -> Unit = {},
     onFixPaymentIssue: () -> Unit = onOpenSubscription,
     onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
     onOpenSavedFoods: () -> Unit = {},
@@ -150,7 +153,7 @@ fun SettingsScreen(
     onOpenTerms: () -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
     onOpenSupportEmail: () -> Unit = {},
-    onDeleteAccount: () -> Unit = {},
+    onDeleteAccount: (subscriptionWarningAcknowledged: Boolean) -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val ctx = LocalContext.current
@@ -166,6 +169,9 @@ fun SettingsScreen(
     val latestOnOpenSubscription = rememberUpdatedState(onOpenSubscription)
     val latestOnCheckCanUseScan = rememberUpdatedState(onCheckCanUseScan)
     val latestOnLanguageSelected = rememberUpdatedState(onLanguageSelected)
+
+    val localeKey = currentLocaleKey()
+
     val effectiveLanguageTag = currentLanguageTag.ifBlank {
         ctx.resources.configuration.locales[0].toLanguageTag()
             .ifBlank { Locale.getDefault().toLanguageTag() }
@@ -247,34 +253,37 @@ fun SettingsScreen(
         },
         bottomBar = { MainBottomBar(current = currentTab, onOpenTab = onOpenTab) }
     ) { inner ->
-        SettingsContent(
-            modifier = Modifier
-                .padding(inner)
-                .fillMaxSize(),
-            avatarUrl = avatarUrl,
-            profileName = profileName,
-            ageText = ageText,
-            homeSummary = homeSummary,
-            todayNutrition = todayNutrition,
-            onOpenPersonalDetails = onOpenPersonalDetails,
-            onOpenEditName = onOpenEditName,
-            onOpenAdjustMacros = onOpenAdjustMacros,
-            onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
-            onOpenWeightHistory = onOpenWeightHistory,
-            premiumStatusKind = premiumStatusKind,
-            premiumStatusSubtitle = premiumStatusSubtitle,
-            onOpenSubscription = onOpenSubscription,
-            onFixPaymentIssue = onFixPaymentIssue,
-            onOpenReferral = onOpenReferral,
-            onOpenNotificationInbox = onOpenNotificationInbox,
-            onOpenWidgetGuide = onOpenWidgetGuide,
-            onOpenLanguage = { if (!languageSwitching) showLanguageDialog = true },
-            onOpenTerms = onOpenTerms,
-            onOpenPrivacy = onOpenPrivacy,
-            onOpenSupportEmail = onOpenSupportEmail,
-            onDeleteAccount = onDeleteAccount,
-            onLogout = onLogout
-        )
+        key(localeKey) {
+            SettingsContent(
+                modifier = Modifier
+                    .padding(inner)
+                    .fillMaxSize(),
+                avatarUrl = avatarUrl,
+                profileName = profileName,
+                ageText = ageText,
+                homeSummary = homeSummary,
+                todayNutrition = todayNutrition,
+                onOpenPersonalDetails = onOpenPersonalDetails,
+                onOpenEditName = onOpenEditName,
+                onOpenAdjustMacros = onOpenAdjustMacros,
+                onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
+                onOpenWeightHistory = onOpenWeightHistory,
+                premiumStatusKind = premiumStatusKind,
+                premiumStatusSubtitle = premiumStatusSubtitle,
+                onOpenSubscription = onOpenSubscription,
+                onManageSubscription = onManageSubscription,
+                onFixPaymentIssue = onFixPaymentIssue,
+                onOpenReferral = onOpenReferral,
+                onOpenNotificationInbox = onOpenNotificationInbox,
+                onOpenWidgetGuide = onOpenWidgetGuide,
+                onOpenLanguage = { if (!languageSwitching) showLanguageDialog = true },
+                onOpenTerms = onOpenTerms,
+                onOpenPrivacy = onOpenPrivacy,
+                onOpenSupportEmail = onOpenSupportEmail,
+                onDeleteAccount = onDeleteAccount,
+                onLogout = onLogout
+            )
+        }
     }
 
     HomeQuickActionMenu(
@@ -328,6 +337,7 @@ private fun SettingsContent(
     premiumStatusKind: MembershipDisplayKind,
     premiumStatusSubtitle: String,
     onOpenSubscription: () -> Unit,
+    onManageSubscription: () -> Unit,
     onFixPaymentIssue: () -> Unit,
     onOpenReferral: () -> Unit,
     onOpenNotificationInbox: () -> Unit,
@@ -336,7 +346,7 @@ private fun SettingsContent(
     onOpenTerms: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenSupportEmail: () -> Unit,
-    onDeleteAccount: () -> Unit,
+    onDeleteAccount: (subscriptionWarningAcknowledged: Boolean) -> Unit,
     onLogout: () -> Unit
 ) {
     val scroll = rememberScrollState()
@@ -346,28 +356,48 @@ private fun SettingsContent(
     var showPaymentIssueDialog by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
 
+// ✅ 不要讓 Dialog 內部自己抓 stringResource。
+// 先在 SettingsContent 的 locale scope 解析文字，再傳給 Dialog。
+    val localeKey = currentLocaleKey()
+    val deleteDialogTitle = stringResource(R.string.delete_account_dialog_title)
+    val deleteDialogBody = stringResource(R.string.delete_account_dialog_body)
+    val deleteDialogCancelText = stringResource(R.string.common_cancel)
+    val deleteDialogDeleteText = stringResource(R.string.common_delete)
+    val deleteDialogDeletingText = stringResource(R.string.common_deleting)
+    val deleteDialogCloseText = stringResource(R.string.common_close)
+
     // ✅ Dialog 放外層（不受 scroll 影響）
-    DeleteAccountDialog(
-        visible = showDeleteDialog,
-        deleting = deleting,
-        onDismiss = { if (!deleting) showDeleteDialog = false },
-        onCancel = { if (!deleting) showDeleteDialog = false },
-        onDelete = {
-            if (deleting) return@DeleteAccountDialog
-            // 先鎖 UI + 關 dialog（跟你截圖體感一致：按下去就收起來）
-            deleting = true
-            showDeleteDialog = false
-            scope.launch {
-                try {
-                    // ✅ 交給上層（NavHost）去做：call API + navigate landing
-                    onDeleteAccount()
-                } finally {
-                    // ✅ 無論成功失敗都解鎖（成功通常已導頁，看不到也沒差）
-                    deleting = false
+    key(localeKey) {
+        DeleteAccountDialog(
+            visible = showDeleteDialog,
+            title = deleteDialogTitle,
+            body = deleteDialogBody,
+            cancelText = deleteDialogCancelText,
+            deleteText = deleteDialogDeleteText,
+            deletingText = deleteDialogDeletingText,
+            closeContentDescription = deleteDialogCloseText,
+            deleting = deleting,
+            onDismiss = { if (!deleting) showDeleteDialog = false },
+            onCancel = { if (!deleting) showDeleteDialog = false },
+            onDelete = {
+                if (deleting) return@DeleteAccountDialog
+
+                // 先鎖 UI + 關 dialog，避免使用者連點
+                deleting = true
+                showDeleteDialog = false
+
+                scope.launch {
+                    try {
+                        // 後端目前仍收 subscriptionWarningAcknowledged 參數。
+                        // Dialog 已不顯示訂閱提示，所以這裡固定 true，避免 PREMIUM/TRIAL 用戶刪帳被後端擋下。
+                        onDeleteAccount(true)
+                    } finally {
+                        deleting = false
+                    }
                 }
             }
-        }
-    )
+        )
+    }
 
     PaymentIssueDialog(
         visible = showPaymentIssueDialog,

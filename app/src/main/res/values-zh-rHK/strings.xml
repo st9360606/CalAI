@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">BiteCal｜AI 卡路里相機：拍照算熱量、記錄飲食</string>
-    <string name="landing_title">拍下餐點，輕鬆追蹤熱量</string>
+    <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
     <string name="cta_get_started">開始使用</string>
     <string name="cta_login_prefix">已擁有帳號？</string>
     <string name="cta_login">登入</string>
@@ -238,11 +238,11 @@
     <string name="camera_need_permission">需要相機權限才能掃描</string>
 
     <!-- SettingScreen privacy policy -->
-    <string name="url_terms">https://YOUR_DOMAIN/terms</string>
-    <string name="url_privacy">https://YOUR_DOMAIN/privacy#data-deletion</string>
-    <string name="url_feature_request">https://YOUR_DOMAIN/feature-request</string>
-    <string name="support_email">support@YOUR_DOMAIN</string>
-    <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
+    <string name="url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
+    <string name="url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
+    <string name="url_feature_request">mailto:support@viraldevelopment.co?subject=Feature%20Request</string>
+    <string name="support_email">support@viraldevelopment.co</string>
+    <string name="url_support_email">mailto:support@viraldevelopment.co?subject=Support%20Request</string>
 
     <!-- foodlog error msg -->
     <string name="err_barcode_not_found_title">查無此商品</string>
@@ -576,6 +576,18 @@
     <string name="settings_feature_request">功能建議</string>
     <string name="settings_delete_account">刪除帳戶？</string>
     <string name="settings_version">版本 %1$s</string>
+
+    <string name="settings_restore_subscription">恢復訂閱</string>
+
+    <string name="common_close">關閉</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_delete">刪除</string>
+    <string name="common_deleting">刪除中...</string>
+    <string name="common_maybe_later">稍後再說</string>
+
+    <string name="delete_account_dialog_title">刪除帳號？</string>
+    <string name="delete_account_dialog_body">您確定要刪除帳號嗎？此操作將永久刪除您在 BiteCal 中的資料，包括飲食紀錄、體重紀錄與相關設定。刪除後將無法復原。</string>
+
     <string name="settings_logout">登出</string>
 
 

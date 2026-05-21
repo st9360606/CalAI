@@ -9,6 +9,7 @@ import com.calai.bitecal.data.entitlement.api.EntitlementSyncRequest
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
 import com.calai.bitecal.data.entitlement.api.PurchaseTokenPayload
 import com.calai.bitecal.data.entitlement.model.PremiumStatus
+import com.calai.bitecal.data.membership.api.MembershipApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -22,6 +23,7 @@ data class PurchaseEntitlementResult(
 class EntitlementSyncer(
     private val billing: BillingGateway,
     private val api: EntitlementApi,
+    private val membershipApi: MembershipApi,
 ) {
     suspend fun syncAfterLoginSilently() = withContext(Dispatchers.IO) {
         runCatching {
@@ -64,10 +66,19 @@ class EntitlementSyncer(
             subs.filter { !it.acknowledged }
                 .forEach { acknowledgeWithRetry(it.purchaseToken) }
 
+            refreshMembershipSummarySilently()
+
             response
         } else {
-            api.me()
+            val response = api.me()
+            refreshMembershipSummarySilently()
+            response
         }
+    }
+
+    private suspend fun refreshMembershipSummarySilently() {
+        runCatching { membershipApi.me() }
+            .onFailure { Log.w(TAG, "membership summary refresh failed: ${it.message}") }
     }
 
     suspend fun hasActivePremiumAccess(): Boolean {

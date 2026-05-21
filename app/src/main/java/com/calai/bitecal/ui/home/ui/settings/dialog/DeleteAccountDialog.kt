@@ -1,14 +1,27 @@
-// app/src/main/java/com/calai/app/ui/home/ui/settings/delete/DeleteAccountDialog.kt
 package com.calai.bitecal.ui.home.ui.settings.dialog
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +36,12 @@ import androidx.compose.ui.window.DialogProperties
 @Composable
 fun DeleteAccountDialog(
     visible: Boolean,
+    title: String,
+    body: String,
+    cancelText: String,
+    deleteText: String,
+    deletingText: String,
+    closeContentDescription: String,
     onDismiss: () -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit,
@@ -52,23 +71,20 @@ fun DeleteAccountDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    // ✅ 四邊距離框更大一點點（但總高度不變：下面 Spacer 會縮）
                     modifier = Modifier.padding(horizontal = 26.dp, vertical = 24.dp)
                 ) {
-                    // Title row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Delete Account?",
+                            text = title,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF111114),
                             modifier = Modifier.weight(1f)
                         )
 
-                        // Close (X) in light circle
                         Box(
                             modifier = Modifier
                                 .size(33.dp)
@@ -82,19 +98,18 @@ fun DeleteAccountDialog(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "close",
+                                    contentDescription = closeContentDescription,
                                     tint = Color.Black
                                 )
                             }
                         }
                     }
 
-                    // ✅ 原本 20.dp → 18.dp（抵消 padding 變大造成的高度增加）
                     Spacer(Modifier.height(18.dp))
 
                     Text(
-                        text = "Are you sure want to permanently delete\nyour account?",
-                        fontSize = 16.sp,
+                        text = body,
+                        fontSize = 15.sp,
                         lineHeight = 20.sp,
                         letterSpacing = 0.5.sp,
                         fontWeight = FontWeight.Normal,
@@ -102,7 +117,6 @@ fun DeleteAccountDialog(
                         textAlign = TextAlign.Start
                     )
 
-                    // ✅ 原本 24.dp → 22.dp（同上）
                     Spacer(Modifier.height(22.dp))
 
                     Row(
@@ -122,7 +136,11 @@ fun DeleteAccountDialog(
                                 .weight(1f)
                                 .height(47.dp)
                         ) {
-                            Text("Cancel", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = cancelText,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
 
                         Button(
@@ -137,7 +155,11 @@ fun DeleteAccountDialog(
                                 .weight(1f)
                                 .height(47.dp)
                         ) {
-                            Text("Delete", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = if (deleting) deletingText else deleteText,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }

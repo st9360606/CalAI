@@ -2,6 +2,7 @@
 package com.calai.bitecal.data.account.repo
 
 import com.calai.bitecal.data.account.api.AccountApi
+import com.calai.bitecal.data.account.api.AccountDeletionRequest
 import com.calai.bitecal.data.auth.repo.TokenStore
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import retrofit2.HttpException
@@ -16,26 +17,45 @@ class AccountRepository @Inject constructor(
 ) {
 
     /**
-     * ✅ 最小閉環（強化版）：
-     * - 正常 200 ok=true：清本機 -> success
-     * - 401/403：視為「後端已 revoke / token 不再可用」-> 仍清本機 -> success
-     * - 其他錯：回 failure（讓 UI 顯示錯誤）
+     * Account deletion must be confirmed by the backend before local auth is cleared.
+     *
+     * Do not treat 401/403 as success here. If the token is expired or invalid,
+     * the deletion request may not have been created on the server. The UI should
+     * ask the user to sign in again and retry the deletion request.
      */
-    suspend fun deleteAccount(): Result<Unit> {
+    suspend fun deleteAccount(
+        subscriptionWarningAcknowledged: Boolean = false,
+        userRequestedGooglePlayCancel: Boolean = false
+    ): Result<Unit> {
         return runCatching {
-            val res = api.requestDeletion()
+            val res = api.requestDeletion(
+                AccountDeletionRequest(
+                    subscriptionWarningAcknowledged = subscriptionWarningAcknowledged,
+                    userRequestedGooglePlayCancel = userRequestedGooglePlayCancel
+                )
+            )
             if (!res.ok) throw IllegalStateException("DELETE_ACCOUNT_FAILED")
 
             clearLocalAuth()
             Unit
         }.recoverCatching { e ->
-            // ✅ 重要：401/403 視為成功（revoke race）
             if (e is HttpException && (e.code() == 401 || e.code() == 403)) {
-                clearLocalAuth()
-                return@recoverCatching Unit
+                throw IllegalStateException("Please sign in again before deleting your account.", e)
             }
+
+            if (e is HttpException && e.code() == 409) {
+                throw IllegalStateException(
+                    "Please manage your Google Play subscription, then try deleting your account again.",
+                    e
+                )
+            }
+
             throw e
         }
+    }
+
+    suspend fun getDeletionPreview() = runCatching {
+        api.deletionPreview()
     }
 
     private suspend fun clearLocalAuth() {

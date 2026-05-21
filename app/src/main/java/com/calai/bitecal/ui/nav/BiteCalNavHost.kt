@@ -561,14 +561,14 @@ fun BiteCalNavHost(
                 onBack = { nav.safePopBackStack() },
                 onSuccess = {
                     scope.launch {
-                        // ✅ 不阻塞導頁：背景自動 sync 訂閱（無 restore 按鈕）。
-                        // uploadLocal=true 時下面會同步等待 entitlement gate，這裡不要重複打 /sync。
-                        if (!uploadLocal) {
-                            launch(Dispatchers.IO) { entitlementSyncer.syncAfterLoginSilently() }
-                        }
-                        // ★ 先印一個 flow log，確定有進來
+                        // 刪帳後重新登入時，先同步等待 Google Play restore + /membership/me，
+                        // 再判斷是否已有 server profile，避免尚未過期訂閱晚一步恢復。
                         val allowHomeAfterRejectedPaywall = onboardingPaywallRejectedOnce
                         val dest = withContext(Dispatchers.IO) {
+                            if (!uploadLocal) {
+                                runCatching { entitlementSyncer.refreshEntitlementSummary() }
+                            }
+
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
                             if (uploadLocal) {
                                 runCatching { store.setLocaleTag(currentTag) }
@@ -1457,6 +1457,9 @@ fun BiteCalNavHost(
                                 restoreState = false
                             }
                         },
+                        onManageSubscription = {
+                            openGooglePlaySubscriptionManagement(activity)
+                        },
                         onFixPaymentIssue = {
                             openGooglePlaySubscriptionManagement(activity)
                         },
@@ -1481,9 +1484,11 @@ fun BiteCalNavHost(
                         onOpenTerms = { uriHandler.openUri(termsUrl) },
                         onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
                         onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
-                        onDeleteAccount = {
+                        onDeleteAccount = { subscriptionWarningAcknowledged ->
                             scope.launch {
-                                val r = accountRepo.deleteAccount()
+                                val r = accountRepo.deleteAccount(
+                                    subscriptionWarningAcknowledged = subscriptionWarningAcknowledged
+                                )
                                 if (r.isSuccess) {
                                     nav.navigate(Routes.LANDING) {
                                         popUpTo(0) { inclusive = true }
@@ -1492,7 +1497,7 @@ fun BiteCalNavHost(
                                     }
                                 } else {
                                     backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] =
-                                        (r.exceptionOrNull()?.message ?: "Delete account failed")
+                                        (r.exceptionOrNull()?.message ?: "Delete account failed. Please sign in again and retry.")
                                 }
                             }
                         }

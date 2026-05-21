@@ -6,6 +6,7 @@ import com.calai.bitecal.data.billing.FakeBillingGateway
 import com.calai.bitecal.data.billing.PlayBillingGateway
 import com.calai.bitecal.data.entitlement.EntitlementSyncer
 import com.calai.bitecal.data.entitlement.api.EntitlementApi
+import com.calai.bitecal.data.membership.api.MembershipApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,11 +40,13 @@ object EntitlementModule {
     @Singleton
     fun provideEntitlementSyncer(
         billing: BillingGateway,
-        api: EntitlementApi
+        api: EntitlementApi,
+        membershipApi: MembershipApi
     ): EntitlementSyncer {
         return EntitlementSyncer(
             billing = billing,
-            api = api
+            api = api,
+            membershipApi = membershipApi
         )
     }
 }

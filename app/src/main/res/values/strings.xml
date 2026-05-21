@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">BiteCal: Calorie Camera</string>
-    <string name="landing_title">Snap meals. Track calories.</string>
+    <string name="landing_title">Snap a photo, know the calories.</string>
     <string name="cta_get_started">Get Started</string>
     <string name="cta_login_prefix">Already have an account ?</string>
     <string name="cta_login">Sign In</string>
@@ -239,11 +239,11 @@
     <string name="camera_need_permission">Camera permission is required to scan</string>
 
     <!-- SettingScreen privacy policy -->
-    <string name="url_terms">https://YOUR_DOMAIN/terms</string>
-    <string name="url_privacy">https://YOUR_DOMAIN/privacy#data-deletion</string>
-    <string name="url_feature_request">https://YOUR_DOMAIN/feature-request</string>
-    <string name="support_email">support@YOUR_DOMAIN</string>
-    <string name="url_support_email">mailto:support@YOUR_DOMAIN?subject=Support%20Request</string>
+    <string name="url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
+    <string name="url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
+    <string name="url_feature_request">mailto:support@viraldevelopment.co?subject=Feature%20Request</string>
+    <string name="support_email">support@viraldevelopment.co</string>
+    <string name="url_support_email">mailto:support@viraldevelopment.co?subject=Support%20Request</string>
 
     <!-- foodlog error msg -->
     <string name="err_barcode_not_found_title">Product not found</string>
@@ -578,6 +578,17 @@
     <string name="settings_feature_request">Feature Request</string>
     <string name="settings_delete_account">Delete Account?</string>
     <string name="settings_version">VERSION %1$s</string>
+
+    <string name="settings_restore_subscription">Restore subscription</string>
+    <string name="common_close">Close</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_deleting">Deleting...</string>
+    <string name="common_maybe_later">Maybe later</string>
+
+    <string name="delete_account_dialog_title">Delete account?</string>
+    <string name="delete_account_dialog_body">Are you sure you want to delete your account? This will permanently delete your BiteCal data, including food logs, weight records, and related settings. This action cannot be undone.</string>
+
     <string name="settings_logout">Logout</string>
 
 
