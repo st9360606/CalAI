@@ -143,6 +143,7 @@ fun SettingsScreen(
     onOpenSavedFoods: () -> Unit = {},
     onOpenReferral: () -> Unit = {},
     onOpenNotificationInbox: () -> Unit = {},
+    onOpenWidgetGuide: () -> Unit = {},
     currentLanguageTag: String = "",
     onLanguageSelected: (String) -> Unit = {},
     onOpenTerms: () -> Unit = {},
@@ -265,6 +266,7 @@ fun SettingsScreen(
             onFixPaymentIssue = onFixPaymentIssue,
             onOpenReferral = onOpenReferral,
             onOpenNotificationInbox = onOpenNotificationInbox,
+            onOpenWidgetGuide = onOpenWidgetGuide,
             onOpenLanguage = { if (!languageSwitching) showLanguageDialog = true },
             onOpenTerms = onOpenTerms,
             onOpenPrivacy = onOpenPrivacy,
@@ -328,6 +330,7 @@ private fun SettingsContent(
     onFixPaymentIssue: () -> Unit,
     onOpenReferral: () -> Unit,
     onOpenNotificationInbox: () -> Unit,
+    onOpenWidgetGuide: () -> Unit,
     onOpenLanguage: () -> Unit,
     onOpenTerms: () -> Unit,
     onOpenPrivacy: () -> Unit,
@@ -380,7 +383,7 @@ private fun SettingsContent(
         modifier = modifier
             .verticalScroll(scroll)
             .padding(horizontal = 18.dp)
-            .padding(top = 6.dp, bottom = 120.dp)
+            .padding(top = 6.dp, bottom = 50.dp)
     ) {
         ProfileCard(
             avatarUrl = avatarUrl,
@@ -414,7 +417,8 @@ private fun SettingsContent(
         Spacer(Modifier.height(22.dp))
         WidgetsSection(
             summary = homeSummary,
-            todayNutrition = todayNutrition
+            todayNutrition = todayNutrition,
+            onOpenWidgetGuide = onOpenWidgetGuide
         )
         Spacer(Modifier.height(18.dp))
 
@@ -443,7 +447,6 @@ private fun SettingsContent(
             style = MaterialTheme.typography.labelMedium.copy(color = Color(0xFF9CA3AF)),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 6.dp),
         )
     }
 }
@@ -1177,7 +1180,8 @@ private fun PreferencesCard(
 @Composable
 private fun WidgetsSection(
     summary: HomeSummary?,
-    todayNutrition: HomeTodayNutritionSummary
+    todayNutrition: HomeTodayNutritionSummary,
+    onOpenWidgetGuide: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -1187,7 +1191,7 @@ private fun WidgetsSection(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Widgets",
+            text = stringResource(R.string.settings_widgets_title),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF5B6472),
@@ -1197,14 +1201,14 @@ private fun WidgetsSection(
         )
 
         Text(
-            text = "How to add?",
+            text = stringResource(R.string.settings_widgets_how_to_add),
             style = MaterialTheme.typography.titleMedium.copy(
                 color = Color(0xFF2F3137),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
                 lineHeight = 24.sp
             ),
-            modifier = Modifier.clickable { /* TODO */ }
+            modifier = Modifier.clickable(onClick = onOpenWidgetGuide)
         )
     }
 
@@ -1712,7 +1716,7 @@ private fun SettingsListCard(content: @Composable () -> Unit) {
 
 @Composable
 private fun SettingsRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     onClick: () -> Unit
 ) {

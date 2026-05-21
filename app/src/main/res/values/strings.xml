@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">BiteCal: Calorie Camera</string>
-    <string name="landing_title">Snap a photo, know the calories.</string>
+    <string name="landing_title">Snap meals. Track calories.</string>
     <string name="cta_get_started">Get Started</string>
     <string name="cta_login_prefix">Already have an account ?</string>
     <string name="cta_login">Sign In</string>
@@ -580,5 +580,27 @@
     <string name="settings_delete_account">Delete Account?</string>
     <string name="settings_version">VERSION %1$s</string>
     <string name="settings_logout">Logout</string>
+
+
+    <!-- Widget Guide -->
+    <string name="settings_widgets_title">Widgets</string>
+    <string name="settings_widgets_how_to_add">How to add?</string>
+    <string name="widget_guide_title">Add widget</string>
+    <string name="widget_guide_hero_title">Add BiteCal to your Home screen</string>
+    <string name="widget_guide_hero_body">Track calories, macros, and quick actions without opening the app.</string>
+    <string name="widget_guide_steps_title">Follow these steps</string>
+    <string name="widget_guide_step_1_title">Long press the Home screen</string>
+    <string name="widget_guide_step_1_body">Press and hold an empty area on your phone Home screen until the menu appears.</string>
+    <string name="widget_guide_step_2_title">Tap Widgets</string>
+    <string name="widget_guide_step_2_body">Choose Widgets from the Home screen menu.</string>
+    <string name="widget_guide_step_3_title">Find BiteCal AI</string>
+    <string name="widget_guide_step_3_body">Scroll or search for BiteCal AI, then open the widget list.</string>
+    <string name="widget_guide_step_4_title">Drag a widget into place</string>
+    <string name="widget_guide_step_4_body">Touch and hold the widget, drag it to your preferred Home screen, then lift your finger.</string>
+    <string name="widget_guide_tip_title">Can’t find the Widgets menu?</string>
+    <string name="widget_guide_tip_body">Some phone brands and launchers use different names. Try Home settings, long-pressing the BiteCal AI app icon, or searching for Widgets in your launcher.</string>
+    <string name="widget_guide_done">Got it</string>
+    <string name="widget_guide_mock_home">Home</string>
+    <string name="widget_guide_mock_widgets">Widgets</string>
 
 </resources>

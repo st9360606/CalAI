@@ -109,6 +109,7 @@ import com.calai.bitecal.ui.home.ui.settings.premium.PremiumRewardsScreen
 import com.calai.bitecal.ui.home.ui.settings.premium.model.PremiumRewardsViewModel
 import com.calai.bitecal.ui.home.ui.settings.referral.ReferralScreen
 import com.calai.bitecal.ui.home.ui.settings.referral.model.ReferralViewModel
+import com.calai.bitecal.ui.home.ui.settings.widgetguide.WidgetGuideScreen
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
 import com.calai.bitecal.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.bitecal.ui.home.ui.weight.RecordWeightScreen
@@ -238,6 +239,7 @@ object Routes {
     const val REFERRALS = "referrals"
     const val PREMIUM_REWARDS = "premium_rewards"
     const val NOTIFICATION_INBOX = "notification_inbox"
+    const val WIDGET_GUIDE = "widget_guide"
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
@@ -1470,6 +1472,12 @@ fun BiteCalNavHost(
                                 restoreState = true
                             }
                         },
+                        onOpenWidgetGuide = {
+                            nav.navigate(Routes.WIDGET_GUIDE) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
                         onOpenTerms = { uriHandler.openUri(termsUrl) },
                         onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
                         onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
@@ -1514,6 +1522,13 @@ fun BiteCalNavHost(
                     }
                 }
             }
+        }
+
+
+        composable(Routes.WIDGET_GUIDE) {
+            WidgetGuideScreen(
+                onBack = { nav.popBackStack() }
+            )
         }
 
         composable(Routes.PERSONAL_DETAILS) { backStackEntry ->

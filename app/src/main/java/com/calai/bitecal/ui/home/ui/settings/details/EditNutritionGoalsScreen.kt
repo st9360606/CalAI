@@ -461,7 +461,7 @@ private fun BottomActionBar(
 
     val horizontalPadding = 16.dp
     val buttonGap = 12.dp
-    val buttonHeight = 46.dp
+    val buttonHeight = 55.dp
     val borderColor = Color(0xFF111114).copy(alpha = 0.45f)
 
     Surface(color = Color.Transparent) {
@@ -484,9 +484,9 @@ private fun BottomActionBar(
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .padding(start = 18.dp, end = 18.dp, bottom = 20.dp, top = 20.dp)
-                        .height(50.dp)
+                        .height(55.dp)
                 ) {
-                    Text("Auto Generate Goals", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Auto Generate Goals", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Row(
@@ -515,7 +515,7 @@ private fun BottomActionBar(
                             .weight(1f)
                             .height(buttonHeight)
                     ) {
-                        Text("Revert", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        Text("Revert", fontSize = 18.sp, fontWeight = FontWeight.Medium)
                     }
 
                     Button(
@@ -532,13 +532,13 @@ private fun BottomActionBar(
                     ) {
                         if (saving) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                                 strokeWidth = 2.dp,
                                 color = Color.White
                             )
                             Spacer(Modifier.width(10.dp))
                         }
-                        Text("Done", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                        Text("Done", fontSize = 18.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }
