@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -825,6 +826,10 @@ private fun InviteFriendsCard(
         shape = outerShape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = Color(0xFFE1E4EA)
+        ),
         modifier = Modifier
             .fillMaxWidth()
             .scale(cardScale)
@@ -1150,10 +1155,6 @@ private fun PreferencesCard(
                 Text(
                     text = stringResource(R.string.settings_appearance),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Text(
-                    text = stringResource(R.string.settings_appearance_description),
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF9CA3AF))
                 )
             }
 
@@ -1710,6 +1711,10 @@ private fun SettingsListCard(content: @Composable () -> Unit) {
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = Color(0xFFE1E4EA)
+        ),
         modifier = Modifier.fillMaxWidth()
     ) { content() }
 }
@@ -1742,9 +1747,10 @@ private fun DividerThin() {
 private fun LogoutButton(onLogout: () -> Unit) {
     OutlinedButton(
         onClick = onLogout,
-        // ✅ 想「完全沒外框」：直接 border = null 最乾淨
-        border = null,
-        // ✅ Material3：用 ButtonDefaults
+        border = BorderStroke(
+            width = 1.dp,
+            color = Color(0xFFE1E4EA)
+        ),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.White,
             contentColor = Color(0xFF111114)
@@ -1753,7 +1759,7 @@ private fun LogoutButton(onLogout: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-    ) {
+    )  {
         Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
         Spacer(Modifier.size(10.dp))
         Text(

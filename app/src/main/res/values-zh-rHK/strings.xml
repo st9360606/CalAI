@@ -568,7 +568,6 @@
 
     <string name="settings_preferences">偏好設定</string>
     <string name="settings_appearance">外觀</string>
-    <string name="settings_appearance_description">選擇淺色、深色或跟隨系統外觀</string>
     <string name="settings_appearance_light">淺色</string>
 
     <string name="settings_terms_conditions">條款及細則</string>
