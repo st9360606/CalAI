@@ -623,4 +623,5 @@
     <string name="widget_guide_mock_home">桌面</string>
     <string name="widget_guide_mock_widgets">小工具</string>
 
+    <string name="subscription_already_owned_restore_required">目前這個 Google Play 帳號已經有有效的 BiteCal 訂閱。請先將訂閱恢復到目前登入的 BiteCal 帳號，才能使用付費功能。</string>
 </resources>

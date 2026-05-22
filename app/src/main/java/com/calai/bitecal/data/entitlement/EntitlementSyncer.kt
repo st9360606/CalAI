@@ -17,7 +17,8 @@ import java.util.Locale
 data class PurchaseEntitlementResult(
     val success: Boolean,
     val response: EntitlementSyncResponse? = null,
-    val message: String? = null
+    val message: String? = null,
+    val restoreRequired: Boolean = false
 )
 
 class EntitlementSyncer(
@@ -173,6 +174,22 @@ class EntitlementSyncer(
         productId: String,
         offerTag: String? = null
     ): PurchaseEntitlementResult {
+        val existingActiveSubscriptions = runCatching {
+            withContext(Dispatchers.IO) {
+                billing.queryActiveSubscriptions()
+            }
+        }.onFailure { ex ->
+            Log.w(TAG, "pre-purchase queryActiveSubscriptions failed: ${ex.message}")
+        }.getOrDefault(emptyList())
+
+        if (existingActiveSubscriptions.isNotEmpty()) {
+            return PurchaseEntitlementResult(
+                success = false,
+                message = PURCHASE_ALREADY_OWNED_RESTORE_REQUIRED,
+                restoreRequired = true
+            )
+        }
+
         val purchaseResult = billing.launchSubscriptionPurchase(
             activity = activity,
             productId = productId,
@@ -191,6 +208,14 @@ class EntitlementSyncer(
                 PurchaseEntitlementResult(
                     success = false,
                     message = "Purchase is pending. Please wait until Google Play confirms the payment."
+                )
+            }
+
+            BillingPurchaseResult.AlreadyOwned -> {
+                PurchaseEntitlementResult(
+                    success = false,
+                    message = PURCHASE_ALREADY_OWNED_RESTORE_REQUIRED,
+                    restoreRequired = true
                 )
             }
 
@@ -220,23 +245,10 @@ class EntitlementSyncer(
                 }.getOrElse { ex ->
                     Log.w(TAG, "purchase entitlement sync failed: ${ex.message}")
 
-                    val restored = runCatching {
-                        refreshEntitlementSummary()
-                    }.onFailure { restoreEx ->
-                        Log.w(TAG, "post-purchase restore failed: ${restoreEx.message}")
-                    }.getOrNull()
-
-                    if (isOpenedEntitlement(restored)) {
-                        return PurchaseEntitlementResult(
-                            success = true,
-                            response = restored
-                        )
-                    }
-
                     return PurchaseEntitlementResult(
                         success = false,
-                        response = restored,
-                        message = "Purchase completed, but entitlement sync failed. Please retry."
+                        message = "Purchase completed, but entitlement sync failed. Please retry.",
+                        restoreRequired = true
                     )
                 }
 
@@ -304,7 +316,8 @@ class EntitlementSyncer(
         return false
     }
 
-    private companion object {
-        const val TAG = "EntitlementSyncer"
+    companion object {
+        private const val TAG = "EntitlementSyncer"
+        const val PURCHASE_ALREADY_OWNED_RESTORE_REQUIRED = "PURCHASE_ALREADY_OWNED_RESTORE_REQUIRED"
     }
 }

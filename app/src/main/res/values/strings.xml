@@ -624,4 +624,5 @@
     <string name="widget_guide_mock_home">Home</string>
     <string name="widget_guide_mock_widgets">Widgets</string>
 
+    <string name="subscription_already_owned_restore_required">Your Google Play account already has an active BiteCal subscription. Restore it to this BiteCal account before using premium features.</string>
 </resources>

@@ -67,6 +67,12 @@ class FakeBillingGateway(
 
         delay(500)
 
+        val existingToken = prefs.getString(KEY_PURCHASE_TOKEN, null)
+        if (!existingToken.isNullOrBlank()) {
+            Log.d(TAG, "FAKE purchase already owned productId=$productId")
+            return BillingPurchaseResult.AlreadyOwned
+        }
+
         val phase =
             if (offerTag == BiteCalBillingProducts.OfferTags.ONBOARD_TRIAL_DISCOUNT_YEARLY) {
                 "trial"

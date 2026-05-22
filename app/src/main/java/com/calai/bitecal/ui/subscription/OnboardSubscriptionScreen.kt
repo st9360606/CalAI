@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.draw.clip
@@ -207,7 +208,15 @@ fun OnboardSubscriptionScreen(
             }
         }
 
-        if (!ui.error.isNullOrBlank()) {
+        val errorText = when (ui.errorKind) {
+            SubscriptionErrorKind.AlreadyOwnedRestoreRequired -> {
+                stringResource(R.string.subscription_already_owned_restore_required)
+            }
+
+            null -> ui.error
+        }
+
+        if (!errorText.isNullOrBlank()) {
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -221,7 +230,7 @@ fun OnboardSubscriptionScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = ui.error!!,
+                    text = errorText,
                     color = Color(0xFFB91C1C),
                     fontSize = 13.sp,
                     lineHeight = 17.sp,
@@ -243,7 +252,7 @@ fun OnboardSubscriptionScreen(
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            text = "Restore purchase",
+                            text = stringResource(R.string.settings_restore_subscription),
                             fontSize = 13.sp,
                             lineHeight = 16.sp,
                             fontWeight = FontWeight.Bold

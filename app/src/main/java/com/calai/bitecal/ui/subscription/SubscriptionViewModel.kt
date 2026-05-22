@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.billing.BillingGateway
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.EntitlementSyncer
+import com.calai.bitecal.data.entitlement.EntitlementSyncer.Companion.PURCHASE_ALREADY_OWNED_RESTORE_REQUIRED
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
 import com.calai.bitecal.data.membership.repo.MembershipRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,10 +17,15 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 
+enum class SubscriptionErrorKind {
+    AlreadyOwnedRestoreRequired
+}
+
 data class SubscriptionUiState(
     val selectedProductId: String = BiteCalBillingProducts.MONTHLY,
     val purchasing: Boolean = false,
     val error: String? = null,
+    val errorKind: SubscriptionErrorKind? = null,
     val canRestorePurchase: Boolean = false,
     val trialEligible: Boolean = false,
     val trialEligibilityLoaded: Boolean = false,
@@ -55,7 +61,8 @@ class SubscriptionViewModel @Inject constructor(
                     it.copy(
                         trialEligible = summary.trialEligible,
                         trialEligibilityLoaded = true,
-                        error = null
+                        error = null,
+                        errorKind = null
                     )
                 }
             }.onFailure { ex ->
@@ -63,7 +70,8 @@ class SubscriptionViewModel @Inject constructor(
                     it.copy(
                         trialEligible = false,
                         trialEligibilityLoaded = false,
-                        error = ex.message ?: "Unable to check trial eligibility. Please try again."
+                        error = ex.message ?: "Unable to check trial eligibility. Please try again.",
+                        errorKind = null
                     )
                 }
             }
@@ -115,6 +123,7 @@ class SubscriptionViewModel @Inject constructor(
             it.copy(
                 selectedProductId = productId,
                 error = null,
+                errorKind = null,
                 canRestorePurchase = false
             )
         }
@@ -150,6 +159,7 @@ class SubscriptionViewModel @Inject constructor(
                     selectedProductId = productId,
                     purchasing = true,
                     error = null,
+                    errorKind = null,
                     canRestorePurchase = false
                 )
             }
@@ -165,6 +175,7 @@ class SubscriptionViewModel @Inject constructor(
                     it.copy(
                         purchasing = false,
                         error = null,
+                        errorKind = null,
                         canRestorePurchase = false,
                         trialEligible = result.response.trialEligible,
                         trialEligibilityLoaded = true
@@ -179,6 +190,7 @@ class SubscriptionViewModel @Inject constructor(
                     it.copy(
                         purchasing = false,
                         error = null,
+                        errorKind = null,
                         canRestorePurchase = false
                     )
                 }
@@ -186,11 +198,19 @@ class SubscriptionViewModel @Inject constructor(
                 return@launch
             }
 
+            val shouldShowRestore = result.restoreRequired || isPostPurchaseSyncFailure(result.message)
+            val errorKind = if (result.restoreRequired || isAlreadyOwnedRestoreRequiredMessage(result.message)) {
+                SubscriptionErrorKind.AlreadyOwnedRestoreRequired
+            } else {
+                null
+            }
+
             _ui.update {
                 it.copy(
                     purchasing = false,
-                    error = result.message ?: "Purchase failed",
-                    canRestorePurchase = isPostPurchaseSyncFailure(result.message),
+                    error = if (errorKind == null) result.message ?: "Purchase failed" else null,
+                    errorKind = errorKind,
+                    canRestorePurchase = shouldShowRestore,
                     trialEligible = result.response?.trialEligible ?: it.trialEligible,
                     trialEligibilityLoaded = if (result.response != null) true else it.trialEligibilityLoaded
                 )
@@ -206,6 +226,7 @@ class SubscriptionViewModel @Inject constructor(
                 it.copy(
                     purchasing = true,
                     error = null,
+                    errorKind = null,
                     canRestorePurchase = false
                 )
             }
@@ -217,6 +238,7 @@ class SubscriptionViewModel @Inject constructor(
                     it.copy(
                         purchasing = false,
                         error = ex.message ?: "Could not restore purchase. Please try again.",
+                        errorKind = null,
                         canRestorePurchase = true
                     )
                 }
@@ -226,6 +248,7 @@ class SubscriptionViewModel @Inject constructor(
             _ui.update {
                 it.copy(
                     purchasing = false,
+                    errorKind = null,
                     trialEligible = response.trialEligible,
                     trialEligibilityLoaded = true
                 )
@@ -235,6 +258,7 @@ class SubscriptionViewModel @Inject constructor(
                 _ui.update {
                     it.copy(
                         error = null,
+                        errorKind = null,
                         canRestorePurchase = false
                     )
                 }
@@ -243,6 +267,7 @@ class SubscriptionViewModel @Inject constructor(
                 _ui.update {
                     it.copy(
                         error = "No active purchase found.",
+                        errorKind = null,
                         canRestorePurchase = true
                     )
                 }
@@ -257,6 +282,10 @@ class SubscriptionViewModel @Inject constructor(
                 (premiumStatus == "PREMIUM" || premiumStatus == "TRIAL") &&
                 !response.entitlementType.isNullOrBlank() &&
                 response.currentPremiumUntil != null
+    }
+
+    private fun isAlreadyOwnedRestoreRequiredMessage(message: String?): Boolean {
+        return message == PURCHASE_ALREADY_OWNED_RESTORE_REQUIRED
     }
 
     private fun isPostPurchaseSyncFailure(message: String?): Boolean {

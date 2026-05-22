@@ -160,6 +160,10 @@ class PlayBillingGateway(
         if (launchResult.responseCode != BillingClient.BillingResponseCode.OK) {
             pendingPurchaseResult.compareAndSet(deferred, null)
 
+            if (launchResult.responseCode == BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED) {
+                return BillingPurchaseResult.AlreadyOwned
+            }
+
             return BillingPurchaseResult.Error(
                 "Failed to launch billing flow. code=${launchResult.responseCode}, msg=${launchResult.debugMessage}"
             )
@@ -361,6 +365,10 @@ class PlayBillingGateway(
 
             BillingClient.BillingResponseCode.USER_CANCELED -> {
                 deferred.complete(BillingPurchaseResult.Cancelled)
+            }
+
+            BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
+                deferred.complete(BillingPurchaseResult.AlreadyOwned)
             }
 
             else -> {

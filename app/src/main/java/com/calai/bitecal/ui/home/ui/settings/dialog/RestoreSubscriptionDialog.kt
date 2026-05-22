@@ -9,6 +9,7 @@
     import androidx.compose.foundation.layout.Spacer
     import androidx.compose.foundation.layout.fillMaxWidth
     import androidx.compose.foundation.layout.height
+    import androidx.compose.foundation.layout.heightIn
     import androidx.compose.foundation.layout.padding
     import androidx.compose.foundation.layout.size
     import androidx.compose.foundation.shape.CircleShape
@@ -166,41 +167,22 @@
                                 )
                             }
                         } else {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                OutlinedButton(
-                                    onClick = { if (!isRestoring) onMaybeLater() },
-                                    enabled = !isRestoring,
-                                    shape = RoundedCornerShape(999.dp),
-                                    border = BorderStroke(0.8.dp, Color(0xFF24252A)),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = Color.White,
-                                        contentColor = Color(0xFF111114)
-                                    ),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(47.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.common_maybe_later),
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-
                                 Button(
                                     onClick = { if (!isRestoring) onRestore() },
                                     enabled = !isRestoring,
                                     shape = RoundedCornerShape(999.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFF111114),
-                                        contentColor = Color.White
+                                        contentColor = Color.White,
+                                        disabledContainerColor = Color(0xFF111114).copy(alpha = 0.56f),
+                                        disabledContentColor = Color.White.copy(alpha = 0.86f)
                                     ),
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .height(47.dp)
+                                        .fillMaxWidth()
+                                        .heightIn(min = 50.dp)
                                 ) {
                                     Text(
                                         text = if (isRestoring) {
@@ -209,7 +191,37 @@
                                             stringResource(R.string.settings_restore_subscription)
                                         },
                                         fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold
+                                        lineHeight = 19.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2
+                                    )
+                                }
+
+                                Spacer(Modifier.height(10.dp))
+
+                                OutlinedButton(
+                                    onClick = { if (!isRestoring) onMaybeLater() },
+                                    enabled = !isRestoring,
+                                    shape = RoundedCornerShape(999.dp),
+                                    border = BorderStroke(0.8.dp, Color(0xFF24252A)),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = Color.White,
+                                        contentColor = Color(0xFF111114),
+                                        disabledContainerColor = Color.White,
+                                        disabledContentColor = Color(0xFF111114).copy(alpha = 0.45f)
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 50.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.common_maybe_later),
+                                        fontSize = 15.sp,
+                                        lineHeight = 18.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2
                                     )
                                 }
                             }
