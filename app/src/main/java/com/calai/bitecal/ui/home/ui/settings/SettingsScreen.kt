@@ -37,6 +37,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.BakeryDining
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Edit
@@ -50,6 +51,7 @@ import androidx.compose.material.icons.outlined.Opacity
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PrivacyTip
+import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Widgets
@@ -111,6 +113,8 @@ import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettin
 import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
 import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
 import com.calai.bitecal.ui.home.ui.settings.dialog.PaymentIssueDialog
+import com.calai.bitecal.ui.home.ui.settings.dialog.RestoreSubscriptionDialog
+import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionUiState
 import com.calai.bitecal.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -153,6 +157,11 @@ fun SettingsScreen(
     onOpenTerms: () -> Unit = {},
     onOpenPrivacy: () -> Unit = {},
     onOpenSupportEmail: () -> Unit = {},
+    restoreSubscriptionUiState: RestoreSubscriptionUiState = RestoreSubscriptionUiState(),
+    onOpenRestoreSubscription: () -> Unit = {},
+    onRestoreSubscription: () -> Unit = {},
+    onDismissRestoreSubscription: () -> Unit = {},
+    onMaybeLaterRestoreSubscription: () -> Unit = {},
     onDeleteAccount: (subscriptionWarningAcknowledged: Boolean) -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
@@ -280,6 +289,11 @@ fun SettingsScreen(
                 onOpenTerms = onOpenTerms,
                 onOpenPrivacy = onOpenPrivacy,
                 onOpenSupportEmail = onOpenSupportEmail,
+                restoreSubscriptionUiState = restoreSubscriptionUiState,
+                onOpenRestoreSubscription = onOpenRestoreSubscription,
+                onRestoreSubscription = onRestoreSubscription,
+                onDismissRestoreSubscription = onDismissRestoreSubscription,
+                onMaybeLaterRestoreSubscription = onMaybeLaterRestoreSubscription,
                 onDeleteAccount = onDeleteAccount,
                 onLogout = onLogout
             )
@@ -346,6 +360,11 @@ private fun SettingsContent(
     onOpenTerms: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenSupportEmail: () -> Unit,
+    restoreSubscriptionUiState: RestoreSubscriptionUiState,
+    onOpenRestoreSubscription: () -> Unit,
+    onRestoreSubscription: () -> Unit,
+    onDismissRestoreSubscription: () -> Unit,
+    onMaybeLaterRestoreSubscription: () -> Unit,
     onDeleteAccount: (subscriptionWarningAcknowledged: Boolean) -> Unit,
     onLogout: () -> Unit
 ) {
@@ -410,6 +429,13 @@ private fun SettingsContent(
         }
     )
 
+    RestoreSubscriptionDialog(
+        uiState = restoreSubscriptionUiState,
+        onDismiss = onDismissRestoreSubscription,
+        onMaybeLater = onMaybeLaterRestoreSubscription,
+        onRestore = onRestoreSubscription
+    )
+
     Column(
         modifier = modifier
             .verticalScroll(scroll)
@@ -451,14 +477,32 @@ private fun SettingsContent(
             todayNutrition = todayNutrition,
             onOpenWidgetGuide = onOpenWidgetGuide
         )
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(28.dp))
 
         SettingsListCard {
-            SettingsRow(icon = Icons.Outlined.Description, title = stringResource(R.string.settings_terms_conditions), onClick = onOpenTerms)
+            SettingsRow(
+                icon = Icons.Outlined.Description,
+                title = stringResource(R.string.settings_terms_conditions),
+                onClick = onOpenTerms
+            )
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.PrivacyTip, title = stringResource(R.string.settings_privacy_policy), onClick = onOpenPrivacy)
+            SettingsRow(
+                icon = Icons.Outlined.PrivacyTip,
+                title = stringResource(R.string.settings_privacy_policy),
+                onClick = onOpenPrivacy
+            )
             DividerThin()
-            SettingsRow(icon = Icons.Outlined.Email, title = stringResource(R.string.settings_support_email), onClick = onOpenSupportEmail)
+            SettingsRow(
+                icon = Icons.Outlined.Email,
+                title = stringResource(R.string.settings_support_email),
+                onClick = onOpenSupportEmail
+            )
+            DividerThin()
+            SettingsRow(
+                icon = Icons.Outlined.Restore,
+                title = stringResource(R.string.settings_restore_subscription),
+                onClick = onOpenRestoreSubscription
+            )
             DividerThin()
             SettingsRow(
                 icon = Icons.Outlined.Person,
@@ -515,6 +559,10 @@ private fun ProfileCard(
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = Color(0xFFE1E4EA)
+        ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(

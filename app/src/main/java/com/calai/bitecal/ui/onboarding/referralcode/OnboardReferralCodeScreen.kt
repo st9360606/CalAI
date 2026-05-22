@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -100,7 +101,7 @@ fun OnboardReferralCodeScreen(
                     .fillMaxWidth()
                     .imePadding()
                     .navigationBarsPadding()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 40.dp),
+                    .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Button(
@@ -111,22 +112,25 @@ fun OnboardReferralCodeScreen(
                         .height(68.dp),
                     shape = RoundedCornerShape(999.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF111114),
+                        containerColor = Color.Black,
                         contentColor = Color.White,
-                        disabledContainerColor = Color(0xFF111114).copy(alpha = 0.45f),
+                        disabledContainerColor = Color.Black,
                         disabledContentColor = Color.White,
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
                 ) {
                     Text(
                         text = stringResource(R.string.continue_text),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Medium,
-                            letterSpacing = 0.2.sp,
-                        ),
+                        color = Color.White,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                     )
                 }
+
+                Spacer(Modifier.height(14.dp))
+
+                Spacer(Modifier.height(17.dp))
             }
         }
     ) { inner ->

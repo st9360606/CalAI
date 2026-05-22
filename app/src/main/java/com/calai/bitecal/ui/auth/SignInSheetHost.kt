@@ -63,9 +63,9 @@ fun SignInSheetHost(
     // ★ 登入後導頁：若帶 uploadLocalOnLogin=true，無論 exists 與否都先 upsert 本機資料
     suspend fun afterLoginNavigateByServerProfile() = withContext(Dispatchers.IO) {
         if (!uploadLocalOnLogin) {
-            // 刪帳後重新登入時，先讓 Google Play active purchase token 回後端 /sync，
-            // 再判斷使用者要進 HOME 或重新跑 Onboarding，避免付費權益晚一步恢復。
-            runCatching { entitlementSyncer.refreshEntitlementSummary() }
+            // 刪帳後重新登入時，只刷新後端既有權益摘要。
+            // Google Play active purchase token 必須等使用者按 Restore Subscription 後才送 /sync。
+            runCatching { entitlementSyncer.refreshServerEntitlementSummaryOnly() }
         }
 
         val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)

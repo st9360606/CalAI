@@ -1,6 +1,7 @@
 package com.calai.bitecal.di
 
 import android.app.Application
+import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.data.billing.BillingGateway
 import com.calai.bitecal.data.billing.FakeBillingGateway
 import com.calai.bitecal.data.billing.PlayBillingGateway
@@ -12,7 +13,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-
 @Module
 @InstallIn(SingletonComponent::class)
 object EntitlementModule {
@@ -25,12 +25,15 @@ object EntitlementModule {
         val packageName = app.packageName
 
         val useFakeBilling =
-            packageName.endsWith(".dev") ||
-                    packageName.endsWith(".devwifi") ||
-                    packageName.endsWith(".devusb")
+            BuildConfig.DEBUG &&
+                    (
+                            packageName.endsWith(".dev") ||
+                                    packageName.endsWith(".devwifi") ||
+                                    packageName.endsWith(".devusb")
+                            )
 
         return if (useFakeBilling) {
-            FakeBillingGateway()
+            FakeBillingGateway(app)
         } else {
             PlayBillingGateway(app)
         }

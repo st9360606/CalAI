@@ -27,20 +27,84 @@ class EntitlementSyncer(
 ) {
     suspend fun syncAfterLoginSilently() = withContext(Dispatchers.IO) {
         runCatching {
-            refreshEntitlementSummary()
+            refreshServerEntitlementSummaryOnly()
         }.onFailure {
             Log.w(TAG, "syncAfterLoginSilently failed: ${it.message}")
         }
         Unit
     }
 
+    suspend fun hasActiveSubscriptionOnDevice(): Boolean = withContext(Dispatchers.IO) {
+        runCatching { billing.queryActiveSubscriptions().isNotEmpty() }
+            .onFailure { Log.w(TAG, "hasActiveSubscriptionOnDevice failed: ${it.message}") }
+            .getOrDefault(false)
+    }
+
+    suspend fun restoreSubscription(): RestoreSubscriptionResult = withContext(Dispatchers.IO) {
+        val subs = runCatching { billing.queryActiveSubscriptions() }
+            .onFailure { Log.w(TAG, "restore queryActiveSubscriptions failed: ${it.message}") }
+            .getOrElse { return@withContext RestoreSubscriptionResult.Failed(it.message) }
+
+        if (subs.isEmpty()) {
+            refreshMembershipSummarySilently()
+            return@withContext RestoreSubscriptionResult.NoActivePurchase
+        }
+
+        val payload = subs.map {
+            PurchaseTokenPayload(
+                productId = it.productId,
+                purchaseToken = it.purchaseToken
+            )
+        }
+
+        val syncResponse = runCatching {
+            api.sync(EntitlementSyncRequest(purchases = payload))
+        }.getOrElse { ex ->
+            Log.w(TAG, "restore entitlement sync failed: ${ex.message}")
+            val message = ex.message.orEmpty()
+            return@withContext if (
+                message.contains("PURCHASE_TOKEN_ALREADY_BOUND", ignoreCase = true) ||
+                message.contains("409")
+            ) {
+                RestoreSubscriptionResult.BoundToAnotherAccount
+            } else {
+                RestoreSubscriptionResult.Failed(ex.message)
+            }
+        }
+
+        subs.filter { !it.acknowledged }
+            .forEach { acknowledgeWithRetry(it.purchaseToken) }
+
+        val summary = runCatching { membershipApi.me() }
+            .onFailure { Log.w(TAG, "restore membership refresh failed: ${it.message}") }
+            .getOrElse { return@withContext RestoreSubscriptionResult.Failed(it.message) }
+
+        val summaryStatus = PremiumStatus.from(summary.premiumStatus)
+        if (summaryStatus == PremiumStatus.PREMIUM || summaryStatus == PremiumStatus.TRIAL) {
+            return@withContext RestoreSubscriptionResult.Restored(summary)
+        }
+
+        val syncStatus = PremiumStatus.from(syncResponse.premiumStatus)
+        if (syncStatus == PremiumStatus.PREMIUM || syncStatus == PremiumStatus.TRIAL) {
+            return@withContext RestoreSubscriptionResult.Failed("Membership refresh did not reflect restored entitlement.")
+        }
+
+        RestoreSubscriptionResult.NoActivePurchase
+    }
+
+
+    suspend fun refreshServerEntitlementSummaryOnly(): EntitlementSyncResponse = withContext(Dispatchers.IO) {
+        val response = api.me()
+        refreshMembershipSummarySilently()
+        response
+    }
+
     /**
-     * 登入/Onboarding 完成後用來判斷是否應該略過 paywall。
+     * Explicit purchase/restore path.
      *
-     * 順序：
-     * 1. 先查 Play Billing 本機 active subscriptions。
-     * 2. 若有 active purchase token，送後端 /sync，避免後端 entitlement 狀態過期或尚未建立。
-     * 3. 若本機沒有 active purchase，仍查 /me，支援後端已存在的有效權益。
+     * This method may call Google Play queryPurchasesAsync() and /entitlements/sync, so it must
+     * not be used by passive premium gates. Account-deletion restore must only happen after the
+     * user explicitly taps a restore action.
      */
     suspend fun refreshEntitlementSummary(): EntitlementSyncResponse = withContext(Dispatchers.IO) {
         val subs = runCatching { billing.queryActiveSubscriptions() }
@@ -81,16 +145,27 @@ class EntitlementSyncer(
             .onFailure { Log.w(TAG, "membership summary refresh failed: ${it.message}") }
     }
 
-    suspend fun hasActivePremiumAccess(): Boolean {
+
+    suspend fun hasServerPremiumAccess(): Boolean {
         return runCatching {
-            val response = refreshEntitlementSummary()
+            val response = refreshServerEntitlementSummaryOnly()
             response.status.equals("ACTIVE", ignoreCase = true) &&
                     PremiumStatus.from(response.premiumStatus).let {
                         it == PremiumStatus.TRIAL || it == PremiumStatus.PREMIUM
                     }
         }.onFailure {
-            Log.w(TAG, "hasActivePremiumAccess failed: ${it.message}")
+            Log.w(TAG, "hasServerPremiumAccess failed: ${it.message}")
         }.getOrDefault(false)
+    }
+
+    /**
+     * Checks whether the current BiteCal account already has server-side Premium/Trial access.
+     *
+     * Important: this method must not call Google Play queryPurchasesAsync() or /entitlements/sync.
+     * Account-deletion restore must only happen after the user explicitly taps Restore Subscription.
+     */
+    suspend fun hasActivePremiumAccess(): Boolean {
+        return hasServerPremiumAccess()
     }
 
     suspend fun purchaseSubscriptionAndSync(

@@ -83,6 +83,7 @@ import com.calai.bitecal.ui.home.ui.notifications.NotificationInboxViewModel
 import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
+import com.calai.bitecal.ui.home.ui.settings.dialog.RestoreSubscriptionDialog
 import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
 import com.calai.bitecal.ui.home.ui.settings.details.EditAgeScreen
 import com.calai.bitecal.ui.home.ui.settings.details.EditDailyStepGoalScreen
@@ -105,6 +106,7 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewMod
 import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
 import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
 import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
+import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionViewModel
 import com.calai.bitecal.ui.home.ui.settings.premium.PremiumRewardsScreen
 import com.calai.bitecal.ui.home.ui.settings.premium.model.PremiumRewardsViewModel
 import com.calai.bitecal.ui.home.ui.settings.referral.ReferralScreen
@@ -566,7 +568,7 @@ fun BiteCalNavHost(
                         val allowHomeAfterRejectedPaywall = onboardingPaywallRejectedOnce
                         val dest = withContext(Dispatchers.IO) {
                             if (!uploadLocal) {
-                                runCatching { entitlementSyncer.refreshEntitlementSummary() }
+                                runCatching { entitlementSyncer.refreshServerEntitlementSummaryOnly() }
                             }
 
                             val exists = runCatching { profileRepo.existsOnServer() }.getOrDefault(false)
@@ -952,6 +954,12 @@ fun BiteCalNavHost(
             )
             val membershipUi by membershipVm.ui.collectAsState()
 
+            val restoreSubscriptionVm: RestoreSubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val restoreSubscriptionUi by restoreSubscriptionVm.ui.collectAsState()
+
             val membershipRefreshTickFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<Long>(
                     Routes.MEMBERSHIP_REFRESH_TICK,
@@ -985,6 +993,19 @@ fun BiteCalNavHost(
                 if (isSignedIn == true) {
                     vm.refreshAfterLogin()
                     membershipVm.refresh()
+                }
+            }
+
+            LaunchedEffect(
+                isSignedIn,
+                membershipUi.loading,
+                membershipUi.premiumStatus
+            ) {
+                if (isSignedIn == true) {
+                    restoreSubscriptionVm.checkCandidateAfterMembershipLoaded(
+                        premiumStatus = membershipUi.premiumStatus,
+                        membershipLoading = membershipUi.loading
+                    )
                 }
             }
 
@@ -1082,6 +1103,17 @@ fun BiteCalNavHost(
                         backStackEntry.savedStateHandle[Routes.OPEN_WORKOUT_SHEET_TICK] =
                             WorkoutSheetOpenRequest.ConsumedTick
                     },
+                )
+
+                RestoreSubscriptionDialog(
+                    uiState = restoreSubscriptionUi,
+                    onDismiss = restoreSubscriptionVm::closeDialog,
+                    onMaybeLater = restoreSubscriptionVm::dismissForSession,
+                    onRestore = {
+                        restoreSubscriptionVm.restoreSubscription(
+                            onRestored = { membershipVm.refresh() }
+                        )
+                    }
                 )
 
                 when {
@@ -1335,6 +1367,12 @@ fun BiteCalNavHost(
 
             val membershipUi by membershipVm.ui.collectAsState()
 
+            val restoreSubscriptionVm: RestoreSubscriptionViewModel = viewModel(
+                viewModelStoreOwner = homeBackStackEntry,
+                factory = HiltViewModelFactory(activity, homeBackStackEntry)
+            )
+            val restoreSubscriptionUi by restoreSubscriptionVm.ui.collectAsState()
+
             LaunchedEffect(Unit) {
                 membershipVm.refresh()
             }
@@ -1484,6 +1522,21 @@ fun BiteCalNavHost(
                         onOpenTerms = { uriHandler.openUri(termsUrl) },
                         onOpenPrivacy = { uriHandler.openUri(privacyUrl) },
                         onOpenSupportEmail = { uriHandler.openUri(supportMailUrl) },
+                        restoreSubscriptionUiState = restoreSubscriptionUi,
+                        onOpenRestoreSubscription = restoreSubscriptionVm::openManualRestore,
+                        onRestoreSubscription = {
+                            restoreSubscriptionVm.restoreSubscription(
+                                onRestored = {
+                                    membershipVm.refresh()
+                                    runCatching {
+                                        nav.getBackStackEntry(Routes.HOME)
+                                            .savedStateHandle[Routes.MEMBERSHIP_REFRESH_TICK] = System.currentTimeMillis()
+                                    }
+                                }
+                            )
+                        },
+                        onDismissRestoreSubscription = restoreSubscriptionVm::closeDialog,
+                        onMaybeLaterRestoreSubscription = restoreSubscriptionVm::dismissForSession,
                         onDeleteAccount = { subscriptionWarningAcknowledged ->
                             scope.launch {
                                 val r = accountRepo.deleteAccount(
@@ -2590,6 +2643,12 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
 
+            val restoreSubscriptionVm: RestoreSubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val restoreSubscriptionUi by restoreSubscriptionVm.ui.collectAsState()
+
             fun goHomeAfterOnboardingSubscription() {
                 runCatching {
                     nav.getBackStackEntry(Routes.HOME)
@@ -2622,21 +2681,76 @@ fun BiteCalNavHost(
 
             var entitlementGateResolved by rememberSaveable { mutableStateOf(false) }
             var allowPaywall by rememberSaveable { mutableStateOf(false) }
+            var showRestoreCandidate by rememberSaveable { mutableStateOf(false) }
+
+            fun continueToOnboardingPaywallWithoutRestore() {
+                showRestoreCandidate = false
+                allowPaywall = true
+                entitlementGateResolved = true
+            }
 
             LaunchedEffect(Unit) {
-                val hasActiveAccess = withContext(Dispatchers.IO) {
-                    entitlementSyncer.hasActivePremiumAccess()
+                val hasServerAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasServerPremiumAccess()
                 }
 
-                if (hasActiveAccess) {
+                if (hasServerAccess) {
                     goHomeAfterOnboardingSubscription()
-                } else {
-                    allowPaywall = true
+                    return@LaunchedEffect
+                }
+
+                val hasRestoreCandidate = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActiveSubscriptionOnDevice()
+                }
+
+                if (hasRestoreCandidate) {
+                    showRestoreCandidate = true
+                    allowPaywall = false
                     entitlementGateResolved = true
+                    restoreSubscriptionVm.openManualRestore()
+                } else {
+                    continueToOnboardingPaywallWithoutRestore()
                 }
             }
 
-            if (!entitlementGateResolved || !allowPaywall) {
+            if (!entitlementGateResolved) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@composable
+            }
+
+            if (showRestoreCandidate && !allowPaywall) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+
+                RestoreSubscriptionDialog(
+                    uiState = restoreSubscriptionUi,
+                    onDismiss = {
+                        restoreSubscriptionVm.closeDialog()
+                        continueToOnboardingPaywallWithoutRestore()
+                    },
+                    onMaybeLater = {
+                        restoreSubscriptionVm.dismissForSession()
+                        continueToOnboardingPaywallWithoutRestore()
+                    },
+                    onRestore = {
+                        restoreSubscriptionVm.restoreSubscription(
+                            onRestored = { goHomeAfterOnboardingSubscription() }
+                        )
+                    }
+                )
+                return@composable
+            }
+
+            if (!allowPaywall) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center

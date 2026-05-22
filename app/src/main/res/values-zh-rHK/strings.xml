@@ -578,6 +578,17 @@
     <string name="settings_version">版本 %1$s</string>
 
     <string name="settings_restore_subscription">恢復訂閱</string>
+    <string name="restore_subscription_dialog_title">偵測到可恢復的訂閱</string>
+    <string name="restore_subscription_dialog_body">我們在目前這台裝置使用的 Google Play 帳號中，偵測到 BiteCal 仍有有效的訂閱或試用。你可以將這筆訂閱恢復到目前登入的 BiteCal 帳號。</string>
+    <string name="restore_subscription_dialog_restoring">恢復中...</string>
+    <string name="restore_subscription_dialog_success_title">訂閱已恢復</string>
+    <string name="restore_subscription_dialog_success_body">你的訂閱已恢復到目前登入的 BiteCal 帳號。</string>
+    <string name="restore_subscription_dialog_no_active_title">找不到有效訂閱</string>
+    <string name="restore_subscription_dialog_no_active_body">我們在目前這台裝置使用的 Google Play 帳號中找不到有效的 BiteCal 訂閱。你可以稍後再從設定頁重試。</string>
+    <string name="restore_subscription_dialog_failed_title">恢復失敗</string>
+    <string name="restore_subscription_dialog_failed_body">目前無法恢復訂閱，請確認網路連線後，稍後再從設定頁重試。</string>
+    <string name="restore_subscription_dialog_bound_title">訂閱已綁定其他帳號</string>
+    <string name="restore_subscription_dialog_bound_body">這筆訂閱已綁定其他有效的 BiteCal 帳號。如果你認為這是錯誤，請聯絡客服。</string>
 
     <string name="common_close">關閉</string>
     <string name="common_cancel">取消</string>

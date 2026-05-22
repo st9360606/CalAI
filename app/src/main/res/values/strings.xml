@@ -580,6 +580,17 @@
     <string name="settings_version">VERSION %1$s</string>
 
     <string name="settings_restore_subscription">Restore subscription</string>
+    <string name="restore_subscription_dialog_title">Subscription found</string>
+    <string name="restore_subscription_dialog_body">We found an active BiteCal subscription or trial associated with the Google Play account on this device. You can restore it to the BiteCal account you’re currently signed in to.</string>
+    <string name="restore_subscription_dialog_restoring">Restoring...</string>
+    <string name="restore_subscription_dialog_success_title">Subscription restored</string>
+    <string name="restore_subscription_dialog_success_body">Your subscription has been restored to this BiteCal account.</string>
+    <string name="restore_subscription_dialog_no_active_title">No active subscription found</string>
+    <string name="restore_subscription_dialog_no_active_body">We could not find an active BiteCal subscription on the Google Play account currently used on this device. You can try again later from Settings.</string>
+    <string name="restore_subscription_dialog_failed_title">Restore failed</string>
+    <string name="restore_subscription_dialog_failed_body">We could not restore your subscription right now. Please check your connection and try again from Settings.</string>
+    <string name="restore_subscription_dialog_bound_title">Subscription already linked</string>
+    <string name="restore_subscription_dialog_bound_body">This subscription is already linked to another active BiteCal account. Please contact support if you believe this is a mistake.</string>
     <string name="common_close">Close</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_delete">Delete</string>

@@ -15,8 +15,8 @@ suspend fun resolveOnboardingDestination(
 ): String {
     if (allowHomeAfterRejectedPaywall) return Routes.HOME
 
-    // 先 restore/sync Google Play 權益，再讓後端 bootstrap 用最新 entitlement 做導頁決策。
-    runCatching { entitlementSyncer.refreshEntitlementSummary() }
+    // 先只刷新後端既有權益摘要，避免未經使用者確認就把 Google Play token 轉移到新帳號。
+    runCatching { entitlementSyncer.refreshServerEntitlementSummaryOnly() }
         .onFailure { Log.w(TAG, "refresh entitlement before bootstrap failed: ${it.message}") }
 
     return runCatching {
@@ -24,7 +24,7 @@ suspend fun resolveOnboardingDestination(
     }.onFailure {
         Log.w(TAG, "onboarding bootstrap failed, fallback to legacy entitlement gate: ${it.message}")
     }.getOrElse {
-        if (entitlementSyncer.hasActivePremiumAccess()) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
+        if (entitlementSyncer.hasServerPremiumAccess()) Routes.HOME else Routes.ONBOARD_SUBSCRIPTION
     }
 }
 
