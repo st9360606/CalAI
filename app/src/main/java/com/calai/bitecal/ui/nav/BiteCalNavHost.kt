@@ -105,6 +105,7 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewMo
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
 import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
 import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
+import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionDialogState
 import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionViewModel
 import com.calai.bitecal.ui.home.ui.settings.premium.PremiumRewardsScreen
@@ -960,6 +961,51 @@ fun BiteCalNavHost(
             )
             val restoreSubscriptionUi by restoreSubscriptionVm.ui.collectAsState()
 
+            val restoreLocaleKey = currentLocaleKey()
+
+            val restoreDialogTitle = when (restoreSubscriptionUi.dialogState) {
+                RestoreSubscriptionDialogState.Restored ->
+                    stringResource(R.string.restore_subscription_dialog_success_title)
+
+                RestoreSubscriptionDialogState.NoActivePurchase ->
+                    stringResource(R.string.restore_subscription_dialog_no_active_title)
+
+                RestoreSubscriptionDialogState.Failed ->
+                    stringResource(R.string.restore_subscription_dialog_failed_title)
+
+                RestoreSubscriptionDialogState.BoundToAnotherAccount ->
+                    stringResource(R.string.restore_subscription_dialog_bound_title)
+
+                RestoreSubscriptionDialogState.Hidden,
+                RestoreSubscriptionDialogState.CandidateFound,
+                RestoreSubscriptionDialogState.Restoring ->
+                    stringResource(R.string.restore_subscription_dialog_title)
+            }
+
+            val restoreDialogBody = when (restoreSubscriptionUi.dialogState) {
+                RestoreSubscriptionDialogState.Restored ->
+                    stringResource(R.string.restore_subscription_dialog_success_body)
+
+                RestoreSubscriptionDialogState.NoActivePurchase ->
+                    stringResource(R.string.restore_subscription_dialog_no_active_body)
+
+                RestoreSubscriptionDialogState.Failed ->
+                    stringResource(R.string.restore_subscription_dialog_failed_body)
+
+                RestoreSubscriptionDialogState.BoundToAnotherAccount ->
+                    stringResource(R.string.restore_subscription_dialog_bound_body)
+
+                RestoreSubscriptionDialogState.Hidden,
+                RestoreSubscriptionDialogState.CandidateFound,
+                RestoreSubscriptionDialogState.Restoring ->
+                    stringResource(R.string.restore_subscription_dialog_body)
+            }
+
+            val restoreDialogCloseText = stringResource(R.string.common_close)
+            val restoreDialogRestoreText = stringResource(R.string.settings_restore_subscription)
+            val restoreDialogRestoringText = stringResource(R.string.restore_subscription_dialog_restoring)
+            val restoreDialogMaybeLaterText = stringResource(R.string.common_maybe_later)
+
             val membershipRefreshTickFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<Long>(
                     Routes.MEMBERSHIP_REFRESH_TICK,
@@ -1105,16 +1151,24 @@ fun BiteCalNavHost(
                     },
                 )
 
-                RestoreSubscriptionDialog(
-                    uiState = restoreSubscriptionUi,
-                    onDismiss = restoreSubscriptionVm::closeDialog,
-                    onMaybeLater = restoreSubscriptionVm::dismissForSession,
-                    onRestore = {
-                        restoreSubscriptionVm.restoreSubscription(
-                            onRestored = { membershipVm.refresh() }
-                        )
-                    }
-                )
+                key(restoreLocaleKey) {
+                    RestoreSubscriptionDialog(
+                        uiState = restoreSubscriptionUi,
+                        title = restoreDialogTitle,
+                        body = restoreDialogBody,
+                        closeText = restoreDialogCloseText,
+                        restoreText = restoreDialogRestoreText,
+                        restoringText = restoreDialogRestoringText,
+                        maybeLaterText = restoreDialogMaybeLaterText,
+                        onDismiss = restoreSubscriptionVm::closeDialog,
+                        onMaybeLater = restoreSubscriptionVm::dismissForSession,
+                        onRestore = {
+                            restoreSubscriptionVm.restoreSubscription(
+                                onRestored = { membershipVm.refresh() }
+                            )
+                        }
+                    )
+                }
 
                 when {
                     !navError.isNullOrBlank() -> {
@@ -2649,6 +2703,51 @@ fun BiteCalNavHost(
             )
             val restoreSubscriptionUi by restoreSubscriptionVm.ui.collectAsState()
 
+            val restoreLocaleKey = currentLocaleKey()
+
+            val restoreDialogTitle = when (restoreSubscriptionUi.dialogState) {
+                RestoreSubscriptionDialogState.Restored ->
+                    stringResource(R.string.restore_subscription_dialog_success_title)
+
+                RestoreSubscriptionDialogState.NoActivePurchase ->
+                    stringResource(R.string.restore_subscription_dialog_no_active_title)
+
+                RestoreSubscriptionDialogState.Failed ->
+                    stringResource(R.string.restore_subscription_dialog_failed_title)
+
+                RestoreSubscriptionDialogState.BoundToAnotherAccount ->
+                    stringResource(R.string.restore_subscription_dialog_bound_title)
+
+                RestoreSubscriptionDialogState.Hidden,
+                RestoreSubscriptionDialogState.CandidateFound,
+                RestoreSubscriptionDialogState.Restoring ->
+                    stringResource(R.string.restore_subscription_dialog_title)
+            }
+
+            val restoreDialogBody = when (restoreSubscriptionUi.dialogState) {
+                RestoreSubscriptionDialogState.Restored ->
+                    stringResource(R.string.restore_subscription_dialog_success_body)
+
+                RestoreSubscriptionDialogState.NoActivePurchase ->
+                    stringResource(R.string.restore_subscription_dialog_no_active_body)
+
+                RestoreSubscriptionDialogState.Failed ->
+                    stringResource(R.string.restore_subscription_dialog_failed_body)
+
+                RestoreSubscriptionDialogState.BoundToAnotherAccount ->
+                    stringResource(R.string.restore_subscription_dialog_bound_body)
+
+                RestoreSubscriptionDialogState.Hidden,
+                RestoreSubscriptionDialogState.CandidateFound,
+                RestoreSubscriptionDialogState.Restoring ->
+                    stringResource(R.string.restore_subscription_dialog_body)
+            }
+
+            val restoreDialogCloseText = stringResource(R.string.common_close)
+            val restoreDialogRestoreText = stringResource(R.string.settings_restore_subscription)
+            val restoreDialogRestoringText = stringResource(R.string.restore_subscription_dialog_restoring)
+            val restoreDialogMaybeLaterText = stringResource(R.string.common_maybe_later)
+
             fun goHomeAfterOnboardingSubscription() {
                 runCatching {
                     nav.getBackStackEntry(Routes.HOME)
@@ -2731,22 +2830,30 @@ fun BiteCalNavHost(
                     CircularProgressIndicator()
                 }
 
-                RestoreSubscriptionDialog(
-                    uiState = restoreSubscriptionUi,
-                    onDismiss = {
-                        restoreSubscriptionVm.closeDialog()
-                        continueToOnboardingPaywallWithoutRestore()
-                    },
-                    onMaybeLater = {
-                        restoreSubscriptionVm.dismissForSession()
-                        continueToOnboardingPaywallWithoutRestore()
-                    },
-                    onRestore = {
-                        restoreSubscriptionVm.restoreSubscription(
-                            onRestored = { goHomeAfterOnboardingSubscription() }
-                        )
-                    }
-                )
+                key(restoreLocaleKey) {
+                    RestoreSubscriptionDialog(
+                        uiState = restoreSubscriptionUi,
+                        title = restoreDialogTitle,
+                        body = restoreDialogBody,
+                        closeText = restoreDialogCloseText,
+                        restoreText = restoreDialogRestoreText,
+                        restoringText = restoreDialogRestoringText,
+                        maybeLaterText = restoreDialogMaybeLaterText,
+                        onDismiss = {
+                            restoreSubscriptionVm.closeDialog()
+                            continueToOnboardingPaywallWithoutRestore()
+                        },
+                        onMaybeLater = {
+                            restoreSubscriptionVm.dismissForSession()
+                            continueToOnboardingPaywallWithoutRestore()
+                        },
+                        onRestore = {
+                            restoreSubscriptionVm.restoreSubscription(
+                                onRestored = { goHomeAfterOnboardingSubscription() }
+                            )
+                        }
+                    )
+                }
                 return@composable
             }
 

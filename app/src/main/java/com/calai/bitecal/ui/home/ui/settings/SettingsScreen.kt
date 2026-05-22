@@ -114,6 +114,7 @@ import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
 import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
 import com.calai.bitecal.ui.home.ui.settings.dialog.PaymentIssueDialog
 import com.calai.bitecal.ui.home.ui.settings.dialog.RestoreSubscriptionDialog
+import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionDialogState
 import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionUiState
 import com.calai.bitecal.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
@@ -385,6 +386,49 @@ private fun SettingsContent(
     val deleteDialogDeletingText = stringResource(R.string.common_deleting)
     val deleteDialogCloseText = stringResource(R.string.common_close)
 
+    val restoreDialogTitle = when (restoreSubscriptionUiState.dialogState) {
+        RestoreSubscriptionDialogState.Restored ->
+            stringResource(R.string.restore_subscription_dialog_success_title)
+
+        RestoreSubscriptionDialogState.NoActivePurchase ->
+            stringResource(R.string.restore_subscription_dialog_no_active_title)
+
+        RestoreSubscriptionDialogState.Failed ->
+            stringResource(R.string.restore_subscription_dialog_failed_title)
+
+        RestoreSubscriptionDialogState.BoundToAnotherAccount ->
+            stringResource(R.string.restore_subscription_dialog_bound_title)
+
+        RestoreSubscriptionDialogState.Hidden,
+        RestoreSubscriptionDialogState.CandidateFound,
+        RestoreSubscriptionDialogState.Restoring ->
+            stringResource(R.string.restore_subscription_dialog_title)
+    }
+
+    val restoreDialogBody = when (restoreSubscriptionUiState.dialogState) {
+        RestoreSubscriptionDialogState.Restored ->
+            stringResource(R.string.restore_subscription_dialog_success_body)
+
+        RestoreSubscriptionDialogState.NoActivePurchase ->
+            stringResource(R.string.restore_subscription_dialog_no_active_body)
+
+        RestoreSubscriptionDialogState.Failed ->
+            stringResource(R.string.restore_subscription_dialog_failed_body)
+
+        RestoreSubscriptionDialogState.BoundToAnotherAccount ->
+            stringResource(R.string.restore_subscription_dialog_bound_body)
+
+        RestoreSubscriptionDialogState.Hidden,
+        RestoreSubscriptionDialogState.CandidateFound,
+        RestoreSubscriptionDialogState.Restoring ->
+            stringResource(R.string.restore_subscription_dialog_body)
+    }
+
+    val restoreDialogCloseText = stringResource(R.string.common_close)
+    val restoreDialogRestoreText = stringResource(R.string.settings_restore_subscription)
+    val restoreDialogRestoringText = stringResource(R.string.restore_subscription_dialog_restoring)
+    val restoreDialogMaybeLaterText = stringResource(R.string.common_maybe_later)
+
     // ✅ Dialog 放外層（不受 scroll 影響）
     key(localeKey) {
         DeleteAccountDialog(
@@ -429,12 +473,20 @@ private fun SettingsContent(
         }
     )
 
-    RestoreSubscriptionDialog(
-        uiState = restoreSubscriptionUiState,
-        onDismiss = onDismissRestoreSubscription,
-        onMaybeLater = onMaybeLaterRestoreSubscription,
-        onRestore = onRestoreSubscription
-    )
+    key(localeKey) {
+        RestoreSubscriptionDialog(
+            uiState = restoreSubscriptionUiState,
+            title = restoreDialogTitle,
+            body = restoreDialogBody,
+            closeText = restoreDialogCloseText,
+            restoreText = restoreDialogRestoreText,
+            restoringText = restoreDialogRestoringText,
+            maybeLaterText = restoreDialogMaybeLaterText,
+            onDismiss = onDismissRestoreSubscription,
+            onMaybeLater = onMaybeLaterRestoreSubscription,
+            onRestore = onRestoreSubscription
+        )
+    }
 
     Column(
         modifier = modifier
