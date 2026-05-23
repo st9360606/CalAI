@@ -56,13 +56,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.core.time.UtcTimeFormatter
 import com.calai.bitecal.data.notifications.api.NotificationItemDto
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
-import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 @Composable
 fun NotificationInboxScreen(
@@ -540,19 +538,13 @@ private fun rememberDebouncedClick(
     }
 }
 
-private fun formatNotificationCreatedAt(raw: String): String {
-    return runCatching {
-        Instant.parse(raw)
-            .atZone(ZoneId.systemDefault())
-            .format(notificationDateFormatter())
-    }.getOrElse {
-        raw.take(10)
-    }
-}
-
-private fun notificationDateFormatter(): DateTimeFormatter =
-    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-        .withLocale(Locale.getDefault())
+private fun formatNotificationCreatedAt(raw: String): String =
+    UtcTimeFormatter.formatUtcDateTimeOrNull(
+        raw = raw,
+        zoneId = ZoneId.systemDefault(),
+        dateStyle = FormatStyle.MEDIUM,
+        timeStyle = FormatStyle.SHORT
+    ) ?: raw.take(10)
 
 private fun Color.luminanceForUi(): Float =
     (0.299f * red) + (0.587f * green) + (0.114f * blue)

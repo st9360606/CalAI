@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -100,6 +101,7 @@ fun OnboardSubscriptionScreen(
     var step by rememberSaveable { mutableStateOf(OnboardPaywallStep.Intro) }
     var trialEnabled by rememberSaveable { mutableStateOf(false) }
     var trialToggleTouched by rememberSaveable { mutableStateOf(false) }
+    var restoreRequiredDismissedThisSession by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(ui.trialEligibilityLoaded, ui.trialEligible) {
         if (!ui.trialEligibilityLoaded) return@LaunchedEffect
@@ -216,51 +218,233 @@ fun OnboardSubscriptionScreen(
             null -> ui.error
         }
 
-        if (!errorText.isNullOrBlank()) {
-            Column(
+        val showRestoreRequiredDialog =
+            ui.errorKind == SubscriptionErrorKind.AlreadyOwnedRestoreRequired &&
+                    !errorText.isNullOrBlank() &&
+                    !restoreRequiredDismissedThisSession
+
+        val showGenericErrorBanner =
+            ui.errorKind != SubscriptionErrorKind.AlreadyOwnedRestoreRequired &&
+                    !errorText.isNullOrBlank()
+
+        if (showRestoreRequiredDialog) {
+            RestoreSubscriptionRequiredDialog(
+                title = stringResource(R.string.restore_subscription_dialog_title),
+                body = errorText.orEmpty(),
+                restoreText = stringResource(R.string.settings_restore_subscription),
+                restoringText = stringResource(R.string.restore_subscription_dialog_restoring),
+                maybeLaterText = stringResource(R.string.common_maybe_later),
+                purchasing = ui.purchasing,
+                canRestorePurchase = ui.canRestorePurchase,
+                onRestore = {
+                    vm.restorePurchase(onPurchased)
+                },
+                onMaybeLater = {
+                    restoreRequiredDismissedThisSession = true
+                    onCloseToSignIn()
+                }
+            )
+        }
+
+        if (showGenericErrorBanner) {
+            OnboardSubscriptionErrorBanner(
+                errorText = errorText.orEmpty()
+            )
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.RestoreSubscriptionRequiredDialog(
+    title: String,
+    body: String,
+    restoreText: String,
+    restoringText: String,
+    maybeLaterText: String,
+    purchasing: Boolean,
+    canRestorePurchase: Boolean,
+    onRestore: () -> Unit,
+    onMaybeLater: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .align(Alignment.Center)
+            .zIndex(80f),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.42f))
+                .clickable(enabled = !purchasing) {
+                    // 只吃掉背景點擊事件，不關閉 Dialog。
+                    // 這樣可以避免使用者誤觸遮罩，導致 restore 提示消失。
+                }
+        )
+
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .fillMaxWidth()
+                .shadow(
+                    elevation = 22.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = Color(0x22000000),
+                    spotColor = Color(0x33000000)
+                )
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color.White)
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFE5E7EB),
+                    shape = RoundedCornerShape(28.dp)
+                )
+                .padding(horizontal = 22.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 78.dp)
-                    .padding(horizontal = 18.dp)
+                    .size(54.dp)
                     .background(
-                        color = Color(0xFFFFEBEE),
-                        shape = RoundedCornerShape(12.dp)
+                        color = Color(0xFF111111),
+                        shape = RoundedCornerShape(18.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Restore,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(29.dp)
+                )
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            Text(
+                text = title,
+                color = Color(0xFF111111),
+                fontSize = 21.sp,
+                lineHeight = 26.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                letterSpacing = (-0.25).sp,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            Text(
+                text = body,
+                color = Color(0xFF52525B),
+                fontSize = 15.sp,
+                lineHeight = 21.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp)
+            )
+
+            Spacer(Modifier.height(22.dp))
+
+            Button(
+                onClick = onRestore,
+                enabled = canRestorePurchase && !purchasing,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF111111),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF111111).copy(alpha = 0.42f),
+                    disabledContentColor = Color.White.copy(alpha = 0.82f)
+                ),
+                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp)
+            ) {
+                if (purchasing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
                     )
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+
+                    Spacer(Modifier.width(10.dp))
+
+                    Text(
+                        text = restoringText,
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else {
+                    Text(
+                        text = restoreText,
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Button(
+                onClick = onMaybeLater,
+                enabled = !purchasing,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color(0xFF52525B),
+                    disabledContainerColor = Color.Transparent,
+                    disabledContentColor = Color(0xFFA1A1AA)
+                ),
+                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp)
             ) {
                 Text(
-                    text = errorText,
-                    color = Color(0xFFB91C1C),
-                    fontSize = 13.sp,
-                    lineHeight = 17.sp,
+                    text = maybeLaterText,
+                    fontSize = 15.sp,
+                    lineHeight = 19.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center
                 )
-
-                if (ui.canRestorePurchase) {
-                    Spacer(Modifier.height(8.dp))
-
-                    Button(
-                        onClick = { vm.restorePurchase(onPurchased) },
-                        enabled = !ui.purchasing,
-                        shape = RoundedCornerShape(999.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF111111),
-                            contentColor = Color.White
-                        ),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.settings_restore_subscription),
-                            fontSize = 13.sp,
-                            lineHeight = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
             }
         }
+    }
+}
+
+@Composable
+private fun BoxScope.OnboardSubscriptionErrorBanner(
+    errorText: String
+) {
+    Column(
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .padding(top = 78.dp)
+            .padding(horizontal = 18.dp)
+            .background(
+                color = Color(0xFFFFEBEE),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = errorText,
+            color = Color(0xFFB91C1C),
+            fontSize = 13.sp,
+            lineHeight = 17.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

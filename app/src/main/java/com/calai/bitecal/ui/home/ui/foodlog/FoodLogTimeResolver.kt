@@ -1,8 +1,7 @@
 package com.calai.bitecal.ui.home.ui.foodlog
 
-import java.time.Instant
+import com.calai.bitecal.core.time.UtcTimeFormatter
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 object FoodLogTimeResolver {
 
@@ -26,11 +25,10 @@ object FoodLogTimeResolver {
         val value = raw?.trim()
         if (value.isNullOrBlank()) return null
 
-        return runCatching {
-            Instant.parse(value)
-                .atZone(zoneId)
-                .toLocalTime()
-                .format(DateTimeFormatter.ofPattern("HH:mm"))
-        }.getOrNull()
+        return UtcTimeFormatter.formatUtcTimeOrNull(
+            raw = value,
+            zoneId = zoneId,
+            pattern = "HH:mm"
+        )
     }
 }

@@ -1,6 +1,7 @@
 package com.calai.bitecal.ui.home.ui.membership
 
 import com.calai.bitecal.data.entitlement.model.PremiumStatus
+import com.calai.bitecal.core.time.UtcTimeFormatter
 
 enum class MembershipDisplayKind {
     FREE,
@@ -54,6 +55,7 @@ object MembershipUiMapper {
 
     private fun formatPremiumSubtitle(currentPremiumUntil: String?): String {
         val date = formatDateOrNull(currentPremiumUntil)
+
         return if (date != null) {
             "Until $date"
         } else {
@@ -71,9 +73,6 @@ object MembershipUiMapper {
         }
     }
 
-    fun formatDateOrNull(raw: String?): String? {
-        return raw
-            ?.takeIf { it.isNotBlank() }
-            ?.take(10)
-    }
+    fun formatDateOrNull(raw: String?): String? =
+        UtcTimeFormatter.formatUtcDateOrNull(raw)
 }
