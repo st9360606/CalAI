@@ -3,12 +3,15 @@ package com.calai.bitecal.ui.home.ui.settings.model
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.calai.bitecal.data.auth.repo.AuthRepository
 import com.calai.bitecal.data.profile.api.UserProfileDto
 import com.calai.bitecal.data.profile.repo.ProfileRepository
 import com.calai.bitecal.data.users.repo.UsersRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -18,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val usersRepo: UsersRepository,
-    private val profileRepo: ProfileRepository
+    private val profileRepo: ProfileRepository,
+    private val authRepo: AuthRepository
 ) : ViewModel() {
 
     data class UiState(
@@ -26,11 +30,20 @@ class SettingsViewModel @Inject constructor(
         val name: String? = null,
         val pictureUrl: String? = null,
         val profile: UserProfileDto? = null,
-        val error: String? = null
+        val error: String? = null,
+        val logoutLoading: Boolean = false,
+        val logoutError: Boolean = false
     )
+
+    sealed interface Event {
+        object LogoutSuccess : Event
+    }
 
     private val _ui = MutableStateFlow(UiState())
     val ui: StateFlow<UiState> = _ui
+
+    private val _events = MutableSharedFlow<Event>(extraBufferCapacity = 1)
+    val events: SharedFlow<Event> = _events
 
     init { refresh() }
 
@@ -104,6 +117,20 @@ class SettingsViewModel @Inject constructor(
             }
         } catch (t: Throwable) {
             _ui.update { it.copy(loading = false, error = t.message ?: t.javaClass.simpleName) }
+        }
+    }
+
+    fun logout() = viewModelScope.launch {
+        if (_ui.value.logoutLoading) return@launch
+
+        _ui.update { it.copy(logoutLoading = true, logoutError = false) }
+
+        val result = authRepo.logoutRemoteThenClear()
+        if (result.isSuccess) {
+            _ui.update { it.copy(logoutLoading = false, logoutError = false) }
+            _events.tryEmit(Event.LogoutSuccess)
+        } else {
+            _ui.update { it.copy(logoutLoading = false, logoutError = true) }
         }
     }
 }

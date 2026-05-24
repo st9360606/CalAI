@@ -57,6 +57,7 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -163,6 +164,8 @@ fun SettingsScreen(
     onDismissRestoreSubscription: () -> Unit = {},
     onMaybeLaterRestoreSubscription: () -> Unit = {},
     onDeleteAccount: (subscriptionWarningAcknowledged: Boolean) -> Unit = {},
+    logoutLoading: Boolean = false,
+    logoutErrorVisible: Boolean = false,
     onLogout: () -> Unit = {}
 ) {
     val ctx = LocalContext.current
@@ -295,6 +298,8 @@ fun SettingsScreen(
                 onDismissRestoreSubscription = onDismissRestoreSubscription,
                 onMaybeLaterRestoreSubscription = onMaybeLaterRestoreSubscription,
                 onDeleteAccount = onDeleteAccount,
+                logoutLoading = logoutLoading,
+                logoutErrorVisible = logoutErrorVisible,
                 onLogout = onLogout
             )
         }
@@ -366,6 +371,8 @@ private fun SettingsContent(
     onDismissRestoreSubscription: () -> Unit,
     onMaybeLaterRestoreSubscription: () -> Unit,
     onDeleteAccount: (subscriptionWarningAcknowledged: Boolean) -> Unit,
+    logoutLoading: Boolean,
+    logoutErrorVisible: Boolean,
     onLogout: () -> Unit
 ) {
     val scroll = rememberScrollState()
@@ -389,6 +396,9 @@ private fun SettingsContent(
         RestoreSubscriptionDialogState.Restored ->
             stringResource(R.string.restore_subscription_dialog_success_title)
 
+        RestoreSubscriptionDialogState.RestoredWithPaymentIssue ->
+            stringResource(R.string.restore_subscription_dialog_payment_issue_title)
+
         RestoreSubscriptionDialogState.NoActivePurchase ->
             stringResource(R.string.restore_subscription_dialog_no_active_title)
 
@@ -407,6 +417,9 @@ private fun SettingsContent(
     val restoreDialogBody = when (restoreSubscriptionUiState.dialogState) {
         RestoreSubscriptionDialogState.Restored ->
             stringResource(R.string.restore_subscription_dialog_success_body)
+
+        RestoreSubscriptionDialogState.RestoredWithPaymentIssue ->
+            stringResource(R.string.restore_subscription_dialog_payment_issue_body)
 
         RestoreSubscriptionDialogState.NoActivePurchase ->
             stringResource(R.string.restore_subscription_dialog_no_active_body)
@@ -564,7 +577,18 @@ private fun SettingsContent(
 
         Spacer(Modifier.height(22.dp))
 
-        LogoutButton(onLogout = onLogout)
+        LogoutButton(
+            loading = logoutLoading,
+            onLogout = onLogout
+        )
+
+        if (logoutErrorVisible) {
+            Spacer(Modifier.height(10.dp))
+            LogoutErrorMessage(
+                retryEnabled = !logoutLoading,
+                onRetry = onLogout
+            )
+        }
 
         Spacer(Modifier.height(20.dp))
         Text(
@@ -1873,27 +1897,89 @@ private fun DividerThin() {
 }
 
 @Composable
-private fun LogoutButton(onLogout: () -> Unit) {
+private fun LogoutButton(
+    loading: Boolean,
+    onLogout: () -> Unit
+) {
+    val enabled = !loading
+
     OutlinedButton(
-        onClick = onLogout,
+        onClick = { if (enabled) onLogout() },
+        enabled = enabled,
         border = BorderStroke(
             width = 1.dp,
-            color = Color(0xFFE1E4EA)
+            color = if (enabled) {
+                Color(0xFFE1E4EA)
+            } else {
+                Color(0xFFE5E7EB)
+            }
         ),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.White,
-            contentColor = Color(0xFF111114)
+            contentColor = Color(0xFF111114),
+            disabledContainerColor = Color(0xFFF4F4F5),
+            disabledContentColor = Color(0xFF9CA3AF)
         ),
         shape = RoundedCornerShape(18.dp),
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-    )  {
-        Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
+    ) {
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+                color = Color(0xFF9CA3AF)
+            )
+        } else {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.Logout,
+                contentDescription = null,
+                tint = Color(0xFF111114)
+            )
+        }
+
         Spacer(Modifier.size(10.dp))
+
         Text(
-            stringResource(R.string.settings_logout),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+            text = stringResource(
+                if (loading) {
+                    R.string.settings_logout_loading
+                } else {
+                    R.string.settings_logout
+                }
+            ),
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = if (enabled) Color(0xFF111114) else Color(0xFF9CA3AF),
+                fontWeight = FontWeight.SemiBold
+            )
         )
+    }
+}
+
+@Composable
+private fun LogoutErrorMessage(
+    retryEnabled: Boolean,
+    onRetry: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.settings_logout_failed),
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = MaterialTheme.colorScheme.error
+            ),
+            modifier = Modifier.weight(1f)
+        )
+        OutlinedButton(
+            onClick = onRetry,
+            enabled = retryEnabled,
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text(stringResource(R.string.cta_retry))
+        }
     }
 }

@@ -53,6 +53,7 @@ fun RestoreSubscriptionDialog(
     val isRestoring = uiState.dialogState == RestoreSubscriptionDialogState.Restoring
     val isResultState = when (uiState.dialogState) {
         RestoreSubscriptionDialogState.Restored,
+        RestoreSubscriptionDialogState.RestoredWithPaymentIssue,
         RestoreSubscriptionDialogState.NoActivePurchase,
         RestoreSubscriptionDialogState.Failed,
         RestoreSubscriptionDialogState.BoundToAnotherAccount -> true

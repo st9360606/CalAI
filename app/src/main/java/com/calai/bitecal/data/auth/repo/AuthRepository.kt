@@ -4,6 +4,7 @@ import com.calai.bitecal.data.auth.api.AuthApi
 import com.calai.bitecal.data.auth.api.model.AuthResponse
 import com.calai.bitecal.data.auth.api.model.GoogleSignInExchangeRequest
 import com.calai.bitecal.data.auth.api.model.RefreshRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import javax.inject.Named
@@ -24,15 +25,36 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun logout() {
-        val access = tokenStore.accessTokenFlow.firstOrNull()
-        val refresh = tokenStore.refreshTokenFlow.firstOrNull()
-        runCatching {
-            api.logout(
-                authorization = access?.let { "Bearer $it" },
-                body = refresh?.let { RefreshRequest(it) }
-            )
+        try {
+            logoutRemote()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Keep legacy behavior: local sign-out must still complete if the remote call fails.
         }
         tokenStore.clear()
+    }
+
+    suspend fun logoutRemoteThenClear(): Result<Unit> =
+        try {
+            logoutRemote()
+            tokenStore.clear()
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    private suspend fun logoutRemote() {
+        val access = tokenStore.accessTokenFlow.firstOrNull()
+        val refresh = tokenStore.refreshTokenFlow.firstOrNull()
+        if (access.isNullOrBlank() && refresh.isNullOrBlank()) return
+
+        api.logout(
+            authorization = access?.takeIf { it.isNotBlank() }?.let { "Bearer $it" },
+            body = refresh?.takeIf { it.isNotBlank() }?.let { RefreshRequest(it) }
+        )
     }
 
     /**

@@ -967,6 +967,9 @@ fun BiteCalNavHost(
                 RestoreSubscriptionDialogState.Restored ->
                     stringResource(R.string.restore_subscription_dialog_success_title)
 
+                RestoreSubscriptionDialogState.RestoredWithPaymentIssue ->
+                    stringResource(R.string.restore_subscription_dialog_payment_issue_title)
+
                 RestoreSubscriptionDialogState.NoActivePurchase ->
                     stringResource(R.string.restore_subscription_dialog_no_active_title)
 
@@ -985,6 +988,9 @@ fun BiteCalNavHost(
             val restoreDialogBody = when (restoreSubscriptionUi.dialogState) {
                 RestoreSubscriptionDialogState.Restored ->
                     stringResource(R.string.restore_subscription_dialog_success_body)
+
+                RestoreSubscriptionDialogState.RestoredWithPaymentIssue ->
+                    stringResource(R.string.restore_subscription_dialog_payment_issue_body)
 
                 RestoreSubscriptionDialogState.NoActivePurchase ->
                     stringResource(R.string.restore_subscription_dialog_no_active_body)
@@ -1164,7 +1170,8 @@ fun BiteCalNavHost(
                         onMaybeLater = restoreSubscriptionVm::dismissForSession,
                         onRestore = {
                             restoreSubscriptionVm.restoreSubscription(
-                                onRestored = { membershipVm.refresh() }
+                                onRestored = {},
+                                onMembershipMayHaveChanged = { membershipVm.refresh() }
                             )
                         }
                     )
@@ -1383,6 +1390,20 @@ fun BiteCalNavHost(
             val homeUi by homeVm.ui.collectAsState()
             val pUi by settingsVm.ui.collectAsState()
 
+            LaunchedEffect(settingsVm) {
+                settingsVm.events.collect { event ->
+                    when (event) {
+                        SettingsViewModel.Event.LogoutSuccess -> {
+                            nav.navigate(Routes.LANDING) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
+                    }
+                }
+            }
+
             // ✅ 讓 PERSONAL 也能顯示「上一頁回傳」的 toast（例如 EditNutritionGoals 回來）
             val successFlow = remember(backStackEntry) {
                 backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
@@ -1580,7 +1601,8 @@ fun BiteCalNavHost(
                         onOpenRestoreSubscription = restoreSubscriptionVm::openManualRestore,
                         onRestoreSubscription = {
                             restoreSubscriptionVm.restoreSubscription(
-                                onRestored = {
+                                onRestored = {},
+                                onMembershipMayHaveChanged = {
                                     membershipVm.refresh()
                                     runCatching {
                                         nav.getBackStackEntry(Routes.HOME)
@@ -1607,7 +1629,10 @@ fun BiteCalNavHost(
                                         (r.exceptionOrNull()?.message ?: "Delete account failed. Please sign in again and retry.")
                                 }
                             }
-                        }
+                        },
+                        logoutLoading = pUi.logoutLoading,
+                        logoutErrorVisible = pUi.logoutError,
+                        onLogout = settingsVm::logout
                     )
                 }
 
@@ -2709,6 +2734,9 @@ fun BiteCalNavHost(
                 RestoreSubscriptionDialogState.Restored ->
                     stringResource(R.string.restore_subscription_dialog_success_title)
 
+                RestoreSubscriptionDialogState.RestoredWithPaymentIssue ->
+                    stringResource(R.string.restore_subscription_dialog_payment_issue_title)
+
                 RestoreSubscriptionDialogState.NoActivePurchase ->
                     stringResource(R.string.restore_subscription_dialog_no_active_title)
 
@@ -2727,6 +2755,9 @@ fun BiteCalNavHost(
             val restoreDialogBody = when (restoreSubscriptionUi.dialogState) {
                 RestoreSubscriptionDialogState.Restored ->
                     stringResource(R.string.restore_subscription_dialog_success_body)
+
+                RestoreSubscriptionDialogState.RestoredWithPaymentIssue ->
+                    stringResource(R.string.restore_subscription_dialog_payment_issue_body)
 
                 RestoreSubscriptionDialogState.NoActivePurchase ->
                     stringResource(R.string.restore_subscription_dialog_no_active_body)

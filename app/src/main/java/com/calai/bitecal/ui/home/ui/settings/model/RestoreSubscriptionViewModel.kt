@@ -17,6 +17,7 @@ enum class RestoreSubscriptionDialogState {
     CandidateFound,
     Restoring,
     Restored,
+    RestoredWithPaymentIssue,
     NoActivePurchase,
     Failed,
     BoundToAnotherAccount
@@ -153,7 +154,10 @@ class RestoreSubscriptionViewModel @Inject constructor(
         }
     }
 
-    fun restoreSubscription(onRestored: () -> Unit) {
+    fun restoreSubscription(
+        onRestored: () -> Unit,
+        onMembershipMayHaveChanged: () -> Unit = {}
+    ) {
         if (_ui.value.isRestoring) return
 
         viewModelScope.launch {
@@ -173,6 +177,18 @@ class RestoreSubscriptionViewModel @Inject constructor(
                             message = null
                         )
                     }
+                    onMembershipMayHaveChanged()
+                    onRestored()
+                }
+
+                is RestoreSubscriptionResult.RestoredWithPaymentIssue -> {
+                    _ui.update {
+                        it.copy(
+                            dialogState = RestoreSubscriptionDialogState.RestoredWithPaymentIssue,
+                            message = null
+                        )
+                    }
+                    onMembershipMayHaveChanged()
                     onRestored()
                 }
 
@@ -183,6 +199,7 @@ class RestoreSubscriptionViewModel @Inject constructor(
                             message = null
                         )
                     }
+                    onMembershipMayHaveChanged()
                 }
 
                 RestoreSubscriptionResult.BoundToAnotherAccount -> {

@@ -585,6 +585,8 @@
     <string name="restore_subscription_dialog_restoring">Restoring...</string>
     <string name="restore_subscription_dialog_success_title">Subscription restored</string>
     <string name="restore_subscription_dialog_success_body">Your subscription has been restored to this BiteCal account.</string>
+    <string name="restore_subscription_dialog_payment_issue_title">Subscription restored, payment issue remains</string>
+    <string name="restore_subscription_dialog_payment_issue_body">Your subscription is linked to this BiteCal account, but Google Play still reports a payment issue. Please update your payment method in Google Play to keep your subscription active.</string>
     <string name="restore_subscription_dialog_no_active_title">No active subscription found</string>
     <string name="restore_subscription_dialog_no_active_body">We could not find an active BiteCal subscription on the Google Play account currently used on this device. You can try again later from Settings.</string>
     <string name="restore_subscription_dialog_failed_title">Restore failed</string>
@@ -601,6 +603,8 @@
     <string name="delete_account_dialog_body">Are you sure you want to delete your account? This will permanently delete your BiteCal data, including food logs, weight records, and related settings. This action cannot be undone.</string>
 
     <string name="settings_logout">Logout</string>
+    <string name="settings_logout_loading">Logging out...</string>
+    <string name="settings_logout_failed">Logout failed. Check your connection and try again.</string>
 
 
     <!-- Widget Guide -->

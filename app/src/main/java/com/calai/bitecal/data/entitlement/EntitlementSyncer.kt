@@ -82,7 +82,11 @@ class EntitlementSyncer(
 
         val summaryStatus = PremiumStatus.from(summary.premiumStatus)
         if (summaryStatus == PremiumStatus.PREMIUM || summaryStatus == PremiumStatus.TRIAL) {
-            return@withContext RestoreSubscriptionResult.Restored(summary)
+            return@withContext if (summary.paymentIssue) {
+                RestoreSubscriptionResult.RestoredWithPaymentIssue(summary)
+            } else {
+                RestoreSubscriptionResult.Restored(summary)
+            }
         }
 
         val syncStatus = PremiumStatus.from(syncResponse.premiumStatus)
