@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -241,6 +242,14 @@ fun WeightScreen(
     LaunchedEffect(deleteToastTick, deleteToastType) {
         if (deleteToastType != null) {
             delay(2_000)
+            vm.clearDeleteToast()
+        }
+    }
+
+    // ✅ 防止 toast 還沒自動消失就離開 WeightScreen，回來後又顯示舊 toast。
+    DisposableEffect(Unit) {
+        onDispose {
+            vm.clearError()
             vm.clearDeleteToast()
         }
     }

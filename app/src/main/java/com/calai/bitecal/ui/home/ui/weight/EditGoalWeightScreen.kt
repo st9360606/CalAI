@@ -217,7 +217,7 @@ fun EditGoalWeightScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
-            Spacer(Modifier.height(80.dp))
+            Spacer(Modifier.height(110.dp))
 
             WeightUnitSegmentedForGoal(
                 useMetric = useMetric,

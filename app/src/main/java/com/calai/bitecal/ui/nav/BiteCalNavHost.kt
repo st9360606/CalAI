@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.HiltViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -283,6 +285,21 @@ object NavResults {
     const val ERROR_TOAST = "error_toast"
     const val AUTO_GEN_RELOAD = "auto_gen_reload"
 }
+
+@Composable
+private fun ClearNavResultToastsOnDispose(backStackEntry: NavBackStackEntry) {
+    DisposableEffect(backStackEntry) {
+        onDispose {
+            clearNavResultToasts(backStackEntry)
+        }
+    }
+}
+
+private fun clearNavResultToasts(backStackEntry: NavBackStackEntry) {
+    backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
+    backStackEntry.savedStateHandle[NavResults.ERROR_TOAST] = null
+}
+
 private fun NavController.goHome() {
     // 1) back stack 裡有 HOME → 直接 pop 回 HOME
     val popped = popBackStack(Routes.HOME, inclusive = false)
@@ -1041,6 +1058,8 @@ fun BiteCalNavHost(
             val navSuccess by successFlow.collectAsState(initial = null)
             val navError by errorFlow.collectAsState(initial = null)
 
+            ClearNavResultToastsOnDispose(backStackEntry)
+
             LaunchedEffect(isSignedIn) {
                 if (isSignedIn == true) {
                     vm.refreshAfterLogin()
@@ -1282,6 +1301,8 @@ fun BiteCalNavHost(
             }
             val successToast by successToastFlow.collectAsState(initial = null)
 
+            ClearNavResultToastsOnDispose(backStackEntry)
+
             Box(modifier = Modifier.fillMaxSize()) {
 
                 WeightScreen(
@@ -1409,6 +1430,8 @@ fun BiteCalNavHost(
             }
             val navSuccess by successFlow.collectAsState(initial = null)
             val navError by errorFlow.collectAsState(initial = null)
+
+            ClearNavResultToastsOnDispose(backStackEntry)
 
             // ✅ 1) UsersApi 的 pictureUrl 優先
             val avatarFromUsersApi = remember(pUi.pictureUrl) {
@@ -1695,6 +1718,8 @@ fun BiteCalNavHost(
 
             val navSuccess by successFlow.collectAsState(initial = null)
             val navError by errorFlow.collectAsState(initial = null)
+
+            ClearNavResultToastsOnDispose(backStackEntry)
 
             Box(Modifier.fillMaxSize()) {
                 PersonalDetailsScreen(
@@ -2042,6 +2067,8 @@ fun BiteCalNavHost(
             val navSuccess by successFlow.collectAsState(initial = null)
             val navError by errorFlow.collectAsState(initial = null)
 
+            ClearNavResultToastsOnDispose(backStackEntry)
+
             Box(Modifier.fillMaxSize()) {
 
                 EditNutritionGoalsRoute(
@@ -2276,6 +2303,13 @@ fun BiteCalNavHost(
                     val hasToast = st.cooldown != null || st.refused != null || !st.error.isNullOrBlank()
                     if (hasToast) {
                         delay(2_000)
+                        flowVm.clearTransient()
+                    }
+                }
+
+                // ✅ 防止 Camera toast 還沒自動消失就離開 Camera，回來後又顯示舊 toast。
+                DisposableEffect(flowVm) {
+                    onDispose {
                         flowVm.clearTransient()
                     }
                 }

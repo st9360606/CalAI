@@ -43,6 +43,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -277,6 +278,15 @@ fun HomeScreen(
     LaunchedEffect(workoutUi.toastMessageResId) {
         if (workoutUi.toastMessageResId != null) {
             showWorkoutSheet.value = false
+        }
+    }
+
+    // ✅ 防止快速離開 Home 時，LaunchedEffect 的 delay 被取消後 toast 狀態殘留。
+    // 例如：成功 toast 還沒自動消失就進入 Settings / Weight / Camera，回來 Home 不應再次顯示舊 toast。
+    DisposableEffect(Unit) {
+        onDispose {
+            workoutVm.clearToast()
+            fastingVm.clearToast()
         }
     }
 

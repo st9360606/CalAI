@@ -41,6 +41,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -274,6 +275,13 @@ fun WorkoutHistoryScreen(
     LaunchedEffect(deleteToastTick, deleteToastType) {
         if (deleteToastType != null) {
             delay(2_000)
+            vm.clearDeleteToast()
+        }
+    }
+
+    // ✅ 防止刪除 toast 還沒自動消失就離開 WorkoutHistoryScreen，回來後又顯示舊 toast。
+    DisposableEffect(Unit) {
+        onDispose {
             vm.clearDeleteToast()
         }
     }
