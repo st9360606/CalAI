@@ -495,7 +495,7 @@
     <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
 
     <!-- Referral Screen -->
-    <string name="referral_title">Referral</string>
+    <string name="referral_title">Invite friends</string>
     <string name="common_back">Back</string>
 
     <string name="referral_premium_reward">Premium reward</string>
@@ -533,7 +533,8 @@
 
 
     <!-- Onboarding Referral Code -->
-    <string name="onboard_referral_code_title">Enter referral code\n(optional)</string>
+    <string name="onboard_referral_code_title">Friends</string>
+    <string name="onboard_referral_code_input">Enter referral code\n(optional)</string>
     <string name="onboard_referral_code_subtitle">You can skip this step</string>
     <string name="onboard_referral_code_input_label">Referral Code</string>
     <string name="onboard_referral_code_placeholder">Referral Code</string>

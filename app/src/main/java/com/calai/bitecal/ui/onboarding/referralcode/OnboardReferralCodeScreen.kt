@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,12 +25,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -143,7 +144,7 @@ fun OnboardReferralCodeScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                text = stringResource(R.string.onboard_referral_code_title),
+                text = stringResource(R.string.onboard_referral_code_input),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 41.sp,
@@ -211,45 +212,47 @@ fun OnboardReferralCodeScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReferralTopBar(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .height(72.dp)
-            .padding(start = 16.dp, end = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.size(58.dp),
-        ) {
-            Box(
+    TopAppBar(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.White,
+            navigationIconContentColor = ReferralText,
+        ),
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFFF1F3F7)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.common_back),
+                        tint = ReferralText,
+                    )
+                }
+            }
+        },
+        title = {
+            Row(
                 modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFFF1F3F7)),
-                contentAlignment = Alignment.Center,
+                    .fillMaxWidth()
+                    .padding(end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.common_back),
-                    tint = ReferralText,
+                OnboardingProgress(
+                    stepIndex = 12,
+                    totalSteps = 12,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-        }
-
-        Spacer(Modifier.width(12.dp))
-
-        OnboardingProgress(
-            stepIndex = 12,
-            totalSteps = 12,
-            modifier = Modifier.weight(1f),
-        )
-
-        Spacer(Modifier.width(8.dp))
-    }
+        },
+    )
 }
 
 @Composable

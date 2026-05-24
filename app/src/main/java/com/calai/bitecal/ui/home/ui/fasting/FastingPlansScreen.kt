@@ -75,8 +75,8 @@ import com.calai.bitecal.data.fasting.model.FastingPlan
 import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
-import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -114,7 +114,7 @@ fun FastingPlansScreen(
         Scaffold(
             containerColor = ScreenBg,
             topBar = {
-                HomeDetailTopBar(
+                ProfileEditTopBar(
                     title = stringResource(R.string.fasting_plans),
                     onBack = onBack
                 )

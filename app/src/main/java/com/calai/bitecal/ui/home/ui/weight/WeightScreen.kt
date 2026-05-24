@@ -61,15 +61,15 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.weight.api.WeightItemDto
-import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.toast.DeleteFailedTopToast
 import com.calai.bitecal.ui.home.components.toast.DeleteSuccessTopToast
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.weight.components.FilterTabs
 import com.calai.bitecal.ui.home.ui.weight.components.HistoryRow
 import com.calai.bitecal.ui.home.ui.weight.components.SegmentedButtons
-import com.calai.bitecal.ui.home.ui.weight.components.WeightComponents
 import com.calai.bitecal.ui.home.ui.weight.components.WeightChartCard
+import com.calai.bitecal.ui.home.ui.weight.components.WeightComponents
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -99,7 +99,7 @@ fun WeightScreen(
         Scaffold(
             containerColor = Color(0xFFF5F5F5),
             topBar = {
-                HomeDetailTopBar(
+                ProfileEditTopBar(
                     title = stringResource(R.string.weight_title),
                     onBack = onBack
                 )

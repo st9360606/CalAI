@@ -1174,6 +1174,11 @@ fun BiteCalNavHost(
                         backStackEntry.savedStateHandle[Routes.OPEN_WORKOUT_SHEET_TICK] =
                             WorkoutSheetOpenRequest.ConsumedTick
                     },
+                    onWorkoutSavedGoHome = {
+                        if (nav.currentDestination?.route != Routes.HOME) {
+                            nav.goHome()
+                        }
+                    },
                 )
 
                 key(restoreLocaleKey) {

@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
@@ -62,7 +61,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.R
 import com.calai.bitecal.data.workout.api.WorkoutHistorySessionDto
 import com.calai.bitecal.ui.home.HomeTab
-import com.calai.bitecal.ui.home.components.HomeDetailTopBar
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.toast.DeleteFailedTopToast
@@ -127,32 +126,9 @@ fun WorkoutHistoryScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                HomeDetailTopBar(
+                ProfileEditTopBar(
                     title = stringResource(R.string.workout_history_title),
-                    onBack = onBack,
-                    action = {
-                        IconButton(
-                            onClick = onBack,
-                            modifier = Modifier
-                                .offset(x = (-12).dp)
-                                .size(36.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape)
-                                    .background(WorkoutInk),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = stringResource(R.string.workout_history_close),
-                                    tint = Color.White,
-                                    modifier = Modifier.size(19.dp)
-                                )
-                            }
-                        }
-                    }
+                    onBack = onBack
                 )
             },
             bottomBar = {

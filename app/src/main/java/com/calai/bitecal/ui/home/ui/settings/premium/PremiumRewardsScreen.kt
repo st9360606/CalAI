@@ -11,15 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -32,8 +26,8 @@ import com.calai.bitecal.data.entitlement.model.PremiumStatus
 import com.calai.bitecal.data.membership.api.MembershipSummaryDto
 import com.calai.bitecal.data.membership.api.RewardHistoryItemDto
 import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
+import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PremiumRewardsScreen(
     loading: Boolean,
@@ -45,13 +39,9 @@ fun PremiumRewardsScreen(
 ) {
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Subscription") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
+            ProfileEditTopBar(
+                title = "Subscription",
+                onBack = onBack
             )
         }
     ) { inner ->

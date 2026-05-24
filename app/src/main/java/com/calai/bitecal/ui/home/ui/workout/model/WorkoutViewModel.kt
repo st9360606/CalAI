@@ -47,8 +47,8 @@ data class WorkoutUiState(
     val saving: Boolean = false,                         // 防止連點送出
     val subscriptionRequiredOnce: Boolean = false,
 
-    // 一次性導航旗標（true 時讓畫面導到歷史頁，之後會被 consume 清回 false）
-    val navigateHistoryOnce: Boolean = false
+    // 一次性導航旗標（true 時讓畫面回到 Home，之後會被 consume 清回 false）
+    val navigateHomeOnce: Boolean = false
 )
 
 @HiltViewModel
@@ -210,7 +210,7 @@ class WorkoutViewModel @Inject constructor(
                 toastMessageResId = R.string.workout_tracker_save_success,
                 estimateResult = null,
                 textInput = "",
-                navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
+                navigateHomeOnce = true              // ★ 觸發一次性導航回 Home
             )
         }
     }
@@ -247,14 +247,14 @@ class WorkoutViewModel @Inject constructor(
                 saving = false,
                 toastMessageResId = R.string.workout_tracker_save_success,
                 showDurationPickerFor = null,
-                navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
+                navigateHomeOnce = true              // ★ 觸發一次性導航回 Home
             )
         }
     }
 
     /** 清除一次性導航事件（避免回到 Home 又再次觸發） */
-    fun consumeNavigateHistory() {
-        _ui.value = _ui.value.copy(navigateHistoryOnce = false)
+    fun consumeNavigateHome() {
+        _ui.value = _ui.value.copy(navigateHomeOnce = false)
     }
 
     fun consumeSubscriptionRequired() {

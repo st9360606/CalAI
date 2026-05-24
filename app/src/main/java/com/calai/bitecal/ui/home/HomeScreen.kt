@@ -154,6 +154,7 @@ fun HomeScreen(
     onCheckCanUseWorkout: suspend () -> Boolean = { false },
     openWorkoutSheetRequestTick: Long = 0L,
     onConsumeOpenWorkoutSheetRequest: () -> Unit = {},
+    onWorkoutSavedGoHome: () -> Unit = {},
 ) {
     val ui by vm.ui.collectAsState()
     val waterState by waterVm.ui.collectAsState()
@@ -274,10 +275,19 @@ fun HomeScreen(
         onPauseOrDispose { /* no-op */ }
     }
 
-    // ✅ 有成功訊息就關掉 Host（停留在 HOME）
+    // ✅ 有成功/失敗訊息就先關掉 Host，避免 Toast 被 Sheet 擋住。
     LaunchedEffect(workoutUi.toastMessageResId) {
         if (workoutUi.toastMessageResId != null) {
             showWorkoutSheet.value = false
+        }
+    }
+
+    // ✅ ResultContent / DurationPicker 保存成功後回到 Home，並保留 VM toast 狀態讓 Home 顯示成功吐司。
+    LaunchedEffect(workoutUi.navigateHomeOnce) {
+        if (workoutUi.navigateHomeOnce) {
+            showWorkoutSheet.value = false
+            onWorkoutSavedGoHome()
+            workoutVm.consumeNavigateHome()
         }
     }
 

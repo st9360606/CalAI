@@ -531,7 +531,8 @@
     <string name="onboard_weight_loss_comparison_caption">BiteCal AI讓一切變得簡單並且\n讓您負責</string>
 
     <!-- Onboarding Referral Code -->
-    <string name="onboard_referral_code_title">輸入推薦碼（可選）</string>
+    <string name="onboard_referral_code_title">好友</string>
+    <string name="onboard_referral_code_input">輸入推薦碼（可選）</string>
     <string name="onboard_referral_code_subtitle">您可以跳過此步驟</string>
     <string name="onboard_referral_code_input_label">推薦碼</string>
     <string name="onboard_referral_code_placeholder">推薦碼</string>
