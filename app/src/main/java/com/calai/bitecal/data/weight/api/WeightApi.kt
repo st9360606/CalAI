@@ -23,6 +23,11 @@ interface WeightApi {
 
     @POST("/api/v1/weights/baseline")
     suspend fun ensureBaseline()
+
+    @DELETE("/api/v1/weights/{logDate}")
+    suspend fun deleteWeight(
+        @Path("logDate") logDate: String
+    )
 }
 
 @Serializable

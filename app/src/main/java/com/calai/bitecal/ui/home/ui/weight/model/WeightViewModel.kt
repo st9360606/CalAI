@@ -31,6 +31,11 @@ class WeightViewModel @Inject constructor(
     private val bus: RepoInvalidationBus
 ) : ViewModel() {
 
+    enum class DeleteToastType {
+        SUCCESS,
+        FAILED
+    }
+
     data class UiState(
         /** 已提交（commit）的顯示單位：只會在「成功存檔」後才改變 */
         val unit: UserProfileStore.WeightUnit = UserProfileStore.WeightUnit.LBS,
@@ -58,7 +63,11 @@ class WeightViewModel @Inject constructor(
         val firstWeightAllTimeKg: Double? = null,
 
         val error: String? = null,
-        val saving: Boolean = false
+        val saving: Boolean = false,
+        val deletingLogDates: Set<String> = emptySet(),
+
+        val deleteToastType: DeleteToastType? = null,
+        val deleteToastTick: Long = 0L
     )
 
     private val _ui = MutableStateFlow(UiState())
@@ -268,6 +277,52 @@ class WeightViewModel @Inject constructor(
 
     fun clearError() {
         _ui.update { it.copy(error = null) }
+    }
+
+    fun clearDeleteToast() {
+        _ui.update { it.copy(deleteToastType = null) }
+    }
+
+    fun deleteHistory(logDate: String) = viewModelScope.launch {
+        if (_ui.value.deletingLogDates.contains(logDate)) return@launch
+
+        _ui.update { state ->
+            state.copy(
+                deletingLogDates = state.deletingLogDates + logDate,
+                error = null,
+                deleteToastType = null
+            )
+        }
+
+        runCatching {
+            repo.delete(logDate)
+        }.onSuccess {
+            refreshGate.invalidate()
+
+            _ui.update { state ->
+                state.copy(
+                    history7 = state.history7.filterNot { it.logDate == logDate },
+                    series = state.series.filterNot { it.logDate == logDate },
+                    deletingLogDates = state.deletingLogDates - logDate,
+                    error = null,
+                    deleteToastType = DeleteToastType.SUCCESS,
+                    deleteToastTick = state.deleteToastTick + 1L
+                )
+            }
+
+            refreshThrottled(force = true)
+        }.onFailure { e ->
+            if (e is CancellationException) throw e
+
+            _ui.update { state ->
+                state.copy(
+                    deletingLogDates = state.deletingLogDates - logDate,
+                    error = null,
+                    deleteToastType = DeleteToastType.FAILED,
+                    deleteToastTick = state.deleteToastTick + 1L
+                )
+            }
+        }
     }
 
     private fun pickCurrentFromTimeseries(

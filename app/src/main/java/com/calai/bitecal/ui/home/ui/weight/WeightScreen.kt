@@ -1,17 +1,28 @@
 package com.calai.bitecal.ui.home.ui.weight
 
+import android.annotation.SuppressLint
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,17 +43,26 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.weight.api.WeightItemDto
 import com.calai.bitecal.ui.home.components.HomeDetailTopBar
+import com.calai.bitecal.ui.home.components.toast.DeleteFailedTopToast
+import com.calai.bitecal.ui.home.components.toast.DeleteSuccessTopToast
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.ui.weight.components.FilterTabs
 import com.calai.bitecal.ui.home.ui.weight.components.HistoryRow
@@ -50,6 +71,7 @@ import com.calai.bitecal.ui.home.ui.weight.components.WeightComponents
 import com.calai.bitecal.ui.home.ui.weight.components.WeightChartCard
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import kotlin.math.abs
 
@@ -63,6 +85,8 @@ fun WeightScreen(
 ) {
     val ui by vm.ui.collectAsState()
     val error = ui.error
+    val deleteToastType = ui.deleteToastType
+    val deleteToastTick = ui.deleteToastTick
 
     val historySorted = remember(ui.history7) {
         ui.history7.sortedByDescending { dto ->
@@ -116,6 +140,7 @@ fun WeightScreen(
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.padding(start = 8.dp)
                             )
+
                             SegmentedButtons(
                                 selected = ui.unit,
                                 onSelect = { vm.setUnit(it) },
@@ -127,7 +152,9 @@ fun WeightScreen(
                         }
                     }
 
-                    item { WeightComponents(ui = ui) }
+                    item {
+                        WeightComponents(ui = ui)
+                    }
 
                     item {
                         FilterTabs(
@@ -155,7 +182,10 @@ fun WeightScreen(
                         )
                     }
 
-                    itemsIndexed(historySorted) { index, item ->
+                    itemsIndexed(
+                        items = historySorted,
+                        key = { _, item -> item.logDate }
+                    ) { index, item ->
                         val previousFromHistory = historySorted.getOrNull(index + 1)
                         val previous = previousFromHistory
                             ?: buildProfileWeightFallbackPrevious(
@@ -163,28 +193,176 @@ fun WeightScreen(
                                 current = item
                             )
 
-                        HistoryRow(
+                        SwipeToDeleteHistoryRow(
                             item = item,
                             unit = ui.unit,
-                            previous = previous
+                            previous = previous,
+                            deleting = ui.deletingLogDates.contains(item.logDate),
+                            onDeleteClick = {
+                                vm.deleteHistory(item.logDate)
+                            }
                         )
                     }
                 }
             }
         }
 
-        if (error != null) {
-            ErrorTopToast(
-                message = error,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
+        when {
+            error != null -> {
+                ErrorTopToast(
+                    message = error,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+
+            deleteToastType == WeightViewModel.DeleteToastType.SUCCESS -> {
+                DeleteSuccessTopToast(
+                    message = stringResource(R.string.weight_delete_success),
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+
+            deleteToastType == WeightViewModel.DeleteToastType.FAILED -> {
+                DeleteFailedTopToast(
+                    message = stringResource(R.string.weight_delete_failed),
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
         }
     }
 
     LaunchedEffect(error) {
         if (error != null) {
-            delay(2000)
+            delay(2_000)
             vm.clearError()
+        }
+    }
+
+    LaunchedEffect(deleteToastTick, deleteToastType) {
+        if (deleteToastType != null) {
+            delay(2_000)
+            vm.clearDeleteToast()
+        }
+    }
+}
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@Composable
+private fun SwipeToDeleteHistoryRow(
+    item: WeightItemDto,
+    unit: UserProfileStore.WeightUnit,
+    previous: WeightItemDto?,
+    deleting: Boolean,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        val scope = rememberCoroutineScope()
+        val actionWidth = maxWidth * 0.25f
+        val density = LocalDensity.current
+        val actionWidthPx = with(density) { actionWidth.toPx() }
+        val openThresholdPx = actionWidthPx * 0.42f
+        val flingThresholdPx = with(density) { 380.dp.toPx() }
+
+        val offsetX = remember(item.logDate) { Animatable(0f) }
+        val isOpened = offsetX.value < -1f
+
+        val dragState = rememberDraggableState { delta ->
+            scope.launch {
+                val next = (offsetX.value + delta).coerceIn(-actionWidthPx, 0f)
+                offsetX.snapTo(next)
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0xFFE46A6A))
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .width(actionWidth)
+                    .fillMaxHeight()
+                    .padding(end = 18.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch { offsetX.snapTo(0f) }
+                        onDeleteClick()
+                    },
+                    enabled = isOpened && !deleting,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .testTag("weight_history_delete_button")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.trash),
+                        contentDescription = stringResource(
+                            R.string.weight_history_delete_content_description
+                        ),
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
+
+            HistoryRow(
+                item = item,
+                unit = unit,
+                previous = previous,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        translationX = offsetX.value
+                    }
+                    .draggable(
+                        state = dragState,
+                        orientation = Orientation.Horizontal,
+                        enabled = !deleting,
+                        onDragStarted = {
+                            scope.launch { offsetX.stop() }
+                        },
+                        onDragStopped = { velocity ->
+                            val target = when {
+                                velocity <= -flingThresholdPx -> -actionWidthPx
+                                velocity >= flingThresholdPx -> 0f
+                                offsetX.value <= -openThresholdPx -> -actionWidthPx
+                                else -> 0f
+                            }
+
+                            scope.launch {
+                                offsetX.animateTo(
+                                    targetValue = target,
+                                    animationSpec = tween(
+                                        durationMillis = 180,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            }
+                        }
+                    )
+                    .clickable(enabled = isOpened) {
+                        scope.launch {
+                            offsetX.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(
+                                    durationMillis = 160,
+                                    easing = FastOutSlowInEasing
+                                )
+                            )
+                        }
+                    }
+            )
         }
     }
 }

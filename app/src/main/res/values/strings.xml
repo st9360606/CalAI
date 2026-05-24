@@ -224,6 +224,9 @@
     <string name="weight_title">Weight</string>
     <string name="weight_overview_title">Overview</string>
     <string name="weight_history_title">History</string>
+    <string name="weight_history_delete_content_description">Delete weight record</string>
+    <string name="weight_delete_success">Deleted successfully !</string>
+    <string name="weight_delete_failed">Delete failed. Please try again.</string>
     <string name="weight_log_weight">Log Weight</string>
     <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
 

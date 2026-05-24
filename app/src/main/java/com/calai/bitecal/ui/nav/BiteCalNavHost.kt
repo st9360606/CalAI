@@ -1188,9 +1188,7 @@ fun BiteCalNavHost(
                     !navSuccess.isNullOrBlank() -> {
                         SuccessTopToast(
                             message = navSuccess!!,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            minWidth = 150.dp,
-                            minHeight = 30.dp
+                            modifier = Modifier.align(Alignment.TopCenter)
                         )
                         LaunchedEffect(navSuccess) {
                             delay(2_000)
@@ -1305,9 +1303,7 @@ fun BiteCalNavHost(
                 if (!successToast.isNullOrBlank()) {
                     SuccessTopToast(
                         message = successToast!!,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        minWidth = 150.dp,
-                        minHeight = 30.dp
+                        modifier = Modifier.align(Alignment.TopCenter)
                     )
 
                     LaunchedEffect(successToast) {
@@ -1346,7 +1342,7 @@ fun BiteCalNavHost(
                             // ✅ 只把結果交給「上一頁」顯示
                             nav.previousBackStackEntry
                                 ?.savedStateHandle
-                                ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                                ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                             settingsVm.refreshProfileOnly()
                             nav.popBackStack()
                         }
@@ -1360,7 +1356,7 @@ fun BiteCalNavHost(
                     onSaved = {
                         nav.previousBackStackEntry
                             ?.savedStateHandle
-                            ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                            ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                         settingsVm.refreshProfileOnly()
                         nav.popBackStack()
                     }
@@ -1648,9 +1644,7 @@ fun BiteCalNavHost(
                     !navSuccess.isNullOrBlank() -> {
                         SuccessTopToast(
                             message = navSuccess!!,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            minWidth = 150.dp,
-                            minHeight = 30.dp
+                            modifier = Modifier.align(Alignment.TopCenter)
                         )
                         LaunchedEffect(navSuccess) {
                             delay(2_000)
@@ -1738,9 +1732,7 @@ fun BiteCalNavHost(
                     !navSuccess.isNullOrBlank() -> {
                         SuccessTopToast(
                             message = navSuccess!!,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            minWidth = 150.dp,
-                            minHeight = 30.dp
+                            modifier = Modifier.align(Alignment.TopCenter)
                         )
 
                         LaunchedEffect(navSuccess) {
@@ -1786,7 +1778,7 @@ fun BiteCalNavHost(
                             // ✅ 回 Personal 顯示 toast（你 PERSONAL 已經有讀 NavResults.SUCCESS_TOAST）
                             nav.previousBackStackEntry
                                 ?.savedStateHandle
-                                ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                                ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
 
                             // ✅ 刷新 Users(me) 的 name（如果你已加 refreshMeOnly 就用它；沒加就先 refresh()）
                             runCatching { settingsVm.refreshMeOnly() }.getOrElse { settingsVm.refresh() }
@@ -1829,7 +1821,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     settingsVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -1853,7 +1845,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     settingsVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -1880,7 +1872,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     settingsVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -1904,7 +1896,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     settingsVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -1928,7 +1920,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     settingsVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -1952,7 +1944,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     settingsVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -1979,7 +1971,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     settingsVm.refreshProfileOnly()
                     nav.popBackStack()
                 }
@@ -2001,7 +1993,7 @@ fun BiteCalNavHost(
                 onSaved = {
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                        ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                     nav.popBackStack()
                 }
             )
@@ -2058,7 +2050,7 @@ fun BiteCalNavHost(
                     onSaved = {
                         nav.previousBackStackEntry
                             ?.savedStateHandle
-                            ?.set(NavResults.SUCCESS_TOAST, "Saved successfully!")
+                            ?.set(NavResults.SUCCESS_TOAST, "Saved successfully !")
                         settingsVm.refreshProfileOnly()
                         nav.popBackStack()
                     },
@@ -2076,9 +2068,7 @@ fun BiteCalNavHost(
                     !navSuccess.isNullOrBlank() -> {
                         SuccessTopToast(
                             message = navSuccess!!,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            minWidth = 150.dp,
-                            minHeight = 30.dp
+                            modifier = Modifier.align(Alignment.TopCenter)
                         )
                         LaunchedEffect(navSuccess) {
                             delay(2_000)

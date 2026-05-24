@@ -838,9 +838,7 @@ fun HomeScreen(
                 fastingToast != null -> {
                     SuccessTopToast(
                         message = fastingToast,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        minWidth = 150.dp,
-                        minHeight = 30.dp
+                        modifier = Modifier.align(Alignment.TopCenter)
                     )
                     LaunchedEffect(fastingToast) {
                         delay(2000)
@@ -852,9 +850,7 @@ fun HomeScreen(
                 canShowWorkoutToast && workoutToast != null -> {
                     SuccessTopToast(
                         message = workoutToast,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        minWidth = 240.dp,
-                        minHeight = 30.dp
+                        modifier = Modifier.align(Alignment.TopCenter)
                     )
                     LaunchedEffect(workoutToast) {
                         delay(2000)

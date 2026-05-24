@@ -145,7 +145,7 @@ class EditHeightViewModel @Inject constructor(
                     it.copy(
                         saving = false,
                         error = null,
-                        toastMessage = "Saved successfully!"
+                        toastMessage = "Saved successfully !"
                     )
                 }
                 onSuccess()

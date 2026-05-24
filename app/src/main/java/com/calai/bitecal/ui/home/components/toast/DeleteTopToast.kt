@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,26 +26,47 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
-/**
- * 頂部置中的白色膠囊錯誤提示。
- *
- * 設計原則：
- * - 短文字依內容寬度縮小
- * - 長文字最多 2 行並省略
- * - 小手機保留左右安全距離
- * - 大手機 / 平板不超過 360dp
- *
- * 2 秒後請由呼叫端自行 clear。
- */
 @Composable
-fun ErrorTopToast(
+fun DeleteSuccessTopToast(
     message: String,
+    modifier: Modifier = Modifier
+) {
+    DeleteTopToastBase(
+        message = message,
+        icon = Icons.Filled.Check,
+        iconBackgroundColor = Color(0xFF22C55E),
+        contentDescription = "delete success",
+        modifier = modifier
+    )
+}
+
+@Composable
+fun DeleteFailedTopToast(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    DeleteTopToastBase(
+        message = message,
+        icon = Icons.Filled.Error,
+        iconBackgroundColor = Color(0xFFEF4444),
+        contentDescription = "delete failed",
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun DeleteTopToastBase(
+    message: String,
+    icon: ImageVector,
+    iconBackgroundColor: Color,
+    contentDescription: String,
     modifier: Modifier = Modifier
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -92,12 +114,12 @@ fun ErrorTopToast(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFEF4444)),
+                        .background(iconBackgroundColor),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Error,
-                        contentDescription = "error",
+                        imageVector = icon,
+                        contentDescription = contentDescription,
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )

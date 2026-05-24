@@ -61,6 +61,11 @@ class WeightRepository @Inject constructor(
     suspend fun recent7() = withContext(Dispatchers.IO) { api.recent7() }
     suspend fun summary(range: String) = withContext(Dispatchers.IO) { api.summary(range) }
 
+    suspend fun delete(logDate: String) = withContext(Dispatchers.IO) {
+        api.deleteWeight(logDate)
+        bus.invalidateWeight()
+    }
+
     suspend fun ensureBaseline() {
         Log.d("WeightRepo", "ensureBaseline() called")
         runCatching { api.ensureBaseline() }

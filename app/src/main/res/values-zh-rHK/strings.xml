@@ -224,6 +224,9 @@
     <string name="weight_title">體重</string>
     <string name="weight_overview_title">總覽</string>
     <string name="weight_history_title">歷史紀錄</string>
+    <string name="weight_history_delete_content_description">刪除體重紀錄</string>
+    <string name="weight_delete_success">刪除成功</string>
+    <string name="weight_delete_failed">刪除失敗，請稍後再試</string>
     <string name="weight_log_weight">記錄體重</string>
     <string name="weight_goal_chart_empty_hint">記錄體重後，這裡會顯示你的趨勢</string>
 
