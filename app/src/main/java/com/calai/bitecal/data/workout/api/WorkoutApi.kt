@@ -3,8 +3,10 @@ package com.calai.bitecal.data.workout.api
 import com.calai.bitecal.data.workout.model.WorkoutWeeklyProgressDto
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 /**
  * Workout / Activity tracking API
@@ -31,6 +33,11 @@ interface WorkoutApi {
 
     @GET("/api/v1/workouts/history/recent")
     suspend fun recentHistory(): WorkoutHistoryResponse
+
+    @DELETE("/api/v1/workouts/{sessionId}")
+    suspend fun deleteSession(
+        @Path("sessionId") sessionId: Long
+    ): TodayWorkoutResponse
 
     @GET("/api/v1/workouts/me/weight")
     suspend fun myWeight(): WeightDto

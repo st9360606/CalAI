@@ -462,6 +462,9 @@
     <string name="workout_history_recent_body">Showing workouts from the last 7 days</string>
     <string name="workout_history_kcal_with_unit">%1$d kcal</string>
     <string name="workout_history_session_completed">Completed</string>
+    <string name="workout_history_delete_failed">Delete failed. Please try again.</string>
+    <string name="workout_history_delete_success">Deleted successfully !</string>
+    <string name="workout_history_delete_content_description">Delete workout record</string>
 
     <!-- =========================
          Water Chart
@@ -632,4 +635,26 @@
     <string name="widget_guide_mock_widgets">Widgets</string>
 
     <string name="subscription_already_owned_restore_required">Your Google Play account already has an active BiteCal subscription. Restore it to this BiteCal account before using premium features.</string>
+
+    <!-- DurationPickerSheet -->
+    <string name="workout_duration_sheet_subtitle">Add this workout time to your activity log</string>
+    <string name="workout_duration_hour_short">hr</string>
+    <string name="workout_duration_minute_short">min</string>
+    <string name="workout_duration_save">Save</string>
+    <string name="workout_duration_cancel">Cancel</string>
+
+    <!-- Workout preset display names -->
+    <string name="workout_preset_walking">Walking</string>
+    <string name="workout_preset_running">Running</string>
+    <string name="workout_preset_cycling">Cycling</string>
+    <string name="workout_preset_swimming">Swimming</string>
+    <string name="workout_preset_hiking">Hiking</string>
+    <string name="workout_preset_aerobic_exercise">Aerobic exercise</string>
+    <string name="workout_preset_strength_training">Strength Training</string>
+    <string name="workout_preset_weight_training">Weight training</string>
+    <string name="workout_preset_basketball">Basketball</string>
+    <string name="workout_preset_soccer">Soccer</string>
+    <string name="workout_preset_tennis">Tennis</string>
+    <string name="workout_preset_yoga">Yoga</string>
+
 </resources>

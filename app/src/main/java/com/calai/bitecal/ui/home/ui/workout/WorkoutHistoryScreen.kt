@@ -1,12 +1,22 @@
 package com.calai.bitecal.ui.home.ui.workout
 
+import android.annotation.SuppressLint
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,10 +42,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,10 +61,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.R
 import com.calai.bitecal.data.workout.api.WorkoutHistorySessionDto
 import com.calai.bitecal.ui.home.HomeTab
+import com.calai.bitecal.ui.home.components.HomeDetailTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
-import com.calai.bitecal.ui.home.components.HomeDetailTopBar
+import com.calai.bitecal.ui.home.components.toast.DeleteFailedTopToast
+import com.calai.bitecal.ui.home.components.toast.DeleteSuccessTopToast
+import com.calai.bitecal.ui.home.ui.workout.model.WorkoutDeleteToastType
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 // --- 精煉後的色彩計畫 (維持原意涵，但微調適用於無邊框設計) ---
@@ -81,6 +101,8 @@ fun WorkoutHistoryScreen(
     }
 
     val ui = vm.ui.collectAsStateWithLifecycle().value
+    val deleteToastType = ui.deleteToastType
+    val deleteToastTick = ui.deleteToastTick
     val history = ui.recentHistory
     val sessions = history?.sessions.orEmpty()
     val totalKcal = history?.totalKcal ?: 0
@@ -217,11 +239,42 @@ fun WorkoutHistoryScreen(
                             items = sessions,
                             key = { session -> session.id }
                         ) { session ->
-                            WorkoutHistorySessionTile(session = session)
+                            SwipeToDeleteWorkoutSessionTile(
+                                session = session,
+                                deleting = ui.deletingSessionIds.contains(session.id),
+                                onDeleteClick = {
+                                    vm.deleteHistorySession(session.id)
+                                }
+                            )
                         }
                     }
                 }
             }
+        }
+
+        when (deleteToastType) {
+            WorkoutDeleteToastType.SUCCESS -> {
+                DeleteSuccessTopToast(
+                    message = stringResource(R.string.workout_history_delete_success),
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+
+            WorkoutDeleteToastType.FAILED -> {
+                DeleteFailedTopToast(
+                    message = stringResource(R.string.workout_history_delete_failed),
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+
+            null -> Unit
+        }
+    }
+
+    LaunchedEffect(deleteToastTick, deleteToastType) {
+        if (deleteToastType != null) {
+            delay(2_000)
+            vm.clearDeleteToast()
         }
     }
 }
@@ -428,12 +481,131 @@ private fun WorkoutHistoryStateCard(
     }
 }
 
+
+@SuppressLint("UnusedBoxWithConstraintsScope")
+@Composable
+private fun SwipeToDeleteWorkoutSessionTile(
+    session: WorkoutHistorySessionDto,
+    deleting: Boolean,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        val scope = rememberCoroutineScope()
+        val actionWidth = maxWidth * 0.25f
+        val density = LocalDensity.current
+        val actionWidthPx = with(density) { actionWidth.toPx() }
+        val openThresholdPx = actionWidthPx * 0.42f
+        val flingThresholdPx = with(density) { 380.dp.toPx() }
+
+        val offsetX = remember(session.id) { Animatable(0f) }
+        val isOpened = offsetX.value < -1f
+
+        val dragState = rememberDraggableState { delta ->
+            scope.launch {
+                val next = (offsetX.value + delta).coerceIn(-actionWidthPx, 0f)
+                offsetX.snapTo(next)
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color(0xFFE46A6A))
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .width(actionWidth)
+                    .fillMaxHeight()
+                    .padding(end = 18.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch { offsetX.snapTo(0f) }
+                        onDeleteClick()
+                    },
+                    enabled = isOpened && !deleting,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .testTag("workout_history_delete_button")
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.trash),
+                        contentDescription = stringResource(
+                            R.string.workout_history_delete_content_description
+                        ),
+                        tint = Color.White,
+                        modifier = Modifier.size(26.dp)
+                    )
+                }
+            }
+
+            WorkoutHistorySessionTile(
+                session = session,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        translationX = offsetX.value
+                    }
+                    .draggable(
+                        state = dragState,
+                        orientation = Orientation.Horizontal,
+                        enabled = !deleting,
+                        onDragStarted = {
+                            scope.launch { offsetX.stop() }
+                        },
+                        onDragStopped = { velocity ->
+                            val target = when {
+                                velocity <= -flingThresholdPx -> -actionWidthPx
+                                velocity >= flingThresholdPx -> 0f
+                                offsetX.value <= -openThresholdPx -> -actionWidthPx
+                                else -> 0f
+                            }
+
+                            scope.launch {
+                                offsetX.animateTo(
+                                    targetValue = target,
+                                    animationSpec = tween(
+                                        durationMillis = 180,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            }
+                        }
+                    )
+                    .clickable(enabled = isOpened) {
+                        scope.launch {
+                            offsetX.animateTo(
+                                targetValue = 0f,
+                                animationSpec = tween(
+                                    durationMillis = 160,
+                                    easing = FastOutSlowInEasing
+                                )
+                            )
+                        }
+                    }
+            )
+        }
+    }
+}
+
 @Composable
 private fun WorkoutHistorySessionTile(
-    session: WorkoutHistorySessionDto
+    session: WorkoutHistorySessionDto,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         color = WorkoutCardWhite,
         shadowElevation = 2.dp

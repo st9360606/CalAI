@@ -461,6 +461,9 @@
     <string name="workout_history_recent_body">顯示最近 7 天的運動紀錄</string>
     <string name="workout_history_kcal_with_unit">%1$d 大卡</string>
     <string name="workout_history_session_completed">已完成</string>
+    <string name="workout_history_delete_failed">刪除失敗，請稍後再試</string>
+    <string name="workout_history_delete_success">刪除成功</string>
+    <string name="workout_history_delete_content_description">刪除運動紀錄</string>
 
     <!-- =========================
          Water Chart
@@ -631,4 +634,26 @@
     <string name="widget_guide_mock_widgets">小工具</string>
 
     <string name="subscription_already_owned_restore_required">目前這個 Google Play 帳號已經有有效的 BiteCal 訂閱。請先將訂閱恢復到目前登入的 BiteCal 帳號，才能使用付費功能。</string>
+
+    <!-- DurationPickerSheet -->
+    <string name="workout_duration_sheet_subtitle">將這次運動時間加入你的活動紀錄</string>
+    <string name="workout_duration_hour_short">時</string>
+    <string name="workout_duration_minute_short">分</string>
+    <string name="workout_duration_save">儲存</string>
+    <string name="workout_duration_cancel">取消</string>
+
+    <!-- Workout preset display names -->
+    <string name="workout_preset_walking">步行</string>
+    <string name="workout_preset_running">跑步</string>
+    <string name="workout_preset_cycling">騎單車</string>
+    <string name="workout_preset_swimming">游泳</string>
+    <string name="workout_preset_hiking">健行</string>
+    <string name="workout_preset_aerobic_exercise">有氧運動</string>
+    <string name="workout_preset_strength_training">肌力訓練</string>
+    <string name="workout_preset_weight_training">重量訓練</string>
+    <string name="workout_preset_basketball">籃球</string>
+    <string name="workout_preset_soccer">足球</string>
+    <string name="workout_preset_tennis">網球</string>
+    <string name="workout_preset_yoga">瑜伽</string>
+
 </resources>

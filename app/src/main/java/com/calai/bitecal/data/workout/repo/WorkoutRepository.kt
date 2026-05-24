@@ -46,6 +46,10 @@ class WorkoutRepository @Inject constructor(
         return api.recentHistory()
     }
 
+    suspend fun deleteSession(sessionId: Long): TodayWorkoutResponse {
+        return api.deleteSession(sessionId)
+    }
+
     suspend fun loadMyWeightKg(): Double {
         return api.myWeight().kg
     }

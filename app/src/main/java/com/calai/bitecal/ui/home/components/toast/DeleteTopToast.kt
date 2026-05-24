@@ -38,7 +38,7 @@ fun DeleteSuccessTopToast(
     message: String,
     modifier: Modifier = Modifier
 ) {
-    DeleteTopToastBase(
+    DeleteTopToast(
         message = message,
         icon = Icons.Filled.Check,
         iconBackgroundColor = Color(0xFF22C55E),
@@ -52,7 +52,7 @@ fun DeleteFailedTopToast(
     message: String,
     modifier: Modifier = Modifier
 ) {
-    DeleteTopToastBase(
+    DeleteTopToast(
         message = message,
         icon = Icons.Filled.Error,
         iconBackgroundColor = Color(0xFFEF4444),
@@ -62,7 +62,7 @@ fun DeleteFailedTopToast(
 }
 
 @Composable
-private fun DeleteTopToastBase(
+private fun DeleteTopToast(
     message: String,
     icon: ImageVector,
     iconBackgroundColor: Color,

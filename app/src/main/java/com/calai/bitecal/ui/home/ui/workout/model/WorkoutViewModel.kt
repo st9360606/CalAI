@@ -9,6 +9,7 @@ import com.calai.bitecal.data.workout.api.WorkoutHistoryResponse
 import com.calai.bitecal.data.workout.repo.WorkoutRepository
 import com.calai.bitecal.data.workout.store.WorkoutTodayStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,11 @@ import retrofit2.HttpException
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
+enum class WorkoutDeleteToastType {
+    SUCCESS,
+    FAILED
+}
+
 data class WorkoutUiState(
     val textInput: String = "",
     val presets: List<PresetWorkoutDto> = emptyList(),
@@ -26,6 +32,9 @@ data class WorkoutUiState(
     val recentHistory: WorkoutHistoryResponse? = null,
     val historyLoading: Boolean = false,
     val historyError: String? = null,
+    val deletingSessionIds: Set<Long> = emptySet(),
+    val deleteToastType: WorkoutDeleteToastType? = null,
+    val deleteToastTick: Long = 0L,
 
     // 狀態控制
     val estimating: Boolean = false,
@@ -253,6 +262,58 @@ class WorkoutViewModel @Inject constructor(
 
     fun clearToast() {
         _ui.value = _ui.value.copy(toastMessage = null)
+    }
+
+    fun clearDeleteToast() {
+        _ui.value = _ui.value.copy(deleteToastType = null)
+    }
+
+    fun deleteHistorySession(sessionId: Long) {
+        if (_ui.value.deletingSessionIds.contains(sessionId)) return
+
+        viewModelScope.launch {
+            _ui.value = _ui.value.copy(
+                deletingSessionIds = _ui.value.deletingSessionIds + sessionId,
+                deleteToastType = null
+            )
+
+            runCatching {
+                repo.deleteSession(sessionId)
+            }.onSuccess { today ->
+                todayStore.setFromServer(today)
+
+                _ui.value = _ui.value.let { state ->
+                    val currentHistory = state.recentHistory
+                    val deletedSession = currentHistory
+                        ?.sessions
+                        ?.firstOrNull { session -> session.id == sessionId }
+
+                    val updatedHistory = currentHistory?.copy(
+                        totalKcal = (currentHistory.totalKcal - (deletedSession?.kcal ?: 0))
+                            .coerceAtLeast(0),
+                        sessions = currentHistory.sessions.filterNot { session ->
+                            session.id == sessionId
+                        }
+                    )
+
+                    state.copy(
+                        recentHistory = updatedHistory,
+                        deletingSessionIds = state.deletingSessionIds - sessionId,
+                        historyError = null,
+                        deleteToastType = WorkoutDeleteToastType.SUCCESS,
+                        deleteToastTick = state.deleteToastTick + 1L
+                    )
+                }
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+
+                _ui.value = _ui.value.copy(
+                    deletingSessionIds = _ui.value.deletingSessionIds - sessionId,
+                    deleteToastType = WorkoutDeleteToastType.FAILED,
+                    deleteToastTick = _ui.value.deleteToastTick + 1L
+                )
+            }
+        }
     }
 
     fun dismissDialogs() {
