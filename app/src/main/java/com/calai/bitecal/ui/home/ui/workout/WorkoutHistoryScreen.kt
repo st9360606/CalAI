@@ -194,7 +194,7 @@ fun WorkoutHistoryScreen(
                         }
                     }
 
-                    ui.historyError != null -> {
+                    ui.historyError -> {
                         item {
                             WorkoutHistoryStateCard(
                                 title = stringResource(R.string.workout_history_error_title),
@@ -322,7 +322,7 @@ private fun WorkoutHistorySummaryCard(
             ) {
                 Column {
                     Text(
-                        text = "Today",
+                        text = stringResource(R.string.workout_history_today_label),
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = WorkoutBurnRed,
                             fontWeight = FontWeight.SemiBold
@@ -628,7 +628,7 @@ private fun WorkoutHistorySessionTile(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = session.name,
+                    text = localizedWorkoutName(rawName = session.name),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = WorkoutInk,
                         fontWeight = FontWeight.Bold
@@ -640,7 +640,7 @@ private fun WorkoutHistorySessionTile(
                 Spacer(Modifier.height(5.dp))
 
                 Text(
-                    text = "${session.dateLabel} • ${session.timeLabel}",
+                    text = stringResource(R.string.workout_history_date_time, session.dateLabel, session.timeLabel),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = WorkoutMuted,
                         fontWeight = FontWeight.Medium

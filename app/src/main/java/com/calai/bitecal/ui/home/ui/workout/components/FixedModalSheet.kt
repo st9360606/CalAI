@@ -15,17 +15,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.unit.dp
+import com.calai.bitecal.i18n.ProvideComposeLocale
+import com.calai.bitecal.i18n.currentLocaleKey
 
 /**
  * 一個固定在底部、完全不跟隨鍵盤位移的「自製」Modal Sheet」。
  * - 以 Dialog 呈現（usePlatformDefaultWidth=false, decorFitsSystemWindows=false）
- * - panel 放在**最後一個參數**，讓尾隨 lambda 自動對到 panel。
+ * - panel 放在最後一個參數，讓尾隨 lambda 自動對到 panel。
  */
 @Composable
 fun FixedModalSheet(
@@ -37,40 +40,50 @@ fun FixedModalSheet(
 ) {
     if (!visible) return
 
-    Dialog(
-        onDismissRequest = onDismissRequest,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false
-        )
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(scrimColor)
-                    .let {
-                        if (onScrimClick != null) it.clickable { onScrimClick.invoke() } else it
-                    }
-            )
+    val localeTag = currentLocaleKey()
+    val scrimClick = onScrimClick
 
-            AnimatedVisibility(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                visible = true,
-                enter = slideInVertically(animationSpec = tween(180)) { it } + fadeIn(tween(180)),
-                exit = slideOutVertically(animationSpec = tween(180)) { it } + fadeOut(tween(120))
-            ) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color.White, // ✅ 改成純白底
-                    shape = MaterialTheme.shapes.extraLarge,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 8.dp
-                ) {
-                    panel()
+    key(localeTag) {
+        Dialog(
+            onDismissRequest = onDismissRequest,
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
+            )
+        ) {
+            ProvideComposeLocale(localeTag) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .background(scrimColor)
+                            .let { modifier ->
+                                if (scrimClick != null) {
+                                    modifier.clickable { scrimClick.invoke() }
+                                } else {
+                                    modifier
+                                }
+                            }
+                    )
+
+                    AnimatedVisibility(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        visible = true,
+                        enter = slideInVertically(animationSpec = tween(180)) { it } + fadeIn(tween(180)),
+                        exit = slideOutVertically(animationSpec = tween(180)) { it } + fadeOut(tween(120))
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color.White,
+                            shape = MaterialTheme.shapes.extraLarge,
+                            tonalElevation = 0.dp,
+                            shadowElevation = 8.dp
+                        ) {
+                            panel()
+                        }
+                    }
                 }
             }
         }
     }
 }
-

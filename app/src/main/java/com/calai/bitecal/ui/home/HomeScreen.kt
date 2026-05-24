@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -85,6 +86,7 @@ import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
+import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.home.components.CalendarStrip
 import com.calai.bitecal.ui.home.components.CaloriesCardModern
 import com.calai.bitecal.ui.home.components.LightHomeBackground
@@ -245,6 +247,7 @@ fun HomeScreen(
     val registryOwner = LocalActivityResultRegistryOwner.current
 
     // === 這裡是新增的狀態：控制 bottom sheet (Workout Tracker) 是否顯示 ===
+    val localeKey = currentLocaleKey()
     val showWorkoutSheet = rememberSaveable { mutableStateOf(false) }
 
     // 只有在 owner 存在時才建立 launcher，否則用 null 表示不用它
@@ -271,8 +274,8 @@ fun HomeScreen(
     }
 
     // ✅ 有成功訊息就關掉 Host（停留在 HOME）
-    LaunchedEffect(workoutUi.toastMessage) {
-        if (workoutUi.toastMessage != null) {
+    LaunchedEffect(workoutUi.toastMessageResId) {
+        if (workoutUi.toastMessageResId != null) {
             showWorkoutSheet.value = false
         }
     }
@@ -819,53 +822,58 @@ fun HomeScreen(
 
         // ===== ✅ Toast 疊加層（先顯示 Fasting，再顯示 Workout） =====
         val canShowWorkoutToast = !showWorkoutSheet.value
-        val workoutToast = workoutUi.toastMessage
+        val workoutToastResId = workoutUi.toastMessageResId
         val fastingToast = fastingUi.toastMessage   // ★ 來自 FastingPlanViewModel
-        Box(Modifier.fillMaxSize()) {
-            when {
-                // 1️⃣ 優先顯示 Fasting 儲存結果（不管 Workout 有沒有）
-                showWorkoutGateError -> {
-                    ErrorTopToast(
-                        message = workoutGateErrorMessage,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
-                    LaunchedEffect(showWorkoutGateError) {
-                        delay(2000)
-                        showWorkoutGateError = false
+        key(localeKey, workoutToastResId, fastingToast, showWorkoutGateError) {
+            Box(Modifier.fillMaxSize()) {
+                when {
+                    // 1️⃣ 優先顯示 Fasting 儲存結果（不管 Workout 有沒有）
+                    showWorkoutGateError -> {
+                        ErrorTopToast(
+                            message = workoutGateErrorMessage,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                        LaunchedEffect(showWorkoutGateError) {
+                            delay(2000)
+                            showWorkoutGateError = false
+                        }
                     }
-                }
 
-                fastingToast != null -> {
-                    SuccessTopToast(
-                        message = fastingToast,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
-                    LaunchedEffect(fastingToast) {
-                        delay(2000)
-                        fastingVm.clearToast()   // ★ 呼叫剛剛加的 clearToast()
+                    fastingToast != null -> {
+                        SuccessTopToast(
+                            message = fastingToast,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                        LaunchedEffect(fastingToast) {
+                            delay(2000)
+                            fastingVm.clearToast()   // ★ 呼叫剛剛加的 clearToast()
+                        }
                     }
-                }
 
-                // 2️⃣ 沒有 Fasting toast 時，才顯示 Workout 的
-                canShowWorkoutToast && workoutToast != null -> {
-                    SuccessTopToast(
-                        message = workoutToast,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
-                    LaunchedEffect(workoutToast) {
-                        delay(2000)
-                        workoutVm.clearToast()
+                    // 2️⃣ 沒有 Fasting toast 時，才顯示 Workout 的
+                    canShowWorkoutToast && workoutToastResId != null -> {
+                        SuccessTopToast(
+                            message = stringResource(workoutToastResId),
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                        LaunchedEffect(workoutToastResId) {
+                            delay(2000)
+                            workoutVm.clearToast()
+                        }
                     }
                 }
             }
         }
         // ===== 共用 BottomSheet Host（常駐），以 visible 控制顯示 =====
-        WorkoutTrackerHost(
-            vm = workoutVm,
-            visible = showWorkoutSheet.value,
-            onCloseFull = { showWorkoutSheet.value = false },
-            onCollapseOnly = { showWorkoutSheet.value = false }
-        )
+        key(localeKey) {
+            WorkoutTrackerHost(
+                vm = workoutVm,
+                visible = showWorkoutSheet.value,
+                localeTag = localeKey,
+                onCloseFull = { showWorkoutSheet.value = false },
+                onCollapseOnly = { showWorkoutSheet.value = false }
+            )
+        }
     }
 }
 
@@ -1199,4 +1207,3 @@ private fun TopBarSettingsButton(
         }
     }
 }
-

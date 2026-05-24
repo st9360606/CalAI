@@ -1,6 +1,8 @@
 package com.calai.bitecal.ui.home.ui.workout.model
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
+import com.calai.bitecal.R
 import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.workout.api.EstimateResponse
 import com.calai.bitecal.data.workout.api.PresetWorkoutDto
@@ -31,7 +33,7 @@ data class WorkoutUiState(
     val today: TodayWorkoutResponse? = null,
     val recentHistory: WorkoutHistoryResponse? = null,
     val historyLoading: Boolean = false,
-    val historyError: String? = null,
+    val historyError: Boolean = false,
     val deletingSessionIds: Set<Long> = emptySet(),
     val deleteToastType: WorkoutDeleteToastType? = null,
     val deleteToastTick: Long = 0L,
@@ -40,7 +42,7 @@ data class WorkoutUiState(
     val estimating: Boolean = false,
     val estimateResult: EstimateResponse? = null,        // (6.jpg)
     val showDurationPickerFor: PresetWorkoutDto? = null, // (2.jpg)
-    val toastMessage: String? = null,                    // 成功儲存吐司
+    @StringRes val toastMessageResId: Int? = null,      // 成功 / 失敗吐司文字資源
     val errorScanFailed: Boolean = false,                // Scan Failed (7.jpg)
     val saving: Boolean = false,                         // 防止連點送出
     val subscriptionRequiredOnce: Boolean = false,
@@ -65,24 +67,23 @@ class WorkoutViewModel @Inject constructor(
     //   計算公式：kcal = round(met * userKg * (minutes/60))
     private data class FallbackMeta(
         val activityId: Long,
-        val name: String,
         val met: Double,
         val iconKey: String
     )
 
     private val fallbackMeta = listOf(
-        FallbackMeta(1L,  "Walking",            3.5, "walk"),
-        FallbackMeta(2L,  "Running",            9.0, "run"),
-        FallbackMeta(3L,  "Cycling",            8.0, "bike"),
-        FallbackMeta(4L,  "Swimming",           8.0, "swimming"),
-        FallbackMeta(5L,  "Hiking",             6.0, "hiking"),
-        FallbackMeta(6L,  "Aerobic exercise",   8.0, "aerobic_exercise"),
-        FallbackMeta(7L,  "Strength Training",  4.0, "strength"),
-        FallbackMeta(8L,  "Weight training",    6.0, "weight_training"),
-        FallbackMeta(9L,  "Basketball",         8.0, "basketball"),
-        FallbackMeta(10L, "Soccer",             8.0, "soccer"),
-        FallbackMeta(11L, "Tennis",             7.3, "tennis"),
-        FallbackMeta(12L, "Yoga",               3.0, "yoga")
+        FallbackMeta(1L, 3.5, "walk"),
+        FallbackMeta(2L, 9.0, "run"),
+        FallbackMeta(3L, 8.0, "bike"),
+        FallbackMeta(4L, 8.0, "swimming"),
+        FallbackMeta(5L, 6.0, "hiking"),
+        FallbackMeta(6L, 8.0, "aerobic_exercise"),
+        FallbackMeta(7L, 4.0, "strength"),
+        FallbackMeta(8L, 6.0, "weight_training"),
+        FallbackMeta(9L, 8.0, "basketball"),
+        FallbackMeta(10L, 8.0, "soccer"),
+        FallbackMeta(11L, 7.3, "tennis"),
+        FallbackMeta(12L, 3.0, "yoga")
     )
 
     private fun kcalFor30Min(kg: Double, met: Double): Int {
@@ -99,7 +100,7 @@ class WorkoutViewModel @Inject constructor(
         return fallbackMeta.map { m ->
             PresetWorkoutDto(
                 activityId = m.activityId,
-                name = m.name,
+                name = m.iconKey,
                 kcalPer30Min = kcalFor30Min(kg, m.met),
                 iconKey = m.iconKey
             )
@@ -199,14 +200,14 @@ class WorkoutViewModel @Inject constructor(
                     )
                     return@launch
                 }
-                _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
+                _ui.value = _ui.value.copy(saving = false, toastMessageResId = R.string.workout_tracker_save_failed)
                 return@launch
             }
 
             todayStore.setFromServer(logResp.today)
             _ui.value = _ui.value.copy(
                 saving = false,
-                toastMessage = "Saved successfully !",
+                toastMessageResId = R.string.workout_tracker_save_success,
                 estimateResult = null,
                 textInput = "",
                 navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
@@ -237,14 +238,14 @@ class WorkoutViewModel @Inject constructor(
                     )
                     return@launch
                 }
-                _ui.value = _ui.value.copy(saving = false, toastMessage = e.message ?: "Failed to save")
+                _ui.value = _ui.value.copy(saving = false, toastMessageResId = R.string.workout_tracker_save_failed)
                 return@launch
             }
 
             todayStore.setFromServer(logResp.today)
             _ui.value = _ui.value.copy(
                 saving = false,
-                toastMessage = "Saved successfully !",
+                toastMessageResId = R.string.workout_tracker_save_success,
                 showDurationPickerFor = null,
                 navigateHistoryOnce = true           // ★ 新增：觸發一次性導航
             )
@@ -261,7 +262,7 @@ class WorkoutViewModel @Inject constructor(
     }
 
     fun clearToast() {
-        _ui.value = _ui.value.copy(toastMessage = null)
+        _ui.value = _ui.value.copy(toastMessageResId = null)
     }
 
     fun clearDeleteToast() {
@@ -299,7 +300,7 @@ class WorkoutViewModel @Inject constructor(
                     state.copy(
                         recentHistory = updatedHistory,
                         deletingSessionIds = state.deletingSessionIds - sessionId,
-                        historyError = null,
+                        historyError = false,
                         deleteToastType = WorkoutDeleteToastType.SUCCESS,
                         deleteToastTick = state.deleteToastTick + 1L
                     )
@@ -330,7 +331,7 @@ class WorkoutViewModel @Inject constructor(
             runCatching { todayStore.refresh() }
                 .onFailure { e ->
                     _ui.value = _ui.value.copy(
-                        toastMessage = e.message ?: "Refresh failed"
+                        toastMessageResId = R.string.workout_tracker_refresh_failed
                     )
                 }
         }
@@ -340,13 +341,13 @@ class WorkoutViewModel @Inject constructor(
         if (_ui.value.historyLoading) return
 
         viewModelScope.launch {
-            _ui.value = _ui.value.copy(historyLoading = true, historyError = null)
+            _ui.value = _ui.value.copy(historyLoading = true, historyError = false)
 
             val history = runCatching { repo.loadRecentHistory() }
                 .getOrElse { e ->
                     _ui.value = _ui.value.copy(
                         historyLoading = false,
-                        historyError = e.message ?: "Refresh failed"
+                        historyError = true
                     )
                     return@launch
                 }
@@ -354,7 +355,7 @@ class WorkoutViewModel @Inject constructor(
             _ui.value = _ui.value.copy(
                 recentHistory = history,
                 historyLoading = false,
-                historyError = null
+                historyError = false
             )
         }
     }

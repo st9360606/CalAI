@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.data.workout.api.EstimateResponse
+import com.calai.bitecal.i18n.ProvideComposeLocale
 import com.calai.bitecal.data.workout.api.PresetWorkoutDto
 import com.calai.bitecal.ui.home.ui.workout.components.DurationPickerSheet
 import com.calai.bitecal.ui.home.ui.workout.components.FixedModalSheet
@@ -80,6 +82,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 
@@ -101,14 +104,12 @@ private sealed interface SheetMode {
     data object Failed : SheetMode
 }
 
-private const val WORKOUT_TRACKER_TITLE = "Workout Tracker"
-private const val WORKOUT_TRACKER_SUBTITLE = "Describe the Type of Exercise and the duration"
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkoutTrackerSheet(
     vm: WorkoutViewModel,
     visible: Boolean,
+    localeTag: String,
     onClose: () -> Unit,
     onCollapse: () -> Unit // ← 外部控制：只收合 UnifiedSheet
 ) {
@@ -202,7 +203,7 @@ fun WorkoutTrackerSheet(
                     )
                     is SheetMode.Estimating -> Column(Modifier.fillMaxSize()) {
                         SimpleHeaderBar(
-                            title = "Workout Tracker",
+                            title = stringResource(R.string.workout_tracker_title),
                             onClose = { vm.dismissDialogs(); onClose() } // ★ 用具名參數
                         )
                         Spacer(Modifier.height(4.dp))
@@ -211,7 +212,7 @@ fun WorkoutTrackerSheet(
 
                     is SheetMode.Result -> Column(Modifier.fillMaxSize()) {
                         SimpleHeaderBar(
-                            title = "Workout Tracker",
+                            title = stringResource(R.string.workout_tracker_title),
                             onClose = { vm.dismissDialogs(); onClose() } // ★ 用具名參數
                         )
                         Spacer(Modifier.height(4.dp))
@@ -227,7 +228,7 @@ fun WorkoutTrackerSheet(
 
                     is SheetMode.Failed -> Column(Modifier.fillMaxSize()) {
                         SimpleHeaderBar(
-                            title = "Workout Tracker",
+                            title = stringResource(R.string.workout_tracker_title),
                             onClose = { vm.dismissDialogs(); onClose() } // ★ 用具名參數
                         )
                         Spacer(Modifier.height(4.dp))
@@ -240,11 +241,18 @@ fun WorkoutTrackerSheet(
 
     // 獨立的 DurationPickerSheet（和 UnifiedSheet 分離顯示）
     if (showDurationPicker && currentPreset != null) {
-        DurationPickerSheet(
-            presetName = currentPreset!!.name,
-            onSaveMinutes = onSaveDuration,
-            onCancel = { showDurationPicker = false }
-        )
+        val preset = currentPreset!!
+        key(localeTag, preset.activityId, preset.iconKey, preset.name) {
+            ProvideComposeLocale(localeTag) {
+                DurationPickerSheet(
+                    presetNameResId = preset.workoutNameStringRes(),
+                    fallbackPresetName = preset.name,
+                    localeTag = localeTag,
+                    onSaveMinutes = onSaveDuration,
+                    onCancel = { showDurationPicker = false }
+                )
+            }
+        }
     }
 }
 
@@ -285,7 +293,7 @@ private fun TrackerContent(
                     .heightIn(min = 120.dp)
                     .border(thinBorder, Gray300, RoundedCornerShape(16.dp))
                     .background(Color.White, RoundedCornerShape(16.dp)),
-                placeholder = { Text("Examples: 45 min Running", color = Gray600) },
+                placeholder = { Text(stringResource(R.string.workout_tracker_example_placeholder), color = Gray600) },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.Black),
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -319,7 +327,7 @@ private fun TrackerContent(
             ) {
                 // ✅ 字體放大（bodyLarge → titleMedium）
                 Text(
-                    text = "Add Workout",
+                    text = stringResource(R.string.workout_tracker_add_workout),
                     color = Color.White,
                     // ✅ 稍大一點（bodyLarge）但保持 Medium 字重，不會太粗
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -334,7 +342,7 @@ private fun TrackerContent(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 HorizontalDivider(modifier = Modifier.weight(1f), color = DividerGray)
                 Text(
-                    text = "or select from the list",
+                    text = stringResource(R.string.workout_tracker_select_from_list),
                     modifier = Modifier.padding(horizontal = 8.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Gray600
@@ -358,7 +366,11 @@ private fun TrackerContent(
                 Spacer(Modifier.height(8.dp))
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     TextButton(onClick = { expanded = !expanded }) {
-                        val label = if (expanded) "Show less" else "Show more ($remaining)"
+                        val label = if (expanded) {
+                            stringResource(R.string.workout_tracker_show_less)
+                        } else {
+                            stringResource(R.string.workout_tracker_show_more, remaining)
+                        }
                         Text(text = label, color = Black, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
@@ -379,7 +391,7 @@ fun CyclingEstimatingLine(
     modifier: Modifier = Modifier,
     intervalMs: Int = 1600
 ) {
-    val safePhrases = phrases.ifEmpty { listOf("Estimating…") }
+    val safePhrases = phrases.ifEmpty { listOf(stringResource(R.string.workout_tracker_estimating_fallback)) }
 
     var index by remember { mutableIntStateOf(0) }
 
@@ -503,7 +515,7 @@ private fun SimpleHeaderBar(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "close",
+                    contentDescription = stringResource(R.string.workout_tracker_close_content_description),
                     tint = Color.White,
                     modifier = Modifier.size(closeIconSize) // ★ 放大 icon
                 )
@@ -547,9 +559,9 @@ fun EstimatingContent(
 
             CyclingEstimatingLine(
                 phrases = listOf(
-                    "Analyzing your activity…",
-                    "Working on your numbers…",
-                    "Estimating effort, calculating calories..."
+                    stringResource(R.string.workout_tracker_estimating_analyzing),
+                    stringResource(R.string.workout_tracker_estimating_numbers),
+                    stringResource(R.string.workout_tracker_estimating_calories)
                 ),
                 intervalMs = 1600, // 1.6 秒切換一次（可依體感調整）
                 modifier = Modifier.fillMaxWidth()
@@ -558,7 +570,7 @@ fun EstimatingContent(
 
         // 底部提示（相對底部再往上）
         Text(
-            text = "Please do not close the app or lock your device",
+            text = stringResource(R.string.workout_tracker_do_not_close),
             color = Black.copy(alpha = 0.70f),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
@@ -659,6 +671,11 @@ fun ResultContent(
     activityIconTint: Color? = Color(0xFFFF8F33), // ★ 預設橘色；不要上色→傳 null
     activityIconLift: Dp = 8.dp        // ★ 僅圖示向上位移量
 ) {
+    val activityLabel = localizedWorkoutName(
+        activityId = result.activityId,
+        rawName = result.activityDisplay
+    ).ifBlank { stringResource(R.string.workout_tracker_activity_content_description) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -676,7 +693,7 @@ fun ResultContent(
                 Spacer(Modifier.height(activityIconTopPadding))
                 Image(
                     painter = painterResource(id = activityIconRes),
-                    contentDescription = result.activityDisplay ?: "Activity",
+                    contentDescription = activityLabel,
                     modifier = Modifier
                         .size(activityIconSize)
                         .offset(y = -activityIconLift), // ← 圖示往上移
@@ -690,7 +707,7 @@ fun ResultContent(
 
             // (2) kcal
             Text(
-                text = "${result.kcal ?: 0} kcal",
+                text = stringResource(R.string.workout_tracker_kcal_value, result.kcal ?: 0),
                 color = Black,
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontWeight = FontWeight.Bold,
@@ -702,7 +719,7 @@ fun ResultContent(
 
             // (3) minutes + activity（單行省略）
             Text(
-                text = "${result.minutes ?: 0} min ${result.activityDisplay.orEmpty()}",
+                text = stringResource(R.string.workout_tracker_minutes_activity, result.minutes ?: 0, activityLabel),
                 color = Black,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -747,7 +764,7 @@ fun ResultContent(
                     contentColor = Color.White
                 )
             ) {
-                Text("Add Workout", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.workout_tracker_add_workout), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(Modifier.height(12.dp))
@@ -764,7 +781,7 @@ fun ResultContent(
                     contentColor = Black
                 )
             ) {
-                Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.workout_tracker_cancel), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -808,7 +825,7 @@ fun FailedContent(
             Spacer(Modifier.height(20.dp))
 
             Text(
-                "Uh-oh! Scan Failed",
+                stringResource(R.string.workout_tracker_scan_failed_title),
                 color = Black,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
@@ -816,7 +833,7 @@ fun FailedContent(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "The workout description may be incorrect ( For example : 30 min Running ),  or the internet connection is weak.",
+                stringResource(R.string.workout_tracker_scan_failed_body),
                 color = Black.copy(alpha = 0.6f),
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 textAlign = TextAlign.Center,
@@ -844,7 +861,7 @@ fun FailedContent(
                 )
             ) {
                 Text(
-                    "Try Again",
+                    stringResource(R.string.workout_tracker_try_again),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -865,7 +882,7 @@ fun FailedContent(
                 )
             ) {
                 Text(
-                    "Cancel",
+                    stringResource(R.string.workout_tracker_cancel),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -878,9 +895,12 @@ fun FailedContent(
 @Composable
 private fun HeaderSection(
     onClose: () -> Unit,
-    title: String = WORKOUT_TRACKER_TITLE,
-    subtitle: String = WORKOUT_TRACKER_SUBTITLE
+    title: String? = null,
+    subtitle: String? = null
 ) {
+    val resolvedTitle = title ?: stringResource(R.string.workout_tracker_title)
+    val resolvedSubtitle = subtitle ?: stringResource(R.string.workout_tracker_subtitle)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -900,7 +920,7 @@ private fun HeaderSection(
         // 標題與關閉按鈕
         Box(Modifier.fillMaxWidth()) {
             Text(
-                text = title,
+                text = resolvedTitle,
                 modifier = Modifier.align(Alignment.Center),
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                 color = TextPrimary,
@@ -919,7 +939,7 @@ private fun HeaderSection(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "close",
+                    contentDescription = stringResource(R.string.workout_tracker_close_content_description),
                     tint = Color.White,
                     modifier = Modifier.size(24.dp) // ← X 更大
                 )
@@ -930,7 +950,7 @@ private fun HeaderSection(
 
         // 副標題
         Text(
-            text = subtitle,
+            text = resolvedSubtitle,
             style = MaterialTheme.typography.bodyMedium,
             color = Gray600,
             textAlign = TextAlign.Center,
@@ -945,6 +965,8 @@ private fun PresetWorkoutRow(
     preset: PresetWorkoutDto,
     onClickPlus: () -> Unit
 ) {
+    val presetName = preset.localizedWorkoutName()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -959,7 +981,7 @@ private fun PresetWorkoutRow(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = preset.name.take(1).uppercase(),
+                text = presetName.take(1).uppercase(),
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
             )
@@ -967,13 +989,13 @@ private fun PresetWorkoutRow(
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                text = preset.name,
+                text = presetName,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = TextPrimary
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "${preset.kcalPer30Min} kcal per 30 min",
+                text = stringResource(R.string.workout_preset_kcal_per_30_min, preset.kcalPer30Min),
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary
             )
@@ -988,7 +1010,7 @@ private fun PresetWorkoutRow(
                 contentColor = Color.White
             )
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "add preset")
+            Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.workout_tracker_add_preset_content_description))
         }
     }
 }

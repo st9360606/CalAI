@@ -656,5 +656,41 @@
     <string name="workout_preset_soccer">Soccer</string>
     <string name="workout_preset_tennis">Tennis</string>
     <string name="workout_preset_yoga">Yoga</string>
+    <string name="workout_preset_badminton">Badminton</string>
+    <string name="workout_preset_baseball">Baseball</string>
+    <string name="workout_preset_softball">Softball</string>
+    <string name="workout_preset_volleyball">Volleyball</string>
+    <string name="workout_preset_table_tennis">Table Tennis</string>
+    <string name="workout_preset_dancing_general">Dancing</string>
+    <string name="workout_preset_zumba">Zumba</string>
+    <string name="workout_preset_pilates">Pilates</string>
+
+    <!-- Workout tracker sheet -->
+    <string name="workout_tracker_title">Workout Tracker</string>
+    <string name="workout_tracker_subtitle">Describe the type of exercise and the duration</string>
+    <string name="workout_tracker_example_placeholder">Example: 45 min Running</string>
+    <string name="workout_tracker_add_workout">Add workout</string>
+    <string name="workout_tracker_select_from_list">or select from the list</string>
+    <string name="workout_tracker_show_less">Show less</string>
+    <string name="workout_tracker_show_more">Show more (%1$d)</string>
+    <string name="workout_tracker_estimating_fallback">Estimating&#8230;</string>
+    <string name="workout_tracker_estimating_analyzing">Analyzing your activity&#8230;</string>
+    <string name="workout_tracker_estimating_numbers">Working on your numbers&#8230;</string>
+    <string name="workout_tracker_estimating_calories">Estimating effort, calculating calories&#8230;</string>
+    <string name="workout_tracker_do_not_close">Please do not close the app or lock your device</string>
+    <string name="workout_tracker_kcal_value">%1$d kcal</string>
+    <string name="workout_tracker_minutes_activity">%1$d min %2$s</string>
+    <string name="workout_tracker_cancel">Cancel</string>
+    <string name="workout_tracker_try_again">Try Again</string>
+    <string name="workout_tracker_scan_failed_title">Uh-oh! Scan Failed</string>
+    <string name="workout_tracker_scan_failed_body">The workout description may be incorrect, or the internet connection is weak. For example: 30 min Running.</string>
+    <string name="workout_tracker_close_content_description">Close workout tracker</string>
+    <string name="workout_tracker_activity_content_description">Workout activity</string>
+    <string name="workout_tracker_add_preset_content_description">Add preset workout</string>
+    <string name="workout_tracker_save_success">Saved successfully!</string>
+    <string name="workout_tracker_save_failed">Failed to save. Please try again.</string>
+    <string name="workout_tracker_refresh_failed">Refresh failed. Please try again.</string>
+    <string name="workout_preset_kcal_per_30_min">%1$d kcal / 30 min</string>
+    <string name="workout_history_today_label">Today</string>
 
 </resources>

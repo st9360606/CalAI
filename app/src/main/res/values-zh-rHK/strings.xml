@@ -655,5 +655,41 @@
     <string name="workout_preset_soccer">足球</string>
     <string name="workout_preset_tennis">網球</string>
     <string name="workout_preset_yoga">瑜伽</string>
+    <string name="workout_preset_badminton">羽球</string>
+    <string name="workout_preset_baseball">棒球</string>
+    <string name="workout_preset_softball">壘球</string>
+    <string name="workout_preset_volleyball">排球</string>
+    <string name="workout_preset_table_tennis">桌球</string>
+    <string name="workout_preset_dancing_general">舞蹈</string>
+    <string name="workout_preset_zumba">尊巴</string>
+    <string name="workout_preset_pilates">皮拉提斯</string>
+
+    <!-- Workout tracker sheet -->
+    <string name="workout_tracker_title">運動追蹤</string>
+    <string name="workout_tracker_subtitle">描述運動類型與時間</string>
+    <string name="workout_tracker_example_placeholder">範例：跑步 45 分鐘</string>
+    <string name="workout_tracker_add_workout">新增運動</string>
+    <string name="workout_tracker_select_from_list">或從清單選擇</string>
+    <string name="workout_tracker_show_less">顯示較少</string>
+    <string name="workout_tracker_show_more">顯示更多（%1$d）</string>
+    <string name="workout_tracker_estimating_fallback">估算中&#8230;</string>
+    <string name="workout_tracker_estimating_analyzing">正在分析你的運動&#8230;</string>
+    <string name="workout_tracker_estimating_numbers">正在計算運動數據&#8230;</string>
+    <string name="workout_tracker_estimating_calories">正在估算強度與消耗熱量&#8230;</string>
+    <string name="workout_tracker_do_not_close">請不要關閉 App 或鎖定裝置</string>
+    <string name="workout_tracker_kcal_value">%1$d 大卡</string>
+    <string name="workout_tracker_minutes_activity">%1$d 分鐘 %2$s</string>
+    <string name="workout_tracker_cancel">取消</string>
+    <string name="workout_tracker_try_again">再試一次</string>
+    <string name="workout_tracker_scan_failed_title">糟糕，辨識失敗</string>
+    <string name="workout_tracker_scan_failed_body">運動描述可能不正確，或目前網路連線不穩。範例：跑步 30 分鐘。</string>
+    <string name="workout_tracker_close_content_description">關閉運動追蹤</string>
+    <string name="workout_tracker_activity_content_description">運動項目</string>
+    <string name="workout_tracker_add_preset_content_description">新增預設運動</string>
+    <string name="workout_tracker_save_success">儲存成功</string>
+    <string name="workout_tracker_save_failed">儲存失敗，請再試一次。</string>
+    <string name="workout_tracker_refresh_failed">重新整理失敗，請再試一次。</string>
+    <string name="workout_preset_kcal_per_30_min">%1$d 大卡 / 30 分鐘</string>
+    <string name="workout_history_today_label">今天</string>
 
 </resources>
