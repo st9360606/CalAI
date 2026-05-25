@@ -232,6 +232,7 @@ private fun EditNutritionGoalsScreen(
                 label = "Carb goal",
                 value = ui.draft.carbsG,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.CARBS],
+                iconSize = 20.dp,
                 onValueChange = onCarbs
             )
             Spacer(Modifier.height(GoalRowGap))
@@ -320,6 +321,7 @@ private fun GoalRow(
     label: String,
     value: String,
     errorText: String?,
+    iconSize: Dp = 16.dp,
     onValueChange: (String) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -335,7 +337,8 @@ private fun GoalRow(
             RingIcon(
                 color = ringColor,
                 icon = icon,
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(56.dp),
+                iconSize = iconSize
             )
 
             Spacer(Modifier.width(14.dp))
