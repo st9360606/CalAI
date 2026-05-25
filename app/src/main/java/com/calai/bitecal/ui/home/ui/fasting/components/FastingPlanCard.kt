@@ -31,25 +31,28 @@ fun FastingPlanCard(
     onClick: () -> Unit,
     cardHeight: Dp,
     modifier: Modifier = Modifier,
-    // ===== 可選（有預設值）=====
-    planTitle: String = "Fasting Plan",        // TODO: stringResource
-    startLabel: String = "start time",         // TODO: stringResource
+
+    planTitle: String = "Fasting Plan",
+    startLabel: String = "start time",
     startText: String? = null,
-    endLabel: String = "end time",             // TODO: stringResource
+    endLabel: String = "end time",
     endText: String? = null,
 
-    planNameTextStyle: TextStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
+    planNameTextStyle: TextStyle = MaterialTheme.typography.headlineSmall.copy(
+        fontWeight = FontWeight.SemiBold
+    ),
     planNameFontSize: TextUnit? = null,
     planNameYOffset: Dp = 0.dp,
 
-    // ===== Switch 尺寸 =====
     switchWidth: Dp = 52.dp,
     switchHeight: Dp = 28.dp,
 
-    // ===== 黑底標題條 =====
     topBarHeight: Dp = 26.dp,
     topBarTextStyle: TextStyle = MaterialTheme.typography.titleSmall,
-    topBarPaddingH: Dp = 16.dp                                 // 左右內距
+    topBarPaddingH: Dp = 16.dp,
+
+    leftColumnWeight: Float = 1f,
+    rightColumnWeight: Float = 0.8f
 ) {
     Card(
         modifier = modifier
@@ -104,7 +107,7 @@ fun FastingPlanCard(
                 // 左欄：計畫名稱（置中，可 Y 偏移）＋ Switch（置中）
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(leftColumnWeight)
                         .fillMaxHeight()
                         .offset(y = (-4).dp),
                     verticalArrangement = Arrangement.spacedBy(
@@ -136,7 +139,7 @@ fun FastingPlanCard(
                 // 右欄：開始/結束（置中 + 字體較大）
                 Column(
                     modifier = Modifier
-                        .weight(0.7f)
+                        .weight(rightColumnWeight)
                         .fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {

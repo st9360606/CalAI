@@ -196,14 +196,13 @@ fun DurationPickerSheet(
                                 .height(56.dp),
                             shape = RoundedCornerShape(28.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF111114),
+                                containerColor = Color.Black,
                                 contentColor = Color.White
                             )
                         ) {
                             Text(
                                 text = saveText,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 16.sp
                             )
                         }
 
@@ -215,15 +214,14 @@ fun DurationPickerSheet(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(28.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE5E7EB),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color(0xFFE1E4EA),
                                 contentColor = Color(0xFF111114)
                             )
                         ) {
                             Text(
                                 text = cancelText,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
+                                fontSize = 16.sp
                             )
                         }
                     }

@@ -732,7 +732,7 @@ private fun CupertinoWheelTimePickerSheet(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(10.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -747,8 +747,8 @@ private fun CupertinoWheelTimePickerSheet(
                     enabled = !saving,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(55.dp),
-                    shape = RoundedCornerShape(999.dp),
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
@@ -769,8 +769,8 @@ private fun CupertinoWheelTimePickerSheet(
                     enabled = !saving,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(55.dp),
-                    shape = RoundedCornerShape(999.dp),
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
                     border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color(0xFFE1E4EA),
@@ -783,8 +783,6 @@ private fun CupertinoWheelTimePickerSheet(
                     )
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
         }
     }
 }
