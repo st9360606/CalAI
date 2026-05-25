@@ -291,6 +291,10 @@ private fun WorkoutChartCardFrame(
 
             this@BoxWithConstraints.chartContent()
 
+            Spacer(modifier = Modifier.height(18.dp))
+
+            WorkoutLegendRow()
+
             Spacer(modifier = Modifier.height(14.dp))
 
             Box(
@@ -362,6 +366,60 @@ private fun WorkoutMetricChip(
         }
     }
 }
+@Composable
+private fun WorkoutLegendRow() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .width(12.dp)
+                    .height(12.dp)
+                    .background(WorkoutBarColor, RoundedCornerShape(4.dp))
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = stringResource(R.string.workout_legend_burned),
+                color = WorkoutValueColor,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Canvas(
+                modifier = Modifier
+                    .width(18.dp)
+                    .height(10.dp)
+            ) {
+                drawLine(
+                    color = WorkoutGoalLineColor,
+                    start = Offset(0f, size.height / 2f),
+                    end = Offset(size.width, size.height / 2f),
+                    strokeWidth = 3.5f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = stringResource(R.string.workout_legend_daily_goal),
+                color = WorkoutValueColor,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun WorkoutBarChart(
