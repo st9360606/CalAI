@@ -39,6 +39,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -58,12 +60,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -74,6 +74,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.data.fasting.model.FastingPlan
 import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.HomeTab
+import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
@@ -102,8 +103,39 @@ fun FastingPlansScreen(
     var saving by rememberSaveable { mutableStateOf(false) }
     val uiScope = rememberCoroutineScope()
 
+    fun persistFastingPlan(
+        showToast: Boolean,
+        navigateBack: Boolean,
+        closePicker: Boolean = false
+    ) {
+        if (saving) return
+
+        saving = true
+
+        uiScope.launch {
+            try {
+                val job = vm.persistAndReschedule(showToast = showToast)
+                job.join()
+
+                if (closePicker) {
+                    showCupertinoPicker = false
+                }
+
+                if (navigateBack) {
+                    onBack()
+                }
+            } finally {
+                saving = false
+            }
+        }
+    }
+
     BackHandler(enabled = true) {
-        if (showCupertinoPicker) showCupertinoPicker = false else onBack()
+        when {
+            saving -> Unit
+            showCupertinoPicker -> showCupertinoPicker = false
+            else -> onBack()
+        }
     }
 
     Box(
@@ -140,11 +172,22 @@ fun FastingPlansScreen(
                     columns = GridCells.Fixed(2),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(vertical = 2.dp),
                     modifier = Modifier.heightIn(max = 2000.dp)
                 ) {
                     items(FastingPlan.entries) { plan ->
                         val selected = plan == state.selected
-                        FastingPlanCard(plan, selected) { vm.onPlanSelected(plan) }
+
+                        FastingPlanCard(plan, selected) {
+                            if (saving) return@FastingPlanCard
+
+                            vm.onPlanSelected(plan)
+
+                            persistFastingPlan(
+                                showToast = false,
+                                navigateBack = false
+                            )
+                        }
                     }
                 }
 
@@ -183,28 +226,14 @@ fun FastingPlansScreen(
 
                     Spacer(Modifier.height(6.dp))
 
-                    OutlinedButton(
+                    FastingPlanTimeValueCard(
+                        text = format24h(state.start),
+                        enabled = true,
                         onClick = { showCupertinoPicker = true },
-                        shape = MaterialTheme.shapes.large,
-                        border = BorderStroke(1.dp, Color(0xFFB8B8B8)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black),
                         modifier = Modifier
                             .fillMaxWidth(0.4f)
                             .height(48.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = format24h(state.start),
-                                fontSize = 21.sp,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = Color.Black.copy(alpha = 0.8f)
-                                )
-                            )
-                        }
-                    }
+                    )
                 }
 
                 Spacer(Modifier.height(22.dp))
@@ -228,64 +257,38 @@ fun FastingPlansScreen(
 
                     Spacer(Modifier.height(6.dp))
 
-                    OutlinedButton(
-                        onClick = {},
+                    FastingPlanTimeValueCard(
+                        text = format24h(state.end),
                         enabled = false,
-                        shape = MaterialTheme.shapes.large,
-                        border = BorderStroke(1.dp, Color(0xFFB8B8B8)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black),
+                        onClick = null,
                         modifier = Modifier
                             .fillMaxWidth(0.4f)
                             .height(48.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = format24h(state.end),
-                                fontSize = 21.sp,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = Color.Black.copy(alpha = 0.6f)
-                                )
-                            )
-                        }
-                    }
+                    )
                 }
-
-                Spacer(Modifier.height(30.dp))
-
-                CalaiPrimaryActionButton(
-                    text = stringResource(R.string.save),
-                    enabled = !saving,
-                    loading = false,
-                    onClick = {
-                        if (saving) return@CalaiPrimaryActionButton
-                        saving = true
-
-                        uiScope.launch {
-                            try {
-                                val job = vm.persistAndReschedule(showToast = true)
-                                job.join()
-                                onBack()
-                            } finally {
-                                saving = false
-                            }
-                        }
-                    }
-                )
-
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(44.dp))
             }
         }
 
         if (showCupertinoPicker) {
             CupertinoWheelTimePickerSheet(
                 initial = state.start,
-                onDismiss = { showCupertinoPicker = false },
+                saving = saving,
+                onDismiss = {
+                    if (!saving) {
+                        showCupertinoPicker = false
+                    }
+                },
                 onConfirm = { picked ->
-                    vm.onChangeStart(picked)
-                    showCupertinoPicker = false
+                    if (!saving) {
+                        vm.onChangeStart(picked)
+
+                        persistFastingPlan(
+                            showToast = true,
+                            navigateBack = true,
+                            closePicker = true
+                        )
+                    }
                 }
             )
         }
@@ -307,6 +310,7 @@ private fun FastingPlanCard(
         "22:2" -> "🍋"
         else -> "🍽️"
     }
+
     val desc = when (plan.code) {
         "14:10" -> "Ease in with a steady rhythm—14 hours to reset appetite cues and energy."
         "16:8" -> "Crowd favorite for a reason—16 hours to stay focused and in a lean groove."
@@ -317,73 +321,68 @@ private fun FastingPlanCard(
         else -> ""
     }
 
-    val neutralCard = Color(0xFFFAFAFA)
-    val cardBorder = Color(0xFFDDDDDD)
-
-    Box(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.9f)
-            .clip(RoundedCornerShape(16.dp))
-            .drawBehind {
-                drawRoundRect(
-                    color = neutralCard,
-                    cornerRadius = CornerRadius(16.dp.toPx())
-                )
-                drawRoundRect(
-                    color = cardBorder,
-                    style = Stroke(width = 1.dp.toPx()),
-                    cornerRadius = CornerRadius(16.dp.toPx())
-                )
-            }
-            .padding(2.dp)
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
+            .clickable(role = Role.Button, onClick = onSelect),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        border = CardStyles.Border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Text(
-                    text = plan.code,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 32.sp,
-                        color = Color(0xFF0A0A0A)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = plan.code,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 32.sp,
+                            color = Color(0xFF0A0A0A)
+                        )
                     )
-                )
+
+                    Text(
+                        text = emoji,
+                        fontSize = 30.sp
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 Text(
-                    text = emoji,
-                    fontSize = 30.sp
+                    text = desc,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Color(0xFF6F6F6F),
+                        lineHeight = 18.sp
+                    ),
+                    modifier = Modifier.padding(end = 4.dp)
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = desc,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color(0xFF6F6F6F),
-                    lineHeight = 18.sp
-                ),
-                modifier = Modifier.padding(end = 4.dp)
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            CupertinoSwitch(
-                checked = selected,
-                onCheckedChange = onSelect
-            )
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                CupertinoSwitch(
+                    checked = selected,
+                    onCheckedChange = onSelect
+                )
+            }
         }
     }
 }
@@ -562,12 +561,58 @@ private fun format24h(t: LocalTime): String {
     return t.format(formatter)
 }
 
+@Composable
+private fun FastingPlanTimeValueCard(
+    text: String,
+    enabled: Boolean,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    val clickableModifier = if (enabled && onClick != null) {
+        Modifier.clickable(
+            role = Role.Button,
+            onClick = onClick
+        )
+    } else {
+        Modifier
+    }
+
+    Card(
+        modifier = modifier
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
+            .then(clickableModifier),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        border = CardStyles.Border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                fontSize = 18.sp,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    color = if (enabled) {
+                        Color(0xFF0F172A)
+                    } else {
+                        Color(0xFF0F172A).copy(alpha = 0.62f)
+                    },
+                    fontWeight = FontWeight.SemiBold
+                )
+            )
+        }
+    }
+}
+
 private val IOS_TEXT = Color(0xFF1C1C1E)
 private val IOS_TEXT_FADED = Color(0xFF8E8E93)
 
 @Composable
 private fun CupertinoWheelTimePickerSheet(
     initial: LocalTime,
+    saving: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (LocalTime) -> Unit
 ) {
@@ -585,7 +630,9 @@ private fun CupertinoWheelTimePickerSheet(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    onDismiss()
+                    if (!saving) {
+                        onDismiss()
+                    }
                 }
         )
 
@@ -653,7 +700,7 @@ private fun CupertinoWheelTimePickerSheet(
                         WheelColumn(
                             values = (0..23).map { "%02d".format(it) },
                             startIndex = hour,
-                            columnWidth = 120.dp,
+                            columnWidth = 92.dp,
                             onSnapped = { idx -> hour = idx },
                             infinite = true,
                             selectedFontSize = 26.sp,
@@ -661,7 +708,7 @@ private fun CupertinoWheelTimePickerSheet(
                         )
 
                         Box(
-                            modifier = Modifier.width(22.dp),
+                            modifier = Modifier.width(12.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -675,7 +722,7 @@ private fun CupertinoWheelTimePickerSheet(
                         WheelColumn(
                             values = (0..59).map { "%02d".format(it) },
                             startIndex = minute,
-                            columnWidth = 120.dp,
+                            columnWidth = 92.dp,
                             onSnapped = { idx -> minute = idx },
                             infinite = true,
                             selectedFontSize = 26.sp,
@@ -685,7 +732,7 @@ private fun CupertinoWheelTimePickerSheet(
                 }
             }
 
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(20.dp))
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -693,8 +740,11 @@ private fun CupertinoWheelTimePickerSheet(
             ) {
                 Button(
                     onClick = {
-                        onConfirm(LocalTime.of(hour, minute))
+                        if (!saving) {
+                            onConfirm(LocalTime.of(hour, minute))
+                        }
                     },
+                    enabled = !saving,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(55.dp),
@@ -706,12 +756,17 @@ private fun CupertinoWheelTimePickerSheet(
                 ) {
                     Text(
                         text = stringResource(R.string.save),
-                        fontSize = 18.sp
+                        fontSize = 16.sp
                     )
                 }
 
                 OutlinedButton(
-                    onClick = { onDismiss() },
+                    onClick = {
+                        if (!saving) {
+                            onDismiss()
+                        }
+                    },
+                    enabled = !saving,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(55.dp),

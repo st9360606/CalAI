@@ -1305,10 +1305,10 @@ fun WeightFastingRowModern(
             onToggle = onToggle,
             onClick = onOpenFastingPlans,
             cardHeight = cardHeight,
-            modifier = Modifier.weight(1f).height(cardHeight),
-            topBarHeight = commonTopBarHeight,           // ★ 更薄
-            topBarTextStyle = commonTopBarTextStyle, // 更低調一點
-            planNameYOffset = (2).dp,        // ★ 再往上
+            modifier = Modifier.weight(1f),
+            topBarHeight = commonTopBarHeight,
+            topBarTextStyle = commonTopBarTextStyle,
+            planNameYOffset = 2.dp,
             planNameFontSize = 32.sp
         )
     }
