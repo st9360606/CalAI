@@ -1309,7 +1309,7 @@ fun WeightFastingRowModern(
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,
             planNameYOffset = 2.dp,
-            planNameFontSize = 32.sp
+            planNameFontSize = 30.sp
         )
     }
 }
@@ -1325,7 +1325,7 @@ fun GreenSwitch(
 ) {
     val radius = height / 2
     val thumbSize = height - 4.dp
-    val trackOn = Color(0xFF34C759)
+    val trackOn = Color(0xFF5ECB7A)
     val trackOff = Color(0xFFE5E7EB)
     val thumb = Color.White
 

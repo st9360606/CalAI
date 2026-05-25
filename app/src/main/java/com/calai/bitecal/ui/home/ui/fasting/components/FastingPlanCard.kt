@@ -97,16 +97,20 @@ fun FastingPlanCard(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 左欄：計畫名稱（置中，可 Y 偏移）＋ Switch（置中）
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceBetween,
+                        .fillMaxHeight()
+                        .offset(y = (-4).dp),
+                    verticalArrangement = Arrangement.spacedBy(
+                        space = 15.dp,
+                        alignment = Alignment.CenterVertically
+                    ),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -121,7 +125,6 @@ fun FastingPlanCard(
                             .fillMaxWidth()
                             .offset(y = planNameYOffset) // 可為負值，往上提
                     )
-                    Spacer(Modifier.height(8.dp))
                     GreenSwitch(
                         checked = enabled,
                         onCheckedChange = onToggle,
@@ -133,7 +136,7 @@ fun FastingPlanCard(
                 // 右欄：開始/結束（置中 + 字體較大）
                 Column(
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.7f)
                         .fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
