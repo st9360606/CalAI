@@ -63,7 +63,7 @@ import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-private val WaterBarColor = Color(0xFF6C93D8)
+private val WaterBarColor = Color(0xFF73B6E6)
 private val WaterGoalLineColor = Color(0xFF3C9E45)
 
 private val WaterCardBg = Color.White
@@ -474,6 +474,7 @@ private fun WaterLegendRow() {
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun WaterBarChart(
     days: List<WaterProgressDayUi>,

@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.home.ui.progress
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -290,6 +291,7 @@ private fun ProgressChartCardFrame(
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun StackedBarChart(
     days: List<ProgressBarDayUi>,
