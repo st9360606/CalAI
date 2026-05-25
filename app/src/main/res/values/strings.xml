@@ -491,6 +491,19 @@
     <string name="home_carbs_eaten_label">Carbs eaten</string>
     <string name="home_fats_goal_label">Fats left</string>
     <string name="home_fats_eaten_label">Fats eaten</string>
+    <string name="home_fiber_goal_label">Fiber left</string>
+    <string name="home_fiber_eaten_label">Fiber eaten</string>
+    <string name="home_sugar_goal_label">Sugar left</string>
+    <string name="home_sugar_eaten_label">Sugar eaten</string>
+    <string name="home_sodium_goal_label">Sodium left</string>
+    <string name="home_sodium_eaten_label">Sodium eaten</string>
+    <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
+    <string name="home_health_score_title">Health score</string>
+    <string name="home_health_score_value">%1$d/10</string>
+    <string name="home_health_score_advice_empty">Log meals today to calculate your average health score.</string>
+    <string name="home_health_score_advice_low">Your meals need more balance today. Add fiber, protein, and lower-sugar options.</string>
+    <string name="home_health_score_advice_medium">You are on track. Keep portions balanced and watch sugar or sodium.</string>
+    <string name="home_health_score_advice_high">Great balance today. Keep choosing nutrient-dense meals.</string>
     <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
     <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
 

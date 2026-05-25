@@ -90,9 +90,11 @@ import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.home.components.CalendarStrip
 import com.calai.bitecal.ui.home.components.CaloriesCardModern
+import com.calai.bitecal.ui.home.components.HealthScoreCardModern
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MacroRowModern
 import com.calai.bitecal.ui.home.components.MainBottomBar
+import com.calai.bitecal.ui.home.components.MicronutrientRowModern
 import com.calai.bitecal.ui.home.components.MealCard
 import com.calai.bitecal.ui.home.components.PagerDots
 import com.calai.bitecal.ui.home.components.PanelHeights
@@ -1000,7 +1002,7 @@ private fun TwoPagePager(
     onWaterMinus: () -> Unit,
     onToggleUnit: () -> Unit,
 ) {
-    val pageCount = 2
+    val pageCount = 3
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
     var showTodayNutritionProgress by rememberSaveable { mutableStateOf(false) }
     val toggleNutritionMode = { showTodayNutritionProgress = !showTodayNutritionProgress }
@@ -1074,6 +1076,30 @@ private fun TwoPagePager(
                         }
 
                         1 -> {
+                            MicronutrientRowModern(
+                                s = summary,
+                                todayNutrition = todayNutrition,
+                                showTodayProgress = showTodayNutritionProgress,
+                                onClick = toggleNutritionMode,
+                                cardHeight = macroH,
+                                valueFontSize = 15.sp,
+                                labelFontSize = 12.sp,
+                                ringSize = 68.dp,
+                                centerDisk = 34.dp,
+                                ringStroke = 5.dp,
+                                spacingTop = 10.dp,
+                                iconFontSize = 21.sp
+                            )
+
+                            Spacer(Modifier.height(spacerV))
+
+                            HealthScoreCardModern(
+                                score = todayNutrition.avgHealthScore,
+                                cardHeight = caloriesH
+                            )
+                        }
+
+                        2 -> {
                             WeightFastingRowModern(
                                 summary = summary,
                                 cardHeight = wfH,

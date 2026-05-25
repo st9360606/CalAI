@@ -35,7 +35,11 @@ data class HomeTodayNutritionSummary(
     val eatenKcal: Int = 0,
     val eatenProteinG: Int = 0,
     val eatenCarbsG: Int = 0,
-    val eatenFatsG: Int = 0
+    val eatenFatsG: Int = 0,
+    val eatenFiberG: Int = 0,
+    val eatenSugarG: Int = 0,
+    val eatenSodiumMg: Int = 0,
+    val avgHealthScore: Int = 0
 )
 
 class FoodLogsRepository @Inject constructor(
@@ -120,7 +124,11 @@ class FoodLogsRepository @Inject constructor(
             eatenKcal = day?.totalKcal?.roundToInt()?.coerceAtLeast(0) ?: 0,
             eatenProteinG = day?.proteinG?.roundToInt()?.coerceAtLeast(0) ?: 0,
             eatenCarbsG = day?.carbsG?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            eatenFatsG = day?.fatsG?.roundToInt()?.coerceAtLeast(0) ?: 0
+            eatenFatsG = day?.fatsG?.roundToInt()?.coerceAtLeast(0) ?: 0,
+            eatenFiberG = day?.fiberG?.roundToInt()?.coerceAtLeast(0) ?: 0,
+            eatenSugarG = day?.sugarG?.roundToInt()?.coerceAtLeast(0) ?: 0,
+            eatenSodiumMg = day?.sodiumMg?.roundToInt()?.coerceAtLeast(0) ?: 0,
+            avgHealthScore = day?.avgHealthScore?.roundToInt()?.coerceIn(0, 10) ?: 0
         )
     }
 

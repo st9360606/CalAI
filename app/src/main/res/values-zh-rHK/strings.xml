@@ -490,6 +490,19 @@
     <string name="home_carbs_eaten_label">已攝取碳水</string>
     <string name="home_fats_goal_label">剩餘脂肪</string>
     <string name="home_fats_eaten_label">已攝取脂肪</string>
+    <string name="home_fiber_goal_label">剩餘纖維</string>
+    <string name="home_fiber_eaten_label">已攝取纖維</string>
+    <string name="home_sugar_goal_label">剩餘糖</string>
+    <string name="home_sugar_eaten_label">已攝取糖</string>
+    <string name="home_sodium_goal_label">剩餘鈉</string>
+    <string name="home_sodium_eaten_label">已攝取鈉</string>
+    <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
+    <string name="home_health_score_title">健康分數</string>
+    <string name="home_health_score_value">%1$d/10</string>
+    <string name="home_health_score_advice_empty">今天記錄餐點後，系統會計算平均健康分數。</string>
+    <string name="home_health_score_advice_low">今天的餐點需要更均衡。建議補充纖維、蛋白質，並降低糖分選擇。</string>
+    <string name="home_health_score_advice_medium">今天整體表現穩定。請維持份量平衡，並留意糖與鈉。</string>
+    <string name="home_health_score_advice_high">今天的餐點很均衡。繼續選擇營養密度高的食物。</string>
     <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
     <string name="home_nutrition_ratio_grams">%1$d / %2$d克</string>
 

@@ -334,6 +334,211 @@ fun MacroRowModern(
 }
 
 @Composable
+fun MicronutrientRowModern(
+    s: HomeSummary,
+    todayNutrition: HomeTodayNutritionSummary,
+    showTodayProgress: Boolean,
+    onClick: () -> Unit,
+    cardHeight: Dp = PanelHeights.Metric,
+    valueFontSize: TextUnit = 15.sp,
+    labelFontSize: TextUnit = 12.sp,
+    ringSize: Dp = RingDefaults.Size,
+    ringStroke: Dp = RingDefaults.Stroke,
+    centerDisk: Dp = RingDefaults.CenterDisk,
+    spacingTop: Dp = 10.dp,
+    iconFontSize: TextUnit = 21.sp
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        MacroStatCardModern(
+            goalValueText = "${s.fiberG}g",
+            progressValueText = stringResource(
+                R.string.home_nutrition_ratio_grams,
+                todayNutrition.eatenFiberG.coerceAtLeast(0),
+                s.fiberG.coerceAtLeast(0)
+            ),
+            goalLabel = stringResource(R.string.home_fiber_goal_label),
+            progressLabel = stringResource(R.string.home_fiber_eaten_label),
+            showTodayProgress = showTodayProgress,
+            ringColor = HomeRingPalette.Workout,
+            progress = progressOfInt(todayNutrition.eatenFiberG, s.fiberG),
+            valueFontSize = valueFontSize,
+            labelFontSize = labelFontSize,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk,
+            spacingTop = spacingTop,
+            icon = {
+                Text(
+                    text = "🫐",
+                    fontSize = iconFontSize,
+                    lineHeight = iconFontSize
+                )
+            },
+            modifier = Modifier.weight(1f),
+            cardHeight = cardHeight,
+            onClick = onClick
+        )
+
+        MacroStatCardModern(
+            goalValueText = "${s.sugarG}g",
+            progressValueText = stringResource(
+                R.string.home_nutrition_ratio_grams,
+                todayNutrition.eatenSugarG.coerceAtLeast(0),
+                s.sugarG.coerceAtLeast(0)
+            ),
+            goalLabel = stringResource(R.string.home_sugar_goal_label),
+            progressLabel = stringResource(R.string.home_sugar_eaten_label),
+            showTodayProgress = showTodayProgress,
+            ringColor = HomeRingPalette.Protein,
+            progress = progressOfInt(todayNutrition.eatenSugarG, s.sugarG),
+            valueFontSize = valueFontSize,
+            labelFontSize = labelFontSize,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk,
+            spacingTop = spacingTop,
+            icon = {
+                Text(
+                    text = "🥄",
+                    fontSize = iconFontSize,
+                    lineHeight = iconFontSize
+                )
+            },
+            modifier = Modifier.weight(1f),
+            cardHeight = cardHeight,
+            onClick = onClick
+        )
+
+        MacroStatCardModern(
+            goalValueText = "${s.sodiumMg}mg",
+            progressValueText = stringResource(
+                R.string.home_nutrition_ratio_mg,
+                todayNutrition.eatenSodiumMg.coerceAtLeast(0),
+                s.sodiumMg.coerceAtLeast(0)
+            ),
+            goalLabel = stringResource(R.string.home_sodium_goal_label),
+            progressLabel = stringResource(R.string.home_sodium_eaten_label),
+            showTodayProgress = showTodayProgress,
+            ringColor = HomeRingPalette.FiberOrCarbs,
+            progress = progressOfInt(todayNutrition.eatenSodiumMg, s.sodiumMg),
+            valueFontSize = valueFontSize,
+            labelFontSize = labelFontSize,
+            ringSize = ringSize,
+            ringStroke = ringStroke,
+            centerDisk = centerDisk,
+            spacingTop = spacingTop,
+            icon = {
+                Text(
+                    text = "🧂",
+                    fontSize = iconFontSize,
+                    lineHeight = iconFontSize
+                )
+            },
+            modifier = Modifier.weight(1f),
+            cardHeight = cardHeight,
+            onClick = onClick
+        )
+    }
+}
+
+@Composable
+fun HealthScoreCardModern(
+    score: Int,
+    modifier: Modifier = Modifier,
+    cardHeight: Dp = PanelHeights.Metric
+) {
+    val safeScore = score.coerceIn(0, 10)
+    val progress by animateFloatAsState(
+        targetValue = safeScore / 10f,
+        label = "home_health_score_progress"
+    )
+    val advice = when {
+        safeScore >= 8 -> stringResource(R.string.home_health_score_advice_high)
+        safeScore >= 5 -> stringResource(R.string.home_health_score_advice_medium)
+        safeScore > 0 -> stringResource(R.string.home_health_score_advice_low)
+        else -> stringResource(R.string.home_health_score_advice_empty)
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(cardHeight)
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        border = CardStyles.Border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.home_health_score_title),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = Color(0xFF18181B),
+                        fontSize = 18.sp,
+                        lineHeight = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+
+                Text(
+                    text = stringResource(R.string.home_health_score_value, safeScore),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = Color(0xFF18181B),
+                        fontSize = 18.sp,
+                        lineHeight = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(Color(0xFFF1F2F4))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(progress)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xFF18181B))
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = advice,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF71717A),
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
+                    fontWeight = FontWeight.Normal
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
 private fun MacroStatCardModern(
     goalValueText: String,
     progressValueText: String,

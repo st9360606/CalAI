@@ -32,5 +32,9 @@ data class ProgressDayDto(
     val totalKcal: Double,
     val proteinG: Double,
     val carbsG: Double,
-    val fatsG: Double
+    val fatsG: Double,
+    val fiberG: Double = 0.0,
+    val sugarG: Double = 0.0,
+    val sodiumMg: Double = 0.0,
+    val avgHealthScore: Double = 0.0
 )
