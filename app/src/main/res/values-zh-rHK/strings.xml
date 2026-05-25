@@ -390,7 +390,7 @@
          Nutrition Chart
          ========================= -->
     <string name="progress_chart_total_calories">總卡路里</string>
-    <string name="progress_chart_cals">卡</string>
+    <string name="progress_chart_cals">大卡</string>
 
     <string name="progress_legend_protein">蛋白質</string>
     <string name="progress_legend_carbs">碳水</string>
@@ -436,6 +436,7 @@
     <string name="workout_chart_unit_kcal">大卡</string>
     <string name="workout_chart_goal">目標</string>
     <string name="workout_chart_7day_avg">7 日平均</string>
+    <string name="workout_chart_value_kcal">%1$d 大卡</string>
     <string name="workout_chart_goal_reached">今天已達成目標</string>
     <string name="workout_chart_goal_left">距離今日目標還差 %1$d 大卡</string>
     <string name="workout_chart_loading">載入中...</string>
@@ -479,17 +480,17 @@
          Water Chart
          ========================= -->
     <string name="water_chart_title">喝水量</string>
-    <string name="water_chart_unit_ml">ml</string>
+    <string name="water_chart_unit_ml">毫升</string>
     <string name="water_chart_goal">目標</string>
     <string name="water_chart_7day_avg">7 日平均</string>
     <string name="water_chart_loading">載入中...</string>
     <string name="water_chart_goal_reached">今日已達成目標</string>
-    <string name="water_chart_goal_left_ml">距離今日目標還差 %1$s ml</string>
-    <string name="water_chart_value_ml">%1$s ml</string>
+    <string name="water_chart_goal_left_ml">距離今日目標還差 %1$s 毫升</string>
+    <string name="water_chart_value_ml">%1$s 毫升</string>
     <string name="water_legend_intake">攝取量</string>
     <string name="water_legend_daily_goal">每日目標</string>
     <string name="water_tooltip_intake">攝取</string>
-    <string name="water_tooltip_ml_value">%1$d ml</string>
+    <string name="water_tooltip_ml_value">%1$d 毫升</string>
 
     <!-- HomeCards -->
     <string name="home_calories_goal_label">剩餘卡路里</string>

@@ -19,9 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,7 +43,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
@@ -176,25 +176,31 @@ private fun MicronutrientChartCardFrame(
         Spacer(modifier = Modifier.height(18.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
             ColorLegendChip(
                 label = stringResource(R.string.progress_legend_fiber),
-                color = MicronutrientFiberColor
+                emoji = "🌿",
+                emojiFontSize = 13.sp
             )
+
             Spacer(modifier = Modifier.width(24.dp))
 
             ColorLegendChip(
                 label = stringResource(R.string.progress_legend_sugar),
-                color = MicronutrientSugarColor
+                emoji = "🍯",
+                emojiFontSize = 15.sp
             )
+
             Spacer(modifier = Modifier.width(24.dp))
 
             ColorLegendChip(
                 label = stringResource(R.string.progress_legend_sodium),
-                color = MicronutrientSodiumColor
+                emoji = "🍚",
+                emojiFontSize = 14.sp
             )
         }
 
@@ -208,7 +214,7 @@ private fun MicronutrientChartCardFrame(
                     color = MicronutrientFooterBg,
                     shape = RoundedCornerShape(12.dp)
                 )
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Text(
                 text = stringResource(R.string.progress_micronutrients_keep_it_up),
@@ -542,7 +548,7 @@ private fun MicronutrientDayTooltip(
                 )
             ),
             ChartTooltipMetricUi(
-                emoji = "🍬",
+                emoji = "🍯",
                 label = stringResource(R.string.progress_tooltip_label_format, sugarLabel),
                 value = stringResource(
                     R.string.progress_tooltip_grams_value,
@@ -567,13 +573,16 @@ private fun MicronutrientDayTooltip(
 @Composable
 private fun ColorLegendChip(
     label: String,
-    color: Color
+    emoji: String,
+    emojiFontSize: TextUnit = 16.sp,
+    emojiYOffset: Dp = 0.dp,
+    textYOffset: Dp = 0.dp
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(9.dp)
-                .background(color, CircleShape)
+        Text(
+            text = emoji,
+            fontSize = emojiFontSize,
+            modifier = Modifier.offset(y = emojiYOffset)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -582,7 +591,8 @@ private fun ColorLegendChip(
             text = label,
             color = Color(0xFF17171C),
             fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.offset(y = textYOffset)
         )
     }
 }

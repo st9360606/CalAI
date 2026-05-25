@@ -58,17 +58,17 @@ import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-private val WorkoutBarColor = Color(0xFFA37FE0)
+private val WorkoutBarColor = Color(0xFFE9A35F)
 private val WorkoutGoalLineColor = Color(0xFF3C9E45)
 private val WorkoutCardBg = Color.White
 private val WorkoutBorderColor = Color(0xFFD9D9DB)
 private val WorkoutTitleColor = Color(0xFF1B1B21)
 private val WorkoutValueColor = Color(0xFF17171C)
 private val WorkoutMetaColor = Color(0xFF74747A)
-private val WorkoutMetricChipBg = Color(0xFFF7F3FF)
-private val WorkoutMetricChipBorder = Color(0xFFE6DDF8)
-private val WorkoutMetricChipLabelColor = Color(0xFF7B6AA0)
-private val WorkoutMetricChipValueColor = Color(0xFF40305F)
+private val WorkoutMetricChipBg = Color(0xFFFFF3E6)
+private val WorkoutMetricChipBorder = Color(0xFFF2D8BE)
+private val WorkoutMetricChipLabelColor = Color(0xFF9A6A43)
+private val WorkoutMetricChipValueColor = Color(0xFF5C3A21)
 
 @Composable
 internal fun WorkoutChartCard(
@@ -87,11 +87,11 @@ internal fun WorkoutChartCard(
         unitText = stringResource(R.string.workout_chart_unit_kcal),
         deltaText = chart.deltaText,
         goalText = stringResource(R.string.workout_chart_goal),
-        goalValue = "${chart.goalKcal} kcal",
+        goalValue = stringResource(R.string.workout_chart_value_kcal, chart.goalKcal),
         avgText = stringResource(R.string.workout_chart_7day_avg),
-        avgValue = "${chart.averageKcal} kcal",
+        avgValue = stringResource(R.string.workout_chart_value_kcal, chart.averageKcal),
         footerText = footerText,
-        footerBackground = if (chart.reachedGoalToday) Color(0xFFEAF5E8) else Color(0xFFF6F0FF),
+        footerBackground = if (chart.reachedGoalToday) Color(0xFFEAF5E8) else Color(0xFFFFF3E6),
         footerTextColor = if (chart.reachedGoalToday) Color(0xFF3C9E45) else WorkoutBarColor,
         modifier = modifier
     ) {
@@ -297,7 +297,7 @@ private fun WorkoutChartCardFrame(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .background(footerBackground, RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = footerText,

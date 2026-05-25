@@ -250,8 +250,9 @@ private fun ProgressChartCardFrame(
             LegendChip(
                 label = stringResource(R.string.progress_legend_protein),
                 emoji = "🥩",
-                emojiFontSize = 15.sp
+                emojiFontSize = 14.sp
             )
+
             Spacer(modifier = Modifier.width(24.dp))
 
             LegendChip(
@@ -259,12 +260,13 @@ private fun ProgressChartCardFrame(
                 emoji = "🌾",
                 emojiFontSize = 15.sp
             )
+
             Spacer(modifier = Modifier.width(24.dp))
 
             LegendChip(
                 label = stringResource(R.string.progress_legend_fats),
                 emoji = "🥑",
-                emojiFontSize = 15.sp
+                emojiFontSize = 14.sp
             )
         }
 
@@ -278,7 +280,7 @@ private fun ProgressChartCardFrame(
                     color = Color(0xFFEAF5E8),
                     shape = RoundedCornerShape(12.dp)
                 )
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Text(
                 text = stringResource(R.string.progress_keep_it_up),

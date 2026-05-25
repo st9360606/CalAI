@@ -339,7 +339,7 @@ private fun WaterChartCardFrame(
                         color = footerBackground,
                         shape = RoundedCornerShape(12.dp)
                     )
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = footerText,
@@ -386,12 +386,11 @@ private fun WaterMetricChip(
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
                 )
             } else {
-                drawRoundRect(
+                drawLine(
                     color = accentColor,
-                    topLeft = Offset(0f, size.height * 0.2f),
-                    size = Size(size.width, size.height * 0.6f),
-                    cornerRadius = CornerRadius(999f, 999f),
-                    style = Fill
+                    start = Offset(0f, size.height / 2f),
+                    end = Offset(size.width, size.height / 2f),
+                    strokeWidth = 4f
                 )
             }
         }
