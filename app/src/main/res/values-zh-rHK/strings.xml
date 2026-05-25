@@ -397,6 +397,16 @@
     <string name="progress_legend_fats">脂肪</string>
 
     <string name="progress_keep_it_up">繼續保持！最難的是開始，而你已經做到了！</string>
+    <string name="progress_micronutrients_title">微量營養素</string>
+    <string name="progress_chart_grams">克</string>
+    <string name="progress_legend_fiber">纖維</string>
+    <string name="progress_legend_sugar">糖</string>
+    <string name="progress_legend_sodium">鈉</string>
+    <string name="progress_micronutrients_keep_it_up">持續保持均衡，讓纖維、糖與鈉更穩定。</string>
+    <string name="progress_tooltip_fiber">纖維</string>
+    <string name="progress_tooltip_sugar">糖</string>
+    <string name="progress_tooltip_sodium">鈉</string>
+    <string name="progress_tooltip_mg_value">%1$d mg</string>
 
     <string name="progress_day_sun">週日</string>
     <string name="progress_day_mon">週一</string>

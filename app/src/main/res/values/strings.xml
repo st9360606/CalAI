@@ -398,6 +398,16 @@
     <string name="progress_legend_fats">Fats</string>
 
     <string name="progress_keep_it_up">Keep it up! Getting started is the hardest part!</string>
+    <string name="progress_micronutrients_title">Micronutrients</string>
+    <string name="progress_chart_grams">g</string>
+    <string name="progress_legend_fiber">Fiber</string>
+    <string name="progress_legend_sugar">Sugar</string>
+    <string name="progress_legend_sodium">Sodium</string>
+    <string name="progress_micronutrients_keep_it_up">Keep your fiber, sugar, and sodium balanced.</string>
+    <string name="progress_tooltip_fiber">Fiber</string>
+    <string name="progress_tooltip_sugar">Sugar</string>
+    <string name="progress_tooltip_sodium">Sodium</string>
+    <string name="progress_tooltip_mg_value">%1$d mg</string>
 
     <string name="progress_day_sun">Sun</string>
     <string name="progress_day_mon">Mon</string>

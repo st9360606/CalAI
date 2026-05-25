@@ -130,6 +130,13 @@ fun ProgressScreen(
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
+
+                    item {
+                        MicronutrientChartCard(
+                            days = ui.days,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
             }
 

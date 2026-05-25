@@ -35,7 +35,10 @@ data class ProgressBarDayUi(
     val carbsG: Float,
     val fatsG: Float,
     val totalG: Float,
-    val totalKcal: Int
+    val totalKcal: Int,
+    val fiberG: Float = 0f,
+    val sugarG: Float = 0f,
+    val sodiumMg: Float = 0f
 )
 
 data class WaterProgressDayUi(
@@ -557,7 +560,10 @@ private fun ProgressDayDto.toUi(): ProgressBarDayUi {
         carbsG = carbs,
         fatsG = fats,
         totalG = protein + carbs + fats,
-        totalKcal = totalKcal.roundToInt()
+        totalKcal = totalKcal.roundToInt(),
+        fiberG = fiberG.toFloat(),
+        sugarG = sugarG.toFloat(),
+        sodiumMg = sodiumMg.toFloat()
     )
 }
 
