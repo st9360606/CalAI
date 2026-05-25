@@ -1087,8 +1087,7 @@ private fun TwoPagePager(
                                 ringSize = 68.dp,
                                 centerDisk = 34.dp,
                                 ringStroke = 5.dp,
-                                spacingTop = 10.dp,
-                                iconFontSize = 21.sp
+                                spacingTop = 10.dp
                             )
 
                             Spacer(Modifier.height(spacerV))

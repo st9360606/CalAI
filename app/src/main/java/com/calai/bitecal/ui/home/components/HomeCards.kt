@@ -33,7 +33,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.EggAlt
+import androidx.compose.material.icons.filled.Icecream
 import androidx.compose.material.icons.filled.Opacity
+import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.RiceBowl
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -88,6 +91,10 @@ private object HomeRingPalette {
     val Protein = Color(0xFFE56C6C)      // 活力珊瑚紅：比玫瑰紅更有食慾與能量
     val FiberOrCarbs = Color(0xFFD89A62) // 活力橘棕：溫暖、食物感，與 CalendarStrip 搭配
     val Fats = Color(0xFF6C93D8)         // 柔和活力藍：乾淨但不灰
+    val Fiber = Color(0xFFA78BFA)        // 淡紫色：亮度/對比度對齊 MacroRowModern
+    val Sugar = Color(0xFFF08AAF)        // 淡粉色：保留甜點感，但避免過亮
+    val Sodium = Color(0xFF73B6E6)       // 淡藍色：清爽、低飽和，與 Fats / Steps 區隔
+    val HealthScore = Color(0xFF5ECB7A)  // 柔和健康綠：亮度/對比度對齊 MacroRowModern 色票
     val Workout = Color(0xFFA37FE0)      // 柔和活力紫：亮度接近 Protein/Fats，不會太沉
     val Steps = Color(0xFF6BB8DA)        // 清爽活力藍：比原本不刺眼，亮度更一致
     val Weight = Color(0xFF5ECB7A)       // 完成綠：保留成功感，亮度與整體色票更一致
@@ -345,8 +352,7 @@ fun MicronutrientRowModern(
     ringSize: Dp = RingDefaults.Size,
     ringStroke: Dp = RingDefaults.Stroke,
     centerDisk: Dp = RingDefaults.CenterDisk,
-    spacingTop: Dp = 10.dp,
-    iconFontSize: TextUnit = 21.sp
+    spacingTop: Dp = 10.dp
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -362,7 +368,7 @@ fun MicronutrientRowModern(
             goalLabel = stringResource(R.string.home_fiber_goal_label),
             progressLabel = stringResource(R.string.home_fiber_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.Workout,
+            ringColor = HomeRingPalette.Fiber,
             progress = progressOfInt(todayNutrition.eatenFiberG, s.fiberG),
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -371,10 +377,11 @@ fun MicronutrientRowModern(
             centerDisk = centerDisk,
             spacingTop = spacingTop,
             icon = {
-                Text(
-                    text = "🫐",
-                    fontSize = iconFontSize,
-                    lineHeight = iconFontSize
+                Icon(
+                    imageVector = Icons.Filled.Spa,
+                    contentDescription = null,
+                    tint = HomeRingPalette.Fiber,
+                    modifier = Modifier.size(21.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -392,7 +399,7 @@ fun MicronutrientRowModern(
             goalLabel = stringResource(R.string.home_sugar_goal_label),
             progressLabel = stringResource(R.string.home_sugar_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.Protein,
+            ringColor = HomeRingPalette.Sugar,
             progress = progressOfInt(todayNutrition.eatenSugarG, s.sugarG),
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -401,10 +408,11 @@ fun MicronutrientRowModern(
             centerDisk = centerDisk,
             spacingTop = spacingTop,
             icon = {
-                Text(
-                    text = "🥄",
-                    fontSize = iconFontSize,
-                    lineHeight = iconFontSize
+                Icon(
+                    imageVector = Icons.Filled.Icecream,
+                    contentDescription = null,
+                    tint = HomeRingPalette.Sugar,
+                    modifier = Modifier.size(22.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -422,7 +430,7 @@ fun MicronutrientRowModern(
             goalLabel = stringResource(R.string.home_sodium_goal_label),
             progressLabel = stringResource(R.string.home_sodium_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.FiberOrCarbs,
+            ringColor = HomeRingPalette.Sodium,
             progress = progressOfInt(todayNutrition.eatenSodiumMg, s.sodiumMg),
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -431,10 +439,11 @@ fun MicronutrientRowModern(
             centerDisk = centerDisk,
             spacingTop = spacingTop,
             icon = {
-                Text(
-                    text = "🧂",
-                    fontSize = iconFontSize,
-                    lineHeight = iconFontSize
+                Icon(
+                    imageVector = Icons.Filled.RiceBowl,
+                    contentDescription = null,
+                    tint = HomeRingPalette.Sodium,
+                    modifier = Modifier.size(21.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -486,9 +495,9 @@ fun HealthScoreCardModern(
                     text = stringResource(R.string.home_health_score_title),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = Color(0xFF18181B),
-                        fontSize = 18.sp,
-                        lineHeight = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 )
 
@@ -496,9 +505,9 @@ fun HealthScoreCardModern(
                     text = stringResource(R.string.home_health_score_value, safeScore),
                     style = MaterialTheme.typography.titleMedium.copy(
                         color = Color(0xFF18181B),
-                        fontSize = 18.sp,
-                        lineHeight = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 )
             }
@@ -517,7 +526,7 @@ fun HealthScoreCardModern(
                         .fillMaxWidth(progress)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(999.dp))
-                        .background(Color(0xFF18181B))
+                        .background(HomeRingPalette.HealthScore)
                 )
             }
 
@@ -527,8 +536,8 @@ fun HealthScoreCardModern(
                 text = advice,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Color(0xFF71717A),
-                    fontSize = 13.sp,
-                    lineHeight = 17.sp,
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp,
                     fontWeight = FontWeight.Normal
                 ),
                 maxLines = 2,

@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,7 +32,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BakeryDining
+import androidx.compose.material.icons.filled.EggAlt
+import androidx.compose.material.icons.filled.Icecream
+import androidx.compose.material.icons.filled.Opacity
+import androidx.compose.material.icons.filled.RiceBowl
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Opacity
@@ -45,8 +49,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -205,7 +207,7 @@ private fun EditNutritionGoalsScreen(
             }
 
             GoalRow(
-                ringColor = Color(0xFF111114),
+                ringColor = Color(0xFF1F1A17),
                 icon = Icons.Outlined.LocalFireDepartment,
                 label = "Calorie goal",
                 value = ui.draft.kcal,
@@ -215,8 +217,8 @@ private fun EditNutritionGoalsScreen(
             Spacer(Modifier.height(GoalRowGap))
 
             GoalRow(
-                ringColor = Color(0xFFE07A7A),
-                icon = Icons.Outlined.Restaurant,
+                ringColor = Color(0xFFE56C6C),
+                icon = Icons.Filled.EggAlt,
                 label = "Protein goal",
                 value = ui.draft.proteinG,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.PROTEIN],
@@ -225,8 +227,8 @@ private fun EditNutritionGoalsScreen(
             Spacer(Modifier.height(GoalRowGap))
 
             GoalRow(
-                ringColor = Color(0xFFDAA86B),
-                icon = Icons.Outlined.Spa,
+                ringColor = Color(0xFFD89A62),
+                icon = Icons.Filled.BakeryDining,
                 label = "Carb goal",
                 value = ui.draft.carbsG,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.CARBS],
@@ -235,8 +237,8 @@ private fun EditNutritionGoalsScreen(
             Spacer(Modifier.height(GoalRowGap))
 
             GoalRow(
-                ringColor = Color(0xFF6D8FD6),
-                icon = Icons.Outlined.WaterDrop,
+                ringColor = Color(0xFF6C93D8),
+                icon = Icons.Filled.Opacity,
                 label = "Fat goal",
                 value = ui.draft.fatG,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.FAT],
@@ -278,8 +280,8 @@ private fun EditNutritionGoalsScreen(
                     Spacer(Modifier.height(6.dp))
 
                     GoalRow(
-                        ringColor = Color(0xFF8A78D6),
-                        icon = Icons.Outlined.Favorite,
+                        ringColor = Color(0xFFA78BFA),
+                        icon = Icons.Filled.Spa,
                         label = "Fiber goal",
                         value = ui.draft.fiberG,
                         errorText = ui.fieldErrors[NutritionGoalsUiState.Field.FIBER],
@@ -288,8 +290,8 @@ private fun EditNutritionGoalsScreen(
                     Spacer(Modifier.height(GoalRowGap))
 
                     GoalRow(
-                        ringColor = Color(0xFFE06FA0),
-                        icon = Icons.Outlined.Opacity,
+                        ringColor = Color(0xFFF08AAF),
+                        icon = Icons.Filled.Icecream,
                         label = "Sugar goal",
                         value = ui.draft.sugarG,
                         errorText = ui.fieldErrors[NutritionGoalsUiState.Field.SUGAR],
@@ -298,8 +300,8 @@ private fun EditNutritionGoalsScreen(
                     Spacer(Modifier.height(GoalRowGap))
 
                     GoalRow(
-                        ringColor = Color(0xFFE0C46F),
-                        icon = Icons.Outlined.Spa,
+                        ringColor = Color(0xFF73B6E6),
+                        icon = Icons.Filled.RiceBowl,
                         label = "Sodium goal",
                         value = ui.draft.sodiumMg,
                         errorText = ui.fieldErrors[NutritionGoalsUiState.Field.SODIUM],
