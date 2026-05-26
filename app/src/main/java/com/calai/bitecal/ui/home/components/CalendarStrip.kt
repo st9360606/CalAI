@@ -56,7 +56,7 @@ fun CalendarStrip(
     val visibleDays = remember(days) {
         days.distinct().sorted()
     }
-    
+
     val visibleCount = 6
     val spacing = 7.dp
     val minItemWidth = 40.dp
