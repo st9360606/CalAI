@@ -34,7 +34,7 @@ private object CalendarStripColors {
     val ActiveText = Color(0xFF111114)
     val DisabledText = Color(0xFF9CA3AF)
     val ActiveStroke = Color(0xFF111114)
-    val DisabledStroke = Color(0xFF9CA3AF)
+    val DisabledStroke = Color(0xFFC1C7D0)
 
     // Ring color rules aligned with Cal AI explanation:
     // Green / Yellow / Red: logged days use solid stroke.
@@ -43,7 +43,7 @@ private object CalendarStripColors {
     val SlightlyOverStroke = Color(0xFFE49A61)
     val FarOverStroke = Color(0xFFE25F5F)
     val NoMealStroke = Color(0xFF555A60)
-    val TodayNoMealStroke = Color(0xFF555A60)
+    val TodayNoMealStroke = Color(0xFF111114)
 }
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -289,9 +289,14 @@ private fun DayDot(
     // 固定 Canvas 外徑，並用 strokeWidth 反推 radius，避免 selected / future 圓圈看起來大小不同。
     // 實線代表已有餐點紀錄，視覺上放大一點；虛線代表無餐點紀錄，維持較輕量。
     val dottedDotSize = 34.dp
-    val solidDotSize = 38.dp //實線的圓
-    val dotSize = if (style == DotStyle.SolidStroke) solidDotSize else dottedDotSize
-    val normalStrokeWidth = 2.dp
+    val solidDotSize = 38.dp // 實線的圓
+    val futureDotSize = 36.dp // 只縮小未來一天的圓，其他日期不受影響
+    val dotSize = when {
+        !enabled && style == DotStyle.SolidStroke -> futureDotSize
+        style == DotStyle.SolidStroke -> solidDotSize
+        else -> dottedDotSize
+    }
+    val normalStrokeWidth = 1.9.dp
     val emphasizedStrokeWidth = 2.5.dp
     val futureStrokeWidth = 1.75.dp
 
