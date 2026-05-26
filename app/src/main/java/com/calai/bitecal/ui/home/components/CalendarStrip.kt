@@ -56,10 +56,7 @@ fun CalendarStrip(
     val visibleDays = remember(days) {
         days.distinct().sorted()
     }
-
-    // Home 需要第一屏固定露出「前 4 天 + 今天 + 未來 1 天」，所以這裡以實際可用寬度切 6 欄。
-    // 不可用 LocalConfiguration.screenWidthDp，因為 CalendarStrip 外層有 horizontal padding，
-    // 用整個螢幕寬度會把 item 算太寬，導致明天雖然在資料中，卻被擠到右側需要滑動才看得到。
+    
     val visibleCount = 6
     val spacing = 7.dp
     val minItemWidth = 40.dp
@@ -70,29 +67,20 @@ fun CalendarStrip(
                 .coerceAtLeast(minItemWidth)
         }
 
-        val targetFirstVisibleIndex = remember(visibleDays, selected, today) {
-            val selectedIndex = visibleDays.indexOf(selected)
-            val todayIndex = visibleDays.indexOf(today)
-            val anchorIndex = when {
-                selectedIndex >= 0 -> selectedIndex
-                todayIndex >= 0 -> todayIndex
-                else -> 0
-            }
+        val initialFirstVisibleIndex = remember(visibleDays, today) {
+            val todayIndex = visibleDays.indexOf(today).coerceAtLeast(0)
             val maxFirstVisibleIndex = (visibleDays.size - visibleCount).coerceAtLeast(0)
 
-            // anchorIndex - 4：讓今天/選中日落在第 5 格。
-            // Home 預設 selected = today 時，第一屏會是：前 4 天 + 今天 + 明天。
-            (anchorIndex - 4).coerceIn(0, maxFirstVisibleIndex)
+            // 只在 CalendarStrip 第一次進入畫面時定位：
+            // 讓今天落在第 5 格，第一屏顯示「前 4 天 + 今天 + 明天」。
+            // 注意：不要把 selected 放進 remember key，也不要在 selected 改變時 scrollToItem，
+            // 否則使用者點其他日期時，LazyRow 會自動跳動，手感會很差。
+            (todayIndex - 4).coerceIn(0, maxFirstVisibleIndex)
         }
 
         val listState = rememberLazyListState(
-            initialFirstVisibleItemIndex = targetFirstVisibleIndex
+            initialFirstVisibleItemIndex = initialFirstVisibleIndex
         )
-
-        // 保險：避免 LazyListState 在重組或 Navigation back stack 中沿用舊位置，導致仍停在「前 5 天 + 今天」。
-        LaunchedEffect(targetFirstVisibleIndex) {
-            listState.scrollToItem(targetFirstVisibleIndex)
-        }
 
         val dashedPath = remember { PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f) }
 
