@@ -13,14 +13,15 @@ import com.calai.bitecal.data.foodlog.model.FoodLogServerErrorDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.model.FoodLogWeeklyProgressDto
 import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
+import com.calai.bitecal.data.foodlog.model.ProgressDayDto
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.HttpException
-import java.time.Instant
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -45,6 +46,19 @@ data class HomeTodayNutritionSummary(
     val avgHealthScore: Int = 0
 )
 
+private fun ProgressDayDto.toHomeTodayNutritionSummary(): HomeTodayNutritionSummary {
+    return HomeTodayNutritionSummary(
+        eatenKcal = totalKcal.roundToInt().coerceAtLeast(0),
+        eatenProteinG = proteinG.roundToInt().coerceAtLeast(0),
+        eatenCarbsG = carbsG.roundToInt().coerceAtLeast(0),
+        eatenFatsG = fatsG.roundToInt().coerceAtLeast(0),
+        eatenFiberG = fiberG.roundToInt().coerceAtLeast(0),
+        eatenSugarG = sugarG.roundToInt().coerceAtLeast(0),
+        eatenSodiumMg = sodiumMg.roundToInt().coerceAtLeast(0),
+        avgHealthScore = avgHealthScore.roundToInt().coerceIn(0, 10)
+    )
+}
+
 class FoodLogsRepository @Inject constructor(
     private val api: FoodLogsApi
 ) {
@@ -55,6 +69,7 @@ class FoodLogsRepository @Inject constructor(
 
     private companion object {
         const val TAG = "FoodLogsRepo"
+        const val MAX_NUTRITION_WEEK_OFFSET = 5
     }
 
     suspend fun submitAlbumImage(part: MultipartBody.Part): FoodLogEnvelopeDto =
@@ -115,38 +130,54 @@ class FoodLogsRepository @Inject constructor(
         }
 
     suspend fun getWeeklyProgress(weekOffset: Int = 0): FoodLogWeeklyProgressDto =
-        safeCall { api.getWeeklyProgress(weekOffset.coerceIn(0, 3)) }
+        safeCall { api.getWeeklyProgress(weekOffset.coerceIn(0, MAX_NUTRITION_WEEK_OFFSET)) }
+
+    /**
+     * 回傳指定 localDate 所在週的每日營養摘要。
+     *
+     * CalendarStrip 目前開放今天往回 30 天，因此需要 weekOffset=0..5。
+     * 後端同樣需要允許 /progress/weekly?weekOffset=0..5。
+     */
+    suspend fun getNutritionSummariesForWeek(
+        weekOffset: Int
+    ): Map<LocalDate, HomeTodayNutritionSummary> {
+        return getWeeklyProgress(weekOffset = weekOffset.coerceIn(0, MAX_NUTRITION_WEEK_OFFSET))
+            .days
+            .mapNotNull { day ->
+                val localDate = runCatching { LocalDate.parse(day.date) }.getOrNull()
+                    ?: return@mapNotNull null
+                localDate to day.toHomeTodayNutritionSummary()
+            }
+            .toMap()
+    }
+
+    fun weekOffsetForDate(
+        localDate: LocalDate,
+        zoneId: ZoneId = ZoneId.systemDefault()
+    ): Int? {
+        val today = LocalDate.now(zoneId)
+        if (localDate.isAfter(today)) return null
+
+        val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        val targetWeekStart = localDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        val offset = ChronoUnit.WEEKS.between(targetWeekStart, currentWeekStart).toInt()
+        return offset.takeIf { it in 0..MAX_NUTRITION_WEEK_OFFSET }
+    }
+
+    suspend fun getNutritionSummaryForDate(
+        localDate: LocalDate,
+        zoneId: ZoneId = ZoneId.systemDefault()
+    ): HomeTodayNutritionSummary {
+        val weekOffset = weekOffsetForDate(localDate, zoneId) ?: return HomeTodayNutritionSummary()
+        return getNutritionSummariesForWeek(weekOffset)[localDate] ?: HomeTodayNutritionSummary()
+    }
 
     suspend fun getTodayNutritionSummary(
         zoneId: ZoneId = ZoneId.systemDefault()
-    ): HomeTodayNutritionSummary =
-        getNutritionSummaryForDate(LocalDate.now(zoneId), zoneId)
-
-    suspend fun getNutritionSummaryForDate(
-        date: LocalDate,
-        zoneId: ZoneId = ZoneId.systemDefault()
     ): HomeTodayNutritionSummary {
-        val today = LocalDate.now(zoneId)
-        if (date.isAfter(today)) return HomeTodayNutritionSummary()
-
-        val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-        val selectedWeekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-        val weekOffset = ChronoUnit.WEEKS.between(selectedWeekStart, currentWeekStart).toInt()
-        if (weekOffset !in 0..3) return HomeTodayNutritionSummary()
-
-        val day = getWeeklyProgress(weekOffset = weekOffset).days.firstOrNull {
-            it.date == date.toString()
-        }
-
-        return HomeTodayNutritionSummary(
-            eatenKcal = day?.totalKcal?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            eatenProteinG = day?.proteinG?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            eatenCarbsG = day?.carbsG?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            eatenFatsG = day?.fatsG?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            eatenFiberG = day?.fiberG?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            eatenSugarG = day?.sugarG?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            eatenSodiumMg = day?.sodiumMg?.roundToInt()?.coerceAtLeast(0) ?: 0,
-            avgHealthScore = day?.avgHealthScore?.roundToInt()?.coerceIn(0, 10) ?: 0
+        return getNutritionSummaryForDate(
+            localDate = LocalDate.now(zoneId),
+            zoneId = zoneId
         )
     }
 

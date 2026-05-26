@@ -640,16 +640,13 @@ fun HomeScreen(
                     )
                 }
                 val today = LocalDate.now()
-                val pastDays = 20
-                val futureDays = 1   // 若不想顯示未來任何一天，改成 0
+                val pastDays = 30
+                val futureDays = 1
                 val days =
                     remember(today) { (-pastDays..futureDays).map { today.plusDays(it.toLong()) } }
-                val selected = remember(today, ui.selectedDayOffset) {
-                    today.plusDays(ui.selectedDayOffset.toLong())
-                }
                 CalendarStrip(
                     days = days,
-                    selected = selected,
+                    selected = ui.selectedDate,
                     onSelect = vm::onCalendarDateSelected,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -675,6 +672,7 @@ fun HomeScreen(
                 TwoPagePager(
                     summary = s,
                     todayNutrition = ui.todayNutrition,
+                    selectedDate = ui.selectedDate,
                     topSwap = topSwap,
                     bottomSwap = bottomSwap,
                     baseHeight = baseHeight,
@@ -984,6 +982,7 @@ private fun nutritionProgress(current: Int?, goal: Int?): Float {
 private fun TwoPagePager(
     summary: HomeSummary,
     todayNutrition: HomeTodayNutritionSummary,
+    selectedDate: LocalDate,
     modifier: Modifier = Modifier,
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
@@ -1006,7 +1005,12 @@ private fun TwoPagePager(
 ) {
     val pageCount = 3
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
-    var showTodayNutritionProgress by rememberSaveable { mutableStateOf(false) }
+    var showTodayNutritionProgress by rememberSaveable { mutableStateOf(true) }
+
+    LaunchedEffect(selectedDate) {
+        showTodayNutritionProgress = true
+    }
+
     val toggleNutritionMode = { showTodayNutritionProgress = !showTodayNutritionProgress }
 
     val caloriesProgress = nutritionProgress(

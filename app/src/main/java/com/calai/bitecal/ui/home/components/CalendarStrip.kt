@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.home.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,7 +20,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,6 +38,7 @@ private object CalendarStripColors {
     val DisabledStroke = Color(0xFF9CA3AF)
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun CalendarStrip(
     days: List<LocalDate>,
@@ -50,144 +52,158 @@ fun CalendarStrip(
 ) {
     val today = LocalDate.now()
 
-    // 視窗：今天往回 19 天（含今天） + 未來 1 天（明天）
-    val startDate = today.minusDays(19)
-    val endDate = today.plusDays(1)
-    val visibleDays = remember(days, today) {
-        days.filter { !it.isBefore(startDate) && !it.isAfter(endDate) }
+    // 顯示範圍由呼叫端控制，避免元件內部 hard-code 造成 Home 想顯示 30 天時仍被裁切。
+    val visibleDays = remember(days) {
+        days.distinct().sorted()
     }
 
-    // 每屏至少 7 天
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
-    val visibleCount = 7
-
-    // ★ ④ 間距加大一點
+    // Home 需要第一屏固定露出「前 4 天 + 今天 + 未來 1 天」，所以這裡以實際可用寬度切 6 欄。
+    // 不可用 LocalConfiguration.screenWidthDp，因為 CalendarStrip 外層有 horizontal padding，
+    // 用整個螢幕寬度會把 item 算太寬，導致明天雖然在資料中，卻被擠到右側需要滑動才看得到。
+    val visibleCount = 6
     val spacing = 7.dp
+    val minItemWidth = 40.dp
 
-    val MIN_ITEM_WIDTH = 56.dp
-    val itemWidth: Dp = remember(screenWidth) {
-        ((screenWidth - spacing * (visibleCount - 1)) / visibleCount)
-            .coerceAtLeast(MIN_ITEM_WIDTH)
-    }
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val itemWidth: Dp = remember(maxWidth) {
+            ((maxWidth - spacing * (visibleCount - 1)) / visibleCount)
+                .coerceAtLeast(minItemWidth)
+        }
 
-    // 初始定位
-    val initialIndex = remember(visibleDays, selected, today) {
-        val selIdx = visibleDays.indexOf(selected)
-        val idx = if (selIdx >= 0) selIdx else visibleDays.indexOf(today).coerceAtLeast(0)
-        (idx - 3).coerceIn(0, (visibleDays.lastIndex).coerceAtLeast(0))
-    }
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+        val targetFirstVisibleIndex = remember(visibleDays, selected, today) {
+            val selectedIndex = visibleDays.indexOf(selected)
+            val todayIndex = visibleDays.indexOf(today)
+            val anchorIndex = when {
+                selectedIndex >= 0 -> selectedIndex
+                todayIndex >= 0 -> todayIndex
+                else -> 0
+            }
+            val maxFirstVisibleIndex = (visibleDays.size - visibleCount).coerceAtLeast(0)
 
-    val dashedPath = remember { PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f) }
+            // anchorIndex - 4：讓今天/選中日落在第 5 格。
+            // Home 預設 selected = today 時，第一屏會是：前 4 天 + 今天 + 明天。
+            (anchorIndex - 4).coerceIn(0, maxFirstVisibleIndex)
+        }
 
-    LazyRow(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(spacing),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        items(
-            count = visibleDays.size,
-            key = { i -> visibleDays[i].toEpochDay() },
-            contentType = { _ -> "day" }
-        ) { i ->
-            val d = visibleDays[i]
-            val isSelected = d == selected
-            val isToday = d == today
-            val isFuture = d.isAfter(today)
-            val enabled = !(disableFuture && isFuture)
+        val listState = rememberLazyListState(
+            initialFirstVisibleItemIndex = targetFirstVisibleIndex
+        )
 
-            val baseContainer = Modifier
-                .width(itemWidth)
-                .height(itemHeight)
+        // 保險：避免 LazyListState 在重組或 Navigation back stack 中沿用舊位置，導致仍停在「前 5 天 + 今天」。
+        LaunchedEffect(targetFirstVisibleIndex) {
+            listState.scrollToItem(targetFirstVisibleIndex)
+        }
 
-            when {
-                isSelected -> {
-                    // 選中的那天：使用 HomeRingPalette 相容的金棕色底
-                    Box(
-                        modifier = baseContainer
-                            .clickable { onSelect(d) }
-                            .drawBehind {
-                                val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
-                                val chipW = size.width * fraction
-                                val chipH = size.height
-                                val left = (size.width - chipW) / 2f
-                                drawRoundRect(
-                                    color = CalendarStripColors.SelectedBackground.copy(alpha = 0.81f),
-                                    topLeft = Offset(left, 0f),
-                                    size = Size(chipW, chipH),
-                                    cornerRadius = CornerRadius(
-                                        selectedBgCorner.toPx(),
-                                        selectedBgCorner.toPx()
+        val dashedPath = remember { PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f) }
+
+        LazyRow(
+            state = listState,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items(
+                count = visibleDays.size,
+                key = { i -> visibleDays[i].toEpochDay() },
+                contentType = { _ -> "day" }
+            ) { i ->
+                val d = visibleDays[i]
+                val isSelected = d == selected
+                val isToday = d == today
+                val isFuture = d.isAfter(today)
+                val enabled = !(disableFuture && isFuture)
+
+                val baseContainer = Modifier
+                    .width(itemWidth)
+                    .height(itemHeight)
+
+                when {
+                    isSelected -> {
+                        // 選中的那天：使用 HomeRingPalette 相容的金棕色底
+                        Box(
+                            modifier = baseContainer
+                                .clickable { onSelect(d) }
+                                .drawBehind {
+                                    val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
+                                    val chipW = size.width * fraction
+                                    val chipH = size.height
+                                    val left = (size.width - chipW) / 2f
+                                    drawRoundRect(
+                                        color = CalendarStripColors.SelectedBackground.copy(alpha = 0.81f),
+                                        topLeft = Offset(left, 0f),
+                                        size = Size(chipW, chipH),
+                                        cornerRadius = CornerRadius(
+                                            selectedBgCorner.toPx(),
+                                            selectedBgCorner.toPx()
+                                        )
                                     )
-                                )
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        DayDot(
-                            date = d,
-                            width = itemWidth,
-                            enabled = true,
-                            style = DotStyle.Dashed,
-                            dashedPath = dashedPath,
-                            onClick = {},
-                            useClickable = false,
-                            isSelected = true // ← 加上這行
-                        )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            DayDot(
+                                date = d,
+                                width = itemWidth,
+                                enabled = true,
+                                style = DotStyle.Dashed,
+                                dashedPath = dashedPath,
+                                onClick = {},
+                                useClickable = false,
+                                isSelected = true
+                            )
+                        }
                     }
-                }
 
-                isToday && (selected != today) -> {
-                    // 今天但未被選：柔和灰底
-                    Box(
-                        modifier = baseContainer
-                            .clickable(enabled = enabled) { if (enabled) onSelect(d) }
-                            .drawBehind {
-                                val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
-                                val chipW = size.width * fraction
-                                val chipH = size.height
-                                val left = (size.width - chipW) / 2f
-                                drawRoundRect(
-                                    color = CalendarStripColors.TodayBackground.copy(alpha = 0.25f),
-                                    topLeft = Offset(left, 0f),
-                                    size = Size(chipW, chipH),
-                                    cornerRadius = CornerRadius(
-                                        selectedBgCorner.toPx(),
-                                        selectedBgCorner.toPx()
+                    isToday && (selected != today) -> {
+                        // 今天但未被選：柔和灰底
+                        Box(
+                            modifier = baseContainer
+                                .clickable(enabled = enabled) { if (enabled) onSelect(d) }
+                                .drawBehind {
+                                    val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
+                                    val chipW = size.width * fraction
+                                    val chipH = size.height
+                                    val left = (size.width - chipW) / 2f
+                                    drawRoundRect(
+                                        color = CalendarStripColors.TodayBackground.copy(alpha = 0.25f),
+                                        topLeft = Offset(left, 0f),
+                                        size = Size(chipW, chipH),
+                                        cornerRadius = CornerRadius(
+                                            selectedBgCorner.toPx(),
+                                            selectedBgCorner.toPx()
+                                        )
                                     )
-                                )
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        DayDot(
-                            date = d,
-                            width = itemWidth,
-                            enabled = enabled,
-                            style = DotStyle.Dashed,
-                            dashedPath = dashedPath,
-                            onClick = { if (enabled) onSelect(d) }
-                        )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            DayDot(
+                                date = d,
+                                width = itemWidth,
+                                enabled = enabled,
+                                style = DotStyle.Dashed,
+                                dashedPath = dashedPath,
+                                onClick = { if (enabled) onSelect(d) }
+                            )
+                        }
                     }
-                }
 
-                else -> {
-                    // 其他（一般日或未來日）
-                    val dotStyle = if (isFuture) DotStyle.SolidStroke else DotStyle.Dashed
-                    Box(
-                        modifier = baseContainer
-                            .clickable(enabled = enabled) { if (enabled) onSelect(d) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        DayDot(
-                            date = d,
-                            width = itemWidth,
-                            enabled = enabled,
-                            style = dotStyle,
-                            dashedPath = dashedPath,
-                            onClick = { if (enabled) onSelect(d) },
-                            useClickable = false
-                        )
+                    else -> {
+                        // 其他（一般日或未來日）
+                        val dotStyle = if (isFuture) DotStyle.SolidStroke else DotStyle.Dashed
+                        Box(
+                            modifier = baseContainer
+                                .clickable(enabled = enabled) { if (enabled) onSelect(d) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            DayDot(
+                                date = d,
+                                width = itemWidth,
+                                enabled = enabled,
+                                style = dotStyle,
+                                dashedPath = dashedPath,
+                                onClick = { if (enabled) onSelect(d) },
+                                useClickable = false
+                            )
+                        }
                     }
                 }
             }

@@ -38,7 +38,6 @@ import retrofit2.HttpException
 import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -47,8 +46,9 @@ data class HomeUiState(
     val loading: Boolean = true,
     val summary: HomeSummary? = null,
     val todayNutrition: HomeTodayNutritionSummary = HomeTodayNutritionSummary(),
+    val selectedDate: LocalDate = LocalDate.now(),
     val error: String? = null,
-    val selectedDayOffset: Int = 0
+    val selectedDayOffset: Int = 0 // 0=今天，-1=昨天...
 )
 
 /** 只用 UI 會渲染到的欄位建立簽章，降低不必要重組 */
@@ -107,6 +107,7 @@ class HomeViewModel @Inject constructor(
         const val KEY_LAST_STABLE_DAILY_STATUS = "last_stable_daily_status"
         const val KEY_LAST_STABLE_DAILY_STEPS = "last_stable_daily_steps"
         const val KEY_LAST_STABLE_DAILY_ACTIVE_KCAL = "last_stable_daily_active_kcal"
+        const val MAX_VISIBLE_NUTRITION_WEEK_OFFSET = 5
 
         @Volatile
         private var inMemoryStableDailySnapshot: DailyStableSnapshot? = null
@@ -203,14 +204,18 @@ class HomeViewModel @Inject constructor(
     private val dailyDebounceMs: Long = 1_500L
     private var lastDailyRefreshAtMs: Long = 0L
 
+    // ====== CalendarStrip 日期切換營養摘要快取 ======
+    private val nutritionSummaryByDateCache = mutableMapOf<LocalDate, HomeTodayNutritionSummary>()
+    private val loadedNutritionWeekOffsets = mutableSetOf<Int>()
+    private var selectedNutritionJob: Job? = null
+    private var nutritionPrefetchJob: Job? = null
+
     //============= recentUploads ==================
     private val _recentUploads = MutableStateFlow<List<HomeRecentUploadUi>>(emptyList())
     val recentUploads: StateFlow<List<HomeRecentUploadUi>> = _recentUploads.asStateFlow()
 
     private var recentUploadPollJob: Job? = null
     private var recentUploadRestoreJob: Job? = null
-    private var nutritionDateJob: Job? = null
-    private val nutritionSummaryCache = mutableMapOf<LocalDate, HomeTodayNutritionSummary>()
 
     init {
         refresh()
@@ -503,7 +508,6 @@ class HomeViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        nutritionDateJob?.cancel()
         recentUploadPollJob?.cancel()
         recentUploadRestoreJob?.cancel()
         super.onCleared()
@@ -659,23 +663,68 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    private fun selectedNutritionDate(): LocalDate =
-        LocalDate.now(zoneId).plusDays(_ui.value.selectedDayOffset.toLong())
+    private fun todayLocalDate(): LocalDate = LocalDate.now(zoneId)
 
-    private suspend fun loadNutritionSummaryForDate(date: LocalDate): HomeTodayNutritionSummary {
+    private fun safeSelectableDate(date: LocalDate): LocalDate {
+        val today = todayLocalDate()
+        return if (date.isAfter(today)) today else date
+    }
+
+    private fun cacheNutritionWeek(
+        weekOffset: Int,
+        values: Map<LocalDate, HomeTodayNutritionSummary>
+    ) {
+        nutritionSummaryByDateCache.putAll(values)
+        loadedNutritionWeekOffsets.add(weekOffset)
+    }
+
+    private suspend fun loadNutritionSummaryForDate(
+        localDate: LocalDate
+    ): HomeTodayNutritionSummary {
+        val safeDate = safeSelectableDate(localDate)
+        nutritionSummaryByDateCache[safeDate]?.let { return it }
+
+        val weekOffset = foodLogsRepository.weekOffsetForDate(safeDate, zoneId)
+            ?: return HomeTodayNutritionSummary()
+
         return runCatching {
-            nutritionSummaryCache[date] ?: withContext(Dispatchers.IO) {
-                foodLogsRepository.getNutritionSummaryForDate(date, zoneId)
-            }.also { summary ->
-                nutritionSummaryCache[date] = summary
+            withContext(Dispatchers.IO) {
+                foodLogsRepository.getNutritionSummariesForWeek(weekOffset)
             }
+        }.map { weekValues ->
+            cacheNutritionWeek(weekOffset, weekValues)
+            weekValues[safeDate] ?: HomeTodayNutritionSummary()
         }.getOrElse { t ->
             Log.w(
                 TAG,
-                "loadNutritionSummaryForDate failed date=$date: ${t.javaClass.simpleName}: ${t.message}",
+                "loadNutritionSummaryForDate failed date=$safeDate: ${t.javaClass.simpleName}: ${t.message}",
                 t
             )
             HomeTodayNutritionSummary()
+        }
+    }
+
+    private fun prefetchVisibleCalendarNutritionSummaries() {
+        if (nutritionPrefetchJob?.isActive == true) return
+
+        nutritionPrefetchJob = viewModelScope.launch {
+            for (weekOffset in 0..MAX_VISIBLE_NUTRITION_WEEK_OFFSET) {
+                if (weekOffset in loadedNutritionWeekOffsets) continue
+
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        foodLogsRepository.getNutritionSummariesForWeek(weekOffset)
+                    }
+                }.onSuccess { values ->
+                    cacheNutritionWeek(weekOffset, values)
+                }.onFailure { t ->
+                    Log.w(
+                        TAG,
+                        "prefetchVisibleCalendarNutritionSummaries failed weekOffset=$weekOffset: ${t.javaClass.simpleName}: ${t.message}",
+                        t
+                    )
+                }
+            }
         }
     }
 
@@ -693,41 +742,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onCalendarDateSelected(date: LocalDate) {
-        val today = LocalDate.now(zoneId)
-        if (date.isAfter(today)) return
-
-        val offset = ChronoUnit.DAYS.between(today, date).toInt()
-        if (_ui.value.selectedDayOffset == offset) return
-
-        nutritionDateJob?.cancel()
-        _ui.update {
-            it.copy(
-                selectedDayOffset = offset,
-                todayNutrition = nutritionSummaryCache[date] ?: HomeTodayNutritionSummary(),
-                error = null
-            )
-        }
-
-        nutritionDateJob = viewModelScope.launch {
-            val summary = loadNutritionSummaryForDate(date)
-            _ui.update { current ->
-                if (current.selectedDayOffset == offset) {
-                    current.copy(
-                        loading = false,
-                        todayNutrition = summary,
-                        error = null
-                    )
-                } else {
-                    current
-                }
-            }
-        }
-    }
-
     fun refresh() = viewModelScope.launch {
         _ui.update { it.copy(loading = true, error = null) }
-        nutritionSummaryCache.remove(selectedNutritionDate())
 
         // ✅ 自動觸發：不 force（會被 1.5 秒 debounce 擋）
         refreshDailyActivity(force = false)
@@ -738,7 +754,8 @@ class HomeViewModel @Inject constructor(
 
         if (first.isSuccess) {
             applySummary(first.getOrThrow())
-            applyTodayNutrition(loadNutritionSummaryForDate(selectedNutritionDate()))
+            applyTodayNutrition(loadNutritionSummaryForDate(_ui.value.selectedDate))
+            prefetchVisibleCalendarNutritionSummaries()
             return@launch
         }
 
@@ -754,7 +771,8 @@ class HomeViewModel @Inject constructor(
                 }
                 if (second.isSuccess) {
                     applySummary(second.getOrThrow())
-                    applyTodayNutrition(loadNutritionSummaryForDate(selectedNutritionDate()))
+                    applyTodayNutrition(loadNutritionSummaryForDate(_ui.value.selectedDate))
+                    prefetchVisibleCalendarNutritionSummaries()
                     return@launch
                 }
                 _ui.update {
@@ -768,6 +786,38 @@ class HomeViewModel @Inject constructor(
         }
 
         _ui.update { it.copy(loading = false, error = e?.message ?: "Failed to load profile") }
+    }
+
+    fun onCalendarDateSelected(localDate: LocalDate) {
+        val today = todayLocalDate()
+        if (localDate.isAfter(today)) return
+
+        val safeDate = safeSelectableDate(localDate)
+        val current = _ui.value
+        if (current.selectedDate == safeDate) return
+
+        selectedNutritionJob?.cancel()
+
+        val cached = nutritionSummaryByDateCache[safeDate]
+        _ui.update {
+            it.copy(
+                selectedDate = safeDate,
+                todayNutrition = cached ?: HomeTodayNutritionSummary(),
+                error = null,
+                selectedDayOffset = (safeDate.toEpochDay() - today.toEpochDay()).toInt()
+            )
+        }
+
+        if (cached != null) return
+
+        selectedNutritionJob = viewModelScope.launch {
+            val summary = loadNutritionSummaryForDate(safeDate)
+            nutritionSummaryByDateCache[safeDate] = summary
+
+            if (_ui.value.selectedDate == safeDate) {
+                applyTodayNutrition(summary)
+            }
+        }
     }
 
     private fun applySummary(summary: HomeSummary) {
