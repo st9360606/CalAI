@@ -644,10 +644,15 @@ fun HomeScreen(
                 val futureDays = 1
                 val days =
                     remember(today) { (-pastDays..futureDays).map { today.plusDays(it.toLong()) } }
+                val calendarCaloriesByDate = remember(ui.calendarNutritionByDate) {
+                    ui.calendarNutritionByDate.mapValues { (_, nutrition) -> nutrition.eatenKcal }
+                }
                 CalendarStrip(
                     days = days,
                     selected = ui.selectedDate,
                     onSelect = vm::onCalendarDateSelected,
+                    caloriesByDate = calendarCaloriesByDate,
+                    dailyGoalKcal = s.tdee,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),

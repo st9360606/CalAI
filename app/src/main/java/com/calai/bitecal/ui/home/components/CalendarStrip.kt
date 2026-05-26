@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +35,15 @@ private object CalendarStripColors {
     val DisabledText = Color(0xFF9CA3AF)
     val ActiveStroke = Color(0xFF111114)
     val DisabledStroke = Color(0xFF9CA3AF)
+
+    // Ring color rules aligned with Cal AI explanation:
+    // Green / Yellow / Red: logged days use solid stroke.
+    // Dotted gray: no meals logged / no kcal summary.
+    val OnTargetStroke = Color(0xFF7DDF83)
+    val SlightlyOverStroke = Color(0xFFE49A61)
+    val FarOverStroke = Color(0xFFE25F5F)
+    val NoMealStroke = Color(0xFF555A60)
+    val TodayNoMealStroke = Color(0xFF555A60)
 }
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -46,6 +54,8 @@ fun CalendarStrip(
     onSelect: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     disableFuture: Boolean = true,
+    caloriesByDate: Map<LocalDate, Int> = emptyMap(),
+    dailyGoalKcal: Int = 0,
     selectedBgWidthFraction: Float = 0.83f,
     selectedBgCorner: Dp = 16.dp,
     itemHeight: Dp = 74.dp,
@@ -57,6 +67,9 @@ fun CalendarStrip(
         days.distinct().sorted()
     }
 
+    // Home 需要第一屏固定露出「前 4 天 + 今天 + 未來 1 天」，所以這裡以實際可用寬度切 6 欄。
+    // 不可用 LocalConfiguration.screenWidthDp，因為 CalendarStrip 外層有 horizontal padding，
+    // 用整個螢幕寬度會把 item 算太寬，導致明天雖然在資料中，卻被擠到右側需要滑動才看得到。
     val visibleCount = 6
     val spacing = 7.dp
     val minItemWidth = 40.dp
@@ -100,6 +113,13 @@ fun CalendarStrip(
                 val isToday = d == today
                 val isFuture = d.isAfter(today)
                 val enabled = !(disableFuture && isFuture)
+                val ringStyle = calendarRingStyleForDate(
+                    date = d,
+                    today = today,
+                    enabled = enabled,
+                    caloriesByDate = caloriesByDate,
+                    dailyGoalKcal = dailyGoalKcal
+                )
 
                 val baseContainer = Modifier
                     .width(itemWidth)
@@ -132,7 +152,8 @@ fun CalendarStrip(
                                 date = d,
                                 width = itemWidth,
                                 enabled = true,
-                                style = DotStyle.Dashed,
+                                style = ringStyle.dotStyle,
+                                ringColor = ringStyle.strokeColor,
                                 dashedPath = dashedPath,
                                 onClick = {},
                                 useClickable = false,
@@ -167,7 +188,8 @@ fun CalendarStrip(
                                 date = d,
                                 width = itemWidth,
                                 enabled = enabled,
-                                style = DotStyle.Dashed,
+                                style = ringStyle.dotStyle,
+                                ringColor = ringStyle.strokeColor,
                                 dashedPath = dashedPath,
                                 onClick = { if (enabled) onSelect(d) }
                             )
@@ -176,7 +198,6 @@ fun CalendarStrip(
 
                     else -> {
                         // 其他（一般日或未來日）
-                        val dotStyle = if (isFuture) DotStyle.SolidStroke else DotStyle.Dashed
                         Box(
                             modifier = baseContainer
                                 .clickable(enabled = enabled) { if (enabled) onSelect(d) },
@@ -186,7 +207,8 @@ fun CalendarStrip(
                                 date = d,
                                 width = itemWidth,
                                 enabled = enabled,
-                                style = dotStyle,
+                                style = ringStyle.dotStyle,
+                                ringColor = ringStyle.strokeColor,
                                 dashedPath = dashedPath,
                                 onClick = { if (enabled) onSelect(d) },
                                 useClickable = false
@@ -201,6 +223,50 @@ fun CalendarStrip(
 
 private enum class DotStyle { Dashed, SolidStroke }
 
+private data class CalendarDayRingStyle(
+    val dotStyle: DotStyle,
+    val strokeColor: Color
+)
+
+private fun calendarRingStyleForDate(
+    date: LocalDate,
+    today: LocalDate,
+    enabled: Boolean,
+    caloriesByDate: Map<LocalDate, Int>,
+    dailyGoalKcal: Int
+): CalendarDayRingStyle {
+    if (!enabled || date.isAfter(today)) {
+        return CalendarDayRingStyle(
+            dotStyle = DotStyle.SolidStroke,
+            strokeColor = CalendarStripColors.DisabledStroke
+        )
+    }
+
+    val eatenKcal = caloriesByDate[date]?.coerceAtLeast(0) ?: 0
+    if (eatenKcal <= 0 || dailyGoalKcal <= 0) {
+        return CalendarDayRingStyle(
+            dotStyle = DotStyle.Dashed,
+            strokeColor = if (date == today) {
+                CalendarStripColors.TodayNoMealStroke
+            } else {
+                CalendarStripColors.NoMealStroke
+            }
+        )
+    }
+
+    val overGoalKcal = eatenKcal - dailyGoalKcal
+    val color = when {
+        overGoalKcal >= 200 -> CalendarStripColors.FarOverStroke
+        overGoalKcal >= 100 -> CalendarStripColors.SlightlyOverStroke
+        else -> CalendarStripColors.OnTargetStroke
+    }
+
+    return CalendarDayRingStyle(
+        dotStyle = DotStyle.SolidStroke,
+        strokeColor = color
+    )
+}
+
 /** 星期縮寫 → 間距 → 圓圈 + 日期數字 */
 @Composable
 private fun DayDot(
@@ -208,22 +274,25 @@ private fun DayDot(
     width: Dp,
     enabled: Boolean,
     style: DotStyle,
+    ringColor: Color,
     dashedPath: PathEffect,
     onClick: () -> Unit,
     useClickable: Boolean = true,
     isSelected: Boolean = false
 ) {
     val weekdayColor = CalendarStripColors.ActiveText
-    val dashedStrokeColor = CalendarStripColors.ActiveStroke
     val disabledStrokeColor = CalendarStripColors.DisabledStroke
-
-    val futureStrokeColor = CalendarStripColors.DisabledStroke
-    val futureStrokeWidthPx = 5f
 
     val textColor = if (enabled) Color.Black else CalendarStripColors.DisabledText
     val alpha = if (enabled) 1f else 0.85f
 
-    val dotSize = 34.dp
+    // 固定 Canvas 外徑，並用 strokeWidth 反推 radius，避免 selected / future 圓圈看起來大小不同。
+    // 實線代表已有餐點紀錄，視覺上放大一點；虛線代表無餐點紀錄，維持較輕量。
+    val dottedDotSize = 34.dp
+    val solidDotSize = 37.dp //實線的圓
+    val dotSize = if (style == DotStyle.SolidStroke) solidDotSize else dottedDotSize
+    val normalStrokeWidth = 2.dp
+    val emphasizedStrokeWidth = 2.5.dp
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -243,19 +312,28 @@ private fun DayDot(
             maxLines = 1,
             overflow = TextOverflow.Clip
         )
+
         Spacer(Modifier.height(6.dp))
+
         Box(contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(dotSize)) {
-                val radius = size.minDimension / 2f - 2f
+                val strokeWidthPx = when {
+                    isSelected -> emphasizedStrokeWidth.toPx()
+                    style == DotStyle.SolidStroke -> emphasizedStrokeWidth.toPx()
+                    else -> normalStrokeWidth.toPx()
+                }
+                val radius = (size.minDimension - strokeWidthPx) / 2f
+                val center = Offset(size.width / 2f, size.height / 2f)
+                val strokeColor = if (enabled) ringColor else disabledStrokeColor
+
                 when (style) {
                     DotStyle.Dashed -> {
-                        val dashedStrokeWidth = if (isSelected) 5f else 3f
                         drawCircle(
-                            color = (if (enabled) dashedStrokeColor else disabledStrokeColor).copy(alpha = alpha),
+                            color = strokeColor.copy(alpha = alpha),
                             radius = radius,
-                            center = Offset(size.width / 2f, size.height / 2f),
+                            center = center,
                             style = Stroke(
-                                width = dashedStrokeWidth,
+                                width = strokeWidthPx,
                                 pathEffect = dashedPath
                             )
                         )
@@ -263,14 +341,15 @@ private fun DayDot(
 
                     DotStyle.SolidStroke -> {
                         drawCircle(
-                            color = futureStrokeColor.copy(alpha = alpha),
+                            color = strokeColor.copy(alpha = alpha),
                             radius = radius,
-                            center = Offset(size.width / 2f, size.height / 2f),
-                            style = Stroke(width = futureStrokeWidthPx)
+                            center = center,
+                            style = Stroke(width = strokeWidthPx)
                         )
                     }
                 }
             }
+
             Text(
                 text = date.dayOfMonth.toString(),
                 color = textColor.copy(alpha = alpha),

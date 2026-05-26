@@ -46,6 +46,7 @@ data class HomeUiState(
     val loading: Boolean = true,
     val summary: HomeSummary? = null,
     val todayNutrition: HomeTodayNutritionSummary = HomeTodayNutritionSummary(),
+    val calendarNutritionByDate: Map<LocalDate, HomeTodayNutritionSummary> = emptyMap(),
     val selectedDate: LocalDate = LocalDate.now(),
     val error: String? = null,
     val selectedDayOffset: Int = 0 // 0=今天，-1=昨天...
@@ -676,6 +677,18 @@ class HomeViewModel @Inject constructor(
     ) {
         nutritionSummaryByDateCache.putAll(values)
         loadedNutritionWeekOffsets.add(weekOffset)
+        publishCalendarNutritionCache()
+    }
+
+    private fun publishCalendarNutritionCache() {
+        val snapshot = nutritionSummaryByDateCache.toMap()
+        _ui.update { current ->
+            if (current.calendarNutritionByDate == snapshot) {
+                current
+            } else {
+                current.copy(calendarNutritionByDate = snapshot)
+            }
+        }
     }
 
     private suspend fun loadNutritionSummaryForDate(
@@ -813,6 +826,7 @@ class HomeViewModel @Inject constructor(
         selectedNutritionJob = viewModelScope.launch {
             val summary = loadNutritionSummaryForDate(safeDate)
             nutritionSummaryByDateCache[safeDate] = summary
+            publishCalendarNutritionCache()
 
             if (_ui.value.selectedDate == safeDate) {
                 applyTodayNutrition(summary)
