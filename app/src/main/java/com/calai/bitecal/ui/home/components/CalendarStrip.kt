@@ -36,7 +36,7 @@ private object CalendarStripColors {
     val ActiveStroke = Color(0xFF111114)
     val DisabledStroke = Color(0xFFC1C7D0)
 
-    // Ring color rules aligned with Cal AI explanation:
+    // Ring color rules aligned with BiteCal AI explanation:
     // Green / Yellow / Red: logged days use solid stroke.
     // Dotted gray: no meals logged / no kcal summary.
     val OnTargetStroke = Color(0xFF7DDF83)

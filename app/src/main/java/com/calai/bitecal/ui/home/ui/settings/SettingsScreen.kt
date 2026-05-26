@@ -38,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.BakeryDining
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.EggAlt
@@ -142,6 +143,7 @@ fun SettingsScreen(
     onOpenAdjustMacros: () -> Unit = {},
     onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
+    onOpenRingColorsExplained: () -> Unit = {},
     premiumStatusSubtitle: String = "Upgrade",
     premiumStatusKind: MembershipDisplayKind = MembershipDisplayKind.FREE,
     canUseScan: Boolean = false,
@@ -280,6 +282,7 @@ fun SettingsScreen(
                 onOpenAdjustMacros = onOpenAdjustMacros,
                 onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
                 onOpenWeightHistory = onOpenWeightHistory,
+                onOpenRingColorsExplained = onOpenRingColorsExplained,
                 premiumStatusKind = premiumStatusKind,
                 premiumStatusSubtitle = premiumStatusSubtitle,
                 onOpenSubscription = onOpenSubscription,
@@ -353,6 +356,7 @@ private fun SettingsContent(
     onOpenAdjustMacros: () -> Unit,
     onOpenGoalAndCurrentWeight: () -> Unit,
     onOpenWeightHistory: () -> Unit,
+    onOpenRingColorsExplained: () -> Unit,
     premiumStatusKind: MembershipDisplayKind,
     premiumStatusSubtitle: String,
     onOpenSubscription: () -> Unit,
@@ -529,6 +533,9 @@ private fun SettingsContent(
             SettingsRow(icon = Icons.Outlined.Flag, title = stringResource(R.string.settings_goal_current_weight), onClick = onOpenGoalAndCurrentWeight)
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Widgets, title = stringResource(R.string.settings_weight_history), onClick = onOpenWeightHistory)
+            DividerThin()
+            SettingsRow(icon = Icons.Outlined.CalendarMonth, title = stringResource(R.string.settings_ring_colors_explained), onClick = onOpenRingColorsExplained
+            )
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Notifications, title = stringResource(R.string.settings_inbox), onClick = onOpenNotificationInbox)
         }

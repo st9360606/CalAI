@@ -84,6 +84,7 @@ import com.calai.bitecal.ui.home.ui.notifications.NotificationInboxScreen
 import com.calai.bitecal.ui.home.ui.notifications.NotificationInboxViewModel
 import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
+import com.calai.bitecal.ui.home.ui.settings.RingColorsExplainedScreen
 import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
 import com.calai.bitecal.ui.home.ui.settings.dialog.RestoreSubscriptionDialog
 import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
@@ -245,6 +246,7 @@ object Routes {
     const val PREMIUM_REWARDS = "premium_rewards"
     const val NOTIFICATION_INBOX = "notification_inbox"
     const val WIDGET_GUIDE = "widget_guide"
+    const val RING_COLORS_EXPLAINED = "ring_colors_explained"
     const val WORKOUT_HISTORY = "workout_history"
     const val WEIGHT = "weight"
     const val RECORD_WEIGHT = "record_weight"
@@ -1584,6 +1586,11 @@ fun BiteCalNavHost(
                                 restoreState = true
                             }
                         },
+                        onOpenRingColorsExplained = {
+                            nav.navigate(Routes.RING_COLORS_EXPLAINED) {
+                                launchSingleTop = true
+                            }
+                        },
                         onOpenPersonalDetails = { nav.navigate(Routes.PERSONAL_DETAILS) },
                         premiumStatusSubtitle = membershipDisplay.subtitle,
                         premiumStatusKind = membershipDisplay.kind,
@@ -1686,6 +1693,12 @@ fun BiteCalNavHost(
 
         composable(Routes.WIDGET_GUIDE) {
             WidgetGuideScreen(
+                onBack = { nav.popBackStack() }
+            )
+        }
+
+        composable(Routes.RING_COLORS_EXPLAINED) {
+            RingColorsExplainedScreen(
                 onBack = { nav.popBackStack() }
             )
         }

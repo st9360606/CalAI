@@ -596,8 +596,29 @@
     <string name="settings_adjust_macronutrients">調整巨量營養素</string>
     <string name="settings_goal_current_weight">目標及目前體重</string>
     <string name="settings_weight_history">體重紀錄</string>
+    <string name="settings_ring_colors_explained">日期圓環顏色說明</string>
     <string name="settings_inbox">收件匣</string>
     <string name="settings_language">語言</string>
+
+    <string name="ring_colors_explained_title">Ring Colors Explained</string>
+    <string name="ring_colors_explained_intro">首頁日曆中，每個日期外圍的彩色圓環會顯示你當天距離每日卡路里目標有多接近：</string>
+    <string name="ring_colors_preview_brand">BiteCal AI</string>
+    <string name="ring_colors_preview_kcal_value">15</string>
+    <string name="ring_colors_preview_day_10">10</string>
+    <string name="ring_colors_preview_day_11">11</string>
+    <string name="ring_colors_preview_day_12">12</string>
+    <string name="ring_colors_preview_day_13">13</string>
+    <string name="ring_colors_preview_day_14">14</string>
+    <string name="ring_colors_preview_day_15">15</string>
+    <string name="ring_colors_preview_day_16">16</string>
+    <string name="ring_colors_green_title">綠色</string>
+    <string name="ring_colors_green_body">達標（距離目標 100 卡路里以內）</string>
+    <string name="ring_colors_yellow_title">黃色</string>
+    <string name="ring_colors_yellow_body">超出目標 100–199 卡路里</string>
+    <string name="ring_colors_red_title">紅色</string>
+    <string name="ring_colors_red_body">超出目標 200 卡路里以上</string>
+    <string name="ring_colors_dotted_title">虛線</string>
+    <string name="ring_colors_dotted_body">當天沒有記錄餐點</string>
 
     <string name="settings_preferences">偏好設定</string>
     <string name="settings_appearance">外觀</string>
