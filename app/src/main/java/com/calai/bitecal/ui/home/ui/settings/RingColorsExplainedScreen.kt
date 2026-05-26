@@ -104,7 +104,7 @@ fun RingColorsExplainedScreen(
                     .fillMaxSize()
                     .verticalScroll(scroll)
                     .padding(horizontal = 18.dp)
-                    .padding(top = 10.dp, bottom = 30.dp)
+                    .padding(top = 8.dp, bottom = 20.dp)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -154,19 +154,6 @@ private fun PremiumHeaderCard() {
                 Spacer(Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.ring_colors_explained_title),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = RingColorsExplainedTheme.Ink,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp,
-                            lineHeight = 27.sp
-                        )
-                    )
-
-                    Spacer(Modifier.height(4.dp))
 
                     Text(
                         text = stringResource(R.string.ring_colors_explained_intro),
@@ -246,10 +233,10 @@ private fun PremiumCalendarPreviewCard() {
         ) {
             Box(
                 modifier = Modifier
-                    .size(150.dp)
-                    .offset(x = 235.dp, y = (-56).dp)
+                    .size(120.dp)
+                    .offset(x = 260.dp, y = (-44).dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF1F2F4).copy(alpha = 0.76f))
+                    .background(Color(0xFFE5E7EB).copy(alpha = 0.92f))
             )
 
             Box(
@@ -284,7 +271,7 @@ private fun PremiumCalendarPreviewCard() {
                         Spacer(Modifier.height(4.dp))
 
                         Text(
-                            text = stringResource(R.string.ring_colors_explained_title),
+                            text = stringResource(R.string.ring_colors_explained),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodyMedium.copy(
@@ -297,7 +284,7 @@ private fun PremiumCalendarPreviewCard() {
                     }
                 }
 
-                Spacer(Modifier.height(26.dp))
+                Spacer(Modifier.height(20.dp))
 
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxWidth()
@@ -314,19 +301,19 @@ private fun PremiumCalendarPreviewCard() {
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_sun),
                             day = stringResource(R.string.ring_colors_preview_day_10),
-                            tone = RingTone.Green,
+                            tone = RingTone.Red,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_mon),
                             day = stringResource(R.string.ring_colors_preview_day_11),
-                            tone = RingTone.Red,
+                            tone = RingTone.Green,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_tue),
                             day = stringResource(R.string.ring_colors_preview_day_12),
-                            tone = RingTone.Dotted,
+                            tone = RingTone.Yellow,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
@@ -338,15 +325,14 @@ private fun PremiumCalendarPreviewCard() {
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_thu),
                             day = stringResource(R.string.ring_colors_preview_day_14),
-                            tone = RingTone.Yellow,
+                            tone = RingTone.Dotted,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_fri),
                             day = stringResource(R.string.ring_colors_preview_day_15),
-                            tone = RingTone.Future,
-                            width = dayWidth,
-                            muted = true
+                            tone = RingTone.Dotted,
+                            width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_sat),
@@ -398,8 +384,8 @@ private fun PremiumPreviewDay(
         Box(contentAlignment = Alignment.Center) {
             RingStroke(
                 tone = tone,
-                size = if (tone == RingTone.Future) 32.dp else 36.dp,
-                strokeWidth = if (tone == RingTone.Future) 1.7.dp else 2.6.dp
+                size = 36.dp,
+                strokeWidth = 2.6.dp
             )
 
             Text(
@@ -445,7 +431,7 @@ private fun RingLegendPanel() {
                 Spacer(Modifier.width(10.dp))
 
                 Text(
-                    text = stringResource(R.string.ring_colors_explained_title),
+                    text = stringResource(R.string.ring_colors_explained_subtitle),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -457,7 +443,7 @@ private fun RingLegendPanel() {
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(14.dp))
 
             LegendRow(
                 tone = RingTone.Green,
@@ -503,7 +489,7 @@ private fun LegendRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(50.dp)
                     .clip(CircleShape)
                     .background(tone.softBackground)
                     .border(
@@ -515,12 +501,12 @@ private fun LegendRow(
             ) {
                 RingStroke(
                     tone = tone,
-                    size = 34.dp,
-                    strokeWidth = if (tone == RingTone.Dotted) 1.7.dp else 2.5.dp
+                    size = 30.dp,
+                    strokeWidth = if (tone == RingTone.Dotted) 1.6.dp else 2.3.dp
                 )
             }
 
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(

@@ -600,14 +600,15 @@
     <string name="settings_adjust_macronutrients">Adjust macronutrients</string>
     <string name="settings_goal_current_weight">Goal &amp; current weight</string>
     <string name="settings_weight_history">Weight history</string>
-    <string name="settings_ring_colors_explained">Ring colors explained</string>
+    <string name="settings_ring_colors_explained">Calendar Ring Color Guide</string>
     <string name="settings_inbox">Inbox</string>
     <string name="settings_language">Language</string>
 
-    <string name="ring_colors_explained_title">Ring Colors Explained</string>
-    <string name="ring_colors_explained_intro">On the homepage calendar, the colored rings around each date show how close you were to your daily calorie goal:</string>
+    <string name="ring_colors_explained_title">Date Ring Colors</string>
+    <string name="ring_colors_explained_intro">Date rings help you quickly see how each day compares with your calorie goal.</string>
+    <string name="ring_colors_explained">Date Ring Preview</string>
+    <string name="ring_colors_explained_subtitle">Ring Colors Explained</string>
     <string name="ring_colors_preview_brand">BiteCal AI</string>
-    <string name="ring_colors_preview_kcal_value">15</string>
     <string name="ring_colors_preview_day_10">10</string>
     <string name="ring_colors_preview_day_11">11</string>
     <string name="ring_colors_preview_day_12">12</string>
