@@ -255,7 +255,11 @@ private fun PremiumCalendarPreviewCard() {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 8.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.ring_colors_preview_brand),
                             maxLines = 1,
@@ -268,7 +272,7 @@ private fun PremiumCalendarPreviewCard() {
                             )
                         )
 
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
 
                         Text(
                             text = stringResource(R.string.ring_colors_explained),
@@ -284,7 +288,7 @@ private fun PremiumCalendarPreviewCard() {
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(16.dp))
 
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxWidth()
@@ -417,33 +421,9 @@ private fun RingLegendPanel() {
                 .background(Color.White.copy(alpha = 0.92f))
                 .padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                PremiumRingBadge(
-                    tone = RingTone.Dotted,
-                    modifier = Modifier.size(38.dp),
-                    ringSize = 20.dp,
-                    strokeWidth = 1.5.dp,
-                    dark = false
-                )
+            LegendSectionHeader()
 
-                Spacer(Modifier.width(10.dp))
-
-                Text(
-                    text = stringResource(R.string.ring_colors_explained_subtitle),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = RingColorsExplainedTheme.Ink,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        lineHeight = 23.sp
-                    )
-                )
-            }
-
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
 
             LegendRow(
                 tone = RingTone.Green,
@@ -468,6 +448,88 @@ private fun RingLegendPanel() {
                 title = stringResource(R.string.ring_colors_dotted_title),
                 body = stringResource(R.string.ring_colors_dotted_body),
                 showDivider = false
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendSectionHeader() {
+    val headerShape = RoundedCornerShape(24.dp)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(headerShape)
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFFF8F9FB),
+                        Color.White.copy(alpha = 0.96f)
+                    )
+                )
+            )
+            .border(
+                width = 1.dp,
+                color = RingColorsExplainedTheme.BorderSoft,
+                shape = headerShape
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(34.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            RingColorsExplainedTheme.Green,
+                            RingColorsExplainedTheme.Yellow,
+                            RingColorsExplainedTheme.Red
+                        )
+                    )
+                )
+        )
+
+        Spacer(Modifier.width(11.dp))
+
+        PremiumRingBadge(
+            tone = RingTone.Dotted,
+            modifier = Modifier.size(32.dp),
+            ringSize = 17.dp,
+            strokeWidth = 1.35.dp,
+            dark = false
+        )
+
+        Spacer(Modifier.width(11.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.ring_colors_explained_subtitle),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = RingColorsExplainedTheme.Ink,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp
+                )
+            )
+
+            Spacer(Modifier.height(2.dp))
+
+            Text(
+                text = stringResource(R.string.ring_colors_explained),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = RingColorsExplainedTheme.Muted,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    lineHeight = 15.sp
+                )
             )
         }
     }
