@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 /**
  * 後端回傳今天喝水的摘要
@@ -47,5 +48,7 @@ interface WaterApi {
     ): WaterSummaryDto
 
     @GET("/water/weekly")
-    suspend fun weekly(): WaterWeeklyChartDto
+    suspend fun weekly(
+        @Query("weekOffset") weekOffset: Int = 0
+    ): WaterWeeklyChartDto
 }

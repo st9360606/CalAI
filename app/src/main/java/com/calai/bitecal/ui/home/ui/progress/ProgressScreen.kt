@@ -113,14 +113,6 @@ fun ProgressScreen(
                     }
                 }
 
-                ui.isEmpty -> {
-                    item {
-                        EmptyCard(
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                    }
-                }
-
                 else -> {
                     item {
                         NutritionChartCard(
@@ -134,6 +126,7 @@ fun ProgressScreen(
                     item {
                         MicronutrientChartCard(
                             days = ui.days,
+                            weekOffset = ui.selectedWeekOffset,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }

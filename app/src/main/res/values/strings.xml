@@ -618,7 +618,7 @@
     <string name="ring_colors_preview_day_16">16</string>
     <string name="ring_colors_green_title">Green</string>
     <string name="ring_colors_green_body">On target (within 100 calories of goal)</string>
-    <string name="ring_colors_yellow_title">Yellow</string>
+    <string name="ring_colors_yellow_title">Brown</string>
     <string name="ring_colors_yellow_body">100-199 calories over your goal</string>
     <string name="ring_colors_red_title">Red</string>
     <string name="ring_colors_red_body">200+ calories over your goal</string>

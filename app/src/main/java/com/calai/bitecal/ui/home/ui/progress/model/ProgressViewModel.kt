@@ -145,11 +145,10 @@ class ProgressViewModel @Inject constructor(
         val safe = weekOffset.coerceIn(0, 3)
         if (_ui.value.selectedWeekOffset == safe && progressLoaded) return
 
-        // Workout chart 不跟 WeekTabs 綁定，所以切週時不重抓 workout
         refresh(
             weekOffset = safe,
-            refreshWater = false,
-            refreshWorkout = false
+            refreshWater = true,
+            refreshWorkout = true
         )
     }
 
@@ -170,7 +169,8 @@ class ProgressViewModel @Inject constructor(
                 )
             }
 
-            runCatching { waterRepository.loadWeeklyChart().toWaterChartUi() }
+            val weekOffset = _ui.value.selectedWeekOffset
+            runCatching { waterRepository.loadWeeklyChart(weekOffset).toWaterChartUi(weekOffset) }
                 .onSuccess { chartUi ->
                     waterLoaded = true
                     _ui.update {
@@ -201,7 +201,8 @@ class ProgressViewModel @Inject constructor(
                 )
             }
 
-            runCatching { workoutRepository.loadWeeklyProgress().toWorkoutChartUi() }
+            val weekOffset = _ui.value.selectedWeekOffset
+            runCatching { workoutRepository.loadWeeklyProgress(weekOffset).toWorkoutChartUi(weekOffset) }
                 .onSuccess { chartUi ->
                     workoutLoaded = true
                     _ui.update {
@@ -237,9 +238,11 @@ class ProgressViewModel @Inject constructor(
                     error = null,
 
                     waterLoading = if (refreshWater) true else it.waterLoading,
+                    waterChart = if (refreshWater) WaterChartUi() else it.waterChart,
                     waterError = if (refreshWater) null else it.waterError,
 
                     workoutLoading = if (refreshWorkout) true else it.workoutLoading,
+                    workoutChart = if (refreshWorkout) WorkoutChartUi() else it.workoutChart,
                     workoutError = if (refreshWorkout) null else it.workoutError
                 )
             }
@@ -257,7 +260,7 @@ class ProgressViewModel @Inject constructor(
 
                 val waterDeferred = if (refreshWater) {
                     async {
-                        runCatching { waterRepository.loadWeeklyChart().toWaterChartUi() }
+                        runCatching { waterRepository.loadWeeklyChart(weekOffset).toWaterChartUi(weekOffset) }
                     }
                 } else {
                     null
@@ -265,7 +268,7 @@ class ProgressViewModel @Inject constructor(
 
                 val workoutDeferred = if (refreshWorkout) {
                     async {
-                        runCatching { workoutRepository.loadWeeklyProgress().toWorkoutChartUi() }
+                        runCatching { workoutRepository.loadWeeklyProgress(weekOffset).toWorkoutChartUi(weekOffset) }
                     }
                 } else {
                     null
@@ -358,7 +361,7 @@ private val ORDERED_WEEK_LABELS = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri
 
 private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState {
     val rawDayUis = days.map { it.toUi() }
-    val normalizedDayUis = rawDayUis.normalizeWeekDays()
+    val normalizedDayUis = rawDayUis.normalizeWeekDays(period.startDate)
     val isCurrentWeek = weekOffset == 0
 
     val today = LocalDate.now()
@@ -371,11 +374,15 @@ private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState
         val todayUi = normalizedDayUis.firstOrNull { it.date == today.toString() }
         val yesterdayUi = normalizedDayUis.firstOrNull { it.date == yesterday.toString() }
 
-        displayDay = todayUi ?: normalizedDayUis.lastOrNull { it.totalKcal > 0 } ?: emptyProgressDayUi("Sat")
+        displayDay = todayUi
+            ?: normalizedDayUis.lastOrNull { day ->
+                parseLocalDateOrNull(day.date)?.let { !it.isAfter(today) } == true
+            }
+            ?: emptyProgressDayUi("Sat")
         compareDay = yesterdayUi
     } else {
-        displayDay = normalizedDayUis.firstOrNull { it.dayLabel == "Sat" } ?: emptyProgressDayUi("Sat")
-        compareDay = normalizedDayUis.firstOrNull { it.dayLabel == "Fri" } ?: emptyProgressDayUi("Fri")
+        displayDay = normalizedDayUis.getOrNull(6) ?: emptyProgressDayUi("Sat")
+        compareDay = normalizedDayUis.getOrNull(5) ?: emptyProgressDayUi("Fri")
     }
 
     val effectiveDeltaValue = if (compareDay != null) {
@@ -405,7 +412,7 @@ private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState
     )
 }
 
-private fun WaterWeeklyChartDto.toWaterChartUi(): WaterChartUi {
+private fun WaterWeeklyChartDto.toWaterChartUi(weekOffset: Int): WaterChartUi {
     val rawDayUis = days.map { it.toWaterUi() }
     val normalizedDayUis = rawDayUis.normalizeWaterWeekDays()
     val resolvedGoalMl = goalMl.takeIf { it > 0 } ?: 2000
@@ -413,26 +420,39 @@ private fun WaterWeeklyChartDto.toWaterChartUi(): WaterChartUi {
     val today = LocalDate.now()
     val yesterday = today.minusDays(1)
 
-    val todayMl = normalizedDayUis.firstOrNull { it.date == today.toString() }?.ml
-        ?: rawDayUis.lastOrNull()?.ml
-        ?: 0
-
-    val yesterdayMl = normalizedDayUis.firstOrNull { it.date == yesterday.toString() }?.ml ?: 0
-
-    val averageMl = if (rawDayUis.isEmpty()) {
-        0
+    val displayDay = if (weekOffset == 0) {
+        normalizedDayUis.firstOrNull { it.date == today.toString() }
+            ?: normalizedDayUis.lastOrNull { day ->
+                parseLocalDateOrNull(day.date)?.let { !it.isAfter(today) } == true
+            }
+            ?: normalizedDayUis.lastOrNull()
     } else {
-        rawDayUis.sumOf { it.ml } / rawDayUis.size
+        normalizedDayUis.getOrNull(6) ?: normalizedDayUis.lastOrNull()
     }
 
-    val remainingMl = (resolvedGoalMl - todayMl).coerceAtLeast(0)
+    val compareDay = if (weekOffset == 0) {
+        normalizedDayUis.firstOrNull { it.date == yesterday.toString() }
+    } else {
+        normalizedDayUis.getOrNull(5)
+    }
+
+    val displayMl = displayDay?.ml ?: 0
+    val compareMl = compareDay?.ml ?: 0
+
+    val averageMl = if (normalizedDayUis.isEmpty()) {
+        0
+    } else {
+        normalizedDayUis.sumOf { it.ml } / normalizedDayUis.size
+    }
+
+    val remainingMl = (resolvedGoalMl - displayMl).coerceAtLeast(0)
     val deltaValue = calculateDayDeltaPercent(
-        todayCalories = todayMl,
-        yesterdayCalories = yesterdayMl
+        todayCalories = displayMl,
+        yesterdayCalories = compareMl
     )
 
     return WaterChartUi(
-        todayMl = todayMl,
+        todayMl = displayMl,
         goalMl = resolvedGoalMl,
         averageMl = averageMl,
         remainingMl = remainingMl,
@@ -462,7 +482,7 @@ private fun WaterSummaryDto.toWaterUi(): WaterProgressDayUi {
     )
 }
 
-private fun WorkoutWeeklyProgressDto.toWorkoutChartUi(): WorkoutChartUi {
+private fun WorkoutWeeklyProgressDto.toWorkoutChartUi(weekOffset: Int): WorkoutChartUi {
     val rawDayUis = days.map { day ->
         WorkoutProgressDayUi(
             date = day.date,
@@ -471,38 +491,67 @@ private fun WorkoutWeeklyProgressDto.toWorkoutChartUi(): WorkoutChartUi {
         )
     }
 
-    val normalizedDayUis = ORDERED_WEEK_LABELS.map { label ->
-        rawDayUis.firstOrNull { it.dayLabel == label }
-            ?: WorkoutProgressDayUi(date = "", dayLabel = label, kcal = 0)
-    }
+    val normalizedDayUis = rawDayUis.normalizeWorkoutWeekDays()
 
     val today = LocalDate.now()
-    val todayKcal = normalizedDayUis.firstOrNull { it.date == today.toString() }?.kcal
-        ?: summary.todayBurnedKcal.roundToInt()
+    val yesterday = today.minusDays(1)
 
-    val remaining = (summary.goalKcal - todayKcal).coerceAtLeast(0)
+    val displayDay = if (weekOffset == 0) {
+        normalizedDayUis.firstOrNull { it.date == today.toString() }
+            ?: normalizedDayUis.lastOrNull { day ->
+                parseLocalDateOrNull(day.date)?.let { !it.isAfter(today) } == true
+            }
+            ?: normalizedDayUis.lastOrNull()
+    } else {
+        normalizedDayUis.getOrNull(6) ?: normalizedDayUis.lastOrNull()
+    }
+
+    val compareDay = if (weekOffset == 0) {
+        normalizedDayUis.firstOrNull { it.date == yesterday.toString() }
+    } else {
+        normalizedDayUis.getOrNull(5)
+    }
+
+    val displayKcal = displayDay?.kcal ?: 0
+    val compareKcal = compareDay?.kcal ?: 0
+    val averageKcal = if (normalizedDayUis.isEmpty()) {
+        0
+    } else {
+        (normalizedDayUis.sumOf { it.kcal }.toDouble() / normalizedDayUis.size.toDouble()).roundToInt()
+    }
+    val deltaPercent = calculateDayDeltaPercent(displayKcal, compareKcal)
+    val remaining = (summary.goalKcal - displayKcal).coerceAtLeast(0)
 
     return WorkoutChartUi(
-        todayBurnedKcal = todayKcal,
+        todayBurnedKcal = displayKcal,
         goalKcal = summary.goalKcal,
-        averageKcal = summary.averageKcal,
+        averageKcal = averageKcal,
         remainingKcal = remaining,
-        deltaText = summary.deltaPercent.toDeltaText(),
+        deltaText = deltaPercent.toDeltaText(),
         days = normalizedDayUis
     )
 }
 
-private fun List<ProgressBarDayUi>.normalizeWeekDays(): List<ProgressBarDayUi> {
-    val dayMap = associateBy { it.dayLabel.take(3) }
+private fun List<ProgressBarDayUi>.normalizeWeekDays(startDateText: String? = null): List<ProgressBarDayUi> {
+    val startDate = parseLocalDateOrNull(startDateText.orEmpty())
+    if (startDate != null) {
+        val dateMap = associateBy { it.date }
+        return (0..6).map { index ->
+            val date = startDate.plusDays(index.toLong())
+            val label = ORDERED_WEEK_LABELS[index]
+            dateMap[date.toString()] ?: emptyProgressDayUi(label, date.toString())
+        }
+    }
 
+    val dayMap = associateBy { it.dayLabel.take(3) }
     return ORDERED_WEEK_LABELS.map { label ->
         dayMap[label] ?: emptyProgressDayUi(label)
     }
 }
 
-private fun emptyProgressDayUi(label: String): ProgressBarDayUi {
+private fun emptyProgressDayUi(label: String, date: String = ""): ProgressBarDayUi {
     return ProgressBarDayUi(
-        date = "",
+        date = date,
         dayLabel = label,
         proteinG = 0f,
         carbsG = 0f,
@@ -640,4 +689,20 @@ private fun List<WaterProgressDayUi>.normalizeWaterWeekDays(): List<WaterProgres
             ml = 0
         )
     }
+}
+
+private fun List<WorkoutProgressDayUi>.normalizeWorkoutWeekDays(): List<WorkoutProgressDayUi> {
+    val dayMap = associateBy { it.dayLabel.take(3) }
+
+    return ORDERED_WEEK_LABELS.map { label ->
+        dayMap[label] ?: WorkoutProgressDayUi(
+            date = "",
+            dayLabel = label,
+            kcal = 0
+        )
+    }
+}
+
+private fun parseLocalDateOrNull(value: String): LocalDate? {
+    return runCatching { LocalDate.parse(value) }.getOrNull()
 }

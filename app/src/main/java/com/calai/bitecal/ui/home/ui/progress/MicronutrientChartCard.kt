@@ -80,17 +80,28 @@ private val MicronutrientFooterText = Color(0xFFA37FE0)
 @Composable
 internal fun MicronutrientChartCard(
     days: List<ProgressBarDayUi>,
+    weekOffset: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val chartDays = normalizeMicronutrientWeekDays(days)
     val today = LocalDate.now()
     val yesterday = today.minusDays(1)
 
-    val displayDay = chartDays.firstOrNull { it.date == today.toString() }
-        ?: chartDays.lastOrNull { it.micronutrientTotalG() > 0f }
-        ?: emptyMicronutrientDayUi("Sat")
+    val displayDay = if (weekOffset == 0) {
+        chartDays.firstOrNull { it.date == today.toString() }
+            ?: chartDays.lastOrNull { day ->
+                parseMicronutrientDateOrNull(day.date)?.let { !it.isAfter(today) } == true
+            }
+            ?: emptyMicronutrientDayUi("Sat")
+    } else {
+        chartDays.getOrNull(6) ?: emptyMicronutrientDayUi("Sat")
+    }
 
-    val compareDay = chartDays.firstOrNull { it.date == yesterday.toString() }
+    val compareDay = if (weekOffset == 0) {
+        chartDays.firstOrNull { it.date == yesterday.toString() }
+    } else {
+        chartDays.getOrNull(5)
+    }
     val deltaText = calculateMicronutrientDeltaPercent(
         todayValue = displayDay.micronutrientTotalG(),
         yesterdayValue = compareDay?.micronutrientTotalG() ?: 0f
@@ -597,6 +608,10 @@ private fun ColorLegendChip(
     }
 }
 
+private fun parseMicronutrientDateOrNull(value: String): LocalDate? {
+    return runCatching { LocalDate.parse(value) }.getOrNull()
+}
+
 private fun normalizeMicronutrientWeekDays(days: List<ProgressBarDayUi>): List<ProgressBarDayUi> {
     val dayMap = days.associateBy { it.dayLabel.take(3) }
     return orderedMicronutrientWeekLabels.map { label ->
@@ -706,3 +721,4 @@ private fun localizedMicronutrientDayLabel(label: String): String {
 }
 
 private val orderedMicronutrientWeekLabels = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+

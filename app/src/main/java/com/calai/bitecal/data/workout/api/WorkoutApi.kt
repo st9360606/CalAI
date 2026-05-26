@@ -7,6 +7,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 /**
  * Workout / Activity tracking API
@@ -43,7 +44,9 @@ interface WorkoutApi {
     suspend fun myWeight(): WeightDto
 
     @GET("/api/v1/workouts/progress/weekly")
-    suspend fun weeklyProgress(): WorkoutWeeklyProgressDto
+    suspend fun weeklyProgress(
+        @Query("weekOffset") weekOffset: Int = 0
+    ): WorkoutWeeklyProgressDto
 }
 
 /** 使用者自由輸入的句子 */

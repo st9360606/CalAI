@@ -36,14 +36,16 @@ private object CalendarStripColors {
     val ActiveStroke = Color(0xFF111114)
     val DisabledStroke = Color(0xFFC1C7D0)
 
-    // Ring color rules aligned with BiteCal AI explanation:
-    // Green / Yellow / Red: logged days use solid stroke.
+    // Ring color rules:
+    // Green: within target / on target.
+    // Brown: slightly over daily goal.
+    // Red: far over daily goal.
     // Dotted gray: no meals logged / no kcal summary.
     val OnTargetStroke = Color(0xFF7DDF83)
-    val SlightlyOverStroke = Color(0xFFE49A61)
-    val FarOverStroke = Color(0xFFE25F5F)
+    val SlightlyOverStroke = Color(0xFFB45309)
+    val FarOverStroke = Color(0xFFD92D20)
     val NoMealStroke = Color(0xFF555A60)
-    val TodayNoMealStroke = Color(0xFF2B3037) // 推薦：高級深灰，沒有那麼硬
+    val TodayNoMealStroke = Color(0xFF2B3037)
 }
 
 @SuppressLint("UnusedBoxWithConstraintsScope")

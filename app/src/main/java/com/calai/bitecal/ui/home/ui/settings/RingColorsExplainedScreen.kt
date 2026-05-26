@@ -64,8 +64,8 @@ private object RingColorsExplainedTheme {
     val Border = Color(0xFFE2E5EA)
     val BorderSoft = Color(0xFFE9EBEF)
     val Green = Color(0xFF7DDF83)
-    val Yellow = Color(0xFFE49A61)
-    val Red = Color(0xFFE25F5F)
+    val Brown = Color(0xFFB45309)
+    val Red = Color(0xFFD92D20)
     val Dotted = Color(0xFF555A60)
     val Future = Color(0xFFC1C7D0)
 }
@@ -486,7 +486,7 @@ private fun LegendSectionHeader() {
                     Brush.verticalGradient(
                         colors = listOf(
                             RingColorsExplainedTheme.Green,
-                            RingColorsExplainedTheme.Yellow,
+                            RingColorsExplainedTheme.Brown,
                             RingColorsExplainedTheme.Red
                         )
                     )
@@ -639,7 +639,7 @@ private enum class RingTone(
         softBackground = Color(0xFFF2FBF3)
     ),
     Yellow(
-        color = RingColorsExplainedTheme.Yellow,
+        color = RingColorsExplainedTheme.Brown,
         softBackground = Color(0xFFFBF6F0)
     ),
     Red(

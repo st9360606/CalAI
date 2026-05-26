@@ -20,5 +20,11 @@ class WaterRepository @Inject constructor(
         )
     }
 
-    suspend fun loadWeeklyChart(): WaterWeeklyChartDto = api.weekly()
+    suspend fun loadWeeklyChart(weekOffset: Int = 0): WaterWeeklyChartDto {
+        return api.weekly(weekOffset = weekOffset.coerceIn(0, MAX_PROGRESS_WEEK_OFFSET))
+    }
+
+    private companion object {
+        const val MAX_PROGRESS_WEEK_OFFSET = 5
+    }
 }

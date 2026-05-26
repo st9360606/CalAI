@@ -614,7 +614,7 @@
     <string name="ring_colors_preview_day_16">11</string>
     <string name="ring_colors_green_title">綠色</string>
     <string name="ring_colors_green_body">達標（距離目標 100 卡路里以內）</string>
-    <string name="ring_colors_yellow_title">黃色</string>
+    <string name="ring_colors_yellow_title">棕色</string>
     <string name="ring_colors_yellow_body">超出目標 100–199 卡路里</string>
     <string name="ring_colors_red_title">紅色</string>
     <string name="ring_colors_red_body">超出目標 200 卡路里以上</string>

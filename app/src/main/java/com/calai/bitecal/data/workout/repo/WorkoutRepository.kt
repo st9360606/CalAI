@@ -54,7 +54,11 @@ class WorkoutRepository @Inject constructor(
         return api.myWeight().kg
     }
 
-    suspend fun loadWeeklyProgress(): WorkoutWeeklyProgressDto {
-        return api.weeklyProgress()
+    suspend fun loadWeeklyProgress(weekOffset: Int = 0): WorkoutWeeklyProgressDto {
+        return api.weeklyProgress(weekOffset = weekOffset.coerceIn(0, MAX_PROGRESS_WEEK_OFFSET))
+    }
+
+    private companion object {
+        const val MAX_PROGRESS_WEEK_OFFSET = 5
     }
 }
