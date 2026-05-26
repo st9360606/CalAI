@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,14 +58,14 @@ private object RingColorsExplainedTheme {
     val Ink = Color(0xFF111114)
     val InkSoft = Color(0xFF2F3137)
     val Muted = Color(0xFF6B7280)
+    val Subtle = Color(0xFF8C929D)
     val Card = Color.White.copy(alpha = 0.92f)
     val CardSoft = Color(0xFFF8F8FA)
     val Border = Color(0xFFE2E5EA)
     val BorderSoft = Color(0xFFE9EBEF)
-
     val Green = Color(0xFF7DDF83)
-    val Yellow = Color(0xFFD99A62)
-    val Red = Color(0xFFE16B70)
+    val Yellow = Color(0xFFE49A61)
+    val Red = Color(0xFFE25F5F)
     val Dotted = Color(0xFF555A60)
     val Future = Color(0xFFC1C7D0)
 }
@@ -113,8 +112,6 @@ fun RingColorsExplainedScreen(
 
                 PremiumCalendarPreviewCard()
 
-                RingInsightCard()
-
                 RingLegendPanel()
             }
         }
@@ -149,9 +146,9 @@ private fun PremiumHeaderCard() {
                 PremiumRingBadge(
                     tone = RingTone.Dotted,
                     modifier = Modifier.size(46.dp),
-                    ringSize = 23.dp,
-                    strokeWidth = 1.7.dp,
-                    dark = true
+                    ringSize = 24.dp,
+                    strokeWidth = 1.6.dp,
+                    dark = false
                 )
 
                 Spacer(Modifier.width(12.dp))
@@ -194,11 +191,15 @@ private fun PremiumRingBadge(
     strokeWidth: Dp = 2.dp,
     dark: Boolean = false
 ) {
-    val background = if (dark) RingColorsExplainedTheme.Ink else tone.softBackground
+    val background = if (dark) {
+        RingColorsExplainedTheme.Ink
+    } else {
+        Color.White
+    }
     val borderColor = if (dark) {
         Color.White.copy(alpha = 0.18f)
     } else {
-        tone.color.copy(alpha = 0.24f)
+        RingColorsExplainedTheme.Border
     }
     val badgeTone = if (dark) RingTone.BadgeLight else tone
 
@@ -228,7 +229,7 @@ private fun PremiumCalendarPreviewCard() {
         shape = RoundedCornerShape(30.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f)),
+        border = BorderStroke(1.dp, RingColorsExplainedTheme.Border),
         modifier = Modifier.fillMaxWidth()
     ) {
         Box(
@@ -236,9 +237,9 @@ private fun PremiumCalendarPreviewCard() {
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF111114),
-                            Color(0xFF20232A),
-                            Color(0xFF2B2F39)
+                            Color.White.copy(alpha = 0.98f),
+                            Color(0xFFF8F8FA).copy(alpha = 0.96f),
+                            Color.White.copy(alpha = 0.94f)
                         )
                     )
                 )
@@ -248,7 +249,7 @@ private fun PremiumCalendarPreviewCard() {
                     .size(150.dp)
                     .offset(x = 235.dp, y = (-56).dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.07f))
+                    .background(Color(0xFFF1F2F4).copy(alpha = 0.76f))
             )
 
             Box(
@@ -256,7 +257,7 @@ private fun PremiumCalendarPreviewCard() {
                     .size(86.dp)
                     .offset(x = (-30).dp, y = 132.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.055f))
+                    .background(Color(0xFFF5F6F8).copy(alpha = 0.82f))
             )
 
             Column(
@@ -273,7 +274,7 @@ private fun PremiumCalendarPreviewCard() {
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.headlineMedium.copy(
-                                color = Color.White,
+                                color = RingColorsExplainedTheme.Ink,
                                 fontWeight = FontWeight.Black,
                                 fontSize = 30.sp,
                                 lineHeight = 34.sp
@@ -287,35 +288,10 @@ private fun PremiumCalendarPreviewCard() {
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                color = Color.White.copy(alpha = 0.68f),
+                                color = RingColorsExplainedTheme.Muted,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.sp,
                                 lineHeight = 18.sp
-                            )
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(Color.White.copy(alpha = 0.12f))
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.16f),
-                                shape = RoundedCornerShape(999.dp)
-                            )
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.ring_colors_preview_kcal_value),
-                            maxLines = 1,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                lineHeight = 22.sp
                             )
                         )
                     }
@@ -395,9 +371,9 @@ private fun PremiumPreviewDay(
     muted: Boolean = false
 ) {
     val labelColor = if (muted) {
-        Color.White.copy(alpha = 0.45f)
+        RingColorsExplainedTheme.Subtle
     } else {
-        Color.White.copy(alpha = 0.88f)
+        RingColorsExplainedTheme.InkSoft
     }
 
     Column(
@@ -442,78 +418,6 @@ private fun PremiumPreviewDay(
 }
 
 @Composable
-private fun RingInsightCard() {
-    Card(
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = RingColorsExplainedTheme.Card),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, RingColorsExplainedTheme.Border),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.95f),
-                            RingColorsExplainedTheme.CardSoft.copy(alpha = 0.94f)
-                        )
-                    )
-                )
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFF3F4F6))
-                    .border(
-                        width = 1.dp,
-                        color = RingColorsExplainedTheme.BorderSoft,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                RingStroke(
-                    tone = RingTone.Green,
-                    size = 24.dp,
-                    strokeWidth = 2.2.dp
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.ring_colors_green_title),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = RingColorsExplainedTheme.Ink,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        lineHeight = 20.sp
-                    )
-                )
-
-                Spacer(Modifier.height(3.dp))
-
-                Text(
-                    text = stringResource(R.string.ring_colors_green_body),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = RingColorsExplainedTheme.Muted,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp
-                    )
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun RingLegendPanel() {
     Card(
         shape = RoundedCornerShape(30.dp),
@@ -534,8 +438,8 @@ private fun RingLegendPanel() {
                     tone = RingTone.Dotted,
                     modifier = Modifier.size(38.dp),
                     ringSize = 20.dp,
-                    strokeWidth = 1.6.dp,
-                    dark = true
+                    strokeWidth = 1.5.dp,
+                    dark = false
                 )
 
                 Spacer(Modifier.width(10.dp))
