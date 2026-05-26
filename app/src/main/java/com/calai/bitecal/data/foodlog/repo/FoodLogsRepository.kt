@@ -20,8 +20,11 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.HttpException
 import java.time.Instant
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import kotlin.math.roundToInt
 import javax.inject.Inject
@@ -116,9 +119,24 @@ class FoodLogsRepository @Inject constructor(
 
     suspend fun getTodayNutritionSummary(
         zoneId: ZoneId = ZoneId.systemDefault()
+    ): HomeTodayNutritionSummary =
+        getNutritionSummaryForDate(LocalDate.now(zoneId), zoneId)
+
+    suspend fun getNutritionSummaryForDate(
+        date: LocalDate,
+        zoneId: ZoneId = ZoneId.systemDefault()
     ): HomeTodayNutritionSummary {
-        val today = LocalDate.now(zoneId).toString()
-        val day = getWeeklyProgress(weekOffset = 0).days.firstOrNull { it.date == today }
+        val today = LocalDate.now(zoneId)
+        if (date.isAfter(today)) return HomeTodayNutritionSummary()
+
+        val currentWeekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        val selectedWeekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        val weekOffset = ChronoUnit.WEEKS.between(selectedWeekStart, currentWeekStart).toInt()
+        if (weekOffset !in 0..3) return HomeTodayNutritionSummary()
+
+        val day = getWeeklyProgress(weekOffset = weekOffset).days.firstOrNull {
+            it.date == date.toString()
+        }
 
         return HomeTodayNutritionSummary(
             eatenKcal = day?.totalKcal?.roundToInt()?.coerceAtLeast(0) ?: 0,

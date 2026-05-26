@@ -38,6 +38,7 @@ import retrofit2.HttpException
 import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -47,7 +48,7 @@ data class HomeUiState(
     val summary: HomeSummary? = null,
     val todayNutrition: HomeTodayNutritionSummary = HomeTodayNutritionSummary(),
     val error: String? = null,
-    val selectedDayOffset: Int = 0 // 0=今天，-1=昨天...
+    val selectedDayOffset: Int = 0
 )
 
 /** 只用 UI 會渲染到的欄位建立簽章，降低不必要重組 */
@@ -208,6 +209,8 @@ class HomeViewModel @Inject constructor(
 
     private var recentUploadPollJob: Job? = null
     private var recentUploadRestoreJob: Job? = null
+    private var nutritionDateJob: Job? = null
+    private val nutritionSummaryCache = mutableMapOf<LocalDate, HomeTodayNutritionSummary>()
 
     init {
         refresh()
@@ -500,6 +503,7 @@ class HomeViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        nutritionDateJob?.cancel()
         recentUploadPollJob?.cancel()
         recentUploadRestoreJob?.cancel()
         super.onCleared()
@@ -655,13 +659,20 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    private suspend fun loadTodayNutritionSummary(): HomeTodayNutritionSummary {
+    private fun selectedNutritionDate(): LocalDate =
+        LocalDate.now(zoneId).plusDays(_ui.value.selectedDayOffset.toLong())
+
+    private suspend fun loadNutritionSummaryForDate(date: LocalDate): HomeTodayNutritionSummary {
         return runCatching {
-            withContext(Dispatchers.IO) { foodLogsRepository.getTodayNutritionSummary(zoneId) }
+            nutritionSummaryCache[date] ?: withContext(Dispatchers.IO) {
+                foodLogsRepository.getNutritionSummaryForDate(date, zoneId)
+            }.also { summary ->
+                nutritionSummaryCache[date] = summary
+            }
         }.getOrElse { t ->
             Log.w(
                 TAG,
-                "loadTodayNutritionSummary failed: ${t.javaClass.simpleName}: ${t.message}",
+                "loadNutritionSummaryForDate failed date=$date: ${t.javaClass.simpleName}: ${t.message}",
                 t
             )
             HomeTodayNutritionSummary()
@@ -682,8 +693,41 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun onCalendarDateSelected(date: LocalDate) {
+        val today = LocalDate.now(zoneId)
+        if (date.isAfter(today)) return
+
+        val offset = ChronoUnit.DAYS.between(today, date).toInt()
+        if (_ui.value.selectedDayOffset == offset) return
+
+        nutritionDateJob?.cancel()
+        _ui.update {
+            it.copy(
+                selectedDayOffset = offset,
+                todayNutrition = nutritionSummaryCache[date] ?: HomeTodayNutritionSummary(),
+                error = null
+            )
+        }
+
+        nutritionDateJob = viewModelScope.launch {
+            val summary = loadNutritionSummaryForDate(date)
+            _ui.update { current ->
+                if (current.selectedDayOffset == offset) {
+                    current.copy(
+                        loading = false,
+                        todayNutrition = summary,
+                        error = null
+                    )
+                } else {
+                    current
+                }
+            }
+        }
+    }
+
     fun refresh() = viewModelScope.launch {
         _ui.update { it.copy(loading = true, error = null) }
+        nutritionSummaryCache.remove(selectedNutritionDate())
 
         // ✅ 自動觸發：不 force（會被 1.5 秒 debounce 擋）
         refreshDailyActivity(force = false)
@@ -694,7 +738,7 @@ class HomeViewModel @Inject constructor(
 
         if (first.isSuccess) {
             applySummary(first.getOrThrow())
-            applyTodayNutrition(loadTodayNutritionSummary())
+            applyTodayNutrition(loadNutritionSummaryForDate(selectedNutritionDate()))
             return@launch
         }
 
@@ -710,7 +754,7 @@ class HomeViewModel @Inject constructor(
                 }
                 if (second.isSuccess) {
                     applySummary(second.getOrThrow())
-                    applyTodayNutrition(loadTodayNutritionSummary())
+                    applyTodayNutrition(loadNutritionSummaryForDate(selectedNutritionDate()))
                     return@launch
                 }
                 _ui.update {

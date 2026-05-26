@@ -644,11 +644,13 @@ fun HomeScreen(
                 val futureDays = 1   // 若不想顯示未來任何一天，改成 0
                 val days =
                     remember(today) { (-pastDays..futureDays).map { today.plusDays(it.toLong()) } }
-                var selected by rememberSaveable(today) { mutableStateOf(today) }
+                val selected = remember(today, ui.selectedDayOffset) {
+                    today.plusDays(ui.selectedDayOffset.toLong())
+                }
                 CalendarStrip(
                     days = days,
                     selected = selected,
-                    onSelect = { selected = it },
+                    onSelect = vm::onCalendarDateSelected,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
