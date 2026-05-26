@@ -289,10 +289,11 @@ private fun DayDot(
     // 固定 Canvas 外徑，並用 strokeWidth 反推 radius，避免 selected / future 圓圈看起來大小不同。
     // 實線代表已有餐點紀錄，視覺上放大一點；虛線代表無餐點紀錄，維持較輕量。
     val dottedDotSize = 34.dp
-    val solidDotSize = 37.dp //實線的圓
+    val solidDotSize = 38.dp //實線的圓
     val dotSize = if (style == DotStyle.SolidStroke) solidDotSize else dottedDotSize
     val normalStrokeWidth = 2.dp
     val emphasizedStrokeWidth = 2.5.dp
+    val futureStrokeWidth = 1.75.dp
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -318,6 +319,7 @@ private fun DayDot(
         Box(contentAlignment = Alignment.Center) {
             Canvas(modifier = Modifier.size(dotSize)) {
                 val strokeWidthPx = when {
+                    !enabled && style == DotStyle.SolidStroke -> futureStrokeWidth.toPx()
                     isSelected -> emphasizedStrokeWidth.toPx()
                     style == DotStyle.SolidStroke -> emphasizedStrokeWidth.toPx()
                     else -> normalStrokeWidth.toPx()
