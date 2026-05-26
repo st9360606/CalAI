@@ -43,7 +43,7 @@ private object CalendarStripColors {
     val SlightlyOverStroke = Color(0xFFE49A61)
     val FarOverStroke = Color(0xFFE25F5F)
     val NoMealStroke = Color(0xFF555A60)
-    val TodayNoMealStroke = Color(0xFF111114)
+    val TodayNoMealStroke = Color(0xFF2B3037) // 推薦：高級深灰，沒有那麼硬
 }
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -288,7 +288,7 @@ private fun DayDot(
 
     // 固定 Canvas 外徑，並用 strokeWidth 反推 radius，避免 selected / future 圓圈看起來大小不同。
     // 實線代表已有餐點紀錄，視覺上放大一點；虛線代表無餐點紀錄，維持較輕量。
-    val dottedDotSize = 34.dp
+    val dottedDotSize = 34.dp //所有虛線的圓
     val solidDotSize = 38.dp // 實線的圓
     val futureDotSize = 36.dp // 只縮小未來一天的圓，其他日期不受影響
     val dotSize = when {
@@ -297,8 +297,10 @@ private fun DayDot(
         else -> dottedDotSize
     }
     val normalStrokeWidth = 1.9.dp
+    val todayDashedStrokeWidth = 1.9.dp
     val emphasizedStrokeWidth = 2.5.dp
     val futureStrokeWidth = 1.75.dp
+    val isToday = date == LocalDate.now()
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -325,6 +327,7 @@ private fun DayDot(
             Canvas(modifier = Modifier.size(dotSize)) {
                 val strokeWidthPx = when {
                     !enabled && style == DotStyle.SolidStroke -> futureStrokeWidth.toPx()
+                    isToday && style == DotStyle.Dashed -> todayDashedStrokeWidth.toPx()
                     isSelected -> emphasizedStrokeWidth.toPx()
                     style == DotStyle.SolidStroke -> emphasizedStrokeWidth.toPx()
                     else -> normalStrokeWidth.toPx()
