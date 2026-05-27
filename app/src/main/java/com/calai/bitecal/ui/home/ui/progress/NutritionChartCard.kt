@@ -1,6 +1,5 @@
 package com.calai.bitecal.ui.home.ui.progress
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -10,7 +9,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,8 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +39,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -175,7 +174,6 @@ private fun resolveCaloriesValueText(totalCaloriesText: String): String {
             .trim()
     }
 }
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun ProgressChartCardFrame(
     totalCaloriesText: String,
@@ -199,15 +197,13 @@ private fun ProgressChartCardFrame(
 
     val resolvedDeltaColor = deltaColorOverride ?: resolveDeltaColor(resolvedDeltaText)
 
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .background(CardBg, RoundedCornerShape(28.dp))
             .border(1.dp, Color(0xFFD9D9DB), RoundedCornerShape(28.dp))
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
-        val metricChipWidth = (maxWidth * 0.30f).coerceIn(88.dp, 108.dp)
-
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -274,14 +270,14 @@ private fun ProgressChartCardFrame(
                             label = average7Label,
                             value = average7Value,
                             accentColor = ProteinColor,
-                            modifier = Modifier.width(metricChipWidth)
+                            modifier = Modifier.widthIn(min = 96.dp, max = 108.dp)
                         )
 
                         NutritionMetricChip(
                             label = average15Label,
                             value = average15Value,
                             accentColor = FatsColor,
-                            modifier = Modifier.width(metricChipWidth)
+                            modifier = Modifier.widthIn(min = 96.dp, max = 108.dp)
                         )
                     }
                 }
@@ -355,26 +351,24 @@ private fun NutritionMetricChip(
 ) {
     Row(
         modifier = modifier
-            .background(Color(0xFFFFF3E6), RoundedCornerShape(14.dp))
-            .border(1.dp, Color(0xFFF2D8BE), RoundedCornerShape(14.dp))
+            .background(Color(0xFFF8FAFC), RoundedCornerShape(14.dp))
+            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(14.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Canvas(modifier = Modifier.size(width = 12.dp, height = 8.dp)) {
-            drawLine(
-                color = accentColor,
-                start = Offset(0f, size.height / 2f),
-                end = Offset(size.width, size.height / 2f),
-                strokeWidth = 4f
-            )
-        }
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(26.dp)
+                .background(accentColor.copy(alpha = 0.86f), RoundedCornerShape(999.dp))
+        )
 
-        Spacer(modifier = Modifier.width(7.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
         Column {
             Text(
                 text = label,
-                color = Color(0xFF9A6A43),
+                color = Color(0xFF64748B),
                 fontSize = 10.sp,
                 lineHeight = 12.sp,
                 fontWeight = FontWeight.Bold
@@ -384,16 +378,15 @@ private fun NutritionMetricChip(
 
             Text(
                 text = value,
-                color = Color(0xFF5C3A21),
+                color = Color(0xFF0F172A),
                 fontSize = 12.sp,
                 lineHeight = 14.sp,
-                fontWeight = FontWeight.ExtraBold
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun StackedBarChart(
     days: List<ProgressBarDayUi>,
@@ -436,6 +429,8 @@ private fun StackedBarChart(
     var pressedTooltip by remember(chartDays, showBars) {
         mutableStateOf<ChartTooltipPressState<ProgressBarDayUi>?>(null)
     }
+
+    var chartSizePx by remember { mutableStateOf(IntSize.Zero) }
 
     LaunchedEffect(chartDays.map { it.totalG }, showBars) {
         // 資料或模式改變時，避免 tooltip 殘留
@@ -496,19 +491,20 @@ private fun StackedBarChart(
 
             Spacer(modifier = Modifier.width(yAxisToChartGap))
 
-            BoxWithConstraints(
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(chartAreaHeight)
                     .padding(end = plotEndPadding)
+                    .onSizeChanged { chartSizePx = it }
             ) {
                 val density = LocalDensity.current
                 var tooltipSizePx by remember { mutableStateOf(IntSize.Zero) }
 
                 val tooltipMinWidth = 124.dp
 
-                val chartWidthPx = with(density) { maxWidth.toPx() }
-                val chartHeightPx = with(density) { maxHeight.toPx() }
+                val chartWidthPx = chartSizePx.width.takeIf { it > 0 }?.toFloat() ?: 1f
+                val chartHeightPx = chartSizePx.height.takeIf { it > 0 }?.toFloat() ?: 1f
                 val slotWidthPx = chartWidthPx / chartDays.size.toFloat()
 
                 val fallbackTooltipWidthPx = with(density) { tooltipMinWidth.toPx() }

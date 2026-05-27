@@ -46,8 +46,13 @@ private val AverageCardBg = Color.White
 private val AverageBorder = Color(0xFFD9D9DB)
 private val AverageTitle = Color(0xFF1B1B21)
 private val AverageMuted = Color(0xFF74747A)
-private val AverageMetricBg = Color(0xFFF8F8FA)
-private val AverageMetricBorder = Color(0xFFE7E7EC)
+private val AverageMetricBg = Color(0xFFF8FAFC)
+private val AverageMetricBorder = Color(0xFFE2E8F0)
+private val AverageBadgeBg = Color(0xFFEEF2FF)
+private val AverageBadgeBorder = Color(0xFFC7D2FE)
+private val AverageBadgeText = Color(0xFF4338CA)
+private val AverageMetricLabel = Color(0xFF64748B)
+private val AverageMetricValue = Color(0xFF0F172A)
 
 @Composable
 internal fun ProgressAverageOverviewSection(
@@ -186,14 +191,14 @@ private fun ProgressAverageOverviewCard(
 
             Box(
                 modifier = Modifier
-                    .background(Color(0xFFFFF3E6), RoundedCornerShape(999.dp))
-                    .border(1.dp, Color(0xFFF2D8BE), RoundedCornerShape(999.dp))
+                    .background(AverageBadgeBg, RoundedCornerShape(999.dp))
+                    .border(1.dp, AverageBadgeBorder, RoundedCornerShape(999.dp))
                     .padding(horizontal = 12.dp, vertical = 7.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = stringResource(R.string.progress_average_days_badge, item.days),
-                    color = Color(0xFF9A6A43),
+                    color = AverageBadgeText,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -224,67 +229,67 @@ private fun averageMetricsFor(item: ProgressAverageOverviewUi): List<AverageMetr
             label = stringResource(R.string.progress_average_total_calories),
             value = stringResource(R.string.progress_chart_value_cals, item.caloriesKcal),
             emoji = "🔥",
-            accent = Color(0xFF1F1A17)
+            accent = Color(0xFF9CA3AF)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_protein),
             value = stringResource(R.string.progress_tooltip_grams_value, item.proteinG),
             emoji = "🥩",
-            accent = Color(0xFFE56C6C)
+            accent = Color(0xFFD96A6A)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_carbs),
             value = stringResource(R.string.progress_tooltip_grams_value, item.carbsG),
             emoji = "🌾",
-            accent = Color(0xFFD89A62)
+            accent = Color(0xFFC88445)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_fats),
             value = stringResource(R.string.progress_tooltip_grams_value, item.fatsG),
             emoji = "🥑",
-            accent = Color(0xFF6C93D8)
+            accent = Color(0xFF5F86C9)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_fiber),
             value = stringResource(R.string.progress_tooltip_grams_value, item.fiberG),
             emoji = "🌿",
-            accent = Color(0xFFA78BFA)
+            accent = Color(0xFF8B7AE6)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_sugar),
             value = stringResource(R.string.progress_tooltip_grams_value, item.sugarG),
             emoji = "🍯",
-            accent = Color(0xFFF08AAF)
+            accent = Color(0xFFD76A96)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_sodium),
             value = stringResource(R.string.progress_tooltip_mg_value, item.sodiumMg),
             emoji = "🍚",
-            accent = Color(0xFF73B6E6)
+            accent = Color(0xFF5DA9D8)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_workout),
             value = stringResource(R.string.workout_chart_value_kcal, item.workoutKcal),
             emoji = "🏋️",
-            accent = Color(0xFFA37FE0)
+            accent = Color(0xFF8E72D6)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_water),
             value = waterText,
             emoji = "💧",
-            accent = Color(0xFF73B6E6)
+            accent = Color(0xFF3BA6C9)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_health_score),
             value = stringResource(R.string.progress_average_health_score_value, item.healthScore),
             emoji = "💚",
-            accent = Color(0xFF5ECB7A)
+            accent = Color(0xFF45B96A)
         ),
         AverageMetricUi(
             label = stringResource(R.string.progress_average_steps),
             value = stepsText,
             emoji = "👟",
-            accent = Color(0xFF6BB8DA)
+            accent = Color(0xFF4EA3C7)
         )
     )
 }
@@ -326,7 +331,7 @@ private fun AverageMetricTile(
         Box(
             modifier = Modifier
                 .size(30.dp)
-                .background(metric.accent.copy(alpha = 0.12f), RoundedCornerShape(999.dp)),
+                .background(metric.accent.copy(alpha = 0.14f), RoundedCornerShape(999.dp)),
             contentAlignment = Alignment.Center
         ) {
             Text(text = metric.emoji, fontSize = 15.sp)
@@ -337,7 +342,7 @@ private fun AverageMetricTile(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = metric.label,
-                color = AverageMuted,
+                color = AverageMetricLabel,
                 fontSize = 11.sp,
                 lineHeight = 13.sp,
                 fontWeight = FontWeight.Medium,
@@ -347,7 +352,7 @@ private fun AverageMetricTile(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = metric.value,
-                color = Color(0xFF17171C),
+                color = AverageMetricValue,
                 fontSize = 14.sp,
                 lineHeight = 17.sp,
                 fontWeight = FontWeight.Bold,

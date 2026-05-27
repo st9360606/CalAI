@@ -1,14 +1,11 @@
 package com.calai.bitecal.ui.home.ui.progress
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -37,6 +33,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -65,10 +62,10 @@ private val WorkoutBorderColor = Color(0xFFD9D9DB)
 private val WorkoutTitleColor = Color(0xFF1B1B21)
 private val WorkoutValueColor = Color(0xFF17171C)
 private val WorkoutMetaColor = Color(0xFF74747A)
-private val WorkoutMetricChipBg = Color(0xFFFFF3E6)
-private val WorkoutMetricChipBorder = Color(0xFFF2D8BE)
-private val WorkoutMetricChipLabelColor = Color(0xFF9A6A43)
-private val WorkoutMetricChipValueColor = Color(0xFF5C3A21)
+private val WorkoutMetricChipBg = Color(0xFFF8FAFC)
+private val WorkoutMetricChipBorder = Color(0xFFE2E8F0)
+private val WorkoutMetricChipLabelColor = Color(0xFF64748B)
+private val WorkoutMetricChipValueColor = Color(0xFF0F172A)
 
 @Composable
 internal fun WorkoutChartCard(
@@ -180,7 +177,6 @@ internal fun WorkoutErrorCard(
     }
 }
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun WorkoutChartCardFrame(
     title: String,
@@ -195,7 +191,7 @@ private fun WorkoutChartCardFrame(
     footerBackground: Color,
     footerTextColor: Color,
     modifier: Modifier = Modifier,
-    chartContent: @Composable BoxWithConstraintsScope.() -> Unit
+    chartContent: @Composable () -> Unit
 ) {
     val resolvedDeltaText = if (deltaText == "--") "--%" else deltaText
     val resolvedDeltaColor = when {
@@ -204,14 +200,14 @@ private fun WorkoutChartCardFrame(
         else -> Color(0xFF74747A)
     }
 
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .background(WorkoutCardBg, RoundedCornerShape(28.dp))
             .border(1.dp, WorkoutBorderColor, RoundedCornerShape(28.dp))
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
-        val metricChipWidth = (maxWidth * 0.30f).coerceIn(88.dp, 102.dp)
+        val metricChipWidth = 102.dp
 
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -274,14 +270,14 @@ private fun WorkoutChartCardFrame(
                     WorkoutMetricChip(
                         label = goalText,
                         value = goalValue,
-                        dashed = true,
+                        accentColor = WorkoutGoalLineColor,
                         modifier = Modifier.width(metricChipWidth)
                     )
 
                     WorkoutMetricChip(
                         label = avgText,
                         value = avgValue,
-                        dashed = false,
+                        accentColor = WorkoutBarColor,
                         modifier = Modifier.width(metricChipWidth)
                     )
                 }
@@ -289,7 +285,7 @@ private fun WorkoutChartCardFrame(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            this@BoxWithConstraints.chartContent()
+            chartContent()
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -319,7 +315,7 @@ private fun WorkoutChartCardFrame(
 private fun WorkoutMetricChip(
     label: String,
     value: String,
-    dashed: Boolean,
+    accentColor: Color,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -329,24 +325,12 @@ private fun WorkoutMetricChip(
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Canvas(modifier = Modifier.size(width = 12.dp, height = 8.dp)) {
-            if (dashed) {
-                drawLine(
-                    color = WorkoutGoalLineColor,
-                    start = Offset(0f, size.height / 2f),
-                    end = Offset(size.width, size.height / 2f),
-                    strokeWidth = 3f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
-                )
-            } else {
-                drawLine(
-                    color = WorkoutBarColor,
-                    start = Offset(0f, size.height / 2f),
-                    end = Offset(size.width, size.height / 2f),
-                    strokeWidth = 4f
-                )
-            }
-        }
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(26.dp)
+                .background(accentColor.copy(alpha = 0.86f), RoundedCornerShape(999.dp))
+        )
 
         Spacer(modifier = Modifier.width(8.dp))
 
@@ -354,13 +338,18 @@ private fun WorkoutMetricChip(
             Text(
                 text = label,
                 color = WorkoutMetricChipLabelColor,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+                fontWeight = FontWeight.Bold
             )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
             Text(
                 text = value,
                 color = WorkoutMetricChipValueColor,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
+                lineHeight = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -420,7 +409,6 @@ private fun WorkoutLegendRow() {
     }
 }
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun WorkoutBarChart(
     days: List<WorkoutProgressDayUi>,
@@ -453,6 +441,8 @@ private fun WorkoutBarChart(
     var pressedTooltip by remember(chartDays, showBars) {
         mutableStateOf<ChartTooltipPressState<WorkoutProgressDayUi>?>(null)
     }
+
+    var chartSizePx by remember { mutableStateOf(IntSize.Zero) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -487,11 +477,12 @@ private fun WorkoutBarChart(
 
             Spacer(modifier = Modifier.width(yAxisToChartGap))
 
-            BoxWithConstraints(
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(chartAreaHeight)
                     .padding(end = plotEndPadding)
+                    .onSizeChanged { chartSizePx = it }
             ) {
                 val density = LocalDensity.current
                 var tooltipSizePx by remember { mutableStateOf(IntSize.Zero) }
@@ -499,8 +490,8 @@ private fun WorkoutBarChart(
                 val tooltipMinWidth = 124.dp
                 val slotCount = if (chartDays.isEmpty()) 7 else chartDays.size
 
-                val chartWidthPx = with(density) { maxWidth.toPx() }
-                val chartHeightPx = with(density) { maxHeight.toPx() }
+                val chartWidthPx = chartSizePx.width.takeIf { it > 0 }?.toFloat() ?: 1f
+                val chartHeightPx = chartSizePx.height.takeIf { it > 0 }?.toFloat() ?: 1f
                 val slotWidthPx = chartWidthPx / slotCount.toFloat()
 
                 val fallbackTooltipWidthPx = with(density) { tooltipMinWidth.toPx() }

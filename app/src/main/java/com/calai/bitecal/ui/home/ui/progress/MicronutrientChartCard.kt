@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -77,6 +76,10 @@ private val MicronutrientValueColor = Color(0xFF17171C)
 private val MicronutrientMetaColor = Color(0xFF74747A)
 private val MicronutrientFooterBg = Color(0xFFF6F0FF)
 private val MicronutrientFooterText = Color(0xFFA37FE0)
+private val MicronutrientAverageChipBg = Color(0xFFF8FAFC)
+private val MicronutrientAverageChipBorder = Color(0xFFE2E8F0)
+private val MicronutrientAverageChipLabel = Color(0xFF64748B)
+private val MicronutrientAverageChipValue = Color(0xFF0F172A)
 
 @Composable
 internal fun MicronutrientChartCard(
@@ -289,19 +292,19 @@ private fun MicronutrientAverageChip(
 ) {
     Column(
         modifier = modifier
-            .background(Color(0xFFF8F7FF), RoundedCornerShape(14.dp))
-            .border(1.dp, Color(0xFFE6E0F5), RoundedCornerShape(14.dp))
+            .background(MicronutrientAverageChipBg, RoundedCornerShape(14.dp))
+            .border(1.dp, MicronutrientAverageChipBorder, RoundedCornerShape(14.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp)
     ) {
         Text(
             text = title,
-            color = Color(0xFF6650A4),
+            color = MicronutrientAverageChipLabel,
             fontSize = 10.sp,
             lineHeight = 12.sp,
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         MicronutrientAverageMetricRow(
             color = MicronutrientFiberColor,
@@ -309,7 +312,7 @@ private fun MicronutrientAverageChip(
             value = fiberValue
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         MicronutrientAverageMetricRow(
             color = MicronutrientSugarColor,
@@ -317,7 +320,7 @@ private fun MicronutrientAverageChip(
             value = sugarValue
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         MicronutrientAverageMetricRow(
             color = MicronutrientSodiumColor,
@@ -334,33 +337,34 @@ private fun MicronutrientAverageMetricRow(
     value: String
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Canvas(modifier = Modifier.size(width = 10.dp, height = 7.dp)) {
-            drawLine(
-                color = color,
-                start = Offset(0f, size.height / 2f),
-                end = Offset(size.width, size.height / 2f),
-                strokeWidth = 4f
-            )
-        }
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(18.dp)
+                .background(color.copy(alpha = 0.86f), RoundedCornerShape(999.dp))
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
 
         Text(
             text = label,
-            color = Color(0xFF6B7280),
+            color = MicronutrientAverageChipLabel,
             fontSize = 10.sp,
             lineHeight = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f)
         )
 
+        Spacer(modifier = Modifier.width(6.dp))
+
         Text(
             text = value,
-            color = Color(0xFF111827),
-            fontSize = 10.sp,
+            color = MicronutrientAverageChipValue,
+            fontSize = 12.sp,
             lineHeight = 12.sp,
-            fontWeight = FontWeight.ExtraBold
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

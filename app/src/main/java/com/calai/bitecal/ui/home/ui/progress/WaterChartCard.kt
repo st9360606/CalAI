@@ -1,6 +1,5 @@
 package com.calai.bitecal.ui.home.ui.progress
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -10,8 +9,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -35,12 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -72,10 +69,10 @@ private val WaterTitleColor = Color(0xFF1B1B21)
 private val WaterValueColor = Color(0xFF17171C)
 private val WaterMetaColor = Color(0xFF74747A)
 
-private val WaterMetricChipBg = Color(0xFFF6F9FF)
-private val WaterMetricChipBorder = Color(0xFFDDE8FA)
-private val WaterMetricChipLabelColor = Color(0xFF6E7F9D)
-private val WaterMetricChipValueColor = Color(0xFF33415C)
+private val WaterMetricChipBg = Color(0xFFF8FAFC)
+private val WaterMetricChipBorder = Color(0xFFE2E8F0)
+private val WaterMetricChipLabelColor = Color(0xFF64748B)
+private val WaterMetricChipValueColor = Color(0xFF0F172A)
 
 private val WaterFooterReachedBg = Color(0xFFEAF5E8)
 private val WaterFooterReachedText = Color(0xFF3C9E45)
@@ -203,7 +200,6 @@ internal fun WaterErrorCard(
     }
 }
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun WaterChartCardFrame(
     title: String,
@@ -218,7 +214,7 @@ private fun WaterChartCardFrame(
     footerBackground: Color,
     footerTextColor: Color,
     modifier: Modifier = Modifier,
-    chartContent: @Composable BoxWithConstraintsScope.() -> Unit
+    chartContent: @Composable () -> Unit
 ) {
     val resolvedDeltaText = if (deltaText == "--") {
         "--%"
@@ -228,14 +224,15 @@ private fun WaterChartCardFrame(
 
     val resolvedDeltaColor = resolveWaterDeltaColor(resolvedDeltaText)
 
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .background(WaterCardBg, RoundedCornerShape(28.dp))
             .border(1.dp, WaterBorderColor, RoundedCornerShape(28.dp))
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
-        val metricChipWidth = (maxWidth * 0.30f).coerceIn(88.dp, 102.dp)
+        val metricChipWidth = 102.dp
+
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -300,11 +297,6 @@ private fun WaterChartCardFrame(
                         label = goalText,
                         value = goalValue,
                         accentColor = WaterGoalLineColor,
-                        backgroundColor = WaterMetricChipBg,
-                        borderColor = WaterMetricChipBorder,
-                        labelColor = WaterMetricChipLabelColor,
-                        valueColor = WaterMetricChipValueColor,
-                        dashedIndicator = true,
                         modifier = Modifier.width(metricChipWidth)
                     )
 
@@ -312,11 +304,6 @@ private fun WaterChartCardFrame(
                         label = avgText,
                         value = avgValue,
                         accentColor = WaterBarColor,
-                        backgroundColor = WaterMetricChipBg,
-                        borderColor = WaterMetricChipBorder,
-                        labelColor = WaterMetricChipLabelColor,
-                        valueColor = WaterMetricChipValueColor,
-                        dashedIndicator = false,
                         modifier = Modifier.width(metricChipWidth)
                     )
                 }
@@ -324,7 +311,7 @@ private fun WaterChartCardFrame(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            this@BoxWithConstraints.chartContent()
+            chartContent()
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -352,69 +339,50 @@ private fun WaterChartCardFrame(
         }
     }
 }
-
 @Composable
 private fun WaterMetricChip(
     label: String,
     value: String,
     accentColor: Color,
-    backgroundColor: Color,
-    borderColor: Color,
-    labelColor: Color,
-    valueColor: Color,
-    dashedIndicator: Boolean,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
-            .background(backgroundColor, RoundedCornerShape(14.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+            .background(WaterMetricChipBg, RoundedCornerShape(14.dp))
+            .border(1.dp, WaterMetricChipBorder, RoundedCornerShape(14.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Canvas(
+        Box(
             modifier = Modifier
-                .width(12.dp)
-                .height(8.dp)
-        ) {
-            if (dashedIndicator) {
-                drawLine(
-                    color = accentColor,
-                    start = Offset(0f, size.height / 2f),
-                    end = Offset(size.width, size.height / 2f),
-                    strokeWidth = 3f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
-                )
-            } else {
-                drawLine(
-                    color = accentColor,
-                    start = Offset(0f, size.height / 2f),
-                    end = Offset(size.width, size.height / 2f),
-                    strokeWidth = 4f
-                )
-            }
-        }
+                .width(4.dp)
+                .height(26.dp)
+                .background(accentColor.copy(alpha = 0.86f), RoundedCornerShape(999.dp))
+        )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Column {
             Text(
                 text = label,
-                color = labelColor,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold
+                color = WaterMetricChipLabelColor,
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+                fontWeight = FontWeight.Bold
             )
+
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = value,
-                color = valueColor,
-                fontSize = 13.sp,
+                color = WaterMetricChipValueColor,
+                fontSize = 12.sp,
+                lineHeight = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
-
 @Composable
 private fun WaterLegendRow() {
     Row(
@@ -473,7 +441,6 @@ private fun WaterLegendRow() {
     }
 }
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun WaterBarChart(
     days: List<WaterProgressDayUi>,
@@ -517,6 +484,8 @@ private fun WaterBarChart(
     var pressedTooltip by remember(chartDays, showBars) {
         mutableStateOf<ChartTooltipPressState<WaterProgressDayUi>?>(null)
     }
+
+    var chartSizePx by remember { mutableStateOf(IntSize.Zero) }
 
     LaunchedEffect(chartDays.map { it.ml }, showBars, goalMl) {
         pressedTooltip = null
@@ -576,11 +545,12 @@ private fun WaterBarChart(
 
             Spacer(modifier = Modifier.width(yAxisToChartGap))
 
-            BoxWithConstraints(
+            Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(chartAreaHeight)
                     .padding(end = plotEndPadding)
+                    .onSizeChanged { chartSizePx = it }
             ) {
                 val density = LocalDensity.current
                 var tooltipSizePx by remember { mutableStateOf(IntSize.Zero) }
@@ -588,8 +558,8 @@ private fun WaterBarChart(
                 val tooltipMinWidth = 124.dp
                 val slotCount = if (chartDays.isEmpty()) 7 else chartDays.size
 
-                val chartWidthPx = with(density) { maxWidth.toPx() }
-                val chartHeightPx = with(density) { maxHeight.toPx() }
+                val chartWidthPx = chartSizePx.width.takeIf { it > 0 }?.toFloat() ?: 1f
+                val chartHeightPx = chartSizePx.height.takeIf { it > 0 }?.toFloat() ?: 1f
                 val slotWidthPx = chartWidthPx / slotCount.toFloat()
 
                 val fallbackTooltipWidthPx = with(density) { tooltipMinWidth.toPx() }
