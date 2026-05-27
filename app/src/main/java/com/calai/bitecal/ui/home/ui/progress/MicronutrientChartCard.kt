@@ -125,7 +125,6 @@ internal fun MicronutrientChartCard(
     }
 }
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun MicronutrientChartCardFrame(
     title: String,
@@ -145,14 +144,14 @@ private fun MicronutrientChartCardFrame(
     }
     val resolvedDeltaColor = resolveMicronutrientDeltaColor(resolvedDeltaText)
 
-    BoxWithConstraints(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .background(MicronutrientCardBg, RoundedCornerShape(28.dp))
             .border(1.dp, MicronutrientBorderColor, RoundedCornerShape(28.dp))
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
-        val averageChipWidth = (maxWidth * 0.36f).coerceIn(116.dp, 142.dp)
+        val averageChipWidth = 128.dp
 
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -290,13 +289,13 @@ private fun MicronutrientAverageChip(
 ) {
     Column(
         modifier = modifier
-            .background(Color(0xFFFFF3E6), RoundedCornerShape(14.dp))
-            .border(1.dp, Color(0xFFF2D8BE), RoundedCornerShape(14.dp))
+            .background(Color(0xFFF8F7FF), RoundedCornerShape(14.dp))
+            .border(1.dp, Color(0xFFE6E0F5), RoundedCornerShape(14.dp))
             .padding(horizontal = 10.dp, vertical = 8.dp)
     ) {
         Text(
             text = title,
-            color = Color(0xFF9A6A43),
+            color = Color(0xFF6650A4),
             fontSize = 10.sp,
             lineHeight = 12.sp,
             fontWeight = FontWeight.Bold
@@ -349,7 +348,7 @@ private fun MicronutrientAverageMetricRow(
 
         Text(
             text = label,
-            color = Color(0xFF9A6A43),
+            color = Color(0xFF6B7280),
             fontSize = 10.sp,
             lineHeight = 12.sp,
             fontWeight = FontWeight.SemiBold,
@@ -358,7 +357,7 @@ private fun MicronutrientAverageMetricRow(
 
         Text(
             text = value,
-            color = Color(0xFF5C3A21),
+            color = Color(0xFF111827),
             fontSize = 10.sp,
             lineHeight = 12.sp,
             fontWeight = FontWeight.ExtraBold
