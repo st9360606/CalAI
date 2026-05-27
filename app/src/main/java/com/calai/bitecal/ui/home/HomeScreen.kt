@@ -716,8 +716,8 @@ fun HomeScreen(
                     workoutGoalKcalOverride = workoutGoalKcal,
                     cardHeight = 104.dp,
                     ringSize = 74.dp,
-                    centerDisk = 38.dp,
-                    ringStroke = 6.dp,
+                    centerDisk = 34.dp,
+                    ringStroke = 5.dp,
                     onAddWorkoutClick = onWorkoutAddClick,
                     workoutAddEnabled = !workoutGateInFlight,
                     onWorkoutCardClick = { onOpenActivityHistory() }
@@ -1060,7 +1060,7 @@ private fun TwoPagePager(
                                 progress = caloriesProgress,
                                 cardHeight = caloriesH,
                                 ringSize = 82.dp,
-                                centerDisk = 40.dp,
+                                centerDisk = 36.dp,
                                 ringStroke = 6.dp,
                                 valueFontSize = 38.sp,
                                 labelFontSize = 12.sp,
@@ -1076,13 +1076,13 @@ private fun TwoPagePager(
                                 cardHeight = macroH,
                                 valueFontSize = 15.sp,
                                 labelFontSize = 12.sp,
-                                ringSize = 68.dp,
-                                centerDisk = 34.dp,
+                                ringSize = 58.dp,
+                                centerDisk = 28.dp,
                                 ringStroke = 5.dp,
-                                spacingTop = 10.dp,
-                                proteinIconSize = 20.dp,
-                                carbsIconSize = 28.dp,
-                                fatsIconSize = 23.dp
+                                spacingTop = 15.dp,
+                                proteinIconSize = 17.dp,
+                                carbsIconSize = 25.dp,
+                                fatsIconSize = 19.dp
                             )
                         }
 
@@ -1095,10 +1095,10 @@ private fun TwoPagePager(
                                 cardHeight = macroH,
                                 valueFontSize = 15.sp,
                                 labelFontSize = 12.sp,
-                                ringSize = 68.dp,
-                                centerDisk = 34.dp,
+                                ringSize = 58.dp,
+                                centerDisk = 28.dp,
                                 ringStroke = 5.dp,
-                                spacingTop = 10.dp
+                                spacingTop = 15.dp
                             )
 
                             Spacer(Modifier.height(spacerV))

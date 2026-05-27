@@ -5,19 +5,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
 import com.calai.bitecal.ui.home.components.CardStyles
+import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.components.TitlePrefixTriangle
 
 object TopBarDefaults {
-    val Height = 26.dp
-    val HorizontalPadding = 16.dp
+    val Height = HomeCardStyles.TopBar.Height
+    val HorizontalPadding = HomeCardStyles.TopBar.HorizontalPadding
 }
 
 @Composable
@@ -48,9 +47,9 @@ fun TopBarCard(
         Column(modifier = Modifier.fillMaxSize()) {
             // 黑底白字頂欄（可選擇顯示白色三角形）
             Surface(
-                color = Color.Black,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                color = HomeCardStyles.TopBar.Container,
+                contentColor = HomeCardStyles.TopBar.Content,
+                shape = HomeCardStyles.TopBar.Shape,
                 shadowElevation = 0.dp
             ) {
                 Row(
@@ -62,7 +61,7 @@ fun TopBarCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (showWhiteTriangle) {
-                        TitlePrefixTriangle(side = triangleSide, color = Color.White)
+                        TitlePrefixTriangle(side = triangleSide, color = HomeCardStyles.TopBar.Content)
                     }
                     Text(
                         text = title,

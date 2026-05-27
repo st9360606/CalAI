@@ -29,23 +29,17 @@ import java.time.LocalDate
 import java.time.DayOfWeek
 
 private object CalendarStripColors {
-    val SelectedBackground = Color(0xFFFF8A33)
-    val TodayBackground = Color.Gray
-    val ActiveText = Color(0xFF111114)
-    val DisabledText = Color(0xFF9CA3AF)
-    val ActiveStroke = Color(0xFF111114)
-    val DisabledStroke = Color(0xFFC1C7D0)
-
-    // Ring color rules:
-    // Green: within target / on target.
-    // Brown: slightly over daily goal.
-    // Red: far over daily goal.
-    // Dotted gray: no meals logged / no kcal summary.
-    val OnTargetStroke = Color(0xFF7DDF83)
-    val SlightlyOverStroke = Color(0xFFB45309)
-    val FarOverStroke = Color(0xFFD92D20)
-    val NoMealStroke = Color(0xFF555A60)
-    val TodayNoMealStroke = Color(0xFF2B3037)
+    val SelectedBackground = HomeCardStyles.Calendar.SelectedBackground
+    val TodayBackground = HomeCardStyles.Calendar.TodayBackground
+    val ActiveText = HomeCardStyles.Calendar.ActiveText
+    val DisabledText = HomeCardStyles.Calendar.DisabledText
+    val ActiveStroke = HomeCardStyles.Calendar.ActiveStroke
+    val DisabledStroke = HomeCardStyles.Calendar.DisabledStroke
+    val OnTargetStroke = HomeCardStyles.Calendar.OnTargetStroke
+    val SlightlyOverStroke = HomeCardStyles.Calendar.SlightlyOverStroke
+    val FarOverStroke = HomeCardStyles.Calendar.FarOverStroke
+    val NoMealStroke = HomeCardStyles.Calendar.NoMealStroke
+    val TodayNoMealStroke = HomeCardStyles.Calendar.TodayNoMealStroke
 }
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -129,7 +123,7 @@ fun CalendarStrip(
 
                 when {
                     isSelected -> {
-                        // 選中的那天：使用 HomeRingPalette 相容的金棕色底
+                        // 選中的那天：使用 HomeCardStyles.Calendar 管理的金棕色底
                         Box(
                             modifier = baseContainer
                                 .clickable { onSelect(d) }

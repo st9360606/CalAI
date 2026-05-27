@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BakeryDining
 import androidx.compose.material.icons.filled.EggAlt
 import androidx.compose.material.icons.filled.Icecream
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.RiceBowl
@@ -77,35 +78,6 @@ import com.calai.bitecal.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.bitecal.ui.home.ui.fasting.components.WeightCardNew
 import kotlin.math.roundToInt
 
-// 統一圓環尺寸（與「蛋白質」卡相同）
-private object RingDefaults {
-    val Size = 66.dp      // 圓直徑
-    val Stroke = 5.dp     // 圓環粗細
-    val CenterDisk = 34.dp// 圓心淺灰底大小
-}
-
-// ✅ Home ring 色票：集中管理 HomeScreen 的主要圓形進度條顏色
-// 設計方向：低飽和、柔和、高級感，避免過亮的 warning / error / success 色。
-private object HomeRingPalette {
-    val Calories = Color(0xFF1F1A17)
-    val Protein = Color(0xFFE56C6C)      // 活力珊瑚紅：比玫瑰紅更有食慾與能量
-    val FiberOrCarbs = Color(0xFFD89A62) // 活力橘棕：溫暖、食物感，與 CalendarStrip 搭配
-    val Fats = Color(0xFF6C93D8)         // 柔和活力藍：乾淨但不灰
-    val Fiber = Color(0xFFA78BFA)        // 淡紫色：亮度/對比度對齊 MacroRowModern
-    val Sugar = Color(0xFFF08AAF)        // 淡粉色：保留甜點感，但避免過亮
-    val Sodium = Color(0xFF73B6E6)       // 淡藍色：清爽、低飽和，與 Fats / Steps 區隔
-    val HealthScore = Color(0xFF5ECB7A)  // 柔和健康綠：亮度/對比度對齊 MacroRowModern 色票
-    val Workout = Color(0xFFA37FE0)      // 柔和活力紫：亮度接近 Protein/Fats，不會太沉
-    val Steps = Color(0xFF6BB8DA)        // 清爽活力藍：比原本不刺眼，亮度更一致
-    val Weight = Color(0xFF5ECB7A)       // 完成綠：保留成功感，亮度與整體色票更一致
-}
-
-// ✅ Steps / Workout 圓環色票
-private object ActivityRingColors {
-    val StepsLightBlue = HomeRingPalette.Steps
-    val WorkoutDeepBlue = HomeRingPalette.Workout
-}
-
 @Composable
 fun CaloriesCardModern(
     goalKcal: Int,
@@ -115,9 +87,9 @@ fun CaloriesCardModern(
     progress: Float,
     modifier: Modifier = Modifier,
     cardHeight: Dp = PanelHeights.Metric,
-    ringSize: Dp = RingDefaults.Size,
-    ringStroke: Dp = RingDefaults.Stroke,
-    centerDisk: Dp = RingDefaults.CenterDisk,
+    ringSize: Dp = HomeCardStyles.Ring.Size,
+    ringStroke: Dp = HomeCardStyles.Ring.Stroke,
+    centerDisk: Dp = HomeCardStyles.Ring.CenterDisk,
     contentPaddingH: Dp = 16.dp,
     contentPaddingV: Dp = 12.dp,
     valueFontSize: TextUnit = 38.sp,
@@ -188,20 +160,21 @@ fun CaloriesCardModern(
                     progress = progress,
                     sizeDp = ringSize,
                     strokeDp = ringStroke,
-                    trackColor = Color(0xFFEFF0F3),
-                    progressColor = HomeRingPalette.Calories,
+                    trackColor = HomeCardStyles.Ring.Track,
+                    progressColor = HomeCardStyles.Palette.Calories,
                     drawTopTick = true,
-                    tickColor = HomeRingPalette.Calories
+                    tickColor = HomeCardStyles.Palette.Calories
                 )
                 Surface(
-                    color = RingColors.CenterFill,
+                    color = HomeCardStyles.Ring.CenterFill,
                     shape = CircleShape,
                     modifier = Modifier.size(centerDisk),
                     content = {}
                 )
-                Image(
-                    painter = painterResource(R.drawable.fire),
-                    contentDescription = "Fire",
+                Icon(
+                    imageVector = Icons.Filled.LocalFireDepartment,
+                    contentDescription = null,
+                    tint = HomeCardStyles.Palette.Calories,
                     modifier = Modifier.size(fireIconSize)
                 )
             }
@@ -220,9 +193,9 @@ fun MacroRowModern(
     // ✅ 新增：集中控制三張卡的尺寸
     valueFontSize: TextUnit = 17.sp,
     labelFontSize: TextUnit = 12.sp,
-    ringSize: Dp = RingDefaults.Size,
-    ringStroke: Dp = RingDefaults.Stroke,
-    centerDisk: Dp = RingDefaults.CenterDisk,
+    ringSize: Dp = HomeCardStyles.Ring.Size,
+    ringStroke: Dp = HomeCardStyles.Ring.Stroke,
+    centerDisk: Dp = HomeCardStyles.Ring.CenterDisk,
     spacingTop: Dp = 12.dp,
     proteinIconSize: Dp = 21.dp,
     carbsIconSize: Dp = 30.dp,
@@ -255,7 +228,7 @@ fun MacroRowModern(
             goalLabel = stringResource(R.string.home_protein_goal_label),
             progressLabel = stringResource(R.string.home_protein_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.Protein,
+            ringColor = HomeCardStyles.Palette.Protein,
             progress = proteinProgress,
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -267,7 +240,7 @@ fun MacroRowModern(
                 Icon(
                     imageVector = Icons.Filled.EggAlt,
                     contentDescription = null,
-                    tint = HomeRingPalette.Protein,
+                    tint = HomeCardStyles.Palette.Protein,
                     modifier = Modifier.size(proteinIconSize)
                 )
             },
@@ -286,7 +259,7 @@ fun MacroRowModern(
             goalLabel = stringResource(R.string.home_carbs_goal_label),
             progressLabel = stringResource(R.string.home_carbs_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.FiberOrCarbs,
+            ringColor = HomeCardStyles.Palette.Carbs,
             progress = carbsProgress,
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -298,7 +271,7 @@ fun MacroRowModern(
                 Icon(
                     imageVector = Icons.Filled.BakeryDining,
                     contentDescription = null,
-                    tint = HomeRingPalette.FiberOrCarbs,
+                    tint = HomeCardStyles.Palette.Carbs,
                     modifier = Modifier.size(carbsIconSize)
                 )
             },
@@ -317,7 +290,7 @@ fun MacroRowModern(
             goalLabel = stringResource(R.string.home_fats_goal_label),
             progressLabel = stringResource(R.string.home_fats_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.Fats,
+            ringColor = HomeCardStyles.Palette.Fats,
             progress = fatsProgress,
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -329,7 +302,7 @@ fun MacroRowModern(
                 Icon(
                     imageVector = Icons.Filled.Opacity,
                     contentDescription = null,
-                    tint = HomeRingPalette.Fats,
+                    tint = HomeCardStyles.Palette.Fats,
                     modifier = Modifier.size(fatsIconSize)
                 )
             },
@@ -349,9 +322,9 @@ fun MicronutrientRowModern(
     cardHeight: Dp = PanelHeights.Metric,
     valueFontSize: TextUnit = 15.sp,
     labelFontSize: TextUnit = 12.sp,
-    ringSize: Dp = RingDefaults.Size,
-    ringStroke: Dp = RingDefaults.Stroke,
-    centerDisk: Dp = RingDefaults.CenterDisk,
+    ringSize: Dp = HomeCardStyles.Ring.Size,
+    ringStroke: Dp = HomeCardStyles.Ring.Stroke,
+    centerDisk: Dp = HomeCardStyles.Ring.CenterDisk,
     spacingTop: Dp = 10.dp
 ) {
     Row(
@@ -368,7 +341,7 @@ fun MicronutrientRowModern(
             goalLabel = stringResource(R.string.home_fiber_goal_label),
             progressLabel = stringResource(R.string.home_fiber_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.Fiber,
+            ringColor = HomeCardStyles.Palette.Fiber,
             progress = progressOfInt(todayNutrition.eatenFiberG, s.fiberG),
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -380,8 +353,8 @@ fun MicronutrientRowModern(
                 Icon(
                     imageVector = Icons.Filled.Spa,
                     contentDescription = null,
-                    tint = HomeRingPalette.Fiber,
-                    modifier = Modifier.size(21.dp)
+                    tint = HomeCardStyles.Palette.Fiber,
+                    modifier = Modifier.size(16.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -399,7 +372,7 @@ fun MicronutrientRowModern(
             goalLabel = stringResource(R.string.home_sugar_goal_label),
             progressLabel = stringResource(R.string.home_sugar_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.Sugar,
+            ringColor = HomeCardStyles.Palette.Sugar,
             progress = progressOfInt(todayNutrition.eatenSugarG, s.sugarG),
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -411,8 +384,8 @@ fun MicronutrientRowModern(
                 Icon(
                     imageVector = Icons.Filled.Icecream,
                     contentDescription = null,
-                    tint = HomeRingPalette.Sugar,
-                    modifier = Modifier.size(22.dp)
+                    tint = HomeCardStyles.Palette.Sugar,
+                    modifier = Modifier.size(19.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -430,7 +403,7 @@ fun MicronutrientRowModern(
             goalLabel = stringResource(R.string.home_sodium_goal_label),
             progressLabel = stringResource(R.string.home_sodium_eaten_label),
             showTodayProgress = showTodayProgress,
-            ringColor = HomeRingPalette.Sodium,
+            ringColor = HomeCardStyles.Palette.Sodium,
             progress = progressOfInt(todayNutrition.eatenSodiumMg, s.sodiumMg),
             valueFontSize = valueFontSize,
             labelFontSize = labelFontSize,
@@ -442,8 +415,8 @@ fun MicronutrientRowModern(
                 Icon(
                     imageVector = Icons.Filled.RiceBowl,
                     contentDescription = null,
-                    tint = HomeRingPalette.Sodium,
-                    modifier = Modifier.size(21.dp)
+                    tint = HomeCardStyles.Palette.Sodium,
+                    modifier = Modifier.size(17.dp)
                 )
             },
             modifier = Modifier.weight(1f),
@@ -526,7 +499,7 @@ fun HealthScoreCardModern(
                         .fillMaxWidth(progress)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(999.dp))
-                        .background(HomeRingPalette.HealthScore)
+                        .background(HomeCardStyles.Palette.HealthScore)
                 )
             }
 
@@ -560,9 +533,9 @@ private fun MacroStatCardModern(
     modifier: Modifier = Modifier,
     progress: Float = 0f,
     cardHeight: Dp = PanelHeights.Metric,
-    ringSize: Dp = RingDefaults.Size,
-    ringStroke: Dp = RingDefaults.Stroke,
-    centerDisk: Dp = RingDefaults.CenterDisk,
+    ringSize: Dp = HomeCardStyles.Ring.Size,
+    ringStroke: Dp = HomeCardStyles.Ring.Stroke,
+    centerDisk: Dp = HomeCardStyles.Ring.CenterDisk,
     spacingTop: Dp = 12.dp,
     valueFontSize: TextUnit = 34.sp,
     labelFontSize: TextUnit = 12.sp,
@@ -614,13 +587,13 @@ private fun MacroStatCardModern(
                     progress = progress,
                     sizeDp = ringSize,
                     strokeDp = ringStroke,
-                    trackColor = Color(0xFFEFF0F3),
+                    trackColor = HomeCardStyles.Ring.Track,
                     progressColor = ringColor,
                     drawTopTick = true,
                     tickColor = ringColor
                 )
                 Surface(
-                    color = RingColors.CenterFill,
+                    color = HomeCardStyles.Ring.CenterFill,
                     shape = CircleShape,
                     modifier = Modifier.size(centerDisk)
                 ) {}
@@ -895,7 +868,7 @@ fun StepsWorkoutRowModern(
                 DailyActivityStatus.ERROR_RETRYABLE ->
                     stringResource(R.string.steps_hint_retry)
 
-                else -> null
+                else ->  null
             }
         }
 
@@ -913,30 +886,30 @@ fun StepsWorkoutRowModern(
             title = "Steps",
             primary = stepsPrimary,
             secondary = stepsSecondary,
-            ringColor = ActivityRingColors.StepsLightBlue,
+            ringColor = HomeCardStyles.Palette.Steps,
             progress = stepsProgress,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
             ringSize = ringSize,
             ringStroke = ringStroke,
             centerDisk = centerDisk,
+            gapTitleToPrimary = 8.dp,
             gapPrimaryToSecondary = 4.dp,
             ringCenterContent = {
                 Image(
                     painter = painterResource(R.drawable.footstep),
                     contentDescription = "Footstep",
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             },
-            onCardClick = onDailyCtaClick, // ✅ 降級時可導去授權/安裝
-
+            onCardClick = onDailyCtaClick,
             blurBackground = (hintText != null),
             overlay = hintText?.let { text ->
                 {
                     StepsConnectHintCard(
                         text = text,
-                        modifier = Modifier.fillMaxWidth(0.79f),
-                        minHeight = 78.dp,
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        minHeight = 81.dp,
                         textStyle = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp,                  // ✅ 字大小
                             fontWeight = FontWeight.Medium,    // ✅ 粗度
@@ -974,7 +947,7 @@ fun StepsWorkoutRowModern(
             title = "Workout",
             primary = workoutPrimary,
             secondary = null,
-            ringColor = ActivityRingColors.WorkoutDeepBlue,
+            ringColor = HomeCardStyles.Palette.Workout,
             progress = workoutProgress,
             modifier = Modifier.weight(1f),
             cardHeight = cardHeight,
@@ -986,7 +959,7 @@ fun StepsWorkoutRowModern(
                 Image(
                     painter = painterResource(R.drawable.fitness),
                     contentDescription = "Dumbbell",
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             },
             primaryContent = workoutKcal?.let {
@@ -1208,13 +1181,13 @@ fun ActivityStatCardSplit(
                                 progress = progress,
                                 sizeDp = ringSize,
                                 strokeDp = ringStroke,
-                                trackColor = Color(0xFFEFF0F3),
+                                trackColor = HomeCardStyles.Ring.Track,
                                 progressColor = ringColor,
                                 drawTopTick = true,
                                 tickColor = ringColor
                             )
                             Surface(
-                                color = RingColors.CenterFill,
+                                color = HomeCardStyles.Ring.CenterFill,
                                 shape = CircleShape,
                                 modifier = Modifier.size(centerDisk)
                             ) {}
@@ -1271,7 +1244,7 @@ fun WeightFastingRowModern(
         WeightCardNew(
             primary = weightPrimary,
             secondary = "to goal",  // "p=${(weightProgress * 100).toInt()}%",
-            ringColor = HomeRingPalette.Weight,
+            ringColor = HomeCardStyles.Palette.Weight,
             progress = weightProgress,
             modifier = Modifier
                 .weight(1f)
@@ -1367,7 +1340,7 @@ fun GreenSwitch(
 @Composable
 fun TitlePrefixTriangle(
     side: Dp = 8.dp,                 // ← 想更小/更大改這裡
-    color: Color = HomeRingPalette.Weight // ← 與 Weight 圓形條一致
+    color: Color = HomeCardStyles.Palette.Weight // ← 與 Weight 圓形條一致
 ) {
     Canvas(modifier = Modifier.size(side)) {
         val w = size.width

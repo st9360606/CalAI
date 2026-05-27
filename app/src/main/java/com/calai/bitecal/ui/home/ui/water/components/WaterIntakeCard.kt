@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.water.store.WaterUnit
 import com.calai.bitecal.ui.home.components.CardStyles
+import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -168,7 +169,7 @@ fun WaterIntakeCard(
                     modifier = Modifier
                         .size(60.dp) // 保持 60dp
                         .background(
-                            color = Color(0xFFE8EAFF), // 淺藍/淡紫
+                            color = HomeCardStyles.Palette.Water.copy(alpha = 0.16f), // 共用 Home water accent
                             shape = RoundedCornerShape(10.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -193,7 +194,7 @@ fun WaterIntakeCard(
                         text = "Water",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Normal,
-                            color = Color(0xFF0F172A)
+                            color = HomeCardStyles.Text.Primary
                         )
                     )
 
@@ -210,7 +211,7 @@ fun WaterIntakeCard(
                         text = "$mainText $cupsText",
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0F172A)
+                            color = HomeCardStyles.Text.Primary
                         )
                     )
                 }

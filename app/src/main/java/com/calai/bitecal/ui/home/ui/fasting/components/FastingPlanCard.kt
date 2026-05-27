@@ -2,7 +2,6 @@ package com.calai.bitecal.ui.home.ui.fasting.components
 
 // ===== Imports =====
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -12,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -21,6 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.home.components.CardStyles
+import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.components.GreenSwitch
 
 @Composable
@@ -47,9 +46,9 @@ fun FastingPlanCard(
     switchWidth: Dp = 52.dp,
     switchHeight: Dp = 28.dp,
 
-    topBarHeight: Dp = 26.dp,
+    topBarHeight: Dp = HomeCardStyles.TopBar.Height,
     topBarTextStyle: TextStyle = MaterialTheme.typography.titleSmall,
-    topBarPaddingH: Dp = 16.dp,
+    topBarPaddingH: Dp = HomeCardStyles.TopBar.HorizontalPadding,
 
     leftColumnWeight: Float = 1f,
     rightColumnWeight: Float = 0.8f
@@ -75,9 +74,9 @@ fun FastingPlanCard(
 
             // ===== 上方：黑底白字標題條（固定高度，垂直置中） =====
             Surface(
-                color = Color.Black,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                color = HomeCardStyles.TopBar.Container,
+                contentColor = HomeCardStyles.TopBar.Content,
+                shape = HomeCardStyles.TopBar.Shape,
                 shadowElevation = 0.dp
             ) {
                 Box(
@@ -120,7 +119,7 @@ fun FastingPlanCard(
                         text = planName,
                         style = planNameTextStyle,
                         fontSize = planNameFontSize ?: planNameTextStyle.fontSize,
-                        color = Color(0xFF0F172A),
+                        color = HomeCardStyles.Text.Primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
@@ -146,7 +145,7 @@ fun FastingPlanCard(
                     Text(
                         text = startLabel,
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFF6B7280),
+                        color = HomeCardStyles.Text.Label,
                         maxLines = 1,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -154,7 +153,7 @@ fun FastingPlanCard(
                     Text(
                         text = startText ?: "—",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF0F172A),
+                        color = HomeCardStyles.Text.Primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
@@ -164,7 +163,7 @@ fun FastingPlanCard(
                     Text(
                         text = endLabel,
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFF6B7280),
+                        color = HomeCardStyles.Text.Label,
                         maxLines = 1,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -172,7 +171,7 @@ fun FastingPlanCard(
                     Text(
                         text = endText ?: "—",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF0F172A),
+                        color = HomeCardStyles.Text.Primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,

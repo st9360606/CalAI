@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.home.components.GaugeRing
-import com.calai.bitecal.ui.home.components.RingColors
+import com.calai.bitecal.ui.home.components.HomeCardStyles
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.Image
@@ -61,7 +61,7 @@ fun WeightCardNew(
     modifier: Modifier = Modifier,
     primary: String,
     secondary: String? = "to goal",
-    ringColor: Color = Color(0xFF06B6D4),
+    ringColor: Color = HomeCardStyles.Palette.Weight,
     progress: Float = 0f,
     cardHeight: Dp,
     ringSize: Dp = 74.dp,
@@ -118,7 +118,7 @@ fun WeightCardNew(
                         text = primary,
                         style = primaryTextStyle,
                         fontSize = primaryFontSize ?: primaryTextStyle.fontSize,
-                        color = Color(0xFF0F172A),
+                        color = HomeCardStyles.Text.Primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.offset(x = (-4).dp, y = primaryYOffset)
@@ -131,7 +131,7 @@ fun WeightCardNew(
                             text = secondary,
                             style = secondaryTextStyle,
                             fontSize = secondaryFontSize ?: secondaryTextStyle.fontSize,
-                            color = Color(0xFF111114),
+                            color = HomeCardStyles.Text.Secondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.offset(y = secondaryYOffset)
@@ -167,7 +167,7 @@ fun WeightCardNew(
                         progress = progress,
                         sizeDp = ringSize,
                         strokeDp = ringStroke,
-                        trackColor = Color(0xFFEFF0F3),
+                        trackColor = HomeCardStyles.Ring.Track,
                         progressColor = ringColor,
                         drawTopTick = true,
                         tickColor = ringColor
@@ -175,7 +175,7 @@ fun WeightCardNew(
 
                     // ✅ 中心灰圓底 + bullseye
                     Surface(
-                        color = RingColors.CenterFill,
+                        color = HomeCardStyles.Ring.CenterFill,
                         shape = CircleShape,
                         modifier = Modifier.size(centerDisk)
                     ) {
