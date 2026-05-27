@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -328,8 +329,21 @@ private fun FastingNotificationInfoCard(
             R.string.fasting_notification_info_status_disabled_label
         }
     )
-    val statusBackground = if (remindersEnabled) Color(0xFFE7F7EF) else Color(0xFFF3F4F6)
-    val statusForeground = if (remindersEnabled) Color(0xFF137A45) else Color(0xFF4B5563)
+
+    val statusDotColor = if (remindersEnabled) Color(0xFF22C55E) else Color(0xFF9CA3AF)
+    val statusTextColor = if (remindersEnabled) Color(0xFF166534) else Color(0xFF4B5563)
+    val statusChipBg = if (remindersEnabled) Color(0xFFEAF7EF) else Color(0xFFF3F4F6)
+    val statusChipBorder = if (remindersEnabled) Color(0xFFCDEBD8) else Color(0xFFDADDE3)
+
+    val reminderIconBg = Color(0xFFFAFAFA)
+    val reminderIconMain = Color(0xFFF97316)
+    val reminderBadgeBg = Color.White
+    val reminderBadgeText = Color(0xFF111114)
+    val reminderBadgeBorder = Color(0xFFDADDE3)
+
+    val statusBoxBg = Color(0xFFFAFAFA)
+    val statusBoxBorder = Color(0xFFE5E7EB)
+    val statusBoxText = Color(0xFF374151)
 
     Card(
         modifier = modifier
@@ -351,18 +365,54 @@ private fun FastingNotificationInfoCard(
                 Box(
                     modifier = Modifier
                         .size(46.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFF3E6)),
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(reminderIconBg)
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFE5E7EB),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "2",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = Color(0xFFB45309),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(23.dp)
+                            .clip(CircleShape)
+                            .background(reminderIconMain)
                     )
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(9.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.88f))
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-5).dp, y = 5.dp)
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(reminderBadgeBg)
+                            .border(
+                                width = 1.dp,
+                                color = reminderBadgeBorder,
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "2",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = reminderBadgeText,
+                                fontSize = 10.sp,
+                                lineHeight = 10.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        )
+                    }
                 }
 
                 Spacer(Modifier.width(14.dp))
@@ -370,87 +420,128 @@ private fun FastingNotificationInfoCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.Top
                     ) {
-                        Text(
-                            text = stringResource(R.string.fasting_notification_info_title),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = Color(0xFF111114),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp,
-                                lineHeight = 21.sp
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.fasting_notification_info_title),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    color = Color(0xFF111114),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 17.sp,
+                                    lineHeight = 21.sp
+                                )
                             )
-                        )
 
-                        Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.height(5.dp))
 
-                        Text(
-                            text = statusLabel,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                color = statusForeground,
-                                fontSize = 12.sp,
-                                lineHeight = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
+                            Text(
+                                text = stringResource(
+                                    R.string.fasting_notification_info_subtitle,
+                                    planCode,
+                                    endText
+                                ),
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color(0xFF6B7280),
+                                    fontSize = 13.sp,
+                                    lineHeight = 18.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            )
+                        }
+
+                        Spacer(Modifier.width(10.dp))
+
+                        Row(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(999.dp))
-                                .background(statusBackground)
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
-                    }
+                                .background(statusChipBg)
+                                .border(
+                                    width = 1.dp,
+                                    color = statusChipBorder,
+                                    shape = RoundedCornerShape(999.dp)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(statusDotColor)
+                            )
 
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = stringResource(
-                            R.string.fasting_notification_info_subtitle,
-                            planCode,
-                            endText
-                        ),
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = Color(0xFF6B7280),
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp
-                        )
-                    )
+                            Spacer(Modifier.width(6.dp))
+
+                            Text(
+                                text = statusLabel,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = statusTextColor,
+                                    fontSize = 12.sp,
+                                    lineHeight = 14.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(Modifier.height(18.dp))
 
-            NotificationTimelineRow(
-                stepText = "1",
-                accentColor = Color(0xFF16A34A),
-                timeText = stringResource(R.string.fasting_notification_info_at_time, startText),
-                title = stringResource(R.string.fasting_notification_info_start_title),
-                body = stringResource(R.string.fasting_notification_info_start_body),
-                isLast = false
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color(0xFFFAFAFA))
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFFE5E7EB),
+                        shape = RoundedCornerShape(18.dp)
+                    )
+                    .padding(horizontal = 14.dp, vertical = 14.dp)
+            ) {
+                NotificationTimelineRow(
+                    stepText = "1",
+                    accentColor = Color(0xFF111114),
+                    timeText = stringResource(R.string.fasting_notification_info_at_time, startText),
+                    title = stringResource(R.string.fasting_notification_info_start_title),
+                    body = stringResource(R.string.fasting_notification_info_start_body),
+                    isLast = false
+                )
 
-            NotificationTimelineRow(
-                stepText = "2",
-                accentColor = Color(0xFFF59E0B),
-                timeText = stringResource(R.string.fasting_notification_info_at_time, endSoonText),
-                title = stringResource(R.string.fasting_notification_info_endsoon_title),
-                body = stringResource(R.string.fasting_notification_info_endsoon_body, endText),
-                isLast = true
-            )
+                NotificationTimelineRow(
+                    stepText = "2",
+                    accentColor = Color(0xFF111114),
+                    timeText = stringResource(R.string.fasting_notification_info_at_time, endSoonText),
+                    title = stringResource(R.string.fasting_notification_info_endsoon_title),
+                    body = stringResource(R.string.fasting_notification_info_endsoon_body, endText),
+                    isLast = true
+                )
+            }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(12.dp))
 
             Text(
                 text = statusText,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = Color(0xFF4B5563),
+                    color = statusBoxText,
                     fontSize = 12.sp,
                     lineHeight = 17.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFF8FAFC))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
+                    .background(statusBoxBg)
+                    .border(
+                        width = 1.dp,
+                        color = statusBoxBorder,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
             )
         }
     }
@@ -474,16 +565,22 @@ private fun NotificationTimelineRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(30.dp)
                     .clip(CircleShape)
-                    .background(accentColor.copy(alpha = 0.14f)),
+                    .background(Color.White)
+                    .border(
+                        width = 1.dp,
+                        color = Color(0xFFDADDE3),
+                        shape = CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = stepText,
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = accentColor,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
+                        lineHeight = 12.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                 )
@@ -492,8 +589,8 @@ private fun NotificationTimelineRow(
             if (!isLast) {
                 Box(
                     modifier = Modifier
-                        .width(2.dp)
-                        .height(52.dp)
+                        .width(1.dp)
+                        .height(46.dp)
                         .background(Color(0xFFE5E7EB))
                 )
             }
@@ -504,22 +601,20 @@ private fun NotificationTimelineRow(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(bottom = if (isLast) 14.dp else 10.dp)
+                .padding(bottom = if (isLast) 0.dp else 12.dp)
         ) {
             Text(
                 text = timeText,
                 style = MaterialTheme.typography.labelMedium.copy(
-                    color = accentColor,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(accentColor.copy(alpha = 0.10f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    color = Color(0xFF111114),
+                    fontSize = 12.sp,
+                    lineHeight = 15.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
             )
-            Spacer(Modifier.height(6.dp))
+
+            Spacer(Modifier.height(4.dp))
+
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -529,13 +624,16 @@ private fun NotificationTimelineRow(
                     fontWeight = FontWeight.Bold
                 )
             )
+
             Spacer(Modifier.height(3.dp))
+
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = Color(0xFF6B7280),
                     fontSize = 12.sp,
-                    lineHeight = 17.sp
+                    lineHeight = 17.sp,
+                    fontWeight = FontWeight.Medium
                 )
             )
         }
