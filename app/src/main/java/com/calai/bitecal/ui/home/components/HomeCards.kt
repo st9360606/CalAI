@@ -1251,9 +1251,9 @@ fun WeightFastingRowModern(
                 .height(cardHeight)
                 .clickable { onOpenWeight() }, // ★ 整張卡片可點
             cardHeight = cardHeight,
-            ringSize = 74.dp,
-            ringStroke = 6.dp,
-            centerDisk = 40.dp,
+            ringSize = 78.dp,
+            ringStroke = 7.dp,
+            centerDisk = 35.dp,
             topBarTitle = "Weight",
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,

@@ -64,9 +64,9 @@ fun WeightCardNew(
     ringColor: Color = HomeCardStyles.Palette.Weight,
     progress: Float = 0f,
     cardHeight: Dp,
-    ringSize: Dp = 74.dp,
-    ringStroke: Dp = 6.dp,
-    centerDisk: Dp = 40.dp,
+    ringSize: Dp = 78.dp,
+    ringStroke: Dp = 7.dp,
+    centerDisk: Dp = 35.dp,
 
     // ✅ 新增：中心 icon（你要放 bullseye 就用預設）
     centerIconRes: Int = R.drawable.flag,
@@ -102,7 +102,7 @@ fun WeightCardNew(
             // ========= 左半：文字 + 固定左下 + =========
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(0.8f)
                     .fillMaxHeight()
             ) {
                 Column(

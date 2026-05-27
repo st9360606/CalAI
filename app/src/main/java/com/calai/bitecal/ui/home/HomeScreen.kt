@@ -666,7 +666,7 @@ fun HomeScreen(
                     8.dp    // 例：Workout -12dp；Weight/Fasting +12dp 第二頁 Workout 變矮、Weight/Fasting 變高（或相反），整頁高度不變。
 
                 // ★ 兩邊總高度控制（共同升降）
-                val baseHeight = 128.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
+                val baseHeight = 126.dp    // ← 每張卡的基準高度（兩張卡都用這個），改這裡就能拉高/降低總高度
                 val verticalGap = 14.dp    // ← 上下卡的間距
 
                 // 將 VM 狀態轉為卡片顯示字串
