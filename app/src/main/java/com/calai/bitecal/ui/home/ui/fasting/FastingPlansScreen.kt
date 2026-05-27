@@ -72,7 +72,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.data.fasting.model.FastingPlan
-import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.MainBottomBar
@@ -475,9 +474,9 @@ private fun WheelColumn(
     columnWidth: Dp,
     onSnapped: (index: Int) -> Unit,
     infinite: Boolean,
-    selectedFontSize: TextUnit = 28.sp,
-    unselectedFontSize: TextUnit = 18.sp,
-    selectedFontWeight: FontWeight = FontWeight.SemiBold,
+    selectedFontSize: TextUnit = 20.sp,
+    unselectedFontSize: TextUnit = 19.sp,
+    selectedFontWeight: FontWeight = FontWeight.Bold,
     unselectedFontWeight: FontWeight = FontWeight.Normal,
 ) {
     val visibleCount = 5
@@ -606,7 +605,7 @@ private fun FastingPlanTimeValueCard(
     }
 }
 
-private val IOS_TEXT = Color(0xFF1C1C1E)
+private val IOS_TEXT = Color(0xFF111114)
 private val IOS_TEXT_FADED = Color(0xFF8E8E93)
 
 @Composable
@@ -703,7 +702,7 @@ private fun CupertinoWheelTimePickerSheet(
                             columnWidth = 92.dp,
                             onSnapped = { idx -> hour = idx },
                             infinite = true,
-                            selectedFontSize = 26.sp,
+                            selectedFontSize = 20.sp,
                             unselectedFontSize = 19.sp
                         )
 
@@ -713,7 +712,7 @@ private fun CupertinoWheelTimePickerSheet(
                         ) {
                             Text(
                                 text = ":",
-                                fontSize = 26.sp,
+                                fontSize = 19.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF1C1C1E)
                             )
@@ -725,7 +724,7 @@ private fun CupertinoWheelTimePickerSheet(
                             columnWidth = 92.dp,
                             onSnapped = { idx -> minute = idx },
                             infinite = true,
-                            selectedFontSize = 26.sp,
+                            selectedFontSize = 20.sp,
                             unselectedFontSize = 19.sp
                         )
                     }

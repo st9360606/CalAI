@@ -4,10 +4,13 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.LocaleList
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,18 +21,21 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,13 +48,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.ProvideComposeLocale
-import com.calai.bitecal.ui.home.components.ScrollingNumberWheel
 import java.util.Locale
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,17 +74,15 @@ fun DurationPickerSheet(
         }
     )
 ) {
-    val screenHeightDp = LocalConfiguration.current.screenHeightDp
-    val sheetHeight = (screenHeightDp * 0.62f).dp
+    val sheetHeight = 546.dp
 
     var hours by remember { mutableIntStateOf(0) }
     var minutes by remember { mutableIntStateOf(30) }
 
-    val rowItemHeight = 48.dp
-    val visibleCount = 5
-    val wheelAreaHeight = rowItemHeight * visibleCount
+    val rowItemHeight = 44.dp
+    val wheelAreaHeight = 260.dp
 
-    val scrollState = rememberScrollState()
+
 
     val titleText = presetNameResId?.let { localizedStringResource(localeTag, it) }
         ?: fallbackPresetName
@@ -91,8 +98,8 @@ fun DurationPickerSheet(
                 sheetState = sheetState,
                 onDismissRequest = { onCancel() },
                 dragHandle = null,
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                containerColor = Color.White,
+                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                containerColor = Color(0xFFF5F5F5),
                 tonalElevation = 0.dp,
                 contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
             ) {
@@ -105,23 +112,37 @@ fun DurationPickerSheet(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .fillMaxWidth()
-                            .verticalScroll(scrollState)
-                            .padding(start = 24.dp, end = 24.dp, top = 35.dp, bottom = 180.dp),
+                            .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 170.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(bottom = 10.dp)
+                                .width(42.dp)
+                                .height(5.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color(0xFFD1D1D6))
+                        )
                         Text(
                             text = titleText,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
                             color = Color(0xFF111114),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 18.dp),
+                            textAlign = TextAlign.Center
                         )
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(6.dp))
                         Text(
                             text = subtitleText,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF6B7280),
-                            fontSize = 18.sp
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
                         )
-                        Spacer(Modifier.height(24.dp))
+                        Spacer(Modifier.height(10.dp))
 
                         Box(
                             modifier = Modifier
@@ -129,13 +150,11 @@ fun DurationPickerSheet(
                                 .height(wheelAreaHeight),
                             contentAlignment = Alignment.Center
                         ) {
-                            Box(
+                            DurationSelectionBandBehind(
                                 modifier = Modifier
                                     .align(Alignment.Center)
                                     .fillMaxWidth()
                                     .height(rowItemHeight)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(Color(0xFFF2F2F2))
                             )
                             Row(
                                 modifier = Modifier
@@ -144,11 +163,12 @@ fun DurationPickerSheet(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                ScrollingNumberWheel(
-                                    value = hours,
-                                    range = 0..12,
-                                    onValueChange = { hours = it },
-                                    textColor = Color(0xFF111114)
+                                DurationWheelColumn(
+                                    values = (0..24).map { "%02d".format(it) },
+                                    startIndex = hours.coerceIn(0, 24),
+                                    columnWidth = 60.dp,
+                                    onSnapped = { index -> hours = index },
+                                    infinite = true
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(
@@ -158,11 +178,12 @@ fun DurationPickerSheet(
                                     fontWeight = FontWeight.Medium
                                 )
                                 Spacer(Modifier.width(24.dp))
-                                ScrollingNumberWheel(
-                                    value = minutes,
-                                    range = 0..59,
-                                    onValueChange = { minutes = it },
-                                    textColor = Color(0xFF111114)
+                                DurationWheelColumn(
+                                    values = (0..59).map { "%02d".format(it) },
+                                    startIndex = minutes.coerceIn(0, 59),
+                                    columnWidth = 60.dp,
+                                    onSnapped = { index -> minutes = index },
+                                    infinite = true
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Text(
@@ -181,7 +202,7 @@ fun DurationPickerSheet(
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .navigationBarsPadding()
-                            .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 32.dp),
+                            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Button(
@@ -230,8 +251,145 @@ fun DurationPickerSheet(
         }
     }
 }
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DurationWheelColumn(
+    values: List<String>,
+    startIndex: Int,
+    columnWidth: Dp,
+    onSnapped: (index: Int) -> Unit,
+    infinite: Boolean,
+    selectedFontSize: TextUnit = 20.sp,
+    unselectedFontSize: TextUnit = 19.sp,
+    selectedFontWeight: FontWeight = FontWeight.Bold,
+    unselectedFontWeight: FontWeight = FontWeight.Normal
+) {
+    val visibleCount = 5
+    val itemHeight = 44.dp
 
+    val total: Int
+    val initialIndex: Int
+    val normalize: (Int) -> Int
 
+    if (infinite) {
+        val loop = 1000
+        total = values.size * loop
+        val base = (loop / 2) * values.size
+        initialIndex = (base + startIndex).coerceIn(0, total - 1)
+        normalize = { index -> ((index % values.size) + values.size) % values.size }
+    } else {
+        total = values.size
+        initialIndex = startIndex.coerceIn(0, total - 1)
+        normalize = { index -> index.coerceIn(0, total - 1) }
+    }
+
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = initialIndex
+    )
+    val flingBehavior = rememberSnapFlingBehavior(
+        lazyListState = listState
+    )
+
+    val centerListIndex by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            if (layoutInfo.visibleItemsInfo.isEmpty()) {
+                return@derivedStateOf initialIndex
+            }
+
+            val viewportCenter =
+                (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2
+
+            layoutInfo.visibleItemsInfo.minByOrNull { item ->
+                val itemCenter = item.offset + item.size / 2
+                abs(itemCenter - viewportCenter)
+            }?.index ?: initialIndex
+        }
+    }
+
+    LaunchedEffect(listState.isScrollInProgress, centerListIndex, startIndex) {
+        if (!listState.isScrollInProgress) {
+            val normalizedIndex = normalize(centerListIndex)
+            if (normalizedIndex != startIndex) {
+                onSnapped(normalizedIndex)
+            }
+        }
+    }
+
+    LazyColumn(
+        state = listState,
+        flingBehavior = flingBehavior,
+        contentPadding = PaddingValues(
+            vertical = itemHeight * (visibleCount / 2)
+        ),
+        modifier = Modifier
+            .width(columnWidth)
+            .height(itemHeight * visibleCount),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        items(total) { index ->
+            val normalizedIndex = normalize(index)
+            val isCenter = index == centerListIndex
+
+            Box(
+                modifier = Modifier
+                    .height(itemHeight)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = values[normalizedIndex],
+                    fontSize = if (isCenter) selectedFontSize else unselectedFontSize,
+                    fontWeight = if (isCenter) selectedFontWeight else unselectedFontWeight,
+                    color = if (isCenter) {
+                        Color(0xFF111114)
+                    } else {
+                        Color(0xFF8E8E93)
+                    },
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+@Composable
+private fun DurationSelectionBandBehind(
+    modifier: Modifier = Modifier
+) {
+    val bandHeight = 44.dp
+    val bandRadius = 10.dp
+    val bandColor = Color(0xFFFAFAFA)
+    val lineColor = Color(0xFFD1D1D6)
+
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(0.88f)
+                .height(bandHeight)
+                .clip(RoundedCornerShape(bandRadius))
+                .background(bandColor)
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = -bandHeight / 2)
+                .fillMaxWidth(0.92f)
+                .height(1.dp)
+                .background(lineColor)
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = bandHeight / 2)
+                .fillMaxWidth(0.92f)
+                .height(1.dp)
+                .background(lineColor)
+        )
+    }
+}
 @Composable
 private fun localizedStringResource(
     localeTag: String,
