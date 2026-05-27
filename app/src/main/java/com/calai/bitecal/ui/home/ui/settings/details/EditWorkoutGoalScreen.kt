@@ -110,8 +110,8 @@ fun EditWorkoutGoalScreen(
                 ) {
                     WorkoutRingIcon(
                         modifier = Modifier
-                            .size(88.dp)
-                            .offset(x = 6.dp)
+                            .size(78.dp)
+                            .offset(x = 7.dp)
                     )
 
                     Column {
@@ -235,12 +235,15 @@ private fun WorkoutGoalInputBox(
 @Composable
 private fun WorkoutRingIcon(modifier: Modifier = Modifier) {
     val ringGrey = Color(0xFFD1D5DB)
-    val ringBlack = Color(0xFF111114)
+    val ringBlack = Color(0xFFA37FE0)
     val innerBg = Color(0xFFF2F4F7)
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val stroke = Stroke(width = size.minDimension * 0.055f, cap = StrokeCap.Round)
+            val stroke = Stroke(
+                width = size.minDimension * 0.075f,
+                cap = StrokeCap.Round
+            )
             val pad = stroke.width / 2f
             val arcSize = Size(size.width - pad * 2, size.height - pad * 2)
 
@@ -266,7 +269,7 @@ private fun WorkoutRingIcon(modifier: Modifier = Modifier) {
 
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(36.dp)
                 .clip(CircleShape)
                 .background(innerBg),
             contentAlignment = Alignment.Center
@@ -275,7 +278,7 @@ private fun WorkoutRingIcon(modifier: Modifier = Modifier) {
                 imageVector = Icons.Outlined.FitnessCenter,
                 contentDescription = null,
                 tint = Color(0xFF111114),
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
     }

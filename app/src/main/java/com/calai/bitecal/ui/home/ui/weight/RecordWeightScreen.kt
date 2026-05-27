@@ -94,7 +94,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
-import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
+import androidx.compose.material3.CircularProgressIndicator
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import kotlinx.coroutines.launch
@@ -361,11 +361,10 @@ private fun RecordWeightScreenContent(
                     .navigationBarsPadding()
                     .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
             ) {
-                CalaiPrimaryActionButton(
-                    text = stringResource(R.string.save),
-                    enabled = valueKg > 0.0 && !ui.saving,
-                    loading = ui.saving,
+                Button(
                     onClick = {
+                        if (ui.saving) return@Button
+
                         val unitUsed = if (useMetric) {
                             UserProfileStore.WeightUnit.KG
                         } else {
@@ -402,8 +401,33 @@ private fun RecordWeightScreenContent(
                                 }
                             }
                         }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    enabled = valueKg > 0.0 && !ui.saving,
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                        contentColor = Color.White
+                    )
+                ) {
+                    if (ui.saving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(R.string.save),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 0.2.sp
+                            )
+                        )
                     }
-                )
+                }
             }
         }
     ) { inner ->
