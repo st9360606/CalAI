@@ -198,10 +198,21 @@
     <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
     <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
 
-    <string name="fasting_start_title">今天的 %1$s 開始了 🍽️</string>
-    <string name="fasting_start_body">你的進食時間已開始（%1$s–%2$s）。有吃東西的話，記得順手記錄。</string>
-    <string name="fasting_endsoon_title">進食時間快結束了 ⏰</string>
-    <string name="fasting_endsoon_body">距離結束還有 1 小時（到 %1$s）。如果還要吃最後一餐，記得順手記錄。</string>
+    <string name="fasting_start_title">%1$s 進食時段開始了</string>
+    <string name="fasting_start_body">你的進食時段是 %1$s–%2$s。吃東西時順手記錄，今天的數據會更準。</string>
+    <string name="fasting_endsoon_title">進食時段還剩 1 小時</string>
+    <string name="fasting_endsoon_body">這次進食時段會在 %1$s 結束。如果還有最後一餐，記得在結束前記錄。</string>
+    <string name="fasting_notification_info_title">提醒會怎麼運作</string>
+    <string name="fasting_notification_info_subtitle">你的 %1$s 計畫會在 %2$s 結束進食視窗。開啟提醒後，BiteCal 每天會發送兩個通知。</string>
+    <string name="fasting_notification_info_at_time">%1$s</string>
+    <string name="fasting_notification_info_start_title">進食時段開始</string>
+    <string name="fasting_notification_info_start_body">你可以開始進食，並在需要時順手紀錄餐點。</string>
+    <string name="fasting_notification_info_endsoon_title">進食時段即將結束</string>
+    <string name="fasting_notification_info_endsoon_body">距離 %1$s 結束前 1 小時，BiteCal 會提醒你完成最後一餐。</string>
+    <string name="fasting_notification_info_status_enabled_label">已開啟</string>
+    <string name="fasting_notification_info_status_disabled_label">已關閉</string>
+    <string name="fasting_notification_info_status_on">提醒已開啟。若裝置通知權限允許，這些提醒會每天重複。</string>
+    <string name="fasting_notification_info_status_off">提醒目前關閉。請回首頁的禁食計畫卡片打開開關，才會收到這些通知。</string>
 
     <!-- Steps Card  -->
     <string name="steps_hint_connect_google_health">連結 Google Health 取得步數資料</string>

@@ -198,10 +198,21 @@
     <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
     <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
 
-    <string name="fasting_start_title">Today’s %1$s starts 🍽️</string>
-    <string name="fasting_start_body">Your eating window is open (%1$s–%2$s). If you eat, remember to log it.</string>
-    <string name="fasting_endsoon_title">Eating window ends soon ⏰</string>
-    <string name="fasting_endsoon_body">1 hour left (until %1$s). If you have a last meal, take it slow and log it.</string>
+    <string name="fasting_start_title">%1$s eating window is open</string>
+    <string name="fasting_start_body">Your eating window runs %1$s–%2$s. Log meals as you go to keep today accurate.</string>
+    <string name="fasting_endsoon_title">1 hour left in your eating window</string>
+    <string name="fasting_endsoon_body">Your window closes at %1$s. If you plan one last meal, log it before you wrap up.</string>
+    <string name="fasting_notification_info_title">How reminders work</string>
+    <string name="fasting_notification_info_subtitle">Your %1$s plan ends at %2$s. When reminders are on, BiteCal sends two daily notifications.</string>
+    <string name="fasting_notification_info_at_time">At %1$s</string>
+    <string name="fasting_notification_info_start_title">Eating window starts</string>
+    <string name="fasting_notification_info_start_body">You can start eating and log meals when needed.</string>
+    <string name="fasting_notification_info_endsoon_title">Eating window ends soon</string>
+    <string name="fasting_notification_info_endsoon_body">One hour before the window closes at %1$s, BiteCal reminds you to finish your last meal.</string>
+    <string name="fasting_notification_info_status_enabled_label">On</string>
+    <string name="fasting_notification_info_status_disabled_label">Off</string>
+    <string name="fasting_notification_info_status_on">Reminders are on. If device notification permission is allowed, these reminders repeat daily.</string>
+    <string name="fasting_notification_info_status_off">Reminders are off. Turn on the switch on the Home fasting card to receive these notifications.</string>
 
     <!-- Steps Card -->
     <string name="steps_hint_connect_google_health">Connect Google Health to track your steps</string>

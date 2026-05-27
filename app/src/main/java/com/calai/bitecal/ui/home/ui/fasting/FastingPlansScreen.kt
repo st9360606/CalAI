@@ -190,6 +190,17 @@ fun FastingPlansScreen(
                     }
                 }
 
+                Spacer(Modifier.height(16.dp))
+
+                FastingNotificationInfoCard(
+                    planCode = state.selected.code,
+                    startText = format24h(state.start),
+                    endSoonText = format24h(state.end.minusHours(1)),
+                    endText = format24h(state.end),
+                    remindersEnabled = state.enabled,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(Modifier.height(18.dp))
 
                 Column(
@@ -289,6 +300,243 @@ fun FastingPlansScreen(
                         )
                     }
                 }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FastingNotificationInfoCard(
+    planCode: String,
+    startText: String,
+    endSoonText: String,
+    endText: String,
+    remindersEnabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val statusText = stringResource(
+        if (remindersEnabled) {
+            R.string.fasting_notification_info_status_on
+        } else {
+            R.string.fasting_notification_info_status_off
+        }
+    )
+    val statusLabel = stringResource(
+        if (remindersEnabled) {
+            R.string.fasting_notification_info_status_enabled_label
+        } else {
+            R.string.fasting_notification_info_status_disabled_label
+        }
+    )
+    val statusBackground = if (remindersEnabled) Color(0xFFE7F7EF) else Color(0xFFF3F4F6)
+    val statusForeground = if (remindersEnabled) Color(0xFF137A45) else Color(0xFF4B5563)
+
+    Card(
+        modifier = modifier
+            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+        shape = CardStyles.Corner,
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        border = CardStyles.Border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 18.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFFF3E6)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "2",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = Color(0xFFB45309),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+                }
+
+                Spacer(Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.fasting_notification_info_title),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = Color(0xFF111114),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp,
+                                lineHeight = 21.sp
+                            )
+                        )
+
+                        Spacer(Modifier.width(8.dp))
+
+                        Text(
+                            text = statusLabel,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = statusForeground,
+                                fontSize = 12.sp,
+                                lineHeight = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(statusBackground)
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.fasting_notification_info_subtitle,
+                            planCode,
+                            endText
+                        ),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFF6B7280),
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp
+                        )
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            NotificationTimelineRow(
+                stepText = "1",
+                accentColor = Color(0xFF16A34A),
+                timeText = stringResource(R.string.fasting_notification_info_at_time, startText),
+                title = stringResource(R.string.fasting_notification_info_start_title),
+                body = stringResource(R.string.fasting_notification_info_start_body),
+                isLast = false
+            )
+
+            NotificationTimelineRow(
+                stepText = "2",
+                accentColor = Color(0xFFF59E0B),
+                timeText = stringResource(R.string.fasting_notification_info_at_time, endSoonText),
+                title = stringResource(R.string.fasting_notification_info_endsoon_title),
+                body = stringResource(R.string.fasting_notification_info_endsoon_body, endText),
+                isLast = true
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = statusText,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF4B5563),
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFF8FAFC))
+                    .padding(horizontal = 14.dp, vertical = 11.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun NotificationTimelineRow(
+    stepText: String,
+    accentColor: Color,
+    timeText: String,
+    title: String,
+    body: String,
+    isLast: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(accentColor.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stepText,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        color = accentColor,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                )
+            }
+
+            if (!isLast) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(52.dp)
+                        .background(Color(0xFFE5E7EB))
+                )
+            }
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(bottom = if (isLast) 14.dp else 10.dp)
+        ) {
+            Text(
+                text = timeText,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    color = accentColor,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .background(accentColor.copy(alpha = 0.10f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF111114),
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = Color(0xFF6B7280),
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp
+                )
             )
         }
     }
