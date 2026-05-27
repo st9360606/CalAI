@@ -22,7 +22,12 @@ data class ProgressSummaryDto(
     val totalCalories: Double,
     val deltaPercent: Double? = null,
     val deltaDirection: String,
-    val compareBasis: String
+    val compareBasis: String,
+    val average7Calories: Double = 0.0,
+    val average15Calories: Double = 0.0,
+    val average7FiberG: Double = 0.0,
+    val average7SugarG: Double = 0.0,
+    val average7SodiumMg: Double = 0.0
 )
 
 @Serializable
@@ -37,4 +42,26 @@ data class ProgressDayDto(
     val sugarG: Double = 0.0,
     val sodiumMg: Double = 0.0,
     val avgHealthScore: Double = 0.0
+)
+
+
+@Serializable
+data class ProgressAveragesDto(
+    val ranges: List<ProgressAverageRangeDto> = emptyList()
+)
+
+@Serializable
+data class ProgressAverageRangeDto(
+    val days: Int,
+    val caloriesKcal: Double = 0.0,
+    val proteinG: Double = 0.0,
+    val carbsG: Double = 0.0,
+    val fatsG: Double = 0.0,
+    val fiberG: Double = 0.0,
+    val sugarG: Double = 0.0,
+    val sodiumMg: Double = 0.0,
+    val workoutKcal: Double = 0.0,
+    val waterMl: Double = 0.0,
+    val healthScore: Double = 0.0,
+    val steps: Double = 0.0
 )

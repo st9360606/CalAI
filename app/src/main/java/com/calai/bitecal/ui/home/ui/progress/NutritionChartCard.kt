@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -74,12 +75,18 @@ private val ChipSelected = Color(0xFF111114)
 internal fun NutritionChartCard(
     totalCaloriesText: String,
     deltaText: String,
+    average7Calories: Int,
+    average15Calories: Int,
     days: List<ProgressBarDayUi>,
     modifier: Modifier = Modifier
 ) {
     ProgressChartCardFrame(
         totalCaloriesText = totalCaloriesText,
         deltaText = deltaText,
+        average7Label = stringResource(R.string.progress_chart_7day_avg_calories),
+        average7Value = stringResource(R.string.progress_chart_value_cals, average7Calories),
+        average15Label = stringResource(R.string.progress_chart_15day_avg_calories),
+        average15Value = stringResource(R.string.progress_chart_value_cals, average15Calories),
         modifier = modifier
     ) {
         StackedBarChart(days = days, showBars = true)
@@ -168,6 +175,7 @@ private fun resolveCaloriesValueText(totalCaloriesText: String): String {
             .trim()
     }
 }
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun ProgressChartCardFrame(
     totalCaloriesText: String,
@@ -175,6 +183,10 @@ private fun ProgressChartCardFrame(
     modifier: Modifier = Modifier,
     deltaDisplayText: String? = null,
     deltaColorOverride: Color? = null,
+    average7Label: String? = null,
+    average7Value: String? = null,
+    average15Label: String? = null,
+    average15Value: String? = null,
     chartContent: @Composable () -> Unit
 ) {
     val valueText = resolveCaloriesValueText(totalCaloriesText)
@@ -187,107 +199,195 @@ private fun ProgressChartCardFrame(
 
     val resolvedDeltaColor = deltaColorOverride ?: resolveDeltaColor(resolvedDeltaText)
 
-    Column(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .background(CardBg, RoundedCornerShape(28.dp))
             .border(1.dp, Color(0xFFD9D9DB), RoundedCornerShape(28.dp))
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
-        Text(
-            text = stringResource(R.string.progress_chart_total_calories),
-            color = Color(0xFF1B1B21),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
+        val metricChipWidth = (maxWidth * 0.30f).coerceIn(88.dp, 108.dp)
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.progress_chart_total_calories),
+                        color = Color(0xFF1B1B21),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 10.dp)
+                    )
 
-        Row(
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = valueText,
-                color = Color(0xFF17171C),
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 36.sp
-            )
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = valueText,
+                            color = Color(0xFF17171C),
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 36.sp
+                        )
 
-            Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
 
-            Text(
-                text = stringResource(R.string.progress_chart_cals),
-                color = Color(0xFF74747A),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
+                        Text(
+                            text = stringResource(R.string.progress_chart_cals),
+                            color = Color(0xFF74747A),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
 
-            Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
 
-            Text(
-                text = resolvedDeltaText,
-                color = resolvedDeltaColor,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-        }
+                        Text(
+                            text = resolvedDeltaText,
+                            color = resolvedDeltaColor,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                }
 
-        Spacer(modifier = Modifier.height(18.dp))
+                if (
+                    average7Label != null &&
+                    average7Value != null &&
+                    average15Label != null &&
+                    average15Value != null
+                ) {
+                    Spacer(modifier = Modifier.width(12.dp))
 
-        chartContent()
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        NutritionMetricChip(
+                            label = average7Label,
+                            value = average7Value,
+                            accentColor = ProteinColor,
+                            modifier = Modifier.width(metricChipWidth)
+                        )
 
-        Spacer(modifier = Modifier.height(18.dp))
+                        NutritionMetricChip(
+                            label = average15Label,
+                            value = average15Value,
+                            accentColor = FatsColor,
+                            modifier = Modifier.width(metricChipWidth)
+                        )
+                    }
+                }
+            }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            LegendChip(
-                label = stringResource(R.string.progress_legend_protein),
-                emoji = "🥩",
-                emojiFontSize = 14.sp
-            )
+            Spacer(modifier = Modifier.height(18.dp))
 
-            Spacer(modifier = Modifier.width(24.dp))
+            chartContent()
 
-            LegendChip(
-                label = stringResource(R.string.progress_legend_carbs),
-                emoji = "🌾",
-                emojiFontSize = 15.sp
-            )
+            Spacer(modifier = Modifier.height(18.dp))
 
-            Spacer(modifier = Modifier.width(24.dp))
-
-            LegendChip(
-                label = stringResource(R.string.progress_legend_fats),
-                emoji = "🥑",
-                emojiFontSize = 14.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .offset(x = 8.dp)
-                .background(
-                    color = Color(0xFFEAF5E8),
-                    shape = RoundedCornerShape(12.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                LegendChip(
+                    label = stringResource(R.string.progress_legend_protein),
+                    emoji = "🥩",
+                    emojiFontSize = 14.sp
                 )
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                LegendChip(
+                    label = stringResource(R.string.progress_legend_carbs),
+                    emoji = "🌾",
+                    emojiFontSize = 15.sp
+                )
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                LegendChip(
+                    label = stringResource(R.string.progress_legend_fats),
+                    emoji = "🥑",
+                    emojiFontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .offset(x = 8.dp)
+                    .background(
+                        color = Color(0xFFEAF5E8),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.progress_keep_it_up),
+                    color = Color(0xFF3C9E45),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NutritionMetricChip(
+    label: String,
+    value: String,
+    accentColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .background(Color(0xFFFFF3E6), RoundedCornerShape(14.dp))
+            .border(1.dp, Color(0xFFF2D8BE), RoundedCornerShape(14.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Canvas(modifier = Modifier.size(width = 12.dp, height = 8.dp)) {
+            drawLine(
+                color = accentColor,
+                start = Offset(0f, size.height / 2f),
+                end = Offset(size.width, size.height / 2f),
+                strokeWidth = 4f
+            )
+        }
+
+        Spacer(modifier = Modifier.width(7.dp))
+
+        Column {
             Text(
-                text = stringResource(R.string.progress_keep_it_up),
-                color = Color(0xFF3C9E45),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                text = label,
+                color = Color(0xFF9A6A43),
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = value,
+                color = Color(0xFF5C3A21),
+                fontSize = 12.sp,
+                lineHeight = 14.sp,
+                fontWeight = FontWeight.ExtraBold
             )
         }
     }

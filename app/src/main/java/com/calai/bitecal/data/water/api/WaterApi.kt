@@ -35,6 +35,7 @@ data class AdjustRequest(
 @Serializable
 data class WaterWeeklyChartDto(
     val goalMl: Int,
+    val averageMl: Int = 0,
     val days: List<WaterSummaryDto>
 )
 

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -81,6 +82,9 @@ private val MicronutrientFooterText = Color(0xFFA37FE0)
 internal fun MicronutrientChartCard(
     days: List<ProgressBarDayUi>,
     weekOffset: Int = 0,
+    average7FiberG: Int,
+    average7SugarG: Int,
+    average7SodiumMg: Int,
     modifier: Modifier = Modifier
 ) {
     val chartDays = normalizeMicronutrientWeekDays(days)
@@ -112,18 +116,25 @@ internal fun MicronutrientChartCard(
         headlineValue = formatMicronutrientGramPlain(displayDay.micronutrientTotalG()),
         unitText = stringResource(R.string.progress_chart_grams),
         deltaText = deltaText,
+        average7FiberG = average7FiberG,
+        average7SugarG = average7SugarG,
+        average7SodiumMg = average7SodiumMg,
         modifier = modifier
     ) {
         MicronutrientStackedBarChart(days = chartDays, showBars = true)
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun MicronutrientChartCardFrame(
     title: String,
     headlineValue: String,
     unitText: String,
     deltaText: String,
+    average7FiberG: Int,
+    average7SugarG: Int,
+    average7SodiumMg: Int,
     modifier: Modifier = Modifier,
     chartContent: @Composable () -> Unit
 ) {
@@ -134,107 +145,224 @@ private fun MicronutrientChartCardFrame(
     }
     val resolvedDeltaColor = resolveMicronutrientDeltaColor(resolvedDeltaText)
 
-    Column(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
             .background(MicronutrientCardBg, RoundedCornerShape(28.dp))
             .border(1.dp, MicronutrientBorderColor, RoundedCornerShape(28.dp))
             .padding(horizontal = 26.dp, vertical = 26.dp)
     ) {
+        val averageChipWidth = (maxWidth * 0.36f).coerceIn(116.dp, 142.dp)
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = title,
+                        color = MicronutrientTitleColor,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 10.dp)
+                    )
+
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = headlineValue,
+                            color = MicronutrientValueColor,
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Bold,
+                            lineHeight = 36.sp
+                        )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Text(
+                            text = unitText,
+                            color = MicronutrientMetaColor,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Text(
+                            text = resolvedDeltaText,
+                            color = resolvedDeltaColor,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                MicronutrientAverageChip(
+                    title = stringResource(R.string.progress_chart_7day_avg),
+                    fiberLabel = stringResource(R.string.progress_legend_fiber),
+                    sugarLabel = stringResource(R.string.progress_legend_sugar),
+                    sodiumLabel = stringResource(R.string.progress_legend_sodium),
+                    fiberValue = stringResource(R.string.progress_tooltip_grams_value, average7FiberG),
+                    sugarValue = stringResource(R.string.progress_tooltip_grams_value, average7SugarG),
+                    sodiumValue = stringResource(R.string.progress_tooltip_mg_value, average7SodiumMg),
+                    modifier = Modifier.width(averageChipWidth)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            chartContent()
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                ColorLegendChip(
+                    label = stringResource(R.string.progress_legend_fiber),
+                    emoji = "🌿",
+                    emojiFontSize = 13.sp
+                )
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                ColorLegendChip(
+                    label = stringResource(R.string.progress_legend_sugar),
+                    emoji = "🍯",
+                    emojiFontSize = 15.sp
+                )
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                ColorLegendChip(
+                    label = stringResource(R.string.progress_legend_sodium),
+                    emoji = "🍚",
+                    emojiFontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .offset(x = 8.dp)
+                    .background(
+                        color = MicronutrientFooterBg,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.progress_micronutrients_keep_it_up),
+                    color = MicronutrientFooterText,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MicronutrientAverageChip(
+    title: String,
+    fiberLabel: String,
+    sugarLabel: String,
+    sodiumLabel: String,
+    fiberValue: String,
+    sugarValue: String,
+    sodiumValue: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .background(Color(0xFFFFF3E6), RoundedCornerShape(14.dp))
+            .border(1.dp, Color(0xFFF2D8BE), RoundedCornerShape(14.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
         Text(
             text = title,
-            color = MicronutrientTitleColor,
-            fontSize = 20.sp,
+            color = Color(0xFF9A6A43),
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = headlineValue,
-                color = MicronutrientValueColor,
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 36.sp
-            )
+        MicronutrientAverageMetricRow(
+            color = MicronutrientFiberColor,
+            label = fiberLabel,
+            value = fiberValue
+        )
 
-            Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
-            Text(
-                text = unitText,
-                color = MicronutrientMetaColor,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
+        MicronutrientAverageMetricRow(
+            color = MicronutrientSugarColor,
+            label = sugarLabel,
+            value = sugarValue
+        )
 
-            Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
-            Text(
-                text = resolvedDeltaText,
-                color = resolvedDeltaColor,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.ExtraBold,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-        }
+        MicronutrientAverageMetricRow(
+            color = MicronutrientSodiumColor,
+            label = sodiumLabel,
+            value = sodiumValue
+        )
+    }
+}
 
-        Spacer(modifier = Modifier.height(18.dp))
-
-        chartContent()
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            ColorLegendChip(
-                label = stringResource(R.string.progress_legend_fiber),
-                emoji = "🌿",
-                emojiFontSize = 13.sp
-            )
-
-            Spacer(modifier = Modifier.width(24.dp))
-
-            ColorLegendChip(
-                label = stringResource(R.string.progress_legend_sugar),
-                emoji = "🍯",
-                emojiFontSize = 15.sp
-            )
-
-            Spacer(modifier = Modifier.width(24.dp))
-
-            ColorLegendChip(
-                label = stringResource(R.string.progress_legend_sodium),
-                emoji = "🍚",
-                emojiFontSize = 14.sp
+@Composable
+private fun MicronutrientAverageMetricRow(
+    color: Color,
+    label: String,
+    value: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Canvas(modifier = Modifier.size(width = 10.dp, height = 7.dp)) {
+            drawLine(
+                color = color,
+                start = Offset(0f, size.height / 2f),
+                end = Offset(size.width, size.height / 2f),
+                strokeWidth = 4f
             )
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Text(
+            text = label,
+            color = Color(0xFF9A6A43),
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f)
+        )
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .offset(x = 8.dp)
-                .background(
-                    color = MicronutrientFooterBg,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.progress_micronutrients_keep_it_up),
-                color = MicronutrientFooterText,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
+        Text(
+            text = value,
+            color = Color(0xFF5C3A21),
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
     }
 }
 

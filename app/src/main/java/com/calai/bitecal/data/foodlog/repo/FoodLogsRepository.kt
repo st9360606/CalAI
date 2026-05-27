@@ -132,6 +132,8 @@ class FoodLogsRepository @Inject constructor(
     suspend fun getWeeklyProgress(weekOffset: Int = 0): FoodLogWeeklyProgressDto =
         safeCall { api.getWeeklyProgress(weekOffset.coerceIn(0, MAX_NUTRITION_WEEK_OFFSET)) }
 
+    suspend fun getProgressAverages() = safeCall { api.getProgressAverages() }
+
     /**
      * 回傳指定 localDate 所在週的每日營養摘要。
      *

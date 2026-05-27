@@ -3,6 +3,7 @@ package com.calai.bitecal.ui.home.ui.progress.model
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.foodlog.model.FoodLogWeeklyProgressDto
+import com.calai.bitecal.data.foodlog.model.ProgressAverageRangeDto
 import com.calai.bitecal.data.foodlog.model.ProgressDayDto
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
 import com.calai.bitecal.data.profile.api.UserProfileDto
@@ -39,6 +40,21 @@ data class ProgressBarDayUi(
     val fiberG: Float = 0f,
     val sugarG: Float = 0f,
     val sodiumMg: Float = 0f
+)
+
+data class ProgressAverageOverviewUi(
+    val days: Int,
+    val caloriesKcal: Int,
+    val proteinG: Int,
+    val carbsG: Int,
+    val fatsG: Int,
+    val fiberG: Int,
+    val sugarG: Int,
+    val sodiumMg: Int,
+    val workoutKcal: Int,
+    val waterMl: Int,
+    val healthScore: Double,
+    val steps: Int
 )
 
 data class WaterProgressDayUi(
@@ -80,10 +96,19 @@ data class ProgressUiState(
     val totalCaloriesText: String = "0.0",
     val deltaText: String = "--",
     val deltaDirection: String = "NONE",
+    val average7Calories: Int = 0,
+    val average15Calories: Int = 0,
+    val average7FiberG: Int = 0,
+    val average7SugarG: Int = 0,
+    val average7SodiumMg: Int = 0,
     val days: List<ProgressBarDayUi> = emptyList(),
     val periodLabel: String = "This Week",
     val bmiCard: BmiCardUi = BmiCardUi(),
     val error: String? = null,
+
+    val averageOverviewLoading: Boolean = true,
+    val averageOverviewItems: List<ProgressAverageOverviewUi> = emptyList(),
+    val averageOverviewError: String? = null,
 
     val waterLoading: Boolean = true,
     val waterChart: WaterChartUi = WaterChartUi(),
@@ -129,16 +154,19 @@ class ProgressViewModel @Inject constructor(
     private var progressLoaded = false
     private var waterLoaded = false
     private var workoutLoaded = false
+    private var averageOverviewLoaded = false
 
     fun loadIfNeeded() {
         when {
             !progressLoaded -> refresh(
                 weekOffset = 0,
                 refreshWater = !waterLoaded,
-                refreshWorkout = !workoutLoaded
+                refreshWorkout = !workoutLoaded,
+                refreshAverageOverview = !averageOverviewLoaded
             )
             !waterLoaded -> retryWater()
             !workoutLoaded -> retryWorkout()
+            !averageOverviewLoaded -> retryAverageOverview()
         }
     }
     fun selectWeek(weekOffset: Int) {
@@ -148,7 +176,8 @@ class ProgressViewModel @Inject constructor(
         refresh(
             weekOffset = safe,
             refreshWater = true,
-            refreshWorkout = true
+            refreshWorkout = true,
+            refreshAverageOverview = false
         )
     }
 
@@ -156,7 +185,8 @@ class ProgressViewModel @Inject constructor(
         refresh(
             weekOffset = _ui.value.selectedWeekOffset,
             refreshWater = !waterLoaded,
-            refreshWorkout = !workoutLoaded
+            refreshWorkout = !workoutLoaded,
+            refreshAverageOverview = !averageOverviewLoaded
         )
     }
 
@@ -225,10 +255,43 @@ class ProgressViewModel @Inject constructor(
     }
 
 
+    fun retryAverageOverview() {
+        viewModelScope.launch {
+            _ui.update {
+                it.copy(
+                    averageOverviewLoading = true,
+                    averageOverviewError = null
+                )
+            }
+
+            runCatching { repo.getProgressAverages().ranges.toAverageOverviewItems() }
+                .onSuccess { items ->
+                    averageOverviewLoaded = true
+                    _ui.update {
+                        it.copy(
+                            averageOverviewLoading = false,
+                            averageOverviewItems = items,
+                            averageOverviewError = null
+                        )
+                    }
+                }
+                .onFailure { t ->
+                    _ui.update {
+                        it.copy(
+                            averageOverviewLoading = false,
+                            averageOverviewError = t.message ?: "Load progress averages failed"
+                        )
+                    }
+                }
+        }
+    }
+
+
     private fun refresh(
         weekOffset: Int,
         refreshWater: Boolean,
-        refreshWorkout: Boolean
+        refreshWorkout: Boolean,
+        refreshAverageOverview: Boolean
     ) {
         viewModelScope.launch {
             _ui.update {
@@ -243,7 +306,10 @@ class ProgressViewModel @Inject constructor(
 
                     workoutLoading = if (refreshWorkout) true else it.workoutLoading,
                     workoutChart = if (refreshWorkout) WorkoutChartUi() else it.workoutChart,
-                    workoutError = if (refreshWorkout) null else it.workoutError
+                    workoutError = if (refreshWorkout) null else it.workoutError,
+
+                    averageOverviewLoading = if (refreshAverageOverview) true else it.averageOverviewLoading,
+                    averageOverviewError = if (refreshAverageOverview) null else it.averageOverviewError
                 )
             }
 
@@ -274,10 +340,19 @@ class ProgressViewModel @Inject constructor(
                     null
                 }
 
+                val averageOverviewDeferred = if (refreshAverageOverview) {
+                    async {
+                        runCatching { repo.getProgressAverages().ranges.toAverageOverviewItems() }
+                    }
+                } else {
+                    null
+                }
+
                 val progressResult = progressDeferred.await()
                 val bmiCard = bmiDeferred.await().getOrElse { _ui.value.bmiCard }
                 val waterResult = waterDeferred?.await()
                 val workoutResult = workoutDeferred?.await()
+                val averageOverviewResult = averageOverviewDeferred?.await()
 
                 if (refreshWater && waterResult != null) {
                     waterResult
@@ -323,6 +398,28 @@ class ProgressViewModel @Inject constructor(
                         }
                 }
 
+                if (refreshAverageOverview && averageOverviewResult != null) {
+                    averageOverviewResult
+                        .onSuccess { items ->
+                            averageOverviewLoaded = true
+                            _ui.update {
+                                it.copy(
+                                    averageOverviewLoading = false,
+                                    averageOverviewItems = items,
+                                    averageOverviewError = null
+                                )
+                            }
+                        }
+                        .onFailure { t ->
+                            _ui.update {
+                                it.copy(
+                                    averageOverviewLoading = false,
+                                    averageOverviewError = t.message ?: "Load progress averages failed"
+                                )
+                            }
+                        }
+                }
+
                 progressResult
                     .onSuccess { dto ->
                         progressLoaded = true
@@ -338,7 +435,12 @@ class ProgressViewModel @Inject constructor(
                                 // 保留 workout state
                                 workoutLoading = current.workoutLoading,
                                 workoutChart = current.workoutChart,
-                                workoutError = current.workoutError
+                                workoutError = current.workoutError,
+
+                                // 保留 average overview state
+                                averageOverviewLoading = current.averageOverviewLoading,
+                                averageOverviewItems = current.averageOverviewItems,
+                                averageOverviewError = current.averageOverviewError
                             )
                         }
                     }
@@ -355,6 +457,25 @@ class ProgressViewModel @Inject constructor(
             }
         }
     }
+}
+
+private fun List<ProgressAverageRangeDto>.toAverageOverviewItems(): List<ProgressAverageOverviewUi> {
+    return map { range ->
+        ProgressAverageOverviewUi(
+            days = range.days,
+            caloriesKcal = range.caloriesKcal.roundToInt().coerceAtLeast(0),
+            proteinG = range.proteinG.roundToInt().coerceAtLeast(0),
+            carbsG = range.carbsG.roundToInt().coerceAtLeast(0),
+            fatsG = range.fatsG.roundToInt().coerceAtLeast(0),
+            fiberG = range.fiberG.roundToInt().coerceAtLeast(0),
+            sugarG = range.sugarG.roundToInt().coerceAtLeast(0),
+            sodiumMg = range.sodiumMg.roundToInt().coerceAtLeast(0),
+            workoutKcal = range.workoutKcal.roundToInt().coerceAtLeast(0),
+            waterMl = range.waterMl.roundToInt().coerceAtLeast(0),
+            healthScore = range.healthScore.coerceIn(0.0, 10.0),
+            steps = range.steps.roundToInt().coerceAtLeast(0)
+        )
+    }.sortedBy { it.days }
 }
 
 private val ORDERED_WEEK_LABELS = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
@@ -406,6 +527,11 @@ private fun FoodLogWeeklyProgressDto.toUiState(weekOffset: Int): ProgressUiState
         totalCaloriesText = effectiveTotalCaloriesText,
         deltaText = effectiveDeltaValue.toDeltaText(),
         deltaDirection = effectiveDeltaValue.toDeltaDirection(),
+        average7Calories = summary.average7Calories.roundToInt().coerceAtLeast(0),
+        average15Calories = summary.average15Calories.roundToInt().coerceAtLeast(0),
+        average7FiberG = summary.average7FiberG.roundToInt().coerceAtLeast(0),
+        average7SugarG = summary.average7SugarG.roundToInt().coerceAtLeast(0),
+        average7SodiumMg = summary.average7SodiumMg.roundToInt().coerceAtLeast(0),
         days = normalizedDayUis,
         periodLabel = period.label.toPrettyLabel(),
         error = null
@@ -439,11 +565,7 @@ private fun WaterWeeklyChartDto.toWaterChartUi(weekOffset: Int): WaterChartUi {
     val displayMl = displayDay?.ml ?: 0
     val compareMl = compareDay?.ml ?: 0
 
-    val averageMl = if (normalizedDayUis.isEmpty()) {
-        0
-    } else {
-        normalizedDayUis.sumOf { it.ml } / normalizedDayUis.size
-    }
+    val averageMl = this.averageMl.coerceAtLeast(0)
 
     val remainingMl = (resolvedGoalMl - displayMl).coerceAtLeast(0)
     val deltaValue = calculateDayDeltaPercent(
@@ -514,11 +636,7 @@ private fun WorkoutWeeklyProgressDto.toWorkoutChartUi(weekOffset: Int): WorkoutC
 
     val displayKcal = displayDay?.kcal ?: 0
     val compareKcal = compareDay?.kcal ?: 0
-    val averageKcal = if (normalizedDayUis.isEmpty()) {
-        0
-    } else {
-        (normalizedDayUis.sumOf { it.kcal }.toDouble() / normalizedDayUis.size.toDouble()).roundToInt()
-    }
+    val averageKcal = summary.averageKcal.coerceAtLeast(0)
     val deltaPercent = calculateDayDeltaPercent(displayKcal, compareKcal)
     val remaining = (summary.goalKcal - displayKcal).coerceAtLeast(0)
 

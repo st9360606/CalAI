@@ -391,6 +391,10 @@
          ========================= -->
     <string name="progress_chart_total_calories">總卡路里</string>
     <string name="progress_chart_cals">大卡</string>
+    <string name="progress_chart_7day_avg_calories">7 日平均</string>
+    <string name="progress_chart_15day_avg_calories">15 日平均</string>
+    <string name="progress_chart_7day_avg">7 日平均</string>
+    <string name="progress_chart_value_cals">%1$d 大卡</string>
 
     <string name="progress_legend_protein">蛋白質</string>
     <string name="progress_legend_carbs">碳水</string>
@@ -740,5 +744,28 @@
     <string name="workout_tracker_refresh_failed">重新整理失敗，請再試一次。</string>
     <string name="workout_preset_kcal_per_30_min">%1$d 大卡 / 30 分鐘</string>
     <string name="workout_history_today_label">今天</string>
+
+    <!-- Progress average overview -->
+    <string name="progress_average_tab_7_days">7 天</string>
+    <string name="progress_average_tab_15_days">15 天</string>
+    <string name="progress_average_tab_30_days">30 天</string>
+    <string name="progress_average_tab_60_days">60 天</string>
+    <string name="progress_average_overview_title">平均總覽</string>
+    <string name="progress_average_overview_subtitle">不含當天，只平均有資料的日期。</string>
+    <string name="progress_average_days_badge">%1$d 日平均</string>
+    <string name="progress_average_loading">正在載入平均資料...</string>
+    <string name="progress_average_total_calories">總卡路里</string>
+    <string name="progress_average_protein">蛋白質</string>
+    <string name="progress_average_carbs">碳水</string>
+    <string name="progress_average_fats">脂肪</string>
+    <string name="progress_average_fiber">纖維</string>
+    <string name="progress_average_sugar">糖</string>
+    <string name="progress_average_sodium">鈉</string>
+    <string name="progress_average_workout">運動消耗</string>
+    <string name="progress_average_water">喝水量</string>
+    <string name="progress_average_health_score">健康分數</string>
+    <string name="progress_average_steps">總步數</string>
+    <string name="progress_average_health_score_value">%1$.1f / 10</string>
+    <string name="progress_average_steps_value">%1$s 步</string>
 
 </resources>

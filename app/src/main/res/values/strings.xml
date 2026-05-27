@@ -392,6 +392,10 @@
          ========================= -->
     <string name="progress_chart_total_calories">Total calories</string>
     <string name="progress_chart_cals">cals</string>
+    <string name="progress_chart_7day_avg_calories">7-day avg</string>
+    <string name="progress_chart_15day_avg_calories">15-day avg</string>
+    <string name="progress_chart_7day_avg">7-day avg</string>
+    <string name="progress_chart_value_cals">%1$d cals</string>
 
     <string name="progress_legend_protein">Protein</string>
     <string name="progress_legend_carbs">Carbs</string>
@@ -743,5 +747,28 @@
     <string name="workout_tracker_refresh_failed">Refresh failed. Please try again.</string>
     <string name="workout_preset_kcal_per_30_min">%1$d kcal / 30 min</string>
     <string name="workout_history_today_label">Today</string>
+
+    <!-- Progress average overview -->
+    <string name="progress_average_tab_7_days">7 days</string>
+    <string name="progress_average_tab_15_days">15 days</string>
+    <string name="progress_average_tab_30_days">30 days</string>
+    <string name="progress_average_tab_60_days">60 days</string>
+    <string name="progress_average_overview_title">Average overview</string>
+    <string name="progress_average_overview_subtitle">Excludes today and averages only days with data.</string>
+    <string name="progress_average_days_badge">%1$d-day avg</string>
+    <string name="progress_average_loading">Loading averages...</string>
+    <string name="progress_average_total_calories">Total calories</string>
+    <string name="progress_average_protein">Protein</string>
+    <string name="progress_average_carbs">Carbs</string>
+    <string name="progress_average_fats">Fats</string>
+    <string name="progress_average_fiber">Fiber</string>
+    <string name="progress_average_sugar">Sugar</string>
+    <string name="progress_average_sodium">Sodium</string>
+    <string name="progress_average_workout">Workout burned</string>
+    <string name="progress_average_water">Water intake</string>
+    <string name="progress_average_health_score">Health score</string>
+    <string name="progress_average_steps">Steps</string>
+    <string name="progress_average_health_score_value">%1$.1f / 10</string>
+    <string name="progress_average_steps_value">%1$s steps</string>
 
 </resources>

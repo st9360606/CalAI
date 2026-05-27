@@ -5,6 +5,7 @@ import com.calai.bitecal.data.foodlog.model.FoodLogListResponseDto
 import com.calai.bitecal.data.foodlog.model.FoodLogOverrideRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogPortionMultiplierRequestDto
 import com.calai.bitecal.data.foodlog.model.FoodLogWeeklyProgressDto
+import com.calai.bitecal.data.foodlog.model.ProgressAveragesDto
 import kotlinx.serialization.Serializable
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -126,6 +127,9 @@ interface FoodLogsApi {
     suspend fun getWeeklyProgress(
         @Query("weekOffset") weekOffset: Int = 0
     ): FoodLogWeeklyProgressDto
+
+    @GET("/api/v1/food-logs/progress/averages")
+    suspend fun getProgressAverages(): ProgressAveragesDto
 }
 
 @Serializable

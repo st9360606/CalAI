@@ -20,7 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -55,6 +57,7 @@ fun ProgressScreen(
     onOpenTab: (HomeTab) -> Unit
 ) {
     val ui by vm.ui.collectAsState()
+    var selectedAverageDays by remember { mutableStateOf(7) }
 
     LaunchedEffect(Unit) { vm.loadIfNeeded() }
     BackHandler { onBack() }
@@ -118,6 +121,8 @@ fun ProgressScreen(
                         NutritionChartCard(
                             totalCaloriesText = ui.totalCaloriesText,
                             deltaText = ui.deltaText,
+                            average7Calories = ui.average7Calories,
+                            average15Calories = ui.average15Calories,
                             days = ui.days,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
@@ -127,6 +132,9 @@ fun ProgressScreen(
                         MicronutrientChartCard(
                             days = ui.days,
                             weekOffset = ui.selectedWeekOffset,
+                            average7FiberG = ui.average7FiberG,
+                            average7SugarG = ui.average7SugarG,
+                            average7SodiumMg = ui.average7SodiumMg,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
@@ -183,6 +191,18 @@ fun ProgressScreen(
                         )
                     }
                 }
+            }
+
+            item {
+                ProgressAverageOverviewSection(
+                    selectedDays = selectedAverageDays,
+                    onSelectedDaysChange = { selectedAverageDays = it },
+                    items = ui.averageOverviewItems,
+                    loading = ui.averageOverviewLoading,
+                    error = ui.averageOverviewError,
+                    onRetry = vm::retryAverageOverview,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
 
             item { Spacer(modifier = Modifier.height(5.dp)) }
