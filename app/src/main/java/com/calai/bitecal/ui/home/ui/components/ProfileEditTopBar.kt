@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.home.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 @Composable
 fun ProfileEditTopBar(
@@ -45,7 +45,7 @@ fun ProfileEditTopBar(
                 .size(36.dp)
                 .clip(CircleShape)
                 .background(backButtonBg)
-                .clickable(onClick = onBack),
+                .biteCalClickable(onClick = onBack),
             contentAlignment = Alignment.Center
         ) {
             Icon(

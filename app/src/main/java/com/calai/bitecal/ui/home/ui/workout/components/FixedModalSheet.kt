@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +23,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.calai.bitecal.i18n.ProvideComposeLocale
 import com.calai.bitecal.i18n.currentLocaleKey
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 /**
  * 一個固定在底部、完全不跟隨鍵盤位移的「自製」Modal Sheet」。
@@ -59,7 +59,7 @@ fun FixedModalSheet(
                             .background(scrimColor)
                             .let { modifier ->
                                 if (scrimClick != null) {
-                                    modifier.clickable { scrimClick.invoke() }
+                                    modifier.biteCalClickable { scrimClick.invoke() }
                                 } else {
                                     modifier
                                 }

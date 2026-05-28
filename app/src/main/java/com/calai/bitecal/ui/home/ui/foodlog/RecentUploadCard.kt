@@ -11,7 +11,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -61,6 +60,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.model.HomeRecentUploadUi
 import kotlinx.coroutines.launch
@@ -211,7 +211,7 @@ fun RecentUploadCard(
                             }
                         }
                     )
-                    .clickable {
+                    .biteCalClickable {
                         if (isOpened) {
                             scope.launch {
                                 offsetX.animateTo(

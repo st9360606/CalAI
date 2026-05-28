@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.roundKg1
 import com.calai.bitecal.i18n.LocalLocaleController
@@ -639,6 +640,11 @@ private fun NumberWheel(
             (listState.firstVisibleItemIndex + mid).coerceIn(0, padded.lastIndex)
         }
     }
+
+    HapticWheelTickEffect(
+        tickKey = centerListIndex,
+        enabled = listState.isScrollInProgress
+    )
 
     val latestOnValueChange by rememberUpdatedState(onValueChange)
 

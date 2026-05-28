@@ -5,7 +5,6 @@ package com.calai.bitecal.ui.landing
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.i18n.LanguageManager
 
 data class LangItem(val label: String, val tag: String, val flag: String)
@@ -176,7 +176,7 @@ fun LanguageDialog(
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(bg)
                                 .border(BorderStroke(1.dp, border), RoundedCornerShape(16.dp))
-                                .clickable(enabled = supported) {
+                                .biteCalClickable(enabled = supported) {
                                     onPick(langItem)
                                 }
                                 .padding(horizontal = 14.dp),

@@ -8,7 +8,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +77,9 @@ import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -213,7 +215,7 @@ fun FastingPlansScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(0.4f)
-                            .clickable { showCupertinoPicker = true },
+                            .biteCalClickable { showCupertinoPicker = true },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
@@ -671,7 +673,7 @@ private fun FastingPlanCard(
             .fillMaxWidth()
             .aspectRatio(0.9f)
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
-            .clickable(role = Role.Button, onClick = onSelect),
+            .biteCalClickable(role = Role.Button, onClick = onSelect),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border,
@@ -760,10 +762,11 @@ private fun CupertinoSwitch(
             .height(trackHeight)
             .clip(RoundedCornerShape(trackHeight / 2))
             .background(trackColor)
-            .clickable(
+            .biteCalClickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onCheckedChange() },
+                indication = null,
+                onClick = onCheckedChange
+            ),
         contentAlignment = Alignment.CenterStart
     ) {
         Box(
@@ -858,6 +861,11 @@ private fun WheelColumn(
         }
     }
 
+    HapticWheelTickEffect(
+        tickKey = normalize(centerListIndex),
+        enabled = listState.isScrollInProgress
+    )
+
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
             val goal = centerListIndex
@@ -914,7 +922,7 @@ private fun FastingPlanTimeValueCard(
     modifier: Modifier = Modifier
 ) {
     val clickableModifier = if (enabled && onClick != null) {
-        Modifier.clickable(
+        Modifier.biteCalClickable(
             role = Role.Button,
             onClick = onClick
         )
@@ -964,6 +972,13 @@ private fun CupertinoWheelTimePickerSheet(
     var hour by rememberSaveable(initial) { mutableIntStateOf(initial.hour) }
     var minute by rememberSaveable(initial) { mutableIntStateOf(initial.minute) }
 
+    val confirmClick = rememberClickWithHaptic(enabled = !saving) {
+        if (!saving) {
+            onConfirm(LocalTime.of(hour, minute))
+        }
+    }
+    val dismissClick = rememberClickWithHaptic(enabled = !saving, onClick = onDismiss)
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -971,7 +986,7 @@ private fun CupertinoWheelTimePickerSheet(
             modifier = Modifier
                 .matchParentSize()
                 .background(Color.Black.copy(alpha = 0.32f))
-                .clickable(
+                .biteCalClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
@@ -989,7 +1004,7 @@ private fun CupertinoWheelTimePickerSheet(
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(Color(0xFFF5F5F5))
                 .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp)
-                .clickable(
+                .biteCalClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) { },
@@ -1084,11 +1099,7 @@ private fun CupertinoWheelTimePickerSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = {
-                        if (!saving) {
-                            onConfirm(LocalTime.of(hour, minute))
-                        }
-                    },
+                    onClick = confirmClick,
                     enabled = !saving,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1106,11 +1117,7 @@ private fun CupertinoWheelTimePickerSheet(
                 }
 
                 OutlinedButton(
-                    onClick = {
-                        if (!saving) {
-                            onDismiss()
-                        }
-                    },
+                    onClick = dismissClick,
                     enabled = !saving,
                     modifier = Modifier
                         .fillMaxWidth()

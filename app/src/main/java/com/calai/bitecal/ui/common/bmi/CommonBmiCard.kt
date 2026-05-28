@@ -3,7 +3,6 @@ package com.calai.bitecal.ui.common.bmi
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -40,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 enum class CommonBmiTone {
     Underweight,
@@ -140,7 +140,7 @@ fun CommonBmiCard(
                 modifier = Modifier
                     .size(30.dp)
                     .clip(CircleShape)
-                    .clickable { showBmiInfoDialog = true },
+                    .biteCalClickable { showBmiInfoDialog = true },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

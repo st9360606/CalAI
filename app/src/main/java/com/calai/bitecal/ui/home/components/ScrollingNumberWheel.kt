@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -63,6 +64,18 @@ fun ScrollingNumberWheel(
         initialFirstVisibleItemIndex = initialFirstVisible
     )
 
+    val currentCenterIndex by remember {
+        derivedStateOf {
+            (listState.firstVisibleItemIndex + centerOffset)
+                .coerceIn(0, dataList.lastIndex)
+        }
+    }
+
+    HapticWheelTickEffect(
+        tickKey = dataList.getOrNull(currentCenterIndex) ?: currentCenterIndex,
+        enabled = listState.isScrollInProgress
+    )
+
     // 停止滾動 => snap central line
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
@@ -106,9 +119,6 @@ fun ScrollingNumberWheel(
         ) {
             items(dataList.size) { idx ->
                 val number = dataList[idx]
-
-                val currentCenterIndex = (listState.firstVisibleItemIndex + centerOffset)
-                    .coerceIn(0, dataList.lastIndex)
 
                 val isSelected = idx == currentCenterIndex
                 val isPlaceholder = (number == null)

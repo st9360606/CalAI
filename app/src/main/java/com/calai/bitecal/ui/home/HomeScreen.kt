@@ -15,7 +15,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -78,6 +77,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionProxyActivity
@@ -922,7 +922,7 @@ private fun Avatar(
             .size(touchSize)
             .then(
                 if (onClick != null) {
-                    Modifier.clickable(
+                    Modifier.biteCalClickable(
                         interactionSource = interaction,
                         indication = null,
                         role = Role.Button

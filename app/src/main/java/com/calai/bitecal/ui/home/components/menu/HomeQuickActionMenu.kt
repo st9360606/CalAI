@@ -2,7 +2,6 @@ package com.calai.bitecal.ui.home.components.menu
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,8 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.scan.ScanCameraIcon
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private val ScrimColor = Color.Black.copy(alpha = 0.16f)
 private val TileColor = Color(0xFFF0F1F6)
@@ -64,7 +65,7 @@ fun HomeQuickActionMenu(
             modifier = Modifier
                 .matchParentSize()
                 .background(ScrimColor)
-                .clickable(
+                .biteCalClickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = onDismiss
@@ -124,12 +125,14 @@ private fun QuickActionCard(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
+    val hapticClick = rememberClickWithHaptic(onClick = onClick)
+
     Card(
         modifier = Modifier
             .width(170.dp)
             .height(125.dp)
             .testTag(testTag),
-        onClick = onClick,
+        onClick = hapticClick,
         shape = RoundedCornerShape(30.dp),
         border = CardStyles.Border,
         colors = CardDefaults.cardColors(

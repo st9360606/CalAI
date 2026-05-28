@@ -3,7 +3,6 @@ package com.calai.bitecal.ui.home.ui.progress
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -32,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.bmi.CommonBmiCard
 import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
 import com.calai.bitecal.ui.common.bmi.CommonBmiTone
@@ -254,7 +254,7 @@ private fun WeekTabs(
                             Modifier.background(Color.Transparent, activeTabShape)
                         }
                     )
-                    .clickable { onSelect(index) },
+                    .biteCalClickable { onSelect(index) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(

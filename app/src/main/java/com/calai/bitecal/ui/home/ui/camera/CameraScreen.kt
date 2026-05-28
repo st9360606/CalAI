@@ -24,7 +24,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -87,6 +86,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.ui.camera.barcode.BarcodeScannerProcessor
 import java.io.File
 import java.util.concurrent.Executor
@@ -358,7 +358,7 @@ fun CameraScreen(
                 .padding(start = 24.dp, top = topPadding + 5.dp)
                 .size(closeBtnSize)
                 .clip(CircleShape)
-                .clickable(role = Role.Button) { onClose() }
+                .biteCalClickable(role = Role.Button) { onClose() }
                 .testTag("camera_close")
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -534,7 +534,7 @@ fun CameraScreen(
                     color = Color.White.copy(alpha = 0.85f),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
-                        .clickable(role = Role.Button) {
+                        .biteCalClickable(role = Role.Button) {
                             requestCameraPermLauncher?.launch(Manifest.permission.CAMERA)
                                 ?: openAppSettings(ctx)
                         }
@@ -810,7 +810,7 @@ private fun CircleIconButton(
             .size(size)
             .alpha(if (enabled) 1f else 0.45f)
             .clip(CircleShape)
-            .clickable(
+            .biteCalClickable(
                 enabled = enabled,
                 role = Role.Button
             ) { onClick() }
@@ -840,7 +840,7 @@ private fun ShutterButton(
             .size(outer)
             .clip(CircleShape)
             .alpha(if (enabled) 1f else 0.45f)
-            .clickable(
+            .biteCalClickable(
                 enabled = enabled,
                 role = Role.Button
             ) { onClick() },

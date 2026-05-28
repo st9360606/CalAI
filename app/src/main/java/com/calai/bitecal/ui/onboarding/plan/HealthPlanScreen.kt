@@ -11,7 +11,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -74,6 +73,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.core.health.BmiClass
 import com.calai.bitecal.core.health.Gender
 import com.calai.bitecal.core.health.MacroPlan
@@ -761,7 +761,7 @@ fun ResearchSourcesBlock(
                 color = Color(0xFF9AA3AF),
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.clickable {
+                modifier = Modifier.biteCalClickable {
                     val next = !expanded
                     expanded = next
                     if (next) onSeeMore()
@@ -794,7 +794,7 @@ fun ResearchSourcesBlock(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .clickable { uriHandler.openUri(url) }
+                            .biteCalClickable { uriHandler.openUri(url) }
                     )
                 }
             }

@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -69,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
 import com.calai.bitecal.ui.landing.LandingSlideshow
@@ -277,7 +277,7 @@ private fun BoxScope.RestoreSubscriptionRequiredDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.42f))
-                .clickable(enabled = !purchasing) {
+                .biteCalClickable(enabled = !purchasing) {
                     // 只吃掉背景點擊事件，不關閉 Dialog。
                     // 這樣可以避免使用者誤觸遮罩，導致 restore 提示消失。
                 }
@@ -1081,7 +1081,7 @@ private fun OneTimeOfferTrialCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp)
-                .clickable(enabled = !purchasing && trialEligible && trialEligibilityLoaded) {
+                .biteCalClickable(enabled = !purchasing && trialEligible && trialEligibilityLoaded) {
                     onTrialEnabledChange(!trialEnabled)
                 },
             verticalAlignment = Alignment.CenterVertically

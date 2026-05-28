@@ -56,6 +56,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import kotlin.math.roundToInt
 
@@ -465,6 +466,11 @@ private fun NumberWheel(
             }?.index ?: selectedIdx
         }
     }
+
+    HapticWheelTickEffect(
+        tickKey = centerIndex,
+        enabled = state.isScrollInProgress && !aligning
+    )
 
     // ✅ 使用者滑動時才回寫；程式對齊中不回寫，避免把 DB 值打回舊值
     LaunchedEffect(centerIndex, aligning) {

@@ -1,6 +1,7 @@
 package com.calai.bitecal.ui.home.ui.workout
 
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -12,7 +13,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -510,7 +510,7 @@ private fun SimpleHeaderBar(
                     .size(closeSize)                 // ★ 放大按鈕外徑
                     .clip(CircleShape)
                     .background(Black)
-                    .clickable { onClose() },
+                    .biteCalClickable { onClose() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -934,7 +934,7 @@ private fun HeaderSection(
                     .size(32.dp) // ← 黑圓底更小
                     .clip(CircleShape)
                     .background(Black)
-                    .clickable(onClick = onClose),
+                    .biteCalClickable(onClick = onClose),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

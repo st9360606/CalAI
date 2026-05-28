@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -28,6 +27,7 @@ import com.calai.bitecal.ui.common.FlagChip
 import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import androidx.compose.ui.platform.LocalContext
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -258,7 +258,7 @@ private fun LandingBottomBar(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { onLogin() },
+                    modifier = Modifier.biteCalClickable { onLogin() },
                     style = LocalTextStyle.current.copy(
                         platformStyle = PlatformTextStyle(includeFontPadding = false)
                     )

@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.common
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 private val CalaiBackBg = Color(0xFFF5F5F5)
 
@@ -39,7 +39,7 @@ fun CalaiBackButton(
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
-            .clickable(enabled = enabled, onClick = onClick),
+            .biteCalClickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Box(

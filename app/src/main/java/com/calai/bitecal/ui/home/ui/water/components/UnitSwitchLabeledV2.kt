@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 /**
  * UnitSwitchLabeledV2 (iOS-like: white track + black thumb)
@@ -213,7 +213,7 @@ fun UnitSwitchLabeledV2(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxSize()
-                    .clickable(interactionSource = interaction, indication = null) {
+                    .biteCalClickable(interactionSource = interaction, indication = null) {
                         val want = if (isRtl) true else false
                         if (want != checked) scope.launch { onCheckedChange(want) }
                     }
@@ -222,7 +222,7 @@ fun UnitSwitchLabeledV2(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxSize()
-                    .clickable(interactionSource = interaction, indication = null) {
+                    .biteCalClickable(interactionSource = interaction, indication = null) {
                         val want = if (isRtl) false else true
                         if (want != checked) scope.launch { onCheckedChange(want) }
                     }

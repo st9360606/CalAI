@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.home.HomeTab
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 /**
  * 共用 BottomBar：Home / Progress / Weight / Fasting / Workout
@@ -60,10 +61,11 @@ fun MainBottomBar(
             ) {
                 val isSelected = current == tab
                 val tint = if (isSelected) selected else unselected
+                val hapticClick = rememberClickWithHaptic { onOpenTab(tab) }
 
                 NavigationBarItem(
                     selected = isSelected,
-                    onClick = { onOpenTab(tab) },
+                    onClick = hapticClick,
                     alwaysShowLabel = true,
                     label = { Text(text = label, color = tint) },     // ✅ 強制 label 顏色
                     icon = { icon(tint) },                            // ✅ 強制 icon tint

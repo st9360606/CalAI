@@ -2,7 +2,6 @@ package com.calai.bitecal.ui.onboarding.referralsource
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.calai.bitecal.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 // 控制每個 item 佔用的寬度比例（置中）
 private const val OPTION_WIDTH_FRACTION = 0.86f
 
@@ -200,7 +200,7 @@ private fun ReferralOptionItem(
             .height(75.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(bg)
-            .clickable(
+            .biteCalClickable(
                 interactionSource = interaction,
                 indication = null,
                 onClick = onClick

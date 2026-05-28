@@ -3,7 +3,6 @@ package com.calai.bitecal.ui.home.ui.water.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.water.store.WaterUnit
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
@@ -77,7 +77,7 @@ private fun RoundActionButton(
     Box(
         modifier = Modifier
             .size(outerSizeDp) // 外圈半徑（也是高亮圈大小）
-            .clickable(
+            .biteCalClickable(
                 indication = null, // 我們自己畫閃光，所以不要 ripple
                 interactionSource = interactionSource
             ) {

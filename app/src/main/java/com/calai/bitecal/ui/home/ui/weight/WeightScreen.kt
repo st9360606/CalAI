@@ -5,7 +5,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -59,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.weight.api.WeightItemDto
 import com.calai.bitecal.ui.home.components.toast.DeleteFailedTopToast
@@ -359,7 +359,7 @@ private fun SwipeToDeleteHistoryRow(
                             }
                         }
                     )
-                    .clickable(enabled = isOpened) {
+                    .biteCalClickable(enabled = isOpened) {
                         scope.launch {
                             offsetX.animateTo(
                                 targetValue = 0f,

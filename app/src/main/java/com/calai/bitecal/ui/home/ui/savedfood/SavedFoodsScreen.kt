@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.home.ui.savedfood
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.CalaiConfirmDialog
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
@@ -239,7 +239,7 @@ private fun SavedFoodCard(
             .fillMaxWidth()
             .aspectRatio(0.7f)
             .testTag("saved_food_card")
-            .clickable(onClick = onOpenDetail),
+            .biteCalClickable(onClick = onOpenDetail),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -264,7 +264,7 @@ private fun SavedFoodCard(
                         .size(30.dp)
                         .clip(CircleShape)
                         .background(SavedFoodCloseButtonBg)
-                        .clickable(onClick = onRemove)
+                        .biteCalClickable(onClick = onRemove)
                         .align(Alignment.TopStart)
                         .testTag("saved_food_remove"),
                     contentAlignment = Alignment.Center
@@ -372,7 +372,7 @@ private fun SavedFoodCard(
                     .fillMaxWidth()
                     .height(36.dp)
                     .background(ActionBlack)
-                    .clickable(onClick = onOpenDetail)
+                    .biteCalClickable(onClick = onOpenDetail)
                     .testTag("saved_food_detail"),
                 contentAlignment = Alignment.Center
             ) {

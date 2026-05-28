@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
@@ -448,6 +449,11 @@ private fun NumberWheelForStart(
             }?.index ?: selectedIdx
         }
     }
+
+    HapticWheelTickEffect(
+        tickKey = centerIndex,
+        enabled = state.isScrollInProgress && initialized
+    )
 
     LaunchedEffect(centerIndex, initialized) {
         if (initialized) onValueChange(items[centerIndex])

@@ -2,7 +2,6 @@ package com.calai.bitecal.ui.home.components
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -25,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import java.time.LocalDate
 import java.time.DayOfWeek
 
@@ -126,7 +126,7 @@ fun CalendarStrip(
                         // 選中的那天：使用 HomeCardStyles.Calendar 管理的金棕色底
                         Box(
                             modifier = baseContainer
-                                .clickable { onSelect(d) }
+                                .biteCalClickable { onSelect(d) }
                                 .drawBehind {
                                     val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
                                     val chipW = size.width * fraction
@@ -162,7 +162,7 @@ fun CalendarStrip(
                         // 今天但未被選：柔和灰底
                         Box(
                             modifier = baseContainer
-                                .clickable(enabled = enabled) { if (enabled) onSelect(d) }
+                                .biteCalClickable(enabled = enabled) { if (enabled) onSelect(d) }
                                 .drawBehind {
                                     val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
                                     val chipW = size.width * fraction
@@ -196,7 +196,7 @@ fun CalendarStrip(
                         // 其他（一般日或未來日）
                         Box(
                             modifier = baseContainer
-                                .clickable(enabled = enabled) { if (enabled) onSelect(d) },
+                                .biteCalClickable(enabled = enabled) { if (enabled) onSelect(d) },
                             contentAlignment = Alignment.Center
                         ) {
                             DayDot(
@@ -303,7 +303,7 @@ private fun DayDot(
         modifier = Modifier
             .width(width)
             .padding(vertical = 2.dp)
-            .then(if (useClickable) Modifier.clickable(enabled = enabled, onClick = onClick) else Modifier)
+            .then(if (useClickable) Modifier.biteCalClickable(enabled = enabled, onClick = onClick) else Modifier)
     ) {
         Text(
             text = dayOfWeekAbbrev(date.dayOfWeek),

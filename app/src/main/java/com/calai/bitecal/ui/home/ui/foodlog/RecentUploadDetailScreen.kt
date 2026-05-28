@@ -5,7 +5,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
@@ -325,7 +325,7 @@ fun RecentUploadDetailScreen(
                         .align(Alignment.CenterStart)
                         .size(40.dp)
                         .clip(CircleShape)
-                        .clickable(enabled = !st.loading, onClick = handleBack),
+                        .biteCalClickable(enabled = !st.loading, onClick = handleBack),
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -359,7 +359,7 @@ fun RecentUploadDetailScreen(
                         .align(Alignment.CenterEnd)
                         .size(40.dp)
                         .clip(CircleShape)
-                        .clickable(enabled = !st.loading) {
+                        .biteCalClickable(enabled = !st.loading) {
                             showDeleteDialog = true
                         },
                     contentAlignment = Alignment.Center
@@ -581,7 +581,7 @@ private fun SaveBadge(
     Box(
         modifier = Modifier
             .size(27.dp)
-            .clickable(enabled = enabled, onClick = onClick),
+            .biteCalClickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(

@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.ui.progress.model.ProgressAverageOverviewUi
 import java.text.NumberFormat
 
@@ -135,7 +135,7 @@ private fun AverageRangeTabs(
                             Modifier.background(Color.Transparent, activeTabShape)
                         }
                     )
-                    .clickable(enabled = enabled) { onSelectedDaysChange(days) },
+                    .biteCalClickable(enabled = enabled) { onSelectedDaysChange(days) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -410,7 +410,7 @@ private fun ProgressAverageOverviewErrorCard(
         Box(
             modifier = Modifier
                 .background(Color(0xFF111114), RoundedCornerShape(999.dp))
-                .clickable { onRetry() }
+                .biteCalClickable { onRetry() }
                 .padding(horizontal = 18.dp, vertical = 10.dp)
         ) {
             Text(

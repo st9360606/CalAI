@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.auth
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.i18n.ProvideComposeLocale
 import kotlinx.coroutines.delay
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 private enum class SheetAuthProvider {
     Google,
     Email
@@ -291,7 +291,7 @@ fun SignInSheet(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .padding(horizontal = 6.dp)
-                                .clickable(role = Role.Button) {
+                                .biteCalClickable(role = Role.Button) {
                                     onTerms()
                                     uriHandler.openUri(termsUrl)
                                 }
@@ -307,7 +307,7 @@ fun SignInSheet(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .padding(horizontal = 6.dp)
-                                .clickable(role = Role.Button) {
+                                .biteCalClickable(role = Role.Button) {
                                     onPrivacy()
                                     uriHandler.openUri(privacyUrl)
                                 }

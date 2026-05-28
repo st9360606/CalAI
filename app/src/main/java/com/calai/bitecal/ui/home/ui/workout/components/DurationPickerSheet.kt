@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.ProvideComposeLocale
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import java.util.Locale
 import kotlin.math.abs
 
@@ -91,6 +93,16 @@ fun DurationPickerSheet(
     val minuteText = localizedStringResource(localeTag, R.string.workout_duration_minute_short)
     val saveText = localizedStringResource(localeTag, R.string.workout_duration_save)
     val cancelText = localizedStringResource(localeTag, R.string.workout_duration_cancel)
+
+    val saveClick = rememberClickWithHaptic {
+        val safeMinutes = if (hours == 24) 0 else minutes
+        val total = hours * 60 + safeMinutes
+
+        if (total > 0 && total <= 24 * 60) {
+            onSaveMinutes(total)
+        }
+    }
+    val cancelClick = rememberClickWithHaptic(onClick = onCancel)
 
     key(localeTag, titleText, subtitleText, hourText, minuteText, saveText, cancelText) {
         ProvideComposeLocale(localeTag) {
@@ -206,12 +218,7 @@ fun DurationPickerSheet(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Button(
-                            onClick = {
-                                val total = hours * 60 + minutes
-                                if (total > 0) {
-                                    onSaveMinutes(total)
-                                }
-                            },
+onClick = saveClick,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
@@ -230,7 +237,7 @@ fun DurationPickerSheet(
                         Spacer(Modifier.height(12.dp))
 
                         Button(
-                            onClick = onCancel,
+                            onClick = cancelClick,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
@@ -306,6 +313,11 @@ private fun DurationWheelColumn(
             }?.index ?: initialIndex
         }
     }
+
+    HapticWheelTickEffect(
+        tickKey = normalize(centerListIndex),
+        enabled = listState.isScrollInProgress
+    )
 
     LaunchedEffect(listState.isScrollInProgress, centerListIndex, startIndex) {
         if (!listState.isScrollInProgress) {

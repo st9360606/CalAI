@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun DeleteAccountDialog(
@@ -48,6 +49,10 @@ fun DeleteAccountDialog(
     deleting: Boolean = false
 ) {
     if (!visible) return
+
+    val dismissClick = rememberClickWithHaptic(enabled = !deleting, onClick = onDismiss)
+    val cancelClick = rememberClickWithHaptic(enabled = !deleting, onClick = onCancel)
+    val deleteClick = rememberClickWithHaptic(enabled = !deleting, onClick = onDelete)
 
     Dialog(
         onDismissRequest = { if (!deleting) onDismiss() },
@@ -92,7 +97,7 @@ fun DeleteAccountDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             IconButton(
-                                onClick = { if (!deleting) onDismiss() },
+                                onClick = { if (!deleting) dismissClick() },
                                 enabled = !deleting,
                                 modifier = Modifier.size(16.dp)
                             ) {
@@ -124,7 +129,7 @@ fun DeleteAccountDialog(
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { if (!deleting) onCancel() },
+                            onClick = { if (!deleting) cancelClick() },
                             enabled = !deleting,
                             shape = RoundedCornerShape(999.dp),
                             border = BorderStroke(0.8.dp, Color(0xFF24252A)),
@@ -144,7 +149,7 @@ fun DeleteAccountDialog(
                         }
 
                         Button(
-                            onClick = { if (!deleting) onDelete() },
+                            onClick = { if (!deleting) deleteClick() },
                             enabled = !deleting,
                             shape = RoundedCornerShape(999.dp),
                             colors = ButtonDefaults.buttonColors(

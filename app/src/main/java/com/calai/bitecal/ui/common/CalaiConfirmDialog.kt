@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun CalaiConfirmDialog(
@@ -49,6 +50,10 @@ fun CalaiConfirmDialog(
     confirmContentColor: Color = Color.White
 ) {
     if (!visible) return
+
+    val dismissClick = rememberClickWithHaptic(enabled = !loading, onClick = onDismiss)
+    val cancelClick = rememberClickWithHaptic(enabled = !loading, onClick = onCancel)
+    val confirmClick = rememberClickWithHaptic(enabled = !loading, onClick = onConfirm)
 
     Dialog(
         onDismissRequest = { if (!loading) onDismiss() },
@@ -94,7 +99,7 @@ fun CalaiConfirmDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             IconButton(
-                                onClick = { if (!loading) onDismiss() },
+                                onClick = { if (!loading) dismissClick() },
                                 enabled = !loading,
                                 modifier = Modifier.size(16.dp)
                             ) {
@@ -130,7 +135,7 @@ fun CalaiConfirmDialog(
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { if (!loading) onCancel() },
+                            onClick = { if (!loading) cancelClick() },
                             enabled = !loading,
                             shape = RoundedCornerShape(999.dp),
                             border = BorderStroke(0.8.dp, Color(0xFF24252A)),
@@ -150,7 +155,7 @@ fun CalaiConfirmDialog(
                         }
 
                         Button(
-                            onClick = { if (!loading) onConfirm() },
+                            onClick = { if (!loading) confirmClick() },
                             enabled = !loading,
                             shape = RoundedCornerShape(999.dp),
                             colors = ButtonDefaults.buttonColors(

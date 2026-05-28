@@ -2,7 +2,6 @@ package com.calai.bitecal.ui.home.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -48,7 +48,7 @@ fun WorkoutAddButton(
     Box(
         modifier = Modifier
             .size(outerSizeDp)
-            .clickable(
+            .biteCalClickable(
                 interactionSource = noRipple,
                 indication = null,
                 enabled = enabled

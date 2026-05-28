@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.home.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 @Composable
 fun StepsConnectHintCard(
@@ -36,7 +36,7 @@ fun StepsConnectHintCard(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val clickableMod = if (onClick != null) {
-        Modifier.clickable(
+        Modifier.biteCalClickable(
             interactionSource = interaction,
             indication = null
         ) { onClick() }

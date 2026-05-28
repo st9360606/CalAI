@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.home.ui.settings.details
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -204,7 +204,7 @@ private fun GenderOptionCard(
             .height(height)
             .clip(shape)
             .background(container)
-            .clickable(
+            .biteCalClickable(
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Button

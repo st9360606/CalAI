@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun CalaiPrimaryActionButton(
@@ -25,8 +26,10 @@ fun CalaiPrimaryActionButton(
     containerColor: Color = Color.Black,
     contentColor: Color = Color.White
 ) {
+    val hapticClick = rememberClickWithHaptic(enabled = enabled && !loading, onClick = onClick)
+
     Button(
-        onClick = onClick,
+        onClick = hapticClick,
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()

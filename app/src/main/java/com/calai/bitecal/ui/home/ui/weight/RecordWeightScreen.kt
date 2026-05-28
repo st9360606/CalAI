@@ -19,7 +19,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -91,6 +90,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
@@ -990,7 +990,7 @@ private fun PhotoPickerBlock(
                 .size(144.dp)
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color(0xFF111114).copy(alpha = 0.06f))
-                .clickable(onClick = onPickPhoto),
+                .biteCalClickable(onClick = onPickPhoto),
             contentAlignment = Alignment.Center
         ) {
             if (uri != null) {

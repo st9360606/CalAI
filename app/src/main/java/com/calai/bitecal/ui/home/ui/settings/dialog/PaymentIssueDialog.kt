@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun PaymentIssueDialog(
@@ -47,6 +48,9 @@ fun PaymentIssueDialog(
     modifier: Modifier = Modifier
 ) {
     if (!visible) return
+
+    val dismissClick = rememberClickWithHaptic(onClick = onDismiss)
+    val updatePaymentClick = rememberClickWithHaptic(onClick = onUpdatePaymentMethod)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -76,7 +80,7 @@ fun PaymentIssueDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     DialogHeader(
-                        onDismiss = onDismiss
+                        onDismiss = dismissClick
                     )
 
                     Spacer(Modifier.height(18.dp))
@@ -130,7 +134,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(22.dp))
 
                     Button(
-                        onClick = onUpdatePaymentMethod,
+                        onClick = updatePaymentClick,
                         shape = RoundedCornerShape(999.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF111114),
@@ -151,7 +155,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(10.dp))
 
                     OutlinedButton(
-                        onClick = onDismiss,
+                        onClick = dismissClick,
                         shape = RoundedCornerShape(999.dp),
                         border = null,
                         colors = ButtonDefaults.outlinedButtonColors(
@@ -228,7 +232,6 @@ private fun DialogHeader(
         }
     }
 }
-
 @Composable
 private fun PaymentIssueHero() {
     Box(
@@ -286,13 +289,12 @@ private fun PaymentIssueHero() {
             Icon(
                 imageVector = Icons.Outlined.WarningAmber,
                 contentDescription = null,
-                tint = Color(0xFF71717A),
+                tint = Color.White,
                 modifier = Modifier.size(17.dp)
             )
         }
     }
 }
-
 @Composable
 private fun PaymentIssueStatusPanel() {
     Column(

@@ -12,7 +12,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -107,6 +106,8 @@ import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
 import com.calai.bitecal.ui.home.components.scan.ScanFab
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
@@ -624,11 +625,11 @@ private fun ProfileCard(
     val subscriptionBadgeClickableModifier =
         when (premiumStatusKind) {
             MembershipDisplayKind.FREE -> {
-                Modifier.clickable(onClick = onSubscriptionClick)
+                Modifier.biteCalClickable(onClick = onSubscriptionClick)
             }
 
             MembershipDisplayKind.PAYMENT_ISSUE -> {
-                Modifier.clickable(onClick = onPaymentIssueClick)
+                Modifier.biteCalClickable(onClick = onPaymentIssueClick)
             }
 
             MembershipDisplayKind.TRIAL,
@@ -657,7 +658,7 @@ private fun ProfileCard(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(18.dp))
-                    .clickable(onClick = onProfileClick),
+                    .biteCalClickable(onClick = onProfileClick),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(
@@ -696,7 +697,7 @@ private fun ProfileCard(
                                     .size(22.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFFF4F4F5))
-                                    .clickable(onClick = onProfileClick),
+                                    .biteCalClickable(onClick = onProfileClick),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -993,7 +994,7 @@ private fun InviteFriendsCard(
         modifier = Modifier
             .fillMaxWidth()
             .scale(cardScale)
-            .clickable(
+            .biteCalClickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
@@ -1298,7 +1299,7 @@ private fun PreferencesCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { /* TODO dropdown */ }
+                .biteCalClickable { /* TODO dropdown */ }
                 .padding(horizontal = 14.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1369,7 +1370,7 @@ private fun WidgetsSection(
                 fontSize = 16.sp,
                 lineHeight = 24.sp
             ),
-            modifier = Modifier.clickable(onClick = onOpenWidgetGuide)
+            modifier = Modifier.biteCalClickable(onClick = onOpenWidgetGuide)
         )
     }
 
@@ -1888,7 +1889,7 @@ private fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .biteCalClickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1909,9 +1910,14 @@ private fun LogoutButton(
     onLogout: () -> Unit
 ) {
     val enabled = !loading
+    val logoutClick = rememberClickWithHaptic(enabled = enabled) {
+        if (enabled) {
+            onLogout()
+        }
+    }
 
     OutlinedButton(
-        onClick = { if (enabled) onLogout() },
+        onClick = logoutClick,
         enabled = enabled,
         border = BorderStroke(
             width = 1.dp,
@@ -1969,6 +1975,8 @@ private fun LogoutErrorMessage(
     retryEnabled: Boolean,
     onRetry: () -> Unit
 ) {
+    val retryClick = rememberClickWithHaptic(enabled = retryEnabled, onClick = onRetry)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -1982,7 +1990,7 @@ private fun LogoutErrorMessage(
             modifier = Modifier.weight(1f)
         )
         OutlinedButton(
-            onClick = onRetry,
+            onClick = retryClick,
             enabled = retryEnabled,
             shape = RoundedCornerShape(14.dp)
         ) {

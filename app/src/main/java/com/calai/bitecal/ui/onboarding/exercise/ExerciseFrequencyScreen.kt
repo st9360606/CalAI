@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.OnboardingProgress
 
 // 與推薦來源頁一致：item 寬度佔螢幕 90%
@@ -221,7 +221,7 @@ private fun ExerciseOptionItem(
             .height(80.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(bg)
-            .clickable(
+            .biteCalClickable(
                 interactionSource = interaction,
                 indication = null,
                 onClick = onClick

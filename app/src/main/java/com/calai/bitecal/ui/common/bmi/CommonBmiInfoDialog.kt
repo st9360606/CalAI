@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 data class CommonBmiInfoDialogModel(
     val title: String,
@@ -70,6 +71,8 @@ fun CommonBmiInfoDialog(
     model: CommonBmiInfoDialogModel,
     onDismiss: () -> Unit
 ) {
+    val dismissClick = rememberClickWithHaptic(onClick = onDismiss)
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -245,7 +248,7 @@ fun CommonBmiInfoDialog(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
-                        onClick = onDismiss,
+                        onClick = dismissClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(min = 54.dp),

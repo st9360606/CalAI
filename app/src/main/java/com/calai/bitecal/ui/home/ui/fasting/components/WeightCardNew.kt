@@ -2,7 +2,6 @@ package com.calai.bitecal.ui.home.ui.fasting.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +37,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.home.components.GaugeRing
 import com.calai.bitecal.ui.home.components.HomeCardStyles
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.Image
@@ -221,7 +221,7 @@ private fun WeightAddButton(
     Box(
         modifier = modifier
             .size(outerSizeDp)
-            .clickable(interactionSource = noRipple, indication = null) {
+            .biteCalClickable(interactionSource = noRipple, indication = null) {
                 scope.launch {
                     flashAlphaGoal = 0.4f
                     delay(120)

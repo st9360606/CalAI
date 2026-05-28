@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.OnboardingProgress
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
@@ -239,6 +240,11 @@ private fun AgeWheel(
             }?.index ?: selectedIdx
         }
     }
+
+    HapticWheelTickEffect(
+        tickKey = centerIndex,
+        enabled = state.isScrollInProgress
+    )
 
     // 即時把中心列回傳 → 「下一步」一定存黑色那個
     LaunchedEffect(centerIndex) {

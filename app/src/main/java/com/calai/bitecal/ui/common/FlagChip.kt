@@ -1,6 +1,5 @@
 package com.calai.bitecal.ui.common
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -16,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 /**
  * 與 Landing 相同樣式的語言旗幟膠囊。
@@ -30,7 +30,7 @@ fun FlagChip(
     Surface(
         modifier = modifier
             .clip(RoundedCornerShape(22.dp))
-            .clickable(onClick = onClick),
+            .biteCalClickable(onClick = onClick),
         color = Color(0xFFF1F3F7),
         shadowElevation = 0.dp
     ) {

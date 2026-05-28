@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionDialogState
 import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionUiState
 
@@ -51,6 +52,10 @@ fun RestoreSubscriptionDialog(
     if (!uiState.visible) return
 
     val isRestoring = uiState.dialogState == RestoreSubscriptionDialogState.Restoring
+    val dismissClick = rememberClickWithHaptic(enabled = !isRestoring, onClick = onDismiss)
+    val restoreClick = rememberClickWithHaptic(enabled = !isRestoring, onClick = onRestore)
+    val maybeLaterClick = rememberClickWithHaptic(enabled = !isRestoring, onClick = onMaybeLater)
+
     val isResultState = when (uiState.dialogState) {
         RestoreSubscriptionDialogState.Restored,
         RestoreSubscriptionDialogState.RestoredWithPaymentIssue,
@@ -106,7 +111,7 @@ fun RestoreSubscriptionDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             IconButton(
-                                onClick = { if (!isRestoring) onDismiss() },
+                                onClick = { if (!isRestoring) dismissClick() },
                                 enabled = !isRestoring,
                                 modifier = Modifier.size(16.dp)
                             ) {
@@ -135,7 +140,7 @@ fun RestoreSubscriptionDialog(
 
                     if (isResultState) {
                         Button(
-                            onClick = onDismiss,
+                            onClick = dismissClick,
                             shape = RoundedCornerShape(999.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF111114),
@@ -156,7 +161,7 @@ fun RestoreSubscriptionDialog(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Button(
-                                onClick = { if (!isRestoring) onRestore() },
+                                onClick = { if (!isRestoring) restoreClick() },
                                 enabled = !isRestoring,
                                 shape = RoundedCornerShape(999.dp),
                                 colors = ButtonDefaults.buttonColors(
@@ -182,7 +187,7 @@ fun RestoreSubscriptionDialog(
                             Spacer(Modifier.height(10.dp))
 
                             OutlinedButton(
-                                onClick = { if (!isRestoring) onMaybeLater() },
+                                onClick = { if (!isRestoring) maybeLaterClick() },
                                 enabled = !isRestoring,
                                 shape = RoundedCornerShape(999.dp),
                                 border = BorderStroke(0.8.dp, Color(0xFF24252A)),

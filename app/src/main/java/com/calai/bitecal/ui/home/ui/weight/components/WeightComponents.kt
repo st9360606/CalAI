@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -76,6 +75,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 private const val WEIGHT_RANGE_30_DAYS = "30d"
 private const val WEIGHT_RANGE_60_DAYS = "60d"
@@ -471,7 +471,7 @@ fun FilterTabs(
                         .padding(horizontal = 2.dp)
                         .clip(RoundedCornerShape(999.dp))
                         .background(if (isSelected) Color(0xFFFCFCFD) else Color.Transparent)
-                        .clickable { onSelect(tab.key) },
+                        .biteCalClickable { onSelect(tab.key) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -585,7 +585,7 @@ private fun GoalProgressBadge(
                 color = Color(0xFFF59E0B).copy(alpha = 0.36f),
                 shape = RoundedCornerShape(999.dp)
             )
-            .clickable { onClick() }    // ★ 讓整個膠囊可以點
+            .biteCalClickable { onClick() }    // ★ 讓整個膠囊可以點
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

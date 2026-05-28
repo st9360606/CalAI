@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.home.ui.settings.details
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +45,7 @@ import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import java.util.Locale
 import kotlin.math.abs
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 @Composable
 fun PersonalDetailsScreen(
@@ -285,7 +285,7 @@ private fun PersonalDetailsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .biteCalClickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

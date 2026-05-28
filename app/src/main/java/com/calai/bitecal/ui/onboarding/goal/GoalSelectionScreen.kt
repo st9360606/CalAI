@@ -1,7 +1,6 @@
 package com.calai.bitecal.ui.onboarding.goal
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.OnboardingProgress
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -229,7 +229,7 @@ private fun GoalOption(
             .height(height)
             .clip(shape)
             .background(container)
-            .clickable(
+            .biteCalClickable(
                 interactionSource = interaction,
                 indication = null,
                 role = Role.Button

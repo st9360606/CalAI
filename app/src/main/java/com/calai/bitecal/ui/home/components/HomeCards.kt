@@ -12,7 +12,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,6 +75,7 @@ import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.bitecal.ui.home.ui.fasting.components.WeightCardNew
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import kotlin.math.roundToInt
 
 @Composable
@@ -116,7 +116,7 @@ fun CaloriesCardModern(
         modifier = modifier
             .height(cardHeight)
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
-            .clickable(role = Role.Button, onClick = onClick),
+            .biteCalClickable(role = Role.Button, onClick = onClick),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -546,7 +546,7 @@ private fun MacroStatCardModern(
         modifier = modifier
             .height(cardHeight)
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
-            .clickable(role = Role.Button, onClick = onClick),
+            .biteCalClickable(role = Role.Button, onClick = onClick),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border,
@@ -1065,7 +1065,7 @@ fun ActivityStatCardSplit(
 
     val interaction = remember { MutableInteractionSource() }
     val clickableMod = if (onCardClick != null) {
-        Modifier.clickable(
+        Modifier.biteCalClickable(
             interactionSource = interaction,
             indication = null
         ) { onCardClick() }
@@ -1251,7 +1251,7 @@ fun WeightFastingRowModern(
             modifier = Modifier
                 .weight(1f)
                 .height(cardHeight)
-                .clickable { onOpenWeight() }, // ★ 整張卡片可點
+                .biteCalClickable { onOpenWeight() }, // ★ 整張卡片可點
             cardHeight = cardHeight,
             ringSize = 78.dp,
             ringStroke = 7.dp,
@@ -1284,6 +1284,7 @@ fun WeightFastingRowModern(
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,
             planNameYOffset = 2.dp,
+            planNameXOffset = (-4).dp,
             planNameFontSize = 30.sp
         )
     }

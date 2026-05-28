@@ -11,7 +11,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,6 +80,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsUiState
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -251,7 +251,7 @@ private fun EditNutritionGoalsScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clickable { onToggleMicros() }
+                    .biteCalClickable { onToggleMicros() }
                     .padding(vertical = 8.dp)
                     .padding(start = 18.dp),
                 horizontalArrangement = Arrangement.Center,
@@ -359,7 +359,7 @@ private fun GoalRow(
                     .clip(RoundedCornerShape(16.dp))
                     .background(bg)
                     .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))
-                    .clickable { focusRequester.requestFocus() }
+                    .biteCalClickable { focusRequester.requestFocus() }
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Column {

@@ -3,7 +3,6 @@ package com.calai.bitecal.ui.home.ui.notifications
 import android.os.SystemClock
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,6 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.core.time.UtcTimeFormatter
 import com.calai.bitecal.data.notifications.api.NotificationItemDto
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
@@ -241,7 +241,7 @@ private fun NotificationCard(
             .fillMaxWidth()
             .then(
                 if (!item.read && !markingRead) {
-                    Modifier.clickable(onClick = markReadClick)
+                    Modifier.biteCalClickable(onClick = markReadClick)
                 } else {
                     Modifier
                 }

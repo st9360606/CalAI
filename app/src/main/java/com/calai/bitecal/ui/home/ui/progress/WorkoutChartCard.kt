@@ -3,7 +3,6 @@ package com.calai.bitecal.ui.home.ui.progress
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +41,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.ui.progress.model.WorkoutChartUi
 import com.calai.bitecal.ui.home.ui.progress.model.WorkoutProgressDayUi
 import com.calai.bitecal.ui.home.ui.progress.tooltip.ChartTooltipCard
@@ -164,7 +164,7 @@ internal fun WorkoutErrorCard(
             Box(
                 modifier = Modifier
                     .background(Color(0xFF111114), RoundedCornerShape(999.dp))
-                    .clickable { onRetry() }
+                    .biteCalClickable { onRetry() }
                     .padding(horizontal = 18.dp, vertical = 10.dp)
             ) {
                 Text(

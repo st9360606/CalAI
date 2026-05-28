@@ -5,7 +5,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -59,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.workout.api.WorkoutHistorySessionDto
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
@@ -567,7 +567,7 @@ private fun SwipeToDeleteWorkoutSessionTile(
                             }
                         }
                     )
-                    .clickable(enabled = isOpened) {
+                    .biteCalClickable(enabled = isOpened) {
                         scope.launch {
                             offsetX.animateTo(
                                 targetValue = 0f,

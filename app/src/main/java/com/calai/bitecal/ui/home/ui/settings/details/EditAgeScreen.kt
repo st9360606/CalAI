@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditAgeViewModel
 import kotlin.math.abs
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -195,6 +196,11 @@ private fun NumberWheel(
             }?.index ?: selectedIdx
         }
     }
+
+    HapticWheelTickEffect(
+        tickKey = centerIndex,
+        enabled = state.isScrollInProgress
+    )
 
     /**
      * ✅ 防止無限回寫：

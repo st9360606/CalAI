@@ -15,14 +15,17 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun ScanFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val hapticClick = rememberClickWithHaptic(onClick = onClick)
+
     FloatingActionButton(
-        onClick = onClick,
+        onClick = hapticClick,
         shape = CircleShape,
         containerColor = Color(0xFF111114),
         contentColor = Color.White,
