@@ -95,6 +95,7 @@ private val WeightChartXAxisLabelGap: Dp = 0.dp
 private val WeightChartXAxisLabelHeight: Dp = 18.dp
 private val WeightChartMotivationBannerMaxWidth: Dp = 320.dp
 private const val WEIGHT_CHART_MOTIVATION_MAX_LINES = 2
+private val WeightChartGroupHorizontalOffset: Dp = (-4).dp
 private val NUM_LOCALE: Locale = Locale.US
 
 // ----------------------------------------------------------
@@ -555,7 +556,8 @@ fun WeightChartCard(
                 series = ui.series,
                 unit = unit,
                 currentKg = currentKg,
-                goalKg = goalKg
+                goalKg = goalKg,
+                modifier = Modifier.offset(x = WeightChartGroupHorizontalOffset)
             )
 
             Spacer(Modifier.height(WeightChartChartToBannerSpacing))
