@@ -534,8 +534,8 @@ fun WeightChartCard(
                 Text(
                     text = stringResource(R.string.weight_chart_title),
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 18.sp,
-                        lineHeight = 22.sp,
+                        fontSize = 19.sp,
+                        lineHeight = 23.sp,
                         fontWeight = FontWeight.Bold
                     ),
                     color = Color(0xFF111114),
@@ -914,31 +914,31 @@ private fun WeightTooltip(
 
         Box(
             modifier = modifier
-                .widthIn(min = 148.dp, max = 186.dp)
-                .clip(RoundedCornerShape(14.dp))
+                .widthIn(min = 158.dp, max = 202.dp)
+                .clip(RoundedCornerShape(15.dp))
                 .background(Color(0xFF111114).copy(alpha = 0.85f))
-                .padding(horizontal = 12.dp, vertical = 10.dp)
+                .padding(horizontal = 14.dp, vertical = 14.dp)
         ) {
             Column {
                 Text(
                     text = dateText,
                     color = Color.White,
-                    fontSize = 11.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
-                Spacer(Modifier.height(3.dp))
+                Spacer(Modifier.height(5.dp))
                 Text(
                     text = weightText,
                     color = Color.White,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )
                 if (goalText != null) {
-                    Spacer(Modifier.height(3.dp))
+                    Spacer(Modifier.height(5.dp))
                     Text(
                         text = goalText,
                         color = Color.White.copy(alpha = 0.72f),
-                        fontSize = 11.sp
+                        fontSize = 12.sp
                     )
                 }
             }
@@ -1408,8 +1408,8 @@ private fun GoalProgressChart(
                 val centerX = startPaddingPx + xSafeInner
                 val centerY = topPaddingPx + pointNorm.y * innerHeightPx
 
-                val tooltipWidthPx = with(density) { 186.dp.toPx() }
-                val tooltipHeightPx = with(density) { 76.dp.toPx() }
+                val tooltipWidthPx = with(density) { 202.dp.toPx() }
+                val tooltipHeightPx = with(density) { 90.dp.toPx() }
                 var tx = centerX - tooltipWidthPx / 2f
 
                 val paddingPx = with(density) { 8.dp.toPx() }
