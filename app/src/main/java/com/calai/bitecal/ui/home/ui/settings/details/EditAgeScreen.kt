@@ -25,6 +25,7 @@ import kotlin.math.abs
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -64,7 +65,7 @@ fun EditAgeScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = { vm.saveAndSyncAge(ageYears = age, onSuccess = onSaved) },
+                        onClick = rememberClickWithHaptic { vm.saveAndSyncAge(ageYears = age, onSuccess = onSaved) },
                         enabled = !ui.saving && !ui.initializing,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(28.dp),

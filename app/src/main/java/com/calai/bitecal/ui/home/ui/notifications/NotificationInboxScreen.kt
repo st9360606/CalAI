@@ -61,6 +61,7 @@ import com.calai.bitecal.data.notifications.api.NotificationItemDto
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import java.time.ZoneId
 import java.time.format.FormatStyle
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun NotificationInboxScreen(
@@ -401,7 +402,7 @@ private fun NotificationInboxErrorState(
         icon = { NotificationStateIcon(unread = true) },
         action = {
             Button(
-                onClick = onRetry,
+                onClick = rememberClickWithHaptic(onClick = onRetry),
                 shape = RoundedCornerShape(999.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF111114),

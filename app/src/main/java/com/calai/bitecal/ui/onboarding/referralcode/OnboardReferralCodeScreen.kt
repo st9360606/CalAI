@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private val ReferralText = Color(0xFF111114)
 private val ReferralMuted = Color(0xFFB8BAC2)
@@ -106,7 +107,7 @@ fun OnboardReferralCodeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Button(
-                    onClick = onContinue,
+                    onClick = rememberClickWithHaptic(onClick = onContinue),
                     enabled = !ui.submitting,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -196,7 +197,7 @@ fun OnboardReferralCodeScreen(
                     Modifier.height(6.dp)
                 )
                 TextButton(
-                    onClick = onSkipAndContinue,
+                    onClick = rememberClickWithHaptic(onClick = onSkipAndContinue),
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text(
@@ -222,7 +223,7 @@ private fun ReferralTopBar(onBack: () -> Unit) {
             navigationIconContentColor = ReferralText,
         ),
         navigationIcon = {
-            IconButton(onClick = onBack) {
+            IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                 Box(
                     modifier = Modifier
                         .size(46.dp)
@@ -363,7 +364,7 @@ private fun ReferralCodeInputCard(
 
         if (!applied) {
             Button(
-                onClick = onSubmit,
+                onClick = rememberClickWithHaptic(onClick = onSubmit),
                 enabled = submitEnabled,
                 modifier = Modifier
                     .width(120.dp)

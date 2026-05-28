@@ -186,7 +186,7 @@ fun DurationPickerSheet(
                                 Text(
                                     text = hourText,
                                     color = Color(0xFF6B7280),
-                                    fontSize = 19.sp,
+                                    fontSize = 21.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Spacer(Modifier.width(24.dp))
@@ -201,7 +201,7 @@ fun DurationPickerSheet(
                                 Text(
                                     text = minuteText,
                                     color = Color(0xFF6B7280),
-                                    fontSize = 19.sp,
+                                    fontSize = 21.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
@@ -218,7 +218,7 @@ fun DurationPickerSheet(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Button(
-onClick = saveClick,
+                            onClick = saveClick,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
@@ -266,8 +266,8 @@ private fun DurationWheelColumn(
     columnWidth: Dp,
     onSnapped: (index: Int) -> Unit,
     infinite: Boolean,
-    selectedFontSize: TextUnit = 20.sp,
-    unselectedFontSize: TextUnit = 19.sp,
+    selectedFontSize: TextUnit = 22.sp,
+    unselectedFontSize: TextUnit = 21.sp,
     selectedFontWeight: FontWeight = FontWeight.Bold,
     unselectedFontWeight: FontWeight = FontWeight.Normal
 ) {

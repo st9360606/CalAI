@@ -55,8 +55,8 @@ fun rememberClickWithHaptic(
         {
             if (enabled) {
                 haptics.click()
+                latestOnClick()
             }
-            latestOnClick()
         }
     }
 }
@@ -90,6 +90,44 @@ fun Modifier.biteCalClickable(
             onClick = wrappedClick
         )
     }
+}
+
+@Composable
+fun Modifier.clickWithoutHaptic(
+    enabled: Boolean = true,
+    onClickLabel: String? = null,
+    role: Role? = null,
+    interactionSource: MutableInteractionSource? = null,
+    indication: Indication? = null,
+    onClick: () -> Unit
+): Modifier {
+    return if (interactionSource != null || indication != null) {
+        val safeInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+        clickable(
+            interactionSource = safeInteractionSource,
+            indication = indication,
+            enabled = enabled,
+            onClickLabel = onClickLabel,
+            role = role,
+            onClick = onClick
+        )
+    } else {
+        clickable(
+            enabled = enabled,
+            onClickLabel = onClickLabel,
+            role = role,
+            onClick = onClick
+        )
+    }
+}
+
+@Composable
+fun Modifier.consumeClickWithoutHaptic(): Modifier {
+    return clickWithoutHaptic(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = {}
+    )
 }
 
 @Composable

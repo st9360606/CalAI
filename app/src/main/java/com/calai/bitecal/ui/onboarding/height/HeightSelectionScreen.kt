@@ -36,6 +36,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import androidx.compose.foundation.lazy.LazyListState
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -117,7 +118,7 @@ fun HeightSelectionScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -152,9 +153,9 @@ fun HeightSelectionScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
-                        if (isSaving || isWheelScrolling) return@Button
-
+                    onClick = rememberClickWithHaptic(
+                        enabled = !isSaving && !isWheelScrolling
+                    ) {
                         scope.launch {
                             isSaving = true
                             try {
@@ -459,7 +460,7 @@ private fun SegItem(
     val fSize = 20.sp
 
     Surface(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         shape = RoundedCornerShape(corner),
         color = if (selected) selectedColor else Color.Transparent,
         modifier = modifier

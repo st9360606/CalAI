@@ -57,6 +57,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
 import kotlinx.coroutines.flow.collectLatest
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun EditDailyStepGoalScreen(
@@ -161,7 +162,7 @@ fun EditDailyStepGoalScreen(
                 horizontalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 OutlinedButton(
-                    onClick = { vm.revert() },
+                    onClick = rememberClickWithHaptic { vm.revert() },
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp),
@@ -180,7 +181,7 @@ fun EditDailyStepGoalScreen(
                 }
                 val enabled = ui.canSave()
                 Button(
-                    onClick = { vm.save() },
+                    onClick = rememberClickWithHaptic { vm.save() },
                     enabled = enabled,
                     modifier = Modifier
                         .weight(1f)

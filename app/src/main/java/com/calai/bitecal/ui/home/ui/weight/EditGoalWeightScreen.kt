@@ -65,6 +65,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -153,8 +154,7 @@ fun EditGoalWeightScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = {
-                            if (isSaving) return@Button
+                        onClick = rememberClickWithHaptic(enabled = !isSaving) {
                             isSaving = true
 
                             val (valueToSave, unitToSave) =
@@ -399,7 +399,7 @@ private fun SegItemForGoal(
     val corner = 22.dp
     val fSize = 18.sp
     Surface(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         shape = RoundedCornerShape(corner),
         color = if (selected) selectedColor else Color.Transparent,
         modifier = modifier

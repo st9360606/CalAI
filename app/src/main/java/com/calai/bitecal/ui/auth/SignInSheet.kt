@@ -25,6 +25,7 @@ import com.calai.bitecal.i18n.ProvideComposeLocale
 import kotlinx.coroutines.delay
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 private enum class SheetAuthProvider {
     Google,
     Email
@@ -91,7 +92,7 @@ fun SignInSheet(
                     )
                     // ★ 右上角 X：淡灰色，固定在最右側
                     IconButton(
-                        onClick = onDismiss,
+                        onClick = rememberClickWithHaptic(onClick = onDismiss),
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                             .size(16.dp) // 建議 24–40.dp，點擊比較好點
@@ -112,7 +113,7 @@ fun SignInSheet(
                 if (selectedProvider == SheetAuthProvider.Google) {
                     // 已選 Google：黑底白字
                     Button(
-                        onClick = {
+                        onClick = rememberClickWithHaptic {
                             // ★ 只改 state，不直接呼叫 onGoogle()
                             selectedProvider = SheetAuthProvider.Google
                         },
@@ -141,7 +142,7 @@ fun SignInSheet(
                 } else {
                     // 未選 Google：Outlined（原本樣式）
                     OutlinedButton(
-                        onClick = {
+                        onClick = rememberClickWithHaptic {
                             selectedProvider = SheetAuthProvider.Google
                         },
                         modifier = Modifier
@@ -174,7 +175,7 @@ fun SignInSheet(
                 if (selectedProvider == SheetAuthProvider.Email) {
                     // 已選 Email：黑底白字
                     Button(
-                        onClick = {
+                        onClick = rememberClickWithHaptic {
                             // ★ 只改 state，不直接呼叫 onEmail()
                             selectedProvider = SheetAuthProvider.Email
                         },
@@ -202,7 +203,7 @@ fun SignInSheet(
                 } else {
                     // 未選 Email：Outlined（原本樣式）
                     OutlinedButton(
-                        onClick = {
+                        onClick = rememberClickWithHaptic {
                             selectedProvider = SheetAuthProvider.Email
                         },
                         modifier = Modifier

@@ -73,6 +73,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private fun isZhLanguageTag(tag: String): Boolean {
     return tag.lowercase(Locale.ROOT).startsWith("zh")
@@ -205,7 +206,7 @@ fun WeightGoalScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -240,9 +241,9 @@ fun WeightGoalScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
-                        if (isSaving || isWheelScrolling) return@Button
-
+                    onClick = rememberClickWithHaptic(
+                        enabled = !isSaving && !isWheelScrolling
+                    ) {
                         scope.launch {
                             isSaving = true
                             try {
@@ -572,7 +573,7 @@ private fun SegItem(
     val fSize = 18.sp
 
     Surface(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         shape = RoundedCornerShape(corner),
         color = if (selected) selectedColor else Color.Transparent,
         modifier = modifier

@@ -71,6 +71,7 @@ import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 // --- 精煉後的色彩計畫 (維持原意涵，但微調適用於無邊框設計) ---
 private val WorkoutCardWhite = Color(0xFFFFFFFF)
@@ -179,7 +180,7 @@ fun WorkoutHistoryScreen(
                                 iconTint = MaterialTheme.colorScheme.error,
                                 action = {
                                     Button(
-                                        onClick = vm::refreshRecentHistory,
+                                        onClick = rememberClickWithHaptic(onClick = vm::refreshRecentHistory),
                                         enabled = !ui.historyLoading,
                                         shape = RoundedCornerShape(16.dp), // 更現代的按鈕圓角
                                         colors = ButtonDefaults.buttonColors(
@@ -514,7 +515,7 @@ private fun SwipeToDeleteWorkoutSessionTile(
                 contentAlignment = Alignment.CenterEnd
             ) {
                 IconButton(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         scope.launch { offsetX.snapTo(0f) }
                         onDeleteClick()
                     },

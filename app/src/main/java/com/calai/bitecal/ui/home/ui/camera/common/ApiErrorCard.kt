@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.data.foodlog.model.ClientAction
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun ApiErrorCard(
@@ -38,12 +39,12 @@ fun ApiErrorCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (ui.primaryCtaResId != null && ui.primaryAction != null) {
-                    Button(onClick = { onAction(ui.primaryAction) }) {
+                    Button(onClick = rememberClickWithHaptic { onAction(ui.primaryAction) }) {
                         Text(stringResource(ui.primaryCtaResId))
                     }
                 }
                 if (ui.secondaryCtaResId != null && ui.secondaryAction != null) {
-                    OutlinedButton(onClick = { onAction(ui.secondaryAction) }) {
+                    OutlinedButton(onClick = rememberClickWithHaptic { onAction(ui.secondaryAction) }) {
                         Text(stringResource(ui.secondaryCtaResId))
                     }
                 }

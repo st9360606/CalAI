@@ -68,6 +68,7 @@ import androidx.health.connect.client.records.StepsRecord
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private const val TAG = "HC-PERM"
 private const val HC_PROVIDER = "com.google.android.apps.healthdata"
@@ -99,7 +100,7 @@ fun HealthConnectIntroScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -334,7 +335,7 @@ private fun HCBottomBar(
 ) {
     Box {
         Button(
-            onClick = onPrimary,
+            onClick = rememberClickWithHaptic(onClick = onPrimary),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()

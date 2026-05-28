@@ -22,6 +22,7 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,9 +66,12 @@ fun EditGenderScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = {
-                            val sel = selected ?: return@Button
-                            vm.saveAndSyncGender(selected = sel, onSuccess = onSaved)
+                        onClick = rememberClickWithHaptic(
+                            enabled = !ui.saving && selected != null
+                        ) {
+                            selected?.let { sel ->
+                                vm.saveAndSyncGender(selected = sel, onSuccess = onSaved)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()

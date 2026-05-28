@@ -72,6 +72,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private object DetailStyle {
     val AppBg = Color(0xFFF3F3F3)
@@ -649,7 +650,7 @@ private fun Stepper(
             .padding(horizontal = 18.dp)
     ) {
         IconButton(
-            onClick = onMinus,
+            onClick = rememberClickWithHaptic(onClick = onMinus),
             enabled = enabled,
             modifier = Modifier.size(34.dp)
         ) {
@@ -669,7 +670,7 @@ private fun Stepper(
         )
 
         IconButton(
-            onClick = onPlus,
+            onClick = rememberClickWithHaptic(onClick = onPlus),
             enabled = enabled,
             modifier = Modifier.size(34.dp)
         ) {

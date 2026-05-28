@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun EditNameScreen(
@@ -92,7 +93,7 @@ fun EditNameScreen(
             Spacer(Modifier.weight(1f))
 
             Button(
-                onClick = onSaved,
+                onClick = rememberClickWithHaptic(onClick = onSaved),
                 enabled = canSave && !isSaving,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF111114),

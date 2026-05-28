@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +62,7 @@ fun WeightLossComparisonScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -96,7 +97,7 @@ fun WeightLossComparisonScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = onNext,
+                    onClick = rememberClickWithHaptic(onClick = onNext),
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()

@@ -31,6 +31,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCodeScreen(
@@ -84,7 +85,7 @@ fun EmailCodeScreen(
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
@@ -203,7 +204,7 @@ fun EmailCodeScreen(
 
                 TextButton(
                     enabled = canResend,
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         localLeft = 60
                         vm.resend()
                         scope.launch { delay(80); focus.requestFocus() }

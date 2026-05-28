@@ -93,6 +93,7 @@ import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 enum class CameraMode { FOOD, BARCODE, LABEL }
 
@@ -762,7 +763,7 @@ private fun ModeTile(
         color = bg.copy(alpha = bgAlpha),
         shape = shape,
         border = border,
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         interactionSource = interactionSource,
         modifier = modifier
             .size(width, height)

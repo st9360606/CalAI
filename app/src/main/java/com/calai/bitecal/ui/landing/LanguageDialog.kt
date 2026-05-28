@@ -44,6 +44,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.i18n.LanguageManager
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 data class LangItem(val label: String, val tag: String, val flag: String)
 
@@ -138,7 +139,7 @@ fun LanguageDialog(
                     )
 
                     IconButton(
-                        onClick = onDismiss,
+                        onClick = rememberClickWithHaptic(onClick = onDismiss),
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                             .size(36.dp)

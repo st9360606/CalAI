@@ -81,6 +81,7 @@ import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsUiState
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -478,7 +479,7 @@ private fun BottomActionBar(
         ) {
             if (!dirty) {
                 OutlinedButton(
-                    onClick = onAutoGenerate,
+                    onClick = rememberClickWithHaptic(onClick = onAutoGenerate),
                     shape = pill,
                     border = BorderStroke(1.dp, Color(0xFF111114).copy(alpha = 0.6f)),
                     colors = ButtonDefaults.outlinedButtonColors(
@@ -508,7 +509,7 @@ private fun BottomActionBar(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
-                        onClick = onRevert,
+                        onClick = rememberClickWithHaptic(onClick = onRevert),
                         enabled = !saving,
                         shape = pill,
                         border = BorderStroke(1.dp, borderColor),
@@ -524,7 +525,7 @@ private fun BottomActionBar(
                     }
 
                     Button(
-                        onClick = onDone,
+                        onClick = rememberClickWithHaptic(onClick = onDone),
                         enabled = canDone,
                         shape = pill,
                         colors = ButtonDefaults.buttonColors(

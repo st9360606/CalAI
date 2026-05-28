@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 // 與推薦來源頁一致：item 寬度佔螢幕 90%
 private const val OPTION_WIDTH_FRACTION = 0.86f
@@ -89,7 +90,7 @@ fun ExerciseFrequencyScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -124,7 +125,7 @@ fun ExerciseFrequencyScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         vm.saveSelected()
                         onNext()
                     },

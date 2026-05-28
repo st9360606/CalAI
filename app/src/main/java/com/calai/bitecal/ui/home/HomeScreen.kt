@@ -133,6 +133,7 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1252,7 +1253,7 @@ private fun TopBarSettingsButton(
         contentAlignment = Alignment.Center
     ) {
         FilledTonalIconButton(
-            onClick = onClick,
+            onClick = rememberClickWithHaptic(onClick = onClick),
             modifier = Modifier.size(visualSize), // ✅ 40dp 視覺圓
             colors = IconButtonDefaults.filledTonalIconButtonColors(
                 containerColor = bg,

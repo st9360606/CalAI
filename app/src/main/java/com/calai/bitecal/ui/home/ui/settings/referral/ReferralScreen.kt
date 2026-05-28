@@ -59,6 +59,7 @@ import com.calai.bitecal.data.referral.api.ReferralClaimItemDto
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import kotlinx.coroutines.delay
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 private val ReferralPageText = Color(0xFF111114)
 private val ReferralMutedText = Color(0xFF7C8490)
 private val ReferralCardWhite = Color.White
@@ -508,7 +509,7 @@ private fun ShareReferralButton(
     modifier: Modifier = Modifier
 ) {
     Button(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),

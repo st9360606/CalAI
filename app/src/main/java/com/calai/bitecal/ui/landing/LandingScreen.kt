@@ -28,6 +28,7 @@ import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import androidx.compose.ui.platform.LocalContext
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -208,7 +209,7 @@ private fun LandingBottomBar(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
-                onClick = onStart,
+                onClick = rememberClickWithHaptic(onClick = onStart),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(68.dp),

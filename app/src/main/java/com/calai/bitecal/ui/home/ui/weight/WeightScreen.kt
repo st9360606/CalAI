@@ -75,6 +75,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import kotlin.math.abs
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -304,7 +305,7 @@ private fun SwipeToDeleteHistoryRow(
                 contentAlignment = Alignment.CenterEnd
             ) {
                 IconButton(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         scope.launch { offsetX.snapTo(0f) }
                         onDeleteClick()
                     },
@@ -416,7 +417,7 @@ private fun BottomLogWeightBar(
         contentAlignment = Alignment.Center
     ) {
         Button(
-            onClick = onLogClick,
+            onClick = rememberClickWithHaptic(onClick = onLogClick),
             modifier = Modifier
                 .width(158.dp)
                 .height(52.dp),

@@ -66,6 +66,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.abs
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -141,9 +142,7 @@ fun EditStartingWeightScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = {
-                            if (isSaving) return@Button
-
+                        onClick = rememberClickWithHaptic(enabled = !isSaving) {
                             val (valueToSave, unitToSave) =
                                 if (useMetric) {
                                     val kgClamped = valueKg.coerceIn(kgMin, kgMax)
@@ -384,7 +383,7 @@ private fun SegItemForStart(
     val corner = 22.dp
     val fSize = 18.sp
     Surface(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         shape = RoundedCornerShape(corner),
         color = if (selected) selectedColor else Color.Transparent,
         modifier = modifier

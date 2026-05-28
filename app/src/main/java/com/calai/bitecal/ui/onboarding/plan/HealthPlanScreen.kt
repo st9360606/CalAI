@@ -86,6 +86,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 // === Colors（保持你的設定） ===
 val NeutralText = Color(0xFF6B7280)
@@ -141,8 +142,9 @@ fun HealthPlanScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
-                        if (starting) return@Button
+                    onClick = rememberClickWithHaptic(
+                        enabled = startEnabled && !starting
+                    ) {
                         starting = true
                         scope.launch {
                             runCatching { onStart() }

@@ -78,6 +78,8 @@ import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
+import com.calai.bitecal.ui.common.haptic.clickWithoutHaptic
+import com.calai.bitecal.ui.common.haptic.consumeClickWithoutHaptic
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.launch
@@ -986,14 +988,12 @@ private fun CupertinoWheelTimePickerSheet(
             modifier = Modifier
                 .matchParentSize()
                 .background(Color.Black.copy(alpha = 0.32f))
-                .biteCalClickable(
+                .clickWithoutHaptic(
+                    enabled = !saving,
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    if (!saving) {
-                        onDismiss()
-                    }
-                }
+                    indication = null,
+                    onClick = onDismiss
+                )
         )
 
         Column(
@@ -1004,10 +1004,7 @@ private fun CupertinoWheelTimePickerSheet(
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(Color(0xFFF5F5F5))
                 .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp)
-                .biteCalClickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { },
+                .consumeClickWithoutHaptic(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
@@ -1063,8 +1060,8 @@ private fun CupertinoWheelTimePickerSheet(
                             columnWidth = 92.dp,
                             onSnapped = { idx -> hour = idx },
                             infinite = true,
-                            selectedFontSize = 20.sp,
-                            unselectedFontSize = 19.sp
+                            selectedFontSize = 22.sp,
+                            unselectedFontSize = 21.sp
                         )
 
                         Box(
@@ -1073,7 +1070,7 @@ private fun CupertinoWheelTimePickerSheet(
                         ) {
                             Text(
                                 text = ":",
-                                fontSize = 19.sp,
+                                fontSize = 21.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF1C1C1E)
                             )
@@ -1085,8 +1082,8 @@ private fun CupertinoWheelTimePickerSheet(
                             columnWidth = 92.dp,
                             onSnapped = { idx -> minute = idx },
                             infinite = true,
-                            selectedFontSize = 20.sp,
-                            unselectedFontSize = 19.sp
+                            selectedFontSize = 22.sp,
+                            unselectedFontSize = 21.sp
                         )
                     }
                 }

@@ -108,6 +108,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 /* =========================================================
  * 外層 wrapper：負責找 ActivityResultRegistryOwner 並塞進 Local
@@ -362,9 +363,7 @@ private fun RecordWeightScreenContent(
                     .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
             ) {
                 Button(
-                    onClick = {
-                        if (ui.saving) return@Button
-
+                    onClick = rememberClickWithHaptic(enabled = !ui.saving) {
                         val unitUsed = if (useMetric) {
                             UserProfileStore.WeightUnit.KG
                         } else {
@@ -585,7 +584,7 @@ private fun DateHeader(
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Surface(
-            onClick = onClick,
+            onClick = rememberClickWithHaptic(onClick = onClick),
             shape = RoundedCornerShape(999.dp),
             color = Color(0xFFF5F5F5),
             shadowElevation = 0.dp,
@@ -667,7 +666,7 @@ private fun SegItemRecord(
     val fontSize = 18.sp
 
     Surface(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         shape = RoundedCornerShape(corner),
         color = if (selected) selectedColor else Color.Transparent,
         modifier = modifier
@@ -926,7 +925,7 @@ private fun WeighingDateSheet(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         val safeYear = year.coerceIn(yearRange)
                         val safeMonth = if (safeYear == today.year) {
                             month.coerceIn(1, today.monthValue)
@@ -952,7 +951,7 @@ private fun WeighingDateSheet(
                 }
 
                 OutlinedButton(
-                    onClick = onDismiss,
+                    onClick = rememberClickWithHaptic(onClick = onDismiss),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(55.dp),

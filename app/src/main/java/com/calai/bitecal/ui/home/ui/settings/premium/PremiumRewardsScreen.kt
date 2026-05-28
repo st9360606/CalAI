@@ -27,6 +27,7 @@ import com.calai.bitecal.data.membership.api.MembershipSummaryDto
 import com.calai.bitecal.data.membership.api.RewardHistoryItemDto
 import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun PremiumRewardsScreen(
@@ -114,7 +115,7 @@ private fun ErrorState(
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(Modifier.height(12.dp))
-        Button(onClick = onRetry) {
+        Button(onClick = rememberClickWithHaptic(onClick = onRetry)) {
             Text("Retry")
         }
     }

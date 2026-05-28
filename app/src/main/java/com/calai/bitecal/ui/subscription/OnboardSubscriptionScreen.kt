@@ -77,6 +77,7 @@ import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import kotlinx.coroutines.delay
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.zIndex
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private enum class OnboardPaywallStep {
     Intro,
@@ -350,7 +351,7 @@ private fun BoxScope.RestoreSubscriptionRequiredDialog(
             Spacer(Modifier.height(22.dp))
 
             Button(
-                onClick = onRestore,
+                onClick = rememberClickWithHaptic(onClick = onRestore),
                 enabled = canRestorePurchase && !purchasing,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -395,7 +396,7 @@ private fun BoxScope.RestoreSubscriptionRequiredDialog(
             Spacer(Modifier.height(10.dp))
 
             Button(
-                onClick = onMaybeLater,
+                onClick = rememberClickWithHaptic(onClick = onMaybeLater),
                 enabled = !purchasing,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -514,7 +515,7 @@ private fun OnboardSubscriptionIntro(
         )
 
         IconButton(
-            onClick = onClose,
+            onClick = rememberClickWithHaptic(onClick = onClose),
             enabled = !purchasing,
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -762,7 +763,7 @@ private fun OnboardOneTimeOfferScreen(
         )
 
         IconButton(
-            onClick = onClose,
+            onClick = rememberClickWithHaptic(onClick = onClose),
             enabled = !purchasing,
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -1412,7 +1413,7 @@ private fun PrimaryBlackButton(
     shape: Shape = RoundedCornerShape(999.dp)
 ) {
     Button(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         enabled = !loading,
         modifier = modifier,
         shape = shape,

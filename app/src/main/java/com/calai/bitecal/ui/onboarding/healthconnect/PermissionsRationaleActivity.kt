@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 /**
  * 供 Health Connect 在授權畫面連結「為何需要權限」時呼叫的頁面（rationale）。
@@ -40,7 +41,7 @@ private fun RationaleScreen(onClose: () -> Unit) {
                             "用來更新卡路里儀表板與歷史圖表。未經你的同意不會上傳雲端；你可在 Health Connect 隨時撤銷授權。"
                 )
                 Spacer(Modifier.height(24.dp))
-                Button(onClick = onClose) {
+                Button(onClick = rememberClickWithHaptic(onClick = onClose)) {
                     Text("了解")
                 }
             }

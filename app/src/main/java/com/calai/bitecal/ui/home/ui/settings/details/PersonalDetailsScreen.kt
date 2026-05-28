@@ -46,6 +46,7 @@ import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import java.util.Locale
 import kotlin.math.abs
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun PersonalDetailsScreen(
@@ -134,7 +135,7 @@ fun PersonalDetailsScreen(
                         }
 
                         Button(
-                            onClick = onChangeGoal,
+                            onClick = rememberClickWithHaptic(onClick = onChangeGoal),
                             modifier = Modifier
                                 .height(28.dp)
                                 .width(93.dp), // ✅ 改小：88/84/80 自己調

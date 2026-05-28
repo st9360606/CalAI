@@ -58,6 +58,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +89,7 @@ fun GenderSelectionScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -131,7 +132,7 @@ fun GenderSelectionScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         scope.launch {
                             vm.saveSelectedGender()
                             onNext(requireNotNull(state.selected)) // 保證非空再前進

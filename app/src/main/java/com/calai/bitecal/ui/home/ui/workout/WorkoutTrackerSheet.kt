@@ -85,6 +85,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 // 色票
 private val Black = Color(0xFF111114)
@@ -311,7 +312,7 @@ private fun TrackerContent(
 
             val isEnabled = uiState.textInput.isNotBlank()
             Button(
-                onClick = onAddWorkout,
+                onClick = rememberClickWithHaptic(onClick = onAddWorkout),
                 enabled = isEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -365,7 +366,7 @@ private fun TrackerContent(
             item {
                 Spacer(Modifier.height(8.dp))
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    TextButton(onClick = { expanded = !expanded }) {
+                    TextButton(onClick = rememberClickWithHaptic { expanded = !expanded }) {
                         val label = if (expanded) {
                             stringResource(R.string.workout_tracker_show_less)
                         } else {
@@ -754,7 +755,7 @@ fun ResultContent(
                 .padding(horizontal = horizontalMargin, vertical = 16.dp)
         ) {
             Button(
-                onClick = onSave,
+                onClick = rememberClickWithHaptic(onClick = onSave),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(buttonHeight),
@@ -770,7 +771,7 @@ fun ResultContent(
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = onCancel,
+                onClick = rememberClickWithHaptic(onClick = onCancel),
                 modifier = Modifier
                     .padding(bottom = 40.dp)
                     .fillMaxWidth()
@@ -850,7 +851,7 @@ fun FailedContent(
                 .padding(horizontal = 0.dp, vertical = 16.dp)
         ) {
             Button(
-                onClick = onTryAgain,
+                onClick = rememberClickWithHaptic(onClick = onTryAgain),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
@@ -870,7 +871,7 @@ fun FailedContent(
             Spacer(Modifier.height(12.dp))
 
             Button(
-                onClick = onCancel,
+                onClick = rememberClickWithHaptic(onClick = onCancel),
                 modifier = Modifier
                     .padding(bottom = 40.dp)
                     .fillMaxWidth()
@@ -1002,7 +1003,7 @@ private fun PresetWorkoutRow(
         }
         Spacer(Modifier.width(16.dp))
         FilledIconButton(
-            onClick = onClickPlus,
+            onClick = rememberClickWithHaptic(onClick = onClickPlus),
             modifier = Modifier.size(32.dp),
             shape = CircleShape,
             colors = IconButtonDefaults.filledIconButtonColors(

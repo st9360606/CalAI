@@ -55,6 +55,7 @@ import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.OnboardingProgress
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -80,7 +81,7 @@ fun AgeSelectionScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -115,7 +116,7 @@ fun AgeSelectionScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         vm.saveAge(selectedAge)
                         onNext()
                     },

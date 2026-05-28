@@ -87,6 +87,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 
 private const val TAG_NOTIF = "NotifPerm"
@@ -132,7 +133,7 @@ fun NotificationPermissionScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -322,7 +323,7 @@ private fun NotifBottomBar(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            onClick = onClick,
+            onClick = rememberClickWithHaptic(onClick = onClick),
             enabled = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -352,7 +353,7 @@ private fun NotifBottomBar(
             Spacer(Modifier.height(8.dp))
 
             TextButton(
-                onClick = onSkip,
+                onClick = rememberClickWithHaptic(onClick = onSkip),
                 modifier = Modifier.height(44.dp),
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = Color(0xFF8F98A3)

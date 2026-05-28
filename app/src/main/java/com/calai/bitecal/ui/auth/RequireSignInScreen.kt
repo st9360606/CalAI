@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private enum class PrimaryAuthMethod { Google, Email }
 
@@ -79,7 +80,7 @@ fun RequireSignInScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -151,7 +152,7 @@ fun RequireSignInScreen(
                     // --- Google ---
                     if (primaryAuth == PrimaryAuthMethod.Google) {
                         Button(
-                            onClick = {
+                            onClick = rememberClickWithHaptic {
                                 primaryAuth = PrimaryAuthMethod.Google
                                 onGoogleClick()
                             },
@@ -195,7 +196,7 @@ fun RequireSignInScreen(
                         }
                     } else {
                         OutlinedButton(
-                            onClick = {
+                            onClick = rememberClickWithHaptic {
                                 primaryAuth = PrimaryAuthMethod.Google
                                 onGoogleClick()
                             },
@@ -241,7 +242,7 @@ fun RequireSignInScreen(
                     // --- Email ---
                     if (primaryAuth == PrimaryAuthMethod.Email) {
                         Button(
-                            onClick = {
+                            onClick = rememberClickWithHaptic {
                                 primaryAuth = PrimaryAuthMethod.Email
                                 onEmailClick()
                             },
@@ -276,7 +277,7 @@ fun RequireSignInScreen(
                         }
                     } else {
                         OutlinedButton(
-                            onClick = {
+                            onClick = rememberClickWithHaptic {
                                 primaryAuth = PrimaryAuthMethod.Email
                                 onEmailClick()
                             },

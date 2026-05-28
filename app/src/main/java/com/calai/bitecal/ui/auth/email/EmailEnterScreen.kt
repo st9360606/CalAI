@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +49,7 @@ fun EmailEnterScreen(
             CenterAlignedTopAppBar(
                 title = { Text("") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
@@ -105,7 +106,7 @@ fun EmailEnterScreen(
             Spacer(Modifier.height(28.dp))
 
             Button(
-                onClick = { vm.sendCode(onSent) },
+                onClick = rememberClickWithHaptic { vm.sendCode(onSent) },
                 enabled = ui.isValid && !ui.loading,
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier

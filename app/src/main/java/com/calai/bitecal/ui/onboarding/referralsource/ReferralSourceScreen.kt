@@ -41,6 +41,7 @@ import com.calai.bitecal.ui.common.OnboardingProgress
 import kotlinx.coroutines.launch
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 // 控制每個 item 佔用的寬度比例（置中）
 private const val OPTION_WIDTH_FRACTION = 0.86f
 
@@ -63,7 +64,7 @@ fun ReferralSourceScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -98,7 +99,7 @@ fun ReferralSourceScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         scope.launch {
                             vm.saveAndContinue()
                             onNext()

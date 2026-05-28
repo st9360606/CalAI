@@ -210,7 +210,7 @@ private fun DialogHeader(
         }
 
         IconButton(
-            onClick = onDismiss,
+            onClick = rememberClickWithHaptic(onClick = onDismiss),
             modifier = Modifier
                 .size(40.dp)
                 .align(Alignment.CenterEnd)

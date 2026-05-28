@@ -59,6 +59,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -120,7 +121,7 @@ fun EditHeightScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
-                        onClick = {
+                        onClick = rememberClickWithHaptic {
                             vm.saveAndSyncHeight(
                                 useMetric = useMetric,
                                 cmVal = cmVal,
@@ -397,7 +398,7 @@ private fun SegItemSameAsGoal(
     val fSize = 20.sp
 
     Surface(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         shape = RoundedCornerShape(corner),
         color = if (selected) selectedColor else Color.Transparent,
         modifier = modifier

@@ -73,6 +73,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private fun isZhLanguageTag(tag: String): Boolean {
     return tag.lowercase(Locale.ROOT).startsWith("zh")
@@ -231,7 +232,7 @@ fun WeightSelectionScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -266,9 +267,9 @@ fun WeightSelectionScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = {
-                        if (isSaving || isWheelScrolling) return@Button
-
+                    onClick = rememberClickWithHaptic(
+                        enabled = !isSaving && !isWheelScrolling
+                    ) {
                         scope.launch {
                             isSaving = true
                             try {
@@ -604,7 +605,7 @@ private fun SegItem(
     val fSize = 18.sp
 
     Surface(
-        onClick = onClick,
+        onClick = rememberClickWithHaptic(onClick = onClick),
         shape = RoundedCornerShape(corner),
         color = if (selected) selectedColor else Color.Transparent,
         modifier = modifier

@@ -55,6 +55,7 @@ import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private val ScreenBg = Color(0xFFF5F5F5)
 private val TitleColor = Color(0xFF18191D)      // 深石墨黑：主資訊，高級但不死黑
@@ -444,7 +445,7 @@ private fun SavedFoodsErrorState(
             color = SecondaryText
         )
 
-        TextButton(onClick = onRetry) {
+        TextButton(onClick = rememberClickWithHaptic(onClick = onRetry)) {
             Text(text = "Retry")
         }
     }

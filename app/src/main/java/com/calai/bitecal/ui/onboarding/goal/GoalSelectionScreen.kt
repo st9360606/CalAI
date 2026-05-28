@@ -44,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +67,7 @@ fun GoalSelectionScreen(
                     navigationIconContentColor = Color(0xFF111114)
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
@@ -101,7 +102,7 @@ fun GoalSelectionScreen(
         bottomBar = {
             Box {
                 Button(
-                    onClick = { vm.saveSelected(); onNext() },
+                    onClick = rememberClickWithHaptic { vm.saveSelected(); onNext() },
                     enabled = state.selected != null, // 未選不能按
                     modifier = Modifier
                         .align(Alignment.BottomCenter)

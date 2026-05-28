@@ -69,6 +69,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 private val TitleColor = Color(0xFF111827)
 private val SecondaryTextColor = Color(0xFF667085)
 private val TimeColor = Color(0xFF5C667A)
@@ -157,7 +158,7 @@ fun RecentUploadCard(
                 contentAlignment = Alignment.CenterEnd
             ) {
                 IconButton(
-                    onClick = {
+                    onClick = rememberClickWithHaptic {
                         scope.launch {
                             offsetX.snapTo(0f)
                         }
