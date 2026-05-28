@@ -118,6 +118,8 @@ import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.water.components.WaterIntakeCard
 import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
+import com.calai.bitecal.ui.home.ui.weight.components.computeWeightProgress
+import com.calai.bitecal.ui.home.ui.weight.components.computeWeightProgressFractionLbs
 import com.calai.bitecal.ui.home.ui.weight.components.formatDeltaGoalMinusCurrentFromDb
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import com.calai.bitecal.ui.home.ui.workout.WorkoutTrackerHost
@@ -204,15 +206,23 @@ fun HomeScreen(
         )
     }
 
-    val weightProgress: Float = computeHomeWeightProgress(
-        unit = weightUnit,
-        profileWeightKg = weightUi.profileWeightKg,
-        profileWeightLbs = weightUi.profileWeightLbs,
-        goalWeightKg = goalKg,                 // ✅ 你上面已經定義：DB goal_weight_kg
-        goalWeightLbs = goalLbs,               // ✅ 你上面已經定義：DB goal_weight_lbs
-        latestWeightKg = weightUi.current,     // 最新 timeseries kg
-        latestWeightLbs = weightUi.currentLbs  // ✅ 最新 timeseries lbs（DB）
-    )
+    val weightProgressKg: Float = computeWeightProgress(
+        timeSeries = weightUi.series,
+        currentKg = currentKg,
+        goalKg = goalKg,
+        profileWeightKg = weightUi.profileWeightKg
+    ).fraction
+
+    val weightProgress: Float = if (weightUnit == UserProfileStore.WeightUnit.KG) {
+        weightProgressKg
+    } else {
+        computeWeightProgressFractionLbs(
+            timeSeries = weightUi.series,
+            currentLbs = currentLbs,
+            goalLbs = goalLbs,
+            profileWeightLbs = weightUi.profileWeightLbs
+        ) ?: weightProgressKg
+    }
 
     val weightPrimaryText = "${formatAchievedPercent1(weightProgress)} %"
 

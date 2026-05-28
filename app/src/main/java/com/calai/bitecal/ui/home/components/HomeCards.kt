@@ -1253,13 +1253,13 @@ fun WeightFastingRowModern(
                 .height(cardHeight)
                 .biteCalClickable { onOpenWeight() }, // ★ 整張卡片可點
             cardHeight = cardHeight,
-            ringSize = 78.dp,
-            ringStroke = 7.dp,
-            centerDisk = 35.dp,
+            ringSize = 70.dp,
+            ringStroke = 5.dp,
+            centerDisk = 31.dp,
             topBarTitle = "Weight",
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,
-            primaryFontSize = 19.sp,
+            primaryFontSize = 20.sp,
             primaryYOffset = (-6).dp,
             primaryTopSpacing = 4.dp,
             secondaryYOffset = (-5).dp,

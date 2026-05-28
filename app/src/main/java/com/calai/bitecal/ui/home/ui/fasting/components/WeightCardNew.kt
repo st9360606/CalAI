@@ -102,7 +102,7 @@ fun WeightCardNew(
             // ========= 左半：文字 + 固定左下 + =========
             Box(
                 modifier = Modifier
-                    .weight(0.8f)
+                    .weight(1f)
                     .fillMaxHeight()
             ) {
                 Column(
@@ -121,7 +121,7 @@ fun WeightCardNew(
                         color = HomeCardStyles.Text.Primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.offset(x = (-4).dp, y = primaryYOffset)
+                        modifier = Modifier.offset(x = (-2).dp, y = primaryYOffset)
                     )
 
                     Spacer(Modifier.height(gapPrimaryToSecondary))
@@ -155,7 +155,7 @@ fun WeightCardNew(
             // ========= 右半：圓環 =========
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(0.95f)
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center
             ) {
@@ -187,7 +187,7 @@ fun WeightCardNew(
                                 painter = painterResource(id = centerIconRes),
                                 contentDescription = centerIconDescription,
                                 modifier = Modifier
-                                    .size(21.dp)
+                                    .size(17.dp)
                                     .padding(0.dp),
                                 contentScale = ContentScale.Fit,
                                 colorFilter = centerIconTint?.let { ColorFilter.tint(it) }
