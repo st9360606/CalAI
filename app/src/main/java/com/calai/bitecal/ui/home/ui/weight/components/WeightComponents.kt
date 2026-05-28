@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -45,6 +46,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.hypot
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,6 +68,7 @@ import androidx.compose.ui.text.TextStyle
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import java.time.format.FormatStyle
 import kotlin.math.max
+import kotlin.math.roundToInt
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.draw.drawWithCache
@@ -72,7 +76,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
-private const val X_TICK_COUNT = 5
+
+private const val WEIGHT_RANGE_30_DAYS = "30d"
+private const val WEIGHT_RANGE_60_DAYS = "60d"
+private const val WEIGHT_RANGE_90_DAYS = "90d"
+private const val WEIGHT_RANGE_ALL_TIME = "all"
+private const val WEIGHT_CHART_MAX_X_LABELS = 5
+private const val WEIGHT_CHART_PADDING_RATIO = 0.04
+private const val WEIGHT_CHART_MIN_SPAN_KG = 1.0
+private val WeightChartHeight: Dp = 248.dp
+private val WeightChartCardHorizontalPadding: Dp = 19.dp
+private val WeightChartCardVerticalPadding: Dp = 20.dp
+private val WeightChartHeaderToChartSpacing: Dp = 16.dp
+private val WeightChartChartToBannerSpacing: Dp = 14.dp
+private val WeightChartYAxisLabelWidth: Dp = 42.dp
+private val WeightChartYAxisLabelGap: Dp = 10.dp
+private val WeightChartXAxisLabelGap: Dp = 0.dp
+private val WeightChartXAxisLabelHeight: Dp = 18.dp
 private val NUM_LOCALE: Locale = Locale.US
 
 // ----------------------------------------------------------
@@ -400,7 +420,7 @@ fun formatWeightCard(
 
 private data class RangeTab(
     val key: String,
-    val label: String
+    val labelRes: Int
 )
 
 @Composable
@@ -409,10 +429,10 @@ fun FilterTabs(
     onSelect: (String) -> Unit
 ) {
     val tabs = listOf(
-        RangeTab("season",   "90 Days"),
-        RangeTab("half year","6 Months"),
-        RangeTab("year",     "1 Year"),
-        RangeTab("all",      "All time")
+        RangeTab(WEIGHT_RANGE_30_DAYS, R.string.weight_chart_tab_30_days),
+        RangeTab(WEIGHT_RANGE_60_DAYS, R.string.weight_chart_tab_60_days),
+        RangeTab(WEIGHT_RANGE_90_DAYS, R.string.weight_chart_tab_90_days),
+        RangeTab(WEIGHT_RANGE_ALL_TIME, R.string.weight_chart_tab_all_time)
     )
 
     val selectedIndex = tabs.indexOfFirst { it.key == selected }.let {
@@ -452,7 +472,7 @@ fun FilterTabs(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = tab.label,
+                        text = stringResource(tab.labelRes),
                         color = if (isSelected) Color(0xFF111114) else Color(0xFF7A7F87),
                         fontSize = 13.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
@@ -469,15 +489,9 @@ fun FilterTabs(
 // Weight Chart Card
 // ----------------------------------------------------------
 
-/**
- * startWeightAllTimeKg：
- * - 之後 VM 若有「全時段第一筆體重」，可以從呼叫端傳進來；
- * - 現在預設為 null，會自動 fallback 成目前 slice 的第一筆紀錄。
- */
 @Composable
 fun WeightChartCard(
     ui: WeightViewModel.UiState,
-    startWeightAllTimeKg: Double? = null,
     onEditGoalWeight: () -> Unit       // ★ 新增
 ) {
     val unit          = ui.unit
@@ -507,7 +521,7 @@ fun WeightChartCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .padding(horizontal = WeightChartCardHorizontalPadding, vertical = WeightChartCardVerticalPadding)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -515,32 +529,37 @@ fun WeightChartCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Goal Progress",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF111114)
+                    text = stringResource(R.string.weight_chart_title),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 18.sp,
+                        lineHeight = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color(0xFF111114),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(Modifier.width(12.dp))
                 GoalProgressBadge(
                     progressPercent = progressPercent,
                     onClick = onEditGoalWeight
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(WeightChartHeaderToChartSpacing))
 
             GoalProgressChart(
                 series = ui.series,
                 unit = unit,
                 currentKg = currentKg,
-                goalKg = goalKg,
-                startWeightAllTimeKg = startWeightAllTimeKg
+                goalKg = goalKg
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(WeightChartChartToBannerSpacing))
 
-            // ⭐ 關鍵：讓膠囊寬度只包住文字，位置靠左
             MotivationBanner(
-                text = "Once you take the first step, the rest will follow !",
+                text = stringResource(R.string.weight_chart_motivation),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
@@ -556,10 +575,10 @@ private fun GoalProgressBadge(
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(Color.White)
+            .background(Color(0xFFFFF7ED))
             .border(
                 width = 1.dp,
-                color = Color(0xFFE2E5EA),
+                color = Color(0xFFF59E0B).copy(alpha = 0.36f),
                 shape = RoundedCornerShape(999.dp)
             )
             .clickable { onClick() }    // ★ 讓整個膠囊可以點
@@ -570,22 +589,25 @@ private fun GoalProgressBadge(
             imageVector = Icons.Filled.Flag,
             contentDescription = null,
             modifier = Modifier.size(14.dp),
-            tint = Color(0xFF6B7280)
+            tint = Color(0xFFD97706)
         )
         Spacer(Modifier.width(6.dp))
         Text(
-            text = "${progressPercent.coerceIn(0, 100)}% of goal",
+            text = stringResource(
+                R.string.weight_chart_goal_progress_badge,
+                progressPercent.coerceIn(0, 100)
+            ),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.Black.copy(alpha = 0.60f)
+            color = Color(0xFFB45309)
         )
         // ★ 文字後面的鉛筆圖示
         Spacer(Modifier.width(4.dp))
         Icon(
             imageVector = Icons.Filled.Edit,
-            contentDescription = "Edit goal",
+            contentDescription = stringResource(R.string.weight_chart_edit_goal_content_description),
             modifier = Modifier.size(13.dp),
-            tint = Color(0xFF6B7280)
+            tint = Color(0xFFD97706)
         )
     }
 }
@@ -600,41 +622,46 @@ private data class ChartPointNormalized(
 )
 
 private data class WeightChartData(
-    val yLabels: List<String>,              // 由上到下
-    val xLabels: List<String>,              // 由左到右（X 軸顯示文字）
-    val points: List<ChartPointNormalized>, // 折線所有點（0f..1f）
-    val dates: List<LocalDate>,             // 每個資料點的日期（對應 points）
-    val weightsKg: List<Double>,            // 每個資料點的體重（kg）
-    val weightsLbs: List<Double?>,          // ★ 新增：每個點的 DB lbs（直接吃 DTO，可能為 null）
-    val axisDates: List<LocalDate>,         // X 軸刻度實際日期（對應 xLabels）
-    val axisX: List<Float>                  // 每個刻度在 X 軸上的位置（0f..1f）
+    val yLabels: List<String>,
+    val xLabels: List<String>,
+    val points: List<ChartPointNormalized>,
+    val dates: List<LocalDate>,
+    val weightsKg: List<Double>,
+    val weightsLbs: List<Double?>,
+    val axisDates: List<LocalDate>,
+    val axisX: List<Float>,
+    val topKg: Double,
+    val bottomKg: Double,
+    val goalPointY: Float?
 )
 
 // X 軸日期格式（軸上字）
 private val axisDateFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("MMM dd", Locale.ENGLISH)
+    DateTimeFormatter.ofPattern("MMMd", Locale.ENGLISH)
 
 // Tooltip 用日期格式（底下黑色氣泡）
 private val tooltipDateFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.ENGLISH)
+    DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.ENGLISH)
+
+private data class RawWeightPoint(
+    val date: LocalDate,
+    val kg: Double,
+    val lbs: Double?
+)
 
 private fun buildEmptyWeightChartData(
     unit: UserProfileStore.WeightUnit,
     currentKg: Double?,
     goalKg: Double?
 ): WeightChartData {
-    val today = LocalDate.now()
-    val axisDates = listOf(
-        today.minusDays(90),
-        today.minusDays(68),
-        today.minusDays(45),
-        today.minusDays(23),
-        today
+    val scale = resolveWeightChartScale(
+        weightsKg = emptyList(),
+        currentKg = currentKg,
+        goalKg = goalKg
     )
-
-    val baseKg = currentKg ?: goalKg ?: 70.0
-    val topKg = baseKg + 10.0
-    val bottomKg = (baseKg - 10.0).coerceAtLeast(1.0)
+    val topKg = scale.first
+    val bottomKg = scale.second
+    val span = (topKg - bottomKg).coerceAtLeast(1e-6)
 
     val yLabels = buildYAxisLabels(
         topKg = topKg,
@@ -644,13 +671,18 @@ private fun buildEmptyWeightChartData(
 
     return WeightChartData(
         yLabels = yLabels,
-        xLabels = axisDates.map { axisDateFormatter.format(it) },
+        xLabels = emptyList(),
         points = emptyList(),
         dates = emptyList(),
         weightsKg = emptyList(),
         weightsLbs = emptyList(),
-        axisDates = axisDates,
-        axisX = listOf(0f, 0.25f, 0.5f, 0.75f, 1f)
+        axisDates = emptyList(),
+        axisX = emptyList(),
+        topKg = topKg,
+        bottomKg = bottomKg,
+        goalPointY = goalKg?.let { goal ->
+            (((topKg - goal.coerceIn(bottomKg, topKg)) / span).toFloat()).coerceIn(0f, 1f)
+        }
     )
 }
 /**
@@ -660,8 +692,7 @@ private fun buildWeightChartData(
     series: List<WeightItemDto>,
     unit: UserProfileStore.WeightUnit,
     currentKg: Double?,
-    goalKg: Double?,
-    startWeightAllTimeKg: Double? = null
+    goalKg: Double?
 ): WeightChartData {
     if (series.isEmpty()) {
         return buildEmptyWeightChartData(
@@ -672,16 +703,12 @@ private fun buildWeightChartData(
     }
 
     // 1) 解析日期 + 排序（同時保留 kg / lbs）
-    val sorted: List<Triple<LocalDate, Double, Double?>> = series.mapNotNull { item ->
+    val sorted: List<RawWeightPoint> = series.mapNotNull { item ->
         runCatching { LocalDate.parse(item.logDate) }.getOrNull()
             ?.let { date ->
-                Triple(
-                    date,
-                    item.weightKg,
-                    item.weightLbs // DB 的 178.0 會變成 178.0
-                )
+                RawWeightPoint(date = date, kg = item.weightKg, lbs = item.weightLbs)
             }
-    }.sortedBy { it.first }
+    }.sortedBy { it.date }
 
     if (sorted.isEmpty()) {
         return buildEmptyWeightChartData(
@@ -691,113 +718,39 @@ private fun buildWeightChartData(
         )
     }
 
-    val datesSorted: List<LocalDate> = sorted.map { it.first }
-    val weightsKg:   List<Double>    = sorted.map { it.second }
-    val weightsLbs:  List<Double?>   = sorted.map { it.third }
+    val datesSorted: List<LocalDate> = sorted.map { it.date }
+    val weightsKg: List<Double> = sorted.map { it.kg }
+    val weightsLbs: List<Double?> = sorted.map { it.lbs }
 
-    // 全時段第一筆（後端算好的）> 沒有就用目前 slice 第一筆
-    val startKg = startWeightAllTimeKg ?: weightsKg.first()
-
-    // 區間內實際 min / max
-    val dataMin = weightsKg.minOrNull()!!
-    val dataMax = weightsKg.maxOrNull()!!
-
-    val effGoal    = goalKg    ?: currentKg ?: startKg
-    val effCurrent = currentKg ?: startKg
-
-    // 2) 決定原始上下界（包住 start / goal / current / 區間 min/max）
-    var topKg: Double
-    var bottomKg: Double
-
-    if (goalKg != null && currentKg != null) {
-        if (goalKg > currentKg) {
-            // 增重
-            topKg = maxOf(goalKg, dataMax, startKg)
-            bottomKg = minOf(startKg, dataMin)
-        } else if (goalKg < currentKg) {
-            // 減重
-            topKg = maxOf(startKg, dataMax)
-            bottomKg = minOf(goalKg, dataMin)
-        } else {
-            topKg = maxOf(startKg, effGoal, dataMax)
-            bottomKg = minOf(startKg, effGoal, dataMin)
-        }
-    } else {
-        topKg = maxOf(startKg, dataMax, effGoal, effCurrent)
-        bottomKg = minOf(startKg, dataMin, effGoal, effCurrent)
-    }
-
-    // 3) 上下加一點 margin
-    run {
-        val rawTop = topKg
-        val rawBottom = bottomKg
-
-        if (rawTop == rawBottom) {
-            topKg = rawTop + 0.5
-            bottomKg = rawBottom - 0.5
-        } else {
-            val rawSpan = (rawTop - rawBottom).coerceAtLeast(1e-6)
-            val marginRatio = 0.05
-            val margin = rawSpan * marginRatio
-
-            var topWithMargin = rawTop + margin
-            var bottomWithMargin = rawBottom - margin
-
-            if (topWithMargin <= bottomWithMargin) {
-                topWithMargin = rawTop + 0.5
-                bottomWithMargin = rawBottom - 0.5
-            }
-
-            topKg = topWithMargin
-            bottomKg = bottomWithMargin
-        }
-    }
+    val scale = resolveWeightChartScale(
+        weightsKg = weightsKg,
+        currentKg = currentKg,
+        goalKg = goalKg
+    )
+    val topKg = scale.first
+    val bottomKg = scale.second
 
     val span = (topKg - bottomKg).coerceAtLeast(1e-6)
 
     // 4) Y / X 標籤
     val yLabels = buildYAxisLabels(topKg, bottomKg, unit)
 
-    val axisDates = buildXAxisDates(datesSorted)
-    val xLabels   = axisDates.map { axisDateFormatter.format(it) }
+    val axisIndexes = buildXAxisIndexes(datesSorted.size)
+    val axisDates = axisIndexes.map { datesSorted[it] }
+    val xLabels = axisDates.map { axisDateFormatter.format(it) }
 
-    // 共同時間座標基準
-    val firstDay = datesSorted.first().toEpochDay()
-    val lastDay  = datesSorted.last().toEpochDay()
-    val daySpan  = (lastDay - firstDay).coerceAtLeast(1L)
+    val points: List<ChartPointNormalized> = weightsKg.mapIndexed { index, wKg ->
+        val clamped = wKg.coerceIn(bottomKg, topKg)
+        val y = (((topKg - clamped) / span).toFloat()).coerceIn(0f, 1f)
+        ChartPointNormalized(
+            x = xForDataIndex(index, datesSorted.size),
+            y = y
+        )
+    }
 
-    // 5) 折線資料點 → 正規化
-    val points: List<ChartPointNormalized> =
-        if (datesSorted.size == 1) {
-            val onlyKg = weightsKg.first()
-            val clamped = onlyKg.coerceIn(bottomKg, topKg)
-            val y = (((topKg - clamped) / span).toFloat()).coerceIn(0f, 1f)
-            listOf(
-                ChartPointNormalized(
-                    x = 0f,
-                    y = y
-                )
-            )
-        } else {
-            datesSorted.zip(weightsKg).map { (date, wKg) ->
-                val x = ((date.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
-                    .coerceIn(0f, 1f)
-                val clamped = wKg.coerceIn(bottomKg, topKg)
-                val y = (((topKg - clamped) / span).toFloat()).coerceIn(0f, 1f)
-                ChartPointNormalized(x, y)
-            }
-        }
-
-    // 6) X 軸刻度位置
-    val axisX: List<Float> =
-        if (axisDates.size == 1) {
-            listOf(0f)
-        } else {
-            axisDates.map { d ->
-                ((d.toEpochDay() - firstDay).toFloat() / daySpan.toFloat())
-                    .coerceIn(0f, 1f)
-            }
-        }
+    val axisX: List<Float> = axisIndexes.map { index ->
+        xForDataIndex(index, datesSorted.size)
+    }
 
     return WeightChartData(
         yLabels   = yLabels,
@@ -805,10 +758,63 @@ private fun buildWeightChartData(
         points    = points,
         dates     = datesSorted,
         weightsKg = weightsKg,
-        weightsLbs = weightsLbs,    // ★ 在這裡塞進去
+        weightsLbs = weightsLbs,
         axisDates = axisDates,
-        axisX     = axisX
+        axisX     = axisX,
+        topKg = topKg,
+        bottomKg = bottomKg,
+        goalPointY = goalKg?.let { goal ->
+            (((topKg - goal.coerceIn(bottomKg, topKg)) / span).toFloat()).coerceIn(0f, 1f)
+        }
     )
+}
+
+private fun resolveWeightChartScale(
+    weightsKg: List<Double>,
+    currentKg: Double?,
+    goalKg: Double?
+): Pair<Double, Double> {
+    val values = buildList {
+        weightsKg.filterTo(this) { it.isFinite() }
+        currentKg?.takeIf { it.isFinite() }?.let(::add)
+        goalKg?.takeIf { it.isFinite() }?.let(::add)
+    }
+
+    if (values.isEmpty()) {
+        val base = currentKg ?: goalKg ?: 70.0
+        return (base + 1.0) to (base - 1.0).coerceAtLeast(1.0)
+    }
+
+    var minKg = values.minOrNull()!!
+    var maxKg = values.maxOrNull()!!
+    if (abs(maxKg - minKg) < WEIGHT_CHART_MIN_SPAN_KG) {
+        val center = (maxKg + minKg) / 2.0
+        minKg = center - WEIGHT_CHART_MIN_SPAN_KG / 2.0
+        maxKg = center + WEIGHT_CHART_MIN_SPAN_KG / 2.0
+    }
+
+    val span = (maxKg - minKg).coerceAtLeast(WEIGHT_CHART_MIN_SPAN_KG)
+    val paddedMin = minKg - span * WEIGHT_CHART_PADDING_RATIO
+    val paddedMax = maxKg + span * WEIGHT_CHART_PADDING_RATIO
+    val step = niceAxisStep((paddedMax - paddedMin) / 4.0)
+    val bottom = floor(paddedMin / step) * step
+    val top = ceil(paddedMax / step) * step
+    return top to bottom.coerceAtLeast(0.0)
+}
+
+private fun niceAxisStep(rawStep: Double): Double {
+    if (!rawStep.isFinite() || rawStep <= 0.0) return 1.0
+    val exponent = floor(kotlin.math.log10(rawStep))
+    val magnitude = Math.pow(10.0, exponent)
+    val normalized = rawStep / magnitude
+    val nice = when {
+        normalized <= 1.0 -> 1.0
+        normalized <= 2.0 -> 2.0
+        normalized <= 2.5 -> 2.5
+        normalized <= 5.0 -> 5.0
+        else -> 10.0
+    }
+    return nice * magnitude
 }
 
 /** Y 軸刻度：最多 5 個；必定包含頂端與底端。 */
@@ -839,31 +845,26 @@ private fun buildYAxisLabels(
 }
 
 /** X 軸：從 minDate~maxDate 等分 maxLabels 個刻度（不依賴資料分佈） */
-private fun buildXAxisDates(
-    dates: List<LocalDate>
-): List<LocalDate> {
-    val maxLabels = X_TICK_COUNT
-    if (dates.isEmpty()) return emptyList()
+private fun buildXAxisIndexes(pointCount: Int): List<Int> {
+    if (pointCount <= 0) return emptyList()
+    val labelCount = minOf(pointCount, WEIGHT_CHART_MAX_X_LABELS)
+    if (labelCount == 1) return listOf(0)
+    val lastIndex = pointCount - 1
+    return (0 until labelCount)
+        .map { i -> ((i * lastIndex.toFloat()) / (labelCount - 1)).roundToInt() }
+        .map { it.coerceIn(0, lastIndex) }
+        .distinct()
+}
 
-    val sortedDistinct = dates.distinct().sorted()
-    val minDate = sortedDistinct.first()
-    val maxDate = sortedDistinct.last()
+private fun xForDataIndex(index: Int, pointCount: Int): Float {
+    return if (pointCount <= 1) 0f else (index.toFloat() / (pointCount - 1)).coerceIn(0f, 1f)
+}
 
-    val spanDays = (maxDate.toEpochDay() - minDate.toEpochDay()).coerceAtLeast(0L)
 
     // ✅ 範圍太短：直接每天列出（<= maxLabels 個，不會重複）
     // 例：只有 11/24~11/26，硬切 5 份只會得到重複日期，反而難看。
-    if (spanDays <= (maxLabels - 1).toLong()) {
-        return (0L..spanDays).map { d -> minDate.plusDays(d) }
-    }
 
     // ✅ 範圍夠長：平均取樣 maxLabels 個日期，首尾必定是 min/max
-    val lastIndex = maxLabels - 1
-    return (0..lastIndex).map { i ->
-        val offset = (i.toLong() * spanDays) / lastIndex.toLong()
-        minDate.plusDays(offset)
-    }.distinct()
-}
 
 private fun formatAxisWeightLabel(
     kg: Double,
@@ -883,38 +884,59 @@ private fun formatAxisWeightLabel(
 private fun WeightTooltip(
     weightKg: Double,
     weightLbs: Double?,
+    goalKg: Double?,
     unit: UserProfileStore.WeightUnit,
     date: LocalDate,
     modifier: Modifier = Modifier
 ) {
-    key(unit, weightLbs) {
+    key(unit, weightLbs, goalKg) {
         val weightText = formatTooltipWeight(
             weightKg = weightKg,
             weightLbs = weightLbs,
             unit = unit
         )
         val dateText = tooltipDateFormatter.format(date)
+        val goalText = goalKg?.let { goal ->
+            stringResource(
+                R.string.weight_chart_to_goal,
+                formatGoalDeltaWeight(
+                    weightKg = weightKg,
+                    weightLbs = weightLbs,
+                    goalKg = goal,
+                    unit = unit
+                )
+            )
+        }
 
         Box(
             modifier = modifier
-                .width(98.dp)
+                .widthIn(min = 148.dp, max = 186.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFF111114).copy(alpha = 0.85f))
-                .padding(horizontal = 10.dp, vertical = 10.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Column {
                 Text(
-                    text = weightText,
+                    text = dateText,
                     color = Color.White,
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(Modifier.height(3.dp))
                 Text(
-                    text = dateText,
-                    color = Color.White.copy(alpha = 0.72f),
-                    fontSize = 11.sp
+                    text = weightText,
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
+                if (goalText != null) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = goalText,
+                        color = Color.White.copy(alpha = 0.72f),
+                        fontSize = 11.sp
+                    )
+                }
             }
         }
     }
@@ -929,21 +951,19 @@ private fun GoalProgressChart(
     unit: UserProfileStore.WeightUnit,
     currentKg: Double?,
     goalKg: Double?,
-    modifier: Modifier = Modifier,
-    startWeightAllTimeKg: Double? = null,
+    modifier: Modifier = Modifier
 ) {
     // ✅ 保留你原本預設尺寸，但允許 caller 覆蓋（caller 的 modifier 會在最後 then）
     val baseModifier = Modifier
         .fillMaxWidth()
-        .height(190.dp)
+        .height(WeightChartHeight)
         .then(modifier)
 
     val chartData = buildWeightChartData(
         series = series,
         unit = unit,
         currentKg = currentKg,
-        goalKg = goalKg,
-        startWeightAllTimeKg = startWeightAllTimeKg
+        goalKg = goalKg
     )
 
     var activeIndex by remember(chartData.points.size) { mutableStateOf<Int?>(null) }
@@ -960,10 +980,10 @@ private fun GoalProgressChart(
     var chartHeightPx by remember { mutableFloatStateOf(0f) }
 
     val density = LocalDensity.current
-    val startPaddingDp = 40.dp
-    val endPaddingDp = 6.dp
-    val topPaddingDp = 8.dp
-    val bottomPaddingDp = 8.dp
+    val startPaddingDp = WeightChartYAxisLabelWidth + WeightChartYAxisLabelGap
+    val endPaddingDp = 8.dp
+    val topPaddingDp = 10.dp
+    val bottomPaddingDp = 10.dp
 
     val startPaddingPx = with(density) { startPaddingDp.toPx() }
     val endPaddingPx = with(density) { endPaddingDp.toPx() }
@@ -1070,11 +1090,11 @@ private fun GoalProgressChart(
 
                         // Brushes（快取）
                         val bgBrush = Brush.verticalGradient(
-                            0f to Color(0xFFF4F4F5),
-                            1f to Color(0xFFFFFFFF)
+                            0f to Color(0xFFECEFF3),
+                            1f to Color(0xFFFAFAFA)
                         )
                         val baseAreaBrush = Brush.verticalGradient(
-                            0f to Color(0xFF111114).copy(alpha = 0.15f),
+                            0f to Color(0xFF111114).copy(alpha = 0.18f),
                             1f to Color.Transparent
                         )
                         val rightAreaBrush = Brush.verticalGradient(
@@ -1089,6 +1109,10 @@ private fun GoalProgressChart(
 
                         val vLineStroke = 1.5.dp.toPx()
                         val gridStroke = 1.dp.toPx()
+                        val goalDash = PathEffect.dashPathEffect(
+                            floatArrayOf(8.dp.toPx(), 6.dp.toPx()),
+                            0f
+                        )
 
                         val circleOuter = 5.dp.toPx()
                         val circleInner = 3.dp.toPx()
@@ -1101,7 +1125,7 @@ private fun GoalProgressChart(
 
                         // Paths（快取）
                         val linePathAll: Path? =
-                            if (allPoints.size >= 2) buildCatmullRomPath(xsAll, ysAll) else null
+                            if (allPoints.size >= 2) buildClampedSmoothPath(xsAll, ysAll) else null
 
                         val areaPathAll: Path? =
                             if (linePathAll != null) {
@@ -1125,10 +1149,22 @@ private fun GoalProgressChart(
                                 // 網格
                                 for (y in gridYs) {
                                     drawLine(
-                                        color = Color(0xFFE5E7EB),
+                                            color = Color(0xFFD8DEE6),
                                         start = Offset(0f, y),
                                         end = Offset(w, y),
                                         strokeWidth = gridStroke
+                                    )
+                                }
+
+                                chartData.goalPointY?.let { goalYNorm ->
+                                    val yGoal = goalYNorm * h
+                                    drawLine(
+                                        color = Color(0xFFF59E0B).copy(alpha = 0.95f),
+                                        start = Offset(0f, yGoal),
+                                        end = Offset(w, yGoal),
+                                        strokeWidth = 1.5.dp.toPx(),
+                                        pathEffect = goalDash,
+                                        cap = StrokeCap.Round
                                     )
                                 }
 
@@ -1140,12 +1176,6 @@ private fun GoalProgressChart(
                                     val ySingle = ysAll[0]
 
                                     // 灰底漸層
-                                    drawRect(
-                                        brush = baseAreaBrush,
-                                        topLeft = Offset(0f, ySingle),
-                                        size = Size(w, h - ySingle)
-                                    )
-
                                     // 基線：未按黑、按下綠（這段依賴 shownIndex，但只是 draw，不會重算 Path）
                                     val isActive = (shownIndex == 0)
                                     drawLine(
@@ -1154,6 +1184,17 @@ private fun GoalProgressChart(
                                         end = Offset(w, ySingle),
                                         strokeWidth = baseStroke,
                                         cap = StrokeCap.Round
+                                    )
+
+                                    drawCircle(
+                                        color = if (isActive) highlightGreen else Color(0xFF111114),
+                                        radius = circleOuter,
+                                        center = Offset(xSingle, ySingle)
+                                    )
+                                    drawCircle(
+                                        color = Color.White,
+                                        radius = circleInner,
+                                        center = Offset(xSingle, ySingle)
                                     )
 
                                     if (isActive) {
@@ -1285,19 +1326,59 @@ private fun GoalProgressChart(
                 )
             }
 
-            // Y 軸標籤
+            if (chartData.goalPointY != null && chartWidthPx > 0f && chartHeightPx > 0f) {
+                val innerHeightPx = chartHeightPx - topPaddingPx - bottomPaddingPx
+                val labelWidthPx = with(density) { 54.dp.toPx() }
+                val labelHeightPx = with(density) { 28.dp.toPx() }
+                val labelX = (chartWidthPx - endPaddingPx - labelWidthPx - with(density) { 8.dp.toPx() })
+                    .coerceAtLeast(startPaddingPx)
+                val labelY = (topPaddingPx + chartData.goalPointY * innerHeightPx - labelHeightPx / 2f)
+                    .coerceIn(topPaddingPx, chartHeightPx - bottomPaddingPx - labelHeightPx)
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(
+                            x = with(density) { labelX.toDp() },
+                            y = with(density) { labelY.toDp() }
+                        )
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xFFFFFBEB))
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFFF59E0B).copy(alpha = 0.42f),
+                            shape = RoundedCornerShape(999.dp)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.weight_chart_goal_label),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFB45309)
+                    )
+                }
+            }
+
+            // Y 軸標籤：右對齊，並保留固定間距避免文字貼到圖表區
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
+                    .width(WeightChartYAxisLabelWidth)
                     .fillMaxHeight()
-                    .offset(x = (-4).dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .padding(top = topPaddingDp, bottom = bottomPaddingDp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.End
             ) {
                 chartData.yLabels.forEach { label ->
                     Text(
                         text = label,
                         fontSize = 11.sp,
-                        color = Color.Black.copy(alpha = 0.60f)
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black.copy(alpha = 0.60f),
+                        maxLines = 1,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
@@ -1323,18 +1404,24 @@ private fun GoalProgressChart(
                 val centerX = startPaddingPx + xSafeInner
                 val centerY = topPaddingPx + pointNorm.y * innerHeightPx
 
-                val tooltipWidthPx = with(density) { 98.dp.toPx() }
+                val tooltipWidthPx = with(density) { 186.dp.toPx() }
+                val tooltipHeightPx = with(density) { 76.dp.toPx() }
                 var tx = centerX - tooltipWidthPx / 2f
 
                 val paddingPx = with(density) { 8.dp.toPx() }
                 val maxX = chartWidthPx - tooltipWidthPx - paddingPx
                 tx = tx.coerceIn(paddingPx, maxX)
 
-                val ty = centerY - with(density) { 52.dp.toPx() }
+                val preferredTy = centerY - tooltipHeightPx - with(density) { 10.dp.toPx() }
+                val fallbackTy = centerY + with(density) { 12.dp.toPx() }
+                val rawTy = if (preferredTy >= paddingPx) preferredTy else fallbackTy
+                val maxY = (chartHeightPx - tooltipHeightPx - paddingPx).coerceAtLeast(paddingPx)
+                val ty = rawTy.coerceIn(paddingPx, maxY)
 
                 WeightTooltip(
                     weightKg = chartData.weightsKg[idx],
                     weightLbs = chartData.weightsLbs.getOrNull(idx),
+                    goalKg = goalKg,
                     unit = unit,
                     date = chartData.dates[idx],
                     modifier = Modifier
@@ -1347,15 +1434,15 @@ private fun GoalProgressChart(
             }
         }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(WeightChartXAxisLabelGap))
 
         val selectedLabelIndex: Int? = shownIndex
             ?.takeIf { it in chartData.dates.indices }
             ?.let { pi ->
-                val goal = chartData.dates[pi]
+                val selectedX = chartData.points.getOrNull(pi)?.x ?: return@let null
                 if (chartData.axisDates.isEmpty()) return@let null
-                chartData.axisDates.withIndex()
-                    .minByOrNull { (_, d) -> abs(d.toEpochDay() - goal.toEpochDay()) }
+                chartData.axisX.withIndex()
+                    .minByOrNull { (_, x) -> abs(x - selectedX) }
                     ?.index
             }
 
@@ -1365,7 +1452,7 @@ private fun GoalProgressChart(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = startPaddingDp, end = endPaddingDp)
-                .height(24.dp)
+                .height(WeightChartXAxisLabelHeight)
         ) {
             if (chartWidthPx > 0f && chartData.axisDates.isNotEmpty()) {
 
@@ -1375,19 +1462,15 @@ private fun GoalProgressChart(
                 val centersPx: List<Float> = chartData.axisX.map { it * innerWidthPx }
 
                 val baseMinGapPx = with(density) { 8.dp.toPx() }
-                val edgePaddingPx = with(density) { 4.dp.toPx() }
-                val desiredMinCount = minOf(4, chartData.axisDates.size)
+                val edgePaddingPx = with(density) { 2.dp.toPx() }
+                val desiredMinCount = chartData.axisDates.size
 
                 val measureStyle = TextStyle(
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold
                 )
 
-                val formatters = listOf(
-                    DateTimeFormatter.ofPattern("MMM dd", Locale.ENGLISH),
-                    DateTimeFormatter.ofPattern("MM/dd", Locale.ENGLISH),
-                    DateTimeFormatter.ofPattern("M/d", Locale.ENGLISH)
-                )
+                val formatters = listOf(axisDateFormatter)
 
                 var bestLabels: List<String> = emptyList()
                 var bestPlaced: List<XLabelPlaced> = emptyList()
@@ -1433,7 +1516,7 @@ private fun GoalProgressChart(
 
                     Text(
                         text = label,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                         color = if (selected) Color(0xFF111114) else Color.Black.copy(alpha = 0.60f),
                         modifier = Modifier
@@ -1455,24 +1538,21 @@ fun MotivationBanner(
     text: String,
     modifier: Modifier = Modifier
 ) {
-    // 顏色你可以再換成你剛一起調的那組
-    val bg = Color(0xFFEFF9F4)   // 超淡綠背景（比純白微微帶綠）
-    val fg = Color(0xFF12823B)   // 草綠文字
+    val bg = Color(0xFFEFF9F4)
+    val fg = Color(0xFF12823B)
 
     Box(
         modifier = modifier
-            // ⭐ 不要 fillMaxWidth、不要固定 height
-            // 只做圓角 + 背景，大小交給內容與 padding 決定
-            .clip(RoundedCornerShape(14.dp)) // 大數字確保是膠囊形狀
+            .clip(RoundedCornerShape(999.dp))
             .background(bg)
-            .padding(horizontal = 18.dp, vertical = 5.dp),
+            .padding(horizontal = 16.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             color = fg,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.bodyMedium
         )
     }
@@ -1735,16 +1815,15 @@ private fun classifyTrendAndColor(delta: Double?): Pair<TrendTag, Color> {
 private fun FilterTabsPreview() {
     MaterialTheme {
         Column(Modifier.padding(50.dp)) {
-            FilterTabs(selected = "all", onSelect = {})
+            FilterTabs(selected = WEIGHT_RANGE_30_DAYS, onSelect = {})
         }
     }
 }
 
 // ★ 新增：Catmull-Rom cubic spline，讓曲線通過每一個點
-private fun buildCatmullRomPath(
+private fun buildClampedSmoothPath(
     xs: List<Float>,
-    ys: List<Float>,
-    tension: Float = 0.5f   // 0.0 = 折線、1.0 = 很彎，0.5 較穩定
+    ys: List<Float>
 ): Path {
     val path = Path()
     val n = xs.size
@@ -1756,28 +1835,23 @@ private fun buildCatmullRomPath(
 
     path.moveTo(xs[0], ys[0])
 
-    val last = n - 1
-    for (i in 0 until last) {
-        // P0, P1, P2, P3
-        val p0x = if (i == 0) xs[i] else xs[i - 1]
-        val p0y = if (i == 0) ys[i] else ys[i - 1]
+    for (i in 0 until n - 1) {
+        val x0 = xs[i]
+        val y0 = ys[i]
+        val x1 = xs[i + 1]
+        val y1 = ys[i + 1]
+        val dx = (x1 - x0) * 0.35f
+        val minY = minOf(y0, y1)
+        val maxY = maxOf(y0, y1)
 
-        val p1x = xs[i]
-        val p1y = ys[i]
-
-        val p2x = xs[i + 1]
-        val p2y = ys[i + 1]
-
-        val p3x = if (i + 1 == last) xs[i + 1] else xs[i + 2]
-        val p3y = if (i + 1 == last) ys[i + 1] else ys[i + 2]
-
-        // Catmull-Rom 轉 cubic 的控制點公式
-        val c1x = p1x + (p2x - p0x) / 6f * tension
-        val c1y = p1y + (p2y - p0y) / 6f * tension
-        val c2x = p2x - (p3x - p1x) / 6f * tension
-        val c2y = p2y - (p3y - p1y) / 6f * tension
-
-        path.cubicTo(c1x, c1y, c2x, c2y, p2x, p2y)
+        path.cubicTo(
+            x0 + dx,
+            y0.coerceIn(minY, maxY),
+            x1 - dx,
+            y1.coerceIn(minY, maxY),
+            x1,
+            y1
+        )
     }
 
     return path
@@ -1863,6 +1937,24 @@ fun formatTooltipWeight(
             // 這裡也一樣：先用 DB 的 lbs
             val lbs = weightLbs ?: kgToLbs1(weightKg)
             String.format(NUM_LOCALE, "%.1f lbs", lbs)
+        }
+    }
+}
+
+private fun formatGoalDeltaWeight(
+    weightKg: Double,
+    weightLbs: Double?,
+    goalKg: Double,
+    unit: UserProfileStore.WeightUnit
+): String {
+    return when (unit) {
+        UserProfileStore.WeightUnit.KG -> {
+            String.format(NUM_LOCALE, "%.1f kg", abs(weightKg - goalKg))
+        }
+        UserProfileStore.WeightUnit.LBS -> {
+            val displayWeightLbs = weightLbs ?: kgToLbs1(weightKg)
+            val goalLbs = kgToLbs1(goalKg)
+            String.format(NUM_LOCALE, "%.1f lbs", abs(displayWeightLbs - goalLbs))
         }
     }
 }

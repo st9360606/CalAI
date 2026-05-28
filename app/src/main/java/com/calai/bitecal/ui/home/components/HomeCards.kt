@@ -438,10 +438,12 @@ fun HealthScoreCardModern(
         label = "home_health_score_progress"
     )
     val advice = when {
-        safeScore >= 8 -> stringResource(R.string.home_health_score_advice_high)
+        safeScore >= 9 -> stringResource(R.string.home_health_score_advice_excellent)
+        safeScore >= 7 -> stringResource(R.string.home_health_score_advice_good)
         safeScore >= 5 -> stringResource(R.string.home_health_score_advice_medium)
-        safeScore > 0 -> stringResource(R.string.home_health_score_advice_low)
-        else -> stringResource(R.string.home_health_score_advice_empty)
+        safeScore >= 3 -> stringResource(R.string.home_health_score_advice_low)
+        safeScore >= 1 -> stringResource(R.string.home_health_score_advice_very_low)
+        else -> stringResource(R.string.home_health_score_advice_zero)
     }
 
     Card(

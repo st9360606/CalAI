@@ -43,7 +43,7 @@ class WeightViewModel @Inject constructor(
         /** 草稿單位：使用者切換時先放這裡，成功存檔後才 commit 到 unit */
         val pendingUnit: UserProfileStore.WeightUnit? = null,
 
-        val range: String = "season",
+        val range: String = "30d",
 
         // --- 以 kg 為主的欄位 ---
         val goal: Double? = null,       // kg

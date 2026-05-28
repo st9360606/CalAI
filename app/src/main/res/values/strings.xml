@@ -239,6 +239,17 @@
     <string name="weight_delete_success">Deleted successfully !</string>
     <string name="weight_delete_failed">Delete failed. Please try again.</string>
     <string name="weight_log_weight">Log Weight</string>
+
+    <string name="weight_chart_title">Weight trend</string>
+    <string name="weight_chart_tab_30_days">30 Days</string>
+    <string name="weight_chart_tab_60_days">60 Days</string>
+    <string name="weight_chart_tab_90_days">90 Days</string>
+    <string name="weight_chart_tab_all_time">All time</string>
+    <string name="weight_chart_goal_label">Goal</string>
+    <string name="weight_chart_goal_progress_badge">%1$d%% of goal</string>
+    <string name="weight_chart_edit_goal_content_description">Edit goal weight</string>
+    <string name="weight_chart_to_goal">%1$s to goal</string>
+    <string name="weight_chart_motivation">Once you take the first step, the rest will follow!</string>
     <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
 
     <!-- Camera -->
@@ -530,10 +541,15 @@
     <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
     <string name="home_health_score_title">Health score</string>
     <string name="home_health_score_value">%1$d/10</string>
-    <string name="home_health_score_advice_empty">Log meals today to calculate your average health score.</string>
-    <string name="home_health_score_advice_low">Your meals need more balance today. Add fiber, protein, and lower-sugar options.</string>
-    <string name="home_health_score_advice_medium">You are on track. Keep portions balanced and watch sugar or sodium.</string>
-    <string name="home_health_score_advice_high">Great balance today. Keep choosing nutrient-dense meals.</string>
+
+    <!-- Home Health Score Advice -->
+    <string name="home_health_score_advice_zero">Log your first meal today to see a health score based on its nutrition details.</string>
+    <string name="home_health_score_advice_very_low">Today\'s average is low. Consider more protein, fiber, and lower sugar or sodium.</string>
+    <string name="home_health_score_advice_low">There\'s room to improve. Try adding vegetables and quality protein.</string>
+    <string name="home_health_score_advice_medium">You\'re on track. Keep portions steady and watch sugar, sodium, and fiber.</string>
+    <string name="home_health_score_advice_good">Good balance today. Keep choosing nutrient-dense foods.</string>
+    <string name="home_health_score_advice_excellent">Great balance today. Keep building consistent habits.</string>
+
     <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
     <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
 

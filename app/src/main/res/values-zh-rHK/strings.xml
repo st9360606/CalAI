@@ -239,6 +239,17 @@
     <string name="weight_delete_success">刪除成功</string>
     <string name="weight_delete_failed">刪除失敗，請稍後再試</string>
     <string name="weight_log_weight">記錄體重</string>
+
+    <string name="weight_chart_title">體重趨勢</string>
+    <string name="weight_chart_tab_30_days">30 天</string>
+    <string name="weight_chart_tab_60_days">60 天</string>
+    <string name="weight_chart_tab_90_days">90 天</string>
+    <string name="weight_chart_tab_all_time">All time</string>
+    <string name="weight_chart_goal_label">目標</string>
+    <string name="weight_chart_goal_progress_badge">目標進度 %1$d%%</string>
+    <string name="weight_chart_edit_goal_content_description">編輯目標體重</string>
+    <string name="weight_chart_to_goal">距離目標 %1$s</string>
+    <string name="weight_chart_motivation">踏出第一步後，後面的路會更順。</string>
     <string name="weight_goal_chart_empty_hint">記錄體重後，這裡會顯示你的趨勢</string>
 
     <!-- Camera -->
@@ -527,10 +538,15 @@
     <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
     <string name="home_health_score_title">健康分數</string>
     <string name="home_health_score_value">%1$d/10</string>
-    <string name="home_health_score_advice_empty">今天記錄餐點後，系統會計算平均健康分數。</string>
-    <string name="home_health_score_advice_low">今天的餐點需要更均衡。建議補充纖維、蛋白質，並降低糖分選擇。</string>
-    <string name="home_health_score_advice_medium">今天整體表現穩定。請維持份量平衡，並留意糖與鈉。</string>
-    <string name="home_health_score_advice_high">今天的餐點很均衡。繼續選擇營養密度高的食物。</string>
+
+    <!-- 首頁飲食健康分數建議 -->
+    <string name="home_health_score_advice_zero">記錄今天的第一餐後，即可查看依營養內容計算的健康分數。</string>
+    <string name="home_health_score_advice_very_low">今天平均分數偏低。可參考補足蛋白質、纖維，並減少高糖或高鈉選擇。</string>
+    <string name="home_health_score_advice_low">今天還有優化空間。建議增加蔬菜與優質蛋白。</string>
+    <string name="home_health_score_advice_medium">今天表現穩定。建議維持份量，並留意糖、鈉與纖維。</string>
+    <string name="home_health_score_advice_good">今天飲食平衡不錯。可以繼續選擇營養密度高的食物。</string>
+    <string name="home_health_score_advice_excellent">今天飲食平衡良好。請繼續維持穩定習慣。</string>
+
     <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
     <string name="home_nutrition_ratio_grams">%1$d / %2$d克</string>
 

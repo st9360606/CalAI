@@ -167,7 +167,6 @@ fun WeightScreen(
                     item {
                         WeightChartCard(
                             ui = ui,
-                            startWeightAllTimeKg = ui.firstWeightAllTimeKg,
                             onEditGoalWeight = onEditGoalWeight
                         )
                     }
