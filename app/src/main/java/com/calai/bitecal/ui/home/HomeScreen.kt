@@ -186,15 +186,7 @@ fun HomeScreen(
     val goalKg  = weightUi.goal      // DB goal_weight_kg
     val goalLbs = weightUi.goalLbs   // DB goal_weight_lbs
 
-    val weightPrimaryTextRaw = formatDeltaGoalMinusCurrentFromDb(
-        goalKg = goalKg,
-        goalLbs = goalLbs,
-        currentKg = currentKg,
-        currentLbs = currentLbs,
-        unit = weightUnit,
-        lbsAsInt = false // 保持原本邏輯，最後再統一 floor
-    )
-    val weightPrimaryText = roundFirstNumberToIntText(weightPrimaryTextRaw)
+
 
     // （可選）把 debug log 改成同時印 kg/lbs，才不會誤判
     LaunchedEffect(weightUnit, currentKg, currentLbs, goalKg, goalLbs) {
@@ -221,6 +213,8 @@ fun HomeScreen(
         latestWeightKg = weightUi.current,     // 最新 timeseries kg
         latestWeightLbs = weightUi.currentLbs  // ✅ 最新 timeseries lbs（DB）
     )
+
+    val weightPrimaryText = "${formatAchievedPercent1(weightProgress)} %"
 
     // ★ 新增：監聽 Workout VM 狀態（為了一次性導航）
     val workoutUi by workoutVm.ui.collectAsState()
@@ -1262,4 +1256,8 @@ private fun TopBarSettingsButton(
             )
         }
     }
+}
+
+internal fun formatAchievedPercent1(progress: Float): String {
+    return String.format(Locale.US, "%.1f", progress * 100f)
 }

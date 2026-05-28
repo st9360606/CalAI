@@ -1245,7 +1245,7 @@ fun WeightFastingRowModern(
         // === 左卡：Weight（新元件）
         WeightCardNew(
             primary = weightPrimary,
-            secondary = "to goal",  // "p=${(weightProgress * 100).toInt()}%",
+            secondary = "of goal",
             ringColor = HomeCardStyles.Palette.Weight,
             progress = weightProgress,
             modifier = Modifier
