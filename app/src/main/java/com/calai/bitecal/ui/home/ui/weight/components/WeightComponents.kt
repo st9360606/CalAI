@@ -93,6 +93,8 @@ private val WeightChartYAxisLabelWidth: Dp = 42.dp
 private val WeightChartYAxisLabelGap: Dp = 10.dp
 private val WeightChartXAxisLabelGap: Dp = 0.dp
 private val WeightChartXAxisLabelHeight: Dp = 18.dp
+private val WeightChartMotivationBannerMaxWidth: Dp = 320.dp
+private const val WEIGHT_CHART_MOTIVATION_MAX_LINES = 2
 private val NUM_LOCALE: Locale = Locale.US
 
 // ----------------------------------------------------------
@@ -1543,17 +1545,23 @@ fun MotivationBanner(
 
     Box(
         modifier = modifier
+            .widthIn(max = WeightChartMotivationBannerMaxWidth)
             .clip(RoundedCornerShape(999.dp))
             .background(bg)
-            .padding(horizontal = 16.dp, vertical = 7.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = fg,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = fg,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            ),
+            maxLines = WEIGHT_CHART_MOTIVATION_MAX_LINES,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

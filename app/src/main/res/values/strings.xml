@@ -249,7 +249,7 @@
     <string name="weight_chart_goal_progress_badge">%1$d%% of goal</string>
     <string name="weight_chart_edit_goal_content_description">Edit goal weight</string>
     <string name="weight_chart_to_goal">%1$s to goal</string>
-    <string name="weight_chart_motivation">Once you take the first step, the rest will follow!</string>
+    <string name="weight_chart_motivation">Every small step brings you closer to your goal.</string>
     <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
 
     <!-- Camera -->

@@ -249,7 +249,7 @@
     <string name="weight_chart_goal_progress_badge">目標進度 %1$d%%</string>
     <string name="weight_chart_edit_goal_content_description">編輯目標體重</string>
     <string name="weight_chart_to_goal">距離目標 %1$s</string>
-    <string name="weight_chart_motivation">踏出第一步後，後面的路會更順。</string>
+    <string name="weight_chart_motivation">每一小步，都讓你更靠近目標。</string>
     <string name="weight_goal_chart_empty_hint">記錄體重後，這裡會顯示你的趨勢</string>
 
     <!-- Camera -->
