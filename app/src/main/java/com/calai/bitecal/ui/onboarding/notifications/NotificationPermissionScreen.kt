@@ -362,7 +362,7 @@ private fun NotifBottomBar(
                 Text(
                     text = verifyTitle(R.string.common_skip, "Skip"),
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 16.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Medium,
                         letterSpacing = 0.1.sp
                     ),
