@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -35,8 +36,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -1065,6 +1064,38 @@ private fun OneTimeOfferUrgencyRow(
         )
     }
 }
+
+@Composable
+private fun OneTimeOfferTrialSwitch(
+    checked: Boolean,
+    enabled: Boolean
+) {
+    val trackColor = when {
+        checked -> Color.Black
+        enabled -> Color(0xFFD4D4D8)
+        else -> Color(0xFFE5E7EB)
+    }
+    val thumbColor = if (enabled || checked) Color.White else Color(0xFFA1A1AA)
+    val thumbOffset = if (checked) 20.dp else 2.dp
+
+    Box(
+        modifier = Modifier
+            .width(52.dp)
+            .height(32.dp)
+            .clip(CircleShape)
+            .background(trackColor),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffset)
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(thumbColor)
+        )
+    }
+}
+
 @Composable
 private fun OneTimeOfferTrialCard(
     trialEnabled: Boolean,
@@ -1101,31 +1132,9 @@ private fun OneTimeOfferTrialCard(
                 modifier = Modifier.weight(1f)
             )
 
-            Switch(
+            OneTimeOfferTrialSwitch(
                 checked = trialEnabled,
-                enabled = !purchasing && trialEligible && trialEligibilityLoaded,
-                onCheckedChange = {
-                    if (!purchasing && trialEligible && trialEligibilityLoaded) {
-                        onTrialEnabledChange(it)
-                    }
-                },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Color.Black,
-                    checkedBorderColor = Color.Transparent,
-
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFD4D4D8),
-                    uncheckedBorderColor = Color.Transparent,
-
-                    disabledCheckedThumbColor = Color.White,
-                    disabledCheckedTrackColor = Color(0xFF18181B),
-                    disabledCheckedBorderColor = Color.Transparent,
-
-                    disabledUncheckedThumbColor = Color(0xFFA1A1AA),
-                    disabledUncheckedTrackColor = Color(0xFFE5E7EB),
-                    disabledUncheckedBorderColor = Color.Transparent
-                )
+                enabled = !purchasing && trialEligible && trialEligibilityLoaded
             )
         }
 

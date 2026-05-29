@@ -59,12 +59,22 @@ class EmailSignInViewModel @Inject constructor(
     fun onEmailChange(text: String) {
         _enter.value = _enter.value.copy(
             email = text,
-            isValid = text.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(text).matches()
+            isValid = EmailAddressValidator.isValid(text),
+            error = null
         )
     }
 
     fun sendCode(onSent: (String) -> Unit) {
         val email = _enter.value.email.trim()
+        if (!EmailAddressValidator.isValid(email)) {
+            _enter.value = _enter.value.copy(
+                loading = false,
+                isValid = false,
+                error = "Invalid email format"
+            )
+            return
+        }
+
         viewModelScope.launch {
             try {
                 _enter.value = _enter.value.copy(loading = true, error = null)

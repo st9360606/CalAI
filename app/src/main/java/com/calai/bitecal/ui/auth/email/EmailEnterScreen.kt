@@ -24,7 +24,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -32,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.haptic.rememberBiteCalHaptics
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +47,8 @@ fun EmailEnterScreen(
     onSent: (String) -> Unit
 ) {
     val ui by vm.enter.collectAsState()
+    val emailFieldHaptics = rememberBiteCalHaptics()
+    var emailFieldFocused by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.White,   // ← 加這行，避免用到主題的粉白背景
@@ -85,7 +92,14 @@ fun EmailEnterScreen(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged { focusState ->
+                        if (focusState.isFocused && !emailFieldFocused) {
+                            emailFieldHaptics.click()
+                        }
+                        emailFieldFocused = focusState.isFocused
+                    },
                 // ← 輸入框聚焦框線／游標／標籤改黑色
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.Black,

@@ -827,10 +827,18 @@ fun BiteCalNavHost(
                                     )
                                 }
 
-                                nav.navigate(destination) {
-                                    popUpTo(0) { inclusive = true }
-                                    launchSingleTop = true
-                                    restoreState = false
+                                if (destination == Routes.ONBOARD_REFERRAL_CODE) {
+                                    nav.navigate(destination) {
+                                        popUpTo(Routes.ROUTE_PLAN) { inclusive = false }
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
+                                } else {
+                                    nav.navigate(destination) {
+                                        popUpTo(0) { inclusive = true }
+                                        launchSingleTop = true
+                                        restoreState = false
+                                    }
                                 }
                             }
 
