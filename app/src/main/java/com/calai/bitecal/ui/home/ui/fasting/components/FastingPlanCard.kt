@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.components.GreenSwitch
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun FastingPlanCard(
@@ -53,6 +54,8 @@ fun FastingPlanCard(
     leftColumnWeight: Float = 1f,
     rightColumnWeight: Float = 0.8f
 ) {
+    val hapticClick = rememberClickWithHaptic(onClick = onClick)
+
     Card(
         modifier = modifier
             .height(cardHeight)
@@ -68,7 +71,7 @@ fun FastingPlanCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border,
-        onClick = onClick
+        onClick = hapticClick
     ){
         Column(modifier = Modifier.fillMaxSize()) {
 

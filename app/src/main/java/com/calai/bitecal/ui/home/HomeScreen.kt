@@ -428,21 +428,21 @@ fun HomeScreen(
 
     val onFabClick: () -> Unit = remember {
         {
-            if (scanFabGateInFlight) return@remember
+            if (!scanFabGateInFlight) {
+                scanFabScope.launch {
+                    scanFabGateInFlight = true
 
-            scanFabScope.launch {
-                scanFabGateInFlight = true
+                    val canOpenScanMenu = runCatching {
+                        latestOnCheckCanUseScan.value.invoke()
+                    }.getOrDefault(false)
 
-                val canOpenScanMenu = runCatching {
-                    latestOnCheckCanUseScan.value.invoke()
-                }.getOrDefault(false)
+                    scanFabGateInFlight = false
 
-                scanFabGateInFlight = false
-
-                if (canOpenScanMenu) {
-                    showQuickAddMenu = true
-                } else {
-                    latestOnOpenSubscription.value.invoke()
+                    if (canOpenScanMenu) {
+                        showQuickAddMenu = true
+                    } else {
+                        latestOnOpenSubscription.value.invoke()
+                    }
                 }
             }
         }
@@ -450,25 +450,25 @@ fun HomeScreen(
 
     val onWorkoutAddClick: () -> Unit = remember(workoutPremiumGate) {
         {
-            if (workoutGateInFlight) return@remember
+            if (!workoutGateInFlight) {
+                scanFabScope.launch {
+                    workoutGateInFlight = true
 
-            scanFabScope.launch {
-                workoutGateInFlight = true
+                    when (workoutPremiumGate.check()) {
+                        WorkoutPremiumGateDecision.OpenWorkout -> {
+                            showWorkoutSheet.value = true
+                        }
+                        WorkoutPremiumGateDecision.OpenSubscription -> {
+                            latestOnOpenWorkoutSubscription.value.invoke()
+                        }
+                        WorkoutPremiumGateDecision.VerificationFailed -> {
+                            showWorkoutGateError = true
+                        }
+                        null -> Unit
+                    }
 
-                when (workoutPremiumGate.check()) {
-                    WorkoutPremiumGateDecision.OpenWorkout -> {
-                        showWorkoutSheet.value = true
-                    }
-                    WorkoutPremiumGateDecision.OpenSubscription -> {
-                        latestOnOpenWorkoutSubscription.value.invoke()
-                    }
-                    WorkoutPremiumGateDecision.VerificationFailed -> {
-                        showWorkoutGateError = true
-                    }
-                    null -> Unit
+                    workoutGateInFlight = false
                 }
-
-                workoutGateInFlight = false
             }
         }
     }
