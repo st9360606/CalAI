@@ -1294,48 +1294,58 @@ fun WeightFastingRowModern(
 }
 
 /** 自訂綠色開關，讓 FastingPlanCard 的狀態切換更柔和。 */
+/** 自訂 iOS 風格開關，讓 FastingPlanCard 的狀態切換更柔和。 */
 @Composable
 fun GreenSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = 56.dp,
+    width: Dp = 52.dp,
     height: Dp = 30.dp,
 ) {
     val radius = height / 2
-    val trackInset = 3.dp
+    val trackInset = 2.dp
     val thumbSize = height - (trackInset * 2f)
-    val trackTop by animateColorAsState(
-        targetValue = if (checked) Color(0xFF68DD99) else Color(0xFFF1F4F7),
-        label = "switchTrackTop"
+
+    val trackColor by animateColorAsState(
+        targetValue = if (checked) {
+            Color(0xFF5ECB7A) // iOS green
+        } else {
+            Color(0xFFE9ECEF)
+        },
+        label = "iosSwitchTrack"
     )
-    val trackBottom by animateColorAsState(
-        targetValue = if (checked) Color(0xFF3CC878) else Color(0xFFE2E8EE),
-        label = "switchTrackBottom"
-    )
+
     val borderColor by animateColorAsState(
-        targetValue = if (checked) Color(0xFF2FA86D).copy(alpha = 0.20f) else Color(0xFFD5DDE5),
-        label = "switchBorder"
+        targetValue = if (checked) {
+            Color.Transparent
+        } else {
+            Color(0xFFD8DEE5)
+        },
+        label = "iosSwitchBorder"
     )
 
     val offset by animateDpAsState(
-        targetValue = if (checked) width - thumbSize - (trackInset * 2f) else 0.dp,
-        label = "thumbOffset"
+        targetValue = if (checked) {
+            width - thumbSize - (trackInset * 2f)
+        } else {
+            0.dp
+        },
+        label = "iosSwitchThumbOffset"
     )
 
-    // 取消 ripple/press 陰影，避免顏色變暗
     val interaction = remember { MutableInteractionSource() }
 
     Box(
         modifier = modifier
             .size(width, height)
             .clip(RoundedCornerShape(radius))
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(trackTop, trackBottom)
-                )
+            .background(trackColor)
+            .border(
+                width = 0.6.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(radius)
             )
-            .border(1.dp, borderColor, RoundedCornerShape(radius))
             .toggleable(
                 value = checked,
                 onValueChange = onCheckedChange,
@@ -1343,14 +1353,18 @@ fun GreenSwitch(
                 interactionSource = interaction,
                 indication = null
             )
-            .padding(horizontal = trackInset)
+            .padding(horizontal = trackInset),
+        contentAlignment = Alignment.CenterStart
     ) {
         Box(
             modifier = Modifier
-                .align(Alignment.CenterStart)
                 .offset(x = offset)
                 .size(thumbSize)
-                .shadow(if (checked) 3.dp else 2.dp, CircleShape, clip = false)
+                .shadow(
+                    elevation = if (checked) 2.5.dp else 2.dp,
+                    shape = CircleShape,
+                    clip = false
+                )
                 .background(Color.White, CircleShape)
         )
     }
