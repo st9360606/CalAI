@@ -21,11 +21,11 @@ import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.bitecal.i18n.ProvideComposeLocale
-import kotlinx.coroutines.delay
 import com.calai.bitecal.R
+import com.calai.bitecal.i18n.ProvideComposeLocale
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+
 private enum class SheetAuthProvider {
     Google,
     Email
@@ -55,18 +55,6 @@ fun SignInSheet(
             // ★ 目前選擇的登入方式（初始都不是黑底）
             var selectedProvider by remember { mutableStateOf<SheetAuthProvider?>(null) }
 
-            // ★ 當選擇改變時，晚一點點再呼叫對應的 callback
-            LaunchedEffect(selectedProvider) {
-                when (selectedProvider) {
-                    SheetAuthProvider.Google -> {
-                        onGoogle()
-                    }
-                    SheetAuthProvider.Email -> {
-                        onEmail()
-                    }
-                    null -> Unit
-                }
-            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -109,14 +97,19 @@ fun SignInSheet(
 
                 // === Google 按鈕 ===
                 val ink = Color(0xFF111114)
+                val googleClick = rememberClickWithHaptic {
+                    selectedProvider = SheetAuthProvider.Google
+                    onGoogle()
+                }
+                val emailClick = rememberClickWithHaptic {
+                    selectedProvider = SheetAuthProvider.Email
+                    onEmail()
+                }
 
                 if (selectedProvider == SheetAuthProvider.Google) {
                     // 已選 Google：黑底白字
                     Button(
-                        onClick = rememberClickWithHaptic {
-                            // ★ 只改 state，不直接呼叫 onGoogle()
-                            selectedProvider = SheetAuthProvider.Google
-                        },
+                        onClick = googleClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -142,9 +135,7 @@ fun SignInSheet(
                 } else {
                     // 未選 Google：Outlined（原本樣式）
                     OutlinedButton(
-                        onClick = rememberClickWithHaptic {
-                            selectedProvider = SheetAuthProvider.Google
-                        },
+                        onClick = googleClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -175,10 +166,7 @@ fun SignInSheet(
                 if (selectedProvider == SheetAuthProvider.Email) {
                     // 已選 Email：黑底白字
                     Button(
-                        onClick = rememberClickWithHaptic {
-                            // ★ 只改 state，不直接呼叫 onEmail()
-                            selectedProvider = SheetAuthProvider.Email
-                        },
+                        onClick = emailClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -203,9 +191,7 @@ fun SignInSheet(
                 } else {
                     // 未選 Email：Outlined（原本樣式）
                     OutlinedButton(
-                        onClick = rememberClickWithHaptic {
-                            selectedProvider = SheetAuthProvider.Email
-                        },
+                        onClick = emailClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -229,7 +215,7 @@ fun SignInSheet(
                     }
                 }
 
-                Spacer (Modifier.height(20.dp))
+                Spacer(Modifier.height(20.dp))
 
                 val hintColor = MaterialTheme.colorScheme.onSurfaceVariant
                 val legalFontSize = 12.sp
