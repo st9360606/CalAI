@@ -44,8 +44,8 @@ fun FastingPlanCard(
     planNameFontSize: TextUnit? = null,
     planNameYOffset: Dp = 0.dp,
     planNameXOffset: Dp = 0.dp,
-    switchWidth: Dp = 52.dp,
-    switchHeight: Dp = 28.dp,
+    switchWidth: Dp = 56.dp,
+    switchHeight: Dp = 30.dp,
 
     topBarHeight: Dp = HomeCardStyles.TopBar.Height,
     topBarTextStyle: TextStyle = MaterialTheme.typography.titleSmall,

@@ -2,6 +2,7 @@ package com.calai.bitecal.ui.home.components
 
 import android.os.Build
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -12,6 +13,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
@@ -1290,23 +1293,33 @@ fun WeightFastingRowModern(
     }
 }
 
-/** 自訂綠色開關（#34C759），接近你上傳圖檔風格 */
+/** 自訂綠色開關，讓 FastingPlanCard 的狀態切換更柔和。 */
 @Composable
 fun GreenSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = 52.dp,
-    height: Dp = 38.dp,
+    width: Dp = 56.dp,
+    height: Dp = 30.dp,
 ) {
     val radius = height / 2
-    val thumbSize = height - 4.dp
-    val trackOn = Color(0xFF5ECB7A)
-    val trackOff = Color(0xFFE5E7EB)
-    val thumb = Color.White
+    val trackInset = 3.dp
+    val thumbSize = height - (trackInset * 2f)
+    val trackTop by animateColorAsState(
+        targetValue = if (checked) Color(0xFF68DD99) else Color(0xFFF1F4F7),
+        label = "switchTrackTop"
+    )
+    val trackBottom by animateColorAsState(
+        targetValue = if (checked) Color(0xFF3CC878) else Color(0xFFE2E8EE),
+        label = "switchTrackBottom"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (checked) Color(0xFF2FA86D).copy(alpha = 0.20f) else Color(0xFFD5DDE5),
+        label = "switchBorder"
+    )
 
     val offset by animateDpAsState(
-        targetValue = if (checked) width - thumbSize - 2.dp else 2.dp,
+        targetValue = if (checked) width - thumbSize - (trackInset * 2f) else 0.dp,
         label = "thumbOffset"
     )
 
@@ -1317,7 +1330,12 @@ fun GreenSwitch(
         modifier = modifier
             .size(width, height)
             .clip(RoundedCornerShape(radius))
-            .background(if (checked) trackOn else trackOff)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(trackTop, trackBottom)
+                )
+            )
+            .border(1.dp, borderColor, RoundedCornerShape(radius))
             .toggleable(
                 value = checked,
                 onValueChange = onCheckedChange,
@@ -1325,14 +1343,15 @@ fun GreenSwitch(
                 interactionSource = interaction,
                 indication = null
             )
-            .padding(2.dp)
+            .padding(horizontal = trackInset)
     ) {
         Box(
             modifier = Modifier
+                .align(Alignment.CenterStart)
                 .offset(x = offset)
                 .size(thumbSize)
-                .shadow(3.dp, CircleShape, clip = false)
-                .background(thumb, CircleShape)
+                .shadow(if (checked) 3.dp else 2.dp, CircleShape, clip = false)
+                .background(Color.White, CircleShape)
         )
     }
 }
