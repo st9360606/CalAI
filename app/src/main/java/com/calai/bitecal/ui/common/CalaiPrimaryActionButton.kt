@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
-fun CalaiPrimaryActionButton(
+fun BiteCalPrimaryButton(
     text: String,
     enabled: Boolean = true,
     onClick: () -> Unit,

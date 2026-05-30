@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberBiteCalHaptics
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalPlainBackTopBar
+import com.calai.bitecal.ui.common.design.BiteCalSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,26 +55,15 @@ fun EmailEnterScreen(
     Scaffold(
         containerColor = Color.White,   // ← 加這行，避免用到主題的粉白背景
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("") },
-                navigationIcon = {
-                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                },
-                // ← 改成白底、圖標黑色，避免預設主色（紫）
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114),
-                    titleContentColor = Color(0xFF111114)
-                )
+            BiteCalPlainBackTopBar(
+                onBack = onBack,
+                centered = true
             )
-        }
-    ) { pad ->
+        }    ) { pad ->
         Column(
             modifier = Modifier
                 .padding(pad)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = BiteCalSpacing.OnboardingHorizontal)
                 .fillMaxSize()
         ) {
             Spacer(Modifier.height(8.dp))

@@ -29,6 +29,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalLandingLanguageTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
 private tailrec fun Context.findActivity(): Activity? =
     when (this) {
         is Activity -> this
@@ -76,23 +78,11 @@ fun LandingScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114)
-                ),
-                actions = {
-                    FlagChip(
-                        flag = flagEmoji,
-                        label = langLabel,
-                        modifier = Modifier
-                            .align(Alignment.CenterVertically)
-                            .padding(end = 16.dp)
-                            .offset(y = (-8).dp),
-                        onClick = { if (!switching) showLang = true }
-                    )
-                }
+            BiteCalLandingLanguageTopBar(
+                flag = flagEmoji,
+                label = langLabel,
+                onClick = { if (!switching) showLang = true },
+                modifier = Modifier.offset(y = (-8).dp)
             )
         },
         bottomBar = {
@@ -205,15 +195,15 @@ private fun LandingBottomBar(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 16.dp, end = 16.dp, bottom = bottomOffset),
+                .padding(start = BiteCalScreenSpacing.BottomHorizontal, end = BiteCalScreenSpacing.BottomHorizontal, bottom = bottomOffset),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Button(
                 onClick = rememberClickWithHaptic(onClick = onStart),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(68.dp),
-                shape = RoundedCornerShape(999.dp),
+                    .height(BiteCalScreenSpacing.PrimaryButtonHeight),
+                shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black,
                     contentColor = Color.White

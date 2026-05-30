@@ -5,14 +5,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,19 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,7 +44,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private val ReferralText = Color(0xFF111114)
@@ -96,67 +87,24 @@ fun OnboardReferralCodeScreen(
         modifier = modifier,
         containerColor = Color.White,
         topBar = {
-            ReferralTopBar(onBack = onBack)
+            BiteCalOnboardingTopBar(
+                stepIndex = 12,
+                totalSteps = 12,
+                onBack = onBack,
+            )
         },
         bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .imePadding()
-                    .navigationBarsPadding()
-                    .padding(
-                        start = 20.dp,
-                        end = 20.dp,
-                        bottom = 8.dp
-                    ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Button(
-                    onClick = rememberClickWithHaptic(onClick = onContinue),
-                    enabled = !ui.submitting,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(68.dp),
-                    shape = RoundedCornerShape(999.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White,
-                        disabledContainerColor = Color.Black,
-                        disabledContentColor = Color.White,
-                    ),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.continue_text),
-                        color = Color.White,
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-
-                Spacer(Modifier.height(8.dp))
-
-                TextButton(
-                    onClick = rememberClickWithHaptic(onClick = onSkipAndContinue),
-                    enabled = !ui.submitting,
-                    modifier = Modifier.height(44.dp),
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFF8F98A3),
-                        disabledContentColor = Color(0xFF8F98A3).copy(alpha = 0.45f)
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.onboard_referral_code_skip),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Medium,
-                            letterSpacing = 0.1.sp
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            BiteCalOnboardingBottomBar(
+                primaryText = stringResource(R.string.continue_text),
+                onPrimaryClick = onContinue,
+                primaryEnabled = !ui.submitting,
+                primaryLoading = ui.submitting,
+                secondaryText = stringResource(R.string.onboard_referral_code_skip),
+                onSecondaryClick = onSkipAndContinue,
+                secondaryEnabled = !ui.submitting,
+                compactBottom = true,
+                useImePadding = true,
+            )
         }
     ) { inner ->
         Column(
@@ -218,49 +166,6 @@ fun OnboardReferralCodeScreen(
             Spacer(Modifier.weight(1.37f))
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ReferralTopBar(onBack: () -> Unit) {
-    TopAppBar(
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.White,
-            navigationIconContentColor = ReferralText,
-        ),
-        navigationIcon = {
-            IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFFF1F3F7)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.common_back),
-                        tint = ReferralText,
-                    )
-                }
-            }
-        },
-        title = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                OnboardingProgress(
-                    stepIndex = 12,
-                    totalSteps = 12,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-    )
 }
 
 @Composable

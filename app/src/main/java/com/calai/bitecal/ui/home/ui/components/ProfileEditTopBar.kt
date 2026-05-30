@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 @Composable
-fun ProfileEditTopBar(
+fun BiteCalTopBar(
     title: String,
     onBack: () -> Unit
 ) {

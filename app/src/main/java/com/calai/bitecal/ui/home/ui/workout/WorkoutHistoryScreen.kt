@@ -61,7 +61,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.workout.api.WorkoutHistorySessionDto
 import com.calai.bitecal.ui.home.HomeTab
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.toast.DeleteFailedTopToast
@@ -127,7 +127,7 @@ fun WorkoutHistoryScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                ProfileEditTopBar(
+                BiteCalTopBar(
                     title = stringResource(R.string.workout_history_title),
                     onBack = onBack
                 )

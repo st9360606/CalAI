@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,20 +34,13 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -86,8 +78,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.OnboardingProgress
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingSecondaryTextButton
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 
 
 private const val TAG_NOTIF = "NotifPerm"
@@ -126,43 +120,10 @@ fun NotificationPermissionScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114)
-                ),
-                navigationIcon = {
-                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xFFF1F3F7)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color(0xFF111114)
-                            )
-                        }
-                    }
-                },
-                title = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OnboardingProgress(
-                            stepIndex = 10,
-                            totalSteps = 12,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+            BiteCalOnboardingTopBar(
+                stepIndex = 10,
+                totalSteps = 12,
+                onBack = onBack
             )
         },
         bottomBar = {
@@ -311,64 +272,22 @@ private fun NotifBottomBar(
     val granted = permissionUiState == NotificationPermissionUiState.GRANTED
     val canRequest = permissionUiState == NotificationPermissionUiState.CAN_REQUEST
 
-    Column(
-        modifier = Modifier
-            .navigationBarsPadding()
-            .padding(
-                start = 20.dp,
-                end = 20.dp,
-                bottom = if (granted) 40.dp else 8.dp
-            )
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Button(
-            onClick = rememberClickWithHaptic(onClick = onClick),
-            enabled = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(68.dp),
-            shape = RoundedCornerShape(999.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black,
-                contentColor = Color.White
-            )
-        ) {
-            Text(
-                text = when {
-                    granted -> verifyTitle(R.string.continue_text, "Continue")
-                    canRequest -> verifyTitle(R.string.allow_notifications_cta, "Allow notifications")
-                    else -> verifyTitle(R.string.continue_text, "Continue")
-                },
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 19.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.2.sp
-                ),
-                textAlign = TextAlign.Center
-            )
-        }
+    BiteCalOnboardingBottomContainer(hasSecondaryAction = !granted) {
+        BiteCalOnboardingPrimaryButton(
+            text = when {
+                granted -> verifyTitle(R.string.continue_text, "Continue")
+                canRequest -> verifyTitle(R.string.allow_notifications_cta, "Allow notifications")
+                else -> verifyTitle(R.string.continue_text, "Continue")
+            },
+            onClick = onClick
+        )
 
         if (!granted) {
             Spacer(Modifier.height(8.dp))
-
-            TextButton(
-                onClick = rememberClickWithHaptic(onClick = onSkip),
-                modifier = Modifier.height(44.dp),
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = Color(0xFF8F98A3)
-                )
-            ) {
-                Text(
-                    text = verifyTitle(R.string.common_skip, "Skip"),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Medium,
-                        letterSpacing = 0.1.sp
-                    ),
-                    textAlign = TextAlign.Center
-                )
-            }
+            BiteCalOnboardingSecondaryTextButton(
+                text = verifyTitle(R.string.common_skip, "Skip"),
+                onClick = onSkip
+            )
         }
     }
 }

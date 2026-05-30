@@ -24,7 +24,7 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.EditAgeViewModel
 import kotlin.math.abs
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -55,7 +55,7 @@ fun EditAgeScreen(
 
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
-        topBar = { ProfileEditTopBar(title = "Edit Your Age", onBack = onBack) },
+        topBar = { BiteCalTopBar(title = "Edit Your Age", onBack = onBack) },
         bottomBar = {
             Box(Modifier.fillMaxWidth().navigationBarsPadding()) {
                 Column(

@@ -26,7 +26,7 @@ import com.calai.bitecal.data.entitlement.model.PremiumStatus
 import com.calai.bitecal.data.membership.api.MembershipSummaryDto
 import com.calai.bitecal.data.membership.api.RewardHistoryItemDto
 import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
@@ -40,7 +40,7 @@ fun PremiumRewardsScreen(
 ) {
     Scaffold(
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = "Subscription",
                 onBack = onBack
             )

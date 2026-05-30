@@ -51,8 +51,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.OnboardingProgress
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
 
 private enum class PrimaryAuthMethod { Google, Email }
 
@@ -74,44 +75,12 @@ fun RequireSignInScreen(
         containerColor = Color.White,
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
         topBar = {
-            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114)
-                ),
-                navigationIcon = {
-                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xFFF1F3F7)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color(0xFF111114)
-                            )
-                        }
-                    }
-                },
-                title = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OnboardingProgress(
-                            stepIndex = 11,
-                            totalSteps = 11,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+            BiteCalOnboardingTopBar(
+                stepIndex = 12,
+                totalSteps = 12,
+                onBack = onBack
             )
-        }
+        },
     ) { inner ->
         Column(
             modifier = Modifier
@@ -132,7 +101,7 @@ fun RequireSignInScreen(
                 color = ink,
                 textAlign = TextAlign.Start,
                 modifier = Modifier
-                    .padding(horizontal = 24.dp, vertical = 15.dp)
+                    .padding(horizontal = BiteCalScreenSpacing.ContentWideHorizontal, vertical = 15.dp)
                     .fillMaxWidth()
             )
 
@@ -140,7 +109,7 @@ fun RequireSignInScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = BiteCalScreenSpacing.ContentWideHorizontal)
             ) {
                 Column(
                     modifier = Modifier

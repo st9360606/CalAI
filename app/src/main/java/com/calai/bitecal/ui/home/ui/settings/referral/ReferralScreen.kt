@@ -57,7 +57,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.referral.api.ReferralClaimItemDto
 import com.calai.bitecal.ui.home.components.LightHomeBackground
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import kotlinx.coroutines.delay
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 private val ReferralPageText = Color(0xFF111114)
@@ -98,7 +98,7 @@ fun ReferralScreen(
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
-                ProfileEditTopBar(
+                BiteCalTopBar(
                     title = stringResource(R.string.referral_title),
                     onBack = onBack
                 )

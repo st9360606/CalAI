@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -73,7 +72,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.core.health.BmiClass
 import com.calai.bitecal.core.health.Gender
 import com.calai.bitecal.core.health.MacroPlan
@@ -82,11 +80,14 @@ import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.ui.common.bmi.CommonBmiCard
 import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
 import com.calai.bitecal.ui.common.bmi.CommonBmiTone
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
+import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 // === Colors（保持你的設定） ===
 val NeutralText = Color(0xFF6B7280)
@@ -140,7 +141,7 @@ fun HealthPlanScreen(
     Scaffold(
         containerColor = Color.White,
         bottomBar = {
-            Box {
+            BiteCalOnboardingBottomContainer {
                 Button(
                     onClick = rememberClickWithHaptic(
                         enabled = startEnabled && !starting
@@ -153,11 +154,8 @@ fun HealthPlanScreen(
                     },
                     enabled = startEnabled && !starting,
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
                         .fillMaxWidth()
-                        .height(68.dp)
+                        .height(BiteCalScreenSpacing.PrimaryButtonHeight)
                         .semantics {
                             stateDescription = when {
                                 starting -> "loading"
@@ -165,7 +163,7 @@ fun HealthPlanScreen(
                                 else -> "idle"
                             }
                         },
-                    shape = RoundedCornerShape(999.dp),
+                    shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White,

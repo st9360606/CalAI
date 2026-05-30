@@ -64,7 +64,7 @@ import com.calai.bitecal.data.weight.api.WeightItemDto
 import com.calai.bitecal.ui.home.components.toast.DeleteFailedTopToast
 import com.calai.bitecal.ui.home.components.toast.DeleteSuccessTopToast
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.weight.components.FilterTabs
 import com.calai.bitecal.ui.home.ui.weight.components.HistoryRow
 import com.calai.bitecal.ui.home.ui.weight.components.SegmentedButtons
@@ -100,7 +100,7 @@ fun WeightScreen(
         Scaffold(
             containerColor = Color(0xFFF5F5F5),
             topBar = {
-                ProfileEditTopBar(
+                BiteCalTopBar(
                     title = stringResource(R.string.weight_title),
                     onBack = onBack
                 )

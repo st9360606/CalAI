@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.data.profile.api.UserProfileDto
 import com.calai.bitecal.data.profile.repo.UserProfileStore
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import java.util.Locale
 import kotlin.math.abs
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
@@ -77,7 +77,7 @@ fun PersonalDetailsScreen(
         containerColor = bg,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = "Personal Details",
                 onBack = onBack
             )

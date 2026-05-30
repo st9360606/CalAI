@@ -111,7 +111,7 @@ import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.membership.MembershipDisplayKind
 import com.calai.bitecal.ui.home.ui.settings.dialog.DeleteAccountDialog
 import com.calai.bitecal.ui.home.ui.settings.dialog.PaymentIssueDialog
@@ -254,7 +254,7 @@ fun SettingsScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = stringResource(R.string.settings_title),
                 onBack = onBack
             )

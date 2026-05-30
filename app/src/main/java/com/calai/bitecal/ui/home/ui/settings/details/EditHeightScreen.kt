@@ -57,7 +57,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import kotlin.math.roundToInt
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
@@ -103,7 +103,7 @@ fun EditHeightScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = "Edit Your Height",
                 onBack = onBack
             )

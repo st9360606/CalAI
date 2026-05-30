@@ -75,7 +75,7 @@ import com.calai.bitecal.data.fasting.model.FastingPlan
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.MainBottomBar
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.clickWithoutHaptic
@@ -150,7 +150,7 @@ fun FastingPlansScreen(
         Scaffold(
             containerColor = ScreenBg,
             topBar = {
-                ProfileEditTopBar(
+                BiteCalTopBar(
                     title = stringResource(R.string.fasting_plans),
                     onBack = onBack
                 )

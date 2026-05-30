@@ -32,6 +32,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalPlainBackTopBar
+import com.calai.bitecal.ui.common.design.BiteCalSpacing
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCodeScreen(
@@ -82,26 +84,13 @@ fun EmailCodeScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114),
-                    titleContentColor = Color(0xFF111114)
-                )
-            )
-        }
-    ) { padding ->
+            BiteCalPlainBackTopBar(onBack = onBack)
+        }    ) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = BiteCalSpacing.OnboardingHorizontal),
             horizontalAlignment = Alignment.Start
         ) {
             Spacer(Modifier.height(12.dp))

@@ -58,7 +58,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.core.time.UtcTimeFormatter
 import com.calai.bitecal.data.notifications.api.NotificationItemDto
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import java.time.ZoneId
 import java.time.format.FormatStyle
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
@@ -83,7 +83,7 @@ fun NotificationInboxScreen(
         containerColor = bg,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = stringResource(R.string.notification_inbox_title),
                 onBack = backClick
             )

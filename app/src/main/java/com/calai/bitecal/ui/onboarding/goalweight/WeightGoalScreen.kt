@@ -14,29 +14,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,17 +54,19 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.roundKg1
 import com.calai.bitecal.i18n.LocalLocaleController
-import com.calai.bitecal.ui.common.OnboardingProgress
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private fun isZhLanguageTag(tag: String): Boolean {
     return tag.lowercase(Locale.ROOT).startsWith("zh")
@@ -199,47 +192,14 @@ fun WeightGoalScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114)
-                ),
-                navigationIcon = {
-                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xFFF1F3F7)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color(0xFF111114)
-                            )
-                        }
-                    }
-                },
-                title = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OnboardingProgress(
-                            stepIndex = 8,
-                            totalSteps = 12,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+            BiteCalOnboardingTopBar(
+                stepIndex = 8,
+                totalSteps = 12,
+                onBack = onBack
             )
         },
         bottomBar = {
-            Box {
+            BiteCalOnboardingBottomContainer {
                 Button(
                     onClick = rememberClickWithHaptic(
                         enabled = !isSaving && !isWheelScrolling
@@ -309,12 +269,9 @@ fun WeightGoalScreen(
                     },
                     enabled = valueKg > 0.0 && !isSaving && !isWheelScrolling,
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
                         .fillMaxWidth()
-                        .height(68.dp),
-                    shape = RoundedCornerShape(999.dp),
+                        .height(BiteCalScreenSpacing.PrimaryButtonHeight),
+                    shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White

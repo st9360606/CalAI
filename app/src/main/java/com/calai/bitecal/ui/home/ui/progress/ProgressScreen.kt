@@ -37,7 +37,7 @@ import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
 import com.calai.bitecal.ui.common.bmi.CommonBmiTone
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.MainBottomBar
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.progress.model.BmiCardUi
 import com.calai.bitecal.ui.home.ui.progress.model.BmiStatusTone
 import com.calai.bitecal.ui.home.ui.progress.model.ProgressViewModel
@@ -65,7 +65,7 @@ fun ProgressScreen(
     Scaffold(
         containerColor = ProgressBg,
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = stringResource(R.string.progress_screen_title),
                 onBack = onBack
             )

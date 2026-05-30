@@ -2148,9 +2148,7 @@ fun BiteCalNavHost(
                 ExerciseFrequencyScreen(
                     vm = vm,
                     onBack = { nav.popBackStack() }, // 回 EditNutritionGoals
-                    onNext = { nav.navigate(Routes.AUTO_GENERATE_HEIGHT) },
-                    stepIndex = 1,
-                    totalSteps = 4,
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_HEIGHT) }
                 )
             }
 
@@ -2164,9 +2162,7 @@ fun BiteCalNavHost(
                 HeightSelectionScreen(
                     vm = vm,
                     onBack = { nav.popBackStack() },
-                    onNext = { nav.navigate(Routes.AUTO_GENERATE_WEIGHT) },
-                    stepIndex = 2,
-                    totalSteps = 4,
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_WEIGHT) }
                 )
             }
 
@@ -2180,9 +2176,7 @@ fun BiteCalNavHost(
                 WeightSelectionScreen(
                     vm = vm,
                     onBack = { nav.popBackStack() },
-                    onNext = { nav.navigate(Routes.AUTO_GENERATE_GOALS) },
-                    stepIndex = 3,
-                    totalSteps = 4,
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_GOALS) }
                 )
 
             }
@@ -2197,10 +2191,7 @@ fun BiteCalNavHost(
                 GoalSelectionScreen(
                     vm = vm,
                     onBack = { nav.popBackStack() },
-                    onNext = { nav.navigate(Routes.AUTO_GENERATE_GOALS_CALC) },
-                    primaryButtonText = "Generate", // 建議換成 stringResource
-                    stepIndex = 4,
-                    totalSteps = 4,
+                    onNext = { nav.navigate(Routes.AUTO_GENERATE_GOALS_CALC) }
                 )
             }
 

@@ -60,7 +60,7 @@ fun CalaiBackButton(
 }
 
 @Composable
-fun CalaiCenteredTopBar(
+fun BiteCalLegacyCenteredTopBar(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,

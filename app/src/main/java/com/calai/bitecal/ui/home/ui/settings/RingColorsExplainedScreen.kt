@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.components.LightHomeBackground
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 
 private object RingColorsExplainedTheme {
     val Ink = Color(0xFF111114)
@@ -91,7 +91,7 @@ fun RingColorsExplainedScreen(
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
-                ProfileEditTopBar(
+                BiteCalTopBar(
                     title = stringResource(R.string.ring_colors_explained_title),
                     onBack = onBackDebounced
                 )

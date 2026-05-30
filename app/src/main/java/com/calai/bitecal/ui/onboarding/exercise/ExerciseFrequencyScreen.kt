@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,18 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,9 +38,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
-import com.calai.bitecal.ui.common.OnboardingProgress
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 // 與推薦來源頁一致：item 寬度佔螢幕 90%
 private const val OPTION_WIDTH_FRACTION = 0.86f
@@ -67,9 +57,7 @@ private data class ExerciseUiOption(
 fun ExerciseFrequencyScreen(
     vm: ExerciseFrequencyViewModel,
     onBack: () -> Unit,
-    onNext: () -> Unit,
-    stepIndex: Int = 6,
-    totalSteps: Int = 12,
+    onNext: () -> Unit
 ) {
     val state by vm.uiState.collectAsState()
 
@@ -84,81 +72,22 @@ fun ExerciseFrequencyScreen(
     Scaffold(
         containerColor = Color.White,
         topBar = {
-            TopAppBar(modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    navigationIconContentColor = Color(0xFF111114)
-                ),
-                navigationIcon = {
-                    IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-                        Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xFFF1F3F7)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = Color(0xFF111114)
-                            )
-                        }
-                    }
-                },
-                title = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OnboardingProgress(
-                            stepIndex = stepIndex,
-                            totalSteps = totalSteps,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+            BiteCalOnboardingTopBar(
+                stepIndex = 6,
+                totalSteps = 12,
+                onBack = onBack
             )
         },
         bottomBar = {
-            Box {
-                Button(
-                    onClick = rememberClickWithHaptic {
-                        vm.saveSelected()
-                        onNext()
-                    },
-                    enabled = state.selected != null,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
-                        .fillMaxWidth()
-                        .height(68.dp),
-                    shape = RoundedCornerShape(999.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.continue_text),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 19.sp,
-                                fontWeight = FontWeight.Medium,
-                                letterSpacing = 0.2.sp
-                            ),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+            BiteCalOnboardingBottomBar(
+                primaryText = stringResource(R.string.continue_text),
+                primaryEnabled = state.selected != null,
+                onPrimaryClick = {
+                    vm.saveSelected()
+                    onNext()
                 }
-            }
-        }
+            )
+        },
     ) { inner ->
         Column(
             Modifier

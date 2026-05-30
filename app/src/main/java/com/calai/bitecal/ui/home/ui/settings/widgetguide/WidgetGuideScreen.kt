@@ -45,9 +45,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
 import com.calai.bitecal.ui.home.components.LightHomeBackground
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 
 @Composable
 fun WidgetGuideScreen(
@@ -59,7 +59,7 @@ fun WidgetGuideScreen(
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = stringResource(R.string.widget_guide_title),
                 onBack = onBack
             )
@@ -78,7 +78,7 @@ fun WidgetGuideScreen(
             WidgetGuideStepsCard()
             WidgetGuideTipCard()
 
-            CalaiPrimaryActionButton(
+            BiteCalPrimaryButton(
                 text = stringResource(R.string.widget_guide_done),
                 enabled = true,
                 loading = false,

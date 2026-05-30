@@ -64,7 +64,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
@@ -136,7 +136,7 @@ fun EditGoalWeightScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = "Edit Goal Weight",
                 onBack = onCancel
             )

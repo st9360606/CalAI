@@ -77,7 +77,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsUiState
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
@@ -160,7 +160,7 @@ private fun EditNutritionGoalsScreen(
     Scaffold(
         containerColor = Color(0xFFF7F7F7),
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = "Edit Nutrition Goals",
                 onBack = {
                     focusManager.clearFocus()

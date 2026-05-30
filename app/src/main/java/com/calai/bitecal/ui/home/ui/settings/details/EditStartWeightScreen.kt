@@ -60,7 +60,7 @@ import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.data.profile.repo.lbsToKg1
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditStartingWeightViewModel
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -123,7 +123,7 @@ fun EditStartingWeightScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = "Edit Starting Weight",
                 onBack = onCancel
             )

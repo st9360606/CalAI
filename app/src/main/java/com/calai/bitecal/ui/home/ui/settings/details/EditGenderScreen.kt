@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditGenderViewModel
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +48,7 @@ fun EditGenderScreen(
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
-            ProfileEditTopBar(
+            BiteCalTopBar(
                 title = "Edit Your Gender",
                 onBack = onBack
             )

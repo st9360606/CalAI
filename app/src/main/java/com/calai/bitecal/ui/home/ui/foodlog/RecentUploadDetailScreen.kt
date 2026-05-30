@@ -63,7 +63,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
-import com.calai.bitecal.ui.common.CalaiPrimaryActionButton
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
 import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
@@ -896,7 +896,7 @@ private fun FooterSaveBar(
                 .navigationBarsPadding()
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            CalaiPrimaryActionButton(
+            BiteCalPrimaryButton(
                 text = stringResource(R.string.save),
                 enabled = enabled,
                 loading = false,

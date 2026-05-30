@@ -52,7 +52,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.CalaiConfirmDialog
 import com.calai.bitecal.ui.home.components.CardStyles
-import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
@@ -220,7 +220,7 @@ fun SavedFoodsScreen(
 private fun SavedFoodsTopBar(
     onBack: () -> Unit
 ) {
-    ProfileEditTopBar(
+    BiteCalTopBar(
         title = stringResource(R.string.saved_foods_title),
         onBack = onBack
     )

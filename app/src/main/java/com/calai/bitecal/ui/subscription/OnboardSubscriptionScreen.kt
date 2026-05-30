@@ -47,36 +47,37 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.billing.BiteCalBillingProducts
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
+import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.landing.LandingSlideshow
 import com.calai.bitecal.ui.landing.SlideItem
 import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import kotlinx.coroutines.delay
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.zIndex
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private enum class OnboardPaywallStep {
     Intro,
@@ -914,12 +915,12 @@ private fun OneTimeOfferHeroCard(
                 modifier = Modifier
                     .background(
                         color = Color.White.copy(alpha = 0.10f),
-                        shape = RoundedCornerShape(999.dp)
+                        shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner)
                     )
                     .border(
                         width = 1.dp,
                         color = Color.White.copy(alpha = 0.13f),
-                        shape = RoundedCornerShape(999.dp)
+                        shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner)
                     )
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center
@@ -1379,13 +1380,13 @@ private fun BoxScope.OnboardPaywallBottomCta(
     loading: Boolean,
     onClick: () -> Unit,
     helperTextColor: Color = Color(0xFF71717A),
-    buttonShape: Shape = RoundedCornerShape(999.dp)
+    buttonShape: Shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner)
 ) {
     Column(
         modifier = Modifier
             .align(Alignment.BottomCenter)
             .navigationBarsPadding()
-            .padding(start = 20.dp, end = 20.dp, bottom = 28.dp)
+            .padding(start = BiteCalScreenSpacing.BottomHorizontal, end = BiteCalScreenSpacing.BottomHorizontal, bottom = 28.dp)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -1396,7 +1397,7 @@ private fun BoxScope.OnboardPaywallBottomCta(
             shape = buttonShape,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(68.dp)
+                .height(BiteCalScreenSpacing.PrimaryButtonHeight)
         )
 
         Spacer(Modifier.height(14.dp))
@@ -1419,7 +1420,7 @@ private fun PrimaryBlackButton(
     loading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(999.dp)
+    shape: Shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner)
 ) {
     Button(
         onClick = rememberClickWithHaptic(onClick = onClick),
