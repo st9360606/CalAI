@@ -90,7 +90,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(18.dp))
 
                     Text(
-                        text = "Keep your Premium active",
+                        text = "Keep your premium active",
                         color = Color(0xFF111114),
                         fontSize = 24.sp,
                         lineHeight = 28.sp,
@@ -102,7 +102,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(10.dp))
 
                     Text(
-                        text = "Your Premium access is still active for now, but your payment needs attention.",
+                        text = "Your premium access is still active for now, but your payment needs attention.",
                         color = Color(0xFF374151),
                         fontSize = 15.sp,
                         lineHeight = 21.sp,
@@ -116,7 +116,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(8.dp))
 
                     Text(
-                        text = "Update your Google Play payment method to avoid losing AI scan and Premium features.",
+                        text = "Update your Google Play payment method to avoid losing AI scan and premium features.",
                         color = Color(0xFF71717A),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,

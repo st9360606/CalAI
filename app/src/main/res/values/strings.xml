@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">BiteCal: Calorie Camera</string>
     <string name="landing_title">Snap a photo, know the calories.</string>
-    <string name="cta_get_started">Get Started</string>
-    <string name="cta_login_prefix">Already have an account ?</string>
-    <string name="cta_login">Sign In</string>
+    <string name="cta_get_started">Get started</string>
+    <string name="cta_login_prefix">Already have an account?</string>
+    <string name="cta_login">Sign in</string>
     <string name="choose_language">Choose language</string>
 
     <string name="signin_title">Sign In</string>
@@ -13,7 +13,7 @@
     <string name="signin_legal_hint">By continuing you agree to BiteCal\'s</string>
     <string name="signin_terms">Terms</string>
     <string name="signin_and">and</string>
-    <string name="signin_privacy">Privacy Policy</string>
+    <string name="signin_privacy">Privacy policy</string>
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
 
@@ -53,7 +53,7 @@
     <string name="err_google_not_completed_with_code">Sign-in wasn’t completed (code=%1$d). Please try again.</string>
 
     <!-- Onboarding: Gender -->
-    <string name="onb_gender_title">Choose your Gender</string>
+    <string name="onb_gender_title">Choose your gender</string>
     <string name="onb_gender_subtitle">This will be used to calibrate your custom plan.</string>
     <string name="male_simple">Male</string>
     <string name="female">Female</string>
@@ -87,7 +87,7 @@
     <string name="onboard_goal_weight_title">What is your goal weight?</string>
 
     <!-- exercise -->
-    <string name="onboard_ex_freq_title">How often do you exercise each week ?</string>
+    <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
     <string name="onboard_ex_freq_subtitle">This will help calibrate your personalized plan.</string>
     <string name="ex_freq_0_title">0</string>
     <string name="ex_freq_0_sub">Sedentary</string>
@@ -101,7 +101,7 @@
     <string name="ex_freq_7_plus_sub">Very high activity</string>
 
     <!-- goal -->
-    <string name="onboard_goal_title">What’s your goal ?</string>
+    <string name="onboard_goal_title">What’s your goal?</string>
     <string name="onboard_goal_subtitle">This helps us tailor your calorie plan.</string>
     <string name="goal_lose">Lose weight</string>
     <string name="goal_maintain">Maintain</string>
@@ -109,8 +109,8 @@
     <string name="goal_healthy_eating">Healthy eating</string>
 
     <!-- notifications -->
-    <string name="allow_notifications_cta">Allow Notifications</string>
-    <string name="notif_title">Make every meal count !</string>
+    <string name="allow_notifications_cta">Allow notifications</string>
+    <string name="notif_title">Make every meal count!</string>
     <string name="notif_subtitle">Enable notifications for gentle reminders to log meals—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
     <string name="onb_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
     <string name="onb_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
@@ -149,7 +149,7 @@
     <string name="plan_unit_kcal_day">kcal / day</string>
     <string name="plan_unit_g">g</string>
 
-    <string name="plan_bmi_index">BMI Index</string>
+    <string name="plan_bmi_index">BMI index</string>
     <string name="plan_bmi_label_underweight">Underweight</string>
     <string name="plan_bmi_label_normal">Normal</string>
     <string name="plan_bmi_label_overweight">Overweight</string>
@@ -157,19 +157,19 @@
     <string name="plan_bmi_classified_as">classified as %1$s</string>
 
     <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
-    <string name="plan_cta_start">Let\'s Get Started !</string>
+    <string name="plan_cta_start">Let\'s get started!</string>
 
     <string name="plan_water_daily">Daily Water</string>
-    <string name="plan_weight_current">Current Weight</string>
-    <string name="plan_weight_delta">To Goal Weight</string>
+    <string name="plan_weight_current">Current weight</string>
+    <string name="plan_weight_delta">To goal weight</string>
 
     <string name="plan_goals_title">How to reach\nyour goals</string>
-    <string name="plan_goal_card_health_scores">Health scores guide you,so habits form naturally</string>
-    <string name="plan_goal_card_track_meals">Log meals in one tap,staying consistent is easy</string>
-    <string name="plan_goal_card_daily_calories">See daily calories clearly,and never lose track</string>
-    <string name="plan_goal_card_balance_macros">Carbs × Protein × Fat,smart balance, better results</string>
+    <string name="plan_goal_card_health_scores">Health scores guide you, so habits form naturally</string>
+    <string name="plan_goal_card_track_meals">Log meals in one tap, staying consistent is easy</string>
+    <string name="plan_goal_card_daily_calories">See daily calories clearly, and never lose track</string>
+    <string name="plan_goal_card_balance_macros">Carbs × protein × fat, smart balance, better results</string>
 
-    <string name="plan_sources_based_on">Based on official dietary guidelines,\nFor reference only, not medical advice.</string>
+    <string name="plan_sources_based_on">Based on official dietary guidelines,\nfor reference only, not medical advice.</string>
     <string name="plan_sources_more">See all references ›</string>
     <string name="plan_sources_hide">Hide sources</string>
 
@@ -236,14 +236,14 @@
     <string name="weight_overview_title">Overview</string>
     <string name="weight_history_title">History</string>
     <string name="weight_history_delete_content_description">Delete weight record</string>
-    <string name="weight_delete_success">Deleted successfully !</string>
+    <string name="weight_delete_success">Deleted successfully!</string>
     <string name="weight_delete_failed">Delete failed. Please try again.</string>
-    <string name="weight_log_weight">Log Weight</string>
+    <string name="weight_log_weight">Log weight</string>
 
     <string name="weight_chart_title">Weight trend</string>
-    <string name="weight_chart_tab_30_days">30 Days</string>
-    <string name="weight_chart_tab_60_days">60 Days</string>
-    <string name="weight_chart_tab_90_days">90 Days</string>
+    <string name="weight_chart_tab_30_days">30 days</string>
+    <string name="weight_chart_tab_60_days">60 days</string>
+    <string name="weight_chart_tab_90_days">90 days</string>
     <string name="weight_chart_tab_all_time">All time</string>
     <string name="weight_chart_goal_label">Goal</string>
     <string name="weight_chart_goal_progress_badge">%1$d%% of goal</string>
@@ -253,9 +253,9 @@
     <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
 
     <!-- Camera -->
-    <string name="camera_mode_food">Scan Food</string>
+    <string name="camera_mode_food">Scan food</string>
     <string name="camera_mode_barcode">Barcode</string>
-    <string name="camera_mode_label">Food Label</string>
+    <string name="camera_mode_label">Food label</string>
     <string name="camera_mode_album">Photos</string>
 
     <string name="camera_barcode_title">Barcode Scanner</string>
@@ -338,8 +338,8 @@
 
     <!-- RecentUploadDetailScreen -->
     <string name="foodlog_detail_load_failed">Load failed</string>
-    <string name="foodlog_unknown_food">Unknown Food</string>
-    <string name="foodlog_no_image">No Image</string>
+    <string name="foodlog_unknown_food">Unknown food</string>
+    <string name="foodlog_no_image">No image</string>
     <string name="foodlog_detail_title">Nutrition</string>
     <string name="foodlog_detail_back">Back</string>
     <string name="foodlog_detail_delete">Delete</string>
@@ -353,16 +353,16 @@
     <string name="foodlog_detail_fiber">Fiber</string>
     <string name="foodlog_detail_sugar">Sugar</string>
     <string name="foodlog_detail_sodium">Sodium</string>
-    <string name="foodlog_detail_health_score">Health Score</string>
+    <string name="foodlog_detail_health_score">Health score</string>
     <string name="foodlog_detail_done">Done</string>
     <string name="foodlog_detail_health_icon_desc">Health icon</string>
 
     <!-- DeleteFoodLogDialog -->
-    <string name="foodlog_delete_dialog_title">Delete Record?</string>
+    <string name="foodlog_delete_dialog_title">Delete record?</string>
     <string name="foodlog_delete_dialog_message">Are you sure you want to permanently delete this meal record? This action cannot be undone.</string>
     <string name="foodlog_delete_dialog_confirm">Delete</string>
     <string name="saved_foods_unsave_content_description">Remove from saved foods</string>
-    <string name="saved_foods_unsave_dialog_title">Remove from Saved Foods?</string>
+    <string name="saved_foods_unsave_dialog_title">Remove from saved foods?</string>
     <string name="saved_foods_unsave_dialog_message">This meal will be removed from your Saved Foods list, but it will still remain in your recent records.</string>
     <string name="saved_foods_unsave_dialog_confirm">Remove</string>
 
@@ -398,8 +398,8 @@
          Progress Screen
          ========================= -->
     <string name="progress_screen_title">Progress</string>
-    <string name="progress_tab_this_week">This Week</string>
-    <string name="progress_tab_last_week">Last Week</string>
+    <string name="progress_tab_this_week">This week</string>
+    <string name="progress_tab_last_week">Last week</string>
     <string name="progress_tab_two_weeks_ago">2 wks. ago</string>
     <string name="progress_tab_three_weeks_ago">3 wks. ago</string>
 
@@ -504,7 +504,7 @@
     <string name="workout_history_kcal_with_unit">%1$d kcal</string>
     <string name="workout_history_session_completed">Completed</string>
     <string name="workout_history_delete_failed">Delete failed. Please try again.</string>
-    <string name="workout_history_delete_success">Deleted successfully !</string>
+    <string name="workout_history_delete_success">Deleted successfully!</string>
     <string name="workout_history_delete_content_description">Delete workout record</string>
 
     <!-- =========================
@@ -539,7 +539,7 @@
     <string name="home_sodium_goal_label">Sodium left</string>
     <string name="home_sodium_eaten_label">Sodium eaten</string>
     <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
-    <string name="home_health_score_title">Health score</string>
+    <string name="home_health_score_title">Health Score</string>
     <string name="home_health_score_value">%1$d/10</string>
 
     <!-- Home Health Score Advice -->
@@ -595,12 +595,12 @@
     <string name="onboard_referral_code_title">Friends</string>
     <string name="onboard_referral_code_input">Enter referral code\n(optional)</string>
     <string name="onboard_referral_code_subtitle">You can skip this step</string>
-    <string name="onboard_referral_code_input_label">Referral Code</string>
-    <string name="onboard_referral_code_placeholder">Referral Code</string>
+    <string name="onboard_referral_code_input_label">Referral code</string>
+    <string name="onboard_referral_code_placeholder">Referral code</string>
     <string name="onboard_referral_code_submit">Submit</string>
     <string name="onboard_referral_code_submitting">Submitting…</string>
-    <string name="onboard_referral_code_applied">Referral Code Applied !</string>
-    <string name="onboard_referral_code_skip_and_continue">Skip and continue</string>
+    <string name="onboard_referral_code_applied">Referral code applied!</string>
+    <string name="onboard_referral_code_skip">Skip</string>
     <string name="onboard_referral_code_error_invalid_format">Use letters and numbers only.</string>
     <string name="onboard_referral_code_error_invalid">We couldn\'t find this referral code.</string>
     <string name="onboard_referral_code_error_self_referral">You can\'t use your own referral code.</string>
@@ -609,7 +609,7 @@
     <string name="onboard_referral_code_error_disabled">Referral is temporarily unavailable.</string>
     <string name="onboard_referral_code_error_risk">We can\'t apply a referral code right now.</string>
     <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
-    <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now. Please try again later.</string>
+    <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now.\nPlease try again later.</string>
 
     <!-- NotificationInboxScreen Inbox -->
     <string name="open_notification_settings">Open notification settings</string>
@@ -664,8 +664,8 @@
     <string name="settings_privacy_policy">Privacy Policy</string>
     <string name="settings_support_email">Support Email</string>
     <string name="settings_feature_request">Feature Request</string>
-    <string name="settings_delete_account">Delete Account?</string>
-    <string name="settings_version">VERSION %1$s</string>
+    <string name="settings_delete_account">Delete account?</string>
+    <string name="settings_version">Version %1$s</string>
 
     <string name="settings_restore_subscription">Restore subscription</string>
     <string name="restore_subscription_dialog_title">Subscription found</string>
@@ -698,7 +698,7 @@
     <!-- Widget Guide -->
     <string name="settings_widgets_title">Widgets</string>
     <string name="settings_widgets_how_to_add">How to add?</string>
-    <string name="widget_guide_title">Add widget</string>
+    <string name="widget_guide_title">Add Widget</string>
     <string name="widget_guide_hero_title">Add BiteCal to your Home screen</string>
     <string name="widget_guide_hero_body">Track calories, macros, and quick actions without opening the app.</string>
     <string name="widget_guide_steps_title">Follow these steps</string>
@@ -732,7 +732,7 @@
     <string name="workout_preset_swimming">Swimming</string>
     <string name="workout_preset_hiking">Hiking</string>
     <string name="workout_preset_aerobic_exercise">Aerobic exercise</string>
-    <string name="workout_preset_strength_training">Strength Training</string>
+    <string name="workout_preset_strength_training">Strength training</string>
     <string name="workout_preset_weight_training">Weight training</string>
     <string name="workout_preset_basketball">Basketball</string>
     <string name="workout_preset_soccer">Soccer</string>
@@ -742,7 +742,7 @@
     <string name="workout_preset_baseball">Baseball</string>
     <string name="workout_preset_softball">Softball</string>
     <string name="workout_preset_volleyball">Volleyball</string>
-    <string name="workout_preset_table_tennis">Table Tennis</string>
+    <string name="workout_preset_table_tennis">Table tennis</string>
     <string name="workout_preset_dancing_general">Dancing</string>
     <string name="workout_preset_zumba">Zumba</string>
     <string name="workout_preset_pilates">Pilates</string>
@@ -750,7 +750,7 @@
     <!-- Workout tracker sheet -->
     <string name="workout_tracker_title">Workout Tracker</string>
     <string name="workout_tracker_subtitle">Describe the type of exercise and the duration</string>
-    <string name="workout_tracker_example_placeholder">Example: 45 min Running</string>
+    <string name="workout_tracker_example_placeholder">Example: 45 min running</string>
     <string name="workout_tracker_add_workout">Add workout</string>
     <string name="workout_tracker_select_from_list">or select from the list</string>
     <string name="workout_tracker_show_less">Show less</string>
@@ -763,8 +763,8 @@
     <string name="workout_tracker_kcal_value">%1$d kcal</string>
     <string name="workout_tracker_minutes_activity">%1$d min %2$s</string>
     <string name="workout_tracker_cancel">Cancel</string>
-    <string name="workout_tracker_try_again">Try Again</string>
-    <string name="workout_tracker_scan_failed_title">Uh-oh! Scan Failed</string>
+    <string name="workout_tracker_try_again">Try again</string>
+    <string name="workout_tracker_scan_failed_title">Uh-oh! Scan failed</string>
     <string name="workout_tracker_scan_failed_body">The workout description may be incorrect, or the internet connection is weak. For example: 30 min Running.</string>
     <string name="workout_tracker_close_content_description">Close workout tracker</string>
     <string name="workout_tracker_activity_content_description">Workout activity</string>
@@ -780,7 +780,7 @@
     <string name="progress_average_tab_15_days">15 days</string>
     <string name="progress_average_tab_30_days">30 days</string>
     <string name="progress_average_tab_60_days">60 days</string>
-    <string name="progress_average_overview_title">Average overview</string>
+    <string name="progress_average_overview_title">Average Overview</string>
     <string name="progress_average_overview_subtitle">Excludes today and averages only days with data.</string>
     <string name="progress_average_days_badge">%1$d-day avg</string>
     <string name="progress_average_loading">Loading averages...</string>

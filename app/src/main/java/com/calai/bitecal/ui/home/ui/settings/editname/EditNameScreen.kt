@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
@@ -54,7 +55,7 @@ fun EditNameScreen(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             ProfileEditTopBar(
-                title = "Edit name",
+                title = "Edit Name",
                 onBack = onBack
             )
         }
@@ -155,6 +156,7 @@ private fun NameField(
             keyboardActions = KeyboardActions(onDone = { onImeDone() }),
             modifier = Modifier
                 .fillMaxWidth()
+                .hapticOnFocus()
                 .semantics { testTag = "nameField" },
             decorationBox = { inner ->
                 if (value.isBlank()) {

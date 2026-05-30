@@ -122,7 +122,7 @@ class OnboardReferralCodeViewModel @Inject constructor(
                     it.copy(
                         submitting = false,
                         errorCode = mapThrowableToErrorCode(throwable),
-                        showSkipAndContinue = navigateOnSuccess,
+                        showSkipAndContinue = true,
                     )
                 }
             }

@@ -337,7 +337,7 @@ private fun NotifBottomBar(
             Text(
                 text = when {
                     granted -> verifyTitle(R.string.continue_text, "Continue")
-                    canRequest -> verifyTitle(R.string.allow_notifications_cta, "Allow Notifications")
+                    canRequest -> verifyTitle(R.string.allow_notifications_cta, "Allow notifications")
                     else -> verifyTitle(R.string.continue_text, "Continue")
                 },
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -608,7 +608,7 @@ private fun NotificationCardIOS(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "AI CALORIE COUNTER",
+                        text = "AI Calorie Counter",
                         fontSize = NotifCardSpec.metaFont,
                         lineHeight = NotifCardSpec.metaLine,
                         fontWeight = FontWeight.Medium,
@@ -688,7 +688,7 @@ private fun AppIconIOSBadge(
         ) {
             Icon(
                 painter = painterResource(id = resId),
-                contentDescription = "App Icon",
+                contentDescription = "App icon",
                 tint = Color.White,
                 modifier = Modifier
                     .fillMaxSize()

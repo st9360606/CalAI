@@ -596,7 +596,7 @@
     <string name="onboard_referral_code_submit">提交</string>
     <string name="onboard_referral_code_submitting">提交中…</string>
     <string name="onboard_referral_code_applied">推薦碼已套用！</string>
-    <string name="onboard_referral_code_skip_and_continue">跳過並繼續</string>
+    <string name="onboard_referral_code_skip">跳過</string>
     <string name="onboard_referral_code_error_invalid_format">僅能輸入英文字母與數字。</string>
     <string name="onboard_referral_code_error_invalid">找不到這組推薦碼。</string>
     <string name="onboard_referral_code_error_self_referral">不能輸入自己的推薦碼。</string>

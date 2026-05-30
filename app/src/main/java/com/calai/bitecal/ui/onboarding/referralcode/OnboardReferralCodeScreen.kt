@@ -28,6 +28,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -103,7 +104,11 @@ fun OnboardReferralCodeScreen(
                     .fillMaxWidth()
                     .imePadding()
                     .navigationBarsPadding()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+                    .padding(
+                        start = 20.dp,
+                        end = 20.dp,
+                        bottom = 8.dp
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Button(
@@ -130,9 +135,27 @@ fun OnboardReferralCodeScreen(
                     )
                 }
 
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(8.dp))
 
-                Spacer(Modifier.height(17.dp))
+                TextButton(
+                    onClick = rememberClickWithHaptic(onClick = onSkipAndContinue),
+                    enabled = !ui.submitting,
+                    modifier = Modifier.height(44.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF8F98A3),
+                        disabledContentColor = Color(0xFF8F98A3).copy(alpha = 0.45f)
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboard_referral_code_skip),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 0.1.sp
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     ) { inner ->
@@ -190,22 +213,6 @@ fun OnboardReferralCodeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                 )
-            }
-
-            if (ui.showSkipAndContinue) {
-                Spacer(
-                    Modifier.height(6.dp)
-                )
-                TextButton(
-                    onClick = rememberClickWithHaptic(onClick = onSkipAndContinue),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text(
-                        text = stringResource(R.string.onboard_referral_code_skip_and_continue),
-                        color = ReferralText,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
             }
 
             Spacer(Modifier.weight(1.37f))

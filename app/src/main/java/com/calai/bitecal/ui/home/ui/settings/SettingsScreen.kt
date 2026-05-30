@@ -833,7 +833,7 @@ private data class ProfileSubscriptionVisual(
             return when (kind) {
                 MembershipDisplayKind.PAYMENT_ISSUE -> {
                     ProfileSubscriptionVisual(
-                        label = "PAYMENT",
+                        label = "Payment",
                         fallbackSubtitle = "Update payment",
                         backgroundColors = listOf(
                             Color(0xFFFFF7F7),
@@ -848,7 +848,7 @@ private data class ProfileSubscriptionVisual(
 
                 MembershipDisplayKind.PREMIUM -> {
                     ProfileSubscriptionVisual(
-                        label = "PREMIUM",
+                        label = "Premium",
                         fallbackSubtitle = "Active member",
                         backgroundColors = listOf(
                             Color(0xFF111114),
@@ -863,7 +863,7 @@ private data class ProfileSubscriptionVisual(
 
                 MembershipDisplayKind.TRIAL -> {
                     ProfileSubscriptionVisual(
-                        label = "TRIAL",
+                        label = "Trial",
                         fallbackSubtitle = "Access active",
                         backgroundColors = listOf(
                             Color(0xFFF0FDF4),
@@ -880,7 +880,7 @@ private data class ProfileSubscriptionVisual(
                 }
                 MembershipDisplayKind.FREE -> {
                     ProfileSubscriptionVisual(
-                        label = "FREE",
+                        label = "Free",
                         fallbackSubtitle = "Upgrade",
                         backgroundColors = listOf(
                             Color(0xFFF4F4F5),
@@ -1229,7 +1229,7 @@ private fun InviteRewardVisual(
                     )
 
                     Text(
-                        text = "DAYS",
+                        text = "Days",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color.White.copy(alpha = 0.92f),
                             fontWeight = FontWeight.Black,
@@ -1579,7 +1579,7 @@ private fun MacroActionsWidgetPreviewCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 WidgetActionTile(
-                    label = "Scan Food",
+                    label = "Scan food",
                     icon = { ScanFocusGlyph() }
                 )
                 WidgetActionTile(

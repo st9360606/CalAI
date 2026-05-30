@@ -179,7 +179,7 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
                     horizontalAlignment = Alignment.Start
                 ) {
                     UpperLabel(
-                        text = "TO GOAL WEIGHT",
+                        text = "To goal weight",
                         color = label,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -200,7 +200,7 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
                     horizontalAlignment = Alignment.Start
                 ) {
                     UpperLabel(
-                        text = "CURRENT WEIGHT",
+                        text = "Current weight",
                         color = label,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -239,7 +239,7 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
                 }
 
             UpperLabel(
-                text = "ACHIEVED ${formatAchievedPercent1(achievedFractionForLabel)}% OF GOAL",
+                text = "Achieved ${formatAchievedPercent1(achievedFractionForLabel)}% of goal",
                 color = label,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(start = 4.dp)
@@ -1660,7 +1660,7 @@ fun HistoryRow(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "WEIGHT",
+                        text = "Weight",
                         fontSize = 11.sp,
                         letterSpacing = 0.6.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -1722,7 +1722,7 @@ private fun RightMetaColumn(
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "CHANGE",
+            text = "Change",
             fontSize = 11.sp,
             letterSpacing = 0.6.sp,
             fontWeight = FontWeight.SemiBold,

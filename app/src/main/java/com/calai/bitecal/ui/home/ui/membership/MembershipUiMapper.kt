@@ -27,7 +27,7 @@ object MembershipUiMapper {
         if (paymentIssue && status == PremiumStatus.PREMIUM) {
             return MembershipDisplay(
                 kind = MembershipDisplayKind.PAYMENT_ISSUE,
-                title = "Payment Issue",
+                title = "Payment issue",
                 subtitle = "Update payment"
             )
         }
@@ -35,19 +35,19 @@ object MembershipUiMapper {
         return when (status) {
             PremiumStatus.FREE -> MembershipDisplay(
                 kind = MembershipDisplayKind.FREE,
-                title = "FREE",
+                title = "Free",
                 subtitle = "Upgrade"
             )
 
             PremiumStatus.TRIAL -> MembershipDisplay(
                 kind = MembershipDisplayKind.TRIAL,
-                title = "TRIAL",
+                title = "Trial",
                 subtitle = formatTrialSubtitle(trialDaysLeft)
             )
 
             PremiumStatus.PREMIUM -> MembershipDisplay(
                 kind = MembershipDisplayKind.PREMIUM,
-                title = "PREMIUM",
+                title = "Premium",
                 subtitle = formatPremiumSubtitle(currentPremiumUntil)
             )
         }

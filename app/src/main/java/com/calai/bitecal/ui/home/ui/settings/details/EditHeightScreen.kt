@@ -323,7 +323,7 @@ fun EditHeightScreen(
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(
-                        text = "Set your current Height",
+                        text = "Set your current height",
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,

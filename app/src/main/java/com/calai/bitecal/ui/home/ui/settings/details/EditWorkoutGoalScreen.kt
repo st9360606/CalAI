@@ -54,6 +54,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
 import kotlinx.coroutines.flow.collectLatest
+import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
@@ -207,7 +208,7 @@ private fun WorkoutGoalInputBox(
             .padding(start = 3.dp)
     ) {
         Text(
-            text = "Daily Workout Goal (kcal)",
+            text = "Daily workout goal (kcal)",
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF6B7280)
@@ -228,7 +229,9 @@ private fun WorkoutGoalInputBox(
                 imeAction = ImeAction.Done
             ),
             keyboardActions = KeyboardActions(onDone = { onImeDone() }),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .hapticOnFocus()
         ) { inner -> Box(Modifier.fillMaxWidth()) { inner() } }
     }
 }

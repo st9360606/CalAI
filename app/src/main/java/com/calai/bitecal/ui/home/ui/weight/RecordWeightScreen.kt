@@ -108,6 +108,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 /* =========================================================
@@ -735,6 +736,11 @@ private fun NumberWheelRecord(
     LaunchedEffect(centerIndex, initialized) {
         if (initialized) onValueChange(items[centerIndex])
     }
+
+    HapticWheelTickEffect(
+        tickKey = centerIndex,
+        enabled = initialized && state.isScrollInProgress
+    )
 
     Box(
         modifier = modifier

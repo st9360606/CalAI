@@ -65,6 +65,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
+import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -468,6 +469,11 @@ private fun NumberWheelForGoal(
     LaunchedEffect(centerIndex, initialized) {
         if (initialized) onValueChange(items[centerIndex])
     }
+
+    HapticWheelTickEffect(
+        tickKey = centerIndex,
+        enabled = initialized && state.isScrollInProgress
+    )
 
     Box(
         modifier = modifier

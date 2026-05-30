@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 
@@ -58,6 +59,19 @@ fun rememberClickWithHaptic(
                 latestOnClick()
             }
         }
+    }
+}
+
+@Composable
+fun Modifier.hapticOnFocus(): Modifier {
+    val haptics = rememberBiteCalHaptics()
+    var wasFocused by remember { mutableStateOf(false) }
+
+    return onFocusChanged { focusState ->
+        if (focusState.isFocused && !wasFocused) {
+            haptics.click()
+        }
+        wasFocused = focusState.isFocused
     }
 }
 

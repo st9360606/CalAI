@@ -54,6 +54,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditWaterGoalViewModel
 import kotlinx.coroutines.flow.collectLatest
+import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
@@ -216,7 +217,7 @@ private fun WaterGoalInputBox(
             .padding(start = 3.dp)
     ) {
         Text(
-            text = "Daily Water Goal (ml)",
+            text = "Daily water goal (ml)",
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF6B7280)
@@ -239,7 +240,9 @@ private fun WaterGoalInputBox(
             keyboardActions = KeyboardActions(
                 onDone = { onImeDone() }
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .hapticOnFocus()
         ) { inner ->
             Box(Modifier.fillMaxWidth()) { inner() }
         }

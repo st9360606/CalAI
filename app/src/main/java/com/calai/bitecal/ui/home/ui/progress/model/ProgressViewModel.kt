@@ -735,8 +735,8 @@ private fun ProgressDayDto.toUi(): ProgressBarDayUi {
 }
 
 private fun String.toPrettyLabel(): String = when (uppercase(Locale.ROOT)) {
-    "THIS_WEEK" -> "This Week"
-    "LAST_WEEK" -> "Last Week"
+    "THIS_WEEK" -> "This week"
+    "LAST_WEEK" -> "Last week"
     "TWO_WEEKS_AGO" -> "2 wks. ago"
     "THREE_WEEKS_AGO" -> "3 wks. ago"
     else -> this.replace('_', ' ')

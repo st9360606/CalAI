@@ -714,7 +714,7 @@ private fun OnboardOneTimeOfferScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Gift Unlocked 🎁",
+                text = "Gift unlocked 🎁",
                 color = Color(0xFF111111),
                 fontSize = 30.sp,
                 lineHeight = 34.sp,
@@ -750,11 +750,11 @@ private fun OnboardOneTimeOfferScreen(
 
         OnboardPaywallBottomCta(
             buttonText = if (trialEnabled && trialEligible) {
-                "Start Free Trial"
+                "Start free trial"
             } else {
                 "Continue"
             },
-            helperText = "No Commitment - Cancel Anytime",
+            helperText = "No commitment — cancel anytime",
             helperTextColor = Color(0xFF52525B),
             buttonShape = RoundedCornerShape(14.dp),
             loading = purchasing,
@@ -925,7 +925,7 @@ private fun OneTimeOfferHeroCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "GIFT PRICE UNLOCKED",
+                    text = "Gift price unlocked",
                     color = Color(0xFFFFE8A3),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -936,7 +936,7 @@ private fun OneTimeOfferHeroCard(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Unlock Premium for only",
+                text = "Unlock premium for only",
                 color = Color(0xFFFFE8A3),
                 fontSize = 18.sp,
                 lineHeight = 23.sp,
@@ -1122,8 +1122,8 @@ private fun OneTimeOfferTrialCard(
                 text = when {
                     !trialEligibilityLoaded -> "Checking trial eligibility..."
                     !trialEligible -> "Trial already used"
-                    trialEnabled -> "Free Trial Enabled"
-                    else -> "Not Sure? Enable Free Trial"
+                    trialEnabled -> "Free trial enabled"
+                    else -> "Not sure? Enable free trial"
                 },
                 color = Color(0xFF111111),
                 fontSize = 21.sp,
@@ -1164,7 +1164,7 @@ private fun OneTimeOfferTrialCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (trialEnabled && trialEligible) "FREE TRIAL" else "LOWEST PRICE EVER",
+                    text = if (trialEnabled && trialEligible) "Free trial" else "Lowest price ever",
                     color = Color.White,
                     fontSize = 14.sp,
                     lineHeight = 17.sp,

@@ -33,9 +33,9 @@ fun FastingPlanCard(
     modifier: Modifier = Modifier,
 
     planTitle: String = "Fasting Plan",
-    startLabel: String = "start time",
+    startLabel: String = "Start time",
     startText: String? = null,
-    endLabel: String = "end time",
+    endLabel: String = "End time",
     endText: String? = null,
 
     planNameTextStyle: TextStyle = MaterialTheme.typography.headlineSmall.copy(

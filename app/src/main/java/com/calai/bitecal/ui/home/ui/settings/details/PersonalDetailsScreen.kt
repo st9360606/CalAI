@@ -78,7 +78,7 @@ fun PersonalDetailsScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             ProfileEditTopBar(
-                title = "Personal details",
+                title = "Personal Details",
                 onBack = onBack
             )
         },
@@ -120,7 +120,7 @@ fun PersonalDetailsScreen(
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
-                                text = "Goal Weight",
+                                text = "Goal weight",
                                 fontSize = titleSize,
                                 fontWeight = FontWeight.Normal,
                                 color = Color(0xFF374151)
@@ -147,7 +147,7 @@ fun PersonalDetailsScreen(
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
                             Text(
-                                text = "Change Goal",
+                                text = "Change goal",
                                 style = MaterialTheme.typography.labelSmall
                             )
                         }
@@ -172,7 +172,7 @@ fun PersonalDetailsScreen(
                     )
 
                     PersonalDetailsRow(
-                        title = "Current Weight",
+                        title = "Current weight",
                         valueMain = curMain,
                         titleOffsetY = 2.dp,
                         valueOffsetY = 2.dp,
@@ -222,7 +222,7 @@ fun PersonalDetailsScreen(
                     PersonalRowDivider(outline)
 
                     PersonalDetailsRow(
-                        title = "Starting Weight",
+                        title = "Starting weight",
                         valueMain = startMain,
                         titleOffsetY = 1.dp,
                         valueOffsetY = 1.dp,
@@ -234,7 +234,7 @@ fun PersonalDetailsScreen(
 
                     val stepText = profile?.dailyStepGoal?.let { "$it steps" } ?: "—"
                     PersonalDetailsRow(
-                        title = "Daily Step Goal",
+                        title = "Daily step goal",
                         valueMain = stepText,
                         titleOffsetY = (-2).dp,
                         valueOffsetY = (-2).dp,
@@ -246,7 +246,7 @@ fun PersonalDetailsScreen(
 
                     val waterText = profile?.waterMl?.let { "$it ml" } ?: "—"
                     PersonalDetailsRow(
-                        title = "Daily Water Goal",
+                        title = "Daily water goal",
                         valueMain = waterText,
                         titleOffsetY = (-2).dp,
                         valueOffsetY = (-2).dp,
@@ -258,7 +258,7 @@ fun PersonalDetailsScreen(
 
                     val workoutGoalText = profile?.dailyWorkoutGoalKcal?.let { "$it kcal" } ?: "—"
                     PersonalDetailsRow(
-                        title = "Daily Workout Goal",
+                        title = "Daily workout goal",
                         valueMain = workoutGoalText,
                         titleOffsetY = (-2).dp,
                         valueOffsetY = (-2).dp,

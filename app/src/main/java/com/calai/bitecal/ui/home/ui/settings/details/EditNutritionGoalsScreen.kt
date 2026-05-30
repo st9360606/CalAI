@@ -81,6 +81,8 @@ import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsUiState
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.clickWithoutHaptic
+import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -159,7 +161,7 @@ private fun EditNutritionGoalsScreen(
         containerColor = Color(0xFFF7F7F7),
         topBar = {
             ProfileEditTopBar(
-                title = "Edit nutrition goals",
+                title = "Edit Nutrition Goals",
                 onBack = {
                     focusManager.clearFocus()
                     onBack()
@@ -360,7 +362,7 @@ private fun GoalRow(
                     .clip(RoundedCornerShape(16.dp))
                     .background(bg)
                     .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))
-                    .biteCalClickable { focusRequester.requestFocus() }
+                    .clickWithoutHaptic { focusRequester.requestFocus() }
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Column {
@@ -386,6 +388,7 @@ private fun GoalRow(
                             .fillMaxWidth()
                             .padding(start = 1.dp)
                             .focusRequester(focusRequester)
+                            .hapticOnFocus()
                             .onFocusChanged { focused = it.isFocused }
                     )
                 }
@@ -492,7 +495,7 @@ private fun BottomActionBar(
                         .padding(start = 18.dp, end = 18.dp, bottom = 20.dp, top = 20.dp)
                         .height(55.dp)
                 ) {
-                    Text("Auto Generate Goals", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Auto generate goals", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Row(

@@ -57,6 +57,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.ui.components.ProfileEditTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
 import kotlinx.coroutines.flow.collectLatest
+import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
@@ -144,7 +145,7 @@ fun EditDailyStepGoalScreen(
 
             // --- input box (thick black border, label inside) ---
             StepGoalInputBox(
-                label = "Daily Step Goal",
+                label = "Daily step goal",
                 value = ui.input,
                 onValueChange = vm::onInputChange,
                 isError = ui.error != null,
@@ -248,7 +249,9 @@ private fun StepGoalInputBox(
             keyboardActions = KeyboardActions(
                 onDone = { onImeDone() }
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .hapticOnFocus()
         ) { inner ->
             // 讓游標/內容位置看起來更像截圖（左上靠近）
             Box(Modifier.fillMaxWidth()) {

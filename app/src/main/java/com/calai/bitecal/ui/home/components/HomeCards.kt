@@ -48,12 +48,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
@@ -79,6 +79,7 @@ import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.bitecal.ui.home.ui.fasting.components.WeightCardNew
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberBiteCalHaptics
 import kotlin.math.roundToInt
 
 @Composable
@@ -1275,9 +1276,9 @@ fun WeightFastingRowModern(
         FastingPlanCard(
             planTitle = "Fasting Plan",
             planName = plan,
-            startLabel = "start time",
+            startLabel = "Start time",
             startText = fastingStartText,
-            endLabel = "end time",
+            endLabel = "End time",
             endText = fastingEndText,
             enabled = fastingEnabled,
             onToggle = onToggle,
@@ -1335,6 +1336,8 @@ fun GreenSwitch(
     )
 
     val interaction = remember { MutableInteractionSource() }
+    val haptics = rememberBiteCalHaptics()
+    val latestOnCheckedChange by rememberUpdatedState(onCheckedChange)
 
     Box(
         modifier = modifier
@@ -1348,7 +1351,10 @@ fun GreenSwitch(
             )
             .toggleable(
                 value = checked,
-                onValueChange = onCheckedChange,
+                onValueChange = { nextChecked ->
+                    haptics.click()
+                    latestOnCheckedChange(nextChecked)
+                },
                 role = Role.Switch,
                 interactionSource = interaction,
                 indication = null
