@@ -84,6 +84,7 @@ import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.clickWithoutHaptic
 import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,7 +195,7 @@ private fun EditNutritionGoalsScreen(
                 .padding(inner)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
                 .padding(bottom = 110.dp)
         ) {
             Spacer(Modifier.height(24.dp))
@@ -492,7 +493,7 @@ private fun BottomActionBar(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(start = 18.dp, end = 18.dp, bottom = 20.dp, top = 20.dp)
+                        .padding(start = BiteCalScreenFrame.contentHorizontalMedium, end = BiteCalScreenFrame.contentHorizontalMedium, bottom = BiteCalScreenFrame.detailBottom, top = BiteCalScreenFrame.detailBottom)
                         .height(55.dp)
                 ) {
                     Text("Auto generate goals", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)

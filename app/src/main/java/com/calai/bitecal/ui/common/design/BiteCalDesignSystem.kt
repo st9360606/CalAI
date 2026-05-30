@@ -139,8 +139,8 @@ object BiteCalSpacing {
     // Legacy-compatible names used while migrating existing screens into the design system.
     val TopBarEndPadding: Dp = 8.dp
     val ContentWideHorizontal: Dp = screenHorizontalWide
-    val ContentVertical: Dp = 20.dp
-    val ContentTitleHorizontal: Dp = 18.dp
+    val ContentVertical: Dp = BiteCalScreenFrame.detailBottom
+    val ContentTitleHorizontal: Dp = BiteCalScreenFrame.contentHorizontalMedium
     val BottomHorizontal: Dp = bottomBarHorizontal
     val BottomSingleAction: Dp = bottomBarBottom
     val BottomWithSecondaryAction: Dp = bottomBarBottomCompact
@@ -150,14 +150,65 @@ object BiteCalSpacing {
 }
 
 
+object BiteCalScreenFrame {
+    /** Standard horizontal distance from the phone edge for full-screen content. */
+    val contentHorizontalCompact: Dp = 16.dp
+    val contentHorizontalMedium: Dp = 18.dp
+    val contentHorizontal: Dp = BiteCalSpacing.screenHorizontal
+    val contentHorizontalComfort: Dp = 22.dp
+    val contentHorizontalWide: Dp = BiteCalSpacing.screenHorizontalWide
+    val contentHorizontalLarge: Dp = 28.dp
+    val contentHorizontalExtraWide: Dp = 30.dp
+    val contentHorizontalPaywall: Dp = 32.dp
+    val contentHorizontalHero: Dp = 36.dp
+
+    /** Default vertical breathing room for content directly under a Scaffold topBar. */
+    val contentVertical: Dp = 16.dp
+    val contentTopTiny: Dp = 5.dp
+    val contentTopSmall: Dp = 8.dp
+    val contentTop: Dp = 12.dp
+    val contentBottomLarge: Dp = 24.dp
+
+    /** Onboarding title and description horizontal padding. */
+    val onboardingTitleHorizontal: Dp = contentHorizontalMedium
+    val onboardingSubtitleHorizontal: Dp = 48.dp
+
+    /** Main onboarding content horizontal distance. */
+    val onboardingHorizontal: Dp = BiteCalSpacing.screenHorizontal
+    val onboardingWideHorizontal: Dp = contentHorizontalExtraWide
+
+    /** Home/feed content distances. */
+    val homeHorizontal: Dp = BiteCalSpacing.screenHorizontal
+    val homeTop: Dp = 12.dp
+    val homeBottom: Dp = 0.dp
+
+    /** Settings/detail screens. */
+    val detailHorizontal: Dp = BiteCalSpacing.screenHorizontal
+    val detailHorizontalWide: Dp = contentHorizontalComfort
+    val detailVertical: Dp = 16.dp
+    val detailTop: Dp = 14.dp
+    val detailBottom: Dp = 20.dp
+    val settingsHorizontal: Dp = contentHorizontalMedium
+    val settingsTop: Dp = 6.dp
+    val settingsBottom: Dp = 50.dp
+
+    /** Bottom CTA content frame values. */
+    val bottomActionSingle: Dp = BiteCalSpacing.bottomBarBottom
+
+    /** Content that intentionally needs more side margin, such as referral code forms. */
+    val formHorizontalWide: Dp = contentHorizontalExtraWide
+    val authTitleVertical: Dp = 15.dp
+}
+
+
 object BiteCalScreenSpacing {
     val TopBarHorizontal: Dp = BiteCalSpacing.topBarHorizontal
     val TopBarEndPadding: Dp = 8.dp
-    val ContentHorizontal: Dp = BiteCalSpacing.screenHorizontal
-    val ContentWideHorizontal: Dp = BiteCalSpacing.screenHorizontalWide
-    val ContentVertical: Dp = 20.dp
-    val ContentTitleHorizontal: Dp = 18.dp
-    val BottomHorizontal: Dp = BiteCalSpacing.bottomBarHorizontal
+    val ContentHorizontal: Dp = BiteCalScreenFrame.contentHorizontal
+    val ContentWideHorizontal: Dp = BiteCalScreenFrame.contentHorizontalWide
+    val ContentVertical: Dp = BiteCalScreenFrame.detailBottom
+    val ContentTitleHorizontal: Dp = BiteCalScreenFrame.contentHorizontalMedium
+    val BottomHorizontal: Dp = BiteCalScreenFrame.contentHorizontal
     val BottomSingleAction: Dp = BiteCalSpacing.bottomBarBottom
     val BottomWithSecondaryAction: Dp = BiteCalSpacing.bottomBarBottomCompact
     val BottomGap: Dp = BiteCalSpacing.bottomButtonToSecondary
@@ -664,9 +715,3 @@ fun BiteCalLandingLanguageTopBar(
         },
     )
 }
-
-fun Modifier.biteCalScreenHorizontalPadding(): Modifier =
-    padding(horizontal = BiteCalSpacing.screenHorizontal)
-
-fun Modifier.biteCalTitleHorizontalPadding(): Modifier =
-    padding(horizontal = 18.dp)

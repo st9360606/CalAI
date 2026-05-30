@@ -62,6 +62,7 @@ import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import java.time.ZoneId
 import java.time.format.FormatStyle
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @Composable
 fun NotificationInboxScreen(
@@ -436,7 +437,7 @@ private fun NotificationCenteredState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp)
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalLarge)
             .padding(bottom = 150.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

@@ -38,6 +38,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @Composable
 fun EditNameScreen(
@@ -66,8 +67,8 @@ fun EditNameScreen(
                 .fillMaxSize()
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 22.dp)
-                .padding(top = 14.dp, bottom = 20.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalComfort)
+                .padding(top = BiteCalScreenFrame.detailTop, bottom = BiteCalScreenFrame.detailBottom)
         ) {
             Spacer(Modifier.height(30.dp))
 
@@ -137,7 +138,7 @@ private fun NameField(
             .height(64.dp)
             .clip(shape)
             .border(width = 2.dp, color = Color(0xFF111114), shape = shape)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact),
         contentAlignment = Alignment.CenterStart
     ) {
         BasicTextField(

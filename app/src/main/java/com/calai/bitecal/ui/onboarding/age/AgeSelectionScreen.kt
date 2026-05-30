@@ -44,6 +44,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -93,7 +94,7 @@ fun AgeSelectionScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                 textAlign = TextAlign.Center
             )
 
@@ -107,7 +108,7 @@ fun AgeSelectionScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 48.dp),
+                    .padding(horizontal = BiteCalScreenFrame.onboardingSubtitleHorizontal),
                 textAlign = TextAlign.Center
             )
 

@@ -26,6 +26,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -61,7 +62,7 @@ fun EditAgeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp),
+                        .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, bottom = BiteCalScreenFrame.bottomActionSingle),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
@@ -108,7 +109,7 @@ fun EditAgeScreen(
                     text = msg,
                     color = Color(0xFFEF4444),
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = BiteCalScreenFrame.contentHorizontalWide),
                     textAlign = TextAlign.Center
                 )
             }
@@ -146,7 +147,7 @@ fun EditAgeScreen(
                 fontSize = 12.sp,
                 color = Color(0xFF9AA3AE),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = BiteCalScreenFrame.contentHorizontalWide)
             )
         }
     }

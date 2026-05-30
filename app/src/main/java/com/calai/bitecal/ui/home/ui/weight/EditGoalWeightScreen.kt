@@ -67,6 +67,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -151,7 +152,7 @@ fun EditGoalWeightScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp),
+                        .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, bottom = BiteCalScreenFrame.bottomActionSingle),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(

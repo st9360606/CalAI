@@ -56,6 +56,7 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.EditWaterGoalViewMode
 import kotlinx.coroutines.flow.collectLatest
 import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @Composable
 fun EditWaterGoalScreen(
@@ -93,8 +94,8 @@ fun EditWaterGoalScreen(
                 .fillMaxSize()
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 22.dp)
-                .padding(top = 14.dp, bottom = 20.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalComfort)
+                .padding(top = BiteCalScreenFrame.detailTop, bottom = BiteCalScreenFrame.detailBottom)
         ) {
             Spacer(Modifier.height(60.dp))
 

@@ -85,6 +85,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 // === Colors（保持你的設定） ===
 val NeutralText = Color(0xFF6B7280)
@@ -237,7 +238,7 @@ fun HealthPlanScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontal)
             )
 
             Spacer(Modifier.height(12.dp))
@@ -249,7 +250,7 @@ fun HealthPlanScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 48.dp)
+                    .padding(horizontal = BiteCalScreenFrame.onboardingSubtitleHorizontal)
             )
 
             Spacer(Modifier.height(24.dp))
@@ -345,7 +346,7 @@ private fun MacrosRings(plan: MacroPlan) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp),
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         MacroRingItem(
@@ -414,7 +415,7 @@ private fun HydrationAndWeightRings(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp),
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         MacroRingItem(
@@ -743,7 +744,7 @@ fun ResearchSourcesBlock(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                     .testTag("sources_links"),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

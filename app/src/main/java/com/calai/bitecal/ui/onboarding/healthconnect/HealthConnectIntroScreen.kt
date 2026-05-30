@@ -58,6 +58,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import kotlinx.coroutines.launch
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private const val TAG = "HC-PERM"
 private const val HC_PROVIDER = "com.google.android.apps.healthdata"
@@ -173,7 +174,7 @@ fun HealthConnectIntroScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalWide)
                     .height(300.dp),
                 contentAlignment = Alignment.Center
             ) {

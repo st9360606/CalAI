@@ -48,6 +48,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @Composable
 fun WidgetGuideScreen(
@@ -70,7 +71,7 @@ fun WidgetGuideScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
                 .padding(top = 0.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

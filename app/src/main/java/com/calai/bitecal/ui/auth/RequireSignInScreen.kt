@@ -54,6 +54,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private enum class PrimaryAuthMethod { Google, Email }
 
@@ -101,7 +102,9 @@ fun RequireSignInScreen(
                 color = ink,
                 textAlign = TextAlign.Start,
                 modifier = Modifier
-                    .padding(horizontal = BiteCalScreenSpacing.ContentWideHorizontal, vertical = 15.dp)
+                    .padding(
+                        horizontal = BiteCalScreenFrame.contentHorizontalWide,
+                        vertical = BiteCalScreenFrame.authTitleVertical)
                     .fillMaxWidth()
             )
 
@@ -109,7 +112,7 @@ fun RequireSignInScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = BiteCalScreenSpacing.ContentWideHorizontal)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalWide)
             ) {
                 Column(
                     modifier = Modifier

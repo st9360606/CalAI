@@ -78,6 +78,7 @@ import com.calai.bitecal.ui.landing.LandingSlideshow
 import com.calai.bitecal.ui.landing.SlideItem
 import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import kotlinx.coroutines.delay
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private enum class OnboardPaywallStep {
     Intro,
@@ -286,7 +287,7 @@ private fun BoxScope.RestoreSubscriptionRequiredDialog(
 
         Column(
             modifier = Modifier
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalWide)
                 .fillMaxWidth()
                 .shadow(
                     elevation = 22.dp,
@@ -430,7 +431,7 @@ private fun BoxScope.OnboardSubscriptionErrorBanner(
         modifier = Modifier
             .align(Alignment.TopCenter)
             .padding(top = 78.dp)
-            .padding(horizontal = 18.dp)
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
             .background(
                 color = Color(0xFFFFEBEE),
                 shape = RoundedCornerShape(12.dp)
@@ -474,7 +475,7 @@ private fun OnboardSubscriptionIntro(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalWide)
                 .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -622,7 +623,7 @@ private fun OnboardDiscountSpinScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalPaywall)
                 .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -710,7 +711,7 @@ private fun OnboardOneTimeOfferScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 22.dp)
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalComfort)
                 .padding(top = 110.dp, bottom = 170.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

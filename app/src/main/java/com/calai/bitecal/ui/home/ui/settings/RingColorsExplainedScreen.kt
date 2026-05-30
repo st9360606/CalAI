@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private object RingColorsExplainedTheme {
     val Ink = Color(0xFF111114)
@@ -103,8 +104,8 @@ fun RingColorsExplainedScreen(
                     .padding(inner)
                     .fillMaxSize()
                     .verticalScroll(scroll)
-                    .padding(horizontal = 18.dp)
-                    .padding(top = 8.dp, bottom = 20.dp)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
+                    .padding(top = BiteCalScreenFrame.contentTopSmall, bottom = BiteCalScreenFrame.detailBottom)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {

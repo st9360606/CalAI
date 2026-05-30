@@ -56,6 +56,7 @@ import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodCardUi
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private val ScreenBg = Color(0xFFF5F5F5)
 private val TitleColor = Color(0xFF18191D)      // 深石墨黑：主資訊，高級但不死黑
@@ -116,7 +117,7 @@ fun SavedFoodsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .offset(y = (-8).dp)
-                .padding(start = 20.dp, end = 20.dp, top = 0.dp, bottom = 2.dp),
+                .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, top = 0.dp, bottom = 2.dp),
             fontSize = 14.sp,
             lineHeight = 20.sp,
             color = SecondaryText,

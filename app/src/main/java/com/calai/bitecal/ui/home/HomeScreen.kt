@@ -134,6 +134,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -622,7 +623,7 @@ fun HomeScreen(
                     .padding(inner)
                     .fillMaxSize()
                     .verticalScroll(scrollState, enabled = verticalScrollEnabled)
-                    .padding(horizontal = 20.dp)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontal)
             ) {
                 // ===== Top bar: avatar + bell
                 Row(

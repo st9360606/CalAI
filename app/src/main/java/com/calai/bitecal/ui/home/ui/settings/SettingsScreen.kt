@@ -121,6 +121,7 @@ import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionUiState
 import com.calai.bitecal.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 /**
  * ✅ Personal => Settings（你圖上的那個）
@@ -508,8 +509,8 @@ private fun SettingsContent(
     Column(
         modifier = modifier
             .verticalScroll(scroll)
-            .padding(horizontal = 18.dp)
-            .padding(top = 6.dp, bottom = 50.dp)
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
+            .padding(top = BiteCalScreenFrame.settingsTop, bottom = BiteCalScreenFrame.settingsBottom)
     ) {
         ProfileCard(
             avatarUrl = avatarUrl,
@@ -1148,7 +1149,7 @@ private fun InviteFriendsCard(
                             .height(44.dp)
                             .clip(RoundedCornerShape(999.dp))
                             .background(Color.White)
-                            .padding(horizontal = 18.dp),
+                            .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {

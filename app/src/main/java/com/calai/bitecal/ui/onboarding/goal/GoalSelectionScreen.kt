@@ -34,6 +34,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +79,7 @@ fun GoalSelectionScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 22.dp),
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                 textAlign = TextAlign.Center
             )
 
@@ -92,7 +93,7 @@ fun GoalSelectionScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = BiteCalScreenFrame.onboardingSubtitleHorizontal),
                 textAlign = TextAlign.Center
             )
 

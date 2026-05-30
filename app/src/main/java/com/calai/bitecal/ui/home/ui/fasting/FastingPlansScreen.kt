@@ -87,6 +87,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private val ScreenBg = Color(0xFFF5F5F5)
 
@@ -1003,7 +1004,7 @@ private fun CupertinoWheelTimePickerSheet(
                 .navigationBarsPadding()
                 .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .background(Color(0xFFF5F5F5))
-                .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp)
+                .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, top = BiteCalScreenFrame.contentTop, bottom = BiteCalScreenFrame.contentBottomLarge)
                 .consumeClickWithoutHaptic(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

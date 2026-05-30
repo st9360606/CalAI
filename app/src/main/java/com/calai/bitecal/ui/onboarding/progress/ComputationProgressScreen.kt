@@ -99,7 +99,9 @@ fun ComputationProgressScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = BiteCalScreenSpacing.ContentWideHorizontal, vertical = BiteCalScreenSpacing.ContentVertical),
+                .padding(
+                    horizontal = BiteCalScreenSpacing.ContentWideHorizontal,
+                    vertical = BiteCalScreenSpacing.ContentVertical),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(20.dp))

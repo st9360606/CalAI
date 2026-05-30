@@ -94,6 +94,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 enum class CameraMode { FOOD, BARCODE, LABEL }
 
@@ -356,7 +357,7 @@ fun CameraScreen(
             color = Color(0xFF6C6C70).copy(alpha = 0.70f),
             shape = CircleShape,
             modifier = Modifier
-                .padding(start = 24.dp, top = topPadding + 5.dp)
+                .padding(start = BiteCalScreenFrame.contentHorizontalWide, top = topPadding + BiteCalScreenFrame.contentTopTiny)
                 .size(closeBtnSize)
                 .clip(CircleShape)
                 .biteCalClickable(role = Role.Button) { onClose() }

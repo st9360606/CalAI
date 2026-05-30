@@ -110,6 +110,7 @@ import kotlin.math.abs
 import kotlin.math.min
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 /* =========================================================
  * 外層 wrapper：負責找 ActivityResultRegistryOwner 並塞進 Local
@@ -361,7 +362,7 @@ private fun RecordWeightScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 40.dp)
+                    .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, bottom = BiteCalScreenFrame.bottomActionSingle)
             ) {
                 Button(
                     onClick = rememberClickWithHaptic(enabled = !ui.saving) {
@@ -443,7 +444,7 @@ private fun RecordWeightScreenContent(
                 onClick = { showDateSheet = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalWide)
             )
 
             PhotoPickerBlock(
@@ -676,7 +677,7 @@ private fun SegItemRecord(
             modifier = Modifier
                 .fillMaxSize()
                 .defaultMinSize(minHeight = 48.dp)
-                .padding(horizontal = 18.dp),
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -864,7 +865,7 @@ private fun WeighingDateSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 520.dp)
-                .padding(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 24.dp),
+                .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, top = BiteCalScreenFrame.contentTopTiny, bottom = BiteCalScreenFrame.contentBottomLarge),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(

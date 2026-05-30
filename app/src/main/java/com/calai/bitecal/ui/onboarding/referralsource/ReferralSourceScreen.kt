@@ -43,6 +43,7 @@ import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import kotlinx.coroutines.launch
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 // 控制每個 item 佔用的寬度比例（置中）
 private const val OPTION_WIDTH_FRACTION = 0.86f
@@ -93,7 +94,7 @@ fun ReferralSourceScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                 textAlign = TextAlign.Center
             )
 

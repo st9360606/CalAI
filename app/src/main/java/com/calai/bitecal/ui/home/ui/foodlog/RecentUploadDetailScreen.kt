@@ -73,6 +73,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private object DetailStyle {
     val AppBg = Color(0xFFF3F3F3)
@@ -397,7 +398,7 @@ fun RecentUploadDetailScreen(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 18.dp)
+                        .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -647,7 +648,7 @@ private fun Stepper(
             .height(43.dp)
             .clip(RoundedCornerShape(999.dp))
             .border(1.dp, DetailStyle.TextPrimary, RoundedCornerShape(999.dp))
-            .padding(horizontal = 18.dp)
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
     ) {
         IconButton(
             onClick = rememberClickWithHaptic(onClick = onMinus),

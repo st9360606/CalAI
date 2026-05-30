@@ -3309,6 +3309,7 @@ private fun isOnboardingRoute(route: String?): Boolean {
             route == Routes.ONBOARD_HEIGHT ||
             route == Routes.ONBOARD_WEIGHT ||
             route == Routes.ONBOARD_GOAL_WEIGHT ||
+            route == Routes.ONBOARD_WEIGHT_LOSS_COMPARISON ||
             route == Routes.ONBOARD_EXERCISE_FREQ ||
             route == Routes.ONBOARD_GOAL ||
             route == Routes.ONBOARD_NOTIF ||

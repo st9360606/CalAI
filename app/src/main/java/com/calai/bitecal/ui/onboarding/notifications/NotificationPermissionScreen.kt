@@ -82,6 +82,7 @@ import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingPrimaryButton
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingSecondaryTextButton
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 
 private const val TAG_NOTIF = "NotifPerm"
@@ -196,7 +197,7 @@ fun NotificationPermissionScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontal),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Column(

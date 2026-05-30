@@ -47,6 +47,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private val ReferralText = Color(0xFF111114)
 private val ReferralMuted = Color(0xFFB8BAC2)
@@ -111,7 +112,7 @@ fun OnboardReferralCodeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(inner)
-                .padding(horizontal = 30.dp),
+                .padding(horizontal = BiteCalScreenFrame.contentHorizontalExtraWide),
         ) {
             Spacer(Modifier.height(24.dp))
 

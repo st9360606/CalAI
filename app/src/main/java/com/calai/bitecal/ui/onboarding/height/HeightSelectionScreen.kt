@@ -64,6 +64,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -186,7 +187,7 @@ fun HeightSelectionScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                 textAlign = TextAlign.Center
             )
 
@@ -200,7 +201,7 @@ fun HeightSelectionScreen(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 48.dp),
+                    .padding(horizontal = BiteCalScreenFrame.onboardingSubtitleHorizontal),
                 textAlign = TextAlign.Center
             )
 

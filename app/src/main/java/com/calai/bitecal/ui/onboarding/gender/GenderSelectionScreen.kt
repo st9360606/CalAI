@@ -48,6 +48,7 @@ import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,7 +114,7 @@ fun GenderSelectionScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                 textAlign = TextAlign.Center
             )
 
@@ -125,7 +126,9 @@ fun GenderSelectionScreen(
                     color = Color(0xFF9AA3AF),
                     lineHeight = 20.sp
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = BiteCalScreenFrame.onboardingSubtitleHorizontal),
                 textAlign = TextAlign.Center
             )
 

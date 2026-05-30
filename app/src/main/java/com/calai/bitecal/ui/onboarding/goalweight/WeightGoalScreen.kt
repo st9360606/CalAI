@@ -58,6 +58,7 @@ import com.calai.bitecal.i18n.LocalLocaleController
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingPrimaryButton
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -282,7 +283,9 @@ fun WeightGoalScreen(
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
                 color = Color(0xFF111114),
-                modifier = Modifier.fillMaxWidth(0.9f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                 textAlign = TextAlign.Center
             )
 
@@ -294,7 +297,9 @@ fun WeightGoalScreen(
                     color = Color(0xFF9AA3AF),
                     lineHeight = 20.sp
                 ),
-                modifier = Modifier.fillMaxWidth(0.82f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = BiteCalScreenFrame.onboardingSubtitleHorizontal),
                 textAlign = TextAlign.Center
             )
 

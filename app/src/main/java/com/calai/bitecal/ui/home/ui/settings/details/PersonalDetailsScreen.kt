@@ -47,6 +47,7 @@ import java.util.Locale
 import kotlin.math.abs
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 @Composable
 fun PersonalDetailsScreen(
@@ -95,8 +96,8 @@ fun PersonalDetailsScreen(
                     .fillMaxWidth()
                     .widthIn(max = contentMaxWidth)
                     .verticalScroll(scroll)
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 8.dp, bottom = 20.dp)
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
+                    .padding(top = BiteCalScreenFrame.contentTopSmall, bottom = BiteCalScreenFrame.detailBottom)
                     .navigationBarsPadding()
             ) {
                 // ===== Goal Weight Card =====

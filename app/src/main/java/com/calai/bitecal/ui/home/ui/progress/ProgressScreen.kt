@@ -41,6 +41,7 @@ import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.progress.model.BmiCardUi
 import com.calai.bitecal.ui.home.ui.progress.model.BmiStatusTone
 import com.calai.bitecal.ui.home.ui.progress.model.ProgressViewModel
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 private val ProgressBg = Color(0xFFF5F5F5)
 
@@ -84,7 +85,7 @@ fun ProgressScreen(
             item {
                 CommonBmiCard(
                     model = rememberProgressBmiCardModel(ui.bmiCard),
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                 )
             }
 
@@ -92,7 +93,7 @@ fun ProgressScreen(
                 WeekTabs(
                     selected = ui.selectedWeekOffset,
                     onSelect = vm::selectWeek,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                 )
             }
 
@@ -100,7 +101,7 @@ fun ProgressScreen(
                 ui.loading -> {
                     item {
                         LoadingCard(
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
                 }
@@ -111,7 +112,7 @@ fun ProgressScreen(
                             message = ui.error?.takeIf { it.isNotBlank() }
                                 ?: stringResource(R.string.progress_error_load_failed),
                             onRetry = vm::retry,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
                 }
@@ -124,7 +125,7 @@ fun ProgressScreen(
                             average7Calories = ui.average7Calories,
                             average15Calories = ui.average15Calories,
                             days = ui.days,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
 
@@ -135,7 +136,7 @@ fun ProgressScreen(
                             average7FiberG = ui.average7FiberG,
                             average7SugarG = ui.average7SugarG,
                             average7SodiumMg = ui.average7SodiumMg,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
                 }
@@ -145,7 +146,7 @@ fun ProgressScreen(
                 when {
                     ui.workoutLoading && ui.workoutChart.days.isEmpty() -> {
                         WorkoutLoadingCard(
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
 
@@ -154,14 +155,14 @@ fun ProgressScreen(
                             message = ui.workoutError?.takeIf { it.isNotBlank() }
                                 ?: stringResource(R.string.workout_chart_error_load_failed),
                             onRetry = vm::retryWorkout,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
 
                     else -> {
                         WorkoutChartCard(
                             chart = ui.workoutChart,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
                 }
@@ -171,7 +172,7 @@ fun ProgressScreen(
                 when {
                     ui.waterLoading && ui.waterChart.days.isEmpty() -> {
                         WaterLoadingCard(
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
 
@@ -180,14 +181,14 @@ fun ProgressScreen(
                             message = ui.waterError?.takeIf { it.isNotBlank() }
                                 ?: stringResource(R.string.water_chart_error_load_failed),
                             onRetry = vm::retryWater,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
 
                     else -> {
                         WaterChartCard(
                             chart = ui.waterChart,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                         )
                     }
                 }
@@ -201,7 +202,7 @@ fun ProgressScreen(
                     loading = ui.averageOverviewLoading,
                     error = ui.averageOverviewError,
                     onRetry = vm::retryAverageOverview,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = BiteCalScreenFrame.contentHorizontalCompact)
                 )
             }
 

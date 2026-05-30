@@ -34,6 +34,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalPlainBackTopBar
 import com.calai.bitecal.ui.common.design.BiteCalSpacing
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCodeScreen(
@@ -90,7 +91,7 @@ fun EmailCodeScreen(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = BiteCalSpacing.OnboardingHorizontal),
+                .padding(horizontal = BiteCalScreenFrame.onboardingHorizontal),
             horizontalAlignment = Alignment.Start
         ) {
             Spacer(Modifier.height(12.dp))

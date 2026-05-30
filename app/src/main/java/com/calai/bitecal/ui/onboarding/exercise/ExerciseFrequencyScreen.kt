@@ -41,6 +41,7 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 // 與推薦來源頁一致：item 寬度佔螢幕 90%
 private const val OPTION_WIDTH_FRACTION = 0.86f
@@ -103,7 +104,7 @@ fun ExerciseFrequencyScreen(
                 color = Color(0xFF111114),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 22.dp),
+                    .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
                 textAlign = TextAlign.Center
             )
 
@@ -156,7 +157,7 @@ private fun ExerciseOptionItem(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 22.dp),
+            .padding(horizontal = BiteCalScreenFrame.contentHorizontalComfort),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 左側固定純白圓底 + 彩色圖示
