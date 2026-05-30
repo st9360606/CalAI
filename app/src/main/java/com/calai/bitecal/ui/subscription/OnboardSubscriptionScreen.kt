@@ -736,7 +736,7 @@ private fun OnboardOneTimeOfferScreen(
 
             OneTimeOfferUrgencyCard()
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(22.dp))
 
             OneTimeOfferTrialCard(
                 trialEnabled = trialEnabled,
@@ -1021,7 +1021,7 @@ private fun OneTimeOfferUrgencyCard() {
                 shape = RoundedCornerShape(20.dp)
             )
             .padding(horizontal = 18.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         OneTimeOfferUrgencyRow(
             emoji = "☕",

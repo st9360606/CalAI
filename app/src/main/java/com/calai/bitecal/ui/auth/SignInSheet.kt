@@ -25,7 +25,8 @@ import com.calai.bitecal.R
 import com.calai.bitecal.i18n.ProvideComposeLocale
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
-
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 private enum class SheetAuthProvider {
     Google,
     Email
@@ -97,13 +98,34 @@ fun SignInSheet(
 
                 // === Google 按鈕 ===
                 val ink = Color(0xFF111114)
-                val googleClick = rememberClickWithHaptic {
+
+                val scope = rememberCoroutineScope()
+                var actionInFlight by remember { mutableStateOf(false) }
+
+                val googleClick = rememberClickWithHaptic(enabled = !actionInFlight) {
                     selectedProvider = SheetAuthProvider.Google
-                    onGoogle()
+
+                    scope.launch {
+                        actionInFlight = true
+                        delay(90)
+                        runCatching {
+                            onGoogle()
+                        }
+                        actionInFlight = false
+                    }
                 }
-                val emailClick = rememberClickWithHaptic {
+
+                val emailClick = rememberClickWithHaptic(enabled = !actionInFlight) {
                     selectedProvider = SheetAuthProvider.Email
-                    onEmail()
+
+                    scope.launch {
+                        actionInFlight = true
+                        delay(90)
+                        runCatching {
+                            onEmail()
+                        }
+                        actionInFlight = false
+                    }
                 }
 
                 if (selectedProvider == SheetAuthProvider.Google) {
