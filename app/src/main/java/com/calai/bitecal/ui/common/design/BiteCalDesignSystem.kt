@@ -329,45 +329,51 @@ fun BiteCalCompactBackButton(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BiteCalTopBar(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    containerColor: Color = Color.Transparent,
     actions: @Composable BoxScope.() -> Unit = {},
 ) {
     val colors = BiteCalColors.current()
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(
-                start = BiteCalSpacing.topBarHorizontal,
-                top = BiteCalSpacing.topBarTop,
-                end = BiteCalSpacing.topBarHorizontal,
-                bottom = BiteCalSpacing.topBarBottom,
+
+    CenterAlignedTopAppBar(
+        modifier = modifier.padding(
+            start = BiteCalSpacing.topBarHorizontal,
+            end = BiteCalSpacing.topBarHorizontal,
+        ),
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = containerColor,
+            scrolledContainerColor = containerColor,
+            navigationIconContentColor = colors.textPrimary,
+            titleContentColor = colors.textPrimary,
+            actionIconContentColor = colors.textPrimary,
+        ),
+        navigationIcon = {
+            BiteCalBackButton(
+                onClick = onBack,
+                contentDescription = stringResource(R.string.common_back),
             )
-            .height(BiteCalSize.profileTopBarHeight),
-    ) {
-        BiteCalCompactBackButton(
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.CenterStart),
-        )
-
-        Text(
-            text = title,
-            modifier = Modifier.align(Alignment.Center),
-            style = BiteCalTextStyles.topBarTitle(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = colors.textPrimary,
-        )
-
-        Box(
-            modifier = Modifier.align(Alignment.CenterEnd),
-            content = actions,
-        )
-    }
+        },
+        title = {
+            Text(
+                text = title,
+                style = BiteCalTextStyles.topBarTitle(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = colors.textPrimary,
+            )
+        },
+        actions = {
+            Box(
+                contentAlignment = Alignment.Center,
+                content = actions,
+            )
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
