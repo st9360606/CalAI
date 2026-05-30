@@ -22,8 +22,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -58,8 +56,8 @@ import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.roundKg1
 import com.calai.bitecal.i18n.LocalLocaleController
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingPrimaryButton
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
-import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -224,10 +222,9 @@ fun WeightSelectionScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomContainer {
-                Button(
-                    onClick = rememberClickWithHaptic(
-                        enabled = !isSaving && !isWheelScrolling
-                    ) {
+                BiteCalOnboardingPrimaryButton(
+                    text = stringResource(R.string.continue_text),
+                    onClick = {
                         scope.launch {
                             isSaving = true
                             try {
@@ -276,7 +273,6 @@ fun WeightSelectionScreen(
                                     lbsTenthsForUi = lbsTenthsNow
                                 }
 
-                                // ✅ 先同步本地 UI state，避免畫面跳回舊值
                                 valueKg = kgToSave.toDouble()
                                 valueLbsTenths = lbsTenthsForUi
 
@@ -293,30 +289,8 @@ fun WeightSelectionScreen(
                         }
                     },
                     enabled = valueKg > 0.0 && !isSaving && !isWheelScrolling,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(BiteCalScreenSpacing.PrimaryButtonHeight),
-                    shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.continue_text),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 19.sp,
-                                fontWeight = FontWeight.Medium,
-                                letterSpacing = 0.2.sp
-                            ),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+                    loading = isSaving
+                )
             }
         }
     ) { inner ->

@@ -1,12 +1,12 @@
 package com.calai.bitecal.ui.landing
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -16,28 +16,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.calai.bitecal.i18n.LanguageSessionFlag
 import com.calai.bitecal.i18n.LocalLocaleController
 import com.calai.bitecal.i18n.flagAndLabelFromTag
-import com.calai.bitecal.ui.common.FlagChip
 import com.calai.bitecal.ui.landing.device.DeviceFrameIPhone
 import androidx.compose.ui.platform.LocalContext
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalLandingLanguageTopBar
-import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
-private tailrec fun Context.findActivity(): Activity? =
-    when (this) {
-        is Activity -> this
-        is ContextWrapper -> baseContext.findActivity()
-        else -> null
-    }
-
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSpacing
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(
@@ -64,14 +56,6 @@ fun LandingScreen(
     val currentTag = composeLocale.tag.ifBlank { systemTag }
     val (flagEmoji, langLabel) = remember(currentTag) { flagAndLabelFromTag(currentTag) }
 
-    // ★ 根據語系決定 bottomOffset
-    val bottomOffset: Dp =
-        if (currentTag.startsWith("zh", ignoreCase = true)) {
-            33.dp
-        } else {
-            45.dp //越大越近
-        }
-
     val isRoot = navController.previousBackStackEntry == null
     BackHandler(enabled = isRoot) { /* stay */ }
 
@@ -92,8 +76,7 @@ fun LandingScreen(
             ) {
                 LandingBottomBar(
                     onStart = onStart,
-                    onLogin = onLogin,
-                    bottomOffset = bottomOffset   // ★ 用你動態算好的值
+                    onLogin = onLogin
                 )
             }
         }
@@ -185,76 +168,44 @@ fun LandingScreen(
 private fun LandingBottomBar(
     onStart: () -> Unit,
     onLogin: () -> Unit,
-    bottomOffset: Dp,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
+    BiteCalOnboardingBottomContainer(
+        hasSecondaryAction = true
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(start = BiteCalScreenSpacing.BottomHorizontal, end = BiteCalScreenSpacing.BottomHorizontal, bottom = bottomOffset),
-            horizontalAlignment = Alignment.CenterHorizontally
+        BiteCalPrimaryButton(
+            text = stringResource(R.string.cta_get_started),
+            onClick = onStart
+        )
+
+        Spacer(Modifier.height(BiteCalSpacing.bottomButtonToSecondary))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
-                onClick = rememberClickWithHaptic(onClick = onStart),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(BiteCalScreenSpacing.PrimaryButtonHeight),
-                shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White
+            Text(
+                text = stringResource(R.string.cta_login_prefix),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color(0xFF111114),
+                style = LocalTextStyle.current.copy(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false)
                 )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(R.string.cta_get_started),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Medium,
-                            letterSpacing = 0.2.sp
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.width(3.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.cta_login_prefix),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color(0xFF111114),
-                    style = LocalTextStyle.current.copy(
-                        platformStyle = PlatformTextStyle(includeFontPadding = false)
-                    )
+            Text(
+                text = stringResource(R.string.cta_login),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.biteCalClickable { onLogin() },
+                style = LocalTextStyle.current.copy(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false)
                 )
-
-                Spacer(Modifier.width(3.dp))
-
-                Text(
-                    text = stringResource(R.string.cta_login),
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.biteCalClickable { onLogin() },
-                    style = LocalTextStyle.current.copy(
-                        platformStyle = PlatformTextStyle(includeFontPadding = false)
-                    )
-                )
-            }
+            )
         }
     }
 }

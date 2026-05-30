@@ -172,7 +172,7 @@ object BiteCalScreenSpacing {
 }
 
 object BiteCalSize {
-    val topBarHeight: Dp = 40.dp
+    val topBarHeight: Dp = 64.dp
     val profileTopBarHeight: Dp = 36.dp
     val backButton: Dp = 36.dp
     val backButtonCompact: Dp = 36.dp
@@ -611,42 +611,26 @@ fun BiteCalOnboardingBottomBar(
 @Composable
 fun BiteCalPlainBackTopBar(
     onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    centered: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
-    val navigationIcon: @Composable () -> Unit = {
-        IconButton(onClick = rememberClickWithHaptic(onClick = onBack)) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.common_back),
-                tint = BiteCalColors.current().textPrimary,
+    TopAppBar(
+        modifier = modifier.padding(
+            start = BiteCalSpacing.topBarHorizontal,
+            end = BiteCalSpacing.topBarHorizontal,
+        ),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = BiteCalColors.current().background,
+            navigationIconContentColor = BiteCalColors.current().textPrimary,
+            titleContentColor = BiteCalColors.current().textPrimary,
+        ),
+        navigationIcon = {
+            BiteCalBackButton(
+                onClick = onBack,
+                contentDescription = stringResource(R.string.common_back)
             )
-        }
-    }
-
-    if (centered) {
-        CenterAlignedTopAppBar(
-            modifier = modifier,
-            title = { Text("") },
-            navigationIcon = navigationIcon,
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = BiteCalColors.current().background,
-                navigationIconContentColor = BiteCalColors.current().textPrimary,
-                titleContentColor = BiteCalColors.current().textPrimary,
-            ),
-        )
-    } else {
-        TopAppBar(
-            modifier = modifier,
-            title = {},
-            navigationIcon = navigationIcon,
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = BiteCalColors.current().background,
-                navigationIconContentColor = BiteCalColors.current().textPrimary,
-                titleContentColor = BiteCalColors.current().textPrimary,
-            ),
-        )
-    }
+        },
+        title = {}
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -28,8 +28,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -81,9 +79,8 @@ import com.calai.bitecal.ui.common.bmi.CommonBmiCard
 import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
 import com.calai.bitecal.ui.common.bmi.CommonBmiTone
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
-import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingPrimaryButton
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.min
@@ -142,10 +139,9 @@ fun HealthPlanScreen(
         containerColor = Color.White,
         bottomBar = {
             BiteCalOnboardingBottomContainer {
-                Button(
-                    onClick = rememberClickWithHaptic(
-                        enabled = startEnabled && !starting
-                    ) {
+                BiteCalOnboardingPrimaryButton(
+                    text = stringResource(R.string.plan_cta_start),
+                    onClick = {
                         starting = true
                         scope.launch {
                             runCatching { onStart() }
@@ -153,47 +149,15 @@ fun HealthPlanScreen(
                         }
                     },
                     enabled = startEnabled && !starting,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(BiteCalScreenSpacing.PrimaryButtonHeight)
-                        .semantics {
-                            stateDescription = when {
-                                starting -> "loading"
-                                !startEnabled -> "disabled"
-                                else -> "idle"
-                            }
-                        },
-                    shape = RoundedCornerShape(BiteCalScreenSpacing.ButtonCorner),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black,
-                        contentColor = Color.White,
-                        disabledContainerColor = Color.Black.copy(alpha = 0.65f),
-                        disabledContentColor = Color.White
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (starting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(19.dp),
-                                strokeWidth = 2.dp,
-                                color = Color.White
-                            )
-                        } else {
-                            Text(
-                                text = stringResource(R.string.plan_cta_start),
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontSize = 19.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    letterSpacing = 0.2.sp
-                                ),
-                                textAlign = TextAlign.Center
-                            )
+                    loading = starting,
+                    modifier = Modifier.semantics {
+                        stateDescription = when {
+                            starting -> "loading"
+                            !startEnabled -> "disabled"
+                            else -> "idle"
                         }
                     }
-                }
+                )
             }
         }
     ) { inner ->

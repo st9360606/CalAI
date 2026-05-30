@@ -7,20 +7,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberBiteCalHaptics
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomBar
 import com.calai.bitecal.ui.common.design.BiteCalPlainBackTopBar
 import com.calai.bitecal.ui.common.design.BiteCalSpacing
 
@@ -56,10 +48,19 @@ fun EmailEnterScreen(
         containerColor = Color.White,   // ← 加這行，避免用到主題的粉白背景
         topBar = {
             BiteCalPlainBackTopBar(
-                onBack = onBack,
-                centered = true
+                onBack = onBack
             )
-        }    ) { pad ->
+        },
+        bottomBar = {
+            BiteCalOnboardingBottomBar(
+                primaryText = stringResource(R.string.continue_text),
+                onPrimaryClick = { vm.sendCode(onSent) },
+                primaryEnabled = ui.isValid && !ui.loading,
+                primaryLoading = ui.loading,
+                useImePadding = true
+            )
+        }
+    ) { pad ->
         Column(
             modifier = Modifier
                 .padding(pad)
@@ -110,24 +111,7 @@ fun EmailEnterScreen(
 
             Spacer(Modifier.height(28.dp))
 
-            Button(
-                onClick = rememberClickWithHaptic { vm.sendCode(onSent) },
-                enabled = ui.isValid && !ui.loading,
-                shape = MaterialTheme.shapes.extraLarge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                // ← 按鈕改黑底白字
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    if (ui.loading) stringResource(R.string.sending)
-                    else stringResource(R.string.continue_btn)
-                )
-            }
+            
 
             ui.error?.let {
                 Spacer(Modifier.height(12.dp))
