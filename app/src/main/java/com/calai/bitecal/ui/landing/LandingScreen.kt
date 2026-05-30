@@ -29,7 +29,10 @@ import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.design.BiteCalLandingLanguageTopBar
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
 import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSize
 import com.calai.bitecal.ui.common.design.BiteCalSpacing
+import com.calai.bitecal.ui.common.design.BiteCalTextStyles
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(
@@ -47,7 +50,7 @@ fun LandingScreen(
     val titleSize = 32.sp
     val titleLineHeight = 42.sp
     val titleWidthFraction = 0.85f
-    val spaceVideoToTitle = 16.dp
+    val spaceVideoToTitle = 14.dp
 
     // 以系統語系當 fallback，不要硬塞 "en"
     val systemTag = remember(context) {
@@ -66,7 +69,7 @@ fun LandingScreen(
                 flag = flagEmoji,
                 label = langLabel,
                 onClick = { if (!switching) showLang = true },
-                modifier = Modifier.offset(y = (-8).dp)
+                modifier = Modifier.offset(y = (-2).dp)
             )
         },
         bottomBar = {
@@ -87,6 +90,9 @@ fun LandingScreen(
                 .padding(inner),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+            Spacer(Modifier.height(6.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -174,37 +180,42 @@ private fun LandingBottomBar(
     ) {
         BiteCalPrimaryButton(
             text = stringResource(R.string.cta_get_started),
-            onClick = onStart
+            onClick = onStart,
+            height = BiteCalSize.primaryButtonHeight
         )
 
         Spacer(Modifier.height(BiteCalSpacing.bottomButtonToSecondary))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(BiteCalSize.secondaryTextButtonHeight)
+                .biteCalClickable { onLogin() },
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = stringResource(R.string.cta_login_prefix),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color(0xFF111114),
-                style = LocalTextStyle.current.copy(
-                    platformStyle = PlatformTextStyle(includeFontPadding = false)
-                )
+                style = BiteCalTextStyles.secondaryButton().copy(
+                    fontSize = 16.sp,
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color(0xFF111114)
+                ),
+                textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.width(3.dp))
+            Spacer(Modifier.width(5.dp))
 
             Text(
                 text = stringResource(R.string.cta_login),
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.biteCalClickable { onLogin() },
-                style = LocalTextStyle.current.copy(
-                    platformStyle = PlatformTextStyle(includeFontPadding = false)
-                )
+                style = BiteCalTextStyles.secondaryButton().copy(
+                    fontSize = 16.sp,
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                textAlign = TextAlign.Center
             )
         }
     }

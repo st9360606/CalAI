@@ -80,7 +80,7 @@ fun GenderSelectionScreen(
                     FlagChip(
                         flag = flagEmoji,
                         label = langLabel,
-                        modifier = Modifier.offset(y = (-8).dp),
+                        modifier = Modifier.offset(y = (-2).dp),
                         onClick = { if (!switching) showLang = true }
                     )
                 }

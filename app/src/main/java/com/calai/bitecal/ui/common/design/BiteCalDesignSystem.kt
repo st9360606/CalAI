@@ -359,6 +359,7 @@ fun BiteCalPrimaryButton(
     height: Dp = BiteCalSize.primaryButtonHeight,
     containerColor: Color? = null,
     contentColor: Color? = null,
+    textStyle: TextStyle? = null,
 ) {
     val colors = BiteCalColors.current()
     val resolvedContainerColor = containerColor ?: colors.primaryButtonContainer
@@ -388,7 +389,7 @@ fun BiteCalPrimaryButton(
         } else {
             Text(
                 text = text,
-                style = BiteCalTextStyles.primaryButton(),
+                style = textStyle ?: BiteCalTextStyles.primaryButton(),
                 color = resolvedContentColor,
                 textAlign = TextAlign.Center,
             )
