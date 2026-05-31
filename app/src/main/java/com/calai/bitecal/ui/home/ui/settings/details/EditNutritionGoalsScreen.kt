@@ -1,5 +1,9 @@
 package com.calai.bitecal.ui.home.ui.settings.details
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -7,7 +11,6 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,18 +40,10 @@ import androidx.compose.material.icons.filled.Icecream
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.RiceBowl
 import androidx.compose.material.icons.filled.Spa
-import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.LocalFireDepartment
-import androidx.compose.material.icons.outlined.Opacity
-import androidx.compose.material.icons.outlined.Restaurant
-import androidx.compose.material.icons.outlined.Spa
-import androidx.compose.material.icons.outlined.WaterDrop
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -71,6 +66,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -83,11 +79,8 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewMod
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.clickWithoutHaptic
 import com.calai.bitecal.ui.common.haptic.hapticOnFocus
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
-import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
 import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
-import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
 import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -143,6 +136,36 @@ fun EditNutritionGoalsRoute(
 }
 private val GoalRowGap = 16.dp
 
+@Composable
+private fun EditNutritionGoalsNoImePanEffect() {
+    val view = LocalView.current
+
+    DisposableEffect(view) {
+        val window = view.context.findActivity()?.window
+
+        if (window == null) {
+            onDispose { }
+        } else {
+            val originalSoftInputMode = window.attributes.softInputMode
+            val originalState = originalSoftInputMode and WindowManager.LayoutParams.SOFT_INPUT_MASK_STATE
+
+            window.setSoftInputMode(
+                originalState or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+            )
+
+            onDispose {
+                window.setSoftInputMode(originalSoftInputMode)
+            }
+        }
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditNutritionGoalsScreen(
@@ -161,6 +184,8 @@ private fun EditNutritionGoalsScreen(
     onSodium: (String) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+
+    EditNutritionGoalsNoImePanEffect()
 
     Scaffold(
         containerColor = Color(0xFFF7F7F7),

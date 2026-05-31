@@ -23,9 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,16 +51,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditDailyStepGoalViewModel
 import kotlinx.coroutines.flow.collectLatest
-import com.calai.bitecal.ui.common.haptic.hapticOnFocus
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
-import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
-import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
-import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
-import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
-import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @Composable
 fun EditDailyStepGoalScreen(
@@ -105,7 +98,7 @@ fun EditDailyStepGoalScreen(
                 .padding(top = BiteCalScreenFrame.detailContentTopNudged, bottom = BiteCalScreenFrame.detailBottom)
         ) {
 
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(45.dp))
 
             // --- previous goal card ---
             Surface(

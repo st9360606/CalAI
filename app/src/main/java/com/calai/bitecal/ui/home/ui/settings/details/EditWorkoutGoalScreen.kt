@@ -24,9 +24,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -51,16 +48,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
 import kotlinx.coroutines.flow.collectLatest
-import com.calai.bitecal.ui.common.haptic.hapticOnFocus
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
-import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
-import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
-import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
-import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
-import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @Composable
 fun EditWorkoutGoalScreen(
@@ -101,7 +94,7 @@ fun EditWorkoutGoalScreen(
                 .padding(horizontal = BiteCalScreenFrame.contentHorizontalComfort)
                 .padding(top = BiteCalScreenFrame.detailContentTopNudged, bottom = BiteCalScreenFrame.detailBottom)
         ) {
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(45.dp))
 
             Surface(
                 modifier = Modifier.fillMaxWidth(),
