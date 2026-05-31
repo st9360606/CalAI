@@ -79,6 +79,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
+import com.calai.bitecal.ui.common.design.BiteCalNotificationPreviewTokens as NotifCardSpec
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingPrimaryButton
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingSecondaryTextButton
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingTopBar
@@ -467,26 +468,6 @@ private fun BatteryGaugeHorizontal(
 }
 
 /* -------------------- 單一卡片：iOS 通知樣式（對齊 & icon滿版版） -------------------- */
-private object NotifCardSpec {
-    val corner = 18.dp
-    val padH = 16.dp
-    val padV = 10.dp
-    val iconSize = 22.dp
-    val iconCorner = 11.dp
-    val iconInnerPad = 0.dp
-    const val ICONSCALE = 1.28f
-    val gapIconText = 10.dp
-    val gapMetaToContent = 5.dp
-    val metaFont = 11.sp
-    val metaLine = 12.sp
-    val metaLetterSpacing = 0.6.sp
-
-    val titleFont = 15.sp
-    val titleLine = 18.sp
-
-    val bodyFont = 12.sp
-    val bodyLine = 16.sp
-}
 
 @Composable
 private fun NotificationCardIOS(
@@ -518,7 +499,7 @@ private fun NotificationCardIOS(
                     size = NotifCardSpec.iconSize,
                     corner = NotifCardSpec.iconCorner,
                     contentPadding = NotifCardSpec.iconInnerPad,
-                    iconScale = NotifCardSpec.ICONSCALE
+                    iconScale = NotifCardSpec.iconScale
                 )
 
                 Spacer(Modifier.width(NotifCardSpec.gapIconText))

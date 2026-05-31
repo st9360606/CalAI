@@ -328,7 +328,6 @@
     <string name="saved_foods_detail">詳情</string>
     <string name="saved_foods_keep_15_days_hint">最近 15 天內儲存的食物。</string>
     <string name="saved_foods_empty_title">還沒有已儲存的食物</string>
-    <string name="saved_foods_empty_body">你儲存的食物會顯示在這裡。</string>
     <string name="saved_foods_kcal">🔥 %1$d 卡路里</string>
     <string name="saved_foods_protein">🥩 %1$dg</string>
     <string name="saved_foods_carbs">🌾 %1$dg</string>

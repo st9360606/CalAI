@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -63,7 +62,8 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
-import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalFoodLogDetailTokens
+import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
 import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
@@ -75,21 +75,6 @@ import kotlin.math.roundToInt
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
-private object DetailStyle {
-    val AppBg = Color(0xFFF3F3F3)
-    val SheetBg = Color.White
-    val Border = Color(0xFFEAEAEA)
-    val TextPrimary = Color(0xFF151515)
-    val HeroFallback = Color(0xFF202124)
-    val Scrim = Color.Black.copy(alpha = 0.16f)
-    val ChipBg = Color(0xFFF5F5F7)
-    val ProteinTone = Color(0xFFFF6B7B)
-    val CarbsTone = Color(0xFFF6B24D)
-    val FatTone = Color(0xFF6FA3FF)
-    val FiberTone = Color(0xFF8E7DF2)
-    val SugarTone = Color(0xFFFF8A5B)
-    val SodiumTone = Color(0xFF4CB7A5)
-}
 
 private data class ScaledNutrients(
     val kcal: Double,
@@ -279,7 +264,7 @@ fun RecentUploadDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DetailStyle.AppBg)
+            .background(BiteCalFoodLogDetailTokens.AppBg)
     ) {
         Box(
             modifier = Modifier
@@ -297,7 +282,7 @@ fun RecentUploadDetailScreen(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(DetailStyle.HeroFallback),
+                        .background(BiteCalFoodLogDetailTokens.HeroFallback),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -311,7 +296,7 @@ fun RecentUploadDetailScreen(
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(DetailStyle.Scrim)
+                    .background(BiteCalFoodLogDetailTokens.Scrim)
             )
 
             Box(
@@ -340,7 +325,7 @@ fun RecentUploadDetailScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.foodlog_detail_back),
-                            tint = DetailStyle.TextPrimary,
+                            tint = BiteCalFoodLogDetailTokens.TextPrimary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -359,6 +344,7 @@ fun RecentUploadDetailScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
+                        .offset(y = (1).dp)
                         .size(40.dp)
                         .clip(CircleShape)
                         .biteCalClickable(enabled = !st.loading) {
@@ -377,7 +363,7 @@ fun RecentUploadDetailScreen(
                             painter = painterResource(R.drawable.trash),
                             contentDescription = stringResource(R.string.foodlog_detail_delete),
                             modifier = Modifier.size(22.dp),
-                            colorFilter = ColorFilter.tint(DetailStyle.TextPrimary)
+                            colorFilter = ColorFilter.tint(BiteCalFoodLogDetailTokens.TextPrimary)
                         )
                     }
                 }
@@ -390,7 +376,7 @@ fun RecentUploadDetailScreen(
                 .fillMaxWidth()
                 .fillMaxHeight(0.6f),
             shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            color = DetailStyle.SheetBg,
+            color = BiteCalFoodLogDetailTokens.SheetBg,
             shadowElevation = 10.dp
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -441,7 +427,7 @@ fun RecentUploadDetailScreen(
                             ),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = DetailStyle.TextPrimary
+                            color = BiteCalFoodLogDetailTokens.TextPrimary
                         )
 
                         Box(
@@ -471,21 +457,21 @@ fun RecentUploadDetailScreen(
                             modifier = Modifier.weight(1f),
                             title = stringResource(R.string.foodlog_detail_protein),
                             value = "${scaled.protein.roundToInt()}g",
-                            tone = DetailStyle.ProteinTone,
+                            tone = BiteCalFoodLogDetailTokens.ProteinTone,
                             emoji = "🥩"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
                             title = stringResource(R.string.foodlog_detail_carbs),
                             value = "${scaled.carbs.roundToInt()}g",
-                            tone = DetailStyle.CarbsTone,
+                            tone = BiteCalFoodLogDetailTokens.CarbsTone,
                             emoji = "🌾"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
                             title = stringResource(R.string.foodlog_detail_fats),
                             value = "${scaled.fat.roundToInt()}g",
-                            tone = DetailStyle.FatTone,
+                            tone = BiteCalFoodLogDetailTokens.FatTone,
                             emoji = "🥑"
                         )
                     }
@@ -500,21 +486,21 @@ fun RecentUploadDetailScreen(
                             modifier = Modifier.weight(1f),
                             title = stringResource(R.string.foodlog_detail_fiber),
                             value = "${scaled.fiber.roundToInt()}g",
-                            tone = DetailStyle.FiberTone,
+                            tone = BiteCalFoodLogDetailTokens.FiberTone,
                             emoji = "🌿"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
                             title = stringResource(R.string.foodlog_detail_sugar),
                             value = "${scaled.sugar.roundToInt()}g",
-                            tone = DetailStyle.SugarTone,
+                            tone = BiteCalFoodLogDetailTokens.SugarTone,
                             emoji = "🍯"
                         )
                         MacroCard(
                             modifier = Modifier.weight(1f),
                             title = stringResource(R.string.foodlog_detail_sodium),
                             value = "${scaled.sodium.roundToInt()}mg",
-                            tone = DetailStyle.SodiumTone,
+                            tone = BiteCalFoodLogDetailTokens.SodiumTone,
                             emoji = "🧂"
                         )
                     }
@@ -523,7 +509,7 @@ fun RecentUploadDetailScreen(
 
                     HealthScoreCard(score = healthScore)
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(38.dp))
                 }
 
                 val hasMultiplierChange = multiplier != persistedMultiplier
@@ -589,7 +575,7 @@ private fun SaveBadge(
         Icon(
             imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
             contentDescription = stringResource(R.string.foodlog_detail_save),
-            tint = DetailStyle.TextPrimary,
+            tint = BiteCalFoodLogDetailTokens.TextPrimary,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -620,7 +606,7 @@ private fun formatDisplayTime(raw: String): String {
 @Composable
 private fun TimeChip(timeText: String) {
     Surface(
-        color = DetailStyle.ChipBg,
+        color = BiteCalFoodLogDetailTokens.ChipBg,
         shape = RoundedCornerShape(999.dp)
     ) {
         Text(
@@ -647,7 +633,7 @@ private fun Stepper(
         modifier = Modifier
             .height(43.dp)
             .clip(RoundedCornerShape(999.dp))
-            .border(1.dp, DetailStyle.TextPrimary, RoundedCornerShape(999.dp))
+            .border(1.dp, BiteCalFoodLogDetailTokens.TextPrimary, RoundedCornerShape(999.dp))
             .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium)
     ) {
         IconButton(
@@ -658,7 +644,7 @@ private fun Stepper(
             Icon(
                 imageVector = Icons.Filled.Remove,
                 contentDescription = stringResource(R.string.foodlog_detail_minus),
-                tint = DetailStyle.TextPrimary
+                tint = BiteCalFoodLogDetailTokens.TextPrimary
             )
         }
 
@@ -667,7 +653,7 @@ private fun Stepper(
             style = MaterialTheme.typography.titleMedium,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = DetailStyle.TextPrimary
+            color = BiteCalFoodLogDetailTokens.TextPrimary
         )
 
         IconButton(
@@ -678,7 +664,7 @@ private fun Stepper(
             Icon(
                 imageVector = Icons.Outlined.Add,
                 contentDescription = stringResource(R.string.foodlog_detail_plus),
-                tint = DetailStyle.TextPrimary
+                tint = BiteCalFoodLogDetailTokens.TextPrimary
             )
         }
     }
@@ -692,7 +678,7 @@ private fun CaloriesHeroCard(kcal: Int) {
             .height(82.dp),
         color = Color.White,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, DetailStyle.Border)
+        border = BorderStroke(1.dp, BiteCalFoodLogDetailTokens.Border)
     ) {
         Row(
             modifier = Modifier
@@ -728,7 +714,7 @@ private fun CaloriesHeroCard(kcal: Int) {
                     text = kcal.toString(),
                     fontSize = 27.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DetailStyle.TextPrimary
+                    color = BiteCalFoodLogDetailTokens.TextPrimary
                 )
             }
         }
@@ -747,7 +733,7 @@ private fun MacroCard(
         modifier = modifier.height(62.dp),
         color = Color.White,
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, DetailStyle.Border)
+        border = BorderStroke(1.dp, BiteCalFoodLogDetailTokens.Border)
     ) {
         Row(
             modifier = Modifier
@@ -787,7 +773,7 @@ private fun MacroCard(
                 Text(
                     text = value,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = DetailStyle.TextPrimary,
+                    color = BiteCalFoodLogDetailTokens.TextPrimary,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1
                 )
@@ -807,7 +793,7 @@ private fun HealthScoreCard(
         modifier = Modifier.fillMaxWidth(),
         color = Color.White,
         shape = RoundedCornerShape(20.dp),
-        border = BorderStroke(1.dp, DetailStyle.Border)
+        border = BorderStroke(1.dp, BiteCalFoodLogDetailTokens.Border)
     ) {
         Row(
             modifier = Modifier
@@ -855,7 +841,7 @@ private fun HealthScoreCard(
                     Text(
                         text = "$safeScore/10",
                         style = MaterialTheme.typography.titleMedium,
-                        color = DetailStyle.TextPrimary,
+                        color = BiteCalFoodLogDetailTokens.TextPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -887,22 +873,16 @@ private fun FooterSaveBar(
     enabled: Boolean,
     onSave: () -> Unit
 ) {
-    Surface(
-        color = Color.White,
-        shadowElevation = 10.dp
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .offset(y = 6.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-        ) {
-            BiteCalPrimaryButton(
-                text = stringResource(R.string.save),
-                enabled = enabled,
-                loading = false,
-                onClick = onSave
-            )
-        }
+        BiteCalEditBottomActionBar(
+            primaryText = stringResource(R.string.save),
+            onPrimaryClick = onSave,
+            primaryEnabled = enabled,
+            primaryLoading = false
+        )
     }
 }

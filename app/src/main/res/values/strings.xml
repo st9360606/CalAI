@@ -157,7 +157,7 @@
     <string name="plan_bmi_classified_as">classified as %1$s</string>
 
     <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
-    <string name="plan_cta_start">Let\'s get started!</string>
+    <string name="plan_cta_start">Let\'s get started</string>
 
     <string name="plan_water_daily">Daily Water</string>
     <string name="plan_weight_current">Current weight</string>
@@ -329,7 +329,6 @@
     <string name="saved_foods_detail">Detail</string>
     <string name="saved_foods_keep_15_days_hint">Saved foods from the last 15 days.</string>
     <string name="saved_foods_empty_title">No saved foods yet</string>
-    <string name="saved_foods_empty_body">Foods you save will appear here.</string>
     <string name="saved_foods_kcal">🔥 %1$d calories</string>
     <string name="saved_foods_protein">🥩 %1$dg</string>
     <string name="saved_foods_carbs">🌾 %1$dg</string>

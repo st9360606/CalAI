@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -875,4 +876,134 @@ fun BiteCalLandingLanguageTopBar(
             }
         },
     )
+}
+
+/**
+ * Shared visual tokens for feature screens that already have carefully tuned styles.
+ * Values intentionally mirror the previous screen-local constants so extracting them does
+ * not change the existing UI appearance.
+ */
+object BiteCalCommonScreenTokens {
+    val softGrayBackground: Color = Color(0xFFF5F5F5)
+}
+
+object BiteCalNotificationPreviewTokens {
+    val corner: Dp = 18.dp
+    val padH: Dp = 16.dp
+    val padV: Dp = 10.dp
+    val iconSize: Dp = 22.dp
+    val iconCorner: Dp = 11.dp
+    val iconInnerPad: Dp = 0.dp
+    const val iconScale: Float = 1.28f
+    val gapIconText: Dp = 10.dp
+    val gapMetaToContent: Dp = 5.dp
+    val metaFont = 11.sp
+    val metaLine = 12.sp
+    val metaLetterSpacing = 0.6.sp
+    val titleFont = 15.sp
+    val titleLine = 18.sp
+    val bodyFont = 12.sp
+    val bodyLine = 16.sp
+}
+
+object BiteCalFoodLogDetailTokens {
+    val AppBg: Color = Color(0xFFF3F3F3)
+    val SheetBg: Color = Color.White
+    val Border: Color = Color(0xFFEAEAEA)
+    val TextPrimary: Color = Color(0xFF151515)
+    val HeroFallback: Color = Color(0xFF202124)
+    val Scrim: Color = Color.Black.copy(alpha = 0.16f)
+    val ChipBg: Color = Color(0xFFF5F5F7)
+    val ProteinTone: Color = Color(0xFFFF6B7B)
+    val CarbsTone: Color = Color(0xFFF6B24D)
+    val FatTone: Color = Color(0xFF6FA3FF)
+    val FiberTone: Color = Color(0xFF8E7DF2)
+    val SugarTone: Color = Color(0xFFFF8A5B)
+    val SodiumTone: Color = Color(0xFF4CB7A5)
+}
+
+object BiteCalSavedFoodTokens {
+    val ScreenBg: Color = BiteCalCommonScreenTokens.softGrayBackground
+    val TitleColor: Color = Color(0xFF18191D)
+    val KcalColor: Color = Color(0xFF2F3137)
+    val MacroColor: Color = Color(0xFF777C86)
+    val ActionBlack: Color = Color(0xFF0F1115)
+    val SecondaryText: Color = Color(0xFF5D5D66)
+    val CloseButtonBg: Color = Color(0xFFF1F2F4)
+    val CloseIconColor: Color = Color(0xFF5B606A)
+
+    val TitleTextStyle = TextStyle(
+        fontSize = 15.sp,
+        lineHeight = 19.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = TitleColor,
+    )
+
+    val KcalTextStyle = TextStyle(
+        fontSize = 14.sp,
+        lineHeight = 18.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = KcalColor,
+    )
+
+    val MacroTextStyle = TextStyle(
+        fontSize = 13.sp,
+        lineHeight = 14.sp,
+        fontWeight = FontWeight.Medium,
+        color = MacroColor,
+    )
+}
+
+object BiteCalRingColorsExplainedTokens {
+    val Ink: Color = Color(0xFF111114)
+    val InkSoft: Color = Color(0xFF2F3137)
+    val Muted: Color = Color(0xFF6B7280)
+    val Subtle: Color = Color(0xFF8C929D)
+    val Card: Color = Color.White.copy(alpha = 0.92f)
+    val CardSoft: Color = Color(0xFFF8F8FA)
+    val Border: Color = Color(0xFFE2E5EA)
+    val BorderSoft: Color = Color(0xFFE9EBEF)
+    val Green: Color = Color(0xFF7DDF83)
+    val Brown: Color = Color(0xFFB45309)
+    val Red: Color = Color(0xFFD92D20)
+    val Dotted: Color = Color(0xFF555A60)
+    val Future: Color = Color(0xFFC1C7D0)
+}
+
+object BiteCalComputationProgressTokens {
+    val ProgressPrimary: Color = Color(0xFF5BCB72)
+    val ProgressPrimarySoft: Color = Color(0x1A5BCB72)
+    val ProgressTrack: Color = Color(0xFFE5E7EB)
+    val TextPrimary: Color = Color(0xFF111827)
+    val TextSecondary: Color = Color(0xFF6B7280)
+    val CardBg: Color = Color(0xFFF8FAFC)
+    val PendingDot: Color = Color(0xFFD1D5DB)
+}
+
+object BiteCalHealthPlanTokens {
+    val NeutralText: Color = Color(0xFF6B7280)
+    val RingTrack: Color = Color(0xFFF0F2F6)
+    val CarbColor: Color = Color(0xFFFBBC05)
+    val ProteinColor: Color = Color(0xFFEA4335)
+    val FatColor: Color = Color(0xFF34A853)
+    val WaterColor: Color = Color(0xFF3B82F6)
+    val WeightColor: Color = Color(0xFF6366F1)
+    const val donutStrokePx: Float = 80f
+    const val miniRingStrokePx: Float = 20f
+}
+
+@Composable
+fun BiteCalLoadingScreen(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = BiteCalColors.current().background,
+    indicatorColor: Color = BiteCalColors.current().textPrimary,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(backgroundColor),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(color = indicatorColor)
+    }
 }

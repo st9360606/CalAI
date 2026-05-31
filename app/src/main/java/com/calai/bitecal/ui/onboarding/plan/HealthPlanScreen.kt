@@ -79,6 +79,7 @@ import com.calai.bitecal.ui.common.bmi.CommonBmiCard
 import com.calai.bitecal.ui.common.bmi.CommonBmiCardModel
 import com.calai.bitecal.ui.common.bmi.CommonBmiTone
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingBottomContainer
+import com.calai.bitecal.ui.common.design.BiteCalHealthPlanTokens as HealthPlanTokens
 import com.calai.bitecal.ui.common.design.BiteCalOnboardingPrimaryButton
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import kotlinx.coroutines.launch
@@ -86,19 +87,6 @@ import java.util.Locale
 import kotlin.math.min
 import kotlin.math.roundToInt
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
-
-// === Colors（保持你的設定） ===
-val NeutralText = Color(0xFF6B7280)
-val RingTrack = Color(0xFFF0F2F6)
-val CarbColor = Color(0xFFFBBC05)    // Amber 600
-val ProteinColor = Color(0xFFEA4335) // Salmon/Red 400-500
-val FatColor = Color(0xFF34A853)     // Emerald 500
-val WaterColor = Color(0xFF3B82F6)   // 水量藍
-val WeightColor = Color(0xFF6366F1)  // 體重紫
-
-// === 圓環粗細 ===
-private const val DONUT_STROKE_PX = 80f     // 大圓
-private const val MINI_RING_STROKE_PX = 20f // 小圓
 
 @Composable
 fun HealthPlanScreen(
@@ -186,7 +174,7 @@ fun HealthPlanScreen(
             ) {
                 Text(
                     text = stringResource(R.string.plan_subtitle_ready),
-                    color = NeutralText,
+                    color = HealthPlanTokens.NeutralText,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center
                 )
@@ -222,7 +210,7 @@ fun HealthPlanScreen(
             ) {
                 Text(
                     text = stringResource(R.string.plan_edit_anytime),
-                    color = NeutralText,
+                    color = HealthPlanTokens.NeutralText,
                     fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(0.55f),
                     textAlign = TextAlign.Center
@@ -293,13 +281,13 @@ private fun DonutMacros(
         contentAlignment = Alignment.Center
     ) {
         Canvas(Modifier.size(200.dp)) {
-            val stroke = DONUT_STROKE_PX
+            val stroke = HealthPlanTokens.donutStrokePx
             val padding = stroke / 2
             val arcSize = Size(size.width - stroke, size.height - stroke)
             val topLeft = Offset(padding, padding)
 
             drawArc(
-                color = RingTrack,
+                color = HealthPlanTokens.RingTrack,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -323,14 +311,14 @@ private fun DonutMacros(
                 )
                 start += sweep
             }
-            seg(CarbColor, carbsPct)
-            seg(FatColor, fatPct)
-            seg(ProteinColor, proteinPct)
+            seg(HealthPlanTokens.CarbColor, carbsPct)
+            seg(HealthPlanTokens.FatColor, fatPct)
+            seg(HealthPlanTokens.ProteinColor, proteinPct)
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(kcal.toString(), fontSize = 44.sp, fontWeight = FontWeight.ExtraBold)
-            Text(stringResource(R.string.plan_unit_kcal_day), color = NeutralText, fontSize = 18.sp)
+            Text(stringResource(R.string.plan_unit_kcal_day), color = HealthPlanTokens.NeutralText, fontSize = 18.sp)
         }
     }
 }
@@ -352,19 +340,19 @@ private fun MacrosRings(plan: MacroPlan) {
         MacroRingItem(
             title = stringResource(R.string.plan_macros_proteins),
             centerText = "${plan.proteinGrams}${stringResource(R.string.plan_unit_g)}",
-            color = ProteinColor,
+            color = HealthPlanTokens.ProteinColor,
             progress = proteinK / total
         )
         MacroRingItem(
             title = stringResource(R.string.plan_macros_carbs),
             centerText = "${plan.carbsGrams}${stringResource(R.string.plan_unit_g)}",
-            color = CarbColor,
+            color = HealthPlanTokens.CarbColor,
             progress = carbsK / total
         )
         MacroRingItem(
             title = stringResource(R.string.plan_macros_fat),
             centerText = "${plan.fatGrams}${stringResource(R.string.plan_unit_g)}",
-            color = FatColor,
+            color = HealthPlanTokens.FatColor,
             progress = fatK / total
         )
     }
@@ -421,19 +409,19 @@ private fun HydrationAndWeightRings(
         MacroRingItem(
             title = stringResource(R.string.plan_water_daily),
             centerText = "$waterMl ml",
-            color = WaterColor,
+            color = HealthPlanTokens.WaterColor,
             progress = min(waterMl / 4000f, 1f)
         )
         MacroRingItem(
             title = stringResource(R.string.plan_weight_current),
             centerText = currText,
-            color = WeightColor,
+            color = HealthPlanTokens.WeightColor,
             progress = currProgress
         )
         MacroRingItem(
             title = stringResource(R.string.plan_weight_delta),
             centerText = deltaText,
-            color = WeightColor.copy(alpha = 0.50f),
+            color = HealthPlanTokens.WeightColor.copy(alpha = 0.50f),
             progress = deltaProgress
         )
     }
@@ -460,13 +448,13 @@ private fun MacroRingItem(
             contentAlignment = Alignment.Center
         ) {
             Canvas(Modifier.matchParentSize()) {
-                val stroke = MINI_RING_STROKE_PX
+                val stroke = HealthPlanTokens.miniRingStrokePx
                 val padding = stroke / 2
                 val arcSize = Size(size.width - stroke, size.height - stroke)
                 val topLeft = Offset(padding, padding)
 
                 drawArc(
-                    color = RingTrack,
+                    color = HealthPlanTokens.RingTrack,
                     startAngle = -90f,
                     sweepAngle = 360f,
                     useCenter = false,
@@ -494,7 +482,7 @@ private fun MacroRingItem(
             )
         }
         Spacer(Modifier.height(6.dp))
-        Text(title, color = NeutralText, fontSize = 12.sp, textAlign = TextAlign.Center)
+        Text(title, color = HealthPlanTokens.NeutralText, fontSize = 12.sp, textAlign = TextAlign.Center)
     }
 }
 

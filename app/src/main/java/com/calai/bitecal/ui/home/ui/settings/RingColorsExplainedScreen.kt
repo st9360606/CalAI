@@ -52,24 +52,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.components.LightHomeBackground
+import com.calai.bitecal.ui.common.design.BiteCalRingColorsExplainedTokens as RingColorsExplainedTheme
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
-private object RingColorsExplainedTheme {
-    val Ink = Color(0xFF111114)
-    val InkSoft = Color(0xFF2F3137)
-    val Muted = Color(0xFF6B7280)
-    val Subtle = Color(0xFF8C929D)
-    val Card = Color.White.copy(alpha = 0.92f)
-    val CardSoft = Color(0xFFF8F8FA)
-    val Border = Color(0xFFE2E5EA)
-    val BorderSoft = Color(0xFFE9EBEF)
-    val Green = Color(0xFF7DDF83)
-    val Brown = Color(0xFFB45309)
-    val Red = Color(0xFFD92D20)
-    val Dotted = Color(0xFF555A60)
-    val Future = Color(0xFFC1C7D0)
-}
 
 @Composable
 fun RingColorsExplainedScreen(

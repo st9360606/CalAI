@@ -50,16 +50,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.design.BiteCalComputationProgressTokens as ProgressTokens
 import com.calai.bitecal.ui.common.design.BiteCalScreenSpacing
 import kotlinx.coroutines.delay
-
-private val ProgressPrimary = Color(0xFF5BCB72)
-private val ProgressPrimarySoft = Color(0x1A5BCB72)
-private val ProgressTrack = Color(0xFFE5E7EB)
-private val TextPrimary = Color(0xFF111827)
-private val TextSecondary = Color(0xFF6B7280)
-private val CardBg = Color(0xFFF8FAFC)
-private val PendingDot = Color(0xFFD1D5DB)
 
 private enum class ItemVisualState {
     DONE, ACTIVE, PENDING
@@ -118,7 +111,7 @@ fun ComputationProgressScreen(
                 fontSize = 28.sp,
                 lineHeight = 34.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
+                color = ProgressTokens.TextPrimary,
                 textAlign = TextAlign.Center,
                 style = LocalTextStyle.current.copy(
                     platformStyle = PlatformTextStyle(includeFontPadding = false),
@@ -136,7 +129,7 @@ fun ComputationProgressScreen(
                 fontSize = 15.sp,
                 lineHeight = 22.sp,
                 fontWeight = FontWeight.Medium,
-                color = TextSecondary,
+                color = ProgressTokens.TextSecondary,
                 textAlign = TextAlign.Center
             )
 
@@ -154,7 +147,7 @@ fun ComputationProgressScreen(
                 text = stringResource(R.string.progress_footer_hint),
                 fontSize = 15.sp,
                 lineHeight = 22.sp,
-                color = TextSecondary,
+                color = ProgressTokens.TextSecondary,
                 textAlign = TextAlign.Center
             )
         }
@@ -174,12 +167,12 @@ private fun HeroProgressRing(
             val stroke = 14.dp.toPx()
 
             drawCircle(
-                color = ProgressTrack,
+                color = ProgressTokens.ProgressTrack,
                 style = Stroke(width = stroke)
             )
 
             drawArc(
-                color = ProgressPrimary,
+                color = ProgressTokens.ProgressPrimary,
                 startAngle = -90f,
                 sweepAngle = 360f * progress,
                 useCenter = false,
@@ -195,7 +188,7 @@ private fun HeroProgressRing(
         ) {
             Text(
                 text = "${percent.coerceIn(0, 100)}%",
-                color = TextPrimary,
+                color = ProgressTokens.TextPrimary,
                 fontSize = 42.sp,
                 lineHeight = 46.sp,
                 fontWeight = FontWeight.SemiBold
@@ -205,7 +198,7 @@ private fun HeroProgressRing(
 
             Text(
                 text = stringResource(R.string.progress_center_caption),
-                color = TextSecondary,
+                color = ProgressTokens.TextSecondary,
                 fontSize = 15.sp,
                 lineHeight = 18.sp,
                 textAlign = TextAlign.Center
@@ -227,12 +220,12 @@ private fun PhasePill(
 
     Surface(
         shape = RoundedCornerShape(999.dp),
-        color = ProgressPrimarySoft
+        color = ProgressTokens.ProgressPrimarySoft
     ) {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-            color = ProgressPrimary,
+            color = ProgressTokens.ProgressPrimary,
             fontSize = 14.sp,
             lineHeight = 17.sp,
             fontWeight = FontWeight.SemiBold,
@@ -248,7 +241,7 @@ private fun ProgressChecklistCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
-        color = CardBg,
+        color = ProgressTokens.CardBg,
         shadowElevation = 8.dp
     ) {
         Column(
@@ -260,7 +253,7 @@ private fun ProgressChecklistCard(
                 fontSize = 16.sp,
                 lineHeight = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = ProgressTokens.TextPrimary
             )
 
             buildChecklistRows(ui).forEach { row ->
@@ -342,7 +335,7 @@ private fun ProgressChecklistRow(
                         modifier = Modifier
                             .size(22.dp)
                             .clip(CircleShape)
-                            .background(ProgressPrimary),
+                            .background(ProgressTokens.ProgressPrimary),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -371,7 +364,7 @@ private fun ProgressChecklistRow(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(ProgressPrimary.copy(alpha = alpha))
+                        .background(ProgressTokens.ProgressPrimary.copy(alpha = alpha))
                 )
             }
 
@@ -380,7 +373,7 @@ private fun ProgressChecklistRow(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(PendingDot)
+                        .background(ProgressTokens.PendingDot)
                 )
             }
         }
@@ -390,9 +383,9 @@ private fun ProgressChecklistRow(
         Text(
             text = title,
             color = when (state) {
-                ItemVisualState.DONE -> TextPrimary
-                ItemVisualState.ACTIVE -> TextPrimary
-                ItemVisualState.PENDING -> TextSecondary
+                ItemVisualState.DONE -> ProgressTokens.TextPrimary
+                ItemVisualState.ACTIVE -> ProgressTokens.TextPrimary
+                ItemVisualState.PENDING -> ProgressTokens.TextSecondary
             },
             fontSize = 15.sp,
             lineHeight = 20.sp,

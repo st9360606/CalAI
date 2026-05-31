@@ -75,6 +75,7 @@ import com.calai.bitecal.data.fasting.model.FastingPlan
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.MainBottomBar
+import com.calai.bitecal.ui.common.design.BiteCalCommonScreenTokens
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
@@ -89,7 +90,6 @@ import java.util.Locale
 import kotlin.math.abs
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
-private val ScreenBg = Color(0xFFF5F5F5)
 
 @Composable
 fun FastingPlansScreen(
@@ -146,10 +146,10 @@ fun FastingPlansScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScreenBg)
+            .background(BiteCalCommonScreenTokens.softGrayBackground)
     ) {
         Scaffold(
-            containerColor = ScreenBg,
+            containerColor = BiteCalCommonScreenTokens.softGrayBackground,
             topBar = {
                 BiteCalTopBar(
                     title = stringResource(R.string.fasting_plans),
@@ -167,7 +167,7 @@ fun FastingPlansScreen(
                 modifier = Modifier
                     .padding(p)
                     .fillMaxSize()
-                    .background(ScreenBg)
+                    .background(BiteCalCommonScreenTokens.softGrayBackground)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 5.dp)
             ) {
