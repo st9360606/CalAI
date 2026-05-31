@@ -547,7 +547,7 @@ private fun WorkoutBarChart(
                     chartDays.forEachIndexed { index, day ->
                         val barPressModifier =
                             Modifier.chartTooltipPressTarget(
-                                enabled = showBars && day.kcal > 0,
+                                enabled = showBars,
                                 index = index,
                                 payload = day,
                                 onTooltipChange = { pressedTooltip = it }

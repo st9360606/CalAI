@@ -620,7 +620,7 @@ private fun WaterBarChart(
 
                         val barPressModifier =
                             Modifier.chartTooltipPressTarget(
-                                enabled = showBars && day.ml > 0,
+                                enabled = showBars,
                                 index = index,
                                 payload = day,
                                 onTooltipChange = { pressedTooltip = it }
