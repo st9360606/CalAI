@@ -1,6 +1,8 @@
 package com.calai.bitecal.ui.landing
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalTextStyle
@@ -32,6 +34,7 @@ import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
 import com.calai.bitecal.ui.common.design.BiteCalSize
 import com.calai.bitecal.ui.common.design.BiteCalSpacing
 import com.calai.bitecal.ui.common.design.BiteCalTextStyles
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,8 +77,10 @@ fun LandingScreen(
         },
         bottomBar = {
             Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center   // ★ 讓 bottomBar 內容水平置中
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-5).dp),
+                contentAlignment = Alignment.Center
             ) {
                 LandingBottomBar(
                     onStart = onStart,
@@ -184,13 +189,14 @@ private fun LandingBottomBar(
             height = BiteCalSize.primaryButtonHeight
         )
 
-        Spacer(Modifier.height(BiteCalSpacing.bottomButtonToSecondary))
+        Spacer(Modifier.height(BiteCalSpacing.bottomButtonToLanding))
+
+        val loginClick = rememberClickWithHaptic(onClick = onLogin)
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(BiteCalSize.secondaryTextButtonHeight)
-                .biteCalClickable { onLogin() },
+                .height(BiteCalSize.secondaryTextButtonHeight),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -215,7 +221,12 @@ private fun LandingBottomBar(
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
                 ),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = loginClick
+                )
             )
         }
     }

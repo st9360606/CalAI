@@ -68,6 +68,10 @@ import java.math.RoundingMode
 import kotlin.math.abs
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -131,76 +135,46 @@ fun EditStartingWeightScreen(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, bottom = BiteCalScreenFrame.bottomActionSingle),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = rememberClickWithHaptic(enabled = !isSaving) {
-                            val (valueToSave, unitToSave) =
-                                if (useMetric) {
-                                    val kgClamped = valueKg.coerceIn(kgMin, kgMax)
-                                    val kgRounded = roundToOneDecimalForStart(kgClamped)
-                                    kgRounded to UserProfileStore.WeightUnit.KG
-                                } else {
-                                    val rawLbs = (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)) / 10.0
-                                    val lbsRounded = roundToOneDecimalForStart(rawLbs)
-                                    lbsRounded to UserProfileStore.WeightUnit.LBS
-                                }
-
-                            vm.updateStartingWeight(value = valueToSave, unit = unitToSave) { result ->
-                                result.onSuccess { onSaved() }
-                                    .onFailure { e ->
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                message = e.message ?: "Failed to update starting weight"
-                                            )
-                                        }
-                                    }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = !isSaving,
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Black,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        if (isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = Color.White
-                            )
+            BiteCalEditBottomActionBar(
+                primaryText = stringResource(R.string.save),
+                onPrimaryClick = {
+                    val (valueToSave, unitToSave) =
+                        if (useMetric) {
+                            val kgClamped = valueKg.coerceIn(kgMin, kgMax)
+                            val kgRounded = roundToOneDecimalForStart(kgClamped)
+                            kgRounded to UserProfileStore.WeightUnit.KG
                         } else {
-                            Text(
-                                text = stringResource(R.string.save),
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    letterSpacing = 0.2.sp
-                                )
-                            )
+                            val rawLbs = (valueLbsTenths.coerceIn(lbsTenthsMin, lbsTenthsMax)) / 10.0
+                            val lbsRounded = roundToOneDecimalForStart(rawLbs)
+                            lbsRounded to UserProfileStore.WeightUnit.LBS
                         }
+
+                    vm.updateStartingWeight(value = valueToSave, unit = unitToSave) { result ->
+                        result.onSuccess { onSaved() }
+                            .onFailure { e ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = e.message ?: "Failed to update starting weight"
+                                    )
+                                }
+                            }
                     }
-                }
-            }
-        }
+                },
+                primaryEnabled = !isSaving,
+                primaryLoading = isSaving,
+            )
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(
+                    start = BiteCalScreenFrame.detailHorizontal,
+                    top = BiteCalScreenFrame.detailContentTopNudged,
+                    end = BiteCalScreenFrame.detailHorizontal,
+                    bottom = BiteCalScreenFrame.detailBottom
+                )
         ) {
             Spacer(Modifier.height(80.dp))
 

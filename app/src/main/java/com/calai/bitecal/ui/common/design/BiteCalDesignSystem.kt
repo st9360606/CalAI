@@ -1,6 +1,8 @@
 package com.calai.bitecal.ui.common.design
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +27,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -133,6 +137,7 @@ object BiteCalSpacing {
     val bottomBarBottom: Dp = 40.dp
     val bottomBarBottomCompact: Dp = 8.dp
     val bottomButtonToSecondary: Dp = 8.dp
+    val bottomButtonToLanding: Dp = 5.dp
     val cardPadding: Dp = 16.dp
     val sectionGap: Dp = 16.dp
 
@@ -187,6 +192,7 @@ object BiteCalScreenFrame {
     val detailHorizontalWide: Dp = contentHorizontalComfort
     val detailVertical: Dp = 16.dp
     val detailTop: Dp = 14.dp
+    val detailContentTopNudged: Dp = 50.dp
     val detailBottom: Dp = 20.dp
     val settingsHorizontal: Dp = contentHorizontalMedium
     val settingsTop: Dp = 6.dp
@@ -229,6 +235,8 @@ object BiteCalSize {
     val backButtonCompact: Dp = 36.dp
     val primaryButtonHeight: Dp = 68.dp
     val primaryButtonHeightCompact: Dp = 55.dp
+    val editActionButtonHeight: Dp = 56.dp
+    val editInlineButtonHeight: Dp = 50.dp
     val secondaryTextButtonHeight: Dp = 44.dp
     val pillCorner: Dp = 999.dp
 }
@@ -274,6 +282,14 @@ object BiteCalTextStyles {
     fun secondaryButton(): TextStyle = MaterialTheme.typography.bodyLarge.copy(
         fontSize = 17.sp,
         lineHeight = 20.sp,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = 0.1.sp,
+    )
+
+    @Composable
+    fun editActionButton(): TextStyle = MaterialTheme.typography.bodyLarge.copy(
+        fontSize = 15.sp,
+        lineHeight = 19.sp,
         fontWeight = FontWeight.Medium,
         letterSpacing = 0.1.sp,
     )
@@ -451,6 +467,145 @@ fun BiteCalPrimaryButton(
                 textAlign = TextAlign.Center,
             )
         }
+    }
+}
+
+@Composable
+fun BiteCalSecondaryOutlinedButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    height: Dp = BiteCalSize.editInlineButtonHeight,
+    borderColor: Color = BiteCalColors.current().textPrimary.copy(alpha = 0.45f),
+    contentColor: Color = BiteCalColors.current().textPrimary,
+) {
+    OutlinedButton(
+        onClick = rememberClickWithHaptic(enabled = enabled, onClick = onClick),
+        enabled = enabled,
+        modifier = modifier.height(height),
+        shape = BiteCalShape.button,
+        border = BorderStroke(1.2.dp, borderColor),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = BiteCalColors.current().surface,
+            contentColor = contentColor,
+            disabledContainerColor = BiteCalColors.current().surface,
+            disabledContentColor = contentColor.copy(alpha = 0.45f),
+        ),
+        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
+    ) {
+        Text(
+            text = text,
+            style = BiteCalTextStyles.editActionButton(),
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+fun BiteCalCompactPillButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    height: Dp = 30.dp,
+    containerColor: Color? = null,
+    contentColor: Color? = null,
+    textStyle: TextStyle? = null,
+) {
+    val colors = BiteCalColors.current()
+    val resolvedContainerColor = containerColor ?: colors.primaryButtonContainer
+    val resolvedContentColor = contentColor ?: colors.primaryButtonContent
+
+    Button(
+        onClick = rememberClickWithHaptic(enabled = enabled, onClick = onClick),
+        enabled = enabled,
+        modifier = modifier.height(height),
+        shape = BiteCalShape.button,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = resolvedContainerColor,
+            contentColor = resolvedContentColor,
+            disabledContainerColor = resolvedContainerColor.copy(alpha = 0.45f),
+            disabledContentColor = resolvedContentColor.copy(alpha = 0.82f),
+        ),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+    ) {
+        Text(
+            text = text,
+            style = textStyle ?: MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+            color = resolvedContentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+fun BiteCalEditBottomActionBar(
+    primaryText: String,
+    onPrimaryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    primaryEnabled: Boolean = true,
+    primaryLoading: Boolean = false,
+    useImePadding: Boolean = false,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (useImePadding) Modifier.imePadding() else Modifier)
+            .navigationBarsPadding()
+            .padding(
+                start = BiteCalScreenFrame.contentHorizontal,
+                end = BiteCalScreenFrame.contentHorizontal,
+                bottom = BiteCalScreenFrame.bottomActionSingle,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        BiteCalPrimaryButton(
+            text = primaryText,
+            enabled = primaryEnabled,
+            loading = primaryLoading,
+            onClick = onPrimaryClick,
+            height = BiteCalSize.editActionButtonHeight,
+            textStyle = BiteCalTextStyles.editActionButton(),
+        )
+    }
+}
+
+@Composable
+fun BiteCalEditDualActionRow(
+    secondaryText: String,
+    onSecondaryClick: () -> Unit,
+    primaryText: String,
+    onPrimaryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    primaryEnabled: Boolean = true,
+    secondaryEnabled: Boolean = true,
+    primaryLoading: Boolean = false,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BiteCalSecondaryOutlinedButton(
+            text = secondaryText,
+            onClick = onSecondaryClick,
+            enabled = secondaryEnabled && !primaryLoading,
+            modifier = Modifier.weight(1f),
+            height = BiteCalSize.editInlineButtonHeight,
+        )
+
+        BiteCalPrimaryButton(
+            text = primaryText,
+            onClick = onPrimaryClick,
+            enabled = primaryEnabled,
+            loading = primaryLoading,
+            modifier = Modifier.weight(1f),
+            height = BiteCalSize.editInlineButtonHeight,
+            textStyle = BiteCalTextStyles.editActionButton(),
+        )
     }
 }
 

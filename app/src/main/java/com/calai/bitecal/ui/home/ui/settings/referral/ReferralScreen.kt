@@ -58,8 +58,13 @@ import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.referral.api.ReferralClaimItemDto
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import kotlinx.coroutines.delay
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 private val ReferralPageText = Color(0xFF111114)
 private val ReferralMutedText = Color(0xFF7C8490)
 private val ReferralCardWhite = Color.White
@@ -109,10 +114,10 @@ fun ReferralScreen(
                     .padding(inner)
                     .fillMaxSize(),
                 contentPadding = PaddingValues(
-                    start = 20.dp,
-                    end = 20.dp,
-                    top = 8.dp,
-                    bottom = 32.dp
+                    start = BiteCalScreenFrame.settingsHorizontal,
+                    end = BiteCalScreenFrame.settingsHorizontal,
+                    top = BiteCalScreenFrame.contentTopSmall,
+                    bottom = BiteCalScreenFrame.settingsBottom
                 ),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
@@ -508,26 +513,18 @@ private fun ShareReferralButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Button(
-        onClick = rememberClickWithHaptic(onClick = onClick),
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(999.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = ReferralBlack,
-            contentColor = Color.White
-        ),
-        contentPadding = PaddingValues(horizontal = 16.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.referral_share),
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+    BiteCalPrimaryButton(
+        text = stringResource(R.string.referral_share),
+        onClick = onClick,
+        modifier = modifier,
+        height = 56.dp,
+        containerColor = ReferralBlack,
+        contentColor = Color.White,
+        textStyle = MaterialTheme.typography.titleMedium.copy(
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
         )
-    }
+    )
 }
 
 @Composable

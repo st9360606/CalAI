@@ -61,6 +61,10 @@ import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import kotlin.math.roundToInt
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -110,63 +114,32 @@ fun EditHeightScreen(
             )
         },
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, bottom = BiteCalScreenFrame.bottomActionSingle),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = rememberClickWithHaptic {
-                            vm.saveAndSyncHeight(
-                                useMetric = useMetric,
-                                cmVal = cmVal,
-                                feet = feet,
-                                inches = inches,
-                                onSuccess = onSaved
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = !ui.saving,
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Black,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        if (ui.saving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = Color.White
-                            )
-                        } else {
-                            Text(
-                                text = stringResource(R.string.save),
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    letterSpacing = 0.2.sp
-                                )
-                            )
-                        }
-                    }
-
-                }
-            }
+            BiteCalEditBottomActionBar(
+                primaryText = stringResource(R.string.save),
+                onPrimaryClick = {
+                    vm.saveAndSyncHeight(
+                        useMetric = useMetric,
+                        cmVal = cmVal,
+                        feet = feet,
+                        inches = inches,
+                        onSuccess = onSaved
+                    )
+                },
+                primaryEnabled = !ui.saving,
+                primaryLoading = ui.saving,
+            )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(
+                    start = BiteCalScreenFrame.detailHorizontal,
+                    top = BiteCalScreenFrame.detailContentTopNudged,
+                    end = BiteCalScreenFrame.detailHorizontal,
+                    bottom = BiteCalScreenFrame.detailBottom
+                )
         ) {
             Spacer(Modifier.height(80.dp))
 

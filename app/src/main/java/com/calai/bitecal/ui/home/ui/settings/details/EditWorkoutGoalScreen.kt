@@ -57,6 +57,10 @@ import kotlinx.coroutines.flow.collectLatest
 import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @Composable
 fun EditWorkoutGoalScreen(
@@ -95,7 +99,7 @@ fun EditWorkoutGoalScreen(
                 .imePadding()
                 .navigationBarsPadding()
                 .padding(horizontal = BiteCalScreenFrame.contentHorizontalComfort)
-                .padding(top = BiteCalScreenFrame.detailTop, bottom = BiteCalScreenFrame.detailBottom)
+                .padding(top = BiteCalScreenFrame.detailContentTopNudged, bottom = BiteCalScreenFrame.detailBottom)
         ) {
             Spacer(Modifier.height(60.dp))
 
@@ -151,43 +155,14 @@ fun EditWorkoutGoalScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                OutlinedButton(
-                    onClick = rememberClickWithHaptic { vm.revert() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(999.dp),
-                    border = BorderStroke(1.5.dp, Color(0xFF9CA3AF)),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = textMain
-                    )
-                ) {
-                    Text(text = "Revert", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
-
-                val enabled = ui.canSave()
-                Button(
-                    onClick = rememberClickWithHaptic { vm.save() },
-                    enabled = enabled,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp),
-                    shape = RoundedCornerShape(999.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (enabled) textMain else Color(0xFFE5E7EB),
-                        contentColor = Color.White,
-                        disabledContainerColor = Color(0xFFE5E7EB),
-                        disabledContentColor = Color.White.copy(alpha = 0.7f)
-                    )
-                ) {
-                    Text(text = stringResource(R.string.save), fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
-            }
+            val enabled = ui.canSave()
+            BiteCalEditDualActionRow(
+                secondaryText = "Revert",
+                onSecondaryClick = { vm.revert() },
+                primaryText = stringResource(R.string.save),
+                onPrimaryClick = { vm.save() },
+                primaryEnabled = enabled,
+            )
         }
     }
 }

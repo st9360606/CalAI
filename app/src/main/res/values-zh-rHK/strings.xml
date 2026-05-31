@@ -692,6 +692,10 @@
     <string name="settings_logout_failed">登出失敗，請檢查網路連線後再試。</string>
 
 
+    <!-- PersonalDetailsScreen -->
+    <string name="personal_details_change_goal">變更目標</string>
+
+
     <!-- Widget Guide -->
     <string name="settings_widgets_title">桌面小工具</string>
     <string name="settings_widgets_how_to_add">如何添加？</string>

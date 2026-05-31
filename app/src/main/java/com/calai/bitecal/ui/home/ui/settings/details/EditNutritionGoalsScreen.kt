@@ -85,6 +85,10 @@ import com.calai.bitecal.ui.common.haptic.clickWithoutHaptic
 import com.calai.bitecal.ui.common.haptic.hapticOnFocus
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -467,13 +471,6 @@ private fun BottomActionBar(
     onRevert: () -> Unit,
     onDone: () -> Unit
 ) {
-    val pill = RoundedCornerShape(999.dp)
-
-    val horizontalPadding = 16.dp
-    val buttonGap = 12.dp
-    val buttonHeight = 55.dp
-    val borderColor = Color(0xFF111114).copy(alpha = 0.45f)
-
     Surface(color = Color.Transparent) {
         Box(
             Modifier
@@ -482,75 +479,41 @@ private fun BottomActionBar(
                 .imePadding()
         ) {
             if (!dirty) {
-                OutlinedButton(
-                    onClick = rememberClickWithHaptic(onClick = onAutoGenerate),
-                    shape = pill,
-                    border = BorderStroke(1.dp, Color(0xFF111114).copy(alpha = 0.6f)),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF111114)
-                    ),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(start = BiteCalScreenFrame.contentHorizontalMedium, end = BiteCalScreenFrame.contentHorizontalMedium, bottom = BiteCalScreenFrame.detailBottom, top = BiteCalScreenFrame.detailBottom)
-                        .height(55.dp)
-                ) {
-                    Text("Auto generate goals", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                }
-            } else {
-                Row(
+                BiteCalSecondaryOutlinedButton(
+                    text = "Auto generate goals",
+                    onClick = onAutoGenerate,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .padding(
-                            start = horizontalPadding,
-                            end = horizontalPadding,
-                            bottom = 20.dp,
-                            top = 20.dp
+                            start = BiteCalScreenFrame.contentHorizontalMedium,
+                            end = BiteCalScreenFrame.contentHorizontalMedium,
+                            top = BiteCalScreenFrame.detailBottom,
+                            bottom = BiteCalScreenFrame.detailBottom,
                         ),
-                    horizontalArrangement = Arrangement.spacedBy(buttonGap),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(
-                        onClick = rememberClickWithHaptic(onClick = onRevert),
-                        enabled = !saving,
-                        shape = pill,
-                        border = BorderStroke(1.dp, borderColor),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.White,
-                            contentColor = Color(0xFF111114)
+                    height = 55.dp,
+                    borderColor = Color(0xFF111114).copy(alpha = 0.6f),
+                    contentColor = Color(0xFF111114),
+                )
+            } else {
+                BiteCalEditDualActionRow(
+                    secondaryText = "Revert",
+                    onSecondaryClick = onRevert,
+                    primaryText = "Done",
+                    onPrimaryClick = onDone,
+                    primaryEnabled = canDone,
+                    secondaryEnabled = !saving,
+                    primaryLoading = saving,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(
+                            start = BiteCalScreenFrame.contentHorizontalMedium,
+                            end = BiteCalScreenFrame.contentHorizontalMedium,
+                            top = BiteCalScreenFrame.detailBottom,
+                            bottom = BiteCalScreenFrame.detailBottom,
                         ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(buttonHeight)
-                    ) {
-                        Text("Revert", fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                    }
-
-                    Button(
-                        onClick = rememberClickWithHaptic(onClick = onDone),
-                        enabled = canDone,
-                        shape = pill,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF111114),
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(buttonHeight)
-                    ) {
-                        if (saving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = Color.White
-                            )
-                            Spacer(Modifier.width(10.dp))
-                        }
-                        Text("Done", fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
+                )
             }
         }
     }

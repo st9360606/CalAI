@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,8 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -35,19 +32,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
 import com.calai.bitecal.data.profile.api.UserProfileDto
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import java.util.Locale
 import kotlin.math.abs
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.design.BiteCalCompactPillButton
 
 @Composable
 fun PersonalDetailsScreen(
@@ -135,23 +134,20 @@ fun PersonalDetailsScreen(
                             )
                         }
 
-                        Button(
-                            onClick = rememberClickWithHaptic(onClick = onChangeGoal),
-                            modifier = Modifier
-                                .height(28.dp)
-                                .width(93.dp), // ✅ 改小：88/84/80 自己調
-                            shape = RoundedCornerShape(999.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF111114),
-                                contentColor = Color.White
+                        BiteCalCompactPillButton(
+                            text = stringResource(R.string.personal_details_change_goal),
+                            onClick = onChangeGoal,
+                            modifier = Modifier.widthIn(
+                                min = 104.dp,
+                                max = 180.dp
                             ),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                        ) {
-                            Text(
-                                text = "Change goal",
-                                style = MaterialTheme.typography.labelSmall
+                            height = 32.dp,
+                            textStyle = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 12.sp,
+                                lineHeight = 14.sp,
+                                fontWeight = FontWeight.Medium
                             )
-                        }
+                        )
                     }
                 }
 

@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -122,6 +123,7 @@ import com.calai.bitecal.ui.landing.LanguageDialog
 import kotlinx.coroutines.launch
 import java.util.Locale
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 /**
  * ✅ Personal => Settings（你圖上的那個）
@@ -703,7 +705,7 @@ private fun ProfileCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Edit name",
+                                    contentDescription = "Edit Your Name",
                                     tint = Color(0xFF52525B),
                                     modifier = Modifier.size(12.dp)
                                 )
@@ -726,17 +728,14 @@ private fun ProfileCard(
 
             Box(
                 modifier = Modifier
-                    .offset(y = (-2).dp)
+                    .offset(x = (-6).dp, y = (-2).dp)
                     .padding(start = 8.dp, end = 12.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 ProfileSubscriptionBadge(
                     kind = premiumStatusKind,
                     subtitle = premiumSubtitle,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .then(subscriptionBadgeClickableModifier)
-                        .padding(horizontal = 2.dp, vertical = 2.dp)
+                    modifier = Modifier.then(subscriptionBadgeClickableModifier)
                 )
             }
         }
@@ -758,12 +757,13 @@ private fun ProfileSubscriptionBadge(
     val horizontalPadding = 11.dp
 
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 2.dp, vertical = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             modifier = Modifier
                 .height(30.dp)
+                .widthIn(min = 58.dp, max = 132.dp)
                 .clip(RoundedCornerShape(999.dp))
                 .background(
                     brush = Brush.linearGradient(visual.backgroundColors)
@@ -774,6 +774,7 @@ private fun ProfileSubscriptionBadge(
                     shape = RoundedCornerShape(999.dp)
                 )
                 .padding(horizontal = horizontalPadding),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (visual.showDot) {
@@ -798,7 +799,8 @@ private fun ProfileSubscriptionBadge(
                     fontSize = 12.sp,
                     lineHeight = 14.sp,
                     letterSpacing = 0.35.sp
-                )
+                ),
+                textAlign = TextAlign.Center
             )
         }
 
@@ -1911,64 +1913,22 @@ private fun LogoutButton(
     onLogout: () -> Unit
 ) {
     val enabled = !loading
-    val logoutClick = rememberClickWithHaptic(enabled = enabled) {
-        if (enabled) {
-            onLogout()
-        }
-    }
 
-    OutlinedButton(
-        onClick = logoutClick,
-        enabled = enabled,
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (enabled) {
-                Color(0xFFE1E4EA)
+    BiteCalSecondaryOutlinedButton(
+        text = stringResource(
+            if (loading) {
+                R.string.settings_logout_loading
             } else {
-                Color(0xFFE5E7EB)
+                R.string.settings_logout
             }
         ),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.White,
-            contentColor = Color(0xFF111114),
-            disabledContainerColor = Color(0xFFF4F4F5),
-            disabledContentColor = Color(0xFF9CA3AF)
-        ),
-        shape = RoundedCornerShape(18.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-    ) {
-        if (loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(18.dp),
-                strokeWidth = 2.dp,
-                color = Color(0xFF9CA3AF)
-            )
-        } else {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.Logout,
-                contentDescription = null,
-                tint = Color(0xFF111114)
-            )
-        }
-
-        Spacer(Modifier.size(10.dp))
-
-        Text(
-            text = stringResource(
-                if (loading) {
-                    R.string.settings_logout_loading
-                } else {
-                    R.string.settings_logout
-                }
-            ),
-            style = MaterialTheme.typography.titleMedium.copy(
-                color = if (enabled) Color(0xFF111114) else Color(0xFF9CA3AF),
-                fontWeight = FontWeight.SemiBold
-            )
-        )
-    }
+        onClick = onLogout,
+        enabled = enabled,
+        height = 56.dp,
+        modifier = Modifier.fillMaxWidth(),
+        borderColor = if (enabled) Color(0xFFE1E4EA) else Color(0xFFE5E7EB),
+        contentColor = if (enabled) Color(0xFF111114) else Color(0xFF9CA3AF),
+    )
 }
 
 @Composable
@@ -1990,12 +1950,11 @@ private fun LogoutErrorMessage(
             ),
             modifier = Modifier.weight(1f)
         )
-        OutlinedButton(
-            onClick = retryClick,
+        BiteCalSecondaryOutlinedButton(
+            text = stringResource(R.string.cta_retry),
+            onClick = onRetry,
             enabled = retryEnabled,
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Text(stringResource(R.string.cta_retry))
-        }
+            height = 40.dp,
+        )
     }
 }

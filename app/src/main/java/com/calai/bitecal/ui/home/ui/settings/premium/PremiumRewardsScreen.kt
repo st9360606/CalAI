@@ -27,7 +27,12 @@ import com.calai.bitecal.data.membership.api.MembershipSummaryDto
 import com.calai.bitecal.data.membership.api.RewardHistoryItemDto
 import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
+import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
+import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
+import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @Composable
 fun PremiumRewardsScreen(
@@ -58,7 +63,12 @@ fun PremiumRewardsScreen(
                     modifier = Modifier
                         .padding(inner)
                         .fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(
+                        start = BiteCalScreenFrame.settingsHorizontal,
+                        end = BiteCalScreenFrame.settingsHorizontal,
+                        top = BiteCalScreenFrame.contentTopSmall,
+                        bottom = BiteCalScreenFrame.settingsBottom,
+                    ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item { SummaryCard(summary) }
@@ -105,7 +115,7 @@ private fun ErrorState(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(BiteCalScreenFrame.contentHorizontalWide),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -115,9 +125,12 @@ private fun ErrorState(
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(Modifier.height(12.dp))
-        Button(onClick = rememberClickWithHaptic(onClick = onRetry)) {
-            Text("Retry")
-        }
+        BiteCalPrimaryButton(
+            text = "Retry",
+            onClick = onRetry,
+            height = 50.dp,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

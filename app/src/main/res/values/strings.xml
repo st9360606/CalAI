@@ -695,6 +695,11 @@
     <string name="settings_logout_failed">Logout failed. Check your connection and try again.</string>
 
 
+    <!-- PersonalDetailsScreen -->
+    <string name="personal_details_change_goal">Change goal</string>
+
+
+
     <!-- Widget Guide -->
     <string name="settings_widgets_title">Widgets</string>
     <string name="settings_widgets_how_to_add">How to add?</string>
