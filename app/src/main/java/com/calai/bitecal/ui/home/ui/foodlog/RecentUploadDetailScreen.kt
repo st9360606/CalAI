@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,10 +28,13 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,8 +64,11 @@ import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
-import com.calai.bitecal.ui.common.design.BiteCalFoodLogDetailTokens
 import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
+import com.calai.bitecal.ui.common.design.BiteCalFoodLogDetailTokens
+import com.calai.bitecal.ui.common.design.BiteCalShape
+import com.calai.bitecal.ui.common.design.BiteCalSize
+import com.calai.bitecal.ui.common.design.BiteCalSpacing
 import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
@@ -299,75 +304,16 @@ fun RecentUploadDetailScreen(
                     .background(BiteCalFoodLogDetailTokens.Scrim)
             )
 
-            Box(
+            RecentUploadDetailTopBar(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .height(40.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .biteCalClickable(enabled = !st.loading, onClick = handleBack),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.6f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.foodlog_detail_back),
-                            tint = BiteCalFoodLogDetailTokens.TextPrimary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                    .fillMaxWidth(),
+                enabled = !st.loading,
+                onBack = handleBack,
+                onDeleteClick = {
+                    showDeleteDialog = true
                 }
-
-                Text(
-                    text = stringResource(R.string.foodlog_detail_title),
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = Color.White
-                )
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .offset(y = (1).dp)
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .biteCalClickable(enabled = !st.loading) {
-                            showDeleteDialog = true
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.6f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.trash),
-                            contentDescription = stringResource(R.string.foodlog_detail_delete),
-                            modifier = Modifier.size(22.dp),
-                            colorFilter = ColorFilter.tint(BiteCalFoodLogDetailTokens.TextPrimary)
-                        )
-                    }
-                }
-            }
+            )
         }
 
         Surface(
@@ -558,6 +504,77 @@ fun RecentUploadDetailScreen(
             deleting = deleteRequested && st.loading
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecentUploadDetailTopBar(
+    enabled: Boolean,
+    onBack: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val legacyButtonBackground = Color.White.copy(alpha = 0.6f)
+    val legacyIconColor = BiteCalFoodLogDetailTokens.TextPrimary
+
+    CenterAlignedTopAppBar(
+        modifier = modifier.padding(
+            start = BiteCalSpacing.topBarHorizontal,
+            end = BiteCalSpacing.topBarHorizontal
+        ),
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent,
+            navigationIconContentColor = legacyIconColor,
+            titleContentColor = Color.White,
+            actionIconContentColor = legacyIconColor
+        ),
+        navigationIcon = {
+            Box(
+                modifier = Modifier
+                    .size(BiteCalSize.backButton)
+                    .clip(BiteCalShape.backButton)
+                    .background(legacyButtonBackground)
+                    .biteCalClickable(enabled = enabled, onClick = onBack),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.common_back),
+                    tint = legacyIconColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        },
+        title = {
+            Text(
+                text = stringResource(R.string.foodlog_detail_title),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = Color.White
+            )
+        },
+        actions = {
+            Box(
+                modifier = Modifier
+                    .offset(y = (1).dp)
+                    .size(BiteCalSize.backButtonCompact)
+                    .clip(CircleShape)
+                    .background(legacyButtonBackground)
+                    .biteCalClickable(enabled = enabled, onClick = onDeleteClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.trash),
+                    contentDescription = stringResource(R.string.foodlog_detail_delete),
+                    modifier = Modifier.size(20.dp),
+                    colorFilter = ColorFilter.tint(legacyIconColor)
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -873,16 +890,10 @@ private fun FooterSaveBar(
     enabled: Boolean,
     onSave: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .offset(y = 6.dp)
-    ) {
-        BiteCalEditBottomActionBar(
-            primaryText = stringResource(R.string.save),
-            onPrimaryClick = onSave,
-            primaryEnabled = enabled,
-            primaryLoading = false
-        )
-    }
+    BiteCalEditBottomActionBar(
+        primaryText = stringResource(R.string.save),
+        onPrimaryClick = onSave,
+        primaryEnabled = enabled,
+        primaryLoading = false
+    )
 }
