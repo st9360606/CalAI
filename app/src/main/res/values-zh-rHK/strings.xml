@@ -798,4 +798,5 @@
     <string name="progress_average_health_score_value">%1$.1f / 10</string>
     <string name="progress_average_steps_value">%1$s 步</string>
 
+    <string name="common_save_success">儲存成功</string>
 </resources>

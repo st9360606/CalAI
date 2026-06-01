@@ -142,6 +142,7 @@ fun RecentUploadDetailScreen(
     vm: FoodLogFlowViewModel,
     onBack: () -> Unit,
     onSave: (FoodLogEnvelopeDto) -> Unit,
+    onSavedStateChanged: (FoodLogEnvelopeDto) -> Unit = {},
     onDeleted: (String) -> Unit
 ) {
     val st by vm.state.collectAsState()
@@ -256,7 +257,11 @@ fun RecentUploadDetailScreen(
         mutableStateOf(persistedSaved)
     }
 
-    LaunchedEffect(foodLogId) {
+    var saveBadgeBusy by rememberSaveable(foodLogId) {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(foodLogId, persistedSaved) {
         editingSaved = persistedSaved
     }
 
@@ -342,12 +347,38 @@ fun RecentUploadDetailScreen(
                     ) {
                         SaveBadge(
                             isSaved = editingSaved,
-                            enabled = !st.loading &&
+                            enabled = !saveBadgeBusy &&
+                                    !st.loading &&
                                     env.status != FoodLogStatus.PENDING &&
                                     env.status != FoodLogStatus.FAILED &&
                                     env.status != FoodLogStatus.DELETED,
                             onClick = {
-                                editingSaved = !editingSaved
+                                if (!saveBadgeBusy) {
+                                    saveBadgeBusy = true
+                                    val targetSaved = !editingSaved
+                                    vm.commitDetailChanges(
+                                        foodLogId = foodLogId,
+                                        baseEnv = env,
+                                        multiplier = multiplier,
+                                        targetSaved = targetSaved,
+                                        previewUri = stablePreviewUri,
+                                        timeText = stableTimeText,
+                                        moveRecentUploadToTop = false,
+                                        showLoading = false,
+                                        onSuccess = { updatedEnv ->
+                                            multiplier = updatedEnv.portionMultiplier.coerceAtLeast(1)
+                                            editingSaved = updatedEnv.status == FoodLogStatus.SAVED
+                                            stableTimeText = resolveFoodLogDisplayTime(
+                                                env = updatedEnv,
+                                                fallbackTimeText = stableTimeText
+                                            )
+                                            onSavedStateChanged(updatedEnv)
+                                        },
+                                        onFinished = {
+                                            saveBadgeBusy = false
+                                        }
+                                    )
+                                }
                             }
                         )
 
@@ -470,6 +501,9 @@ fun RecentUploadDetailScreen(
                                 baseEnv = env,
                                 multiplier = multiplier,
                                 targetSaved = editingSaved,
+                                previewUri = stablePreviewUri,
+                                timeText = stableTimeText,
+                                moveRecentUploadToTop = true,
                                 onSuccess = { updatedEnv ->
                                     multiplier = updatedEnv.portionMultiplier.coerceAtLeast(1)
                                     stableTimeText = resolveFoodLogDisplayTime(

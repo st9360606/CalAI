@@ -5,6 +5,8 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.calai.bitecal.data.foodlog.event.FoodLogMutationBus
+import com.calai.bitecal.data.foodlog.event.FoodLogMutationEvent
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
@@ -45,6 +47,7 @@ data class SavedFoodCardUi(
 class SavedFoodsViewModel @Inject constructor(
     private val repo: FoodLogsRepository,
     private val zoneId: ZoneId,
+    private val foodLogMutationBus: FoodLogMutationBus,
     @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
@@ -57,6 +60,29 @@ class SavedFoodsViewModel @Inject constructor(
         const val TAG = "SavedFoodsVm"
         const val LOOK_BACK_DAYS = 15
         const val PAGE_SIZE = 100
+    }
+
+    init {
+        observeFoodLogMutations()
+    }
+
+    private fun observeFoodLogMutations() {
+        viewModelScope.launch {
+            foodLogMutationBus.events.collect { event ->
+                when (event) {
+                    is FoodLogMutationEvent.Upserted -> {
+                        applyFoodLogMutation(
+                            env = event.env,
+                            previewUri = event.previewUri
+                        )
+                    }
+
+                    is FoodLogMutationEvent.Deleted -> {
+                        applyFoodLogDeleted(event.foodLogId)
+                    }
+                }
+            }
+        }
     }
 
     fun loadIfNeeded() {
@@ -97,14 +123,8 @@ class SavedFoodsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 repo.unsave(foodLogId)
-            }.onSuccess {
-                deletePreviewCache(foodLogId)
-                _ui.update { st ->
-                    st.copy(
-                        items = st.items.filterNot { it.foodLogId == foodLogId },
-                        error = null
-                    )
-                }
+            }.onSuccess { env ->
+                foodLogMutationBus.publishUpserted(env = env)
                 onSuccess()
             }.onFailure { t ->
                 Log.w(TAG, "unsave failed id=$foodLogId: ${t.javaClass.simpleName}: ${t.message}", t)
@@ -150,11 +170,11 @@ class SavedFoodsViewModel @Inject constructor(
             }
         }
     }
-    fun onFoodLogUpdatedFromDetail(
+    private fun applyFoodLogMutation(
         env: FoodLogEnvelopeDto,
         previewUri: String?
     ) {
-        loaded = true
+        if (!loaded && _ui.value.items.isEmpty()) return
 
         when (env.status) {
             FoodLogStatus.SAVED -> {
@@ -200,9 +220,7 @@ class SavedFoodsViewModel @Inject constructor(
             FoodLogStatus.DRAFT,
             FoodLogStatus.FAILED,
             FoodLogStatus.DELETED -> {
-                if (env.status == FoodLogStatus.DELETED) {
-                    deletePreviewCache(env.foodLogId)
-                }
+                deletePreviewCache(env.foodLogId)
 
                 _ui.update { st ->
                     st.copy(
@@ -213,6 +231,18 @@ class SavedFoodsViewModel @Inject constructor(
             }
 
             FoodLogStatus.PENDING -> Unit
+        }
+    }
+
+    private fun applyFoodLogDeleted(foodLogId: String) {
+        if (!loaded && _ui.value.items.isEmpty()) return
+
+        deletePreviewCache(foodLogId)
+        _ui.update { st ->
+            st.copy(
+                items = st.items.filterNot { it.foodLogId == foodLogId },
+                error = null
+            )
         }
     }
 

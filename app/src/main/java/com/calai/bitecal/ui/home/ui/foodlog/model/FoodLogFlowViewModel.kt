@@ -9,6 +9,7 @@ import com.calai.bitecal.data.foodlog.model.CooldownActiveDto
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.model.ModelRefusedDto
+import com.calai.bitecal.data.foodlog.event.FoodLogMutationBus
 import com.calai.bitecal.data.foodlog.repo.FoodLogApiException
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
 import com.calai.bitecal.data.foodlog.repo.ImageCompressUtil
@@ -30,7 +31,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FoodLogFlowViewModel @Inject constructor(
-    private val repo: FoodLogsRepository
+    private val repo: FoodLogsRepository,
+    private val foodLogMutationBus: FoodLogMutationBus
 ) : ViewModel() {
 
     data class UiState(
@@ -78,6 +80,8 @@ class FoodLogFlowViewModel @Inject constructor(
     fun submitAlbum(
         ctx: Context,
         uri: Uri,
+        previewUri: String? = null,
+        timeText: String? = null,
         onCreated: (FoodLogEnvelopeDto) -> Unit
     ) {
         viewModelScope.launch {
@@ -101,6 +105,11 @@ class FoodLogFlowViewModel @Inject constructor(
 
                 val env = repo.submitAlbumImage(part)
                 _state.value = UiState(loading = false, envelope = env)
+                foodLogMutationBus.publishUpserted(
+                    env = env,
+                    previewUri = previewUri,
+                    timeText = timeText
+                )
                 onCreated(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
@@ -130,6 +139,7 @@ class FoodLogFlowViewModel @Inject constructor(
 
     fun submitBarcode(
         barcode: String,
+        timeText: String? = null,
         onResult: (FoodLogEnvelopeDto) -> Unit
     ) {
         viewModelScope.launch {
@@ -139,6 +149,11 @@ class FoodLogFlowViewModel @Inject constructor(
 
                 val env = repo.submitBarcode(barcode)
                 _state.value = UiState(loading = false, envelope = env)
+                foodLogMutationBus.publishUpserted(
+                    env = env,
+                    previewUri = null,
+                    timeText = timeText
+                )
                 onResult(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
@@ -194,6 +209,7 @@ class FoodLogFlowViewModel @Inject constructor(
                     loading = false,
                     envelope = env
                 )
+                foodLogMutationBus.publishUpserted(env = env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
                 if (!isActive || generation != pollingGeneration) return@launch
@@ -237,6 +253,7 @@ class FoodLogFlowViewModel @Inject constructor(
                 )
 
                 val env = repo.save(foodLogId)
+                foodLogMutationBus.publishUpserted(env = env)
 
                 _state.value = UiState(
                     loading = (env.status == FoodLogStatus.PENDING),
@@ -287,7 +304,13 @@ class FoodLogFlowViewModel @Inject constructor(
                     error = null
                 )
 
+                val capturedLocalDate = _state.value.envelope?.capturedLocalDate
+
                 repo.delete(foodLogId)
+                foodLogMutationBus.publishDeleted(
+                    foodLogId = foodLogId,
+                    capturedLocalDate = capturedLocalDate
+                )
 
                 _state.value = _state.value.copy(loading = false)
                 onSuccess()
@@ -330,6 +353,7 @@ class FoodLogFlowViewModel @Inject constructor(
                 )
 
                 val env = repo.retry(foodLogId)
+                foodLogMutationBus.publishUpserted(env = env)
 
                 _state.value = UiState(
                     loading = (env.status == FoodLogStatus.PENDING),
@@ -370,14 +394,19 @@ class FoodLogFlowViewModel @Inject constructor(
         baseEnv: FoodLogEnvelopeDto,
         multiplier: Int,
         targetSaved: Boolean,
-        onSuccess: (FoodLogEnvelopeDto) -> Unit = {}
+        previewUri: String? = null,
+        timeText: String? = null,
+        moveRecentUploadToTop: Boolean = false,
+        showLoading: Boolean = true,
+        onSuccess: (FoodLogEnvelopeDto) -> Unit = {},
+        onFinished: () -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
                 stopPollingSilently()
 
                 _state.value = _state.value.copy(
-                    loading = true,
+                    loading = showLoading,
                     cooldown = null,
                     refused = null,
                     apiError = null,
@@ -419,6 +448,12 @@ class FoodLogFlowViewModel @Inject constructor(
                     envelope = latest
                 )
 
+                foodLogMutationBus.publishUpserted(
+                    env = latest,
+                    previewUri = previewUri,
+                    timeText = timeText,
+                    moveToTop = moveRecentUploadToTop
+                )
                 onSuccess(latest)
 
             } catch (e: FoodLogApiException.CooldownActive) {
@@ -442,12 +477,16 @@ class FoodLogFlowViewModel @Inject constructor(
                     loading = false,
                     error = t.message ?: "commit detail changes failed"
                 )
+            } finally {
+                onFinished()
             }
         }
     }
 
     fun submitPhotoFile(
         file: File,
+        previewUri: String? = null,
+        timeText: String? = null,
         onCreated: (FoodLogEnvelopeDto) -> Unit
     ) {
         viewModelScope.launch {
@@ -474,6 +513,11 @@ class FoodLogFlowViewModel @Inject constructor(
                 )
 
                 _state.value = UiState(loading = false, envelope = env)
+                foodLogMutationBus.publishUpserted(
+                    env = env,
+                    previewUri = previewUri,
+                    timeText = timeText
+                )
                 onCreated(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {
@@ -508,6 +552,8 @@ class FoodLogFlowViewModel @Inject constructor(
 
     fun submitLabelFile(
         file: File,
+        previewUri: String? = null,
+        timeText: String? = null,
         onCreated: (FoodLogEnvelopeDto) -> Unit
     ) {
         viewModelScope.launch {
@@ -534,6 +580,11 @@ class FoodLogFlowViewModel @Inject constructor(
                 )
 
                 _state.value = UiState(loading = false, envelope = env)
+                foodLogMutationBus.publishUpserted(
+                    env = env,
+                    previewUri = previewUri,
+                    timeText = timeText
+                )
                 onCreated(env)
 
             } catch (e: FoodLogApiException.CooldownActive) {

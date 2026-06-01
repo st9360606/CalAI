@@ -10,6 +10,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.activity.model.DailyActivityStatus
 import com.calai.bitecal.data.activity.sync.DailyActivitySyncer
+import com.calai.bitecal.data.foodlog.event.FoodLogMutationBus
+import com.calai.bitecal.data.foodlog.event.FoodLogMutationEvent
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
 import com.calai.bitecal.data.foodlog.model.FoodLogStatus
 import com.calai.bitecal.data.foodlog.repo.FoodLogsRepository
@@ -36,8 +38,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.File
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.TemporalAdjusters
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -88,6 +92,7 @@ class HomeViewModel @Inject constructor(
     private val profileStore: UserProfileStore,
     private val zoneId: ZoneId,
     private val foodLogsRepository: FoodLogsRepository,
+    private val foodLogMutationBus: FoodLogMutationBus,
     @ApplicationContext private val appContext: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -216,9 +221,11 @@ class HomeViewModel @Inject constructor(
     val recentUploads: StateFlow<List<HomeRecentUploadUi>> = _recentUploads.asStateFlow()
 
     private var recentUploadPollJob: Job? = null
+    private var recentUploadPollingFoodLogId: String? = null
     private var recentUploadRestoreJob: Job? = null
 
     init {
+        observeFoodLogMutations()
         refresh()
         restoreRecentUploadsFromServer()
 
@@ -232,6 +239,54 @@ class HomeViewModel @Inject constructor(
             profileStore.dailyWorkoutGoalUiFlow.collectLatest { v ->
                 _dailyWorkoutGoalKcal.value = v
             }
+        }
+    }
+
+    private fun observeFoodLogMutations() {
+        viewModelScope.launch {
+            foodLogMutationBus.events.collectLatest { event ->
+                when (event) {
+                    is FoodLogMutationEvent.Upserted -> {
+                        onRecentUploadUpdated(
+                            env = event.env,
+                            previewUri = event.previewUri,
+                            fallbackTimeText = event.timeText.orEmpty(),
+                            moveExistingToTop = event.moveToTop
+                        )
+                    }
+
+                    is FoodLogMutationEvent.Deleted -> {
+                        onFoodLogDeletedFromMutation(
+                            foodLogId = event.foodLogId,
+                            capturedLocalDate = event.capturedLocalDate
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun onFoodLogDeletedFromMutation(
+        foodLogId: String,
+        capturedLocalDate: String?
+    ) {
+        if (recentUploadPollingFoodLogId == foodLogId) {
+            recentUploadPollJob?.cancel()
+            recentUploadPollJob = null
+            recentUploadPollingFoodLogId = null
+        }
+
+        removeRecentUpload(foodLogId)
+        deleteRecentUploadPreviewCache(foodLogId)
+
+        val parsedDate = capturedLocalDate
+            ?.let { raw -> runCatching { LocalDate.parse(raw) }.getOrNull() }
+
+        if (parsedDate != null) {
+            invalidateNutritionWeekForDate(parsedDate)
+            refresh()
+        } else {
+            refreshAfterFoodLogMutation(null)
         }
     }
 
@@ -267,68 +322,33 @@ class HomeViewModel @Inject constructor(
         ).ifBlank { fallbackTimeText }
     }
 
-    fun onFoodLogCreated(
-        env: FoodLogEnvelopeDto,
-        previewUri: String?,
-        timeText: String
-    ) {
-        recentUploadPollJob?.cancel()
-
-        when (env.status) {
-            FoodLogStatus.PENDING -> {
-                upsertRecentUpload(
-                    HomeRecentUploadMapper.pending(
-                        foodLogId = env.foodLogId,
-                        previewUri = previewUri,
-                        timeText = timeText
-                    )
-                )
-                startRecentUploadPolling(
-                    foodLogId = env.foodLogId,
-                    previewUri = previewUri,
-                    timeText = timeText
-                )
-            }
-
-            FoodLogStatus.DRAFT,
-            FoodLogStatus.SAVED -> {
-                val resolvedTimeText = resolveRecentUploadTimeText(
-                    env = env,
-                    fallbackTimeText = timeText
-                )
-
-                upsertRecentUpload(
-                    HomeRecentUploadMapper.success(
-                        foodLogId = env.foodLogId,
-                        previewUri = previewUri,
-                        timeText = resolvedTimeText,
-                        env = env
-                    )
-                )
-                refresh()
-            }
-
-            FoodLogStatus.FAILED,
-            FoodLogStatus.DELETED -> {
-                removeRecentUpload(env.foodLogId)
-            }
-        }
-    }
-
     fun clearRecentUpload() {
         recentUploadPollJob?.cancel()
         recentUploadPollJob = null
+        recentUploadPollingFoodLogId = null
         _recentUploads.value = emptyList()
     }
 
-    private fun upsertRecentUpload(item: HomeRecentUploadUi) {
+    private fun upsertRecentUpload(
+        item: HomeRecentUploadUi,
+        moveExistingToTop: Boolean = false
+    ) {
         _recentUploads.update { current ->
-            buildList {
-                add(item)
+            val existingIndex = current.indexOfFirst { it.foodLogId == item.foodLogId }
+            if (existingIndex >= 0 && !moveExistingToTop) {
                 current
-                    .filterNot { it.foodLogId == item.foodLogId }
-                    .take(9)
-                    .forEach(::add)
+                    .map { existing ->
+                        if (existing.foodLogId == item.foodLogId) item else existing
+                    }
+                    .take(10)
+            } else {
+                buildList {
+                    add(item)
+                    current
+                        .filterNot { it.foodLogId == item.foodLogId }
+                        .take(9)
+                        .forEach(::add)
+                }
             }
         }
     }
@@ -337,14 +357,6 @@ class HomeViewModel @Inject constructor(
         _recentUploads.update { current ->
             current.filterNot { it.foodLogId == foodLogId }
         }
-    }
-
-    fun onRecentUploadDeleted(foodLogId: String) {
-        recentUploadPollJob?.cancel()
-        recentUploadPollJob = null
-
-        removeRecentUpload(foodLogId)
-        deleteRecentUploadPreviewCache(foodLogId)
     }
 
     fun deleteRecentUpload(
@@ -359,9 +371,10 @@ class HomeViewModel @Inject constructor(
                     item is HomeRecentUploadUi.Pending || item is HomeRecentUploadUi.Delayed
                 } == true
 
-            if (deletingPendingLike) {
+            if (deletingPendingLike && recentUploadPollingFoodLogId == foodLogId) {
                 recentUploadPollJob?.cancel()
                 recentUploadPollJob = null
+                recentUploadPollingFoodLogId = null
             }
 
             try {
@@ -369,8 +382,7 @@ class HomeViewModel @Inject constructor(
                     foodLogsRepository.delete(foodLogId)
                 }
 
-                onRecentUploadDeleted(foodLogId)
-                refresh()
+                foodLogMutationBus.publishDeleted(foodLogId = foodLogId)
 
                 if (deletingPendingLike) {
                     restoreRecentUploadsFromServer()
@@ -420,89 +432,97 @@ class HomeViewModel @Inject constructor(
         timeText: String
     ) {
         recentUploadPollJob?.cancel()
+        recentUploadPollingFoodLogId = foodLogId
 
         recentUploadPollJob = viewModelScope.launch {
             var enteredDelayedState = false
 
-            while (true) {
-                try {
-                    when (val result = withContext(Dispatchers.IO) {
-                        foodLogsRepository.pollForHomeCard(
-                            id = foodLogId,
-                            hotWindowMs = if (enteredDelayedState) 8_000L else 15_000L,
-                            maxAttempts = if (enteredDelayedState) 4 else 8
-                        )
-                    }) {
-                        is HomeCardPollResult.Terminal -> {
-                            when (result.env.status) {
-                                FoodLogStatus.DRAFT,
-                                FoodLogStatus.SAVED -> {
-                                    val resolvedTimeText = resolveRecentUploadTimeText(
-                                        env = result.env,
-                                        fallbackTimeText = timeText
-                                    )
-
-                                    upsertRecentUpload(
-                                        HomeRecentUploadMapper.success(
-                                            foodLogId = foodLogId,
-                                            previewUri = previewUri,
-                                            timeText = resolvedTimeText,
-                                            env = result.env
+            try {
+                while (true) {
+                    try {
+                        when (val result = withContext(Dispatchers.IO) {
+                            foodLogsRepository.pollForHomeCard(
+                                id = foodLogId,
+                                hotWindowMs = if (enteredDelayedState) 8_000L else 15_000L,
+                                maxAttempts = if (enteredDelayedState) 4 else 8
+                            )
+                        }) {
+                            is HomeCardPollResult.Terminal -> {
+                                when (result.env.status) {
+                                    FoodLogStatus.DRAFT,
+                                    FoodLogStatus.SAVED -> {
+                                        val resolvedTimeText = resolveRecentUploadTimeText(
+                                            env = result.env,
+                                            fallbackTimeText = timeText
                                         )
-                                    )
-                                    refresh()
-                                    return@launch
-                                }
 
-                                FoodLogStatus.FAILED,
-                                FoodLogStatus.DELETED -> {
-                                    removeRecentUpload(foodLogId)
-                                    return@launch
-                                }
-
-                                FoodLogStatus.PENDING -> {
-                                    if (!enteredDelayedState) {
-                                        enteredDelayedState = true
                                         upsertRecentUpload(
-                                            HomeRecentUploadMapper.delayed(
+                                            HomeRecentUploadMapper.success(
                                                 foodLogId = foodLogId,
                                                 previewUri = previewUri,
-                                                timeText = timeText
+                                                timeText = resolvedTimeText,
+                                                env = result.env
                                             )
                                         )
+                                        refreshAfterFoodLogMutation(result.env)
+                                        return@launch
                                     }
-                                    delay(8_000L)
+
+                                    FoodLogStatus.FAILED,
+                                    FoodLogStatus.DELETED -> {
+                                        removeRecentUpload(foodLogId)
+                                        return@launch
+                                    }
+
+                                    FoodLogStatus.PENDING -> {
+                                        if (!enteredDelayedState) {
+                                            enteredDelayedState = true
+                                            upsertRecentUpload(
+                                                HomeRecentUploadMapper.delayed(
+                                                    foodLogId = foodLogId,
+                                                    previewUri = previewUri,
+                                                    timeText = timeText
+                                                )
+                                            )
+                                        }
+                                        delay(8_000L)
+                                    }
                                 }
                             }
-                        }
 
-                        is HomeCardPollResult.StillPending -> {
-                            if (!enteredDelayedState) {
-                                enteredDelayedState = true
-                                upsertRecentUpload(
-                                    HomeRecentUploadMapper.delayed(
-                                        foodLogId = foodLogId,
-                                        previewUri = previewUri,
-                                        timeText = timeText
+                            is HomeCardPollResult.StillPending -> {
+                                if (!enteredDelayedState) {
+                                    enteredDelayedState = true
+                                    upsertRecentUpload(
+                                        HomeRecentUploadMapper.delayed(
+                                            foodLogId = foodLogId,
+                                            previewUri = previewUri,
+                                            timeText = timeText
+                                        )
                                     )
-                                )
+                                }
+                                delay(8_000L)
                             }
-                            delay(8_000L)
                         }
-                    }
-                } catch (ce: CancellationException) {
-                    throw ce
-                } catch (_: Throwable) {
-                    upsertRecentUpload(
-                        HomeRecentUploadMapper.delayed(
-                            foodLogId = foodLogId,
-                            previewUri = previewUri,
-                            timeText = timeText,
-                            title = "網路較慢",
-                            subtitle = "稍後會自動再試"
+                    } catch (ce: CancellationException) {
+                        throw ce
+                    } catch (_: Throwable) {
+                        upsertRecentUpload(
+                            HomeRecentUploadMapper.delayed(
+                                foodLogId = foodLogId,
+                                previewUri = previewUri,
+                                timeText = timeText,
+                                title = "網路較慢",
+                                subtitle = "稍後會自動再試"
+                            )
                         )
-                    )
-                    delay(10_000L)
+                        delay(10_000L)
+                    }
+                }
+            } finally {
+                if (recentUploadPollingFoodLogId == foodLogId) {
+                    recentUploadPollingFoodLogId = null
+                    recentUploadPollJob = null
                 }
             }
         }
@@ -510,6 +530,7 @@ class HomeViewModel @Inject constructor(
 
     override fun onCleared() {
         recentUploadPollJob?.cancel()
+        recentUploadPollingFoodLogId = null
         recentUploadRestoreJob?.cancel()
         super.onCleared()
     }
@@ -588,27 +609,63 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun resolveRecentUploadPreviewUri(
+        foodLogId: String,
+        incomingPreviewUri: String?
+    ): String? {
+        val incoming = incomingPreviewUri?.takeIf { it.isNotBlank() }
+        if (incoming != null) return incoming
+
+        val existing = _recentUploads.value
+            .firstOrNull { it.foodLogId == foodLogId }
+            ?.previewUri
+            ?.takeIf { it.isNotBlank() }
+        if (existing != null) return existing
+
+        val cachedFile = File(
+            appContext.cacheDir,
+            "foodlog_recent_upload_preview/foodlog_$foodLogId.img"
+        )
+
+        return cachedFile
+            .takeIf { it.exists() && it.length() > 0L }
+            ?.let { Uri.fromFile(it).toString() }
+    }
+
     fun onRecentUploadUpdated(
         env: FoodLogEnvelopeDto,
-        previewUri: String?
+        previewUri: String?,
+        fallbackTimeText: String = "",
+        moveExistingToTop: Boolean = false
     ) {
-        recentUploadPollJob?.cancel()
-        recentUploadPollJob = null
+        if (recentUploadPollingFoodLogId == env.foodLogId) {
+            recentUploadPollJob?.cancel()
+            recentUploadPollJob = null
+            recentUploadPollingFoodLogId = null
+        }
 
-        val resolvedTimeText = resolveRecentUploadTimeText(env = env)
+        val resolvedTimeText = resolveRecentUploadTimeText(
+            env = env,
+            fallbackTimeText = fallbackTimeText
+        )
+        val resolvedPreviewUri = resolveRecentUploadPreviewUri(
+            foodLogId = env.foodLogId,
+            incomingPreviewUri = previewUri
+        )
 
         when (env.status) {
             FoodLogStatus.DRAFT,
             FoodLogStatus.SAVED -> {
                 upsertRecentUpload(
-                    HomeRecentUploadMapper.success(
+                    item = HomeRecentUploadMapper.success(
                         foodLogId = env.foodLogId,
-                        previewUri = previewUri,
+                        previewUri = resolvedPreviewUri,
                         timeText = resolvedTimeText,
                         env = env
-                    )
+                    ),
+                    moveExistingToTop = moveExistingToTop
                 )
-                refresh()
+                refreshAfterFoodLogMutation(env)
                 recentUploadRestoreJob?.cancel()
                 recentUploadRestoreJob = null
             }
@@ -617,13 +674,13 @@ class HomeViewModel @Inject constructor(
                 upsertRecentUpload(
                     HomeRecentUploadMapper.pending(
                         foodLogId = env.foodLogId,
-                        previewUri = previewUri,
+                        previewUri = resolvedPreviewUri,
                         timeText = resolvedTimeText
                     )
                 )
                 startRecentUploadPolling(
                     foodLogId = env.foodLogId,
-                    previewUri = previewUri,
+                    previewUri = resolvedPreviewUri,
                     timeText = resolvedTimeText
                 )
             }
@@ -632,7 +689,7 @@ class HomeViewModel @Inject constructor(
             FoodLogStatus.DELETED -> {
                 removeRecentUpload(env.foodLogId)
                 deleteRecentUploadPreviewCache(env.foodLogId)
-                refresh()
+                refreshAfterFoodLogMutation(env)
             }
         }
     }
@@ -661,6 +718,47 @@ class HomeViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+
+    private fun refreshAfterFoodLogMutation(env: FoodLogEnvelopeDto?) {
+        invalidateNutritionCacheForFoodLog(env)
+        refresh()
+    }
+
+    private fun invalidateNutritionCacheForFoodLog(env: FoodLogEnvelopeDto?) {
+        val capturedDate = env?.capturedLocalDate
+            ?.let { raw -> runCatching { LocalDate.parse(raw) }.getOrNull() }
+
+        if (capturedDate != null) {
+            invalidateNutritionWeekForDate(capturedDate)
+        } else {
+            invalidateVisibleNutritionCache()
+        }
+    }
+
+    private fun invalidateNutritionWeekForDate(localDate: LocalDate) {
+        val safeDate = safeSelectableDate(localDate)
+        val weekOffset = foodLogsRepository.weekOffsetForDate(safeDate, zoneId)
+
+        if (weekOffset == null) {
+            nutritionSummaryByDateCache.remove(safeDate)
+            publishCalendarNutritionCache()
+            return
+        }
+
+        val weekStart = safeDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        repeat(7) { dayOffset ->
+            nutritionSummaryByDateCache.remove(weekStart.plusDays(dayOffset.toLong()))
+        }
+        loadedNutritionWeekOffsets.remove(weekOffset)
+        publishCalendarNutritionCache()
+    }
+
+    private fun invalidateVisibleNutritionCache() {
+        nutritionSummaryByDateCache.clear()
+        loadedNutritionWeekOffsets.clear()
+        publishCalendarNutritionCache()
     }
 
 

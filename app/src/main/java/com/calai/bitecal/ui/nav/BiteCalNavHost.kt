@@ -2284,17 +2284,6 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, cameraOwner)
             )
 
-            // ✅ 取得 HomeViewModel（讓 Camera 成功後可以把 recent upload 狀態交給 Home）
-            val homeEntry = remember(nav) {
-                runCatching { nav.getBackStackEntry(Routes.HOME) }.getOrNull()
-            }
-            val homeVm: HomeViewModel? = homeEntry?.let { entry ->
-                viewModel(
-                    viewModelStoreOwner = entry,
-                    factory = HiltViewModelFactory(activity, entry)
-                )
-            }
-
             // ✅ 外部要求切模式（Detail 回來）
             var initialMode by rememberSaveable { mutableStateOf(CameraMode.FOOD) }
             val modeReqFlow = remember(backStackEntry) {
@@ -2395,21 +2384,7 @@ fun BiteCalNavHost(
                     LocalTime.now()
                         .format(DateTimeFormatter.ofPattern("HH:mm"))
 
-                fun handleCreatedFoodLog(
-                    env: FoodLogEnvelopeDto,
-                    previewUri: String?
-                ) {
-                    val latestTimeText = resolveFoodLogTimeText(
-                        env = env,
-                        fallbackTimeText = nowHm()
-                    )
-
-                    homeVm?.onFoodLogCreated(
-                        env = env,
-                        previewUri = previewUri,
-                        timeText = latestTimeText
-                    )
-
+                fun handleCreatedFoodLog(env: FoodLogEnvelopeDto) {
                     when (env.status) {
                         FoodLogStatus.DRAFT,
                         FoodLogStatus.SAVED,
@@ -2457,11 +2432,13 @@ fun BiteCalNavHost(
                         // ✅ ALBUM 一律走 album，不再看當前 mode
                         onAlbumPicked = { uri ->
                             val previewUri = copyUriToPreviewFile(ctx, uri)
-                            flowVm.submitAlbum(ctx, uri) { env ->
-                                handleCreatedFoodLog(
-                                    env = env,
-                                    previewUri = previewUri
-                                )
+                            flowVm.submitAlbum(
+                                ctx = ctx,
+                                uri = uri,
+                                previewUri = previewUri,
+                                timeText = nowHm()
+                            ) { env ->
+                                handleCreatedFoodLog(env = env)
                             }
                         },
 
@@ -2469,21 +2446,23 @@ fun BiteCalNavHost(
                             when (mode) {
                                 CameraMode.FOOD -> {
                                     val previewUri = createPreviewCopy(file)
-                                    flowVm.submitPhotoFile(file) { env ->
-                                        handleCreatedFoodLog(
-                                            env = env,
-                                            previewUri = previewUri
-                                        )
+                                    flowVm.submitPhotoFile(
+                                        file = file,
+                                        previewUri = previewUri,
+                                        timeText = nowHm()
+                                    ) { env ->
+                                        handleCreatedFoodLog(env = env)
                                     }
                                 }
 
                                 CameraMode.LABEL -> {
                                     val previewUri = createPreviewCopy(file)
-                                    flowVm.submitLabelFile(file) { env ->
-                                        handleCreatedFoodLog(
-                                            env = env,
-                                            previewUri = previewUri
-                                        )
+                                    flowVm.submitLabelFile(
+                                        file = file,
+                                        previewUri = previewUri,
+                                        timeText = nowHm()
+                                    ) { env ->
+                                        handleCreatedFoodLog(env = env)
                                     }
                                 }
 
@@ -2494,35 +2473,18 @@ fun BiteCalNavHost(
                         onBarcodeScanned = { code ->
                             if (st.loading) return@CameraScreen
 
-                            flowVm.submitBarcode(code) { env ->
+                            flowVm.submitBarcode(
+                                barcode = code,
+                                timeText = nowHm()
+                            ) { env ->
                                 when (env.status) {
                                     FoodLogStatus.DRAFT,
                                     FoodLogStatus.SAVED -> {
-                                        val latestTimeText = resolveFoodLogTimeText(
-                                            env = env,
-                                            fallbackTimeText = nowHm()
-                                        )
-
-                                        homeVm?.onFoodLogCreated(
-                                            env = env,
-                                            previewUri = null,
-                                            timeText = latestTimeText
-                                        )
                                         flowVm.reset()
                                         goHome()
                                     }
 
                                     FoodLogStatus.PENDING -> {
-                                        val latestTimeText = resolveFoodLogTimeText(
-                                            env = env,
-                                            fallbackTimeText = nowHm()
-                                        )
-
-                                        homeVm?.onFoodLogCreated(
-                                            env = env,
-                                            previewUri = null,
-                                            timeText = latestTimeText
-                                        )
                                         flowVm.reset()
                                         goHome()
                                     }
@@ -2578,27 +2540,47 @@ fun BiteCalNavHost(
                 factory = HiltViewModelFactory(activity, homeBackStackEntry)
             )
 
-            SavedFoodsScreen(
-                vm = savedFoodsVm,
-                onBack = { nav.safePopBackStack() },
-                onOpenDetail = { foodLogId, previewUri, timeText ->
-                    nav.currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(Routes.RECENT_UPLOAD_PREVIEW_URI, previewUri)
+            val successFlow = remember(backStackEntry) {
+                backStackEntry.savedStateHandle.getStateFlow<String?>(NavResults.SUCCESS_TOAST, null)
+            }
+            val navSuccess by successFlow.collectAsState(initial = null)
 
-                    nav.currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, timeText)
+            ClearNavResultToastsOnDispose(backStackEntry)
 
-                    nav.currentBackStackEntry
-                        ?.savedStateHandle
-                        ?.set(Routes.RECENT_UPLOAD_SOURCE, Routes.SAVED_FOODS)
+            Box(Modifier.fillMaxSize()) {
+                SavedFoodsScreen(
+                    vm = savedFoodsVm,
+                    onBack = { nav.safePopBackStack() },
+                    onOpenDetail = { foodLogId, previewUri, timeText ->
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(Routes.RECENT_UPLOAD_PREVIEW_URI, previewUri)
 
-                    nav.navigate(Routes.recentUploadDetail(foodLogId)) {
-                        launchSingleTop = true
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, timeText)
+
+                        nav.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(Routes.RECENT_UPLOAD_SOURCE, Routes.SAVED_FOODS)
+
+                        nav.navigate(Routes.recentUploadDetail(foodLogId)) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+
+                if (!navSuccess.isNullOrBlank()) {
+                    SuccessTopToast(
+                        message = navSuccess!!,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+                    LaunchedEffect(navSuccess) {
+                        delay(2_000)
+                        backStackEntry.savedStateHandle[NavResults.SUCCESS_TOAST] = null
                     }
                 }
-            )
+            }
         }
 
         composable(Routes.RECENT_UPLOAD_DETAIL) { backStackEntry ->
@@ -2609,17 +2591,6 @@ fun BiteCalNavHost(
                 viewModelStoreOwner = recentUploadOwner,
                 factory = HiltViewModelFactory(activity, recentUploadOwner)
             )
-
-            val homeEntry = remember(nav) {
-                runCatching { nav.getBackStackEntry(Routes.HOME) }.getOrNull()
-            }
-
-            val homeVm: HomeViewModel? = homeEntry?.let { entry ->
-                viewModel(
-                    viewModelStoreOwner = entry,
-                    factory = HiltViewModelFactory(activity, entry)
-                )
-            }
 
             val id = backStackEntry.arguments?.getString("id").orEmpty()
 
@@ -2636,17 +2607,21 @@ fun BiteCalNavHost(
                     .orEmpty()
             }
 
-            val savedFoodsVm: SavedFoodsViewModel? = homeEntry?.let { entry ->
-                viewModel(
-                    viewModelStoreOwner = entry,
-                    factory = HiltViewModelFactory(activity, entry)
-                )
-            }
-
             val source = remember(backStackEntry) {
                 nav.previousBackStackEntry
                     ?.savedStateHandle
                     ?.get<String>(Routes.RECENT_UPLOAD_SOURCE)
+            }
+
+            fun publishFoodLogDetailUpdate(updatedEnv: FoodLogEnvelopeDto) {
+                val latestTimeText = resolveFoodLogTimeText(
+                    env = updatedEnv,
+                    fallbackTimeText = timeText
+                )
+
+                nav.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, latestTimeText)
             }
 
             RecentUploadDetailScreen(
@@ -2662,24 +2637,11 @@ fun BiteCalNavHost(
                     }
                 },
                 onSave = { updatedEnv ->
-                    val latestTimeText = resolveFoodLogTimeText(
-                        env = updatedEnv,
-                        fallbackTimeText = timeText
-                    )
+                    publishFoodLogDetailUpdate(updatedEnv)
 
                     nav.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set(Routes.RECENT_UPLOAD_TIME_TEXT, latestTimeText)
-
-                    homeVm?.onRecentUploadUpdated(
-                        env = updatedEnv,
-                        previewUri = previewUri
-                    )
-
-                    savedFoodsVm?.onFoodLogUpdatedFromDetail(
-                        env = updatedEnv,
-                        previewUri = previewUri
-                    )
+                        ?.set(NavResults.SUCCESS_TOAST, activity.getString(R.string.common_save_success))
 
                     if (source == Routes.SAVED_FOODS) {
                         nav.safePopBackStack()
@@ -2687,11 +2649,11 @@ fun BiteCalNavHost(
                         nav.goHome()
                     }
                 },
-                onDeleted = { deletedFoodLogId ->
-                    homeVm?.onRecentUploadDeleted(deletedFoodLogId)
-
+                onSavedStateChanged = { updatedEnv ->
+                    publishFoodLogDetailUpdate(updatedEnv)
+                },
+                onDeleted = { _ ->
                     if (source == Routes.SAVED_FOODS) {
-                        savedFoodsVm?.refresh()
                         nav.safePopBackStack()
                     } else {
                         nav.goHome()
