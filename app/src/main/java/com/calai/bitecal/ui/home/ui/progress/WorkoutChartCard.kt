@@ -14,8 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,11 +38,15 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.ui.progress.model.WorkoutChartUi
@@ -66,6 +73,7 @@ private val WorkoutMetricChipBg = Color(0xFFF8FAFC)
 private val WorkoutMetricChipBorder = Color(0xFFE2E8F0)
 private val WorkoutMetricChipLabelColor = Color(0xFF64748B)
 private val WorkoutMetricChipValueColor = Color(0xFF0F172A)
+private val WorkoutInfoIconText = Color(0xFF6B7078)
 
 @Composable
 internal fun WorkoutChartCard(
@@ -80,6 +88,8 @@ internal fun WorkoutChartCard(
 
     WorkoutChartCardFrame(
         title = stringResource(R.string.workout_chart_title),
+        infoDialogText = stringResource(R.string.workout_chart_info_dialog_body),
+        infoButtonContentDescription = stringResource(R.string.workout_chart_info_button_content_description),
         headlineValue = chart.todayBurnedKcal.toString(),
         unitText = stringResource(R.string.workout_chart_unit_kcal),
         deltaText = chart.deltaText,
@@ -106,6 +116,8 @@ internal fun WorkoutLoadingCard(
 ) {
     WorkoutChartCardFrame(
         title = stringResource(R.string.workout_chart_title),
+        infoDialogText = stringResource(R.string.workout_chart_info_dialog_body),
+        infoButtonContentDescription = stringResource(R.string.workout_chart_info_button_content_description),
         headlineValue = "--",
         unitText = stringResource(R.string.workout_chart_unit_kcal),
         deltaText = "--",
@@ -180,6 +192,8 @@ internal fun WorkoutErrorCard(
 @Composable
 private fun WorkoutChartCardFrame(
     title: String,
+    infoDialogText: String,
+    infoButtonContentDescription: String,
     headlineValue: String,
     unitText: String,
     deltaText: String,
@@ -199,6 +213,7 @@ private fun WorkoutChartCardFrame(
         resolvedDeltaText.startsWith("↓") -> Color(0xFF329A3F)
         else -> Color(0xFF74747A)
     }
+    var showInfoDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -222,13 +237,38 @@ private fun WorkoutChartCardFrame(
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = title,
-                        color = WorkoutTitleColor,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 10.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(top = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Text(
+                            text = title,
+                            color = WorkoutTitleColor,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .offset(x = (-1).dp, y = (-1).dp)
+                                .semantics {
+                                    contentDescription = infoButtonContentDescription
+                                }
+                                .biteCalClickable { showInfoDialog = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "ⓘ",
+                                color = WorkoutInfoIconText,
+                                fontSize = 16.sp,
+                                lineHeight = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
 
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
@@ -306,6 +346,107 @@ private fun WorkoutChartCardFrame(
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
+            }
+
+        }
+    }
+
+    if (showInfoDialog) {
+        WorkoutChartInfoDialog(
+            title = title,
+            body = infoDialogText,
+            closeText = stringResource(R.string.common_close),
+            onDismiss = { showInfoDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun WorkoutChartInfoDialog(
+    title: String,
+    body: String,
+    closeText: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth(0.86f)
+                    .widthIn(min = 280.dp, max = 360.dp)
+                    .border(1.dp, WorkoutBorderColor, RoundedCornerShape(24.dp))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 22.dp, vertical = 22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier.size(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "ⓘ",
+                            color = WorkoutInfoIconText,
+                            fontSize = 19.sp,
+                            lineHeight = 19.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = title,
+                        color = WorkoutTitleColor,
+                        fontSize = 20.sp,
+                        lineHeight = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = body,
+                        color = WorkoutMetaColor,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFF17171C), RoundedCornerShape(999.dp))
+                            .biteCalClickable { onDismiss() }
+                            .padding(horizontal = 26.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = closeText,
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             }
         }
     }

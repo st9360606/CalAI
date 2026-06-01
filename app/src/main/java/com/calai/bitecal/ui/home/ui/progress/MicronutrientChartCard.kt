@@ -152,14 +152,14 @@ private fun MicronutrientChartCardFrame(
             .fillMaxWidth()
             .background(MicronutrientCardBg, RoundedCornerShape(28.dp))
             .border(1.dp, MicronutrientBorderColor, RoundedCornerShape(28.dp))
-            .padding(horizontal = 26.dp, vertical = 26.dp)
+            .padding(horizontal = 22.dp, vertical = 26.dp)
     ) {
-        val averageChipWidth = 128.dp
+        val averageChipWidth = 122.dp
 
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.Top
             ) {
                 Column(
@@ -194,19 +194,21 @@ private fun MicronutrientChartCardFrame(
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
 
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
 
                         Text(
                             text = resolvedDeltaText,
                             color = resolvedDeltaColor,
                             fontSize = 17.sp,
                             fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            softWrap = false,
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 MicronutrientAverageChip(
                     title = stringResource(R.string.progress_chart_7day_avg),
@@ -557,7 +559,7 @@ private fun MicronutrientStackedBarChart(
 
                                     if (roundTop) {
                                         val resolvedRadius = minOf(
-                                            6.dp.toPx(),
+                                            8.dp.toPx(),
                                             barWidth / 2f,
                                             segmentHeight / 2f
                                         )

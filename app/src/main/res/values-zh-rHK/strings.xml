@@ -458,6 +458,9 @@
          Workout Chart
          ========================= -->
     <string name="workout_chart_title">運動消耗</string>
+    <string name="workout_chart_info_dialog_body">此數值包含手動記錄的運動，以及步數推估的日常活動消耗。</string>
+    <string name="workout_chart_info_button_content_description">查看運動消耗說明</string>
+    <string name="workout_chart_subtitle_steps_included">含運動與日常步行</string>
     <string name="workout_chart_unit_kcal">大卡</string>
     <string name="workout_chart_goal">目標</string>
     <string name="workout_chart_7day_avg">7 日平均</string>

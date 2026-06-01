@@ -459,6 +459,9 @@
          Workout Chart
          ========================= -->
     <string name="workout_chart_title">Workout burn</string>
+    <string name="workout_chart_info_dialog_body">Includes logged workouts and activity calories estimated from daily steps.</string>
+    <string name="workout_chart_info_button_content_description">Show workout burn info</string>
+    <string name="workout_chart_subtitle_steps_included">Workouts &amp; daily steps included</string>
     <string name="workout_chart_unit_kcal">kcal</string>
     <string name="workout_chart_goal">Goal</string>
     <string name="workout_chart_7day_avg">7-day avg</string>
