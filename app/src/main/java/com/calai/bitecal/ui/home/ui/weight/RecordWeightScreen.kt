@@ -16,7 +16,6 @@ import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -31,12 +30,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -49,7 +48,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarHost
@@ -105,7 +103,6 @@ import java.time.LocalDate
 import java.time.Month
 import java.time.Year
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
 import com.calai.bitecal.ui.common.haptic.HapticWheelTickEffect
@@ -133,12 +130,6 @@ fun RecordWeightScreen(
 
     val effectiveOwner = localOwner ?: ownerFromContext
     val canUseActivityResult = !isPreview && effectiveOwner != null
-
-    Log.d(
-        "RecordWeightScreen",
-        "wrapper localOwner=$localOwner, ctxOwner=$ownerFromContext, " +
-                "canUseActivityResult=$canUseActivityResult, isPreview=$isPreview"
-    )
 
     if (effectiveOwner != null && localOwner == null) {
         CompositionLocalProvider(LocalActivityResultRegistryOwner provides effectiveOwner) {
@@ -705,7 +696,12 @@ private fun NumberWheelRecord(
     textSize: TextUnit,
     sideAlpha: Float,
     modifier: Modifier = Modifier,
-    label: (Int) -> String = { it.toString() }
+    label: (Int) -> String = { it.toString() },
+    showSelectionLines: Boolean = true,
+    selectedTextColor: Color = Color.Black,
+    unselectedTextColor: Color = Color.Black.copy(alpha = sideAlpha),
+    centerFontWeight: FontWeight = FontWeight.SemiBold,
+    sideFontWeight: FontWeight = FontWeight.Normal
 ) {
     val visibleCount = 5
     val mid = visibleCount / 2
@@ -734,8 +730,11 @@ private fun NumberWheelRecord(
         }
     }
 
-    LaunchedEffect(centerIndex, initialized) {
-        if (initialized) onValueChange(items[centerIndex])
+    LaunchedEffect(centerIndex, initialized, items) {
+        val centeredItem = items.getOrNull(centerIndex)
+        if (initialized && centeredItem != null) {
+            onValueChange(centeredItem)
+        }
     }
 
     HapticWheelTickEffect(
@@ -757,9 +756,9 @@ private fun NumberWheelRecord(
         ) {
             itemsIndexed(items) { index, num ->
                 val isCenter = index == centerIndex
-                val alpha = if (isCenter) 1f else sideAlpha
                 val size = if (isCenter) centerTextSize else textSize
-                val weight = if (isCenter) FontWeight.SemiBold else FontWeight.Normal
+                val weight = if (isCenter) centerFontWeight else sideFontWeight
+                val textColor = if (isCenter) selectedTextColor else unselectedTextColor
 
                 Row(
                     modifier = Modifier
@@ -772,32 +771,34 @@ private fun NumberWheelRecord(
                         text = label(num),
                         fontSize = size,
                         fontWeight = weight,
-                        color = Color.Black.copy(alpha = alpha),
+                        color = textColor,
                         textAlign = TextAlign.Center
                     )
                 }
             }
         }
 
-        val lineColor = Color(0x11000000)
-        val half = rowHeight / 2
-        val lineThickness = 1.dp
-        Box(
-            Modifier
-                .align(Alignment.Center)
-                .offset(y = -half)
-                .fillMaxWidth()
-                .height(lineThickness)
-                .background(lineColor)
-        )
-        Box(
-            Modifier
-                .align(Alignment.Center)
-                .offset(y = half - lineThickness)
-                .fillMaxWidth()
-                .height(lineThickness)
-                .background(lineColor)
-        )
+        if (showSelectionLines) {
+            val lineColor = Color(0x11000000)
+            val half = rowHeight / 2
+            val lineThickness = 1.dp
+            Box(
+                Modifier
+                    .align(Alignment.Center)
+                    .offset(y = -half)
+                    .fillMaxWidth()
+                    .height(lineThickness)
+                    .background(lineColor)
+            )
+            Box(
+                Modifier
+                    .align(Alignment.Center)
+                    .offset(y = half - lineThickness)
+                    .fillMaxWidth()
+                    .height(lineThickness)
+                    .background(lineColor)
+            )
+        }
     }
 }
 
@@ -816,7 +817,7 @@ private fun WeighingDateSheet(
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
-        confirmValueChange = { goal -> goal != SheetValue.Hidden }
+        confirmValueChange = { targetValue -> targetValue != SheetValue.Hidden }
     )
 
     val today = remember(maxDate) { maxDate }
@@ -826,11 +827,25 @@ private fun WeighingDateSheet(
     var month by rememberSaveable(currentDate) { mutableIntStateOf(currentDate.monthValue) }
     var day by rememberSaveable(currentDate) { mutableIntStateOf(currentDate.dayOfMonth) }
 
-    val months = remember {
-        Month.entries.map { m ->
-            m.getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH)
-        }
-    }
+    val months = listOf(
+        stringResource(R.string.weight_date_sheet_month_january),
+        stringResource(R.string.weight_date_sheet_month_february),
+        stringResource(R.string.weight_date_sheet_month_march),
+        stringResource(R.string.weight_date_sheet_month_april),
+        stringResource(R.string.weight_date_sheet_month_may),
+        stringResource(R.string.weight_date_sheet_month_june),
+        stringResource(R.string.weight_date_sheet_month_july),
+        stringResource(R.string.weight_date_sheet_month_august),
+        stringResource(R.string.weight_date_sheet_month_september),
+        stringResource(R.string.weight_date_sheet_month_october),
+        stringResource(R.string.weight_date_sheet_month_november),
+        stringResource(R.string.weight_date_sheet_month_december)
+    )
+
+    val titleText = stringResource(R.string.weight_date_sheet_title)
+    val subtitleText = stringResource(R.string.weight_date_sheet_subtitle)
+    val saveText = stringResource(R.string.save)
+    val cancelText = stringResource(R.string.cancel)
 
     val monthRange: IntRange = remember(year, today) {
         if (year >= today.year) 1..today.monthValue else 1..12
@@ -846,6 +861,18 @@ private fun WeighingDateSheet(
         1..maxDay
     }
 
+    LaunchedEffect(monthRange) {
+        if (month !in monthRange) {
+            month = month.coerceIn(monthRange.first, monthRange.last)
+        }
+    }
+
+    LaunchedEffect(dayRange) {
+        if (day !in dayRange) {
+            day = day.coerceIn(dayRange.first, dayRange.last)
+        }
+    }
+
     fun clampDay(y: Int, m: Int, d: Int): Int {
         val maxDayOfMonth = Month.of(m).length(Year.of(y).isLeap)
         val maxDay = if (y == today.year && m == today.monthValue) {
@@ -856,124 +883,227 @@ private fun WeighingDateSheet(
         return d.coerceIn(1, maxDay)
     }
 
+    val confirmClick = rememberClickWithHaptic {
+        val safeYear = year.coerceIn(yearRange)
+        val safeMonth = if (safeYear == today.year) {
+            month.coerceIn(1, today.monthValue)
+        } else {
+            month.coerceIn(1, 12)
+        }
+        val safeDay = clampDay(safeYear, safeMonth, day)
+        val raw = LocalDate.of(safeYear, safeMonth, safeDay)
+        val finalDate = if (raw.isAfter(today)) today else raw
+
+        onConfirm(finalDate)
+    }
+    val cancelClick = rememberClickWithHaptic(onClick = onDismiss)
+
+    val sheetHeight = 546.dp
+    val rowItemHeight = 44.dp
+    val wheelAreaHeight = 260.dp
+
     ModalBottomSheet(
         onDismissRequest = { /* 只有 Cancel 才關 */ },
         sheetState = sheetState,
-        containerColor = Color(0xFFF5F5F5)
+        dragHandle = null,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = Color(0xFFF5F5F5),
+        tonalElevation = 0.dp,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 520.dp)
-                .padding(start = BiteCalScreenFrame.contentHorizontal, end = BiteCalScreenFrame.contentHorizontal, top = BiteCalScreenFrame.contentTopTiny, bottom = BiteCalScreenFrame.contentBottomLarge),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .height(sheetHeight)
         ) {
-            Text(
-                text = "Select your weighing date",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF111114)
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = "When did you step on the scale?",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF6B7280)
-            )
-
-            Spacer(Modifier.height(18.dp))
-
-            val wheelRowHeight = 52.dp
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                NumberWheelRecord(
-                    range = dayRange,
-                    value = day,
-                    onValueChange = { day = it },
-                    rowHeight = wheelRowHeight,
-                    centerTextSize = 22.sp,
-                    textSize = 17.sp,
-                    sideAlpha = 0.35f,
-                    modifier = Modifier.width(70.dp)
-                )
-                Spacer(Modifier.width(12.dp))
-                NumberWheelRecord(
-                    range = monthRange,
-                    value = month,
-                    onValueChange = { month = it },
-                    rowHeight = wheelRowHeight,
-                    centerTextSize = 22.sp,
-                    textSize = 17.sp,
-                    sideAlpha = 0.35f,
-                    modifier = Modifier.width(130.dp),
-                    label = { idx -> months[idx - 1] }
-                )
-                Spacer(Modifier.width(12.dp))
-                NumberWheelRecord(
-                    range = yearRange,
-                    value = year,
-                    onValueChange = { year = it },
-                    rowHeight = wheelRowHeight,
-                    centerTextSize = 22.sp,
-                    textSize = 17.sp,
-                    sideAlpha = 0.35f,
-                    modifier = Modifier.width(90.dp)
-                )
-            }
-
-            Spacer(Modifier.height(30.dp))
-
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 170.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
-                    onClick = rememberClickWithHaptic {
-                        val safeYear = year.coerceIn(yearRange)
-                        val safeMonth = if (safeYear == today.year) {
-                            month.coerceIn(1, today.monthValue)
-                        } else {
-                            month.coerceIn(1, 12)
-                        }
-                        val safeDay = clampDay(safeYear, safeMonth, day)
-                        val raw = LocalDate.of(safeYear, safeMonth, safeDay)
-                        val finalDate = if (raw.isAfter(today)) today else raw
-
-                        onConfirm(finalDate)
-                    },
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 10.dp)
+                        .width(42.dp)
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Color(0xFFD1D1D6))
+                )
+                Text(
+                    text = titleText,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color(0xFF111114),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(55.dp),
-                    shape = RoundedCornerShape(999.dp),
+                        .padding(top = 18.dp),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = subtitleText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF6B7280),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(10.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(wheelAreaHeight),
+                    contentAlignment = Alignment.Center
+                ) {
+                    DateSelectionBandBehind(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth()
+                            .height(rowItemHeight)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        NumberWheelRecord(
+                            range = dayRange,
+                            value = day,
+                            onValueChange = { day = it },
+                            rowHeight = rowItemHeight,
+                            centerTextSize = 22.sp,
+                            textSize = 21.sp,
+                            sideAlpha = 1f,
+                            modifier = Modifier.width(64.dp),
+                            showSelectionLines = false,
+                            selectedTextColor = Color(0xFF111114),
+                            unselectedTextColor = Color(0xFF8E8E93),
+                            centerFontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        NumberWheelRecord(
+                            range = monthRange,
+                            value = month,
+                            onValueChange = { month = it },
+                            rowHeight = rowItemHeight,
+                            centerTextSize = 20.sp,
+                            textSize = 19.sp,
+                            sideAlpha = 1f,
+                            modifier = Modifier.width(142.dp),
+                            label = { idx -> months[idx - 1] },
+                            showSelectionLines = false,
+                            selectedTextColor = Color(0xFF111114),
+                            unselectedTextColor = Color(0xFF8E8E93),
+                            centerFontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        NumberWheelRecord(
+                            range = yearRange,
+                            value = year,
+                            onValueChange = { year = it },
+                            rowHeight = rowItemHeight,
+                            centerTextSize = 22.sp,
+                            textSize = 21.sp,
+                            sideAlpha = 1f,
+                            modifier = Modifier.width(86.dp),
+                            showSelectionLines = false,
+                            selectedTextColor = Color(0xFF111114),
+                            unselectedTextColor = Color(0xFF8E8E93),
+                            centerFontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(
+                    onClick = confirmClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Black,
                         contentColor = Color.White
                     )
                 ) {
-                    Text(stringResource(R.string.save), fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = saveText,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
 
-                OutlinedButton(
-                    onClick = rememberClickWithHaptic(onClick = onDismiss),
+                Spacer(Modifier.height(12.dp))
+
+                Button(
+                    onClick = cancelClick,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(55.dp),
-                    shape = RoundedCornerShape(999.dp),
-                    border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = Color(0xFFE1E4EA),
                         contentColor = Color(0xFF111114)
                     )
                 ) {
-                    Text("Cancel", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = cancelText,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
-            Spacer(Modifier.height(8.dp))
         }
+    }
+}
+
+@Composable
+private fun DateSelectionBandBehind(
+    modifier: Modifier = Modifier
+) {
+    val bandHeight = 44.dp
+    val bandRadius = 10.dp
+    val bandColor = Color(0xFFFAFAFA)
+    val lineColor = Color(0xFFD1D1D6)
+
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(0.88f)
+                .height(bandHeight)
+                .clip(RoundedCornerShape(bandRadius))
+                .background(bandColor)
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = -bandHeight / 2)
+                .fillMaxWidth(0.92f)
+                .height(1.dp)
+                .background(lineColor)
+        )
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(y = bandHeight / 2)
+                .fillMaxWidth(0.92f)
+                .height(1.dp)
+                .background(lineColor)
+        )
     }
 }
 

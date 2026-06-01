@@ -728,6 +728,23 @@
     <string name="workout_duration_save">儲存</string>
     <string name="workout_duration_cancel">取消</string>
 
+
+    <!-- WeighingDateSheet -->
+    <string name="weight_date_sheet_title">選擇量體重日期</string>
+    <string name="weight_date_sheet_subtitle">你是哪一天量的體重？</string>
+    <string name="weight_date_sheet_month_january">一月</string>
+    <string name="weight_date_sheet_month_february">二月</string>
+    <string name="weight_date_sheet_month_march">三月</string>
+    <string name="weight_date_sheet_month_april">四月</string>
+    <string name="weight_date_sheet_month_may">五月</string>
+    <string name="weight_date_sheet_month_june">六月</string>
+    <string name="weight_date_sheet_month_july">七月</string>
+    <string name="weight_date_sheet_month_august">八月</string>
+    <string name="weight_date_sheet_month_september">九月</string>
+    <string name="weight_date_sheet_month_october">十月</string>
+    <string name="weight_date_sheet_month_november">十一月</string>
+    <string name="weight_date_sheet_month_december">十二月</string>
+
     <!-- Workout preset display names -->
     <string name="workout_preset_walking">步行</string>
     <string name="workout_preset_running">跑步</string>

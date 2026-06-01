@@ -732,6 +732,23 @@
     <string name="workout_duration_save">Save</string>
     <string name="workout_duration_cancel">Cancel</string>
 
+
+    <!-- WeighingDateSheet -->
+    <string name="weight_date_sheet_title">Select your weighing date</string>
+    <string name="weight_date_sheet_subtitle">When did you step on the scale?</string>
+    <string name="weight_date_sheet_month_january">January</string>
+    <string name="weight_date_sheet_month_february">February</string>
+    <string name="weight_date_sheet_month_march">March</string>
+    <string name="weight_date_sheet_month_april">April</string>
+    <string name="weight_date_sheet_month_may">May</string>
+    <string name="weight_date_sheet_month_june">June</string>
+    <string name="weight_date_sheet_month_july">July</string>
+    <string name="weight_date_sheet_month_august">August</string>
+    <string name="weight_date_sheet_month_september">September</string>
+    <string name="weight_date_sheet_month_october">October</string>
+    <string name="weight_date_sheet_month_november">November</string>
+    <string name="weight_date_sheet_month_december">December</string>
+
     <!-- Workout preset display names -->
     <string name="workout_preset_walking">Walking</string>
     <string name="workout_preset_running">Running</string>
