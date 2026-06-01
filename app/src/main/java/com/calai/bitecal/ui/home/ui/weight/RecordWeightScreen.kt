@@ -16,6 +16,7 @@ import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -42,6 +43,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -438,13 +440,15 @@ private fun RecordWeightScreenContent(
                     .padding(horizontal = BiteCalScreenFrame.contentHorizontalWide)
             )
 
+            Spacer(Modifier.height(2.dp))
+
             PhotoPickerBlock(
                 photoUriString = photoUriString,
                 cameraAvailable = canUseActivityResult,
                 onPickPhoto = { launchTakePhoto() }
             )
 
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(22.dp))
 
             WeightUnitSegmentedRecord(
                 useMetric = useMetric,
@@ -576,30 +580,30 @@ private fun DateHeader(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Surface(
-            onClick = rememberClickWithHaptic(onClick = onClick),
-            shape = RoundedCornerShape(999.dp),
-            color = Color(0xFFF5F5F5),
-            shadowElevation = 0.dp,
+        Row(
+            modifier = Modifier
+                .offset(x = 10.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .biteCalClickable(onClick = rememberClickWithHaptic(onClick = onClick))
+                .defaultMinSize(minHeight = 44.dp)
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.CalendarMonth,
-                    contentDescription = "Select date",
-                    tint = Color.Black,
-                    modifier = Modifier.size(22.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = dateText,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF111114)
-                )
-            }
+            Text(
+                text = dateText,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF111114)
+            )
+
+            Spacer(Modifier.width(6.dp))
+
+            Icon(
+                imageVector = Icons.Outlined.Edit,
+                contentDescription = "Edit date",
+                tint = Color(0xFF6B7280),
+                modifier = Modifier.size(17.dp)
+            )
         }
     }
 }
@@ -1123,8 +1127,8 @@ private fun PhotoPickerBlock(
     ) {
         Box(
             modifier = Modifier
-                .size(144.dp)
-                .clip(RoundedCornerShape(24.dp))
+                .size(156.dp)
+                .clip(RoundedCornerShape(26.dp))
                 .background(Color(0xFF111114).copy(alpha = 0.06f))
                 .biteCalClickable(onClick = onPickPhoto),
             contentAlignment = Alignment.Center
@@ -1141,11 +1145,13 @@ private fun PhotoPickerBlock(
                     painter = painterResource(id = R.drawable.weight_image_2),
                     contentDescription = "Add weight photo",
                     tint = Color(0xFF9AA3AE),
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(48.dp)
                 )
             }
         }
+
         Spacer(Modifier.height(12.dp))
+
         Text(
             text = when {
                 !cameraAvailable -> "Camera not available"
@@ -1153,7 +1159,7 @@ private fun PhotoPickerBlock(
                 else -> "Retake photo"
             },
             color = if (cameraAvailable) Color.Black else Color(0xFF9AA3AE),
-            fontSize = 14.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold
         )
     }
