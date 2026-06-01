@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -421,6 +422,12 @@ fun formatWeightCard(
 // Filter Tabs
 // ----------------------------------------------------------
 
+private val WeightFilterTabsContainerBg = Color(0xFFF1F1F3)
+private val WeightFilterTabsActiveBg = Color(0xFFFFFFFF)
+private val WeightFilterTabsActiveBorder = Color(0xFFE2E2E6)
+private val WeightFilterTabsActiveText = Color(0xFF2D2F35)
+private val WeightFilterTabsIdleText = Color(0xFF3A3D43)
+
 private data class RangeTab(
     val key: String,
     val labelRes: Int
@@ -429,7 +436,8 @@ private data class RangeTab(
 @Composable
 fun FilterTabs(
     selected: String,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val tabs = listOf(
         RangeTab(WEIGHT_RANGE_30_DAYS, R.string.weight_chart_tab_30_days),
@@ -442,47 +450,53 @@ fun FilterTabs(
         if (it >= 0) it else 0
     }
 
-    val tabShape = RoundedCornerShape(999.dp)
+    val containerShape = RoundedCornerShape(18.dp)
+    val activeTabShape = RoundedCornerShape(14.dp)
 
-    Box(
-        modifier = Modifier
+    Row(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp)
-            .clip(tabShape)
-            .background(Color(0xFFF3F4F6))
-            .border(
-                border = CardStyles.Border,
-                shape = tabShape
-            )
-            .padding(4.dp)
+            .background(WeightFilterTabsContainerBg, containerShape)
+            .padding(horizontal = 6.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(36.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            tabs.forEachIndexed { index, tab ->
-                val isSelected = index == selectedIndex
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .padding(horizontal = 2.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(if (isSelected) Color(0xFFFCFCFD) else Color.Transparent)
-                        .biteCalClickable { onSelect(tab.key) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(tab.labelRes),
-                        color = if (isSelected) Color(0xFF111114) else Color(0xFF7A7F87),
-                        fontSize = 13.sp,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+        tabs.forEachIndexed { index, tab ->
+            val isSelected = index == selectedIndex
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .then(
+                        if (isSelected) {
+                            Modifier
+                                .shadow(
+                                    elevation = 1.5.dp,
+                                    shape = activeTabShape,
+                                    clip = false
+                                )
+                                .background(WeightFilterTabsActiveBg, activeTabShape)
+                                .border(1.dp, WeightFilterTabsActiveBorder, activeTabShape)
+                        } else {
+                            Modifier.background(Color.Transparent, activeTabShape)
+                        }
                     )
-                }
+                    .biteCalClickable { onSelect(tab.key) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(tab.labelRes),
+                    color = if (isSelected) {
+                        WeightFilterTabsActiveText
+                    } else {
+                        WeightFilterTabsIdleText
+                    },
+                    fontSize = 14.sp,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }
