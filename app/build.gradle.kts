@@ -19,8 +19,8 @@ android {
         applicationId = "com.calai.bitecal"
         minSdk = 30
         targetSdk = 36
-        versionCode = 10006
-        versionName = "1.0.3-internal"
+        versionCode = 10007
+        versionName = "1.0.31"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 預設 app 顯示名稱（不覆蓋多語字串）
@@ -115,29 +115,6 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
 
             manifestPlaceholders["appLabel"] = "BiteCal (dev)"
-        }
-
-        create("devWifi") {
-            dimension = "env"
-            applicationIdSuffix = ".devwifi"
-            versionNameSuffix = "-devwifi"
-
-            buildConfigField("String", "BASE_URL", "\"http://172.20.10.2:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://172.20.10.2:8080\"")
-
-            manifestPlaceholders["appLabel"] = "BiteCal (devWifi)"
-        }
-
-        create("devUsb") {
-            dimension = "env"
-            applicationIdSuffix = ".devusb"
-            versionNameSuffix = "-devusb"
-
-            // ⚠️ 提醒：真機用 127.0.0.1 會指向「手機自己」不是電腦
-            // 如果你是 adb reverse 8080:8080 才能用這個
-            buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:8080/\"")
-            buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:8080\"")
-            manifestPlaceholders["appLabel"] = "BiteCal (devUsb)"
         }
 
         create("prod") {

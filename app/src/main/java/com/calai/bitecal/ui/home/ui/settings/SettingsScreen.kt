@@ -96,6 +96,7 @@ import androidx.core.content.ContextCompat
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import coil.request.ImageRequest
+import com.calai.bitecal.BuildConfig
 import com.calai.bitecal.R
 import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
@@ -603,7 +604,7 @@ private fun SettingsContent(
 
         Spacer(Modifier.height(20.dp))
         Text(
-            text = stringResource(R.string.settings_version, "1.0.150"),
+            text = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelMedium.copy(color = Color(0xFF9CA3AF)),
             modifier = Modifier
