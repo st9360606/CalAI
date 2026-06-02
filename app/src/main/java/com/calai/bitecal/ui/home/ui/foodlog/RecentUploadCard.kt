@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -54,26 +55,36 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.model.HomeRecentUploadUi
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.sp
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+
+private val CardHeight = 124.dp
+private val CardCorner = 22.dp
+private val ThumbSize = 100.dp
+private val ThumbCorner = 18.dp
+private val ContentStartGap = 14.dp
+private val ContentEndPadding = 12.dp
+private val DeleteActionColor = Color(0xFFE46A6A)
+private val DeleteActionCorner = RoundedCornerShape(CardCorner)
+
 private val TitleColor = Color(0xFF111827)
 private val SecondaryTextColor = Color(0xFF667085)
-private val TimeColor = Color(0xFF5C667A)
-private val TimeChipBg = Color(0xFFF2F4F7)
+private val TimeColor = Color(0xFF647084)
+private val TimeChipBg = Color(0xFFF3F5F7)
 private val KcalColor = Color(0xFF0F172A)
 private val MacroColor = Color(0xFF344054)
 private val SkeletonBase = Color(0xFFD7D7E0)
@@ -102,11 +113,12 @@ private val KcalTextStyle = TextStyle(
 )
 
 private val MacroTextStyle = TextStyle(
-    fontSize = 13.sp,
-    lineHeight = 18.sp,
-    fontWeight = FontWeight.Medium,
+    fontSize = 12.sp,
+    lineHeight = 16.sp,
+    fontWeight = FontWeight.SemiBold,
     color = MacroColor
 )
+
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
@@ -140,13 +152,13 @@ fun RecentUploadCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .height(CardHeight)
+                .clip(DeleteActionCorner)
         ) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .background(Color(0xFFE46A6A))
+                    .background(DeleteActionColor)
             )
 
             Box(
@@ -154,7 +166,7 @@ fun RecentUploadCard(
                     .align(Alignment.CenterEnd)
                     .width(actionWidth)
                     .fillMaxHeight()
-                    .padding(end = 18.dp),
+                    .padding(end = 16.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 IconButton(
@@ -166,14 +178,14 @@ fun RecentUploadCard(
                     },
                     enabled = isOpened,
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(50.dp)
                         .testTag("recent_upload_delete_button")
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.trash),
                         contentDescription = "delete recent upload",
                         tint = Color.White,
-                        modifier = Modifier.size(26.dp)
+                        modifier = Modifier.size(25.dp)
                     )
                 }
             }
@@ -241,15 +253,21 @@ private fun RecentUploadCardContent(
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(CardCorner),
         border = CardStyles.Border,
-        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg)
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
+        elevation = CardDefaults.cardElevation(defaultElevation = CardStyles.Elevation)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
-                .padding(end = 8.dp)
+                .height(CardHeight)
+                .padding(
+                    start = 12.dp,
+                    top = 12.dp,
+                    end = ContentEndPadding,
+                    bottom = 12.dp
+                )
                 .alpha(if (isLoadingLike) 0.99f else 1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -257,37 +275,31 @@ private fun RecentUploadCardContent(
                 is HomeRecentUploadUi.Pending -> {
                     LoadingThumb(
                         previewUri = item.previewUri,
-                        modifier = Modifier
-                            .width(118.dp)
-                            .fillMaxHeight()
+                        modifier = Modifier.size(ThumbSize)
                     )
                 }
 
                 is HomeRecentUploadUi.Delayed -> {
                     LoadingThumb(
                         previewUri = item.previewUri,
-                        modifier = Modifier
-                            .width(118.dp)
-                            .fillMaxHeight()
+                        modifier = Modifier.size(ThumbSize)
                     )
                 }
 
                 is HomeRecentUploadUi.Success -> {
                     SuccessThumb(
                         previewUri = item.previewUri,
-                        modifier = Modifier
-                            .width(118.dp)
-                            .fillMaxHeight()
+                        modifier = Modifier.size(ThumbSize)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(ContentStartGap))
 
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(118.dp),
+                    .fillMaxHeight(),
                 verticalArrangement = Arrangement.Center
             ) {
                 when (item) {
@@ -334,10 +346,10 @@ private fun LoadingThumb(
 
         Canvas(
             modifier = Modifier
-                .size(38.dp)
+                .size(36.dp)
                 .testTag("recent_upload_loading_ring")
         ) {
-            val strokeWidth = 8.dp.toPx()
+            val strokeWidth = 7.dp.toPx()
 
             drawArc(
                 color = Color.White.copy(alpha = 0.95f),
@@ -376,7 +388,7 @@ private fun ThumbImage(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(ThumbCorner))
             .background(ThumbPlaceholder),
         contentAlignment = Alignment.Center
     ) {
@@ -476,15 +488,14 @@ private fun PendingContent(
 private fun SuccessContent(
     item: HomeRecentUploadUi.Success
 ) {
-    val displayTitle = item.title.ifBlank { "Food Analysis" }
+    val displayTitle = item.title.ifBlank { stringResource(R.string.foodlog_analysis_done) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -495,41 +506,50 @@ private fun SuccessContent(
                 modifier = Modifier.weight(1f)
             )
 
+            Spacer(modifier = Modifier.width(8.dp))
 
             RecentUploadTimeChip(
-                timeText = item.timeText,
-                modifier = Modifier.padding(start = 8.dp)
+                timeText = item.timeText
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(7.dp))
 
         Text(
             text = stringResource(R.string.recent_upload_kcal_text, item.kcal),
             style = KcalTextStyle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.testTag("recent_upload_kcal")
+            modifier = Modifier
+                .offset(x = (-2).dp)
+                .testTag("recent_upload_kcal")
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(13.dp))
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.Start),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            MacroText(stringResource(R.string.recent_upload_protein_text, item.proteinG))
-            MacroText(stringResource(R.string.recent_upload_carbs_text, item.carbsG))
-            MacroText(stringResource(R.string.recent_upload_fat_text, item.fatG))
+            MacroText(
+                text = stringResource(R.string.recent_upload_protein_text, item.proteinG)
+            )
+            MacroText(
+                text = stringResource(R.string.recent_upload_fat_text, item.fatG)
+            )
+            MacroText(
+                text = stringResource(R.string.recent_upload_carbs_text, item.carbsG)
+            )
         }
     }
 }
 
 private fun formatDisplayTime(raw: String): String {
     val input = raw.trim()
-    if (input.isBlank()) return "--:-- --"
+    if (input.isBlank()) return "--:--"
 
-    val outputFormatter = DateTimeFormatter.ofPattern("HH:mm a", Locale.US)
+    val outputFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
 
     val candidates = listOf(
         DateTimeFormatter.ofPattern("H:mm", Locale.US),
@@ -556,7 +576,7 @@ private fun RecentUploadTimeChip(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
             .background(TimeChipBg)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -568,12 +588,16 @@ private fun RecentUploadTimeChip(
 }
 
 @Composable
-private fun MacroText(text: String) {
+private fun MacroText(
+    text: String,
+    modifier: Modifier = Modifier
+) {
     Text(
         text = text,
         style = MacroTextStyle,
         maxLines = 1,
-        overflow = TextOverflow.Clip
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
     )
 }
 

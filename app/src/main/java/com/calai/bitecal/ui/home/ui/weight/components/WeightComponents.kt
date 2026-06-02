@@ -1719,36 +1719,49 @@ fun HistoryRow(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 左：WEIGHT + 日期（你要的 dateText 放這裡）
+                // 左：WEIGHT + 體重 + 更新時間
                 Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 58.dp)
+                        .padding(top = 1.dp, bottom = 1.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.Start
                 ) {
                     Text(
                         text = "Weight",
-                        fontSize = 11.sp,
-                        letterSpacing = 0.6.sp,
+                        fontSize = 10.5.sp,
+                        lineHeight = 13.sp,
+                        letterSpacing = 0.7.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = label,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
+                    Spacer(Modifier.height(6.dp))
+
                     Text(
                         text = weightText,
-                        fontSize = 18.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .offset(x = (-2).dp),
+                        fontSize = 19.sp,
+                        lineHeight = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = mainText,
+                        textAlign = TextAlign.Start,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.offset(y = 5.dp)
+                        overflow = TextOverflow.Ellipsis
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(6.dp))
 
                     Text(
                         text = dateText,
                         fontSize = 12.sp,
+                        lineHeight = 15.sp,
+                        fontWeight = FontWeight.Medium,
                         color = subText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
