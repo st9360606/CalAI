@@ -34,8 +34,9 @@ interface WeightApi {
 data class WeightItemDto(
     val logDate: String,
     val weightKg: Double,
-    val weightLbs: Double? = null,   // ★ 若不想顯示小數，也可以維持 Int?，但 CURRENT 建議 Double
-    val photoUrl: String? = null
+    val weightLbs: Double? = null,
+    val photoUrl: String? = null,
+    val updatedAtUtc: String? = null
 )
 
 @Serializable

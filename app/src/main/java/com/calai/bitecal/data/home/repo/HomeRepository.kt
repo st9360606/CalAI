@@ -3,7 +3,6 @@ package com.calai.bitecal.data.home.repo
 import android.net.Uri
 import com.calai.bitecal.data.health.HealthConnectRepository
 import com.calai.bitecal.data.health.TodayActivity
-import com.calai.bitecal.data.meals.repo.MealRepository
 import com.calai.bitecal.data.profile.api.ProfileApi
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.users.api.UsersApi
@@ -32,8 +31,7 @@ class HomeRepository @Inject constructor(
     private val profileApi: ProfileApi,
     private val usersApi: UsersApi,
     private val store: UserProfileStore,
-    private val hc: HealthConnectRepository,
-    private val meals: MealRepository
+    private val hc: HealthConnectRepository
 ) {
 
     // ===== 驗證工具 =====
@@ -164,10 +162,7 @@ class HomeRepository @Inject constructor(
             runCatching { hc.readToday() }.getOrDefault(TodayActivity(0, 0.0, 0))
         } else TodayActivity(0, 0.0, 0)
 
-        // 8) 最近餐點
-        val recent = runCatching { meals.loadRecent(10) }.getOrDefault(emptyList())
-
-        // 9) 將部分 Server 值回寫 DataStore 作為快取（但 SSOT 仍是 Server）
+        // 8) 將部分 Server 值回寫 DataStore 作為快取（但 SSOT 仍是 Server）
         runCatching {
             store.setHeightCm(heightCm.toFloat())
             store.setWeightKg(weightKg.toFloat())
@@ -175,7 +170,7 @@ class HomeRepository @Inject constructor(
             levelToBucket(p.exerciseLevel)?.let { store.setExerciseFreqPerWeek(it) }
         }
 
-        // 10) 組裝 HomeSummary（✅ 宏量/卡路里已改為 DB 為主）
+        // 9) 組裝 HomeSummary（✅ 宏量/卡路里已改為 DB 為主）
         HomeSummary(
             tdee = tdee,
             proteinG = proteinG,
@@ -192,7 +187,6 @@ class HomeRepository @Inject constructor(
             weightDiffUnit = weightDiffUnit,
             fastingPlan = local.fastingPlan,
             todayActivity = activity,
-            recentMeals = recent,
             avatarUrl = avatarUrl
         )
     }

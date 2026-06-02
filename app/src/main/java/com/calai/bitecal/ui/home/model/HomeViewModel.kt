@@ -73,8 +73,7 @@ private data class SummaryUiKey(
     val activeKcalInt: Int,
     val fastingPlan: String?,
     val weightDiffSigned: Double,
-    val weightDiffUnit: String,
-    val recentMealsSig: String
+    val weightDiffUnit: String
 )
 
 private data class DailyStableSnapshot(
@@ -1097,12 +1096,6 @@ class HomeViewModel @Inject constructor(
 /* -------------------- 私有工具 -------------------- */
 
 private fun HomeSummary.toUiKey(): SummaryUiKey {
-    val rm = this.recentMeals
-    val recentSig = buildString {
-        append(rm.size)
-        rm.take(3).forEach { m -> append('|').append(m.hashCode()) }
-    }
-
     // ✅ activeKcal 可能為 null：用 -1 當 key 的穩定 sentinel（不影響 UI 顯示）
     val activeKcalSafe = this.todayActivity.activeKcal?.toDouble()?.roundToInt() ?: -1
 
@@ -1122,7 +1115,6 @@ private fun HomeSummary.toUiKey(): SummaryUiKey {
         activeKcalInt = activeKcalSafe,
         fastingPlan = this.fastingPlan,
         weightDiffSigned = this.weightDiffSigned,
-        weightDiffUnit = this.weightDiffUnit,
-        recentMealsSig = recentSig
+        weightDiffUnit = this.weightDiffUnit
     )
 }

@@ -96,7 +96,6 @@ import com.calai.bitecal.ui.home.components.HealthScoreCardModern
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MacroRowModern
 import com.calai.bitecal.ui.home.components.MainBottomBar
-import com.calai.bitecal.ui.home.components.MealCard
 import com.calai.bitecal.ui.home.components.MicronutrientRowModern
 import com.calai.bitecal.ui.home.components.PagerDots
 import com.calai.bitecal.ui.home.components.PanelHeights
@@ -774,7 +773,7 @@ fun HomeScreen(
                         }
                     }
 
-                    s.recentMeals.isEmpty() -> {
+                    else -> {
                         RecentlyUploadedEmptySection(
                             cardHeight = 120.dp,
                             titleStartPadding = recentSectionTitleStart,
@@ -783,26 +782,6 @@ fun HomeScreen(
                             lineHeight = 30.sp,
                             titleFontWeight = FontWeight.Bold
                         )
-                    }
-
-                    else -> {
-                        Text(
-                            text = stringResource(R.string.recently_uploaded),
-                            style = TextStyle(
-                                fontSize = 18.sp,
-                                lineHeight = 28.sp,
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            modifier = Modifier.padding(
-                                start = recentSectionTitleStart,
-                                bottom = recentSectionTitleBottomGap
-                            )
-                        )
-
-                        for (m in s.recentMeals) {
-                            MealCard(m)
-                            Spacer(Modifier.height(12.dp))
-                        }
                     }
                 }
                 Spacer(Modifier.height(70.dp))

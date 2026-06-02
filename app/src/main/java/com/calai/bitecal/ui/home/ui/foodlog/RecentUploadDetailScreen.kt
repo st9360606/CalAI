@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -72,13 +73,24 @@ import com.calai.bitecal.ui.common.design.BiteCalSpacing
 import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
+import java.time.Instant
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+
+
+private val recentUploadDetailDateTimeFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("MMMM d · HH:mm", Locale.US)
+
+private val recentUploadDetailTimeOnlyFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("HH:mm", Locale.US)
 
 
 private data class ScaledNutrients(
@@ -125,13 +137,60 @@ private fun resolveFoodLogDisplayTime(
     env: FoodLogEnvelopeDto,
     fallbackTimeText: String = ""
 ): String {
+    val zoneId = ZoneId.systemDefault()
+
+    val utcInstant = parseUtcInstantOrNull(env.updatedAtUtc)
+        ?: parseUtcInstantOrNull(env.serverReceivedAtUtc)
+        ?: parseUtcInstantOrNull(env.capturedAtUtc)
+
+    if (utcInstant != null) {
+        return utcInstant
+            .atZone(zoneId)
+            .format(recentUploadDetailDateTimeFormatter)
+    }
+
     return FoodLogTimeResolver.resolveDisplayTimeText(
-        zoneId = ZoneId.systemDefault(),
+        zoneId = zoneId,
         updatedAtUtc = env.updatedAtUtc,
         serverReceivedAtUtc = env.serverReceivedAtUtc,
         capturedAtUtc = env.capturedAtUtc,
         capturedLocalDate = env.capturedLocalDate
     ).ifBlank { fallbackTimeText }
+}
+
+private fun parseUtcInstantOrNull(value: Any?): Instant? {
+    return when (value) {
+        null -> null
+        is Instant -> value
+        is OffsetDateTime -> value.toInstant()
+        is ZonedDateTime -> value.toInstant()
+        is LocalDateTime -> value.atZone(ZoneId.systemDefault()).toInstant()
+        is String -> parseUtcInstantTextOrNull(value)
+        else -> parseUtcInstantTextOrNull(value.toString())
+    }
+}
+
+private fun parseUtcInstantTextOrNull(raw: String): Instant? {
+    val text = raw.trim()
+    if (text.isBlank()) return null
+
+    runCatching {
+        return Instant.parse(text)
+    }
+
+    runCatching {
+        return OffsetDateTime.parse(text).toInstant()
+    }
+
+    runCatching {
+        return ZonedDateTime.parse(text).toInstant()
+    }
+
+    runCatching {
+        return LocalDateTime.parse(text).atZone(ZoneId.systemDefault()).toInstant()
+    }
+
+    return null
 }
 
 @Composable
@@ -271,6 +330,13 @@ fun RecentUploadDetailScreen(
 
     val healthScore = env.nutritionResult?.healthScore ?: 0
 
+    val detailTimeText = remember(env, stableTimeText) {
+        resolveFoodLogDisplayTime(
+            env = env,
+            fallbackTimeText = stableTimeText
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -384,7 +450,7 @@ fun RecentUploadDetailScreen(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        TimeChip(timeText = stableTimeText)
+                        TimeChip(timeText = detailTimeText)
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
@@ -634,20 +700,26 @@ private fun SaveBadge(
 
 private fun formatDisplayTime(raw: String): String {
     val input = raw.trim()
-    if (input.isBlank()) return "--:-- --"
+    if (input.isBlank()) return "-- · --:--"
 
-    val outputFormatter = DateTimeFormatter.ofPattern("HH:mm a", Locale.US)
+    parseUtcInstantTextOrNull(input)?.let { instant ->
+        return instant
+            .atZone(ZoneId.systemDefault())
+            .format(recentUploadDetailDateTimeFormatter)
+    }
 
-    val candidates = listOf(
+    val timeOnlyCandidates = listOf(
         DateTimeFormatter.ofPattern("H:mm", Locale.US),
         DateTimeFormatter.ofPattern("HH:mm", Locale.US),
         DateTimeFormatter.ofPattern("h:mm a", Locale.US),
         DateTimeFormatter.ofPattern("hh:mm a", Locale.US)
     )
 
-    for (formatter in candidates) {
+    for (formatter in timeOnlyCandidates) {
         runCatching {
-            return LocalTime.parse(input.uppercase(Locale.US), formatter).format(outputFormatter)
+            return LocalTime
+                .parse(input.uppercase(Locale.US), formatter)
+                .format(recentUploadDetailTimeOnlyFormatter)
         }
     }
 
@@ -663,10 +735,17 @@ private fun TimeChip(timeText: String) {
         Text(
             text = formatDisplayTime(timeText),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.bodySmall,
-            fontSize = 13.sp,
+            style = MaterialTheme.typography.bodySmall.merge(
+                TextStyle(
+                    fontSize = 13.sp,
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontFeatureSettings = "tnum"
+                )
+            ),
             color = Color(0xFF5C667A),
-            fontWeight = FontWeight.Medium
+            maxLines = 1,
+            overflow = TextOverflow.Clip
         )
     }
 }

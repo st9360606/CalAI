@@ -42,7 +42,12 @@ import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.weight.api.WeightItemDto
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
@@ -66,7 +71,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import com.calai.bitecal.data.profile.repo.kgToLbs1
-import java.time.format.FormatStyle
 import kotlin.math.max
 import kotlin.math.roundToInt
 import androidx.compose.ui.text.AnnotatedString
@@ -1582,6 +1586,56 @@ fun MotivationBanner(
     }
 }
 
+private val historyRowDateTimeFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("MMMM d · HH:mm", Locale.US)
+
+private val historyRowDateOnlyFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("MMMM d", Locale.US)
+
+private fun formatHistoryRowUpdatedTime(
+    item: WeightItemDto,
+    zoneId: ZoneId = ZoneId.systemDefault()
+): String {
+    item.updatedAtUtc
+        ?.let(::parseHistoryRowUtcInstantOrNull)
+        ?.let { instant ->
+            return instant
+                .atZone(zoneId)
+                .format(historyRowDateTimeFormatter)
+        }
+
+    return runCatching {
+        LocalDate.parse(item.logDate).format(historyRowDateOnlyFormatter)
+    }.getOrElse {
+        item.logDate
+    }
+}
+
+private fun parseHistoryRowUtcInstantOrNull(raw: String): Instant? {
+    val text = raw.trim()
+    if (text.isBlank()) return null
+
+    runCatching {
+        return Instant.parse(text)
+    }
+
+    runCatching {
+        return OffsetDateTime.parse(text).toInstant()
+    }
+
+    runCatching {
+        return ZonedDateTime.parse(text).toInstant()
+    }
+
+    runCatching {
+        return LocalDateTime.parse(text)
+            .atZone(ZoneId.of("UTC"))
+            .toInstant()
+    }
+
+    return null
+}
+
 private enum class TrendTag { LOSS, GAIN, STABLE }
 
 @Composable
@@ -1597,12 +1651,9 @@ fun HistoryRow(
     val mainText = Color(0xFF111114)
     val subText = Color.Black.copy(alpha = 0.45f)
 
-    val dateText = runCatching {
-        val d = LocalDate.parse(item.logDate)
-        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-            .withLocale(Locale.getDefault())
-            .format(d)
-    }.getOrElse { item.logDate }
+    val dateText = remember(item.logDate, item.updatedAtUtc) {
+        formatHistoryRowUpdatedTime(item)
+    }
 
     val weightText = formatWeightFromDb(
         kg = item.weightKg,

@@ -2,7 +2,6 @@ package com.calai.bitecal.data.home.repo
 
 import android.net.Uri
 import com.calai.bitecal.data.health.TodayActivity
-import com.calai.bitecal.data.meals.api.MealItemDto
 
 /**
  * Home 畫面所需的彙總資料。
@@ -30,6 +29,5 @@ data class HomeSummary(
     val weightDiffUnit: String,
     val fastingPlan: String?,
     val todayActivity: TodayActivity,
-    val recentMeals: List<MealItemDto>,
     val avatarUrl: Uri?
 )
