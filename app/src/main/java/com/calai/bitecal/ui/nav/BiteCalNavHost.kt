@@ -11,6 +11,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistryOwner
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -482,7 +484,15 @@ fun BiteCalNavHost(
         }
     }
 
-    NavHost(navController = nav, startDestination = Routes.APP_ENTRY, modifier = modifier) {
+    NavHost(
+        navController = nav,
+        startDestination = Routes.APP_ENTRY,
+        modifier = modifier,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
+    ) {
 
         composable(Routes.APP_ENTRY) {
             AppEntryRoute(
@@ -1334,7 +1344,7 @@ fun BiteCalNavHost(
                             restoreState = true
                         }
                     },
-                    onBack = { nav.popBackStack() }
+                    onBack = { nav.goHome() }
                 )
                 if (!successToast.isNullOrBlank()) {
                     SuccessTopToast(
@@ -1555,7 +1565,7 @@ fun BiteCalNavHost(
                         },
                         onOpenTab = { tab ->
                             when (tab) {
-                                HomeTab.Home -> nav.navigate(Routes.HOME) { launchSingleTop = true; restoreState = true }
+                                HomeTab.Home -> nav.goHome()
                                 HomeTab.Progress -> nav.navigate(Routes.PROGRESS) { launchSingleTop = true; restoreState = true }
                                 HomeTab.Weight -> nav.navigate(Routes.WEIGHT) { launchSingleTop = true; restoreState = true }
                                 HomeTab.Fasting -> nav.navigate(Routes.FASTING) { launchSingleTop = true; restoreState = true }
@@ -1563,12 +1573,7 @@ fun BiteCalNavHost(
                                 HomeTab.Personal -> Unit
                             }
                         },
-                        onBack = {
-                            nav.navigate(Routes.HOME) {
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
+                        onBack = { nav.goHome() },
                         onOpenEditName = {
                             backStackEntry.savedStateHandle[Routes.EDIT_NAME_INITIAL] = (pUi.name ?: "").trim()
                             nav.navigate(Routes.EDIT_NAME) {
@@ -2369,14 +2374,9 @@ fun BiteCalNavHost(
                     }
                 }
 
-                // ✅ 回 Home：優先 pop 回既有 Home；沒有再 navigate
+                // ✅ 回 Home：統一走共用 goHome()，避免極少數情境殘留 Camera route 或重建 Home。
                 fun goHome() {
-                    val popped = nav.popBackStack(Routes.HOME, false)
-                    if (!popped) {
-                        nav.navigate(Routes.HOME) {
-                            launchSingleTop = true
-                        }
-                    }
+                    nav.goHome()
                 }
 
                 // ✅ Home 第四區塊右上角時間，例如 11:10

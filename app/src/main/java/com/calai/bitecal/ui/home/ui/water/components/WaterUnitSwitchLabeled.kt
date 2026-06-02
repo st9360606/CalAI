@@ -53,13 +53,13 @@ import com.calai.bitecal.ui.common.haptic.biteCalClickable
  * - RTL 支援
  */
 @Composable
-fun UnitSwitchLabeledV2(
+fun WaterUnitSwitchLabeled(
     checked: Boolean,                         // true = 右側 (ml)；false = 左側 (oz)
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 
-    width: Dp = 92.dp,
-    height: Dp = 30.dp,
+    width: Dp = 100.dp,
+    height: Dp = 34.dp,
     padding: Dp = 3.dp,
 
     leftLabel: String = "oz",

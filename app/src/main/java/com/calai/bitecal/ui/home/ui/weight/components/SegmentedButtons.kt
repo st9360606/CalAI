@@ -8,7 +8,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.bitecal.ui.home.ui.water.components.UnitSwitchLabeled
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 
 @Composable
@@ -26,7 +25,7 @@ fun SegmentedButtons(
     )
 ) {
     val checked = (selected == UserProfileStore.WeightUnit.LBS) // 右側為 LBS
-    UnitSwitchLabeled(
+    WeightUnitSwitchLabeled(
         checked = checked,
         onCheckedChange = { isRight ->
             onSelect(if (isRight) UserProfileStore.WeightUnit.LBS else UserProfileStore.WeightUnit.KG)

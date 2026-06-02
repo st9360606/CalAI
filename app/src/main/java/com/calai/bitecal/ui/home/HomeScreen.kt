@@ -77,7 +77,6 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionIntents
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionPrefs
 import com.calai.bitecal.data.activity.healthconnect.HealthConnectPermissionProxyActivity
@@ -88,14 +87,17 @@ import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.UserProfileStore
 import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.i18n.currentLocaleKey
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.home.components.CalendarStrip
 import com.calai.bitecal.ui.home.components.CaloriesCardModern
 import com.calai.bitecal.ui.home.components.HealthScoreCardModern
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MacroRowModern
 import com.calai.bitecal.ui.home.components.MainBottomBar
-import com.calai.bitecal.ui.home.components.MicronutrientRowModern
 import com.calai.bitecal.ui.home.components.MealCard
+import com.calai.bitecal.ui.home.components.MicronutrientRowModern
 import com.calai.bitecal.ui.home.components.PagerDots
 import com.calai.bitecal.ui.home.components.PanelHeights
 import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
@@ -106,9 +108,6 @@ import com.calai.bitecal.ui.home.components.scan.ScanFab
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
 import com.calai.bitecal.ui.home.model.HomeViewModel
-import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGate
-import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGateDecision
-import com.calai.bitecal.ui.home.workoutgate.WorkoutSheetOpenRequest
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
@@ -120,10 +119,12 @@ import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
 import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
 import com.calai.bitecal.ui.home.ui.weight.components.computeWeightProgress
 import com.calai.bitecal.ui.home.ui.weight.components.computeWeightProgressFractionLbs
-import com.calai.bitecal.ui.home.ui.weight.components.formatDeltaGoalMinusCurrentFromDb
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
 import com.calai.bitecal.ui.home.ui.workout.WorkoutTrackerHost
 import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
+import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGate
+import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGateDecision
+import com.calai.bitecal.ui.home.workoutgate.WorkoutSheetOpenRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
@@ -133,8 +134,6 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
-import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
 @OptIn(ExperimentalMaterial3Api::class)

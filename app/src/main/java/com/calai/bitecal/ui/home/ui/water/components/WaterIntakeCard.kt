@@ -1,6 +1,5 @@
 package com.calai.bitecal.ui.home.ui.water.components
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,11 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -44,12 +39,10 @@ import com.calai.bitecal.data.water.store.WaterUnit
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /**
- * RoundActionButton v16.1
- * - 覆蓋層改用 fillMaxSize()，避免 matchParentSize() import 爭議。
+ * RoundActionButton
+ * - Keep this stateless; rapid water clicks should not start per-click animation coroutines.
  */
 @Composable
 private fun RoundActionButton(
@@ -61,46 +54,19 @@ private fun RoundActionButton(
     iconVector: ImageVector,
     onClick: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-
-    // 控制閃光的目標亮度
-    var flashAlphaGoal by remember { mutableFloatStateOf(0f) }
-
-    // 用動畫平滑淡出
-    val animatedAlpha by animateFloatAsState(
-        targetValue = flashAlphaGoal,
-        label = "pressFlashAlphaAnim"
-    )
-
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(
         modifier = Modifier
-            .size(outerSizeDp) // 外圈半徑（也是高亮圈大小）
+            .size(outerSizeDp)
             .biteCalClickable(
-                indication = null, // 我們自己畫閃光，所以不要 ripple
+                indication = null,
                 interactionSource = interactionSource
             ) {
-                scope.launch {
-                    // 亮一下深灰圈（比按鈕大）
-                    delay(120)
-                }
                 onClick()
             },
         contentAlignment = Alignment.Center
     ) {
-        // 深灰閃光圈，尺寸 = outerSizeDp，比內層按鈕大一圈
-        if (animatedAlpha > 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize() // ← 取代 matchParentSize()
-                    .background(
-                        color = Color.Black.copy(alpha = animatedAlpha * 0.4f),
-                        shape = CircleShape
-                    )
-            )
-        }
-
         // 內層實際按鈕 (顯示出來的 - / +)
         Box(
             modifier = Modifier
@@ -256,14 +222,14 @@ fun WaterIntakeCard(
                 Spacer(Modifier.height(10.dp))
 
                 // 第二排：單位切換（文字在切換鈕上）
-                UnitSwitchLabeledV2(
+                WaterUnitSwitchLabeled(
                     checked = (state.unit == WaterUnit.ML),
                     onCheckedChange = { newChecked ->
                         val isMlNow = (state.unit == WaterUnit.ML)
                         if (newChecked != isMlNow) onToggleUnit()
                     },
-                    width = 92.dp,
-                    height = 30.dp,
+                    width = 100.dp,
+                    height = 32.dp,
                     leftLabel = "oz",
                     rightLabel = "ml",
                 )

@@ -854,7 +854,15 @@ class HomeViewModel @Inject constructor(
     }
 
     fun refresh() = viewModelScope.launch {
-        _ui.update { it.copy(loading = true, error = null) }
+        // Keep the existing Home content visible during foreground / back-navigation refreshes.
+        // Clearing or visually re-entering loading state while a summary already exists is what makes
+        // Home look like it flashes for one frame when returning from Settings / detail pages.
+        _ui.update { current ->
+            current.copy(
+                loading = current.summary == null,
+                error = null
+            )
+        }
 
         // ✅ 自動觸發：不 force（會被 1.5 秒 debounce 擋）
         refreshDailyActivity(force = false)
