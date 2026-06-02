@@ -819,4 +819,7 @@
     <string name="progress_average_steps_value">%1$s 步</string>
 
     <string name="common_save_success">儲存成功</string>
+
+    <string name="common_today">今天</string>
+    <string name="common_yesterday">昨天</string>
 </resources>

@@ -69,6 +69,7 @@ import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
 import com.calai.bitecal.ui.common.design.BiteCalFoodLogDetailTokens
 import com.calai.bitecal.ui.common.design.BiteCalShape
 import com.calai.bitecal.ui.common.design.BiteCalSize
+import com.calai.bitecal.core.time.UtcTimeFormatter
 import com.calai.bitecal.ui.common.design.BiteCalSpacing
 import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
@@ -78,6 +79,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -164,34 +166,14 @@ private fun parseUtcInstantOrNull(value: Any?): Instant? {
         is Instant -> value
         is OffsetDateTime -> value.toInstant()
         is ZonedDateTime -> value.toInstant()
-        is LocalDateTime -> value.atZone(ZoneId.systemDefault()).toInstant()
+        is LocalDateTime -> value.toInstant(ZoneOffset.UTC)
         is String -> parseUtcInstantTextOrNull(value)
         else -> parseUtcInstantTextOrNull(value.toString())
     }
 }
 
-private fun parseUtcInstantTextOrNull(raw: String): Instant? {
-    val text = raw.trim()
-    if (text.isBlank()) return null
-
-    runCatching {
-        return Instant.parse(text)
-    }
-
-    runCatching {
-        return OffsetDateTime.parse(text).toInstant()
-    }
-
-    runCatching {
-        return ZonedDateTime.parse(text).toInstant()
-    }
-
-    runCatching {
-        return LocalDateTime.parse(text).atZone(ZoneId.systemDefault()).toInstant()
-    }
-
-    return null
-}
+private fun parseUtcInstantTextOrNull(raw: String): Instant? =
+    UtcTimeFormatter.parseBackendUtcInstantOrNull(raw)
 
 @Composable
 fun RecentUploadDetailScreen(

@@ -1,6 +1,7 @@
 package com.calai.bitecal.ui.home.ui.notifications
 
 import android.os.SystemClock
+import android.text.format.DateFormat as AndroidDateFormat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,21 +23,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,14 +51,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.core.time.UtcTimeFormatter
 import com.calai.bitecal.data.notifications.api.NotificationItemDto
-import com.calai.bitecal.ui.common.design.BiteCalTopBar
-import java.time.ZoneId
-import java.time.format.FormatStyle
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun NotificationInboxScreen(
@@ -304,8 +304,18 @@ private fun NotificationCard(
 
                 Spacer(Modifier.height(12.dp))
 
+                val localeTag = currentLocaleKey()
+                val locale = remember(localeTag) { localeFromTag(localeTag) }
+                val use24HourTime = AndroidDateFormat.is24HourFormat(LocalContext.current)
+
                 NotificationDateText(
-                    text = formatNotificationCreatedAt(item.createdAtUtc),
+                    text = formatNotificationCreatedAt(
+                        raw = item.createdAtUtc,
+                        todayText = stringResource(R.string.common_today),
+                        yesterdayText = stringResource(R.string.common_yesterday),
+                        locale = locale,
+                        use24HourTime = use24HourTime
+                    ),
                     color = metaColor
                 )
             }
@@ -540,13 +550,73 @@ private fun rememberDebouncedClick(
     }
 }
 
-private fun formatNotificationCreatedAt(raw: String): String =
-    UtcTimeFormatter.formatUtcDateTimeOrNull(
-        raw = raw,
-        zoneId = ZoneId.systemDefault(),
-        dateStyle = FormatStyle.MEDIUM,
-        timeStyle = FormatStyle.SHORT
-    ) ?: raw.take(10)
+private fun formatNotificationCreatedAt(
+    raw: String,
+    todayText: String,
+    yesterdayText: String,
+    zoneId: ZoneId = ZoneId.systemDefault(),
+    locale: Locale = Locale.getDefault(),
+    use24HourTime: Boolean = false
+): String {
+    val instant = UtcTimeFormatter.parseBackendUtcInstantOrNull(raw) ?: return raw.take(10)
+    val localDateTime = instant.atZone(zoneId)
+    val today = LocalDate.now(zoneId)
+    val notificationDate = localDateTime.toLocalDate()
+
+    val dateText = when (notificationDate) {
+        today -> todayText
+        today.minusDays(1) -> yesterdayText
+        else -> formatNotificationDate(
+            dateTime = localDateTime,
+            today = today,
+            locale = locale
+        )
+    }
+    val timeText = formatNotificationTime(
+        dateTime = localDateTime,
+        locale = locale,
+        use24HourTime = use24HourTime
+    )
+
+    return "$dateText · $timeText"
+}
+
+private fun formatNotificationDate(
+    dateTime: ZonedDateTime,
+    today: LocalDate,
+    locale: Locale
+): String {
+    val skeleton = if (dateTime.year == today.year) {
+        "MMMMd"
+    } else {
+        "yMMMMd"
+    }
+    val pattern = AndroidDateFormat.getBestDateTimePattern(locale, skeleton)
+    return DateTimeFormatter
+        .ofPattern(pattern, locale)
+        .format(dateTime)
+}
+
+private fun formatNotificationTime(
+    dateTime: ZonedDateTime,
+    locale: Locale,
+    use24HourTime: Boolean
+): String {
+    val skeleton = if (use24HourTime) {
+        "Hm"
+    } else {
+        "hm"
+    }
+    val pattern = AndroidDateFormat.getBestDateTimePattern(locale, skeleton)
+    return DateTimeFormatter
+        .ofPattern(pattern, locale)
+        .format(dateTime)
+}
+
+private fun localeFromTag(tag: String): Locale {
+    val normalized = tag.trim().ifBlank { Locale.getDefault().toLanguageTag() }
+    return Locale.forLanguageTag(normalized)
+}
 
 private fun Color.luminanceForUi(): Float =
     (0.299f * red) + (0.587f * green) + (0.114f * blue)
