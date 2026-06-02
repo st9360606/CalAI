@@ -7,12 +7,12 @@ object FoodLogTimeResolver {
 
     fun resolveDisplayTimeText(
         zoneId: ZoneId,
-        updatedAtUtc: String?,
+        createdAtUtc: String?,
         serverReceivedAtUtc: String?,
         capturedAtUtc: String?,
         capturedLocalDate: String?
     ): String {
-        parseUtcToLocalHm(updatedAtUtc, zoneId)?.let { return it }
+        parseUtcToLocalHm(createdAtUtc, zoneId)?.let { return it }
         parseUtcToLocalHm(serverReceivedAtUtc, zoneId)?.let { return it }
         parseUtcToLocalHm(capturedAtUtc, zoneId)?.let { return it }
         return capturedLocalDate.orEmpty()

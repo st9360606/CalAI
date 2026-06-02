@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.calai.bitecal.core.time.UtcTimeFormatter
 import com.calai.bitecal.data.foodlog.event.FoodLogMutationBus
 import com.calai.bitecal.data.foodlog.event.FoodLogMutationEvent
 import com.calai.bitecal.data.foodlog.model.FoodLogEnvelopeDto
@@ -40,6 +41,7 @@ data class SavedFoodCardUi(
     val carbsG: Int,
     val fatG: Int,
     val timeText: String,
+    val savedAtUtc: String?,
     val previewUri: String?
 )
 
@@ -121,10 +123,17 @@ class SavedFoodsViewModel @Inject constructor(
         onFailure: (Throwable) -> Unit = {}
     ) {
         viewModelScope.launch {
+            val previewUri = _ui.value.items
+                .firstOrNull { it.foodLogId == foodLogId }
+                ?.previewUri
+
             runCatching {
                 repo.unsave(foodLogId)
             }.onSuccess { env ->
-                foodLogMutationBus.publishUpserted(env = env)
+                foodLogMutationBus.publishUpserted(
+                    env = env,
+                    previewUri = previewUri
+                )
                 onSuccess()
             }.onFailure { t ->
                 Log.w(TAG, "unsave failed id=$foodLogId: ${t.javaClass.simpleName}: ${t.message}", t)
@@ -159,17 +168,19 @@ class SavedFoodsViewModel @Inject constructor(
                         fatG = (item.nutrition?.fat ?: 0.0).roundToInt(),
                         timeText = FoodLogTimeResolver.resolveDisplayTimeText(
                             zoneId = zoneId,
-                            updatedAtUtc = item.updatedAtUtc,
+                            createdAtUtc = item.createdAtUtc,
                             serverReceivedAtUtc = item.serverReceivedAtUtc,
                             capturedAtUtc = item.capturedAtUtc,
                             capturedLocalDate = item.capturedLocalDate
                         ),
+                        savedAtUtc = item.savedAtUtc,
                         previewUri = previewUri
                     )
                 )
             }
-        }
+        }.sortBySavedAtDescending()
     }
+
     private fun applyFoodLogMutation(
         env: FoodLogEnvelopeDto,
         previewUri: String?
@@ -196,29 +207,36 @@ class SavedFoodsViewModel @Inject constructor(
                     fatG = (nutrients?.fat ?: 0.0).roundToInt(),
                     timeText = FoodLogTimeResolver.resolveDisplayTimeText(
                         zoneId = zoneId,
-                        updatedAtUtc = env.updatedAtUtc,
+                        createdAtUtc = env.createdAtUtc,
                         serverReceivedAtUtc = env.serverReceivedAtUtc,
                         capturedAtUtc = env.capturedAtUtc,
                         capturedLocalDate = env.capturedLocalDate
                     ).ifBlank { existingItem?.timeText.orEmpty() },
+                    savedAtUtc = env.savedAtUtc ?: existingItem?.savedAtUtc,
                     previewUri = previewUri ?: existingItem?.previewUri
                 )
 
                 _ui.update { st ->
                     st.copy(
-                        items = buildList {
-                            add(updated)
-                            st.items
-                                .filterNot { it.foodLogId == env.foodLogId }
-                                .forEach(::add)
-                        }.take(PAGE_SIZE),
+                        items = upsertSavedFoodBySavedAt(
+                            current = st.items,
+                            updated = updated
+                        ),
                         error = null
                     )
                 }
             }
 
             FoodLogStatus.DRAFT,
-            FoodLogStatus.FAILED,
+            FoodLogStatus.FAILED -> {
+                _ui.update { st ->
+                    st.copy(
+                        items = st.items.filterNot { it.foodLogId == env.foodLogId },
+                        error = null
+                    )
+                }
+            }
+
             FoodLogStatus.DELETED -> {
                 deletePreviewCache(env.foodLogId)
 
@@ -232,6 +250,55 @@ class SavedFoodsViewModel @Inject constructor(
 
             FoodLogStatus.PENDING -> Unit
         }
+    }
+
+    private fun upsertSavedFoodBySavedAt(
+        current: List<SavedFoodCardUi>,
+        updated: SavedFoodCardUi
+    ): List<SavedFoodCardUi> {
+        val merged = buildList {
+            add(updated)
+            current
+                .filterNot { it.foodLogId == updated.foodLogId }
+                .forEach(::add)
+        }
+
+        return merged
+            .sortBySavedAtDescending(previousOrder = current)
+            .take(PAGE_SIZE)
+    }
+
+    private fun List<SavedFoodCardUi>.sortBySavedAtDescending(
+        previousOrder: List<SavedFoodCardUi> = this
+    ): List<SavedFoodCardUi> {
+        val previousIndexById = previousOrder
+            .withIndex()
+            .associate { it.value.foodLogId to it.index }
+
+        return sortedWith { left, right ->
+            val leftSavedAt = left.savedAtEpochMillis()
+            val rightSavedAt = right.savedAtEpochMillis()
+
+            when {
+                leftSavedAt != null && rightSavedAt != null && leftSavedAt != rightSavedAt ->
+                    rightSavedAt.compareTo(leftSavedAt)
+
+                leftSavedAt != null && rightSavedAt == null -> -1
+                leftSavedAt == null && rightSavedAt != null -> 1
+
+                else -> {
+                    val leftIndex = previousIndexById[left.foodLogId] ?: Int.MAX_VALUE
+                    val rightIndex = previousIndexById[right.foodLogId] ?: Int.MAX_VALUE
+                    leftIndex.compareTo(rightIndex)
+                }
+            }
+        }
+    }
+
+    private fun SavedFoodCardUi.savedAtEpochMillis(): Long? {
+        return UtcTimeFormatter
+            .parseBackendUtcInstantOrNull(savedAtUtc)
+            ?.toEpochMilli()
     }
 
     private fun applyFoodLogDeleted(foodLogId: String) {

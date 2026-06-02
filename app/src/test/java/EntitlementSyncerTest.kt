@@ -7,6 +7,8 @@ import com.calai.bitecal.data.entitlement.EntitlementSyncer
 import com.calai.bitecal.data.entitlement.api.EntitlementApi
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncRequest
 import com.calai.bitecal.data.entitlement.api.EntitlementSyncResponse
+import com.calai.bitecal.data.membership.api.MembershipApi
+import com.calai.bitecal.data.membership.api.MembershipSummaryDto
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -22,14 +24,18 @@ class EntitlementSyncerTest {
         )
 
         val api = mockk<EntitlementApi>()
+        val membershipApi = mockk<MembershipApi>()
 
         coEvery { api.me() } returns EntitlementSyncResponse(
             status = "INACTIVE",
             entitlementType = null,
             premiumStatus = "FREE"
         )
+        coEvery { membershipApi.me() } returns MembershipSummaryDto(
+            premiumStatus = "FREE"
+        )
 
-        val syncer = EntitlementSyncer(billing, api)
+        val syncer = EntitlementSyncer(billing, api, membershipApi)
 
         syncer.syncAfterLoginSilently()
 
@@ -55,6 +61,7 @@ class EntitlementSyncerTest {
         )
 
         val api = mockk<EntitlementApi>()
+        val membershipApi = mockk<MembershipApi>()
 
         coEvery { api.sync(any()) } returns EntitlementSyncResponse(
             status = "ACTIVE",
@@ -62,8 +69,12 @@ class EntitlementSyncerTest {
             premiumStatus = "PREMIUM",
             currentPremiumUntil = "2026-12-31T00:00:00Z"
         )
+        coEvery { membershipApi.me() } returns MembershipSummaryDto(
+            premiumStatus = "PREMIUM",
+            currentPremiumUntil = "2026-12-31T00:00:00Z"
+        )
 
-        val syncer = EntitlementSyncer(billing, api)
+        val syncer = EntitlementSyncer(billing, api, membershipApi)
 
         syncer.syncAfterLoginSilently()
 

@@ -314,7 +314,7 @@ class HomeViewModel @Inject constructor(
     ): String {
         return FoodLogTimeResolver.resolveDisplayTimeText(
             zoneId = zoneId,
-            updatedAtUtc = env.updatedAtUtc,
+            createdAtUtc = env.createdAtUtc,
             serverReceivedAtUtc = env.serverReceivedAtUtc,
             capturedAtUtc = env.capturedAtUtc,
             capturedLocalDate = env.capturedLocalDate
@@ -574,7 +574,7 @@ class HomeViewModel @Inject constructor(
                 previewUri = cacheRecentUploadPreview(item.foodLogId),
                 timeText = FoodLogTimeResolver.resolveDisplayTimeText(
                     zoneId = zoneId,
-                    updatedAtUtc = item.updatedAtUtc,
+                    createdAtUtc = item.createdAtUtc,
                     serverReceivedAtUtc = item.serverReceivedAtUtc,
                     capturedAtUtc = item.capturedAtUtc,
                     capturedLocalDate = item.capturedLocalDate

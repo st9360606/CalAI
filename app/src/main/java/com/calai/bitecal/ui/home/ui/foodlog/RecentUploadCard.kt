@@ -536,10 +536,10 @@ private fun SuccessContent(
                 text = stringResource(R.string.recent_upload_protein_text, item.proteinG)
             )
             MacroText(
-                text = stringResource(R.string.recent_upload_fat_text, item.fatG)
+                text = stringResource(R.string.recent_upload_carbs_text, item.carbsG)
             )
             MacroText(
-                text = stringResource(R.string.recent_upload_carbs_text, item.carbsG)
+                text = stringResource(R.string.recent_upload_fat_text, item.fatG)
             )
         }
     }

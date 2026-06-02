@@ -141,7 +141,7 @@ private fun resolveFoodLogDisplayTime(
 ): String {
     val zoneId = ZoneId.systemDefault()
 
-    val utcInstant = parseUtcInstantOrNull(env.updatedAtUtc)
+    val utcInstant = parseUtcInstantOrNull(env.createdAtUtc)
         ?: parseUtcInstantOrNull(env.serverReceivedAtUtc)
         ?: parseUtcInstantOrNull(env.capturedAtUtc)
 
@@ -153,7 +153,7 @@ private fun resolveFoodLogDisplayTime(
 
     return FoodLogTimeResolver.resolveDisplayTimeText(
         zoneId = zoneId,
-        updatedAtUtc = env.updatedAtUtc,
+        createdAtUtc = env.createdAtUtc,
         serverReceivedAtUtc = env.serverReceivedAtUtc,
         capturedAtUtc = env.capturedAtUtc,
         capturedLocalDate = env.capturedLocalDate
@@ -259,12 +259,7 @@ fun RecentUploadDetailScreen(
     }
 
     if (st.loading && env == null) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
+        RecentUploadDetailLoadingFrame(previewUri = stablePreviewUri)
         return
     }
 
@@ -299,6 +294,9 @@ fun RecentUploadDetailScreen(
     }
 
     var saveBadgeBusy by rememberSaveable(foodLogId) {
+        mutableStateOf(false)
+    }
+    var footerSaveBusy by rememberSaveable(foodLogId) {
         mutableStateOf(false)
     }
 
@@ -543,7 +541,10 @@ fun RecentUploadDetailScreen(
                 FooterSaveBar(
                     enabled = !st.loading,
                     onSave = {
+                        if (footerSaveBusy) return@FooterSaveBar
+
                         if (hasMultiplierChange || hasSavedChange) {
+                            footerSaveBusy = true
                             vm.commitDetailChanges(
                                 foodLogId = foodLogId,
                                 baseEnv = env,
@@ -551,7 +552,8 @@ fun RecentUploadDetailScreen(
                                 targetSaved = editingSaved,
                                 previewUri = stablePreviewUri,
                                 timeText = stableTimeText,
-                                moveRecentUploadToTop = true,
+                                moveRecentUploadToTop = false,
+                                showLoading = false,
                                 onSuccess = { updatedEnv ->
                                     multiplier = updatedEnv.portionMultiplier.coerceAtLeast(1)
                                     stableTimeText = resolveFoodLogDisplayTime(
@@ -559,6 +561,9 @@ fun RecentUploadDetailScreen(
                                         fallbackTimeText = stableTimeText
                                     )
                                     onSave(updatedEnv)
+                                },
+                                onFinished = {
+                                    footerSaveBusy = false
                                 }
                             )
                         } else {
@@ -585,6 +590,70 @@ fun RecentUploadDetailScreen(
             },
             deleting = deleteRequested && st.loading
         )
+    }
+}
+
+@Composable
+private fun RecentUploadDetailLoadingFrame(
+    previewUri: String?
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BiteCalFoodLogDetailTokens.AppBg)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.46f)
+        ) {
+            if (!previewUri.isNullOrBlank()) {
+                AsyncImage(
+                    model = previewUri,
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(BiteCalFoodLogDetailTokens.HeroFallback)
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(BiteCalFoodLogDetailTokens.Scrim)
+            )
+
+            RecentUploadDetailTopBar(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth(),
+                enabled = false,
+                onBack = {},
+                onDeleteClick = {}
+            )
+        }
+
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f),
+            shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+            color = BiteCalFoodLogDetailTokens.SheetBg,
+            shadowElevation = 10.dp
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
 }
 

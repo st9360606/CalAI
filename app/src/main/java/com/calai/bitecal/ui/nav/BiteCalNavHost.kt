@@ -330,7 +330,7 @@ private fun resolveFoodLogTimeText(
 ): String {
     return FoodLogTimeResolver.resolveDisplayTimeText(
         zoneId = ZoneId.systemDefault(),
-        updatedAtUtc = env.updatedAtUtc,
+        createdAtUtc = env.createdAtUtc,
         serverReceivedAtUtc = env.serverReceivedAtUtc,
         capturedAtUtc = env.capturedAtUtc,
         capturedLocalDate = env.capturedLocalDate
