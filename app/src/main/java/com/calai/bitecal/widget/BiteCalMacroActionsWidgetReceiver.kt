@@ -35,7 +35,7 @@ class BiteCalMacroActionsWidgetReceiver : AppWidgetProvider() {
                     BiteCalWidgetRingRenderer.render(
                         context = appContext,
                         progressPercent = snapshot.calorieProgress,
-                        sizeDp = 96,
+                        sizeDp = 116,
                         strokeDp = 7f
                     )
                 )

@@ -17,14 +17,14 @@
         android:paddingBottom="9dp">
 
         <FrameLayout
-            android:layout_width="82dp"
-            android:layout_height="82dp"
+            android:layout_width="106dp"
+            android:layout_height="106dp"
             android:layout_gravity="top|center_horizontal">
 
             <ImageView
                 android:id="@+id/widget_calories_ring"
-                android:layout_width="82dp"
-                android:layout_height="82dp"
+                android:layout_width="106dp"
+                android:layout_height="106dp"
                 android:contentDescription="@null" />
 
             <LinearLayout
@@ -41,12 +41,12 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:fontFamily="sans-serif"
+                    android:textStyle="bold"
                     android:includeFontPadding="false"
                     android:maxLines="1"
                     android:text="@string/widget_preview_goal_kcal"
                     android:textColor="#FF111114"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textSize="26sp" />
 
                 <TextView
                     android:id="@+id/widget_calories_label"
@@ -59,7 +59,7 @@
                     android:maxLines="1"
                     android:text="@string/widget_calories_left"
                     android:textColor="#FF8D9198"
-                    android:textSize="9sp" />
+                    android:textSize="10sp" />
             </LinearLayout>
         </FrameLayout>
 
