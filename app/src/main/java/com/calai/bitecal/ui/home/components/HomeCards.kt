@@ -241,10 +241,9 @@ fun MacroRowModern(
             centerDisk = centerDisk,
             spacingTop = spacingTop,
             icon = {
-                Icon(
-                    imageVector = Icons.Filled.EggAlt,
+                Image(
+                    painter = painterResource(R.drawable.ic_widget_protein),
                     contentDescription = null,
-                    tint = HomeCardStyles.Palette.Protein,
                     modifier = Modifier.size(proteinIconSize)
                 )
             },
@@ -272,10 +271,9 @@ fun MacroRowModern(
             centerDisk = centerDisk,
             spacingTop = spacingTop,
             icon = {
-                Icon(
-                    imageVector = Icons.Filled.BakeryDining,
+                Image(
+                    painter = painterResource(R.drawable.ic_widget_carbs),
                     contentDescription = null,
-                    tint = HomeCardStyles.Palette.Carbs,
                     modifier = Modifier.size(carbsIconSize)
                 )
             },
@@ -303,10 +301,9 @@ fun MacroRowModern(
             centerDisk = centerDisk,
             spacingTop = spacingTop,
             icon = {
-                Icon(
-                    imageVector = Icons.Filled.Opacity,
+                Image(
+                    painter = painterResource(R.drawable.ic_widget_fats),
                     contentDescription = null,
-                    tint = HomeCardStyles.Palette.Fats,
                     modifier = Modifier.size(fatsIconSize)
                 )
             },

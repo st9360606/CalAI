@@ -19,13 +19,13 @@
         android:paddingBottom="6dp">
 
     <FrameLayout
-        android:layout_width="116dp"
-        android:layout_height="116dp">
+        android:layout_width="114dp"
+        android:layout_height="114dp">
 
         <ImageView
             android:id="@+id/widget_macro_calories_ring"
-            android:layout_width="116dp"
-            android:layout_height="116dp"
+            android:layout_width="114dp"
+            android:layout_height="114dp"
             android:contentDescription="@null" />
 
         <LinearLayout
@@ -60,14 +60,14 @@
                 android:maxLines="1"
                 android:text="@string/widget_calories_left"
                 android:textColor="#FF8D9198"
-                android:textSize="11sp" />
+                android:textSize="12sp" />
         </LinearLayout>
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="18dp"
         android:layout_weight="1"
         android:gravity="center_vertical"
         android:orientation="vertical">
@@ -79,18 +79,19 @@
             android:orientation="horizontal">
 
             <FrameLayout
-                android:layout_width="27dp"
-                android:layout_height="27dp">
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginTop="2dp">
 
                 <ImageView
                     android:id="@+id/widget_protein_ring"
-                    android:layout_width="27dp"
-                    android:layout_height="27dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
                     android:contentDescription="@null" />
 
                 <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:background="@drawable/widget_circle_protein_bg"
                     android:contentDescription="@null"
@@ -113,7 +114,7 @@
                     android:includeFontPadding="false"
                     android:text="@string/widget_preview_protein"
                     android:textColor="#FF111114"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -127,30 +128,31 @@
                     android:maxLines="1"
                     android:text="@string/widget_protein_left"
                     android:textColor="#FF2F3136"
-                    android:textSize="10sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="15dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <FrameLayout
-                android:layout_width="27dp"
-                android:layout_height="27dp">
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginTop="2dp">
 
                 <ImageView
                     android:id="@+id/widget_carbs_ring"
-                    android:layout_width="27dp"
-                    android:layout_height="27dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
                     android:contentDescription="@null" />
 
                 <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:background="@drawable/widget_circle_carbs_bg"
                     android:contentDescription="@null"
@@ -173,7 +175,7 @@
                     android:includeFontPadding="false"
                     android:text="@string/widget_preview_carbs"
                     android:textColor="#FF111114"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -187,34 +189,35 @@
                     android:maxLines="1"
                     android:text="@string/widget_carbs_left"
                     android:textColor="#FF2F3136"
-                    android:textSize="10sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="15dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <FrameLayout
-                android:layout_width="27dp"
-                android:layout_height="27dp">
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginTop="2dp">
 
                 <ImageView
                     android:id="@+id/widget_fats_ring"
-                    android:layout_width="27dp"
-                    android:layout_height="27dp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
                     android:contentDescription="@null" />
 
                 <ImageView
-                    android:layout_width="21dp"
-                    android:layout_height="21dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:background="@drawable/widget_circle_fats_bg"
                     android:contentDescription="@null"
-                    android:padding="3dp"
+                    android:padding="4dp"
                     android:src="@drawable/ic_widget_fats" />
             </FrameLayout>
 
@@ -233,7 +236,7 @@
                     android:includeFontPadding="false"
                     android:text="@string/widget_preview_fats"
                     android:textColor="#FF111114"
-                    android:textSize="13sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -247,7 +250,7 @@
                     android:maxLines="1"
                     android:text="@string/widget_fats_left"
                     android:textColor="#FF2F3136"
-                    android:textSize="10sp" />
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

@@ -128,7 +128,8 @@ import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 import com.calai.bitecal.widget.BiteCalHomeWidgetUpdater
 import com.calai.bitecal.widget.BiteCalWidgetSnapshotStore
-
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 /**
  * ✅ Personal => Settings（你圖上的那個）
  * - 內容可捲動
@@ -1545,7 +1546,7 @@ private fun MacroActionsWidgetPreviewCard(
                     verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
                     WidgetMacroStatRow(
-                        icon = Icons.Outlined.EggAlt,
+                        iconRes = R.drawable.ic_widget_protein,
                         iconTint = Color(0xFFE56C6C),
                         iconBackground = Color(0xFFF7F5F7),
                         value = proteinGoal?.let { "${it}g" } ?: dash,
@@ -1553,10 +1554,11 @@ private fun MacroActionsWidgetPreviewCard(
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenProteinG,
                             goal = proteinGoal
-                        )
+                        ),
+                        iconSize = 20.dp
                     )
                     WidgetMacroStatRow(
-                        icon = Icons.Outlined.BakeryDining,
+                        iconRes = R.drawable.ic_widget_carbs,
                         iconTint = Color(0xFFD89A62),
                         iconBackground = Color(0xFFF8F6F3),
                         value = carbsGoal?.let { "${it}g" } ?: dash,
@@ -1564,10 +1566,11 @@ private fun MacroActionsWidgetPreviewCard(
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenCarbsG,
                             goal = carbsGoal
-                        )
+                        ),
+                        iconSize = 20.dp
                     )
                     WidgetMacroStatRow(
-                        icon = Icons.Outlined.Opacity,
+                        iconRes = R.drawable.ic_widget_fats,
                         iconTint = Color(0xFF6C93D8),
                         iconBackground = Color(0xFFF3F6FB),
                         value = fatsGoal?.let { "${it}g" } ?: dash,
@@ -1575,7 +1578,8 @@ private fun MacroActionsWidgetPreviewCard(
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenFatsG,
                             goal = fatsGoal
-                        )
+                        ),
+                        iconSize = 16.dp
                     )
                 }
             }
@@ -1660,12 +1664,13 @@ private fun WidgetCaloriesRing(
 
 @Composable
 private fun WidgetMacroStatRow(
-    icon: ImageVector,
+    iconRes: Int,
     iconTint: Color,
     iconBackground: Color,
     value: String,
     label: String,
-    progress: Float
+    progress: Float,
+    iconSize: Dp = 16.dp
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -1691,11 +1696,10 @@ private fun WidgetMacroStatRow(
                     .background(iconBackground),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = icon,
+                Image(
+                    painter = painterResource(iconRes),
                     contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(iconSize)
                 )
             }
         }
