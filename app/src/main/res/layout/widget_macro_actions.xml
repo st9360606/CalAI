@@ -67,7 +67,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="18dp"
+        android:layout_marginStart="14dp"
         android:layout_weight="1"
         android:gravity="center_vertical"
         android:orientation="vertical">
@@ -128,7 +128,7 @@
                     android:maxLines="1"
                     android:text="@string/widget_protein_left"
                     android:textColor="#FF2F3136"
-                    android:textSize="11sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -189,7 +189,7 @@
                     android:maxLines="1"
                     android:text="@string/widget_carbs_left"
                     android:textColor="#FF2F3136"
-                    android:textSize="11sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
 
@@ -250,13 +250,13 @@
                     android:maxLines="1"
                     android:text="@string/widget_fats_left"
                     android:textColor="#FF2F3136"
-                    android:textSize="11sp" />
+                    android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
     <TextView
-        android:layout_width="6dp"
+        android:layout_width="3dp"
         android:layout_height="1dp"
         android:text="" />
 
@@ -266,33 +266,33 @@
         android:background="@drawable/widget_divider_bg" />
 
     <TextView
-        android:layout_width="4dp"
+        android:layout_width="7dp"
         android:layout_height="1dp"
         android:text="" />
 
     <LinearLayout
-        android:layout_width="88dp"
+        android:layout_width="92dp"
         android:layout_height="match_parent"
-        android:gravity="center"
+        android:gravity="center_vertical|end"
         android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/widget_scan_food_tile"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_width="85dp"
+            android:layout_height="70dp"
             android:background="@drawable/widget_action_light_bg"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="3dp">
+            android:padding="5dp">
 
             <FrameLayout
-                android:layout_width="27dp"
-                android:layout_height="27dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:background="@drawable/widget_circle_gray_bg">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_widget_scan" />
@@ -302,36 +302,35 @@
                 android:id="@+id/widget_scan_food_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="5dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:gravity="center"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 android:text="@string/widget_scan_food"
-                android:textColor="#FF111114"
-                android:textSize="10sp"
-                android:textStyle="bold" />
+                android:textColor="#FF2F3136"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/widget_barcode_tile"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="11dp"
+            android:layout_width="85dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/widget_action_light_bg"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="3dp">
+            android:padding="5dp">
 
             <FrameLayout
-                android:layout_width="27dp"
-                android:layout_height="27dp"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
                 android:background="@drawable/widget_circle_gray_bg">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_widget_barcode" />
@@ -341,16 +340,15 @@
                 android:id="@+id/widget_barcode_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="5dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:gravity="center"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 android:text="@string/widget_barcode"
-                android:textColor="#FF111114"
-                android:textSize="10sp"
-                android:textStyle="bold" />
+                android:textColor="#FF2F3136"
+                android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
