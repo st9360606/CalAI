@@ -155,6 +155,8 @@ import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
 import com.calai.bitecal.ui.subscription.OnboardSubscriptionScreen
 import com.calai.bitecal.ui.subscription.SubscriptionViewModel
+import com.calai.bitecal.widget.BiteCalWidgetNavigationRequest
+import com.calai.bitecal.widget.BiteCalWidgetPendingIntents
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -432,9 +434,12 @@ private fun NavController.resolveCameraFallbackPaywallRoute(): String {
 fun BiteCalNavHost(
     hostActivity: ComponentActivity,
     modifier: Modifier = Modifier,
+    widgetNavigationRequest: BiteCalWidgetNavigationRequest? = null,
     onSetLocale: (String) -> Unit,
 ) {
     val nav = rememberNavController()
+    val currentBackStackEntry by nav.currentBackStackEntryFlow.collectAsState(initial = null)
+    val currentRoute = currentBackStackEntry?.destination?.route
 
     val appCtx = LocalContext.current.applicationContext
     val ep = remember(appCtx) { EntryPointAccessors.fromApplication(appCtx, AppEntryPoint::class.java) }
@@ -460,6 +465,7 @@ fun BiteCalNavHost(
     var onboardingPaywallRejectedOnce by remember { mutableStateOf(false) }
 
     val localeController = LocalLocaleController.current
+    var consumedWidgetNavigationRequestId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(nav) {
         SessionBus.expired.collect {
@@ -480,6 +486,73 @@ fun BiteCalNavHost(
                 popUpTo(0) { inclusive = true }
                 launchSingleTop = true
                 restoreState = false
+            }
+        }
+    }
+
+    LaunchedEffect(widgetNavigationRequest?.id, isSignedIn, currentRoute) {
+        val request = widgetNavigationRequest ?: return@LaunchedEffect
+        if (consumedWidgetNavigationRequestId == request.id) return@LaunchedEffect
+        if (isSignedIn == null) return@LaunchedEffect
+        if (currentRoute == null || currentRoute == Routes.APP_ENTRY) return@LaunchedEffect
+
+        consumedWidgetNavigationRequestId = request.id
+
+        if (isSignedIn == false) {
+            nav.navigate(
+                Routes.requireSignInRoute(
+                    redirect = Routes.HOME,
+                    auto = false,
+                    uploadLocal = false
+                )
+            ) {
+                launchSingleTop = true
+                restoreState = false
+            }
+            return@LaunchedEffect
+        }
+
+        if (isOnboardingRoute(currentRoute) || isAuthOrEntryRoute(currentRoute)) {
+            return@LaunchedEffect
+        }
+
+        when (request.destination) {
+            BiteCalWidgetPendingIntents.DESTINATION_HOME -> {
+                nav.navigate(Routes.HOME) {
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+
+            BiteCalWidgetPendingIntents.DESTINATION_SCAN_FOOD,
+            BiteCalWidgetPendingIntents.DESTINATION_SCAN_BARCODE -> {
+                val hasActiveAccess = withContext(Dispatchers.IO) {
+                    entitlementSyncer.hasActivePremiumAccess()
+                }
+
+                if (hasActiveAccess) {
+                    val cameraMode = if (
+                        request.destination == BiteCalWidgetPendingIntents.DESTINATION_SCAN_BARCODE
+                    ) {
+                        CameraMode.BARCODE
+                    } else {
+                        CameraMode.FOOD
+                    }
+
+                    nav.navigate(Routes.CAMERA) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    runCatching {
+                        nav.getBackStackEntry(Routes.CAMERA)
+                            .savedStateHandle["camera_mode"] = cameraMode.name
+                    }
+                } else {
+                    nav.navigate(Routes.HOME_SCAN_SUBSCRIPTION) {
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
             }
         }
     }
@@ -2498,9 +2571,10 @@ fun BiteCalNavHost(
                         }
                     )
 
-                    if (showApiCard && apiErrUi != null) {
+                    val visibleApiErrUi = apiErrUi.takeIf { showApiCard }
+                    if (visibleApiErrUi != null) {
                         ApiErrorCard(
-                            ui = apiErrUi,
+                            ui = visibleApiErrUi,
                             onAction = ::handleClientAction,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)

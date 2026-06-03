@@ -16,6 +16,7 @@ import com.calai.bitecal.i18n.LanguageStore
 import com.calai.bitecal.i18n.ProvideComposeLocale
 import com.calai.bitecal.ui.nav.BiteCalNavHost
 import com.calai.bitecal.widget.BiteCalHomeWidgetUpdater
+import com.calai.bitecal.widget.BiteCalWidgetNavigationRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -26,7 +27,10 @@ import java.util.Locale
  * - NavHost 不再做語言初始化，只處理導航與邏輯
  */
 @Composable
-fun BiteCalApp(hostActivity: ComponentActivity) {
+fun BiteCalApp(
+    hostActivity: ComponentActivity,
+    widgetNavigationRequest: BiteCalWidgetNavigationRequest? = null
+) {
     val context = LocalContext.current
     val store = remember(context) { LanguageStore(context) }
 
@@ -70,6 +74,7 @@ fun BiteCalApp(hostActivity: ComponentActivity) {
     ProvideComposeLocale(composeLocale) {
         BiteCalNavHost(
             hostActivity = hostActivity,
+            widgetNavigationRequest = widgetNavigationRequest,
             onSetLocale = { tag -> composeLocale = tag } // 切語言只改這個 state
         )
     }
