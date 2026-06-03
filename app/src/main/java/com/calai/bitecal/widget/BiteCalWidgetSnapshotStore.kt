@@ -17,7 +17,7 @@ object BiteCalWidgetSnapshotStore {
      * Increase this when widget XML / RemoteViews rendering changes but visible nutrition data does not.
      * This forces one refresh so existing desktop widget instances pick up the new UI.
      */
-    private const val WIDGET_RENDER_VERSION = 30
+    private const val WIDGET_RENDER_VERSION = 31
 
     private const val KEY_HAS_SNAPSHOT = "has_snapshot"
     private const val KEY_RENDER_VERSION = "render_version"
@@ -124,10 +124,10 @@ data class BiteCalWidgetSnapshot(
     val eatenFatsG: Int,
     val updatedAtMs: Long
 ) {
-    val caloriesLeft: Int = (goalKcal - eatenKcal).coerceAtLeast(0)
-    val proteinLeftG: Int = (proteinGoalG - eatenProteinG).coerceAtLeast(0)
-    val carbsLeftG: Int = (carbsGoalG - eatenCarbsG).coerceAtLeast(0)
-    val fatsLeftG: Int = (fatsGoalG - eatenFatsG).coerceAtLeast(0)
+    val caloriesLeft: Int = goalKcal.coerceAtLeast(0) - eatenKcal.coerceAtLeast(0)
+    val proteinLeftG: Int = proteinGoalG.coerceAtLeast(0) - eatenProteinG.coerceAtLeast(0)
+    val carbsLeftG: Int = carbsGoalG.coerceAtLeast(0) - eatenCarbsG.coerceAtLeast(0)
+    val fatsLeftG: Int = fatsGoalG.coerceAtLeast(0) - eatenFatsG.coerceAtLeast(0)
 
     val calorieProgress: Int = progressPercent(eatenKcal, goalKcal)
     val proteinProgress: Int = progressPercent(eatenProteinG, proteinGoalG)

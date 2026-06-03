@@ -107,7 +107,7 @@ fun CaloriesCardModern(
             goalKcal.coerceAtLeast(0)
         )
     } else {
-        goalKcal.coerceAtLeast(0).toString()
+        remainingValue(goalKcal, eatenKcal).toString()
     }
 
     val labelText = if (showTodayProgress) {
@@ -223,7 +223,7 @@ fun MacroRowModern(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         MacroStatCardModern(
-            goalValueText = "${s.proteinG}g",
+            goalValueText = "${remainingValue(s.proteinG, todayNutrition.eatenProteinG)}g",
             progressValueText = stringResource(
                 R.string.home_nutrition_ratio_grams,
                 todayNutrition.eatenProteinG.coerceAtLeast(0),
@@ -253,7 +253,7 @@ fun MacroRowModern(
         )
 
         MacroStatCardModern(
-            goalValueText = "${s.carbsG}g",
+            goalValueText = "${remainingValue(s.carbsG, todayNutrition.eatenCarbsG)}g",
             progressValueText = stringResource(
                 R.string.home_nutrition_ratio_grams,
                 todayNutrition.eatenCarbsG.coerceAtLeast(0),
@@ -283,7 +283,7 @@ fun MacroRowModern(
         )
 
         MacroStatCardModern(
-            goalValueText = "${s.fatG}g",
+            goalValueText = "${remainingValue(s.fatG, todayNutrition.eatenFatsG)}g",
             progressValueText = stringResource(
                 R.string.home_nutrition_ratio_grams,
                 todayNutrition.eatenFatsG.coerceAtLeast(0),
@@ -333,7 +333,7 @@ fun MicronutrientRowModern(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         MacroStatCardModern(
-            goalValueText = "${s.fiberG}g",
+            goalValueText = "${remainingValue(s.fiberG, todayNutrition.eatenFiberG)}g",
             progressValueText = stringResource(
                 R.string.home_nutrition_ratio_grams,
                 todayNutrition.eatenFiberG.coerceAtLeast(0),
@@ -364,7 +364,7 @@ fun MicronutrientRowModern(
         )
 
         MacroStatCardModern(
-            goalValueText = "${s.sugarG}g",
+            goalValueText = "${remainingValue(s.sugarG, todayNutrition.eatenSugarG)}g",
             progressValueText = stringResource(
                 R.string.home_nutrition_ratio_grams,
                 todayNutrition.eatenSugarG.coerceAtLeast(0),
@@ -395,7 +395,7 @@ fun MicronutrientRowModern(
         )
 
         MacroStatCardModern(
-            goalValueText = "${s.sodiumMg}mg",
+            goalValueText = "${remainingValue(s.sodiumMg, todayNutrition.eatenSodiumMg)}mg",
             progressValueText = stringResource(
                 R.string.home_nutrition_ratio_mg,
                 todayNutrition.eatenSodiumMg.coerceAtLeast(0),
@@ -792,6 +792,10 @@ private fun progressOfInt(current: Int?, goal: Int?): Float {
     val g = goal ?: return 0f
     if (g <= 0) return 0f
     return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
+}
+
+private fun remainingValue(goal: Int, eaten: Int): Int {
+    return goal.coerceAtLeast(0) - eaten.coerceAtLeast(0)
 }
 
 @Composable

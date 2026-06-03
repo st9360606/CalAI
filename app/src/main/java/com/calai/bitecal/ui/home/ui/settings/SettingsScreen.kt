@@ -1422,7 +1422,9 @@ private fun CaloriesWidgetPreviewCard(
 ) {
     val dash = stringResource(R.string.common_dash)
     val goalKcal = summary?.tdee?.coerceAtLeast(0)
-    val valueText = goalKcal?.toString() ?: dash
+    val valueText = goalKcal
+        ?.let { remainingWidgetValue(goal = it, eaten = todayNutrition.eatenKcal).toString() }
+        ?: dash
     val progress = widgetNutritionProgress(
         current = todayNutrition.eatenKcal,
         goal = goalKcal
@@ -1509,6 +1511,10 @@ private fun MacroActionsWidgetPreviewCard(
     val proteinGoal = summary?.proteinG?.coerceAtLeast(0)
     val carbsGoal = summary?.carbsG?.coerceAtLeast(0)
     val fatsGoal = summary?.fatG?.coerceAtLeast(0)
+    val caloriesLeft = goalKcal?.let { remainingWidgetValue(it, todayNutrition.eatenKcal) }
+    val proteinLeft = proteinGoal?.let { remainingWidgetValue(it, todayNutrition.eatenProteinG) }
+    val carbsLeft = carbsGoal?.let { remainingWidgetValue(it, todayNutrition.eatenCarbsG) }
+    val fatsLeft = fatsGoal?.let { remainingWidgetValue(it, todayNutrition.eatenFatsG) }
 
     Card(
         modifier = modifier
@@ -1532,7 +1538,7 @@ private fun MacroActionsWidgetPreviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 WidgetCaloriesRing(
-                    value = goalKcal?.toString() ?: dash,
+                    value = caloriesLeft?.toString() ?: dash,
                     label = stringResource(R.string.home_calories_goal_label),
                     progress = widgetNutritionProgress(
                         current = todayNutrition.eatenKcal,
@@ -1542,7 +1548,7 @@ private fun MacroActionsWidgetPreviewCard(
                     modifier = Modifier.size(108.dp)
                 )
 
-                Spacer(Modifier.size(10.dp))
+                Spacer(Modifier.size(18.dp))
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(15.dp)
@@ -1551,7 +1557,7 @@ private fun MacroActionsWidgetPreviewCard(
                         iconRes = R.drawable.ic_widget_protein,
                         iconTint = Color(0xFFE56C6C),
                         iconBackground = Color(0xFFF7F5F7),
-                        value = proteinGoal?.let { "${it}g" } ?: dash,
+                        value = proteinLeft?.let { "${it}g" } ?: dash,
                         label = stringResource(R.string.home_protein_goal_label),
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenProteinG,
@@ -1563,7 +1569,7 @@ private fun MacroActionsWidgetPreviewCard(
                         iconRes = R.drawable.ic_widget_carbs,
                         iconTint = Color(0xFFD89A62),
                         iconBackground = Color(0xFFF8F6F3),
-                        value = carbsGoal?.let { "${it}g" } ?: dash,
+                        value = carbsLeft?.let { "${it}g" } ?: dash,
                         label = stringResource(R.string.home_carbs_goal_label),
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenCarbsG,
@@ -1575,7 +1581,7 @@ private fun MacroActionsWidgetPreviewCard(
                         iconRes = R.drawable.ic_widget_fats,
                         iconTint = Color(0xFF6C93D8),
                         iconBackground = Color(0xFFF3F6FB),
-                        value = fatsGoal?.let { "${it}g" } ?: dash,
+                        value = fatsLeft?.let { "${it}g" } ?: dash,
                         label = stringResource(R.string.home_fats_goal_label),
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenFatsG,
@@ -1587,7 +1593,6 @@ private fun MacroActionsWidgetPreviewCard(
             }
 
             Spacer(Modifier.size(4.dp))
-
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -1595,7 +1600,7 @@ private fun MacroActionsWidgetPreviewCard(
                     .background(Color(0xFFE9EAEE))
             )
 
-            Spacer(Modifier.size(20.dp))
+            Spacer(Modifier.size(14.dp))
 
             Column(
                 modifier = Modifier.width(88.dp),
@@ -1630,7 +1635,7 @@ private fun WidgetCaloriesRing(
         GaugeRing(
             progress = progress,
             sizeDp = ringSize,
-            strokeDp = 7.dp,
+            strokeDp = 7.3.dp,
             trackColor = Color(0xFFEAEAED),
             progressColor = Color(0xFF111114),
             drawTopTick = true,
@@ -1684,7 +1689,7 @@ private fun WidgetMacroStatRow(
             GaugeRing(
                 progress = progress,
                 sizeDp = 30.dp,
-                strokeDp = 2.dp,
+                strokeDp = 2.8.dp,
                 trackColor = Color(0xFFEAEAED),
                 progressColor = iconTint,
                 drawTopTick = true,
@@ -1740,6 +1745,10 @@ private fun widgetNutritionProgress(current: Int?, goal: Int?): Float {
     val g = (goal ?: 0).coerceAtLeast(0)
     if (g <= 0) return 0f
     return (c.toFloat() / g.toFloat()).coerceIn(0f, 1f)
+}
+
+private fun remainingWidgetValue(goal: Int, eaten: Int): Int {
+    return goal.coerceAtLeast(0) - eaten.coerceAtLeast(0)
 }
 
 @Composable
