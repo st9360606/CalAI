@@ -48,7 +48,7 @@ class BiteCalMacroActionsWidgetReceiver : AppWidgetProvider() {
                         context = appContext,
                         progressPercent = snapshot.proteinProgress,
                         sizeDp = 34,
-                        strokeDp = 2.7f,
+                        strokeDp = 3.3f,
                         progressColor = Color.rgb(229, 108, 108),
                         tickRadiusScale = 0.55f
                     )
@@ -62,7 +62,7 @@ class BiteCalMacroActionsWidgetReceiver : AppWidgetProvider() {
                         context = appContext,
                         progressPercent = snapshot.carbsProgress,
                         sizeDp = 34,
-                        strokeDp = 2.7f,
+                        strokeDp = 3.3f,
                         progressColor = Color.rgb(216, 154, 98),
                         tickRadiusScale = 0.55f
                     )
@@ -76,7 +76,7 @@ class BiteCalMacroActionsWidgetReceiver : AppWidgetProvider() {
                         context = appContext,
                         progressPercent = snapshot.fatsProgress,
                         sizeDp = 34,
-                        strokeDp = 2.7f,
+                        strokeDp = 3.3f,
                         progressColor = Color.rgb(108, 147, 216),
                         tickRadiusScale = 0.55f
                     )
