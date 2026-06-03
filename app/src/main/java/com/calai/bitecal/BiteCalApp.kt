@@ -15,6 +15,9 @@ import com.calai.bitecal.i18n.LanguageManager
 import com.calai.bitecal.i18n.LanguageStore
 import com.calai.bitecal.i18n.ProvideComposeLocale
 import com.calai.bitecal.ui.nav.BiteCalNavHost
+import com.calai.bitecal.widget.BiteCalHomeWidgetUpdater
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.Locale
 
 /**
@@ -53,10 +56,13 @@ fun BiteCalApp(hostActivity: ComponentActivity) {
 
     var composeLocale by remember(initialTag) { mutableStateOf(initialTag) }
 
-    // 語系變更時持久化（不阻塞 UI）
+    // 語系變更時持久化（不阻塞 UI），並同步刷新桌面小工具文字。
     LaunchedEffect(composeLocale) {
         if (composeLocale.isNotBlank()) {
             store.save(composeLocale)
+            withContext(Dispatchers.IO) {
+                BiteCalHomeWidgetUpdater.updateAll(context.applicationContext)
+            }
         }
     }
 

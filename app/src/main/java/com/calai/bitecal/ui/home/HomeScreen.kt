@@ -124,6 +124,8 @@ import com.calai.bitecal.ui.home.ui.workout.model.WorkoutViewModel
 import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGate
 import com.calai.bitecal.ui.home.workoutgate.WorkoutPremiumGateDecision
 import com.calai.bitecal.ui.home.workoutgate.WorkoutSheetOpenRequest
+import com.calai.bitecal.widget.BiteCalHomeWidgetUpdater
+import com.calai.bitecal.widget.BiteCalWidgetSnapshotStore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.math.RoundingMode
@@ -574,6 +576,15 @@ fun HomeScreen(
             }
         ) { inner ->
             val s = ui.summary ?: return@Scaffold
+
+            LaunchedEffect(s, ui.todayNutrition) {
+                BiteCalWidgetSnapshotStore.saveFrom(
+                    context = ctx,
+                    summary = s,
+                    todayNutrition = ui.todayNutrition
+                )
+                BiteCalHomeWidgetUpdater.updateAll(ctx)
+            }
 
             val scrollState = rememberScrollState()
 

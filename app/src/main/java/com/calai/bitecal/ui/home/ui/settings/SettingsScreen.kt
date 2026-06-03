@@ -67,6 +67,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -125,6 +126,8 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
+import com.calai.bitecal.widget.BiteCalHomeWidgetUpdater
+import com.calai.bitecal.widget.BiteCalWidgetSnapshotStore
 
 /**
  * ✅ Personal => Settings（你圖上的那個）
@@ -1349,6 +1352,17 @@ private fun WidgetsSection(
     todayNutrition: HomeTodayNutritionSummary,
     onOpenWidgetGuide: () -> Unit
 ) {
+    val context = LocalContext.current.applicationContext
+
+    LaunchedEffect(summary, todayNutrition) {
+        BiteCalWidgetSnapshotStore.saveFrom(
+            context = context,
+            summary = summary,
+            todayNutrition = todayNutrition
+        )
+        BiteCalHomeWidgetUpdater.updateAll(context)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()

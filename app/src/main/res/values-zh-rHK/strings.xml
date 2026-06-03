@@ -822,4 +822,28 @@
 
     <string name="common_today">今天</string>
     <string name="common_yesterday">昨天</string>
+
+    <!-- Android home screen widgets -->
+    <string name="widget_preview_goal_kcal">1830</string>
+    <string name="widget_preview_protein">120g</string>
+    <string name="widget_preview_carbs">180g</string>
+    <string name="widget_preview_fats">60g</string>
+    <string name="widget_plus_symbol">+</string>
+    <string name="widget_protein_abbr">P</string>
+    <string name="widget_carbs_abbr">C</string>
+    <string name="widget_fats_abbr">F</string>
+    <string name="widget_scan_symbol">⌖</string>
+    <string name="widget_barcode_symbol">▥</string>
+    <string name="widget_calories_left">Calories left</string>
+    <string name="widget_protein_left">Protein left</string>
+    <string name="widget_carbs_left">Carbs left</string>
+    <string name="widget_fats_left">Fats left</string>
+    <string name="widget_calories_description">BiteCal calories widget</string>
+    <string name="widget_macro_actions_description">BiteCal macros and quick actions widget</string>
+    <string name="widget_log_your_food">Log your food</string>
+    <string name="widget_scan_food">Scan food</string>
+    <string name="widget_logged_kcal_preview">Logged 620 kcal</string>
+    <string name="widget_grams_format">%1$dg</string>
+    <string name="widget_logged_kcal">Logged %1$d kcal</string>
+    <string name="widget_barcode">Barcode</string>
 </resources>
