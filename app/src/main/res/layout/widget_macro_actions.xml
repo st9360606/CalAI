@@ -253,7 +253,7 @@
     </LinearLayout>
 
     <TextView
-        android:layout_width="4dp"
+        android:layout_width="6dp"
         android:layout_height="1dp"
         android:text="" />
 
@@ -263,7 +263,7 @@
         android:background="@drawable/widget_divider_bg" />
 
     <TextView
-        android:layout_width="6dp"
+        android:layout_width="4dp"
         android:layout_height="1dp"
         android:text="" />
 
