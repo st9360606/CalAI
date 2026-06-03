@@ -29,7 +29,6 @@ class BiteCalCaloriesWidgetReceiver : AppWidgetProvider() {
             val views = RemoteViews(appContext.packageName, R.layout.widget_calories).apply {
                 setTextViewText(R.id.widget_calories_value, snapshot.caloriesLeft.toString())
                 setTextViewText(R.id.widget_calories_label, localizedContext.getString(R.string.widget_calories_left))
-                setTextViewText(R.id.widget_calories_plus, localizedContext.getString(R.string.widget_plus_symbol))
                 setTextViewText(R.id.widget_calories_action_text, localizedContext.getString(R.string.widget_log_your_food))
                 setImageViewBitmap(
                     R.id.widget_calories_ring,
