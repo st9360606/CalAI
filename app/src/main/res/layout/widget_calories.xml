@@ -52,7 +52,7 @@
                     android:id="@+id/widget_calories_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
+                    android:layout_marginTop="5dp"
                     android:ellipsize="end"
                     android:fontFamily="sans-serif-medium"
                     android:includeFontPadding="false"
@@ -65,38 +65,38 @@
 
         <LinearLayout
             android:id="@+id/widget_calories_action"
-            android:layout_width="match_parent"
-            android:layout_height="28dp"
+            android:layout_width="136dp"
+            android:layout_height="34dp"
             android:layout_gravity="bottom|center_horizontal"
             android:background="@drawable/widget_action_dark_bg"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp">
 
             <TextView
                 android:id="@+id/widget_calories_plus"
-                android:layout_width="19dp"
-                android:layout_height="19dp"
+                android:layout_width="23dp"
+                android:layout_height="23dp"
                 android:background="@drawable/widget_circle_white_bg"
                 android:gravity="center"
                 android:includeFontPadding="false"
                 android:text="@string/widget_plus_symbol"
                 android:textColor="#FF111114"
-                android:textSize="17sp" />
+                android:textSize="20sp" />
 
             <TextView
                 android:id="@+id/widget_calories_action_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="7dp"
+                android:layout_marginStart="8dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 android:text="@string/widget_log_your_food"
                 android:textColor="#FFFFFFFF"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </FrameLayout>
