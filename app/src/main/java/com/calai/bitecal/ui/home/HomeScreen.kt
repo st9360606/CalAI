@@ -578,12 +578,14 @@ fun HomeScreen(
             val s = ui.summary ?: return@Scaffold
 
             LaunchedEffect(s, ui.todayNutrition) {
-                BiteCalWidgetSnapshotStore.saveFrom(
+                val widgetSnapshotChanged = BiteCalWidgetSnapshotStore.saveFrom(
                     context = ctx,
                     summary = s,
                     todayNutrition = ui.todayNutrition
                 )
-                BiteCalHomeWidgetUpdater.updateAll(ctx)
+                if (widgetSnapshotChanged) {
+                    BiteCalHomeWidgetUpdater.updateAll(ctx)
+                }
             }
 
             val scrollState = rememberScrollState()

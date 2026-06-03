@@ -1,6 +1,7 @@
 package com.calai.bitecal.widget
 
 import android.content.Context
+import androidx.core.content.edit
 import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
 
@@ -12,6 +13,14 @@ import com.calai.bitecal.data.home.repo.HomeSummary
 object BiteCalWidgetSnapshotStore {
     private const val PREFS_NAME = "bitecal_widget_snapshot"
 
+    /**
+     * Increase this when widget XML / RemoteViews rendering changes but visible nutrition data does not.
+     * This forces one refresh so existing desktop widget instances pick up the new UI.
+     */
+    private const val WIDGET_RENDER_VERSION = 30
+
+    private const val KEY_HAS_SNAPSHOT = "has_snapshot"
+    private const val KEY_RENDER_VERSION = "render_version"
     private const val KEY_GOAL_KCAL = "goal_kcal"
     private const val KEY_EATEN_KCAL = "eaten_kcal"
     private const val KEY_PROTEIN_GOAL_G = "protein_goal_g"
@@ -22,26 +31,61 @@ object BiteCalWidgetSnapshotStore {
     private const val KEY_EATEN_FATS_G = "eaten_fats_g"
     private const val KEY_UPDATED_AT_MS = "updated_at_ms"
 
+    /**
+     * Saves the latest widget snapshot.
+     *
+     * @return true only when widget-visible data or widget render version changed.
+     * When unchanged, avoid touching SharedPreferences and avoid re-applying RemoteViews
+     * so the launcher does not redraw the widget unnecessarily.
+     */
     fun saveFrom(
         context: Context,
         summary: HomeSummary?,
         todayNutrition: HomeTodayNutritionSummary
-    ) {
-        if (summary == null) return
+    ): Boolean {
+        if (summary == null) return false
 
-        context.applicationContext
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putInt(KEY_GOAL_KCAL, summary.tdee.coerceAtLeast(0))
-            .putInt(KEY_EATEN_KCAL, todayNutrition.eatenKcal.coerceAtLeast(0))
-            .putInt(KEY_PROTEIN_GOAL_G, summary.proteinG.coerceAtLeast(0))
-            .putInt(KEY_EATEN_PROTEIN_G, todayNutrition.eatenProteinG.coerceAtLeast(0))
-            .putInt(KEY_CARBS_GOAL_G, summary.carbsG.coerceAtLeast(0))
-            .putInt(KEY_EATEN_CARBS_G, todayNutrition.eatenCarbsG.coerceAtLeast(0))
-            .putInt(KEY_FATS_GOAL_G, summary.fatG.coerceAtLeast(0))
-            .putInt(KEY_EATEN_FATS_G, todayNutrition.eatenFatsG.coerceAtLeast(0))
-            .putLong(KEY_UPDATED_AT_MS, System.currentTimeMillis())
-            .apply()
+        val appContext = context.applicationContext
+        val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+        val goalKcal = summary.tdee.coerceAtLeast(0)
+        val eatenKcal = todayNutrition.eatenKcal.coerceAtLeast(0)
+        val proteinGoalG = summary.proteinG.coerceAtLeast(0)
+        val eatenProteinG = todayNutrition.eatenProteinG.coerceAtLeast(0)
+        val carbsGoalG = summary.carbsG.coerceAtLeast(0)
+        val eatenCarbsG = todayNutrition.eatenCarbsG.coerceAtLeast(0)
+        val fatsGoalG = summary.fatG.coerceAtLeast(0)
+        val eatenFatsG = todayNutrition.eatenFatsG.coerceAtLeast(0)
+
+        val unchanged =
+            prefs.getBoolean(KEY_HAS_SNAPSHOT, false) &&
+                prefs.getInt(KEY_RENDER_VERSION, 0) == WIDGET_RENDER_VERSION &&
+                prefs.getInt(KEY_GOAL_KCAL, DEFAULT_GOAL_KCAL) == goalKcal &&
+                prefs.getInt(KEY_EATEN_KCAL, DEFAULT_EATEN_KCAL) == eatenKcal &&
+                prefs.getInt(KEY_PROTEIN_GOAL_G, DEFAULT_PROTEIN_GOAL_G) == proteinGoalG &&
+                prefs.getInt(KEY_EATEN_PROTEIN_G, DEFAULT_EATEN_PROTEIN_G) == eatenProteinG &&
+                prefs.getInt(KEY_CARBS_GOAL_G, DEFAULT_CARBS_GOAL_G) == carbsGoalG &&
+                prefs.getInt(KEY_EATEN_CARBS_G, DEFAULT_EATEN_CARBS_G) == eatenCarbsG &&
+                prefs.getInt(KEY_FATS_GOAL_G, DEFAULT_FATS_GOAL_G) == fatsGoalG &&
+                prefs.getInt(KEY_EATEN_FATS_G, DEFAULT_EATEN_FATS_G) == eatenFatsG
+
+        if (unchanged) return false
+
+        prefs.edit {
+            putBoolean(KEY_HAS_SNAPSHOT, true)
+            putInt(KEY_RENDER_VERSION, WIDGET_RENDER_VERSION)
+            putInt(KEY_GOAL_KCAL, goalKcal)
+            putInt(KEY_EATEN_KCAL, eatenKcal)
+            putInt(KEY_PROTEIN_GOAL_G, proteinGoalG)
+            putInt(KEY_EATEN_PROTEIN_G, eatenProteinG)
+            putInt(KEY_CARBS_GOAL_G, carbsGoalG)
+            putInt(KEY_EATEN_CARBS_G, eatenCarbsG)
+            putInt(KEY_FATS_GOAL_G, fatsGoalG)
+            putInt(KEY_EATEN_FATS_G, eatenFatsG)
+            putLong(KEY_UPDATED_AT_MS, System.currentTimeMillis())
+        }
+
+        return true
     }
 
     fun load(context: Context): BiteCalWidgetSnapshot {

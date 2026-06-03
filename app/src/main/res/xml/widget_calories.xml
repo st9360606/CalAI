@@ -26,7 +26,6 @@
                 android:id="@+id/widget_calories_ring"
                 android:layout_width="106dp"
                 android:layout_height="106dp"
-                android:src="@drawable/widget_preview_calories_ring"
                 android:contentDescription="@null" />
 
             <LinearLayout

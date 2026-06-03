@@ -1356,12 +1356,14 @@ private fun WidgetsSection(
     val context = LocalContext.current.applicationContext
 
     LaunchedEffect(summary, todayNutrition) {
-        BiteCalWidgetSnapshotStore.saveFrom(
+        val widgetSnapshotChanged = BiteCalWidgetSnapshotStore.saveFrom(
             context = context,
             summary = summary,
             todayNutrition = todayNutrition
         )
-        BiteCalHomeWidgetUpdater.updateAll(context)
+        if (widgetSnapshotChanged) {
+            BiteCalHomeWidgetUpdater.updateAll(context)
+        }
     }
 
     Row(

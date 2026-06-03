@@ -36,7 +36,7 @@ class BiteCalCaloriesWidgetReceiver : AppWidgetProvider() {
                         context = appContext,
                         progressPercent = snapshot.calorieProgress,
                         sizeDp = 106,
-                        strokeDp = 7f
+                        strokeDp = 7.5f
                     )
                 )
                 setOnClickPendingIntent(R.id.widget_calories_root, BiteCalWidgetPendingIntents.openHome(appContext))

@@ -4,6 +4,10 @@
     android:minHeight="175dp"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_calories"
+    android:previewImage="@drawable/widget_preview_calories"
+    android:previewLayout="@layout/widget_calories"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/widget_calories_description" />
