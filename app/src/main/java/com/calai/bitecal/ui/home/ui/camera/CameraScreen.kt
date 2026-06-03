@@ -84,10 +84,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.ui.camera.barcode.BarcodeScannerProcessor
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
+import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
+import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
 import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -135,11 +139,17 @@ fun CameraScreen(
                     PackageManager.PERMISSION_GRANTED
         )
     }
+    var cameraPermissionPromptAttempted by rememberSaveable { mutableStateOf(false) }
 
     val requestCameraPermLauncher =
         registryOwner?.let {
             rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
                 hasCameraPerm = granted
+                if (granted) {
+                    CameraPermissionPrefs.resetCameraDeniedCount(ctx)
+                } else {
+                    CameraPermissionPrefs.incrementCameraDeniedCount(ctx)
+                }
             }
         }
 
@@ -149,6 +159,30 @@ fun CameraScreen(
                 if (uri != null) onAlbumPicked(uri)
             }
         }
+
+    LifecycleResumeEffect(Unit) {
+        val grantedNow =
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) ==
+                    PackageManager.PERMISSION_GRANTED
+        hasCameraPerm = grantedNow
+        if (grantedNow) {
+            CameraPermissionPrefs.resetCameraDeniedCount(ctx)
+        }
+        onPauseOrDispose { }
+    }
+
+    LaunchedEffect(enableCameraX, hasCameraPerm, requestCameraPermLauncher) {
+        if (!enableCameraX || hasCameraPerm || cameraPermissionPromptAttempted) return@LaunchedEffect
+
+        cameraPermissionPromptAttempted = true
+        val deniedCount = CameraPermissionPrefs.getCameraDeniedCount(ctx)
+        if (deniedCount >= 2) {
+            openCameraPermissionSettings(ctx)
+        } else {
+            requestCameraPermLauncher?.launch(Manifest.permission.CAMERA)
+                ?: CameraPermissionProxyActivity.start(ctx)
+        }
+    }
 
     // ===== CameraX PreviewView =====
     val previewView = remember {
