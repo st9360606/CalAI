@@ -690,10 +690,10 @@ private fun ProfileCard(
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(weight = 1f, fill = false),
                                 style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF404A58),
-                                    fontSize = 17.sp,
-                                    lineHeight = 20.sp
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF20242B),
+                                    fontSize = 19.sp,
+                                    lineHeight = 23.sp
                                 )
                             )
 
@@ -701,18 +701,16 @@ private fun ProfileCard(
 
                             Box(
                                 modifier = Modifier
-                                    .offset(y = (-1).dp)
+                                    .offset(y = (0).dp)
                                     .size(22.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFF4F4F5))
                                     .biteCalClickable(onClick = onProfileClick),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
                                     contentDescription = "Edit Your Name",
-                                    tint = Color(0xFF52525B),
-                                    modifier = Modifier.size(12.dp)
+                                    tint = Color(0xFF6B7280),
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                         }
@@ -724,7 +722,10 @@ private fun ProfileCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color(0xFF1F2937)
+                                color = Color(0xFF6B7280),
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 13.sp,
+                                lineHeight = 17.sp
                             )
                         )
                     }
@@ -801,9 +802,9 @@ private fun ProfileSubscriptionBadge(
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Black,
                     color = visual.textColor,
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp,
-                    letterSpacing = 0.35.sp
+                    fontSize = 13.sp,
+                    lineHeight = 15.5.sp,
+                    letterSpacing = 0.24.sp
                 ),
                 textAlign = TextAlign.Center
             )
@@ -819,8 +820,8 @@ private fun ProfileSubscriptionBadge(
             style = MaterialTheme.typography.bodySmall.copy(
                 color = visual.subtitleColor,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 12.sp,
-                lineHeight = 14.sp
+                fontSize = 11.5.sp,
+                lineHeight = 14.5.sp
             )
         )
     }

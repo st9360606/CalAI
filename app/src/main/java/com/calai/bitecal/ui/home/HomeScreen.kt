@@ -1007,10 +1007,10 @@ private fun TwoPagePager(
 ) {
     val pageCount = 3
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
-    var showTodayNutritionProgress by rememberSaveable { mutableStateOf(true) }
+    var showTodayNutritionProgress by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(selectedDate) {
-        showTodayNutritionProgress = true
+        showTodayNutritionProgress = false
     }
 
     val toggleNutritionMode = { showTodayNutritionProgress = !showTodayNutritionProgress }
