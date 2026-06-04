@@ -1,5 +1,6 @@
 package com.calai.bitecal.ui.home.ui.settings.model
 
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.calai.bitecal.data.entitlement.EntitlementSyncer
@@ -51,6 +52,15 @@ class RestoreSubscriptionViewModel @Inject constructor(
          */
         @Volatile
         private var dismissedInAppSession: Boolean = false
+
+        @Volatile
+        private var suppressAutoRestoreCandidateUntilElapsedMs: Long = 0L
+
+        private const val RECENT_PURCHASE_SUPPRESS_AUTO_RESTORE_MS = 90_000L
+
+        private fun isAutoRestoreCandidateSuppressed(): Boolean {
+            return SystemClock.elapsedRealtime() < suppressAutoRestoreCandidateUntilElapsedMs
+        }
     }
 
     private val _ui = MutableStateFlow(
@@ -60,18 +70,43 @@ class RestoreSubscriptionViewModel @Inject constructor(
     )
     val ui: StateFlow<RestoreSubscriptionUiState> = _ui
 
+    private var candidateCheckSequence: Long = 0L
+
     fun checkCandidateAfterMembershipLoaded(
         premiumStatus: PremiumStatus,
-        membershipLoading: Boolean
+        membershipLoading: Boolean,
+        paymentIssue: Boolean
     ) {
+        val requestSequence = ++candidateCheckSequence
         val current = _ui.value
 
-        if (membershipLoading || premiumStatus != PremiumStatus.FREE) {
+        if (membershipLoading) {
+            return
+        }
+
+        if (premiumStatus != PremiumStatus.FREE) {
+            suppressAutoRestoreCandidateUntilElapsedMs = 0L
+            return
+        }
+
+        if (paymentIssue) {
+            _ui.update { state ->
+                if (state.checkingCandidate || state.dialogState == RestoreSubscriptionDialogState.CandidateFound) {
+                    state.copy(
+                        dialogState = RestoreSubscriptionDialogState.Hidden,
+                        checkingCandidate = false,
+                        message = null
+                    )
+                } else {
+                    state
+                }
+            }
             return
         }
 
         if (
             dismissedInAppSession ||
+            isAutoRestoreCandidateSuppressed() ||
             current.dismissedInSession ||
             current.visible ||
             current.checkingCandidate
@@ -82,7 +117,9 @@ class RestoreSubscriptionViewModel @Inject constructor(
         viewModelScope.launch {
             _ui.update { state ->
                 if (
+                    requestSequence != candidateCheckSequence ||
                     dismissedInAppSession ||
+                    isAutoRestoreCandidateSuppressed() ||
                     state.dismissedInSession ||
                     state.visible ||
                     state.checkingCandidate
@@ -97,8 +134,10 @@ class RestoreSubscriptionViewModel @Inject constructor(
             }
 
             val shouldContinue =
-                _ui.value.checkingCandidate &&
+                requestSequence == candidateCheckSequence &&
+                        _ui.value.checkingCandidate &&
                         !dismissedInAppSession &&
+                        !isAutoRestoreCandidateSuppressed() &&
                         !_ui.value.dismissedInSession &&
                         !_ui.value.visible
 
@@ -110,7 +149,10 @@ class RestoreSubscriptionViewModel @Inject constructor(
 
             _ui.update { state ->
                 when {
-                    dismissedInAppSession || state.dismissedInSession -> {
+                    requestSequence != candidateCheckSequence ||
+                            dismissedInAppSession ||
+                            isAutoRestoreCandidateSuppressed() ||
+                            state.dismissedInSession -> {
                         state.copy(
                             checkingCandidate = false,
                             dialogState = RestoreSubscriptionDialogState.Hidden,
@@ -141,6 +183,19 @@ class RestoreSubscriptionViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    fun suppressAutoRestoreCandidateAfterSuccessfulPurchase() {
+        suppressAutoRestoreCandidateUntilElapsedMs =
+            SystemClock.elapsedRealtime() + RECENT_PURCHASE_SUPPRESS_AUTO_RESTORE_MS
+
+        _ui.update {
+            it.copy(
+                dialogState = RestoreSubscriptionDialogState.Hidden,
+                checkingCandidate = false,
+                message = null
+            )
         }
     }
 

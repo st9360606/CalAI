@@ -1163,12 +1163,14 @@ fun BiteCalNavHost(
             LaunchedEffect(
                 isSignedIn,
                 membershipUi.loading,
-                membershipUi.premiumStatus
+                membershipUi.premiumStatus,
+                membershipUi.paymentIssue
             ) {
                 if (isSignedIn == true) {
                     restoreSubscriptionVm.checkCandidateAfterMembershipLoaded(
                         premiumStatus = membershipUi.premiumStatus,
-                        membershipLoading = membershipUi.loading
+                        membershipLoading = membershipUi.loading,
+                        paymentIssue = membershipUi.paymentIssue
                     )
                 }
             }
@@ -2957,7 +2959,10 @@ fun BiteCalNavHost(
                         },
                         onRestore = {
                             restoreSubscriptionVm.restoreSubscription(
-                                onRestored = { goHomeAfterOnboardingSubscription() }
+                                onRestored = {
+                                    restoreSubscriptionVm.suppressAutoRestoreCandidateAfterSuccessfulPurchase()
+                                    goHomeAfterOnboardingSubscription()
+                                }
                             )
                         }
                     )
@@ -2986,6 +2991,7 @@ fun BiteCalNavHost(
                     closeOnboardingSubscriptionAsFree()
                 },
                 onPurchased = {
+                    restoreSubscriptionVm.suppressAutoRestoreCandidateAfterSuccessfulPurchase()
                     goHomeAfterOnboardingSubscription()
                 }
             )
@@ -2995,6 +3001,10 @@ fun BiteCalNavHost(
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
             val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val restoreSubscriptionVm: RestoreSubscriptionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
@@ -3060,6 +3070,7 @@ fun BiteCalNavHost(
                 },
                 onPurchased = {
                     // Google Play 付款 / trial 成功後，刷新 HOME membership 後回 HOME。
+                    restoreSubscriptionVm.suppressAutoRestoreCandidateAfterSuccessfulPurchase()
                     goHomeAfterHomeScanSubscription()
                 }
             )
@@ -3069,6 +3080,10 @@ fun BiteCalNavHost(
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
             val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val restoreSubscriptionVm: RestoreSubscriptionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
@@ -3155,6 +3170,7 @@ fun BiteCalNavHost(
                     goHomeAfterWorkoutPaywallClose()
                 },
                 onPurchased = {
+                    restoreSubscriptionVm.suppressAutoRestoreCandidateAfterSuccessfulPurchase()
                     goHomeAfterWorkoutPurchase()
                 }
             )
@@ -3164,6 +3180,10 @@ fun BiteCalNavHost(
             val activity = (LocalContext.current.findActivity() ?: hostActivity)
 
             val vm: SubscriptionViewModel = viewModel(
+                viewModelStoreOwner = backStackEntry,
+                factory = HiltViewModelFactory(activity, backStackEntry)
+            )
+            val restoreSubscriptionVm: RestoreSubscriptionViewModel = viewModel(
                 viewModelStoreOwner = backStackEntry,
                 factory = HiltViewModelFactory(activity, backStackEntry)
             )
@@ -3260,6 +3280,7 @@ fun BiteCalNavHost(
                 onPurchased = {
                     // 付款成功 / trial 成功：
                     // 更新會員狀態後回 HOME。
+                    restoreSubscriptionVm.suppressAutoRestoreCandidateAfterSuccessfulPurchase()
                     goHomeAfterSettingsScanPurchase()
                 }
             )

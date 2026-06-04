@@ -32,17 +32,27 @@ class MembershipViewModel @Inject constructor(
     private val _ui = MutableStateFlow(MembershipUiState())
     val ui = _ui.asStateFlow()
 
+    private var refreshSequence: Long = 0L
+
     init {
         refresh()
     }
 
     fun refresh() {
+        val requestSequence = ++refreshSequence
+
         viewModelScope.launch {
             _ui.value = _ui.value.copy(loading = true, error = null)
 
-            runCatching {
+            val result = runCatching {
                 membershipRepository.getSummary()
-            }.onSuccess { dto ->
+            }
+
+            if (requestSequence != refreshSequence) {
+                return@launch
+            }
+
+            result.onSuccess { dto ->
                 _ui.value = MembershipUiState(
                     loading = false,
                     premiumStatus = PremiumStatus.from(dto.premiumStatus),
