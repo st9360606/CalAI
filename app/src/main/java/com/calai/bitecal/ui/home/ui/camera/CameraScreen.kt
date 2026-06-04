@@ -364,6 +364,7 @@ fun CameraScreen(
     val tileCorner = 14.dp
 
     val tileBg = Color(0xFFE9EBEF).copy(alpha = 0.92f)
+    val selectedTileBg = Color(0xFF2F3237)
     val tileText = Color.Black
     val tileIcon = Color.Black
 
@@ -440,6 +441,7 @@ fun CameraScreen(
                     textColor = tileText,
                     iconTint = tileIcon,
                     selected = mode == CameraMode.FOOD,
+                    selectedColor = selectedTileBg,
                     onClick = { mode = CameraMode.FOOD },
                     modifier = Modifier.testTag("mode_food")
                 )
@@ -454,6 +456,7 @@ fun CameraScreen(
                     textColor = tileText,
                     iconTint = tileIcon,
                     selected = mode == CameraMode.BARCODE,
+                    selectedColor = selectedTileBg,
                     onClick = { mode = CameraMode.BARCODE },
                     modifier = Modifier.testTag("mode_barcode")
                 )
@@ -468,6 +471,7 @@ fun CameraScreen(
                     textColor = tileText,
                     iconTint = tileIcon,
                     selected = mode == CameraMode.LABEL,
+                    selectedColor = selectedTileBg,
                     onClick = { mode = CameraMode.LABEL },
                     modifier = Modifier.testTag("mode_label")
                 )
@@ -482,6 +486,7 @@ fun CameraScreen(
                     textColor = tileText,
                     iconTint = tileIcon,
                     selected = false,
+                    selectedColor = selectedTileBg,
                     onClick = {
                         if (pickImageLauncher != null) {
                             pickImageLauncher.launch(
@@ -786,16 +791,23 @@ private fun ModeTile(
     textColor: Color,
     iconTint: Color,
     selected: Boolean,
+    selectedColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(corner)
     val interactionSource = remember { MutableInteractionSource() }
-    val border = if (selected) BorderStroke(1.dp, Color.Black.copy(alpha = 0.12f)) else null
-    val bgAlpha = if (selected) 0.96f else 0.92f
+
+    val containerColor = if (selected) selectedColor else bg
+    val currentTextColor = if (selected) Color.White else textColor
+    val currentIconTint = if (selected) Color.White else iconTint
+    val border = BorderStroke(
+        width = if (selected) 1.6.dp else 1.dp,
+        color = if (selected) Color.White.copy(alpha = 0.24f) else Color.Black.copy(alpha = 0.05f)
+    )
 
     Surface(
-        color = bg.copy(alpha = bgAlpha),
+        color = containerColor,
         shape = shape,
         border = border,
         onClick = rememberClickWithHaptic(onClick = onClick),
@@ -807,21 +819,23 @@ private fun ModeTile(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 8.dp, bottom = 8.dp),
+                .padding(top = 7.dp, bottom = 7.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = iconTint,
+                tint = currentIconTint,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(Modifier.size(3.dp))
+            Spacer(Modifier.size(2.dp))
             Text(
                 text = label,
-                color = textColor,
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                color = currentTextColor,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
