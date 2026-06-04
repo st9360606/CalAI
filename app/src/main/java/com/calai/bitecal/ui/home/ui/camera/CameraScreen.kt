@@ -401,7 +401,7 @@ fun CameraScreen(
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Outlined.Close,
-                    contentDescription = "close",
+                    contentDescription = stringResource(R.string.common_close),
                     tint = Color.White,
                     modifier = Modifier.size(closeIconSize)
                 )

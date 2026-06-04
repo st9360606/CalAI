@@ -395,7 +395,7 @@ private fun ReferralRewardBadge(
                     )
 
                     Text(
-                        text = "Days",
+                        text = stringResource(R.string.settings_days_label),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color.White.copy(alpha = 0.92f),
                             fontWeight = FontWeight.Black,

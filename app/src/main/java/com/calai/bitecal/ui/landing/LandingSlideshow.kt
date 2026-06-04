@@ -18,12 +18,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -53,8 +55,14 @@ fun LandingSlideshow(
 ) {
     val safeSlides = if (slides.isEmpty()) {
         // 預覽或資產未就緒時的保護
-        listOf(SlideItem(android.R.drawable.ic_menu_gallery, "placeholder"))
+        listOf(
+            SlideItem(
+                android.R.drawable.ic_menu_gallery,
+                stringResource(R.string.landing_slide_placeholder_content_description)
+            )
+        )
     } else slides
+    val slideshowContentDescription = stringResource(R.string.landing_slideshow_content_description)
 
     val pagerState = rememberPagerState(initialPage = 0) { safeSlides.size }
     val scope = rememberCoroutineScope()
@@ -93,7 +101,7 @@ fun LandingSlideshow(
             // 無障礙語意：整體視為影像輪播
             .semantics {
                 role = Role.Image
-                contentDescription = "Landing slideshow"
+                contentDescription = slideshowContentDescription
             }
     ) {
         HorizontalPager(
@@ -139,6 +147,11 @@ private fun SlideIndicator(
     ) {
         repeat(pageCount) { index ->
             val isActive = index == currentPage
+            val indicatorContentDescription = stringResource(
+                R.string.landing_slide_indicator_content_description,
+                index + 1,
+                pageCount
+            )
             val goalAlpha = if (isActive) 1f else 0.35f
             val alpha by animateFloatAsState(
                 targetValue = goalAlpha,
@@ -152,7 +165,7 @@ private fun SlideIndicator(
                     .width(if (isActive) activeWidth else dotSize)
                     .alpha(alpha)
                     .semantics {
-                        contentDescription = "slide_indicator_${index + 1}_of_$pageCount"
+                        contentDescription = indicatorContentDescription
                     }
                     .padding(horizontal = spacing / 2)
                     .then(

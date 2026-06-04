@@ -822,6 +822,206 @@
 
     <string name="common_today">今天</string>
     <string name="common_yesterday">昨天</string>
+    <string name="common_unavailable_dash">—</string>
+    <string name="retry">重試</string>
+
+    <!-- Premium rewards -->
+    <string name="premium_rewards_subscription_title">訂閱</string>
+    <string name="premium_rewards_loading_membership">正在載入會員資料...</string>
+    <string name="premium_rewards_status_title">Premium 狀態</string>
+    <string name="premium_rewards_latest_title">最新獎勵</string>
+    <string name="premium_rewards_history_title">獎勵紀錄</string>
+    <string name="premium_rewards_source_format">來源：%1$s</string>
+    <string name="premium_rewards_channel_format">管道：%1$s</string>
+    <string name="premium_rewards_grant_status_format">發放狀態：%1$s</string>
+    <string name="premium_rewards_status_format">狀態：%1$s</string>
+    <string name="premium_rewards_google_defer_format">Google 延期：%1$s</string>
+    <string name="premium_rewards_granted_at_format">發放時間：%1$s</string>
+    <string name="premium_rewards_old_expiry_format">原到期日：%1$s</string>
+    <string name="premium_rewards_new_expiry_format">新到期日：%1$s</string>
+    <string name="premium_rewards_error_format">錯誤：%1$s</string>
+    <string name="premium_rewards_days_added_format">新增天數：%1$d</string>
+    <string name="premium_rewards_empty_title">尚未有獎勵</string>
+    <string name="premium_rewards_empty_body">成功的推薦通過驗證後會顯示在這裡。</string>
+    <string name="premium_rewards_channel_google_play_defer">Google Play 帳單日期已延後</string>
+    <string name="premium_rewards_channel_backend_only">Premium 獎勵已套用</string>
+    <string name="premium_rewards_grant_success">成功</string>
+    <string name="premium_rewards_status_retrying">重試中</string>
+    <string name="premium_rewards_grant_not_granted">未發放</string>
+    <string name="premium_rewards_google_defer_success">已由 Google Play 延長</string>
+    <string name="premium_rewards_google_defer_failed">失敗</string>
+    <string name="premium_rewards_google_defer_not_required">不需要</string>
+
+    <!-- Record weight -->
+    <string name="record_weight_title">記錄體重</string>
+    <string name="record_weight_save_failed">儲存失敗</string>
+    <string name="record_weight_camera_failed_to_open">相機無法開啟。</string>
+    <string name="record_weight_camera_permission_required">需要相機權限。</string>
+    <string name="record_weight_camera_preview_unavailable">相機只可在執行中的 App 使用，Preview 無法使用。</string>
+    <string name="record_weight_camera_screen_unavailable">此畫面目前無法使用相機。</string>
+    <string name="record_weight_no_camera_app_found">此裝置找不到相機 App。</string>
+    <string name="record_weight_enable_camera_permission_settings">請在設定中開啟相機權限。</string>
+    <string name="record_weight_edit_date_content_description">編輯日期</string>
+    <string name="record_weight_photo_content_description">體重照片</string>
+    <string name="record_weight_add_photo_content_description">新增體重照片</string>
+    <string name="record_weight_camera_not_available">相機無法使用</string>
+    <string name="record_weight_take_photo">拍攝照片</string>
+    <string name="record_weight_retake_photo">重新拍攝</string>
+
+    <!-- Navigation placeholders -->
+    <string name="camera_manual_entry_not_ready">手動輸入尚未完成，暫時改用標籤辨識。</string>
+    <string name="reminders_title">提醒</string>
+    <string name="placeholder_todo_page">%1$s 頁面尚未完成</string>
+
+    <!-- Settings referral card -->
+    <string name="settings_invite_friends">邀請朋友</string>
+    <string name="settings_premium_reward">Premium 獎勵</string>
+    <string name="settings_share_bitecal_with_friends">和朋友分享 BiteCal AI</string>
+    <string name="settings_referral_reward_description">朋友訂閱後，你可獲得 30 天免費 Premium。</string>
+    <string name="settings_get_30_days_free">獲得 30 天免費 Premium</string>
+    <string name="settings_days_label">天</string>
+    <string name="settings_edit_your_name_content_description">編輯你的名字</string>
+    <string name="settings_avatar_content_description">頭像</string>
+    <string name="settings_default_avatar_content_description">預設頭像</string>
+    <string name="log_your_food">記錄食物</string>
+    <string name="settings_membership_payment">付款</string>
+    <string name="settings_membership_update_payment">更新付款</string>
+    <string name="settings_membership_premium">Premium</string>
+    <string name="settings_membership_active_member">會員啟用中</string>
+    <string name="settings_membership_trial">試用</string>
+    <string name="settings_membership_access_active">權限啟用中</string>
+    <string name="settings_membership_free">免費</string>
+    <string name="settings_membership_upgrade">升級</string>
+
+    <!-- Payment issue dialog -->
+    <string name="payment_issue_dialog_title">保持 Premium 啟用</string>
+    <string name="payment_issue_dialog_body">你的 Premium 權限目前仍可使用，但付款方式需要處理。</string>
+    <string name="payment_issue_dialog_supporting_body">請更新 Google Play 付款方式，避免失去 AI 掃描與 Premium 功能。</string>
+    <string name="payment_issue_dialog_update_payment">更新付款方式</string>
+    <string name="payment_issue_dialog_badge">付款需要處理</string>
+    <string name="payment_issue_dialog_premium_access">Premium 權限</string>
+    <string name="payment_issue_dialog_active_for_now">目前仍啟用</string>
+    <string name="payment_issue_dialog_next_step">下一步</string>
+    <string name="payment_issue_dialog_update_payment_short">更新付款</string>
+
+    <!-- Saved foods -->
+    <string name="saved_foods_load_failed_title">已儲存食物載入失敗</string>
+
+    <!-- Water card -->
+    <string name="water_intake_title">飲水</string>
+    <string name="water_intake_content_description">飲水</string>
+    <string name="water_intake_cups_format">（%1$d 杯）</string>
+
+    <!-- Weight card labels -->
+    <string name="weight_card_to_goal_weight">距離目標體重</string>
+    <string name="weight_card_current_weight">目前體重</string>
+    <string name="weight_card_achieved_goal_format">已達成目標的 %1$s%%</string>
+    <string name="weight_history_weight_label">體重</string>
+    <string name="weight_history_change_label">變化</string>
+
+    <!-- Landing accessibility -->
+    <string name="landing_slideshow_content_description">Landing 輪播圖片</string>
+    <string name="landing_slide_placeholder_content_description">預設輪播圖片</string>
+    <string name="landing_slide_indicator_content_description">第 %1$d 張，共 %2$d 張</string>
+    <string name="landing_slide_1_content_description">餐點照片輪播 1</string>
+    <string name="landing_slide_2_content_description">餐點照片輪播 2</string>
+    <string name="landing_slide_3_content_description">餐點照片輪播 3</string>
+
+    <!-- Auth accessibility -->
+    <string name="auth_google_content_description">Google</string>
+    <string name="auth_email_content_description">Email</string>
+    <string name="signup_placeholder">註冊（佔位畫面）</string>
+
+    <!-- Health Connect rationale -->
+    <string name="health_connect_rationale_title">為何需要 Health Connect 權限</string>
+    <string name="health_connect_rationale_body">我們會讀取步數、運動與睡眠，用於計算每日消耗、活動時段與睡眠分析，並更新卡路里儀表板與歷史圖表。未經你的同意不會上傳雲端；你可在 Health Connect 隨時撤銷授權。</string>
+    <string name="common_understood">了解</string>
+    <string name="done">完成</string>
+    <string name="common_revert">還原</string>
+    <string name="common_settings_content_description">設定</string>
+    <string name="common_edit_content_description">編輯</string>
+
+    <!-- Common accessibility -->
+    <string name="toast_success_content_description">成功</string>
+    <string name="toast_error_content_description">錯誤</string>
+    <string name="toast_delete_success_content_description">刪除成功</string>
+    <string name="toast_delete_failed_content_description">刪除失敗</string>
+    <string name="home_steps_icon_content_description">步數</string>
+    <string name="home_google_health_content_description">Google 健康資料</string>
+    <string name="home_workout_icon_content_description">運動</string>
+    <string name="workout_add_content_description">新增運動</string>
+    <string name="unit_switch_content_description">單位切換</string>
+    <string name="recent_upload_delete_content_description">刪除最近上傳</string>
+    <string name="weight_add_entry_content_description">新增體重紀錄</string>
+    <string name="notification_wifi_content_description">Wi-Fi</string>
+    <string name="notification_app_icon_content_description">App 圖示</string>
+    <string name="notification_mock_app_title">AI 熱量計算器</string>
+    <string name="health_connect_logo_content_description">Health Connect 標誌</string>
+    <string name="subscription_intro_slide_1_content_description">訂閱介紹餐點輪播 1</string>
+    <string name="subscription_intro_slide_2_content_description">訂閱介紹餐點輪播 2</string>
+    <string name="subscription_intro_slide_3_content_description">訂閱介紹餐點輪播 3</string>
+    <string name="recent_meal_placeholder_content_description">最近餐點預設圖</string>
+
+    <!-- Bottom navigation -->
+    <string name="bottom_nav_home">首頁</string>
+    <string name="bottom_nav_progress">進度</string>
+    <string name="bottom_nav_weight">體重</string>
+    <string name="bottom_nav_fasting">斷食</string>
+    <string name="bottom_nav_workout">運動</string>
+
+    <!-- Settings detail screens -->
+    <string name="edit_age_privacy_note">我們只會用你的年齡來改善體驗與熱量估算準確度。</string>
+    <string name="edit_gender_privacy_note">僅用於個人化體驗並提升估算準確度。</string>
+    <string name="gender_male">男性</string>
+    <string name="gender_female">女性</string>
+    <string name="gender_other">其他</string>
+    <string name="edit_height_set_current_height">設定你目前的身高</string>
+    <string name="edit_height_privacy_note">你的身高僅用於提升熱量估算準確度。</string>
+    <string name="edit_goal_weight_set_goal">設定你的目標體重</string>
+    <string name="edit_goal_weight_progress_note">我們會用這個目標來計算你的進度。</string>
+    <string name="edit_start_weight_set_starting">設定你的起始體重</string>
+    <string name="edit_start_weight_baseline_note">我們會把它作為進度比較的基準。</string>
+    <string name="record_weight_date_note">這筆體重會記錄在 %1$s。</string>
+    <string name="edit_water_goal_previous_format">上一個目標 %1$d ml</string>
+    <string name="edit_water_goal_input_label">每日飲水目標（ml）</string>
+    <string name="edit_workout_goal_previous_format">上一個目標 %1$d kcal</string>
+    <string name="edit_workout_goal_input_label">每日運動目標（kcal）</string>
+    <string name="edit_daily_step_goal_previous_format">上一個目標 %1$d 步</string>
+    <string name="edit_daily_step_goal_input_label">每日步數目標</string>
+    <string name="edit_nutrition_calorie_goal">熱量目標</string>
+    <string name="edit_nutrition_protein_goal">蛋白質目標</string>
+    <string name="edit_nutrition_carb_goal">碳水目標</string>
+    <string name="edit_nutrition_fat_goal">脂肪目標</string>
+    <string name="edit_nutrition_view_micronutrients">查看微量營養素</string>
+    <string name="edit_nutrition_fiber_goal">纖維目標</string>
+    <string name="edit_nutrition_sugar_goal">糖分目標</string>
+    <string name="edit_nutrition_sodium_goal">鈉目標</string>
+    <string name="edit_nutrition_auto_generate_goals">自動產生目標</string>
+    <string name="personal_details_goal_weight">目標體重</string>
+    <string name="edit_name_placeholder">輸入你的名字</string>
+
+    <!-- Subscription paywall -->
+    <string name="subscription_intro_helper_format">每年只要 %1$s（約 %2$s）</string>
+    <string name="subscription_intro_title">解鎖 BiteCal AI\n更快達成你的目標。</string>
+    <string name="subscription_gift_offer_unlocked">禮物優惠已解鎖</string>
+    <string name="subscription_gift_unlocked_title">禮物已解鎖 🎁</string>
+    <string name="subscription_spin_helper_ready">點擊 Spin 揭曉你的專屬禮物。</string>
+    <string name="subscription_spin_helper_wait">請等待轉盤停止。</string>
+    <string name="subscription_spin_helper_revealed">優惠會在轉盤停止後揭曉。</string>
+    <string name="subscription_spin_button">Spin</string>
+    <string name="subscription_spinning_button">轉動中...</string>
+    <string name="subscription_spin_title">轉動解鎖\n專屬折扣</string>
+    <string name="subscription_start_free_trial">開始免費試用</string>
+    <string name="subscription_trial_helper">無承諾，可隨時取消</string>
+    <string name="subscription_gift_price_unlocked">禮物價格已解鎖</string>
+    <string name="subscription_unlock_premium_for_only">只需以下價格即可解鎖 Premium</string>
+    <string name="subscription_discount_body">更快掃描餐點，更聰明追蹤營養素。\n每天穩定保持計畫。</string>
+    <string name="subscription_yearly_price_format">%1$s/年</string>
+    <string name="subscription_urgency_coffee">比一杯咖啡更划算。</string>
+    <string name="subscription_urgency_price_gone">關閉此畫面後，這個價格就會消失</string>
+    <string name="subscription_urgency_waiting">還在等什麼？</string>
+    <string name="subscription_yearly_plan">年度方案</string>
+    <string name="subscription_yearly_plan_price_format">12 個月 · %1$s</string>
 
     <!-- Android home screen widgets -->
     <string name="widget_preview_goal_kcal">1830</string>

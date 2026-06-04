@@ -333,7 +333,7 @@ fun EditGoalWeightScreen(
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(
-                        text = "Set your goal weight",
+                        text = stringResource(R.string.edit_goal_weight_set_goal),
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -341,7 +341,7 @@ fun EditGoalWeightScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "We will use this goal to calculate your progress.",
+                        text = stringResource(R.string.edit_goal_weight_progress_note),
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,

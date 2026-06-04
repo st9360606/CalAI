@@ -143,7 +143,7 @@ private fun NameField(
             decorationBox = { inner ->
                 if (value.isBlank()) {
                     Text(
-                        text = "Enter your name",
+                        text = stringResource(R.string.edit_name_placeholder),
                         fontSize = 18.sp,
                         color = Color(0xFF737B88),
                         fontWeight = FontWeight.Normal

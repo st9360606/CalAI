@@ -18,8 +18,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -77,7 +79,7 @@ fun WorkoutAddButton(
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = "add workout",
+                contentDescription = stringResource(R.string.workout_add_content_description),
                 tint = Color.White,
                 modifier = Modifier.size(iconSizeDp)
             )

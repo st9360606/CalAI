@@ -126,9 +126,18 @@ fun LandingScreen(
                     LandingSlideshow(
                         modifier = Modifier.fillMaxSize(),
                         slides = listOf(
-                            SlideItem(R.drawable.meal_1, contentDescription = "img_1"),
-                            SlideItem(R.drawable.meal_2, contentDescription = "img_2"),
-                            SlideItem(R.drawable.meal_3, contentDescription = "img_3")
+                            SlideItem(
+                                R.drawable.meal_1,
+                                contentDescription = stringResource(R.string.landing_slide_1_content_description)
+                            ),
+                            SlideItem(
+                                R.drawable.meal_2,
+                                contentDescription = stringResource(R.string.landing_slide_2_content_description)
+                            ),
+                            SlideItem(
+                                R.drawable.meal_3,
+                                contentDescription = stringResource(R.string.landing_slide_3_content_description)
+                            )
                         ),
                         autoPlay = true,
                         autoPlayIntervalMs = 2800L

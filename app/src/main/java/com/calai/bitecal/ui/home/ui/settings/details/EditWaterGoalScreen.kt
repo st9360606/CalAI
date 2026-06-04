@@ -125,7 +125,7 @@ fun EditWaterGoalScreen(
                         )
                         Spacer(Modifier.height(3.dp))
                         Text(
-                            text = "Previous goal ${ui.previousGoalMl} ml",
+                            text = stringResource(R.string.edit_water_goal_previous_format, ui.previousGoalMl),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color(0xFF6B7280),
@@ -151,7 +151,7 @@ fun EditWaterGoalScreen(
 
             val enabled = ui.canSave()
             BiteCalEditDualActionRow(
-                secondaryText = "Revert",
+                secondaryText = stringResource(R.string.common_revert),
                 onSecondaryClick = { vm.revert() },
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = { vm.save() },
@@ -178,7 +178,7 @@ private fun WaterGoalInputBox(
             .padding(start = 3.dp)
     ) {
         Text(
-            text = "Daily water goal (ml)",
+            text = stringResource(R.string.edit_water_goal_input_label),
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF6B7280)

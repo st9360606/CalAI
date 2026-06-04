@@ -152,7 +152,7 @@ fun RequireSignInScreen(
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.google),
-                                        contentDescription = "Google",
+                                        contentDescription = stringResource(R.string.auth_google_content_description),
                                         tint = Color.Unspecified,
                                         modifier = Modifier.size(22.dp)
                                     )
@@ -193,7 +193,7 @@ fun RequireSignInScreen(
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.google),
-                                        contentDescription = "Google",
+                                        contentDescription = stringResource(R.string.auth_google_content_description),
                                         tint = Color.Unspecified,
                                         modifier = Modifier.size(22.dp)
                                     )
@@ -235,7 +235,7 @@ fun RequireSignInScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Email,
-                                    contentDescription = "Email",
+                                    contentDescription = stringResource(R.string.auth_email_content_description),
                                     modifier = Modifier.size(22.dp)
                                 )
                                 Spacer(Modifier.width(12.dp))
@@ -267,7 +267,7 @@ fun RequireSignInScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Email,
-                                    contentDescription = "Email",
+                                    contentDescription = stringResource(R.string.auth_email_content_description),
                                     modifier = Modifier.size(22.dp)
                                 )
                                 Spacer(Modifier.width(12.dp))

@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
 
 /**
@@ -250,7 +251,7 @@ private fun WeightAddButton(
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = "add weight entry",
+                contentDescription = stringResource(R.string.weight_add_entry_content_description),
                 tint = Color.White,
                 modifier = Modifier.size(iconSizeDp)
             )

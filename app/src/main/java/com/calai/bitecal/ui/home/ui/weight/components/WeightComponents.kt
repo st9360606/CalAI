@@ -184,7 +184,7 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
                     horizontalAlignment = Alignment.Start
                 ) {
                     UpperLabel(
-                        text = "To goal weight",
+                        text = stringResource(R.string.weight_card_to_goal_weight),
                         color = label,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -205,7 +205,7 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
                     horizontalAlignment = Alignment.Start
                 ) {
                     UpperLabel(
-                        text = "Current weight",
+                        text = stringResource(R.string.weight_card_current_weight),
                         color = label,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -244,7 +244,10 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
                 }
 
             UpperLabel(
-                text = "Achieved ${formatAchievedPercent1(achievedFractionForLabel)}% of goal",
+                text = stringResource(
+                    R.string.weight_card_achieved_goal_format,
+                    formatAchievedPercent1(achievedFractionForLabel)
+                ),
                 color = label,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(start = 4.dp)
@@ -1729,7 +1732,7 @@ fun HistoryRow(
                     horizontalAlignment = Alignment.Start
                 ) {
                     Text(
-                        text = "Weight",
+                        text = stringResource(R.string.weight_history_weight_label),
                         fontSize = 10.5.sp,
                         lineHeight = 13.sp,
                         letterSpacing = 0.7.sp,
@@ -1800,7 +1803,7 @@ private fun RightMetaColumn(
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "Change",
+            text = stringResource(R.string.weight_history_change_label),
             fontSize = 11.sp,
             letterSpacing = 0.6.sp,
             fontWeight = FontWeight.SemiBold,

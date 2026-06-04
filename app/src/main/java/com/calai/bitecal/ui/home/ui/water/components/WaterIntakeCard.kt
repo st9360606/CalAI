@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -143,7 +144,7 @@ fun WaterIntakeCard(
                     // 杯子 icon
                     Icon(
                         painter = painterResource(R.drawable.glass),
-                        contentDescription = "water",
+                        contentDescription = stringResource(R.string.water_intake_content_description),
                         modifier = Modifier.size(28.dp), // 杯子 28dp
                         tint = Color.Unspecified // 保留原色
                     )
@@ -157,7 +158,7 @@ fun WaterIntakeCard(
                 ) {
                     // "Water" 細字
                     Text(
-                        text = "Water",
+                        text = stringResource(R.string.water_intake_title),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Normal,
                             color = HomeCardStyles.Text.Primary
@@ -171,7 +172,7 @@ fun WaterIntakeCard(
                         WaterUnit.ML -> "${state.ml} ml"
                         WaterUnit.OZ -> "${state.flOz} fl oz"
                     }
-                    val cupsText = "(${state.cups} cups)"
+                    val cupsText = stringResource(R.string.water_intake_cups_format, state.cups)
 
                     Text(
                         text = "$mainText $cupsText",

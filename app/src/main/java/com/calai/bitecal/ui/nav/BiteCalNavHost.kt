@@ -2442,7 +2442,11 @@ fun BiteCalNavHost(
                         }
 
                         ClientAction.ENTER_MANUALLY -> {
-                            Toast.makeText(ctx, "手動輸入尚未實作，先改用標籤辨識", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                ctx,
+                                ctx.getString(R.string.camera_manual_entry_not_ready),
+                                Toast.LENGTH_SHORT
+                            ).show()
                             flowVm.reset()
                             initialMode = CameraMode.LABEL
                         }
@@ -3330,14 +3334,17 @@ fun BiteCalNavHost(
             )
         }
 
-        composable(Routes.REMINDERS) { SimplePlaceholder("Reminders") }
+        composable(Routes.REMINDERS) { SimplePlaceholder(stringResource(R.string.reminders_title)) }
 
     }
 }
 
 @Composable
 private fun SimplePlaceholder(title: String) {
-    Text(modifier = Modifier.padding(24.dp), text = "TODO: $title page")
+    Text(
+        modifier = Modifier.padding(24.dp),
+        text = stringResource(R.string.placeholder_todo_page, title)
+    )
 }
 
 private fun openNetworkSettings(ctx: Context) {

@@ -129,7 +129,7 @@ fun EditDailyStepGoalScreen(
                         )
                         Spacer(Modifier.height(3.dp))
                         Text(
-                            text = "Previous goal ${ui.previousGoal} steps",
+                            text = stringResource(R.string.edit_daily_step_goal_previous_format, ui.previousGoal),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color(0xFF6B7280),
@@ -143,7 +143,7 @@ fun EditDailyStepGoalScreen(
 
             // --- input box (thick black border, label inside) ---
             StepGoalInputBox(
-                label = "Daily step goal",
+                label = stringResource(R.string.edit_daily_step_goal_input_label),
                 value = ui.input,
                 onValueChange = vm::onInputChange,
                 isError = ui.error != null,
@@ -157,7 +157,7 @@ fun EditDailyStepGoalScreen(
 
             val enabled = ui.canSave()
             BiteCalEditDualActionRow(
-                secondaryText = "Revert",
+                secondaryText = stringResource(R.string.common_revert),
                 onSecondaryClick = { vm.revert() },
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = { vm.save() },

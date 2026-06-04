@@ -297,7 +297,7 @@ fun EditHeightScreen(
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(
-                        text = "Set your current height",
+                        text = stringResource(R.string.edit_height_set_current_height),
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -305,7 +305,7 @@ fun EditHeightScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Your height is used only to improve calorie estimate accuracy.", //你的身高僅用於提升熱量估算準確度。
+                        text = stringResource(R.string.edit_height_privacy_note),
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -528,4 +528,3 @@ private fun NumberWheel(
         )
     }
 }
-

@@ -407,7 +407,7 @@ private fun SavedFoodsErrorState(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
-            text = "Saved foods 載入失敗",
+            text = stringResource(R.string.saved_foods_load_failed_title),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF202124)
@@ -420,7 +420,7 @@ private fun SavedFoodsErrorState(
         )
 
         TextButton(onClick = rememberClickWithHaptic(onClick = onRetry)) {
-            Text(text = "Retry")
+            Text(text = stringResource(R.string.retry))
         }
     }
 }

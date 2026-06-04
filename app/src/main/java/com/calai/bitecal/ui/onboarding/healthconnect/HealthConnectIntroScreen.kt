@@ -192,7 +192,7 @@ fun HealthConnectIntroScreen(
                 Box(cardModifier, contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(R.drawable.health_connect_logo),
-                        contentDescription = "logo",
+                        contentDescription = stringResource(R.string.health_connect_logo_content_description),
                         modifier = Modifier.size(135.dp),
                         contentScale = ContentScale.Fit
                     )

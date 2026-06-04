@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -708,7 +709,7 @@ private fun ProfileCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Edit Your Name",
+                                    contentDescription = stringResource(R.string.settings_edit_your_name_content_description),
                                     tint = Color(0xFF6B7280),
                                     modifier = Modifier.size(14.dp)
                                 )
@@ -795,7 +796,7 @@ private fun ProfileSubscriptionBadge(
             }
 
             Text(
-                text = visual.label,
+                text = stringResource(visual.labelRes),
                 maxLines = 1,
                 softWrap = false,
                 overflow = TextOverflow.Ellipsis,
@@ -813,7 +814,7 @@ private fun ProfileSubscriptionBadge(
         Spacer(Modifier.height(5.dp))
 
         Text(
-            text = subtitle.ifBlank { visual.fallbackSubtitle },
+            text = subtitle.ifBlank { stringResource(visual.fallbackSubtitleRes) },
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Ellipsis,
@@ -828,8 +829,8 @@ private fun ProfileSubscriptionBadge(
 }
 
 private data class ProfileSubscriptionVisual(
-    val label: String,
-    val fallbackSubtitle: String,
+    @StringRes val labelRes: Int,
+    @StringRes val fallbackSubtitleRes: Int,
     val backgroundColors: List<Color>,
     val borderColor: Color,
     val dotColor: Color,
@@ -842,8 +843,8 @@ private data class ProfileSubscriptionVisual(
             return when (kind) {
                 MembershipDisplayKind.PAYMENT_ISSUE -> {
                     ProfileSubscriptionVisual(
-                        label = "Payment",
-                        fallbackSubtitle = "Update payment",
+                        labelRes = R.string.settings_membership_payment,
+                        fallbackSubtitleRes = R.string.settings_membership_update_payment,
                         backgroundColors = listOf(
                             Color(0xFFFFF7F7),
                             Color(0xFFFFF1F2)
@@ -857,8 +858,8 @@ private data class ProfileSubscriptionVisual(
 
                 MembershipDisplayKind.PREMIUM -> {
                     ProfileSubscriptionVisual(
-                        label = "Premium",
-                        fallbackSubtitle = "Active member",
+                        labelRes = R.string.settings_membership_premium,
+                        fallbackSubtitleRes = R.string.settings_membership_active_member,
                         backgroundColors = listOf(
                             Color(0xFF111114),
                             Color(0xFF18181B)
@@ -872,8 +873,8 @@ private data class ProfileSubscriptionVisual(
 
                 MembershipDisplayKind.TRIAL -> {
                     ProfileSubscriptionVisual(
-                        label = "Trial",
-                        fallbackSubtitle = "Access active",
+                        labelRes = R.string.settings_membership_trial,
+                        fallbackSubtitleRes = R.string.settings_membership_access_active,
                         backgroundColors = listOf(
                             Color(0xFFF0FDF4),
                             Color(0xFFDCFCE7)
@@ -889,8 +890,8 @@ private data class ProfileSubscriptionVisual(
                 }
                 MembershipDisplayKind.FREE -> {
                     ProfileSubscriptionVisual(
-                        label = "Free",
-                        fallbackSubtitle = "Upgrade",
+                        labelRes = R.string.settings_membership_free,
+                        fallbackSubtitleRes = R.string.settings_membership_upgrade,
                         backgroundColors = listOf(
                             Color(0xFFF4F4F5),
                             Color(0xFFEFEFF1)
@@ -934,7 +935,7 @@ private fun ProfileAvatar(url: Uri?) {
 
     SubcomposeAsyncImage(
         model = req,
-        contentDescription = "Avatar",
+        contentDescription = stringResource(R.string.settings_avatar_content_description),
         modifier = avatarModifier,
         contentScale = ContentScale.Crop,
         loading = {
@@ -965,7 +966,7 @@ private fun DefaultProfileAvatarPlaceholder(
     ) {
         Icon(
             imageVector = Icons.Outlined.Person,
-            contentDescription = "Default avatar",
+            contentDescription = stringResource(R.string.settings_default_avatar_content_description),
             tint = Color(0xFF111114),
             modifier = Modifier.size(25.dp)
         )
@@ -1028,7 +1029,7 @@ private fun InviteFriendsCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Invite friends",
+                        text = stringResource(R.string.settings_invite_friends),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF111114),
@@ -1084,7 +1085,7 @@ private fun InviteFriendsCard(
                                 Spacer(Modifier.size(8.dp))
 
                                 Text(
-                                    text = "Premium reward",
+                                    text = stringResource(R.string.settings_premium_reward),
                                     style = MaterialTheme.typography.labelLarge.copy(
                                         color = Color(0xFFFFE7A3),
                                         fontWeight = FontWeight.Bold,
@@ -1106,7 +1107,7 @@ private fun InviteFriendsCard(
                             Spacer(Modifier.height(10.dp))
 
                             Text(
-                                text = "Share BiteCal AI\nwith your friends",
+                                text = stringResource(R.string.settings_share_bitecal_with_friends),
                                 style = MaterialTheme.typography.headlineSmall.copy(
                                     fontWeight = FontWeight.Black,
                                     color = Color.White,
@@ -1135,7 +1136,7 @@ private fun InviteFriendsCard(
                         }
 
                         Text(
-                            text = "They subscribe. You get 30 days free.",
+                            text = stringResource(R.string.settings_referral_reward_description),
                             maxLines = 1,
                             softWrap = false,
                             overflow = TextOverflow.Clip,
@@ -1162,7 +1163,7 @@ private fun InviteFriendsCard(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Get 30 days free",
+                            text = stringResource(R.string.settings_get_30_days_free),
                             style = MaterialTheme.typography.labelLarge.copy(
                                 color = Color(0xFF111114),
                                 fontWeight = FontWeight.Bold,
@@ -1238,7 +1239,7 @@ private fun InviteRewardVisual(
                     )
 
                     Text(
-                        text = "Days",
+                        text = stringResource(R.string.settings_days_label),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color.White.copy(alpha = 0.92f),
                             fontWeight = FontWeight.Black,
@@ -1486,7 +1487,7 @@ private fun CaloriesWidgetPreviewCard(
                 }
 
                 Text(
-                    text = "Log your food",
+                    text = stringResource(R.string.log_your_food),
                     color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1609,11 +1610,11 @@ private fun MacroActionsWidgetPreviewCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 WidgetActionTile(
-                    label = "Scan food",
+                    label = stringResource(R.string.widget_scan_food),
                     icon = { ScanFocusGlyph() }
                 )
                 WidgetActionTile(
-                    label = "Barcode",
+                    label = stringResource(R.string.widget_barcode),
                     icon = { BarcodeGlyph() }
                 )
             }

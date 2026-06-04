@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 /**
@@ -115,6 +117,7 @@ fun WaterUnitSwitchLabeled(
     val thumbOffsetDp = padding + travelDp * (if (!isRtl) animPos else (1f - animPos))
 
     val stateText = if (checked) rightLabel else leftLabel
+    val unitSwitchContentDescription = stringResource(R.string.unit_switch_content_description)
 
     Box(
         modifier = modifier
@@ -124,7 +127,7 @@ fun WaterUnitSwitchLabeled(
             .border(width = 1.dp, color = trackStroke, shape = shape)
             .semantics(mergeDescendants = true) {
                 role = Role.Switch
-                contentDescription = "Unit switch"
+                contentDescription = unitSwitchContentDescription
                 stateDescription = stateText
             }
     ) {

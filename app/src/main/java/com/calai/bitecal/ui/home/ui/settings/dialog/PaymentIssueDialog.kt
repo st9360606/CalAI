@@ -32,12 +32,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
@@ -90,7 +92,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(18.dp))
 
                     Text(
-                        text = "Keep your premium active",
+                        text = stringResource(R.string.payment_issue_dialog_title),
                         color = Color(0xFF111114),
                         fontSize = 24.sp,
                         lineHeight = 28.sp,
@@ -102,7 +104,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(10.dp))
 
                     Text(
-                        text = "Your premium access is still active for now, but your payment needs attention.",
+                        text = stringResource(R.string.payment_issue_dialog_body),
                         color = Color(0xFF374151),
                         fontSize = 15.sp,
                         lineHeight = 21.sp,
@@ -116,7 +118,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(8.dp))
 
                     Text(
-                        text = "Update your Google Play payment method to avoid losing AI scan and premium features.",
+                        text = stringResource(R.string.payment_issue_dialog_supporting_body),
                         color = Color(0xFF71717A),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
@@ -145,7 +147,7 @@ fun PaymentIssueDialog(
                             .height(52.dp)
                     ) {
                         Text(
-                            text = "Update payment method",
+                            text = stringResource(R.string.payment_issue_dialog_update_payment),
                             fontSize = 16.sp,
                             lineHeight = 20.sp,
                             fontWeight = FontWeight.Bold
@@ -167,7 +169,7 @@ fun PaymentIssueDialog(
                             .height(44.dp)
                     ) {
                         Text(
-                            text = "Maybe later",
+                            text = stringResource(R.string.common_maybe_later),
                             fontSize = 15.sp,
                             lineHeight = 18.sp,
                             fontWeight = FontWeight.SemiBold
@@ -200,7 +202,7 @@ private fun DialogHeader(
             Spacer(Modifier.size(8.dp))
 
             Text(
-                text = "Payment needs attention",
+                text = stringResource(R.string.payment_issue_dialog_badge),
                 color = Color(0xFF8F3F4B),
                 fontSize = 13.sp,
                 lineHeight = 16.sp,
@@ -224,7 +226,7 @@ private fun DialogHeader(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.common_close),
                     tint = Color(0xFF3F3F46),
                     modifier = Modifier.size(17.dp)
                 )
@@ -312,15 +314,15 @@ private fun PaymentIssueStatusPanel() {
     ) {
         PaymentIssueInfoRow(
             icon = Icons.Outlined.Lock,
-            title = "Premium access",
-            value = "Active for now",
+            title = stringResource(R.string.payment_issue_dialog_premium_access),
+            value = stringResource(R.string.payment_issue_dialog_active_for_now),
             valueColor = Color(0xFF15803D)
         )
 
         PaymentIssueInfoRow(
             icon = Icons.Outlined.CreditCard,
-            title = "Next step",
-            value = "Update payment",
+            title = stringResource(R.string.payment_issue_dialog_next_step),
+            value = stringResource(R.string.payment_issue_dialog_update_payment_short),
             valueColor = Color(0xFFE46A6A)
         )
     }

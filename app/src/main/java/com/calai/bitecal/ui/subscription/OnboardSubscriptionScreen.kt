@@ -124,7 +124,11 @@ fun OnboardSubscriptionScreen(
             OnboardPaywallStep.Intro -> {
                 OnboardSubscriptionIntro(
                     purchasing = ui.purchasing,
-                    helperText = "Just ${ui.yearlyBasePrice} per 年 (${ui.yearlyBaseMonthlyEquivalent})",
+                    helperText = stringResource(
+                        R.string.subscription_intro_helper_format,
+                        ui.yearlyBasePrice,
+                        ui.yearlyBaseMonthlyEquivalent
+                    ),
                     onClose = onCloseToSignIn,
                     onContinue = {
                         if (shouldBypassInitialGooglePlaywallForDev()) {
@@ -480,7 +484,7 @@ private fun OnboardSubscriptionIntro(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Unlock BiteCal AI to\nreach your goals faster.",
+                text = stringResource(R.string.subscription_intro_title),
                 color = Color.Black,
                 fontSize = 32.sp,
                 lineHeight = 38.sp,
@@ -509,7 +513,7 @@ private fun OnboardSubscriptionIntro(
         }
 
         OnboardPaywallBottomCta(
-            buttonText = "Continue",
+            buttonText = stringResource(R.string.continue_text),
             helperText = helperText,
             loading = purchasing,
             onClick = onContinue
@@ -526,7 +530,7 @@ private fun OnboardSubscriptionIntro(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(R.string.common_close),
                 tint = Color(0xFFA1A1AA),
                 modifier = Modifier.size(28.dp)
             )
@@ -574,7 +578,7 @@ private fun OnboardDiscountSpinScreen(
     val rotation = remember { Animatable(initialRotationDegrees) }
     var spinStarted by rememberSaveable { mutableStateOf(false) }
     var spinFinished by rememberSaveable { mutableStateOf(false) }
-    val unlockedDiscountText = "Gift offer unlocked"
+    val unlockedDiscountText = stringResource(R.string.subscription_gift_offer_unlocked)
 
     LaunchedEffect(spinStarted) {
         if (spinStarted && !spinFinished) {
@@ -592,15 +596,15 @@ private fun OnboardDiscountSpinScreen(
     }
 
     val helperText = when {
-        !spinStarted -> "Tap Spin to reveal your exclusive gift."
-        !spinFinished -> "Please wait until the wheel stops."
-        else -> "This offer is revealed after the wheel stops."
+        !spinStarted -> stringResource(R.string.subscription_spin_helper_ready)
+        !spinFinished -> stringResource(R.string.subscription_spin_helper_wait)
+        else -> stringResource(R.string.subscription_spin_helper_revealed)
     }
 
     val buttonText = when {
-        !spinStarted -> "Spin"
-        !spinFinished -> "Spinning..."
-        else -> "Continue"
+        !spinStarted -> stringResource(R.string.subscription_spin_button)
+        !spinFinished -> stringResource(R.string.subscription_spinning_button)
+        else -> stringResource(R.string.continue_text)
     }
 
     val buttonLoading = spinStarted && !spinFinished
@@ -628,7 +632,7 @@ private fun OnboardDiscountSpinScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Spin to unlock an\nexclusive discount",
+                text = stringResource(R.string.subscription_spin_title),
                 color = Color.Black,
                 fontSize = 32.sp,
                 lineHeight = 38.sp,
@@ -716,7 +720,7 @@ private fun OnboardOneTimeOfferScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Gift unlocked 🎁",
+                text = stringResource(R.string.subscription_gift_unlocked_title),
                 color = Color(0xFF111111),
                 fontSize = 30.sp,
                 lineHeight = 34.sp,
@@ -752,11 +756,11 @@ private fun OnboardOneTimeOfferScreen(
 
         OnboardPaywallBottomCta(
             buttonText = if (trialEnabled && trialEligible) {
-                "Start free trial"
+                stringResource(R.string.subscription_start_free_trial)
             } else {
-                "Continue"
+                stringResource(R.string.continue_text)
             },
-            helperText = "No commitment — cancel anytime",
+            helperText = stringResource(R.string.subscription_trial_helper),
             helperTextColor = Color(0xFF52525B),
             buttonShape = RoundedCornerShape(14.dp),
             loading = purchasing,
@@ -774,7 +778,7 @@ private fun OnboardOneTimeOfferScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(R.string.common_close),
                 tint = Color(0xFF71717A),
                 modifier = Modifier.size(28.dp)
             )
@@ -927,7 +931,7 @@ private fun OneTimeOfferHeroCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Gift price unlocked",
+                    text = stringResource(R.string.subscription_gift_price_unlocked),
                     color = Color(0xFFFFE8A3),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -938,7 +942,7 @@ private fun OneTimeOfferHeroCard(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Unlock premium for only",
+                text = stringResource(R.string.subscription_unlock_premium_for_only),
                 color = Color(0xFFFFE8A3),
                 fontSize = 18.sp,
                 lineHeight = 23.sp,
@@ -978,7 +982,7 @@ private fun OneTimeOfferHeroCard(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                text = "Scan meals faster. Track macros smarter.\nStay on plan daily.",
+                text = stringResource(R.string.subscription_discount_body),
                 color = Color(0xFFEDE7FF),
                 fontSize = 13.sp,
                 lineHeight = 17.sp,
@@ -992,7 +996,7 @@ private fun OneTimeOfferHeroCard(
             Spacer(Modifier.height(6.dp))
 
             Text(
-                text = "$originalYearlyPrice/year",
+                text = stringResource(R.string.subscription_yearly_price_format, originalYearlyPrice),
                 color = Color.White,
                 fontSize = 16.sp,
                 lineHeight = 21.sp,
@@ -1026,17 +1030,17 @@ private fun OneTimeOfferUrgencyCard() {
     ) {
         OneTimeOfferUrgencyRow(
             emoji = "☕",
-            text = "Less than a coffee."
+            text = stringResource(R.string.subscription_urgency_coffee)
         )
 
         OneTimeOfferUrgencyRow(
             emoji = "⚠️",
-            text = "Close this screen? This price is gone"
+            text = stringResource(R.string.subscription_urgency_price_gone)
         )
 
         OneTimeOfferUrgencyRow(
             emoji = "\uD83D\uDE4B",
-            text = "What are you waiting for?"
+            text = stringResource(R.string.subscription_urgency_waiting)
         )
     }
 }
@@ -1186,7 +1190,7 @@ private fun OneTimeOfferTrialCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Yearly Plan",
+                        text = stringResource(R.string.subscription_yearly_plan),
                         color = Color(0xFF111111),
                         fontSize = 19.sp,
                         lineHeight = 23.sp,
@@ -1196,7 +1200,7 @@ private fun OneTimeOfferTrialCard(
                     Spacer(Modifier.height(4.dp))
 
                     Text(
-                        text = "12mo · $offerYearlyPrice",
+                        text = stringResource(R.string.subscription_yearly_plan_price_format, offerYearlyPrice),
                         color = Color(0xFF71717A),
                         fontSize = 16.sp,
                         lineHeight = 20.sp,
@@ -1247,9 +1251,18 @@ private fun PhonePreviewMock(
         LandingSlideshow(
             modifier = Modifier.fillMaxSize(),
             slides = listOf(
-                SlideItem(R.drawable.meal_1, contentDescription = "onboard_intro_slide_1"),
-                SlideItem(R.drawable.meal_2, contentDescription = "onboard_intro_slide_2"),
-                SlideItem(R.drawable.meal_3, contentDescription = "onboard_intro_slide_3")
+                SlideItem(
+                    R.drawable.meal_1,
+                    contentDescription = stringResource(R.string.subscription_intro_slide_1_content_description)
+                ),
+                SlideItem(
+                    R.drawable.meal_2,
+                    contentDescription = stringResource(R.string.subscription_intro_slide_2_content_description)
+                ),
+                SlideItem(
+                    R.drawable.meal_3,
+                    contentDescription = stringResource(R.string.subscription_intro_slide_3_content_description)
+                )
             ),
             autoPlay = true,
             autoPlayIntervalMs = 2800L

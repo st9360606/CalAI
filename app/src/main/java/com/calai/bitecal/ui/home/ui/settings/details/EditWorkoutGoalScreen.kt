@@ -124,7 +124,7 @@ fun EditWorkoutGoalScreen(
                         )
                         Spacer(Modifier.height(3.dp))
                         Text(
-                            text = "Previous goal ${ui.previousGoalKcal} kcal",
+                            text = stringResource(R.string.edit_workout_goal_previous_format, ui.previousGoalKcal),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color(0xFF6B7280),
@@ -150,7 +150,7 @@ fun EditWorkoutGoalScreen(
 
             val enabled = ui.canSave()
             BiteCalEditDualActionRow(
-                secondaryText = "Revert",
+                secondaryText = stringResource(R.string.common_revert),
                 onSecondaryClick = { vm.revert() },
                 primaryText = stringResource(R.string.save),
                 onPrimaryClick = { vm.save() },
@@ -177,7 +177,7 @@ private fun WorkoutGoalInputBox(
             .padding(start = 3.dp)
     ) {
         Text(
-            text = "Daily workout goal (kcal)",
+            text = stringResource(R.string.edit_workout_goal_input_label),
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF6B7280)

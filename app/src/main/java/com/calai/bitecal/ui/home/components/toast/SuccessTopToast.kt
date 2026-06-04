@@ -26,11 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 
 /**
  * 頂部置中的白色膠囊成功提示。
@@ -99,7 +101,7 @@ fun SuccessTopToast(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
-                        contentDescription = "success",
+                        contentDescription = stringResource(R.string.toast_success_content_description),
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )

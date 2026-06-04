@@ -290,7 +290,7 @@ fun EditStartingWeightScreen(
                     modifier = Modifier.fillMaxWidth(0.8f)
                 ) {
                     Text(
-                        text = "Set your starting weight",
+                        text = stringResource(R.string.edit_start_weight_set_starting),
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,
@@ -298,7 +298,7 @@ fun EditStartingWeightScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "We will use it as your baseline for progress.",
+                        text = stringResource(R.string.edit_start_weight_baseline_note),
                         fontSize = 12.sp,
                         color = Color(0xFF9AA3AE),
                         textAlign = TextAlign.Center,

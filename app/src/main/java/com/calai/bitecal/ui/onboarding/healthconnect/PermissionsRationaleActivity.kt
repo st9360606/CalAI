@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 /**
@@ -32,17 +34,16 @@ private fun RationaleScreen(onClose: () -> Unit) {
                 .fillMaxWidth()
                 .padding(20.dp)) {
                 Text(
-                    text = "為何需要 Health Connect 權限",
+                    text = stringResource(R.string.health_connect_rationale_title),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "我們會讀取「步數、運動、睡眠」用於計算每日消耗、活動時段與睡眠分析，" +
-                            "用來更新卡路里儀表板與歷史圖表。未經你的同意不會上傳雲端；你可在 Health Connect 隨時撤銷授權。"
+                    text = stringResource(R.string.health_connect_rationale_body)
                 )
                 Spacer(Modifier.height(24.dp))
                 Button(onClick = rememberClickWithHaptic(onClick = onClose)) {
-                    Text("了解")
+                    Text(stringResource(R.string.common_understood))
                 }
             }
         }

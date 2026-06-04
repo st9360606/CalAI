@@ -18,7 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.home.HomeTab
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
@@ -73,19 +75,19 @@ fun MainBottomBar(
                 )
             }
 
-            NavItem(tab = HomeTab.Home, label = "Home") { tint ->
+            NavItem(tab = HomeTab.Home, label = stringResource(R.string.bottom_nav_home)) { tint ->
                 Icon(Icons.Filled.Home, contentDescription = null, tint = tint)
             }
-            NavItem(tab = HomeTab.Progress, label = "Progress") { tint ->
+            NavItem(tab = HomeTab.Progress, label = stringResource(R.string.bottom_nav_progress)) { tint ->
                 Icon(Icons.Filled.BarChart, contentDescription = null, tint = tint)
             }
-            NavItem(tab = HomeTab.Weight, label = "Weight") { tint ->
+            NavItem(tab = HomeTab.Weight, label = stringResource(R.string.bottom_nav_weight)) { tint ->
                 Icon(Icons.Filled.MonitorWeight, contentDescription = null, tint = tint)
             }
-            NavItem(tab = HomeTab.Fasting, label = "Fasting") { tint ->
+            NavItem(tab = HomeTab.Fasting, label = stringResource(R.string.bottom_nav_fasting)) { tint ->
                 Icon(Icons.Filled.AccessTime, contentDescription = null, tint = tint)
             }
-            NavItem(tab = HomeTab.Workout, label = "Workout") { tint ->
+            NavItem(tab = HomeTab.Workout, label = stringResource(R.string.bottom_nav_workout)) { tint ->
                 Icon(Icons.Filled.FitnessCenter, contentDescription = null, tint = tint)
             }
         }

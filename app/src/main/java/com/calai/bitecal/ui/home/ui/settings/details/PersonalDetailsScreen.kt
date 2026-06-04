@@ -120,7 +120,7 @@ fun PersonalDetailsScreen(
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
-                                text = "Goal weight",
+                                text = stringResource(R.string.personal_details_goal_weight),
                                 fontSize = titleSize,
                                 fontWeight = FontWeight.Normal,
                                 color = Color(0xFF374151)
@@ -320,7 +320,7 @@ private fun PersonalDetailsRow(
 
             Icon(
                 imageVector = Icons.Outlined.Edit,
-                contentDescription = "edit",
+                contentDescription = stringResource(R.string.common_edit_content_description),
                 tint = Color(0xFF9CA3AF),
                 modifier = Modifier.size(20.dp)
             )
@@ -400,4 +400,3 @@ private fun PersonalRowDivider(color: Color) {
         color = color
     )
 }
-

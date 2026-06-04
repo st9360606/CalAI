@@ -384,7 +384,7 @@ private fun StatusBarIcons(
     ) {
         Icon(
             imageVector = Icons.Filled.Wifi,
-            contentDescription = "Wi-Fi",
+            contentDescription = stringResource(R.string.notification_wifi_content_description),
             tint = tint,
             modifier = Modifier.size(18.dp)
         )
@@ -509,7 +509,7 @@ private fun NotificationCardIOS(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "AI Calorie Counter",
+                        text = stringResource(R.string.notification_mock_app_title),
                         fontSize = NotifCardSpec.metaFont,
                         lineHeight = NotifCardSpec.metaLine,
                         fontWeight = FontWeight.Medium,
@@ -589,7 +589,7 @@ private fun AppIconIOSBadge(
         ) {
             Icon(
                 painter = painterResource(id = resId),
-                contentDescription = "App icon",
+                contentDescription = stringResource(R.string.notification_app_icon_content_description),
                 tint = Color.White,
                 modifier = Modifier
                     .fillMaxSize()

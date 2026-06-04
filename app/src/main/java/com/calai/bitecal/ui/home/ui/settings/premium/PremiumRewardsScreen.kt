@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -20,19 +19,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 import com.calai.bitecal.data.entitlement.model.PremiumStatus
 import com.calai.bitecal.data.membership.api.MembershipSummaryDto
 import com.calai.bitecal.data.membership.api.RewardHistoryItemDto
-import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
-import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
-import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
-import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
 import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
-import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
+import com.calai.bitecal.ui.common.design.BiteCalTopBar
+import com.calai.bitecal.ui.home.ui.membership.MembershipUiMapper
 
 @Composable
 fun PremiumRewardsScreen(
@@ -46,7 +43,7 @@ fun PremiumRewardsScreen(
     Scaffold(
         topBar = {
             BiteCalTopBar(
-                title = "Subscription",
+                title = stringResource(R.string.premium_rewards_subscription_title),
                 onBack = onBack
             )
         }
@@ -75,7 +72,7 @@ fun PremiumRewardsScreen(
                     item { LatestRewardCard(summary) }
                     item {
                         Text(
-                            "Reward history",
+                            stringResource(R.string.premium_rewards_history_title),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                     }
@@ -102,7 +99,7 @@ private fun LoadingState(modifier: Modifier) {
     ) {
         CircularProgressIndicator()
         Spacer(Modifier.height(12.dp))
-        Text("Loading membership...")
+        Text(stringResource(R.string.premium_rewards_loading_membership))
     }
 }
 
@@ -126,7 +123,7 @@ private fun ErrorState(
         )
         Spacer(Modifier.height(12.dp))
         BiteCalPrimaryButton(
-            text = "Retry",
+            text = stringResource(R.string.retry),
             onClick = onRetry,
             height = 50.dp,
             modifier = Modifier.fillMaxWidth()
@@ -143,13 +140,17 @@ private fun SummaryCard(summary: MembershipSummaryDto?) {
         trialDaysLeft = summary?.trialDaysLeft,
         paymentIssue = summary?.paymentIssue == true
     )
+    val unavailable = stringResource(R.string.common_unavailable_dash)
 
     Card(
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("Premium Status", style = MaterialTheme.typography.labelLarge)
+            Text(
+                text = stringResource(R.string.premium_rewards_status_title),
+                style = MaterialTheme.typography.labelLarge
+            )
             Spacer(Modifier.height(4.dp))
 
             Text(
@@ -158,7 +159,7 @@ private fun SummaryCard(summary: MembershipSummaryDto?) {
             )
 
             Spacer(Modifier.height(6.dp))
-            Text(display.subtitle.ifBlank { "—" })
+            Text(display.subtitle.ifBlank { unavailable })
         }
     }
 }
@@ -171,19 +172,20 @@ private fun LatestRewardCard(summary: MembershipSummaryDto?) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                "Latest reward",
+                stringResource(R.string.premium_rewards_latest_title),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
 
             Spacer(Modifier.height(8.dp))
 
-            Text("Source: ${summary?.latestRewardSource ?: "—"}")
-            Text("Channel: ${friendlyRewardChannel(summary?.latestRewardChannel)}")
-            Text("Grant status: ${friendlyGrantStatus(summary?.latestRewardGrantStatus)}")
-            Text("Google defer: ${friendlyGoogleDeferStatus(summary?.latestGoogleDeferStatus)}")
-            Text("Granted at: ${MembershipUiMapper.formatDateOrNull(summary?.latestGrantedAtUtc)}")
-            Text("Old expiry: ${MembershipUiMapper.formatDateOrNull(summary?.latestOldPremiumUntil)}")
-            Text("New expiry: ${MembershipUiMapper.formatDateOrNull(summary?.latestNewPremiumUntil)}")
+            val unavailable = stringResource(R.string.common_unavailable_dash)
+            Text(stringResource(R.string.premium_rewards_source_format, summary?.latestRewardSource ?: unavailable))
+            Text(stringResource(R.string.premium_rewards_channel_format, friendlyRewardChannel(summary?.latestRewardChannel)))
+            Text(stringResource(R.string.premium_rewards_grant_status_format, friendlyGrantStatus(summary?.latestRewardGrantStatus)))
+            Text(stringResource(R.string.premium_rewards_google_defer_format, friendlyGoogleDeferStatus(summary?.latestGoogleDeferStatus)))
+            Text(stringResource(R.string.premium_rewards_granted_at_format, MembershipUiMapper.formatDateOrNull(summary?.latestGrantedAtUtc) ?: unavailable))
+            Text(stringResource(R.string.premium_rewards_old_expiry_format, MembershipUiMapper.formatDateOrNull(summary?.latestOldPremiumUntil) ?: unavailable))
+            Text(stringResource(R.string.premium_rewards_new_expiry_format, MembershipUiMapper.formatDateOrNull(summary?.latestNewPremiumUntil) ?: unavailable))
         }
     }
 }
@@ -202,16 +204,20 @@ private fun RewardHistoryRow(item: RewardHistoryItemDto) {
 
             Spacer(Modifier.height(4.dp))
 
-            Text("Status: ${friendlyGrantStatus(item.grantStatus)}")
-            Text("Channel: ${friendlyRewardChannel(item.rewardChannel)}")
-            Text("Google defer: ${friendlyGoogleDeferStatus(item.googleDeferStatus)}")
+            val unavailable = stringResource(R.string.common_unavailable_dash)
+            Text(stringResource(R.string.premium_rewards_status_format, friendlyGrantStatus(item.grantStatus)))
+            Text(stringResource(R.string.premium_rewards_channel_format, friendlyRewardChannel(item.rewardChannel)))
+            Text(stringResource(R.string.premium_rewards_google_defer_format, friendlyGoogleDeferStatus(item.googleDeferStatus)))
             item.errorCode?.takeIf { it.isNotBlank() }?.let {
-                Text("Error: $it", color = MaterialTheme.colorScheme.error)
+                Text(
+                    text = stringResource(R.string.premium_rewards_error_format, it),
+                    color = MaterialTheme.colorScheme.error
+                )
             }
-            Text("Days added: ${item.daysAdded}")
-            Text("Granted at: ${MembershipUiMapper.formatDateOrNull(item.grantedAtUtc)}")
-            Text("Old expiry: ${MembershipUiMapper.formatDateOrNull(item.oldPremiumUntil)}")
-            Text("New expiry: ${MembershipUiMapper.formatDateOrNull(item.newPremiumUntil)}")
+            Text(stringResource(R.string.premium_rewards_days_added_format, item.daysAdded))
+            Text(stringResource(R.string.premium_rewards_granted_at_format, MembershipUiMapper.formatDateOrNull(item.grantedAtUtc) ?: unavailable))
+            Text(stringResource(R.string.premium_rewards_old_expiry_format, MembershipUiMapper.formatDateOrNull(item.oldPremiumUntil) ?: unavailable))
+            Text(stringResource(R.string.premium_rewards_new_expiry_format, MembershipUiMapper.formatDateOrNull(item.newPremiumUntil) ?: unavailable))
         }
     }
 }
@@ -221,42 +227,45 @@ private fun EmptyRewardHistoryCard() {
     Card(shape = RoundedCornerShape(18.dp)) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                text = "No rewards yet",
+                text = stringResource(R.string.premium_rewards_empty_title),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Successful referrals will appear here after verification.",
+                text = stringResource(R.string.premium_rewards_empty_body),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
     }
 }
 
+@Composable
 private fun friendlyRewardChannel(channel: String?): String {
     return when (channel) {
-        "GOOGLE_PLAY_DEFER" -> "Google Play billing date extended"
-        "BACKEND_ONLY" -> "Premium reward applied"
-        else -> channel ?: "—"
+        "GOOGLE_PLAY_DEFER" -> stringResource(R.string.premium_rewards_channel_google_play_defer)
+        "BACKEND_ONLY" -> stringResource(R.string.premium_rewards_channel_backend_only)
+        else -> channel ?: stringResource(R.string.common_unavailable_dash)
     }
 }
 
 
+@Composable
 private fun friendlyGrantStatus(status: String?): String {
     return when (status) {
-        "SUCCESS", "GRANTED" -> "Success"
-        "FAILED_RETRYABLE" -> "Retrying"
-        "FAILED_FINAL" -> "Not granted"
-        else -> status ?: "—"
+        "SUCCESS", "GRANTED" -> stringResource(R.string.premium_rewards_grant_success)
+        "FAILED_RETRYABLE" -> stringResource(R.string.premium_rewards_status_retrying)
+        "FAILED_FINAL" -> stringResource(R.string.premium_rewards_grant_not_granted)
+        else -> status ?: stringResource(R.string.common_unavailable_dash)
     }
 }
 
+@Composable
 private fun friendlyGoogleDeferStatus(status: String?): String {
     return when (status) {
-        "SUCCESS" -> "Extended by Google Play"
-        "FAILED_RETRYABLE" -> "Retrying"
-        "FAILED_FINAL" -> "Failed"
-        "NOT_REQUIRED" -> "Not required"
-        else -> status ?: "—"
+        "SUCCESS" -> stringResource(R.string.premium_rewards_google_defer_success)
+        "FAILED_RETRYABLE" -> stringResource(R.string.premium_rewards_status_retrying)
+        "FAILED_FINAL" -> stringResource(R.string.premium_rewards_google_defer_failed)
+        "NOT_REQUIRED" -> stringResource(R.string.premium_rewards_google_defer_not_required)
+        else -> status ?: stringResource(R.string.common_unavailable_dash)
     }
 }

@@ -826,6 +826,206 @@
 
     <string name="common_today">Today</string>
     <string name="common_yesterday">Yesterday</string>
+    <string name="common_unavailable_dash">—</string>
+    <string name="retry">Retry</string>
+
+    <!-- Premium rewards -->
+    <string name="premium_rewards_subscription_title">Subscription</string>
+    <string name="premium_rewards_loading_membership">Loading membership...</string>
+    <string name="premium_rewards_status_title">Premium Status</string>
+    <string name="premium_rewards_latest_title">Latest reward</string>
+    <string name="premium_rewards_history_title">Reward history</string>
+    <string name="premium_rewards_source_format">Source: %1$s</string>
+    <string name="premium_rewards_channel_format">Channel: %1$s</string>
+    <string name="premium_rewards_grant_status_format">Grant status: %1$s</string>
+    <string name="premium_rewards_status_format">Status: %1$s</string>
+    <string name="premium_rewards_google_defer_format">Google defer: %1$s</string>
+    <string name="premium_rewards_granted_at_format">Granted at: %1$s</string>
+    <string name="premium_rewards_old_expiry_format">Old expiry: %1$s</string>
+    <string name="premium_rewards_new_expiry_format">New expiry: %1$s</string>
+    <string name="premium_rewards_error_format">Error: %1$s</string>
+    <string name="premium_rewards_days_added_format">Days added: %1$d</string>
+    <string name="premium_rewards_empty_title">No rewards yet</string>
+    <string name="premium_rewards_empty_body">Successful referrals will appear here after verification.</string>
+    <string name="premium_rewards_channel_google_play_defer">Google Play billing date extended</string>
+    <string name="premium_rewards_channel_backend_only">Premium reward applied</string>
+    <string name="premium_rewards_grant_success">Success</string>
+    <string name="premium_rewards_status_retrying">Retrying</string>
+    <string name="premium_rewards_grant_not_granted">Not granted</string>
+    <string name="premium_rewards_google_defer_success">Extended by Google Play</string>
+    <string name="premium_rewards_google_defer_failed">Failed</string>
+    <string name="premium_rewards_google_defer_not_required">Not required</string>
+
+    <!-- Record weight -->
+    <string name="record_weight_title">Record Weight</string>
+    <string name="record_weight_save_failed">Save failed</string>
+    <string name="record_weight_camera_failed_to_open">Camera failed to open.</string>
+    <string name="record_weight_camera_permission_required">Camera permission required.</string>
+    <string name="record_weight_camera_preview_unavailable">Camera only works in the running app, not in Preview.</string>
+    <string name="record_weight_camera_screen_unavailable">Camera is not available in this screen.</string>
+    <string name="record_weight_no_camera_app_found">No camera app found on this device.</string>
+    <string name="record_weight_enable_camera_permission_settings">Please enable Camera permission in Settings.</string>
+    <string name="record_weight_edit_date_content_description">Edit date</string>
+    <string name="record_weight_photo_content_description">Weight photo</string>
+    <string name="record_weight_add_photo_content_description">Add weight photo</string>
+    <string name="record_weight_camera_not_available">Camera not available</string>
+    <string name="record_weight_take_photo">Take a photo</string>
+    <string name="record_weight_retake_photo">Retake photo</string>
+
+    <!-- Navigation placeholders -->
+    <string name="camera_manual_entry_not_ready">Manual entry is not ready yet. Switching to label scan for now.</string>
+    <string name="reminders_title">Reminders</string>
+    <string name="placeholder_todo_page">TODO: %1$s page</string>
+
+    <!-- Settings referral card -->
+    <string name="settings_invite_friends">Invite friends</string>
+    <string name="settings_premium_reward">Premium reward</string>
+    <string name="settings_share_bitecal_with_friends">Share BiteCal AI\nwith your friends</string>
+    <string name="settings_referral_reward_description">They subscribe. You get 30 days free.</string>
+    <string name="settings_get_30_days_free">Get 30 days free</string>
+    <string name="settings_days_label">Days</string>
+    <string name="settings_edit_your_name_content_description">Edit your name</string>
+    <string name="settings_avatar_content_description">Avatar</string>
+    <string name="settings_default_avatar_content_description">Default avatar</string>
+    <string name="log_your_food">Log your food</string>
+    <string name="settings_membership_payment">Payment</string>
+    <string name="settings_membership_update_payment">Update payment</string>
+    <string name="settings_membership_premium">Premium</string>
+    <string name="settings_membership_active_member">Active member</string>
+    <string name="settings_membership_trial">Trial</string>
+    <string name="settings_membership_access_active">Access active</string>
+    <string name="settings_membership_free">Free</string>
+    <string name="settings_membership_upgrade">Upgrade</string>
+
+    <!-- Payment issue dialog -->
+    <string name="payment_issue_dialog_title">Keep your premium active</string>
+    <string name="payment_issue_dialog_body">Your premium access is still active for now, but your payment needs attention.</string>
+    <string name="payment_issue_dialog_supporting_body">Update your Google Play payment method to avoid losing AI scan and premium features.</string>
+    <string name="payment_issue_dialog_update_payment">Update payment method</string>
+    <string name="payment_issue_dialog_badge">Payment needs attention</string>
+    <string name="payment_issue_dialog_premium_access">Premium access</string>
+    <string name="payment_issue_dialog_active_for_now">Active for now</string>
+    <string name="payment_issue_dialog_next_step">Next step</string>
+    <string name="payment_issue_dialog_update_payment_short">Update payment</string>
+
+    <!-- Saved foods -->
+    <string name="saved_foods_load_failed_title">Saved foods failed to load</string>
+
+    <!-- Water card -->
+    <string name="water_intake_title">Water</string>
+    <string name="water_intake_content_description">Water</string>
+    <string name="water_intake_cups_format">(%1$d cups)</string>
+
+    <!-- Weight card labels -->
+    <string name="weight_card_to_goal_weight">To goal weight</string>
+    <string name="weight_card_current_weight">Current weight</string>
+    <string name="weight_card_achieved_goal_format">Achieved %1$s%% of goal</string>
+    <string name="weight_history_weight_label">Weight</string>
+    <string name="weight_history_change_label">Change</string>
+
+    <!-- Landing accessibility -->
+    <string name="landing_slideshow_content_description">Landing slideshow</string>
+    <string name="landing_slide_placeholder_content_description">Placeholder slide</string>
+    <string name="landing_slide_indicator_content_description">Slide %1$d of %2$d</string>
+    <string name="landing_slide_1_content_description">Meal photo slide 1</string>
+    <string name="landing_slide_2_content_description">Meal photo slide 2</string>
+    <string name="landing_slide_3_content_description">Meal photo slide 3</string>
+
+    <!-- Auth accessibility -->
+    <string name="auth_google_content_description">Google</string>
+    <string name="auth_email_content_description">Email</string>
+    <string name="signup_placeholder">Sign Up (placeholder)</string>
+
+    <!-- Health Connect rationale -->
+    <string name="health_connect_rationale_title">Why Health Connect permissions are needed</string>
+    <string name="health_connect_rationale_body">We read steps, workouts, and sleep to calculate daily burn, activity windows, and sleep analysis, then update your calorie dashboard and history charts. Nothing is uploaded to the cloud without your consent, and you can revoke access in Health Connect at any time.</string>
+    <string name="common_understood">Understood</string>
+    <string name="done">Done</string>
+    <string name="common_revert">Revert</string>
+    <string name="common_settings_content_description">Settings</string>
+    <string name="common_edit_content_description">Edit</string>
+
+    <!-- Common accessibility -->
+    <string name="toast_success_content_description">Success</string>
+    <string name="toast_error_content_description">Error</string>
+    <string name="toast_delete_success_content_description">Delete success</string>
+    <string name="toast_delete_failed_content_description">Delete failed</string>
+    <string name="home_steps_icon_content_description">Steps</string>
+    <string name="home_google_health_content_description">Google Health</string>
+    <string name="home_workout_icon_content_description">Workout</string>
+    <string name="workout_add_content_description">Add workout</string>
+    <string name="unit_switch_content_description">Unit switch</string>
+    <string name="recent_upload_delete_content_description">Delete recent upload</string>
+    <string name="weight_add_entry_content_description">Add weight entry</string>
+    <string name="notification_wifi_content_description">Wi-Fi</string>
+    <string name="notification_app_icon_content_description">App icon</string>
+    <string name="notification_mock_app_title">AI Calorie Counter</string>
+    <string name="health_connect_logo_content_description">Health Connect logo</string>
+    <string name="subscription_intro_slide_1_content_description">Subscription intro meal slide 1</string>
+    <string name="subscription_intro_slide_2_content_description">Subscription intro meal slide 2</string>
+    <string name="subscription_intro_slide_3_content_description">Subscription intro meal slide 3</string>
+    <string name="recent_meal_placeholder_content_description">Recent meal placeholder</string>
+
+    <!-- Bottom navigation -->
+    <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_progress">Progress</string>
+    <string name="bottom_nav_weight">Weight</string>
+    <string name="bottom_nav_fasting">Fasting</string>
+    <string name="bottom_nav_workout">Workout</string>
+
+    <!-- Settings detail screens -->
+    <string name="edit_age_privacy_note">We only use your age to improve your experience and calorie estimation accuracy.</string>
+    <string name="edit_gender_privacy_note">Used only to personalize and improve estimate accuracy.</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="gender_other">Other</string>
+    <string name="edit_height_set_current_height">Set your current height</string>
+    <string name="edit_height_privacy_note">Your height is used only to improve calorie estimate accuracy.</string>
+    <string name="edit_goal_weight_set_goal">Set your goal weight</string>
+    <string name="edit_goal_weight_progress_note">We will use this goal to calculate your progress.</string>
+    <string name="edit_start_weight_set_starting">Set your starting weight</string>
+    <string name="edit_start_weight_baseline_note">We will use it as your baseline for progress.</string>
+    <string name="record_weight_date_note">This weight will be recorded for %1$s.</string>
+    <string name="edit_water_goal_previous_format">Previous goal %1$d ml</string>
+    <string name="edit_water_goal_input_label">Daily water goal (ml)</string>
+    <string name="edit_workout_goal_previous_format">Previous goal %1$d kcal</string>
+    <string name="edit_workout_goal_input_label">Daily workout goal (kcal)</string>
+    <string name="edit_daily_step_goal_previous_format">Previous goal %1$d steps</string>
+    <string name="edit_daily_step_goal_input_label">Daily step goal</string>
+    <string name="edit_nutrition_calorie_goal">Calorie goal</string>
+    <string name="edit_nutrition_protein_goal">Protein goal</string>
+    <string name="edit_nutrition_carb_goal">Carb goal</string>
+    <string name="edit_nutrition_fat_goal">Fat goal</string>
+    <string name="edit_nutrition_view_micronutrients">View micronutrients</string>
+    <string name="edit_nutrition_fiber_goal">Fiber goal</string>
+    <string name="edit_nutrition_sugar_goal">Sugar goal</string>
+    <string name="edit_nutrition_sodium_goal">Sodium goal</string>
+    <string name="edit_nutrition_auto_generate_goals">Auto generate goals</string>
+    <string name="personal_details_goal_weight">Goal weight</string>
+    <string name="edit_name_placeholder">Enter your name</string>
+
+    <!-- Subscription paywall -->
+    <string name="subscription_intro_helper_format">Just %1$s per year (%2$s)</string>
+    <string name="subscription_intro_title">Unlock BiteCal AI to\nreach your goals faster.</string>
+    <string name="subscription_gift_offer_unlocked">Gift offer unlocked</string>
+    <string name="subscription_gift_unlocked_title">Gift unlocked 🎁</string>
+    <string name="subscription_spin_helper_ready">Tap Spin to reveal your exclusive gift.</string>
+    <string name="subscription_spin_helper_wait">Please wait until the wheel stops.</string>
+    <string name="subscription_spin_helper_revealed">This offer is revealed after the wheel stops.</string>
+    <string name="subscription_spin_button">Spin</string>
+    <string name="subscription_spinning_button">Spinning...</string>
+    <string name="subscription_spin_title">Spin to unlock an\nexclusive discount</string>
+    <string name="subscription_start_free_trial">Start free trial</string>
+    <string name="subscription_trial_helper">No commitment — cancel anytime</string>
+    <string name="subscription_gift_price_unlocked">Gift price unlocked</string>
+    <string name="subscription_unlock_premium_for_only">Unlock premium for only</string>
+    <string name="subscription_discount_body">Scan meals faster. Track macros smarter.\nStay on plan daily.</string>
+    <string name="subscription_yearly_price_format">%1$s/year</string>
+    <string name="subscription_urgency_coffee">Less than a coffee.</string>
+    <string name="subscription_urgency_price_gone">Close this screen? This price is gone</string>
+    <string name="subscription_urgency_waiting">What are you waiting for?</string>
+    <string name="subscription_yearly_plan">Yearly Plan</string>
+    <string name="subscription_yearly_plan_price_format">12mo · %1$s</string>
 
     <!-- Android home screen widgets -->
     <string name="widget_preview_goal_kcal">1830</string>

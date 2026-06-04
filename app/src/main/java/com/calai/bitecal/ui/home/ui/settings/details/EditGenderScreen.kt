@@ -108,7 +108,7 @@ fun EditGenderScreen(
             Spacer(Modifier.height(22.dp))
 
             Text(
-                text = "Used only to personalize and improve estimate accuracy.",
+                text = stringResource(R.string.edit_gender_privacy_note),
                 fontSize = 12.sp,
                 color = Color(0xFF9AA3AE),
                 textAlign = TextAlign.Center,
@@ -133,7 +133,7 @@ private fun GenderSegmented(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         GenderOptionCard(
-            text = "Male",
+            text = stringResource(R.string.gender_male),
             selected = selected == EditGenderViewModel.GenderKey.MALE,
             onClick = { onSelect(EditGenderViewModel.GenderKey.MALE) },
             widthFraction = widthFraction,
@@ -142,7 +142,7 @@ private fun GenderSegmented(
         )
         Spacer(Modifier.height(21.dp))
         GenderOptionCard(
-            text = "Female",
+            text = stringResource(R.string.gender_female),
             selected = selected == EditGenderViewModel.GenderKey.FEMALE,
             onClick = { onSelect(EditGenderViewModel.GenderKey.FEMALE) },
             widthFraction = widthFraction,
@@ -151,7 +151,7 @@ private fun GenderSegmented(
         )
         Spacer(Modifier.height(21.dp))
         GenderOptionCard(
-            text = "Other",
+            text = stringResource(R.string.gender_other),
             selected = selected == EditGenderViewModel.GenderKey.OTHER,
             onClick = { onSelect(EditGenderViewModel.GenderKey.OTHER) },
             widthFraction = widthFraction,

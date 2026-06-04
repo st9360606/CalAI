@@ -266,12 +266,20 @@ private fun RecordWeightScreenContent(
                     runCatching { takePhotoLauncher?.launch(null) }
                         .onFailure { e ->
                             Log.e("RecordWeightScreen", "Camera launch after permission failed", e)
-                            Toast.makeText(context, "Camera failed to open.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.record_weight_camera_failed_to_open),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                 } else {
                     // ✅ 拒絕：累加（但不在這裡導設定，除非已經「不再詢問」）
                     cameraDenyCount += 1
-                    Toast.makeText(context, "Camera permission required.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.record_weight_camera_permission_required),
+                        Toast.LENGTH_SHORT
+                    ).show()
 
                     val act = context.findActivity()
                     val dontAskAgain = act != null &&
@@ -291,9 +299,9 @@ private fun RecordWeightScreenContent(
     fun launchTakePhoto() {
         if (takePhotoLauncher == null) {
             val msg = if (isPreview) {
-                "Camera only works in the running app, not in Preview."
+                context.getString(R.string.record_weight_camera_preview_unavailable)
             } else {
-                "Camera is not available in this screen."
+                context.getString(R.string.record_weight_camera_screen_unavailable)
             }
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             return
@@ -306,21 +314,37 @@ private fun RecordWeightScreenContent(
                 takePhotoLauncher.launch(null)
             } catch (e: ActivityNotFoundException) {
                 Log.e("RecordWeightScreen", "No camera app can handle ACTION_IMAGE_CAPTURE", e)
-                Toast.makeText(context, "No camera app found on this device.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.record_weight_no_camera_app_found),
+                    Toast.LENGTH_SHORT
+                ).show()
             } catch (e: SecurityException) {
                 Log.e("RecordWeightScreen", "Camera launch blocked by SecurityException", e)
-                Toast.makeText(context, "Camera permission required.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.record_weight_camera_permission_required),
+                    Toast.LENGTH_SHORT
+                ).show()
                 openAppSettings()
             } catch (e: Throwable) {
                 Log.e("RecordWeightScreen", "Camera launch failed", e)
-                Toast.makeText(context, "Camera failed to open.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.record_weight_camera_failed_to_open),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
             return
         }
 
         // ✅ 沒權限：拒絕兩次後，第三次點擊直接導設定（不再彈權限）
         if (cameraDenyCount >= 2) {
-            Toast.makeText(context, "Please enable Camera permission in Settings.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                context.getString(R.string.record_weight_enable_camera_permission_settings),
+                Toast.LENGTH_SHORT
+            ).show()
             openAppSettings()
             return
         }
@@ -346,7 +370,7 @@ private fun RecordWeightScreenContent(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             BiteCalTopBar(
-                title = "Record Weight",
+                title = stringResource(R.string.record_weight_title),
                 onBack = onBack
             )
         },
@@ -390,7 +414,7 @@ private fun RecordWeightScreenContent(
                             }.onFailure { e ->
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
-                                        message = e.message ?: "Save failed"
+                                        message = e.message ?: context.getString(R.string.record_weight_save_failed)
                                     )
                                 }
                             }
@@ -560,7 +584,10 @@ private fun RecordWeightScreenContent(
 
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = "This weight will be recorded for ${selectedDate.format(dateFormatterDisplay)}.",
+                    text = stringResource(
+                        R.string.record_weight_date_note,
+                        selectedDate.format(dateFormatterDisplay)
+                    ),
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                     color = Color(0xFF9AA3AE),
                     textAlign = TextAlign.Center,
@@ -600,7 +627,7 @@ private fun DateHeader(
 
             Icon(
                 imageVector = Icons.Outlined.Edit,
-                contentDescription = "Edit date",
+                contentDescription = stringResource(R.string.record_weight_edit_date_content_description),
                 tint = Color(0xFF6B7280),
                 modifier = Modifier.size(17.dp)
             )
@@ -1136,14 +1163,14 @@ private fun PhotoPickerBlock(
             if (uri != null) {
                 AsyncImage(
                     model = uri,
-                    contentDescription = "Weight photo",
+                    contentDescription = stringResource(R.string.record_weight_photo_content_description),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Icon(
                     painter = painterResource(id = R.drawable.weight_image_2),
-                    contentDescription = "Add weight photo",
+                    contentDescription = stringResource(R.string.record_weight_add_photo_content_description),
                     tint = Color(0xFF9AA3AE),
                     modifier = Modifier.size(48.dp)
                 )
@@ -1154,9 +1181,9 @@ private fun PhotoPickerBlock(
 
         Text(
             text = when {
-                !cameraAvailable -> "Camera not available"
-                uri == null -> "Take a photo"
-                else -> "Retake photo"
+                !cameraAvailable -> stringResource(R.string.record_weight_camera_not_available)
+                uri == null -> stringResource(R.string.record_weight_take_photo)
+                else -> stringResource(R.string.record_weight_retake_photo)
             },
             color = if (cameraAvailable) Color.Black else Color(0xFF9AA3AE),
             fontSize = 15.sp,

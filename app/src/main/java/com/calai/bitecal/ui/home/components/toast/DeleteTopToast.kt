@@ -28,10 +28,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 
 @Composable
 fun DeleteSuccessTopToast(
@@ -42,7 +44,7 @@ fun DeleteSuccessTopToast(
         message = message,
         icon = Icons.Filled.Check,
         iconBackgroundColor = Color(0xFF22C55E),
-        contentDescription = "delete success",
+        contentDescription = stringResource(R.string.toast_delete_success_content_description),
         modifier = modifier
     )
 }
@@ -56,7 +58,7 @@ fun DeleteFailedTopToast(
         message = message,
         icon = Icons.Filled.Error,
         iconBackgroundColor = Color(0xFFEF4444),
-        contentDescription = "delete failed",
+        contentDescription = stringResource(R.string.toast_delete_failed_content_description),
         modifier = modifier
     )
 }

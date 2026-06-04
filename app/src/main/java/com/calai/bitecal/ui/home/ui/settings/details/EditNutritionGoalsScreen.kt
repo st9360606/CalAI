@@ -67,12 +67,14 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.design.BiteCalTopBar
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsUiState
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
@@ -242,7 +244,7 @@ private fun EditNutritionGoalsScreen(
             GoalRow(
                 ringColor = Color(0xFF1F1A17),
                 icon = Icons.Outlined.LocalFireDepartment,
-                label = "Calorie goal",
+                label = stringResource(R.string.edit_nutrition_calorie_goal),
                 value = ui.draft.kcal,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.KCAL],
                 onValueChange = onKcal
@@ -252,7 +254,7 @@ private fun EditNutritionGoalsScreen(
             GoalRow(
                 ringColor = Color(0xFFE56C6C),
                 icon = Icons.Filled.EggAlt,
-                label = "Protein goal",
+                label = stringResource(R.string.edit_nutrition_protein_goal),
                 value = ui.draft.proteinG,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.PROTEIN],
                 onValueChange = onProtein
@@ -262,7 +264,7 @@ private fun EditNutritionGoalsScreen(
             GoalRow(
                 ringColor = Color(0xFFD89A62),
                 icon = Icons.Filled.BakeryDining,
-                label = "Carb goal",
+                label = stringResource(R.string.edit_nutrition_carb_goal),
                 value = ui.draft.carbsG,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.CARBS],
                 iconSize = 20.dp,
@@ -273,7 +275,7 @@ private fun EditNutritionGoalsScreen(
             GoalRow(
                 ringColor = Color(0xFF6C93D8),
                 icon = Icons.Filled.Opacity,
-                label = "Fat goal",
+                label = stringResource(R.string.edit_nutrition_fat_goal),
                 value = ui.draft.fatG,
                 errorText = ui.fieldErrors[NutritionGoalsUiState.Field.FAT],
                 onValueChange = onFat
@@ -291,7 +293,7 @@ private fun EditNutritionGoalsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "View micronutrients",
+                    text = stringResource(R.string.edit_nutrition_view_micronutrients),
                     fontSize = 15.sp,
                     color = Color(0xFF606A78),
                     fontWeight = FontWeight.Normal
@@ -316,7 +318,7 @@ private fun EditNutritionGoalsScreen(
                     GoalRow(
                         ringColor = Color(0xFFA78BFA),
                         icon = Icons.Filled.Spa,
-                        label = "Fiber goal",
+                        label = stringResource(R.string.edit_nutrition_fiber_goal),
                         value = ui.draft.fiberG,
                         errorText = ui.fieldErrors[NutritionGoalsUiState.Field.FIBER],
                         onValueChange = onFiber
@@ -326,7 +328,7 @@ private fun EditNutritionGoalsScreen(
                     GoalRow(
                         ringColor = Color(0xFFF08AAF),
                         icon = Icons.Filled.Icecream,
-                        label = "Sugar goal",
+                        label = stringResource(R.string.edit_nutrition_sugar_goal),
                         value = ui.draft.sugarG,
                         errorText = ui.fieldErrors[NutritionGoalsUiState.Field.SUGAR],
                         onValueChange = onSugar
@@ -336,7 +338,7 @@ private fun EditNutritionGoalsScreen(
                     GoalRow(
                         ringColor = Color(0xFF73B6E6),
                         icon = Icons.Filled.RiceBowl,
-                        label = "Sodium goal",
+                        label = stringResource(R.string.edit_nutrition_sodium_goal),
                         value = ui.draft.sodiumMg,
                         errorText = ui.fieldErrors[NutritionGoalsUiState.Field.SODIUM],
                         onValueChange = onSodium
@@ -505,7 +507,7 @@ private fun BottomActionBar(
         ) {
             if (!dirty) {
                 BiteCalSecondaryOutlinedButton(
-                    text = "Auto generate goals",
+                    text = stringResource(R.string.edit_nutrition_auto_generate_goals),
                     onClick = onAutoGenerate,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -522,9 +524,9 @@ private fun BottomActionBar(
                 )
             } else {
                 BiteCalEditDualActionRow(
-                    secondaryText = "Revert",
+                    secondaryText = stringResource(R.string.common_revert),
                     onSecondaryClick = onRevert,
-                    primaryText = "Done",
+                    primaryText = stringResource(R.string.done),
                     onPrimaryClick = onDone,
                     primaryEnabled = canDone,
                     secondaryEnabled = !saving,

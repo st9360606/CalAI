@@ -123,7 +123,7 @@ fun EditAgeScreen(
 
             Spacer(Modifier.height(18.dp))
             Text(
-                text = "We only use your age to improve your experience and calorie estimation accuracy.",
+                text = stringResource(R.string.edit_age_privacy_note),
                 fontSize = 12.sp,
                 color = Color(0xFF9AA3AE),
                 textAlign = TextAlign.Center,
@@ -261,4 +261,3 @@ private fun NumberWheel(
         )
     }
 }
-

@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 
 @Composable
@@ -70,6 +72,7 @@ fun WeightUnitSwitchLabeled(
     val pillX by animateDpAsState(targetValue = goalX, label = "pillX")
 
     val stateText = if (checked) rightLabel else leftLabel
+    val unitSwitchContentDescription = stringResource(R.string.unit_switch_content_description)
 
     Box(
         modifier = modifier
@@ -78,7 +81,7 @@ fun WeightUnitSwitchLabeled(
             .background(trackBase)
             .semantics(mergeDescendants = true) {
                 role = Role.Switch
-                contentDescription = "Unit switch"
+                contentDescription = unitSwitchContentDescription
                 stateDescription = stateText
             }
     ) {

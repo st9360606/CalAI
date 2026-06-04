@@ -183,7 +183,7 @@ fun RecentUploadCard(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.trash),
-                        contentDescription = "delete recent upload",
+                        contentDescription = stringResource(R.string.recent_upload_delete_content_description),
                         tint = Color.White,
                         modifier = Modifier.size(25.dp)
                     )

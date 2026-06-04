@@ -941,7 +941,7 @@ private fun Avatar(
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_focus_spoon_foreground),
-                    contentDescription = "avatar",
+                    contentDescription = stringResource(R.string.settings_avatar_content_description),
                     modifier = Modifier.size(fallbackIconSize),
                     contentScale = ContentScale.Fit
                 )
@@ -958,7 +958,7 @@ private fun Avatar(
 
             AsyncImage(
                 model = request,
-                contentDescription = "avatar",
+                contentDescription = stringResource(R.string.settings_avatar_content_description),
                 modifier = Modifier
                     .size(avatarSize)
                     .clip(CircleShape),
@@ -1254,7 +1254,7 @@ private fun TopBarSettingsButton(
         ) {
             Icon(
                 imageVector = Icons.Filled.Settings,
-                contentDescription = "settings",
+                contentDescription = stringResource(R.string.common_settings_content_description),
                 modifier = Modifier.size(iconSize)
             )
         }
