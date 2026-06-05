@@ -197,7 +197,7 @@ fun WeightSelectionScreen(
     val lbsDecSel = lbsTenthsClamped % 10
 
     val isZh = currentIsZhByAppLocale()
-    val subtitleToUnitSpacing = if (isZh) 60.dp else 25.dp
+    val subtitleToUnitSpacing = if (isZh) 65.dp else 25.dp
 
     val scope = rememberCoroutineScope()
 
