@@ -33,8 +33,8 @@ import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.max
 import androidx.compose.ui.semantics.Role
+import kotlin.math.max
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCodeScreen(
@@ -86,7 +86,8 @@ fun EmailCodeScreen(
         containerColor = Color.White,
         topBar = {
             BiteCalPlainBackTopBar(onBack = onBack)
-        }    ) { padding ->
+        }
+    ) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
@@ -220,17 +221,6 @@ fun EmailCodeScreen(
                             fontWeight = FontWeight.SemiBold
                         )
                     )
-                }
-            }
-
-            AnimatedVisibility(visible = ui?.loading == true) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator(strokeWidth = 3.dp, color = Color.Black)
                 }
             }
 
