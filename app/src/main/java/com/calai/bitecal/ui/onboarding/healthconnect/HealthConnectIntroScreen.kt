@@ -26,9 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,11 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
@@ -192,7 +186,7 @@ fun HealthConnectIntroScreen(
                 Box(cardModifier, contentAlignment = Alignment.Center) {
                     Image(
                         painter = painterResource(R.drawable.health_connect_logo),
-                        contentDescription = stringResource(R.string.health_connect_logo_content_description),
+                        contentDescription = "logo",
                         modifier = Modifier.size(135.dp),
                         contentScale = ContentScale.Fit
                     )
@@ -237,51 +231,13 @@ fun HealthConnectIntroScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                val titleWidthFraction = 0.74f
-                val bodyWidthFraction = 0.72f
-
-                Text(
-                    text = stringResource(R.string.hc_connect_title_prefix),
-                    modifier = Modifier.fillMaxWidth(titleWidthFraction),
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = 42.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 42.sp
-                    ),
-                    color = Color(0xFF111114),
-                    textAlign = TextAlign.Start,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = stringResource(R.string.hc_connect_title_service),
-                    modifier = Modifier.fillMaxWidth(titleWidthFraction),
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontSize = 42.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 42.sp
-                    ),
-                    color = Color(0xFF111114),
-                    textAlign = TextAlign.Start,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                Text(
-                    text = stringResource(R.string.hc_connect_body),
-                    modifier = Modifier.fillMaxWidth(bodyWidthFraction),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 16.sp,
-                        lineHeight = 22.sp
-                    ),
-                    color = Color(0xFF8F98A3),
-                    textAlign = TextAlign.Start
-                )
-            }
+            HealthConnectRationaleTextBlock(
+                titlePrefix = stringResource(R.string.onboard_hc_connect_title_prefix),
+                titleService = stringResource(R.string.onboard_hc_connect_title_service),
+                body = stringResource(R.string.onboard_hc_connect_body),
+                titleWidthFraction = 0.74f,
+                bodyWidthFraction = 0.72f
+            )
         }
     }
 }

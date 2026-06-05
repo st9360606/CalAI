@@ -7,7 +7,7 @@
     <string name="common_save">儲存</string>
     <string name="common_cancel">取消</string>
     <string name="common_continue_btn">下一步</string>
-    <string name="common_skip">略過</string>
+    <string name="common_skip">跳過</string>
 
     <!-- Landing Screen -->
     <string name="landing_slide_1_content_description">餐點照片輪播 1</string>
@@ -83,11 +83,6 @@
     <string name="onboard_height_subtitle">我們只會用你的資料來改善使用體驗與熱量估算準確度。</string>
     <string name="onboard_height_hint">這將用於校準你的自訂計畫。</string>
 
-
-
-
-
-
     <!-- Onboarding: WeightSelectionScreen  -->
     <string name="onboard_weight_title">你的當前體重是多少？</string>
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
@@ -120,58 +115,59 @@
     <string name="onboard_goal_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_goal_weight_hint">這將用於校準你的自訂計畫。</string>
 
+    <!-- Onboarding: WeightLossComparisonScreen -->
+    <string name="onboard_weight_loss_comparison_title">增加 使用BiteCal AI減重效果是自己減重的\n三倍</string>
+    <string name="onboard_weight_loss_comparison_without_ai">沒有\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_with_ai">使用\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_twenty_percent">20%</string>
+    <string name="onboard_weight_loss_comparison_two_times">3X</string>
+    <string name="onboard_weight_loss_comparison_caption">BiteCal AI讓一切變得簡單並且\n讓您負責</string>
 
+    <!-- Onboarding: NotificationPermissionScreen -->
+    <string name="onboard_notif_title">每一餐都算數</string>
+    <string name="onboard_notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓你的熱量、三大營養素與進度保持在正軌。偶爾忘記很正常；及時提醒能幫你更快回到節奏。</string>
+    <string name="onboard_allow_notifications_cta">允許通知</string>
+    <string name="notification_mock_app_title">AI 熱量計算器</string>
+    <string name="onboard_notif_title_got_a_sec">現在有 10 秒嗎？</string>
+    <string name="onboard_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
 
-    <!-- notifications -->
-    <string name="allow_notifications_cta">允許通知</string>
-    <string name="notif_title">每一餐都算數</string>
-    <string name="notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓你的熱量、三大營養素與進度保持在正軌。偶爾忘記很正常；及時提醒能幫你更快回到節奏。</string>
-    <string name="onb_notif_title_got_a_sec">現在有 10 秒嗎？</string>
-    <string name="onb_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
+    <!-- Onboarding: HealthConnectIntroScreen -->
+    <string name="onboard_hc_connect_title_prefix">連接到</string>
+    <string name="onboard_hc_connect_title_service">Health Connect</string>
+    <string name="onboard_hc_connect_body">在 BiteCal AI 與健康應用間同步日常活動，取得更完整的紀錄與分析。</string>
+    <string name="onboard_hc_permission_rationale_title_prefix">為什麼 BiteCal 使用</string>
+    <string name="onboard_hc_permission_rationale_title_service">Health Connect</string>
+    <string name="onboard_hc_permission_rationale_body">BiteCal 會讀取你的步數、運動與睡眠資料，用來估算每日活動消耗、更新卡路里儀表板，並提供更完整的進度分析。你可以隨時在 Health Connect 中撤銷授權。</string>
+    <string name="onboard_hc_permission_rationale_button">了解</string>
 
-    <!-- HealthConnect -->
-    <string name="hc_connect_title_prefix">連接到</string>
-    <string name="hc_connect_title_service">Health Connect</string>
-    <string name="hc_connect_body">在 BiteCal AI 與健康應用間同步日常活動，取得更完整的紀錄與分析。</string>
-    <string name="skip_text">暫不</string>
-
-    <!-- ComputationProgressScreen -->
+    <!-- Onboarding: ComputationProgressScreen -->
     <string name="progress_hero_title">正在建立你的個人化計畫</string>
     <string name="progress_hero_subtitle">我們會根據你的目標、身體資料與偏好，為你設定每日營養目標。</string>
+    <string name="progress_footer_hint">只需要一點點時間</string>
     <string name="progress_center_caption">正在準備結果</string>
     <string name="progress_phase_pill_1">正在整理你的個人資料</string>
     <string name="progress_phase_pill_2">正在計算每日卡路里目標</string>
     <string name="progress_phase_pill_3">正在平衡每日三大營養素</string>
     <string name="progress_phase_pill_4">正在完成健康評分分析</string>
-    <string name="progress_card_title_v2">正在為你設定計畫</string>
+    <string name="progress_card_title">正在為你設定計畫</string>
     <string name="progress_row_calorie_target">每日卡路里目標</string>
     <string name="progress_row_carb_distribution">碳水分配建議</string>
     <string name="progress_row_protein_recommendation">蛋白質建議</string>
     <string name="progress_row_fat_recommendation">脂肪建議</string>
     <string name="progress_row_health_score_estimate">健康分數預估</string>
-    <string name="progress_footer_hint">只需要一點點時間</string>
 
-    <!-- plan -->
+    <!-- Onboarding: HealthPlanScreen -->
+    <string name="plan_cta_start">開始使用</string>
     <string name="plan_title_congrats">恭喜!</string>
     <string name="plan_subtitle_ready">你的個人健康計畫已完成！</string>
     <string name="plan_edit_anytime">每日攝取量已根據您的目標進行客製化</string>
-
-    <string name="plan_macros_carbs">碳水</string>
-    <string name="plan_macros_proteins">蛋白質</string>
-    <string name="plan_macros_fat">脂肪</string>
-
-    <string name="plan_unit_kcal_day">kcal / 天</string>
-    <string name="plan_unit_g">g</string>
-
-    <string name="plan_bmi_index">BMI 指數</string>
-    <string name="plan_bmi_label_underweight">過輕</string>
-    <string name="plan_bmi_label_normal">正常</string>
-    <string name="plan_bmi_label_overweight">過重</string>
-    <string name="plan_bmi_label_obesity">肥胖</string>
-    <string name="plan_bmi_classified_as">分類：%1$s</string>
-
     <string name="plan_disclaimer">計算以可信學術研究為基礎。可至「個人檔案 &gt; 健康資訊來源」查看來源。</string>
-    <string name="plan_cta_start">開始使用</string>
+    <string name="plan_unit_kcal_day">kcal / 天</string>
+
+    <string name="plan_macros_proteins">蛋白質</string>
+    <string name="plan_macros_carbs">碳水</string>
+    <string name="plan_macros_fat">脂肪</string>
+    <string name="plan_unit_g">g</string>
 
     <string name="plan_water_daily">每日飲水量</string>
     <string name="plan_weight_current">目前體重</string>
@@ -182,10 +178,33 @@
     <string name="plan_goal_card_track_meals">一鍵紀錄餐點，持之以恆更簡單</string>
     <string name="plan_goal_card_daily_calories">每日熱量清晰可見，進度永不偏航</string>
     <string name="plan_goal_card_balance_macros">碳水×蛋白×脂肪，吃對才能更有效</string>
-
     <string name="plan_sources_based_on">根據官方飲食指引，僅供參考非醫療建議。</string>
     <string name="plan_sources_more">查看參考來源 ›</string>
     <string name="plan_sources_hide">隱藏來源</string>
+
+
+    <!-- Onboarding: OnboardReferralCodeScreen -->
+    <string name="onboard_referral_code_input">輸入推薦碼（可選）</string>
+    <string name="onboard_referral_code_subtitle">您可以跳過此步驟</string>
+    <string name="onboard_referral_code_input_label">推薦碼</string>
+    <string name="onboard_referral_code_placeholder">推薦碼</string>
+    <string name="onboard_referral_code_submit">提交</string>
+    <string name="onboard_referral_code_submitting">提交中…</string>
+    <string name="onboard_referral_code_applied">推薦碼已套用！</string>
+
+    <string name="onboard_referral_code_error_invalid_format">僅能輸入英文字母與數字。</string>
+    <string name="onboard_referral_code_error_invalid">找不到這組推薦碼。</string>
+    <string name="onboard_referral_code_error_self_referral">不能輸入自己的推薦碼。</string>
+    <string name="onboard_referral_code_error_already_claimed">此帳號已經套用過推薦碼。</string>
+    <string name="onboard_referral_code_error_already_subscribed">已訂閱過的帳號無法套用推薦碼。</string>
+    <string name="onboard_referral_code_error_disabled">推薦活動目前暫停。</string>
+    <string name="onboard_referral_code_error_risk">目前無法套用推薦碼。</string>
+    <string name="onboard_referral_code_error_network">目前無法套用推薦碼，請稍後再試。</string>
+    <string name="onboard_referral_code_error_unknown">推薦碼目前無法套用，請稍後再試。</string>
+
+
+
+
 
 
 
@@ -589,33 +608,7 @@
     <string name="referral_unable_to_open_share_options">無法開啟分享選項。</string>
 
 
-    <!-- WeightLossComparisonScreen -->
-    <string name="onboard_weight_loss_comparison_title">增加 使用BiteCal AI減重效果是自己減重的\n三倍</string>
-    <string name="onboard_weight_loss_comparison_without_ai">沒有\nBiteCal AI</string>
-    <string name="onboard_weight_loss_comparison_with_ai">使用\nBiteCal AI</string>
-    <string name="onboard_weight_loss_comparison_twenty_percent">20%</string>
-    <string name="onboard_weight_loss_comparison_two_times">3X</string>
-    <string name="onboard_weight_loss_comparison_caption">BiteCal AI讓一切變得簡單並且\n讓您負責</string>
 
-    <!-- Onboarding Referral Code -->
-    <string name="onboard_referral_code_title">好友</string>
-    <string name="onboard_referral_code_input">輸入推薦碼（可選）</string>
-    <string name="onboard_referral_code_subtitle">您可以跳過此步驟</string>
-    <string name="onboard_referral_code_input_label">推薦碼</string>
-    <string name="onboard_referral_code_placeholder">推薦碼</string>
-    <string name="onboard_referral_code_submit">提交</string>
-    <string name="onboard_referral_code_submitting">提交中…</string>
-    <string name="onboard_referral_code_applied">推薦碼已套用！</string>
-    <string name="onboard_referral_code_skip">跳過</string>
-    <string name="onboard_referral_code_error_invalid_format">僅能輸入英文字母與數字。</string>
-    <string name="onboard_referral_code_error_invalid">找不到這組推薦碼。</string>
-    <string name="onboard_referral_code_error_self_referral">不能輸入自己的推薦碼。</string>
-    <string name="onboard_referral_code_error_already_claimed">此帳號已經套用過推薦碼。</string>
-    <string name="onboard_referral_code_error_already_subscribed">已訂閱過的帳號無法套用推薦碼。</string>
-    <string name="onboard_referral_code_error_disabled">推薦活動目前暫停。</string>
-    <string name="onboard_referral_code_error_risk">目前無法套用推薦碼。</string>
-    <string name="onboard_referral_code_error_network">目前無法套用推薦碼，請稍後再試。</string>
-    <string name="onboard_referral_code_error_unknown">推薦碼目前無法套用，請稍後再試。</string>
 
     <!-- NotificationInboxScreen Inbox -->
     <string name="open_notification_settings">開啟通知設定</string>
@@ -950,10 +943,10 @@
     <string name="unit_switch_content_description">單位切換</string>
     <string name="recent_upload_delete_content_description">刪除最近上傳</string>
     <string name="weight_add_entry_content_description">新增體重紀錄</string>
-    <string name="notification_wifi_content_description">Wi-Fi</string>
+
     <string name="notification_app_icon_content_description">App 圖示</string>
-    <string name="notification_mock_app_title">AI 熱量計算器</string>
-    <string name="health_connect_logo_content_description">Health Connect 標誌</string>
+
+
     <string name="subscription_intro_slide_1_content_description">訂閱介紹餐點輪播 1</string>
     <string name="subscription_intro_slide_2_content_description">訂閱介紹餐點輪播 2</string>
     <string name="subscription_intro_slide_3_content_description">訂閱介紹餐點輪播 3</string>

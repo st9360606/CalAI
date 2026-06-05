@@ -249,7 +249,7 @@ private fun ProgressChecklistCard(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text(
-                text = stringResource(R.string.progress_card_title_v2),
+                text = stringResource(R.string.progress_card_title),
                 fontSize = 16.sp,
                 lineHeight = 20.sp,
                 fontWeight = FontWeight.Bold,

@@ -61,7 +61,7 @@ class OnboardReferralCodeScreenTest {
     fun errorState_skipAndContinueDisplayed() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val error = context.getString(R.string.onboard_referral_code_error_risk)
-        val skip = context.getString(R.string.onboard_referral_code_skip_and_continue)
+        val skip = context.getString(R.string.common_skip)
 
         composeRule.setContent {
             OnboardReferralCodeScreen(

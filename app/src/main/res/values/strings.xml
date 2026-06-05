@@ -115,58 +115,59 @@
     <string name="onboard_goal_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_goal_weight_hint">This will be used to calibrate your custom plan.</string>
 
+    <!-- Onboarding: WeightLossComparisonScreen -->
+    <string name="onboard_weight_loss_comparison_title">Using BiteCal AI can\ntriple your weight loss efficiency</string>
+    <string name="onboard_weight_loss_comparison_without_ai">Without\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_with_ai">With\nBiteCal AI</string>
+    <string name="onboard_weight_loss_comparison_twenty_percent">20%</string>
+    <string name="onboard_weight_loss_comparison_two_times">3X</string>
+    <string name="onboard_weight_loss_comparison_caption">BiteCal AI makes everything simple\nand keeps you accountable</string>
 
+    <!-- Onboarding: NotificationPermissionScreen -->
+    <string name="onboard_notif_title">Make every meal count!</string>
+    <string name="onboard_notif_subtitle">Enable notifications for gentle reminders to log meals—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
+    <string name="onboard_allow_notifications_cta">Allow notifications</string>
+    <string name="notification_mock_app_title">AI Calorie Counter</string>
+    <string name="onboard_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
+    <string name="onboard_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
 
-    <!-- notifications -->
-    <string name="allow_notifications_cta">Allow notifications</string>
-    <string name="notif_title">Make every meal count!</string>
-    <string name="notif_subtitle">Enable notifications for gentle reminders to log meals—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
-    <string name="onb_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
-    <string name="onb_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
+    <!-- Onboarding: HealthConnectIntroScreen -->
+    <string name="onboard_hc_connect_title_prefix">Connect to</string>
+    <string name="onboard_hc_connect_title_service">Health Connect</string>
+    <string name="onboard_hc_connect_body">Sync your daily activity between BiteCal AI and your health apps for more complete tracking and insights.</string>
+    <string name="onboard_hc_permission_rationale_title_prefix">Why BiteCal uses</string>
+    <string name="onboard_hc_permission_rationale_title_service">Health Connect</string>
+    <string name="onboard_hc_permission_rationale_body">BiteCal reads your steps, exercise, and sleep data to estimate daily activity burn, update your calorie dashboard, and improve progress insights. You can revoke access anytime in Health Connect.</string>
+    <string name="onboard_hc_permission_rationale_button">Got it</string>
 
-    <!-- HealthConnect -->
-    <string name="hc_connect_title_prefix">Connect to</string>
-    <string name="hc_connect_title_service">Health Connect</string>
-    <string name="hc_connect_body">Sync your daily activity between BiteCal AI and your health apps for more complete tracking and insights.</string>
-    <string name="skip_text">Not now</string>
-
-    <!-- ComputationProgressScreen -->
+    <!-- Onboarding: ComputationProgressScreen -->
     <string name="progress_hero_title">Creating your personalized plan</string>
     <string name="progress_hero_subtitle">We’re using your goals, body data, and preferences to tailor your daily targets.</string>
+    <string name="progress_footer_hint">This takes just a moment</string>
     <string name="progress_center_caption">Preparing your results</string>
     <string name="progress_phase_pill_1">Reviewing your profile</string>
     <string name="progress_phase_pill_2">Calculating your calorie target</string>
     <string name="progress_phase_pill_3">Balancing your daily macros</string>
     <string name="progress_phase_pill_4">Finalizing your health insights</string>
-    <string name="progress_card_title_v2">Setting up your plan</string>
+    <string name="progress_card_title">Setting up your plan</string>
     <string name="progress_row_calorie_target">Daily calorie target</string>
     <string name="progress_row_carb_distribution">Carb distribution</string>
     <string name="progress_row_protein_recommendation">Protein recommendation</string>
     <string name="progress_row_fat_recommendation">Fat recommendation</string>
     <string name="progress_row_health_score_estimate">Health score estimate</string>
-    <string name="progress_footer_hint">This takes just a moment</string>
 
-    <!-- plan -->
+    <!-- Onboarding: HealthPlanScreen -->
+    <string name="plan_cta_start">Let\'s get started</string>
     <string name="plan_title_congrats">Congratulations!</string>
     <string name="plan_subtitle_ready">Your personal health plan is ready!</string>
     <string name="plan_edit_anytime">You can edit this anytime.</string>
-
-    <string name="plan_macros_carbs">Carbs</string>
-    <string name="plan_macros_proteins">Protein</string>
-    <string name="plan_macros_fat">Fats</string>
-
-    <string name="plan_unit_kcal_day">kcal / day</string>
-    <string name="plan_unit_g">g</string>
-
-    <string name="plan_bmi_index">BMI index</string>
-    <string name="plan_bmi_label_underweight">Underweight</string>
-    <string name="plan_bmi_label_normal">Normal</string>
-    <string name="plan_bmi_label_overweight">Overweight</string>
-    <string name="plan_bmi_label_obesity">Obesity</string>
-    <string name="plan_bmi_classified_as">classified as %1$s</string>
-
     <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
-    <string name="plan_cta_start">Let\'s get started</string>
+    <string name="plan_unit_kcal_day">kcal / day</string>
+
+    <string name="plan_macros_proteins">Protein</string>
+    <string name="plan_macros_carbs">Carbs</string>
+    <string name="plan_macros_fat">Fats</string>
+    <string name="plan_unit_g">g</string>
 
     <string name="plan_water_daily">Daily Water</string>
     <string name="plan_weight_current">Current weight</string>
@@ -177,10 +178,36 @@
     <string name="plan_goal_card_track_meals">Log meals in one tap, staying consistent is easy</string>
     <string name="plan_goal_card_daily_calories">See daily calories clearly, and never lose track</string>
     <string name="plan_goal_card_balance_macros">Carbs × protein × fat, smart balance, better results</string>
-
     <string name="plan_sources_based_on">Based on official dietary guidelines,\nfor reference only, not medical advice.</string>
     <string name="plan_sources_more">See all references ›</string>
     <string name="plan_sources_hide">Hide sources</string>
+
+
+    <!-- Onboarding: OnboardReferralCodeScreen -->
+    <string name="onboard_referral_code_input">Enter referral code\n(optional)</string>
+    <string name="onboard_referral_code_subtitle">You can skip this step</string>
+    <string name="onboard_referral_code_input_label">Referral code</string>
+    <string name="onboard_referral_code_placeholder">Referral code</string>
+    <string name="onboard_referral_code_submit">Submit</string>
+    <string name="onboard_referral_code_submitting">Submitting…</string>
+    <string name="onboard_referral_code_applied">Referral code applied!</string>
+
+    <string name="onboard_referral_code_error_invalid_format">Use letters and numbers only.</string>
+    <string name="onboard_referral_code_error_invalid">We couldn\'t find this referral code.</string>
+    <string name="onboard_referral_code_error_self_referral">You can\'t use your own referral code.</string>
+    <string name="onboard_referral_code_error_already_claimed">This account has already applied a referral code.</string>
+    <string name="onboard_referral_code_error_already_subscribed">Subscribed accounts can\'t apply a referral code.</string>
+    <string name="onboard_referral_code_error_disabled">Referral is temporarily unavailable.</string>
+    <string name="onboard_referral_code_error_risk">We can\'t apply a referral code right now.</string>
+    <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
+    <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now.\nPlease try again later.</string>
+
+
+
+
+
+
+
 
 
 
@@ -587,34 +614,7 @@
 
 
 
-    <!-- WeightLossComparisonScreen -->
-    <string name="onboard_weight_loss_comparison_title">Using BiteCal AI can\ntriple your weight loss efficiency</string>
-    <string name="onboard_weight_loss_comparison_without_ai">Without\nBiteCal AI</string>
-    <string name="onboard_weight_loss_comparison_with_ai">With\nBiteCal AI</string>
-    <string name="onboard_weight_loss_comparison_twenty_percent">20%</string>
-    <string name="onboard_weight_loss_comparison_two_times">3X</string>
-    <string name="onboard_weight_loss_comparison_caption">BiteCal AI makes everything simple\nand keeps you accountable</string>
 
-
-    <!-- Onboarding Referral Code -->
-    <string name="onboard_referral_code_title">Friends</string>
-    <string name="onboard_referral_code_input">Enter referral code\n(optional)</string>
-    <string name="onboard_referral_code_subtitle">You can skip this step</string>
-    <string name="onboard_referral_code_input_label">Referral code</string>
-    <string name="onboard_referral_code_placeholder">Referral code</string>
-    <string name="onboard_referral_code_submit">Submit</string>
-    <string name="onboard_referral_code_submitting">Submitting…</string>
-    <string name="onboard_referral_code_applied">Referral code applied!</string>
-    <string name="onboard_referral_code_skip">Skip</string>
-    <string name="onboard_referral_code_error_invalid_format">Use letters and numbers only.</string>
-    <string name="onboard_referral_code_error_invalid">We couldn\'t find this referral code.</string>
-    <string name="onboard_referral_code_error_self_referral">You can\'t use your own referral code.</string>
-    <string name="onboard_referral_code_error_already_claimed">This account has already applied a referral code.</string>
-    <string name="onboard_referral_code_error_already_subscribed">Subscribed accounts can\'t apply a referral code.</string>
-    <string name="onboard_referral_code_error_disabled">Referral is temporarily unavailable.</string>
-    <string name="onboard_referral_code_error_risk">We can\'t apply a referral code right now.</string>
-    <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
-    <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now.\nPlease try again later.</string>
 
     <!-- NotificationInboxScreen Inbox -->
     <string name="open_notification_settings">Open notification settings</string>
@@ -949,10 +949,10 @@
     <string name="unit_switch_content_description">Unit switch</string>
     <string name="recent_upload_delete_content_description">Delete recent upload</string>
     <string name="weight_add_entry_content_description">Add weight entry</string>
-    <string name="notification_wifi_content_description">Wi-Fi</string>
+
     <string name="notification_app_icon_content_description">App icon</string>
-    <string name="notification_mock_app_title">AI Calorie Counter</string>
-    <string name="health_connect_logo_content_description">Health Connect logo</string>
+
+
     <string name="subscription_intro_slide_1_content_description">Subscription intro meal slide 1</string>
     <string name="subscription_intro_slide_2_content_description">Subscription intro meal slide 2</string>
     <string name="subscription_intro_slide_3_content_description">Subscription intro meal slide 3</string>

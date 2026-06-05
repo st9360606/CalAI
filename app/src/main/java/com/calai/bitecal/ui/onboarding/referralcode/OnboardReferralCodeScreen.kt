@@ -100,7 +100,7 @@ fun OnboardReferralCodeScreen(
                 onPrimaryClick = onContinue,
                 primaryEnabled = !ui.submitting,
                 primaryLoading = ui.submitting,
-                secondaryText = stringResource(R.string.onboard_referral_code_skip),
+                secondaryText = stringResource(R.string.common_skip),
                 onSecondaryClick = onSkipAndContinue,
                 secondaryEnabled = !ui.submitting,
                 compactBottom = true,

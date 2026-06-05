@@ -234,7 +234,7 @@ fun NotificationPermissionScreen(
                     )
 
                     NotifTitleWithEndImageInline(
-                        text = verifyTitle(R.string.notif_title, "Make every meal count"),
+                        text = verifyTitle(R.string.onboard_notif_title, "Make every meal count"),
                         tailRes = R.drawable.notifications,
                         modifier = Modifier.fillMaxWidth(0.82f),
                         tailSizeSp = titleStyle.fontSize,
@@ -247,7 +247,7 @@ fun NotificationPermissionScreen(
 
                     Text(
                         text = verifyTitle(
-                            R.string.notif_subtitle,
+                            R.string.onboard_notif_subtitle,
                             "Enable notifications—we’ll nudge you at the right moments so the occasional slip doesn’t set you back!"
                         ),
                         style = MaterialTheme.typography.bodyMedium.copy(
@@ -278,7 +278,7 @@ private fun NotifBottomBar(
         BiteCalOnboardingPrimaryButton(
             text = when {
                 granted -> verifyTitle(R.string.common_continue_btn, "Continue")
-                canRequest -> verifyTitle(R.string.allow_notifications_cta, "Allow notifications")
+                canRequest -> verifyTitle(R.string.onboard_allow_notifications_cta, "Allow notifications")
                 else -> verifyTitle(R.string.common_continue_btn, "Continue")
             },
             onClick = onClick
@@ -384,7 +384,7 @@ private fun StatusBarIcons(
     ) {
         Icon(
             imageVector = Icons.Filled.Wifi,
-            contentDescription = stringResource(R.string.notification_wifi_content_description),
+            contentDescription = "Wi-Fi signal icon",
             tint = tint,
             modifier = Modifier.size(18.dp)
         )
@@ -541,7 +541,7 @@ private fun NotificationCardIOS(
                     .padding(start = 3.dp)
             ) {
                 Text(
-                    text = stringResource(id = R.string.onb_notif_title_got_a_sec),
+                    text = stringResource(id = R.string.onboard_notif_title_got_a_sec),
                     fontSize = NotifCardSpec.titleFont,
                     lineHeight = NotifCardSpec.titleLine,
                     fontWeight = FontWeight.SemiBold,
@@ -553,7 +553,7 @@ private fun NotificationCardIOS(
                 Spacer(Modifier.height(3.dp))
 
                 Text(
-                    text = stringResource(id = R.string.onb_notif_subtitle_log_meal_goal),
+                    text = stringResource(id = R.string.onboard_notif_subtitle_log_meal_goal),
                     fontSize = NotifCardSpec.bodyFont,
                     lineHeight = NotifCardSpec.bodyLine,
                     color = bodyColor,
