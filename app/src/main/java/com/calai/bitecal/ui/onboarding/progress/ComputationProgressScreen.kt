@@ -184,14 +184,26 @@ private fun HeroProgressRing(
         }
 
         Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "${percent.coerceIn(0, 100)}%",
+                modifier = Modifier.fillMaxWidth(),
                 color = ProgressTokens.TextPrimary,
                 fontSize = 42.sp,
                 lineHeight = 46.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                style = LocalTextStyle.current.copy(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    lineHeightStyle = LineHeightStyle(
+                        alignment = LineHeightStyle.Alignment.Center,
+                        trim = LineHeightStyle.Trim.Both
+                    )
+                )
             )
 
             Spacer(modifier = Modifier.height(4.dp))

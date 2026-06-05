@@ -3,13 +3,13 @@ package com.calai.bitecal.ui.auth.email
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,14 +27,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.calai.bitecal.R
+import com.calai.bitecal.ui.common.design.BiteCalPlainBackTopBar
+import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
-import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
-import com.calai.bitecal.ui.common.design.BiteCalPlainBackTopBar
-import com.calai.bitecal.ui.common.design.BiteCalSpacing
-import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
+import androidx.compose.ui.semantics.Role
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmailCodeScreen(
@@ -190,24 +190,35 @@ fun EmailCodeScreen(
                     stringResource(R.string.didnt_receive_code),
                     style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
                 )
+
                 Spacer(Modifier.width(6.dp))
 
-                TextButton(
-                    enabled = canResend,
-                    onClick = rememberClickWithHaptic {
-                        localLeft = 60
-                        vm.resend()
-                        scope.launch { delay(80); focus.requestFocus() }
-                    },
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color.Black,
-                        disabledContentColor = Color(0x61000000)
-                    )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(
+                            enabled = canResend,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            role = Role.Button,
+                            onClick = rememberClickWithHaptic {
+                                localLeft = 60
+                                vm.resend()
+                                scope.launch {
+                                    delay(80)
+                                    focus.requestFocus()
+                                }
+                            }
+                        )
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = resendLabel,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color(0xFF111114),
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
                 }
             }

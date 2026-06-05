@@ -1126,10 +1126,10 @@ private fun OneTimeOfferTrialCard(
         ) {
             Text(
                 text = when {
-                    !trialEligibilityLoaded -> "Checking trial eligibility..."
-                    !trialEligible -> "Trial already used"
-                    trialEnabled -> "Free trial enabled"
-                    else -> "Not sure? Enable free trial"
+                    !trialEligibilityLoaded -> stringResource(R.string.subscription_trial_checking_eligibility)
+                    !trialEligible -> stringResource(R.string.subscription_trial_already_used)
+                    trialEnabled -> stringResource(R.string.subscription_trial_enabled)
+                    else -> stringResource(R.string.subscription_trial_enable_prompt)
                 },
                 color = Color(0xFF111111),
                 fontSize = 21.sp,
@@ -1170,7 +1170,11 @@ private fun OneTimeOfferTrialCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (trialEnabled && trialEligible) "Free trial" else "Lowest price ever",
+                    text = if (trialEnabled && trialEligible) {
+                        stringResource(R.string.subscription_badge_free_trial)
+                    } else {
+                        stringResource(R.string.subscription_badge_lowest_price_ever)
+                    },
                     color = Color.White,
                     fontSize = 14.sp,
                     lineHeight = 17.sp,

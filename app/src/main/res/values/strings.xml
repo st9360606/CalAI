@@ -134,7 +134,7 @@
     <!-- Onboarding: HealthConnectIntroScreen -->
     <string name="onboard_hc_connect_title_prefix">Connect to</string>
     <string name="onboard_hc_connect_title_service">Health Connect</string>
-    <string name="onboard_hc_connect_body">Sync your daily activity between BiteCal AI and your health apps for more complete tracking and insights.</string>
+    <string name="onboard_hc_connect_body">Sync daily activity between BiteCal AI and health apps to get more complete records and insights.</string>
     <string name="onboard_hc_permission_rationale_title_prefix">Why BiteCal uses</string>
     <string name="onboard_hc_permission_rationale_title_service">Health Connect</string>
     <string name="onboard_hc_permission_rationale_body">BiteCal reads your steps, exercise, and sleep data to estimate daily activity burn, update your calorie dashboard, and improve progress insights. You can revoke access anytime in Health Connect.</string>
@@ -200,6 +200,50 @@
     <string name="onboard_referral_code_error_risk">We can\'t apply a referral code right now.</string>
     <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
     <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now.\nPlease try again later.</string>
+
+    <!-- Onboarding: OnboardSubscriptionScreen  Paywall -->
+    <string name="subscription_intro_title">Unlock BiteCal AI to\nreach your goals faster.</string>
+    <string name="subscription_intro_helper_format">Just %1$s per year (%2$s)</string>
+    <string name="subscription_already_owned_restore_required">Your Google Play account already has an active BiteCal subscription. Restore it to this BiteCal account before using premium features.</string>
+    <string name="restore_subscription_dialog_title">Subscription found</string>
+    <string name="settings_restore_subscription">Restore subscription</string>
+    <string name="restore_subscription_dialog_restoring">Restoring...</string>
+    <string name="common_maybe_later">Maybe later</string>
+
+    <string name="subscription_spin_title">Spin to unlock an\nexclusive discount</string>
+    <string name="subscription_spin_helper_ready">Tap Spin to reveal your exclusive gift.</string>
+    <string name="subscription_spin_button">Spin</string>
+    <string name="subscription_spinning_button">Spinning...</string>
+    <string name="subscription_gift_offer_unlocked">Gift offer unlocked</string>
+    <string name="subscription_spin_helper_wait">Please wait until the wheel stops.</string>
+    <string name="subscription_spin_helper_revealed">This offer is revealed after the wheel stops.</string>
+
+
+    <string name="subscription_gift_unlocked_title">Gift unlocked 🎁</string>
+    <string name="subscription_gift_price_unlocked">Gift price unlocked</string>
+    <string name="subscription_unlock_premium_for_only">Unlock premium for only</string>
+    <string name="subscription_discount_body">Scan meals faster. Track macros smarter.\nStay on plan daily.</string>
+    <string name="subscription_urgency_coffee">Less than a coffee.</string>
+    <string name="subscription_urgency_price_gone">Close this screen? This price is gone</string>
+    <string name="subscription_urgency_waiting">What are you waiting for?</string>
+    <string name="subscription_trial_checking_eligibility">Checking trial availability…</string>
+    <string name="subscription_trial_already_used">Trial already used</string>
+    <string name="subscription_trial_enabled">Free trial enabled</string>
+    <string name="subscription_trial_enable_prompt">Not sure? Turn on free trial</string>
+    <string name="subscription_badge_free_trial">Free trial</string>
+    <string name="subscription_badge_lowest_price_ever">Lowest price ever</string>
+    <string name="subscription_yearly_plan">Yearly Plan</string>
+    <string name="subscription_yearly_plan_price_format">12mo · %1$s</string>
+
+
+
+
+    <string name="subscription_start_free_trial">Start free trial</string>
+    <string name="subscription_trial_helper">No commitment — cancel anytime</string>
+
+
+
+    <string name="subscription_yearly_price_format">%1$s/year</string>
 
 
 
@@ -671,10 +715,9 @@
     <string name="settings_delete_account">Delete account?</string>
     <string name="settings_version">Version %1$s</string>
 
-    <string name="settings_restore_subscription">Restore subscription</string>
-    <string name="restore_subscription_dialog_title">Subscription found</string>
+
     <string name="restore_subscription_dialog_body">We found an active BiteCal subscription or trial associated with the Google Play account on this device. You can restore it to the BiteCal account you’re currently signed in to.</string>
-    <string name="restore_subscription_dialog_restoring">Restoring...</string>
+
     <string name="restore_subscription_dialog_success_title">Subscription restored</string>
     <string name="restore_subscription_dialog_success_body">Your subscription has been restored to this BiteCal account.</string>
     <string name="restore_subscription_dialog_payment_issue_title">Subscription restored, payment issue remains</string>
@@ -687,7 +730,7 @@
     <string name="restore_subscription_dialog_bound_body">This subscription is already linked to another active BiteCal account. Please contact support if you believe this is a mistake.</string>
     <string name="common_delete">Delete</string>
     <string name="common_deleting">Deleting...</string>
-    <string name="common_maybe_later">Maybe later</string>
+
 
     <string name="delete_account_dialog_title">Delete account?</string>
     <string name="delete_account_dialog_body">Are you sure you want to delete your account? This will permanently delete your BiteCal data, including food logs, weight records, and related settings. This action cannot be undone.</string>
@@ -723,7 +766,7 @@
     <string name="widget_guide_mock_home">Home</string>
     <string name="widget_guide_mock_widgets">Widgets</string>
 
-    <string name="subscription_already_owned_restore_required">Your Google Play account already has an active BiteCal subscription. Restore it to this BiteCal account before using premium features.</string>
+
 
     <!-- DurationPickerSheet -->
     <string name="workout_duration_sheet_subtitle">Add this workout time to your activity log</string>
@@ -995,28 +1038,7 @@
     <string name="personal_details_goal_weight">Goal weight</string>
     <string name="edit_name_placeholder">Enter your name</string>
 
-    <!-- Subscription paywall -->
-    <string name="subscription_intro_helper_format">Just %1$s per year (%2$s)</string>
-    <string name="subscription_intro_title">Unlock BiteCal AI to\nreach your goals faster.</string>
-    <string name="subscription_gift_offer_unlocked">Gift offer unlocked</string>
-    <string name="subscription_gift_unlocked_title">Gift unlocked 🎁</string>
-    <string name="subscription_spin_helper_ready">Tap Spin to reveal your exclusive gift.</string>
-    <string name="subscription_spin_helper_wait">Please wait until the wheel stops.</string>
-    <string name="subscription_spin_helper_revealed">This offer is revealed after the wheel stops.</string>
-    <string name="subscription_spin_button">Spin</string>
-    <string name="subscription_spinning_button">Spinning...</string>
-    <string name="subscription_spin_title">Spin to unlock an\nexclusive discount</string>
-    <string name="subscription_start_free_trial">Start free trial</string>
-    <string name="subscription_trial_helper">No commitment — cancel anytime</string>
-    <string name="subscription_gift_price_unlocked">Gift price unlocked</string>
-    <string name="subscription_unlock_premium_for_only">Unlock premium for only</string>
-    <string name="subscription_discount_body">Scan meals faster. Track macros smarter.\nStay on plan daily.</string>
-    <string name="subscription_yearly_price_format">%1$s/year</string>
-    <string name="subscription_urgency_coffee">Less than a coffee.</string>
-    <string name="subscription_urgency_price_gone">Close this screen? This price is gone</string>
-    <string name="subscription_urgency_waiting">What are you waiting for?</string>
-    <string name="subscription_yearly_plan">Yearly Plan</string>
-    <string name="subscription_yearly_plan_price_format">12mo · %1$s</string>
+
 
     <!-- Android home screen widgets -->
     <string name="widget_preview_goal_kcal">1830</string>

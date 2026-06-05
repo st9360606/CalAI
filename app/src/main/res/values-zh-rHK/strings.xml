@@ -134,7 +134,7 @@
     <!-- Onboarding: HealthConnectIntroScreen -->
     <string name="onboard_hc_connect_title_prefix">連接到</string>
     <string name="onboard_hc_connect_title_service">Health Connect</string>
-    <string name="onboard_hc_connect_body">在 BiteCal AI 與健康應用間同步日常活動，取得更完整的紀錄與分析。</string>
+    <string name="onboard_hc_connect_body">在 BiteCal AI 與健康應用之間同步日常活動，取得更完整的紀錄與分析。</string>
     <string name="onboard_hc_permission_rationale_title_prefix">為什麼 BiteCal 使用</string>
     <string name="onboard_hc_permission_rationale_title_service">Health Connect</string>
     <string name="onboard_hc_permission_rationale_body">BiteCal 會讀取你的步數、運動與睡眠資料，用來估算每日活動消耗、更新卡路里儀表板，並提供更完整的進度分析。你可以隨時在 Health Connect 中撤銷授權。</string>
@@ -200,6 +200,51 @@
     <string name="onboard_referral_code_error_risk">目前無法套用推薦碼。</string>
     <string name="onboard_referral_code_error_network">目前無法套用推薦碼，請稍後再試。</string>
     <string name="onboard_referral_code_error_unknown">推薦碼目前無法套用，請稍後再試。</string>
+
+    <!-- Onboarding: OnboardSubscriptionScreen  Paywall -->
+    <string name="subscription_intro_title">解鎖 BiteCal AI\n更快達成你的目標。</string>
+    <string name="subscription_intro_helper_format">每年只要 %1$s（約 %2$s）</string>
+    <string name="subscription_already_owned_restore_required">目前這個 Google Play 帳號已經有有效的 BiteCal 訂閱。請先將訂閱恢復到目前登入的 BiteCal 帳號，才能使用付費功能。</string>
+    <string name="restore_subscription_dialog_title">偵測到可恢復的訂閱</string>
+    <string name="settings_restore_subscription">恢復訂閱</string>
+    <string name="restore_subscription_dialog_restoring">恢復中...</string>
+    <string name="common_maybe_later">稍後再說</string>
+
+    <string name="subscription_spin_title">解鎖專屬折扣</string>
+    <string name="subscription_spin_helper_ready">點擊 Spin 揭曉你的專屬禮物。</string>
+    <string name="subscription_spin_button">Spin</string>
+    <string name="subscription_spinning_button">轉動中…</string>
+    <string name="subscription_gift_offer_unlocked">禮物優惠已解鎖</string>
+    <string name="subscription_spin_helper_wait">請等待轉盤停止。</string>
+    <string name="subscription_spin_helper_revealed">優惠會在轉盤停止後揭曉。</string>
+
+
+
+    <string name="subscription_gift_unlocked_title">禮物已解鎖 🎁</string>
+    <string name="subscription_gift_price_unlocked">禮物價格已解鎖</string>
+    <string name="subscription_unlock_premium_for_only">只需以下價格即可解鎖 Premium</string>
+    <string name="subscription_discount_body">更快掃描餐點，更聰明追蹤營養素。\n每天穩定保持計畫。</string>
+    <string name="subscription_urgency_coffee">比一杯咖啡更划算。</string>
+    <string name="subscription_urgency_price_gone">關閉此畫面後，這個價格就會消失</string>
+    <string name="subscription_urgency_waiting">還在等什麼？</string>
+    <string name="subscription_trial_checking_eligibility">正在檢查試用資格…</string>
+    <string name="subscription_trial_already_used">已使用過試用</string>
+    <string name="subscription_trial_enabled">免費試用已啟用</string>
+    <string name="subscription_trial_enable_prompt">還不確定？開啟免費試用</string>
+    <string name="subscription_badge_free_trial">免費試用</string>
+    <string name="subscription_badge_lowest_price_ever">史上最低價</string>
+    <string name="subscription_yearly_plan">年度方案</string>
+    <string name="subscription_yearly_plan_price_format">12 個月 · %1$s</string>
+
+
+
+
+    <string name="subscription_start_free_trial">開始免費試用</string>
+    <string name="subscription_trial_helper">無承諾，可隨時取消</string>
+
+
+
+    <string name="subscription_yearly_price_format">%1$s/年</string>
 
 
 
@@ -665,10 +710,9 @@
     <string name="settings_delete_account">刪除帳戶？</string>
     <string name="settings_version">版本 %1$s</string>
 
-    <string name="settings_restore_subscription">恢復訂閱</string>
-    <string name="restore_subscription_dialog_title">偵測到可恢復的訂閱</string>
+
     <string name="restore_subscription_dialog_body">我們在目前這台裝置使用的 Google Play 帳號中，偵測到 BiteCal 仍有有效的訂閱或試用。你可以將這筆訂閱恢復到目前登入的 BiteCal 帳號。</string>
-    <string name="restore_subscription_dialog_restoring">恢復中...</string>
+
     <string name="restore_subscription_dialog_success_title">訂閱已恢復</string>
     <string name="restore_subscription_dialog_success_body">你的訂閱已恢復到目前登入的 BiteCal 帳號。</string>
     <string name="restore_subscription_dialog_payment_issue_title">訂閱已恢復，但付款仍有問題</string>
@@ -682,7 +726,7 @@
 
     <string name="common_delete">刪除</string>
     <string name="common_deleting">刪除中...</string>
-    <string name="common_maybe_later">稍後再說</string>
+
 
     <string name="delete_account_dialog_title">刪除帳號？</string>
     <string name="delete_account_dialog_body">您確定要刪除帳號嗎？此操作將永久刪除您在 BiteCal 中的資料，包括飲食紀錄、體重紀錄與相關設定。刪除後將無法復原。</string>
@@ -717,7 +761,7 @@
     <string name="widget_guide_mock_home">桌面</string>
     <string name="widget_guide_mock_widgets">小工具</string>
 
-    <string name="subscription_already_owned_restore_required">目前這個 Google Play 帳號已經有有效的 BiteCal 訂閱。請先將訂閱恢復到目前登入的 BiteCal 帳號，才能使用付費功能。</string>
+
 
     <!-- DurationPickerSheet -->
     <string name="workout_duration_sheet_subtitle">將這次運動時間加入你的活動紀錄</string>
@@ -989,28 +1033,7 @@
     <string name="personal_details_goal_weight">目標體重</string>
     <string name="edit_name_placeholder">輸入你的名字</string>
 
-    <!-- Subscription paywall -->
-    <string name="subscription_intro_helper_format">每年只要 %1$s（約 %2$s）</string>
-    <string name="subscription_intro_title">解鎖 BiteCal AI\n更快達成你的目標。</string>
-    <string name="subscription_gift_offer_unlocked">禮物優惠已解鎖</string>
-    <string name="subscription_gift_unlocked_title">禮物已解鎖 🎁</string>
-    <string name="subscription_spin_helper_ready">點擊 Spin 揭曉你的專屬禮物。</string>
-    <string name="subscription_spin_helper_wait">請等待轉盤停止。</string>
-    <string name="subscription_spin_helper_revealed">優惠會在轉盤停止後揭曉。</string>
-    <string name="subscription_spin_button">Spin</string>
-    <string name="subscription_spinning_button">轉動中...</string>
-    <string name="subscription_spin_title">轉動解鎖\n專屬折扣</string>
-    <string name="subscription_start_free_trial">開始免費試用</string>
-    <string name="subscription_trial_helper">無承諾，可隨時取消</string>
-    <string name="subscription_gift_price_unlocked">禮物價格已解鎖</string>
-    <string name="subscription_unlock_premium_for_only">只需以下價格即可解鎖 Premium</string>
-    <string name="subscription_discount_body">更快掃描餐點，更聰明追蹤營養素。\n每天穩定保持計畫。</string>
-    <string name="subscription_yearly_price_format">%1$s/年</string>
-    <string name="subscription_urgency_coffee">比一杯咖啡更划算。</string>
-    <string name="subscription_urgency_price_gone">關閉此畫面後，這個價格就會消失</string>
-    <string name="subscription_urgency_waiting">還在等什麼？</string>
-    <string name="subscription_yearly_plan">年度方案</string>
-    <string name="subscription_yearly_plan_price_format">12 個月 · %1$s</string>
+
 
     <!-- Android home screen widgets -->
     <string name="widget_preview_goal_kcal">1830</string>
