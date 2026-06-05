@@ -160,7 +160,6 @@
     <string name="plan_cta_start">Let\'s get started</string>
     <string name="plan_title_congrats">Congratulations!</string>
     <string name="plan_subtitle_ready">Your personal health plan is ready!</string>
-    <string name="plan_edit_anytime">You can edit this anytime.</string>
     <string name="plan_disclaimer">Calculations based on established scientific research. View sources in Profile &gt; Health Information Sources.</string>
     <string name="plan_unit_kcal_day">kcal / day</string>
 

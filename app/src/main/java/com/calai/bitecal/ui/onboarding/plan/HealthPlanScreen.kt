@@ -203,21 +203,7 @@ fun HealthPlanScreen(
                 displayGoal = ui.goalWeightDisplay
             )
 
-            Spacer(Modifier.height(18.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.plan_edit_anytime),
-                    color = HealthPlanTokens.NeutralText,
-                    fontSize = 12.sp,
-                    modifier = Modifier.fillMaxWidth(0.55f),
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
 
             CommonBmiCard(
                 model = rememberHealthPlanBmiCardModel(
