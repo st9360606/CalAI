@@ -60,7 +60,7 @@ fun EditGenderScreen(
         },
         bottomBar = {
             BiteCalEditBottomActionBar(
-                primaryText = stringResource(R.string.save),
+                primaryText = stringResource(R.string.common_close),
                 onPrimaryClick = {
                     selected?.let { sel ->
                         vm.saveAndSyncGender(selected = sel, onSuccess = onSaved)

@@ -63,7 +63,7 @@ fun EditAgeScreen(
         topBar = { BiteCalTopBar(title = "Edit Your Age", onBack = onBack) },
         bottomBar = {
             BiteCalEditBottomActionBar(
-                primaryText = stringResource(R.string.save),
+                primaryText = stringResource(R.string.common_close),
                 onPrimaryClick = { vm.saveAndSyncAge(ageYears = age, onSuccess = onSaved) },
                 primaryEnabled = !ui.saving && !ui.initializing,
                 primaryLoading = ui.saving,

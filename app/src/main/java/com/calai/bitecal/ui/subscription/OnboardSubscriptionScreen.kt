@@ -513,7 +513,7 @@ private fun OnboardSubscriptionIntro(
         }
 
         OnboardPaywallBottomCta(
-            buttonText = stringResource(R.string.continue_text),
+            buttonText = stringResource(R.string.common_continue_btn),
             helperText = helperText,
             loading = purchasing,
             onClick = onContinue
@@ -604,7 +604,7 @@ private fun OnboardDiscountSpinScreen(
     val buttonText = when {
         !spinStarted -> stringResource(R.string.subscription_spin_button)
         !spinFinished -> stringResource(R.string.subscription_spinning_button)
-        else -> stringResource(R.string.continue_text)
+        else -> stringResource(R.string.common_continue_btn)
     }
 
     val buttonLoading = spinStarted && !spinFinished
@@ -758,7 +758,7 @@ private fun OnboardOneTimeOfferScreen(
             buttonText = if (trialEnabled && trialEligible) {
                 stringResource(R.string.subscription_start_free_trial)
             } else {
-                stringResource(R.string.continue_text)
+                stringResource(R.string.common_continue_btn)
             },
             helperText = stringResource(R.string.subscription_trial_helper),
             helperTextColor = Color(0xFF52525B),

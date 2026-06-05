@@ -53,7 +53,7 @@ fun LandingSlideshow(
     indicatorSize: Dp = 6.dp,
     indicatorActiveWidth: Dp = 18.dp
 ) {
-    val safeSlides = if (slides.isEmpty()) {
+    val safeSlides = slides.ifEmpty {
         // 預覽或資產未就緒時的保護
         listOf(
             SlideItem(
@@ -61,7 +61,7 @@ fun LandingSlideshow(
                 stringResource(R.string.landing_slide_placeholder_content_description)
             )
         )
-    } else slides
+    }
     val slideshowContentDescription = stringResource(R.string.landing_slideshow_content_description)
 
     val pagerState = rememberPagerState(initialPage = 0) { safeSlides.size }

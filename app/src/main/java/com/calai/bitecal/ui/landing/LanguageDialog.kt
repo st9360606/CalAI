@@ -146,7 +146,7 @@ fun LanguageDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = stringResource(R.string.close),
+                            contentDescription = stringResource(R.string.common_close),
                             tint = onSurface
                         )
                     }

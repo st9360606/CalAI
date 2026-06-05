@@ -88,7 +88,7 @@ fun SignInSheet(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.close),
+                            contentDescription = stringResource(R.string.common_close),
                             tint = closeTint
                         )
                     }

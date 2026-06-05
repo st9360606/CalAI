@@ -115,7 +115,7 @@ fun EditHeightScreen(
         },
         bottomBar = {
             BiteCalEditBottomActionBar(
-                primaryText = stringResource(R.string.save),
+                primaryText = stringResource(R.string.common_close),
                 onPrimaryClick = {
                     vm.saveAndSyncHeight(
                         useMetric = useMetric,

@@ -152,7 +152,7 @@ fun EditWorkoutGoalScreen(
             BiteCalEditDualActionRow(
                 secondaryText = stringResource(R.string.common_revert),
                 onSecondaryClick = { vm.revert() },
-                primaryText = stringResource(R.string.save),
+                primaryText = stringResource(R.string.common_close),
                 onPrimaryClick = { vm.save() },
                 primaryEnabled = enabled,
             )

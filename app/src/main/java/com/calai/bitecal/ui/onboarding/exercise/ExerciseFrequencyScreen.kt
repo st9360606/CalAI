@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,11 +64,35 @@ fun ExerciseFrequencyScreen(
     val state by vm.uiState.collectAsState()
 
     val options = listOf(
-        ExerciseUiOption(0, R.drawable.working,        R.string.ex_freq_0_title,         R.string.ex_freq_0_sub),
-        ExerciseUiOption(2, R.drawable.running,        R.string.ex_freq_1_3_title,       R.string.ex_freq_1_3_sub),
-        ExerciseUiOption(4, R.drawable.cycling,        R.string.ex_freq_3_5_title,       R.string.ex_freq_3_5_sub),
-        ExerciseUiOption(6, R.drawable.weight_lifting, R.string.ex_freq_6_7_plus_title,  R.string.ex_freq_6_7_plus_sub),
-        ExerciseUiOption(7, R.drawable.muscle,         R.string.ex_freq_7_plus_title,    R.string.ex_freq_7_plus_sub)
+        ExerciseUiOption(
+            0,
+            R.drawable.working,
+            R.string.ex_freq_0_title,
+            R.string.ex_freq_0_sub),
+        ExerciseUiOption(
+            2,
+            R.drawable.running,
+            R.string.ex_freq_1_3_title,
+            R.string.ex_freq_1_3_sub
+        ),
+        ExerciseUiOption(
+            4,
+            R.drawable.cycling,
+            R.string.ex_freq_3_5_title,
+            R.string.ex_freq_3_5_sub
+        ),
+        ExerciseUiOption(
+            6,
+            R.drawable.weight_lifting,
+            R.string.ex_freq_6_7_plus_title,
+            R.string.ex_freq_6_7_plus_sub
+        ),
+        ExerciseUiOption(
+            7,
+            R.drawable.muscle,
+            R.string.ex_freq_7_plus_title,
+            R.string.ex_freq_7_plus_sub
+        )
     )
 
     Scaffold(
@@ -81,7 +106,7 @@ fun ExerciseFrequencyScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomBar(
-                primaryText = stringResource(R.string.continue_text),
+                primaryText = stringResource(R.string.common_continue_btn),
                 primaryEnabled = state.selected != null,
                 onPrimaryClick = {
                     vm.saveSelected()
@@ -105,6 +130,20 @@ fun ExerciseFrequencyScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = BiteCalScreenFrame.contentHorizontalMedium),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(R.string.onboard_ex_freq_subtitle),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = Color(0xFF9AA3AF),
+                    lineHeight = 20.sp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = BiteCalScreenFrame.onboardingSubtitleHorizontal),
                 textAlign = TextAlign.Center
             )
 

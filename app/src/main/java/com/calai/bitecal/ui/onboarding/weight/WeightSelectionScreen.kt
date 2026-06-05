@@ -224,7 +224,7 @@ fun WeightSelectionScreen(
         bottomBar = {
             BiteCalOnboardingBottomContainer {
                 BiteCalOnboardingPrimaryButton(
-                    text = stringResource(R.string.continue_text),
+                    text = stringResource(R.string.common_continue_btn),
                     onClick = {
                         scope.launch {
                             isSaving = true

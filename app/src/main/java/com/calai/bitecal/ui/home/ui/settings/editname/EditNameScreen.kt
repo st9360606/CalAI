@@ -61,7 +61,7 @@ fun EditNameScreen(
         },
         bottomBar = {
             BiteCalEditBottomActionBar(
-                primaryText = stringResource(R.string.save),
+                primaryText = stringResource(R.string.common_close),
                 onPrimaryClick = onSaved,
                 primaryEnabled = canSave && !isSaving,
                 primaryLoading = isSaving,

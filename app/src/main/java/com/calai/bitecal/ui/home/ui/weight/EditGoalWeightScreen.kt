@@ -201,7 +201,7 @@ fun EditGoalWeightScreen(
                             )
                         } else {
                             Text(
-                                text = stringResource(R.string.save),
+                                text = stringResource(R.string.common_close),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.2.sp

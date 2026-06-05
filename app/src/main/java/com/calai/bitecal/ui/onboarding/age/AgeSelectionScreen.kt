@@ -72,7 +72,7 @@ fun AgeSelectionScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomBar(
-                primaryText = stringResource(R.string.continue_text),
+                primaryText = stringResource(R.string.common_continue_btn),
                 onPrimaryClick = {
                     vm.saveAge(selectedAge)
                     onNext()

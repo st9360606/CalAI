@@ -1,4 +1,3 @@
-// app/src/main/java/com/calai/app/ui/onboarding/gender/GenderSelectionViewModel.kt
 package com.calai.bitecal.ui.onboarding.gender
 
 import androidx.lifecycle.ViewModel

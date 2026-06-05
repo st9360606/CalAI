@@ -277,9 +277,9 @@ private fun NotifBottomBar(
     BiteCalOnboardingBottomContainer(hasSecondaryAction = !granted) {
         BiteCalOnboardingPrimaryButton(
             text = when {
-                granted -> verifyTitle(R.string.continue_text, "Continue")
+                granted -> verifyTitle(R.string.common_continue_btn, "Continue")
                 canRequest -> verifyTitle(R.string.allow_notifications_cta, "Allow notifications")
-                else -> verifyTitle(R.string.continue_text, "Continue")
+                else -> verifyTitle(R.string.common_continue_btn, "Continue")
             },
             onClick = onClick
         )

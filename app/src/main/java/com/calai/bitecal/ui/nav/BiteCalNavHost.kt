@@ -20,8 +20,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -88,7 +88,6 @@ import com.calai.bitecal.ui.home.ui.savedfood.SavedFoodsScreen
 import com.calai.bitecal.ui.home.ui.savedfood.model.SavedFoodsViewModel
 import com.calai.bitecal.ui.home.ui.settings.RingColorsExplainedScreen
 import com.calai.bitecal.ui.home.ui.settings.SettingsScreen
-import com.calai.bitecal.ui.home.ui.settings.dialog.RestoreSubscriptionDialog
 import com.calai.bitecal.ui.home.ui.settings.details.AutoGenerateGoalsCalcScreen
 import com.calai.bitecal.ui.home.ui.settings.details.EditAgeScreen
 import com.calai.bitecal.ui.home.ui.settings.details.EditDailyStepGoalScreen
@@ -108,11 +107,12 @@ import com.calai.bitecal.ui.home.ui.settings.details.model.EditStartingWeightVie
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditWaterGoalViewModel
 import com.calai.bitecal.ui.home.ui.settings.details.model.EditWorkoutGoalViewModel
 import com.calai.bitecal.ui.home.ui.settings.details.model.NutritionGoalsViewModel
+import com.calai.bitecal.ui.home.ui.settings.dialog.RestoreSubscriptionDialog
 import com.calai.bitecal.ui.home.ui.settings.editname.EditNameScreen
 import com.calai.bitecal.ui.home.ui.settings.editname.model.EditNameViewModel
 import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionDialogState
-import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import com.calai.bitecal.ui.home.ui.settings.model.RestoreSubscriptionViewModel
+import com.calai.bitecal.ui.home.ui.settings.model.SettingsViewModel
 import com.calai.bitecal.ui.home.ui.settings.premium.PremiumRewardsScreen
 import com.calai.bitecal.ui.home.ui.settings.premium.model.PremiumRewardsViewModel
 import com.calai.bitecal.ui.home.ui.settings.referral.ReferralScreen
@@ -129,6 +129,7 @@ import com.calai.bitecal.ui.home.workoutgate.WorkoutSheetOpenRequest
 import com.calai.bitecal.ui.landing.LandingScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionScreen
 import com.calai.bitecal.ui.onboarding.age.AgeSelectionViewModel
+import com.calai.bitecal.ui.onboarding.comparison.WeightLossComparisonScreen
 import com.calai.bitecal.ui.onboarding.exercise.ExerciseFrequencyScreen
 import com.calai.bitecal.ui.onboarding.exercise.ExerciseFrequencyViewModel
 import com.calai.bitecal.ui.onboarding.gender.GenderKey
@@ -139,7 +140,6 @@ import com.calai.bitecal.ui.onboarding.goal.GoalSelectionViewModel
 import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalScreen
 import com.calai.bitecal.ui.onboarding.goalweight.WeightGoalViewModel
 import com.calai.bitecal.ui.onboarding.healthconnect.HealthConnectIntroScreen
-import com.calai.bitecal.ui.onboarding.comparison.WeightLossComparisonScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.height.HeightSelectionViewModel
 import com.calai.bitecal.ui.onboarding.notifications.NotificationPermissionScreen
@@ -147,9 +147,9 @@ import com.calai.bitecal.ui.onboarding.plan.HealthPlanScreen
 import com.calai.bitecal.ui.onboarding.plan.HealthPlanViewModel
 import com.calai.bitecal.ui.onboarding.progress.ComputationProgressScreen
 import com.calai.bitecal.ui.onboarding.progress.ComputationProgressViewModel
-import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.bitecal.ui.onboarding.referralcode.OnboardReferralCodeRoute
 import com.calai.bitecal.ui.onboarding.referralcode.OnboardReferralCodeViewModel
+import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceScreen
 import com.calai.bitecal.ui.onboarding.referralsource.ReferralSourceViewModel
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionScreen
 import com.calai.bitecal.ui.onboarding.weight.WeightSelectionViewModel
@@ -245,7 +245,6 @@ object Routes {
     const val SETTINGS = "settings"
     const val CAMERA = "camera"
     const val SAVED_FOODS = "saved_foods"
-    const val REMINDERS = "reminders"
     const val REFERRALS = "referrals"
     const val PREMIUM_REWARDS = "premium_rewards"
     const val NOTIFICATION_INBOX = "notification_inbox"
@@ -3333,9 +3332,6 @@ fun BiteCalNavHost(
                 onBack = { nav.popBackStack() }
             )
         }
-
-        composable(Routes.REMINDERS) { SimplePlaceholder(stringResource(R.string.reminders_title)) }
-
     }
 }
 

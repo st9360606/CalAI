@@ -54,7 +54,7 @@ fun EmailEnterScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomBar(
-                primaryText = stringResource(R.string.continue_text),
+                primaryText = stringResource(R.string.common_continue_btn),
                 onPrimaryClick = { vm.sendCode(onSent) },
                 primaryEnabled = ui.isValid && !ui.loading,
                 primaryLoading = ui.loading,
@@ -70,7 +70,7 @@ fun EmailEnterScreen(
         ) {
             Spacer(Modifier.height(8.dp))
             Text(
-                text = stringResource(R.string.sign_in_title),
+                text = stringResource(R.string.email_sign_in_title),
                 style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
                 color = Color(0xFF111114)
             )
@@ -79,7 +79,7 @@ fun EmailEnterScreen(
             OutlinedTextField(
                 value = ui.email,
                 onValueChange = vm::onEmailChange,
-                label = { Text(stringResource(R.string.email_label)) },
+                label = { Text(stringResource(R.string.input_box_email_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,

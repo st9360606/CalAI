@@ -1109,7 +1109,7 @@ private fun CupertinoWheelTimePickerSheet(
                     )
                 ) {
                     Text(
-                        text = stringResource(R.string.save),
+                        text = stringResource(R.string.common_close),
                         fontSize = 16.sp
                     )
                 }
@@ -1128,7 +1128,7 @@ private fun CupertinoWheelTimePickerSheet(
                     )
                 ) {
                     Text(
-                        text = stringResource(R.string.cancel),
+                        text = stringResource(R.string.common_cancel),
                         fontSize = 16.sp
                     )
                 }

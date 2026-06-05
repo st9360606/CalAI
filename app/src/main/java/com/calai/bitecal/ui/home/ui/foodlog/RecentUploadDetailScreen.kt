@@ -1055,7 +1055,7 @@ private fun FooterSaveBar(
     onSave: () -> Unit
 ) {
     BiteCalEditBottomActionBar(
-        primaryText = stringResource(R.string.save),
+        primaryText = stringResource(R.string.common_close),
         onPrimaryClick = onSave,
         primaryEnabled = enabled,
         primaryLoading = false

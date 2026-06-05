@@ -136,7 +136,7 @@ fun EditStartingWeightScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             BiteCalEditBottomActionBar(
-                primaryText = stringResource(R.string.save),
+                primaryText = stringResource(R.string.common_close),
                 onPrimaryClick = {
                     val (valueToSave, unitToSave) =
                         if (useMetric) {

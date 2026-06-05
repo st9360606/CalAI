@@ -56,7 +56,7 @@ fun GoalSelectionScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomBar(
-                primaryText = stringResource(R.string.continue_text),
+                primaryText = stringResource(R.string.common_continue_btn),
                 primaryEnabled = state.selected != null,
                 onPrimaryClick = {
                     vm.saveSelected()

@@ -89,7 +89,7 @@ fun GenderSelectionScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomBar(
-                primaryText = stringResource(R.string.continue_text),
+                primaryText = stringResource(R.string.common_continue_btn),
                 primaryEnabled = state.selected != null,
                 onPrimaryClick = {
                     scope.launch {
@@ -107,7 +107,7 @@ fun GenderSelectionScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(R.string.onb_gender_title),
+                text = stringResource(R.string.onboard_gender_title),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,
@@ -121,7 +121,7 @@ fun GenderSelectionScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = stringResource(R.string.onb_gender_subtitle),
+                text = stringResource(R.string.onboard_gender_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Color(0xFF9AA3AF),
                     lineHeight = 20.sp
@@ -143,7 +143,7 @@ fun GenderSelectionScreen(
                 val corner = 999.dp
 
                 GenderOption(
-                    text = stringResource(R.string.male_simple),
+                    text = stringResource(R.string.onboard_male),
                     selected = state.selected == GenderKey.MALE,
                     onClick = { vm.select(GenderKey.MALE) },
                     widthFraction = widthFraction,
@@ -152,7 +152,7 @@ fun GenderSelectionScreen(
                 )
                 Spacer(Modifier.height(21.dp))
                 GenderOption(
-                    text = stringResource(R.string.female),
+                    text = stringResource(R.string.onboard_female),
                     selected = state.selected == GenderKey.FEMALE,
                     onClick = { vm.select(GenderKey.FEMALE) },
                     widthFraction = widthFraction,
@@ -161,7 +161,7 @@ fun GenderSelectionScreen(
                 )
                 Spacer(Modifier.height(21.dp))
                 GenderOption(
-                    text = stringResource(R.string.other),
+                    text = stringResource(R.string.onboard_other),
                     selected = state.selected == GenderKey.OTHER,
                     onClick = { vm.select(GenderKey.OTHER) },
                     widthFraction = widthFraction,

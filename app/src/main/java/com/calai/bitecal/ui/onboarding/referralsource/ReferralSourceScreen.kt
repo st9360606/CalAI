@@ -69,7 +69,7 @@ fun ReferralSourceScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomBar(
-                primaryText = stringResource(R.string.continue_text),
+                primaryText = stringResource(R.string.common_continue_btn),
                 primaryEnabled = state.selected != null,
                 onPrimaryClick = {
                     scope.launch {
@@ -87,7 +87,7 @@ fun ReferralSourceScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = stringResource(id = R.string.onboard_referral_title),
+                text = stringResource(R.string.onboard_referral_title),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 lineHeight = 40.sp,

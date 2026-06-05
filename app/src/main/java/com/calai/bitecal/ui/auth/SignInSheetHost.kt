@@ -36,7 +36,6 @@ fun SignInSheetHost(
     onApple: () -> Unit = {},
     onEmail: () -> Unit = {},
     onShowError: (CharSequence) -> Unit = {},
-    // ★ 從 ROUTE_PLAN 來要把本機資料（剛填的表單）寫到伺服器
     uploadLocalOnLogin: Boolean = false,
     allowHomeAfterOnboardingPaywallRejected: Boolean = false,
 ) {

@@ -186,7 +186,7 @@ fun SavedFoodsScreen(
         title = stringResource(R.string.saved_foods_unsave_dialog_title),
         message = stringResource(R.string.saved_foods_unsave_dialog_message),
         confirmText = stringResource(R.string.saved_foods_unsave_dialog_confirm),
-        cancelText = stringResource(R.string.cancel)
+        cancelText = stringResource(R.string.common_cancel)
     )
 }
 

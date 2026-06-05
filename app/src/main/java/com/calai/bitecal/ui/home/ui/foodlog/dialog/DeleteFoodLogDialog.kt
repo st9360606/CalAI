@@ -24,7 +24,7 @@ fun DeleteFoodLogDialog(
         title = stringResource(R.string.foodlog_delete_dialog_title),
         message = stringResource(R.string.foodlog_delete_dialog_message),
         confirmText = stringResource(R.string.foodlog_delete_dialog_confirm),
-        cancelText = stringResource(R.string.cancel),
+        cancelText = stringResource(R.string.common_cancel),
         confirmButtonColor = Color(0xFFE46A6A),
         confirmContentColor = Color.White
     )

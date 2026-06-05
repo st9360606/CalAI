@@ -1,11 +1,36 @@
 <resources>
+
     <string name="app_name">BiteCal: Calorie Camera</string>
+
+    <!-- common -->
+    <string name="common_close">Close</string>
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_continue_btn">Continue</string>
+    <string name="common_skip">Skip</string>
+
+    <!-- Landing Screen -->
+    <string name="landing_slide_1_content_description">Meal photo slide 1</string>
+    <string name="landing_slide_2_content_description">Meal photo slide 2</string>
+    <string name="landing_slide_3_content_description">Meal photo slide 3</string>
+
     <string name="landing_title">Snap a photo, know the calories.</string>
+    <string name="choose_language">Choose language</string>
     <string name="cta_get_started">Get started</string>
     <string name="cta_login_prefix">Already have an account?</string>
     <string name="cta_login">Sign in</string>
-    <string name="choose_language">Choose language</string>
 
+    <!-- LandingSlideshow -->
+    <string name="landing_slideshow_content_description">Landing slideshow</string>
+    <string name="landing_slide_placeholder_content_description">Placeholder slide</string>
+    <string name="landing_slide_indicator_content_description">Slide %1$d of %2$d</string>
+
+    <!-- RequireSignInScreen -->
+    <string name="auth_sign_in_account_title">Sign in to your account</string>
+    <string name="auth_sign_in_with_google">Sign in with Google</string>
+    <string name="auth_signin_with_email">Continue with email</string>
+
+    <!-- SignInSheet-->
     <string name="signin_title">Sign In</string>
     <string name="signin_with_apple">Sign in with Apple</string>
     <string name="signin_with_google">Sign in with Google</string>
@@ -17,76 +42,53 @@
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
 
-    <!-- common -->
-    <string name="close">Close</string>
-    <string name="save">Save</string>
-    <string name="cancel">Cancel</string>
-    <!-- Email -->
-    <string name="sign_in_title">Sign In</string>
-    <string name="email_label">Email</string>
-    <string name="continue_btn">Continue</string>
-    <string name="sending">Sending…</string>
+    <!-- SignInSheetHost 控制 Sheet 是否顯示、處理狀態、接外部 callback -->
+    <string name="err_google_no_account_hint">Tip: add a Google account in Settings → Accounts and try again</string>
+    <string name="err_google_signin_failed">Google sign-in failed</string>
 
-    <!-- Email OTP screen -->
-    <string name="confirm_email_title">Confirm your email</string>
-    <string name="confirm_email_hint">Please enter the 4-digit code we\'ve just sent to</string>
+    <!-- EmailEnterScreen-->
+    <string name="email_sign_in_title">Sign In</string>
+    <string name="input_box_email_label">Email</string>
 
-    <!-- Resend -->
-    <string name="didnt_receive_code">Didn’t receive the code?</string>
+    <!-- EmailCodeScreen OTP -->
     <string name="resend">Resend</string>
     <string name="resend_countdown">Resend (%1$d s)</string>
 
-    <!-- Errors -->
     <string name="err_otp_invalid">The code is incorrect. Please try again.</string>
     <string name="err_otp_too_many_attempts">Too many attempts. Please try again later.</string>
     <string name="err_network_io">Network error. Please try again.</string>
     <string name="err_server_unavailable">Service is temporarily unavailable. Please try again later.</string>
     <string name="err_generic">Something went wrong. Please try again.</string>
 
-    <!-- Google -->
-    <string name="err_google_id_token_empty">Google returned an empty ID token</string>
-    <string name="err_google_result_parse">Failed to parse sign-in result</string>
-    <string name="err_google_cancelled">You cancelled sign-in</string>
-    <string name="err_google_launch_failed">Couldn\'t start Google Sign-In%1$s</string>
-    <string name="err_google_no_account_hint">Tip: add a Google account in Settings → Accounts and try again</string>
-    <string name="err_google_signin_failed">Google sign-in failed</string>
-    <string name="err_google_not_completed_with_code">Sign-in wasn’t completed (code=%1$d). Please try again.</string>
+    <string name="confirm_email_title">Confirm your email</string>
+    <string name="confirm_email_hint">Please enter the 4-digit code we\'ve just sent to</string>
+    <string name="didnt_receive_code">Didn’t receive the code?</string>
 
-    <!-- Onboarding: Gender -->
-    <string name="onb_gender_title">Choose your gender</string>
-    <string name="onb_gender_subtitle">This will be used to calibrate your custom plan.</string>
-    <string name="male_simple">Male</string>
-    <string name="female">Female</string>
-    <string name="other">Other</string>
-    <string name="continue_text">Continue</string>
+    <!-- Onboarding: GenderSelectionScreen -->
+    <string name="onboard_gender_title">Choose your gender</string>
+    <string name="onboard_gender_subtitle">This will be used to calibrate your custom plan.</string>
+    <string name="onboard_male">Male</string>
+    <string name="onboard_female">Female</string>
+    <string name="onboard_other">Other</string>
 
-    <!-- referral_source -->
+    <!-- Onboarding: ReferralSourceScreen -->
     <string name="onboard_referral_title">How did you discover us?</string>
-    <string name="referral_app_store">App Store</string>
-    <string name="referral_youtube">YouTube</string>
-    <string name="referral_instagram">Instagram</string>
-    <string name="referral_google">Google</string>
-    <string name="referral_facebook">Facebook</string>
-    <string name="referral_tiktok">TikTok</string>
-    <string name="referral_x">X</string>
-    <string name="referral_other">Other</string>
 
-    <!-- age -->
+    <!-- Onboarding: AgeSelectionScreen -->
     <string name="onboard_age_title">How old are you?</string>
     <string name="onboard_age_subtitle">We only use your age to improve your experience and calorie estimation accuracy.</string>
 
-    <!-- height -->
+    <!-- Onboarding: HeightSelectionScreen -->
     <string name="onboard_height_title">How tall are you?</string>
     <string name="onboard_height_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
+    <string name="onboard_height_hint">This will be used to calibrate your custom plan.</string>
 
-    <!-- weight -->
+    <!-- Onboarding: WeightSelectionScreen -->
     <string name="onboard_weight_title">How much do you weigh?</string>
     <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_weight_hint">This will be used to calibrate your custom plan.</string>
-    <string name="onboard_weight_zero_error">Please enter a weight greater than 0</string>
-    <string name="onboard_goal_weight_title">What is your goal weight?</string>
 
-    <!-- exercise -->
+    <!-- Onboarding: ExerciseFrequencyScreen  -->
     <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
     <string name="onboard_ex_freq_subtitle">This will help calibrate your personalized plan.</string>
     <string name="ex_freq_0_title">0</string>
@@ -100,13 +102,20 @@
     <string name="ex_freq_7_plus_title">7+</string>
     <string name="ex_freq_7_plus_sub">Very high activity</string>
 
-    <!-- goal -->
+    <!-- Onboarding: GoalSelectionScreen  -->
     <string name="onboard_goal_title">What’s your goal?</string>
     <string name="onboard_goal_subtitle">This helps us tailor your calorie plan.</string>
     <string name="goal_lose">Lose weight</string>
     <string name="goal_maintain">Maintain</string>
     <string name="goal_gain">Gain weight</string>
     <string name="goal_healthy_eating">Healthy eating</string>
+
+    <!-- Onboarding: WeightGoalScreen -->
+    <string name="onboard_goal_weight_title">What is your goal weight?</string>
+    <string name="onboard_goal_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
+    <string name="onboard_goal_weight_hint">This will be used to calibrate your custom plan.</string>
+
+
 
     <!-- notifications -->
     <string name="allow_notifications_cta">Allow notifications</string>
@@ -173,13 +182,7 @@
     <string name="plan_sources_more">See all references ›</string>
     <string name="plan_sources_hide">Hide sources</string>
 
-    <!-- REQUIRE_SIGN_IN -->
-    <string name="auth_sign_in_account_title">Sign in to your account</string>
-    <string name="auth_sign_in_with_google">Sign in with Google</string>
-    <string name="auth_signin_with_email">Continue with email</string>
-    <string name="common_skip">Skip</string>
-    <string name="msg_login_success">Sign-in successful</string>
-    <string name="msg_login_failed_generic">Sign-in failed. Please try again.</string>
+
 
     <!-- Fasting -->
     <string name="fasting_plan_title">Fasting Plan</string>
@@ -683,8 +686,6 @@
     <string name="restore_subscription_dialog_failed_body">We could not restore your subscription right now. Please check your connection and try again from Settings.</string>
     <string name="restore_subscription_dialog_bound_title">Subscription already linked</string>
     <string name="restore_subscription_dialog_bound_body">This subscription is already linked to another active BiteCal account. Please contact support if you believe this is a mistake.</string>
-    <string name="common_close">Close</string>
-    <string name="common_cancel">Cancel</string>
     <string name="common_delete">Delete</string>
     <string name="common_deleting">Deleting...</string>
     <string name="common_maybe_later">Maybe later</string>
@@ -923,18 +924,9 @@
     <string name="weight_history_weight_label">Weight</string>
     <string name="weight_history_change_label">Change</string>
 
-    <!-- Landing accessibility -->
-    <string name="landing_slideshow_content_description">Landing slideshow</string>
-    <string name="landing_slide_placeholder_content_description">Placeholder slide</string>
-    <string name="landing_slide_indicator_content_description">Slide %1$d of %2$d</string>
-    <string name="landing_slide_1_content_description">Meal photo slide 1</string>
-    <string name="landing_slide_2_content_description">Meal photo slide 2</string>
-    <string name="landing_slide_3_content_description">Meal photo slide 3</string>
 
-    <!-- Auth accessibility -->
-    <string name="auth_google_content_description">Google</string>
-    <string name="auth_email_content_description">Email</string>
-    <string name="signup_placeholder">Sign Up (placeholder)</string>
+
+
 
     <!-- Health Connect rationale -->
     <string name="health_connect_rationale_title">Why Health Connect permissions are needed</string>

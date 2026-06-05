@@ -18,7 +18,7 @@ class OnboardReferralCodeScreenTest {
     fun emptyState_submitDisabled_continueDisplayed() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val submit = context.getString(R.string.onboard_referral_code_submit)
-        val continueText = context.getString(R.string.continue_text)
+        val continueText = context.getString(R.string.common_continue_btn)
 
         composeRule.setContent {
             OnboardReferralCodeScreen(

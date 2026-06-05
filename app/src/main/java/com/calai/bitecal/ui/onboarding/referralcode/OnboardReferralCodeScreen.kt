@@ -96,7 +96,7 @@ fun OnboardReferralCodeScreen(
         },
         bottomBar = {
             BiteCalOnboardingBottomBar(
-                primaryText = stringResource(R.string.continue_text),
+                primaryText = stringResource(R.string.common_continue_btn),
                 onPrimaryClick = onContinue,
                 primaryEnabled = !ui.submitting,
                 primaryLoading = ui.submitting,

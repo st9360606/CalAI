@@ -146,7 +146,7 @@ fun HeightSelectionScreen(
         bottomBar = {
             BiteCalOnboardingBottomContainer {
                 BiteCalOnboardingPrimaryButton(
-                    text = stringResource(R.string.continue_text),
+                    text = stringResource(R.string.common_continue_btn),
                     onClick = {
                         scope.launch {
                             isSaving = true
@@ -359,7 +359,7 @@ fun HeightSelectionScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.onboard_weight_hint),
+                    text = stringResource(R.string.onboard_height_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF9AA3AE),
                     textAlign = TextAlign.Center,

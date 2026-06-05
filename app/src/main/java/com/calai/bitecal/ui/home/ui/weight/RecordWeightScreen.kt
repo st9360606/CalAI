@@ -438,7 +438,7 @@ private fun RecordWeightScreenContent(
                         )
                     } else {
                         Text(
-                            text = stringResource(R.string.save),
+                            text = stringResource(R.string.common_close),
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Medium,
                                 letterSpacing = 0.2.sp
@@ -875,8 +875,8 @@ private fun WeighingDateSheet(
 
     val titleText = stringResource(R.string.weight_date_sheet_title)
     val subtitleText = stringResource(R.string.weight_date_sheet_subtitle)
-    val saveText = stringResource(R.string.save)
-    val cancelText = stringResource(R.string.cancel)
+    val saveText = stringResource(R.string.common_save)
+    val cancelText = stringResource(R.string.common_cancel)
 
     val monthRange: IntRange = remember(year, today) {
         if (year >= today.year) 1..today.monthValue else 1..12

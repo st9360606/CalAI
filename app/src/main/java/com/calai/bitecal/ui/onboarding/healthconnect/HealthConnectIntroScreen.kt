@@ -291,7 +291,7 @@ private fun HCBottomBar(
     onPrimary: () -> Unit,
 ) {
     BiteCalOnboardingBottomBar(
-        primaryText = stringResource(R.string.continue_text),
+        primaryText = stringResource(R.string.common_continue_btn),
         onPrimaryClick = onPrimary
     )
 }

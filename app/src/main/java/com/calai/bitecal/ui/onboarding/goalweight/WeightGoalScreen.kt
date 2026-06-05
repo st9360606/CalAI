@@ -200,7 +200,7 @@ fun WeightGoalScreen(
         bottomBar = {
             BiteCalOnboardingBottomContainer {
                 BiteCalOnboardingPrimaryButton(
-                    text = stringResource(R.string.continue_text),
+                    text = stringResource(R.string.common_continue_btn),
                     onClick = {
                         scope.launch {
                             isSaving = true
@@ -292,7 +292,7 @@ fun WeightGoalScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = stringResource(R.string.onboard_weight_subtitle),
+                text = stringResource(R.string.onboard_goal_weight_subtitle),
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Color(0xFF9AA3AF),
                     lineHeight = 20.sp
@@ -449,7 +449,7 @@ fun WeightGoalScreen(
 
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = stringResource(R.string.onboard_weight_hint),
+                    text = stringResource(R.string.onboard_goal_weight_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFF9AA3AE),
                     textAlign = TextAlign.Center,
