@@ -30,11 +30,11 @@ data class SubscriptionUiState(
     val trialEligible: Boolean = false,
     val trialEligibilityLoaded: Boolean = false,
     val yearlyBasePrice: String = "NT$999.00",
-    val yearlyBaseMonthlyEquivalent: String = "NT$83.25/mo",
+    val yearlyBaseMonthlyEquivalent: String = "NT$83.25",
     val yearlyDiscountPrice: String = "NT$649.00",
-    val yearlyDiscountMonthlyEquivalent: String = "NT$54.08/mo",
+    val yearlyDiscountMonthlyEquivalent: String = "NT$54.08",
     val yearlyTrialDiscountPrice: String = "NT$649.00",
-    val yearlyTrialDiscountMonthlyEquivalent: String = "NT$54.08/mo"
+    val yearlyTrialDiscountMonthlyEquivalent: String = "NT$54.08"
 ) {
     val busy: Boolean
         get() = purchasing

@@ -54,7 +54,7 @@ class FakeBillingGateway(
             productId = productId,
             offerTag = offerTag,
             formattedPrice = if (isDiscountOffer) "NT$649.00" else "NT$999.00",
-            formattedMonthlyEquivalent = if (isDiscountOffer) "NT$54.08/mo" else "NT$83.25/mo"
+            formattedMonthlyEquivalent = if (isDiscountOffer) "NT$54.08" else "NT$83.25"
         )
     }
 

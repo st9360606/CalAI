@@ -201,49 +201,56 @@
     <string name="onboard_referral_code_error_network">We can\'t apply it right now. Please try again later.</string>
     <string name="onboard_referral_code_error_unknown">Referral code can\'t be applied right now.\nPlease try again later.</string>
 
+
     <!-- Onboarding: OnboardSubscriptionScreen  Paywall -->
+    <string name="subscription_price_per_month_format">%1$s/mo</string>
+    <string name="subscription_price_per_month_unit">/mo</string>
+
     <string name="subscription_intro_title">Unlock BiteCal AI to\nreach your goals faster.</string>
     <string name="subscription_intro_helper_format">Just %1$s per year (%2$s)</string>
     <string name="subscription_already_owned_restore_required">Your Google Play account already has an active BiteCal subscription. Restore it to this BiteCal account before using premium features.</string>
     <string name="restore_subscription_dialog_title">Subscription found</string>
     <string name="settings_restore_subscription">Restore subscription</string>
-    <string name="restore_subscription_dialog_restoring">Restoring...</string>
+    <string name="restore_subscription_dialog_restoring">Restoring…</string>
     <string name="common_maybe_later">Maybe later</string>
 
+
+    <!-- Onboarding: OnboardDiscountSpinScreen-->
     <string name="subscription_spin_title">Spin to unlock an\nexclusive discount</string>
     <string name="subscription_spin_helper_ready">Tap Spin to reveal your exclusive gift.</string>
     <string name="subscription_spin_button">Spin</string>
-    <string name="subscription_spinning_button">Spinning...</string>
+    <string name="subscription_spinning_button">Spinning…</string>
     <string name="subscription_gift_offer_unlocked">Gift offer unlocked</string>
     <string name="subscription_spin_helper_wait">Please wait until the wheel stops.</string>
     <string name="subscription_spin_helper_revealed">This offer is revealed after the wheel stops.</string>
 
 
+    <!-- Onboarding: OneTimeOfferHeroCard-->
     <string name="subscription_gift_unlocked_title">Gift unlocked 🎁</string>
     <string name="subscription_gift_price_unlocked">Gift price unlocked</string>
     <string name="subscription_unlock_premium_for_only">Unlock premium for only</string>
     <string name="subscription_discount_body">Scan meals faster. Track macros smarter.\nStay on plan daily.</string>
+    <string name="subscription_yearly_price_format">%1$s/year</string>
     <string name="subscription_urgency_coffee">Less than a coffee.</string>
     <string name="subscription_urgency_price_gone">Close this screen? This price is gone</string>
     <string name="subscription_urgency_waiting">What are you waiting for?</string>
-    <string name="subscription_trial_checking_eligibility">Checking trial availability…</string>
-    <string name="subscription_trial_already_used">Trial already used</string>
+
     <string name="subscription_trial_enabled">Free trial enabled</string>
     <string name="subscription_trial_enable_prompt">Not sure? Turn on free trial</string>
+    <string name="subscription_trial_checking_eligibility">Checking trial availability…</string>
+    <string name="subscription_trial_already_used">Trial already used</string>
+
     <string name="subscription_badge_free_trial">Free trial</string>
     <string name="subscription_badge_lowest_price_ever">Lowest price ever</string>
     <string name="subscription_yearly_plan">Yearly Plan</string>
     <string name="subscription_yearly_plan_price_format">12mo · %1$s</string>
-
-
-
 
     <string name="subscription_start_free_trial">Start free trial</string>
     <string name="subscription_trial_helper">No commitment — cancel anytime</string>
 
 
 
-    <string name="subscription_yearly_price_format">%1$s/year</string>
+
 
 
 

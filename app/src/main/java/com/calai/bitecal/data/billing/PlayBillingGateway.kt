@@ -277,7 +277,7 @@ class PlayBillingGateway(
         if (months <= BigDecimal.ZERO) return null
 
         if (months.compareTo(BigDecimal.ONE) == 0) {
-            return "$fallbackFormattedPrice/mo"
+            return fallbackFormattedPrice
         }
 
         val monthlyAmount = BigDecimal.valueOf(priceAmountMicros)
@@ -290,7 +290,7 @@ class PlayBillingGateway(
                 minimumFractionDigits = 2
                 maximumFractionDigits = 2
             }
-            "${formatter.format(monthlyAmount)}/mo"
+            formatter.format(monthlyAmount)
         }.getOrNull()
     }
 

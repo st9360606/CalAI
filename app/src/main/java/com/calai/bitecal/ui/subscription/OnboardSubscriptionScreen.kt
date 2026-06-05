@@ -122,12 +122,16 @@ fun OnboardSubscriptionScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         when (step) {
             OnboardPaywallStep.Intro -> {
+                val yearlyBaseMonthlyEquivalentText = localizedMonthlyEquivalentText(
+                    monthlyEquivalent = ui.yearlyBaseMonthlyEquivalent
+                )
+
                 OnboardSubscriptionIntro(
                     purchasing = ui.purchasing,
                     helperText = stringResource(
                         R.string.subscription_intro_helper_format,
                         ui.yearlyBasePrice,
-                        ui.yearlyBaseMonthlyEquivalent
+                        yearlyBaseMonthlyEquivalentText
                     ),
                     onClose = onCloseToSignIn,
                     onContinue = {
@@ -672,7 +676,11 @@ private fun OnboardDiscountSpinScreen(
 
             if (spinStarted) {
                 Text(
-                    text = if (spinFinished) unlockedDiscountText else "Spinning...",
+                    text = if (spinFinished) {
+                        unlockedDiscountText
+                    } else {
+                        stringResource(R.string.subscription_spinning_button)
+                    },
                     color = if (spinFinished) Color(0xFFE45F69) else Color(0xFF71717A),
                     fontSize = 22.sp,
                     lineHeight = 26.sp,
@@ -786,13 +794,27 @@ private fun OnboardOneTimeOfferScreen(
     }
 }
 
+private fun String.monthlyPriceOnly(): String {
+    return substringBefore("/").trim()
+}
+
+@Composable
+private fun localizedMonthlyEquivalentText(
+    monthlyEquivalent: String
+): String {
+    return stringResource(
+        R.string.subscription_price_per_month_format,
+        monthlyEquivalent.monthlyPriceOnly()
+    )
+}
+
 @Composable
 private fun OneTimeOfferHeroCard(
     originalYearlyPrice: String,
     monthlyEquivalent: String
 ) {
-    val monthlyPrice = monthlyEquivalent.substringBefore("/")
-    val monthlyUnit = "/" + monthlyEquivalent.substringAfter("/", missingDelimiterValue = "mo")
+    val monthlyPrice = monthlyEquivalent.monthlyPriceOnly()
+    val monthlyUnit = stringResource(R.string.subscription_price_per_month_unit)
     val shape = RoundedCornerShape(32.dp)
 
     Box(
@@ -1112,6 +1134,10 @@ private fun OneTimeOfferTrialCard(
     monthlyEquivalent: String,
     onTrialEnabledChange: (Boolean) -> Unit
 ) {
+    val monthlyEquivalentText = localizedMonthlyEquivalentText(
+        monthlyEquivalent = monthlyEquivalent
+    )
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1215,7 +1241,7 @@ private fun OneTimeOfferTrialCard(
                 Spacer(Modifier.width(12.dp))
 
                 Text(
-                    text = monthlyEquivalent,
+                    text = monthlyEquivalentText,
                     color = Color(0xFF111111),
                     fontSize = 20.sp,
                     lineHeight = 24.sp,
