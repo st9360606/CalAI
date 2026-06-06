@@ -41,7 +41,6 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
@@ -144,14 +143,12 @@ fun SettingsScreen(
     onOpenPersonalDetails: () -> Unit = {},
     onOpenEditName: () -> Unit = {},
     onOpenAdjustMacros: () -> Unit = {},
-    onOpenGoalAndCurrentWeight: () -> Unit = {},
     onOpenWeightHistory: () -> Unit = {},
     onOpenRingColorsExplained: () -> Unit = {},
     premiumStatusSubtitle: String = "Upgrade",
     premiumStatusKind: MembershipDisplayKind = MembershipDisplayKind.FREE,
     canUseScan: Boolean = false,
     onOpenSubscription: () -> Unit = {},
-    onManageSubscription: () -> Unit = {},
     onFixPaymentIssue: () -> Unit = onOpenSubscription,
     onCheckCanUseScan: suspend () -> Boolean = { canUseScan },
     onOpenSavedFoods: () -> Unit = {},
@@ -283,13 +280,11 @@ fun SettingsScreen(
                 onOpenPersonalDetails = onOpenPersonalDetails,
                 onOpenEditName = onOpenEditName,
                 onOpenAdjustMacros = onOpenAdjustMacros,
-                onOpenGoalAndCurrentWeight = onOpenGoalAndCurrentWeight,
                 onOpenWeightHistory = onOpenWeightHistory,
                 onOpenRingColorsExplained = onOpenRingColorsExplained,
                 premiumStatusKind = premiumStatusKind,
                 premiumStatusSubtitle = premiumStatusSubtitle,
                 onOpenSubscription = onOpenSubscription,
-                onManageSubscription = onManageSubscription,
                 onFixPaymentIssue = onFixPaymentIssue,
                 onOpenReferral = onOpenReferral,
                 onOpenNotificationInbox = onOpenNotificationInbox,
@@ -357,13 +352,11 @@ private fun SettingsContent(
     onOpenPersonalDetails: () -> Unit,
     onOpenEditName: () -> Unit,
     onOpenAdjustMacros: () -> Unit,
-    onOpenGoalAndCurrentWeight: () -> Unit,
     onOpenWeightHistory: () -> Unit,
     onOpenRingColorsExplained: () -> Unit,
     premiumStatusKind: MembershipDisplayKind,
     premiumStatusSubtitle: String,
     onOpenSubscription: () -> Unit,
-    onManageSubscription: () -> Unit,
     onFixPaymentIssue: () -> Unit,
     onOpenReferral: () -> Unit,
     onOpenNotificationInbox: () -> Unit,
@@ -532,8 +525,6 @@ private fun SettingsContent(
             SettingsRow(icon = Icons.Outlined.Person, title = stringResource(R.string.settings_personal_details), onClick = onOpenPersonalDetails)
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Tune, title = stringResource(R.string.settings_adjust_macronutrients), onClick = onOpenAdjustMacros)
-            DividerThin()
-            SettingsRow(icon = Icons.Outlined.Flag, title = stringResource(R.string.settings_goal_current_weight), onClick = onOpenGoalAndCurrentWeight)
             DividerThin()
             SettingsRow(icon = Icons.Outlined.Widgets, title = stringResource(R.string.settings_weight_history), onClick = onOpenWeightHistory)
             DividerThin()

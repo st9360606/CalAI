@@ -1661,12 +1661,6 @@ fun BiteCalNavHost(
                                 restoreState = false
                             }
                         },
-                        onOpenGoalAndCurrentWeight = {
-                            nav.navigate(Routes.PERSONAL_DETAILS) {
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
                         onOpenWeightHistory = {
                             nav.navigate(Routes.WEIGHT) {
                                 launchSingleTop = true
@@ -1687,9 +1681,6 @@ fun BiteCalNavHost(
                                 launchSingleTop = true
                                 restoreState = false
                             }
-                        },
-                        onManageSubscription = {
-                            openGooglePlaySubscriptionManagement(activity)
                         },
                         onFixPaymentIssue = {
                             openGooglePlaySubscriptionManagement(activity)
