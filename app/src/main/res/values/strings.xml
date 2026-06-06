@@ -269,9 +269,8 @@
     <string name="workout_membership_verify_failed">Unable to verify membership. Please try again.</string>
 
 
-    <!--
-        HomeCards
-    -->
+    <!-- =============   HomeCards  ============= -->
+
     <!-- HomeCards :  Calories Card -->
     <string name="home_calories_nutrition_ratio">%1$d / %2$d</string>
     <string name="home_calories_goal_label">Calories left</string>
