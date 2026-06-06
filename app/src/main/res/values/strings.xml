@@ -790,6 +790,20 @@
 
     <!-- PersonalDetailsScreen -->
     <string name="personal_details_change_goal">Change goal</string>
+    <string name="personal_details_body_details_section">Body details</string>
+    <string name="personal_details_daily_goals_section">Daily goals</string>
+    <string name="personal_details_current_weight">Current weight</string>
+    <string name="personal_details_height">Height</string>
+    <string name="personal_details_age">Age</string>
+    <string name="personal_details_gender">Gender</string>
+    <string name="personal_details_starting_weight">Starting weight</string>
+    <string name="personal_details_daily_step_goal">Daily step goal</string>
+    <string name="personal_details_daily_water_goal">Daily water goal</string>
+    <string name="personal_details_daily_workout_goal">Daily workout goal</string>
+    <string name="personal_details_age_value">%1$d years</string>
+    <string name="personal_details_steps_value">%1$d steps</string>
+    <string name="personal_details_water_value">%1$d ml</string>
+    <string name="personal_details_kcal_value">%1$d kcal</string>
 
 
 
@@ -971,7 +985,7 @@
     <string name="settings_referral_reward_content">They subscribe. You get 30 days free.</string>
     <string name="settings_get_30_days_free">Get 30 days free</string>
     <string name="settings_days_label">Days</string>
-    <string name="settings_edit_your_name_title">Edit your name</string>
+    <string name="settings_edit_your_name_title">Edit Your Name</string>
 
 
     <string name="log_your_food">Log your food</string>

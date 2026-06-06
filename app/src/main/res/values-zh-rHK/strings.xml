@@ -809,6 +809,21 @@
     <string name="personal_details_change_goal">變更目標</string>
 
 
+    <string name="personal_details_body_details_section">身體資料</string>
+    <string name="personal_details_daily_goals_section">每日目標</string>
+    <string name="personal_details_current_weight">目前體重</string>
+    <string name="personal_details_height">身高</string>
+    <string name="personal_details_age">年齡</string>
+    <string name="personal_details_gender">性別</string>
+    <string name="personal_details_starting_weight">起始體重</string>
+    <string name="personal_details_daily_step_goal">每日步數目標</string>
+    <string name="personal_details_daily_water_goal">每日喝水目標</string>
+    <string name="personal_details_daily_workout_goal">每日運動目標</string>
+    <string name="personal_details_age_value">%1$d 歲</string>
+    <string name="personal_details_steps_value">%1$d 步</string>
+    <string name="personal_details_water_value">%1$d ml</string>
+    <string name="personal_details_kcal_value">%1$d kcal</string>
+
     <!-- Widget Guide -->
     <string name="settings_widgets_title">桌面小工具</string>
     <string name="settings_widgets_how_to_add">如何添加？</string>
