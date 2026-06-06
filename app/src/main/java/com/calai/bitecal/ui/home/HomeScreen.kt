@@ -90,26 +90,26 @@ import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
-import com.calai.bitecal.ui.home.components.CalendarStrip
-import com.calai.bitecal.ui.home.components.CaloriesCardModern
-import com.calai.bitecal.ui.home.components.HealthScoreCardModern
+import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.components.LightHomeBackground
-import com.calai.bitecal.ui.home.components.MacroRowModern
 import com.calai.bitecal.ui.home.components.MainBottomBar
-import com.calai.bitecal.ui.home.components.MicronutrientRowModern
 import com.calai.bitecal.ui.home.components.PagerDots
-import com.calai.bitecal.ui.home.components.PanelHeights
-import com.calai.bitecal.ui.home.components.RecentlyUploadedEmptySection
-import com.calai.bitecal.ui.home.components.StepsWorkoutRowModern
-import com.calai.bitecal.ui.home.components.WeightFastingRowModern
-import com.calai.bitecal.ui.home.components.menu.HomeQuickActionMenu
-import com.calai.bitecal.ui.home.components.scan.ScanFab
+import com.calai.bitecal.ui.home.ui.camera.menu.HomeQuickActionMenu
+import com.calai.bitecal.ui.home.ui.camera.scan.ScanFab
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
 import com.calai.bitecal.ui.home.model.HomeViewModel
+import com.calai.bitecal.ui.home.ui.calendar.CalendarStrip
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
+import com.calai.bitecal.ui.home.ui.card.CaloriesCardModern
+import com.calai.bitecal.ui.home.ui.card.HealthScoreCardModern
+import com.calai.bitecal.ui.home.ui.card.MacroRowModern
+import com.calai.bitecal.ui.home.ui.card.MicronutrientRowModern
+import com.calai.bitecal.ui.home.ui.card.RecentlyUploadedEmptySection
+import com.calai.bitecal.ui.home.ui.card.StepsWorkoutRowModern
+import com.calai.bitecal.ui.home.ui.card.WeightFastingRowModern
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadCard
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
@@ -420,7 +420,6 @@ fun HomeScreen(
     var scanFabGateInFlight by rememberSaveable { mutableStateOf(false) }
     var workoutGateInFlight by rememberSaveable { mutableStateOf(false) }
     var showWorkoutGateError by rememberSaveable { mutableStateOf(false) }
-    val workoutGateErrorMessage = stringResource(R.string.workout_membership_verify_failed)
     val workoutPremiumGate = remember {
         WorkoutPremiumGate {
             latestOnCheckCanUseWorkout.value.invoke()
@@ -854,7 +853,7 @@ fun HomeScreen(
                     // 1️⃣ 優先顯示 Fasting 儲存結果（不管 Workout 有沒有）
                     showWorkoutGateError -> {
                         ErrorTopToast(
-                            message = workoutGateErrorMessage,
+                            message = stringResource(R.string.workout_membership_verify_failed),
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
                         LaunchedEffect(showWorkoutGateError) {
@@ -988,7 +987,7 @@ private fun TwoPagePager(
     modifier: Modifier = Modifier,
     topSwap: Dp = 0.dp,
     bottomSwap: Dp = 0.dp,
-    baseHeight: Dp = PanelHeights.Metric,
+    baseHeight: Dp = HomeCardStyles.PanelHeights.Metric,
     verticalGap: Dp = 14.dp,
     onOpenFastingPlans: () -> Unit = {},
     planOverride: String? = null,

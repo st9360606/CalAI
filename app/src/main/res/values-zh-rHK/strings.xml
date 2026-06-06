@@ -1,6 +1,7 @@
 <resources>
-
+    <!-- App_Name -->
     <string name="app_name">BiteCal｜AI 卡路里相機：拍照算熱量、記錄飲食</string>
+
 
     <!-- common -->
     <string name="common_close">關閉</string>
@@ -8,6 +9,9 @@
     <string name="common_cancel">取消</string>
     <string name="common_continue_btn">下一步</string>
     <string name="common_skip">跳過</string>
+    <string name="common_dash">—</string>
+    <string name="common_error">錯誤</string>
+
 
     <!-- Landing Screen -->
     <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
@@ -16,10 +20,12 @@
     <string name="cta_login_prefix">已擁有帳號？</string>
     <string name="cta_login">登入</string>
 
+
     <!-- RequireSignInScreen -->
     <string name="auth_sign_in_account_title">登入帳戶</string>
     <string name="auth_sign_in_with_google">使用 Google 登入</string>
     <string name="auth_signin_with_email">使用 Email 繼續</string>
+
 
     <!-- SignInSheet-->
     <string name="signin_title">登入</string>
@@ -33,13 +39,16 @@
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
 
+
     <!-- SignInSheetHost 控制 Sheet 是否顯示、處理狀態、接外部 callback -->
     <string name="err_google_no_account_hint">建議先到「設定 → 帳號」新增 Google 帳號，再重新嘗試</string>
     <string name="err_google_signin_failed">Google 登入失敗</string>
 
+
     <!-- EmailEnterScreen-->
     <string name="email_sign_in_title">登入</string>
     <string name="input_box_email_label">Email</string>
+
 
     <!-- EmailCodeScreen OTP -->
     <string name="resend">重新寄送</string>
@@ -55,6 +64,7 @@
     <string name="confirm_email_hint">請輸入我們剛剛寄出的 4 位數驗證碼</string>
     <string name="didnt_receive_code">沒有收到驗證碼？</string>
 
+
     <!-- Onboarding: GenderSelectionScreen -->
     <string name="onboard_gender_title">選擇你的性別</string>
     <string name="onboard_gender_subtitle">這將用於校準你的自訂計畫。</string>
@@ -62,22 +72,27 @@
     <string name="onboard_female">女</string>
     <string name="onboard_other">其他</string>
 
+
     <!-- Onboarding: ReferralSourceScreen -->
     <string name="onboard_referral_title">你是怎麼知道 BiteCal 的？</string>
+
 
     <!-- Onboarding: AgeSelectionScreen -->
     <string name="onboard_age_title">你的年齡是？</string>
     <string name="onboard_age_subtitle">我們只會用你的年齡來改善使用體驗與熱量估算準確度。</string>
+
 
     <!-- Onboarding: HeightSelectionScreen -->
     <string name="onboard_height_title">你的身高是多少？</string>
     <string name="onboard_height_subtitle">我們只會用你的資料來改善使用體驗與熱量估算準確度。</string>
     <string name="onboard_height_hint">這將用於校準你的自訂計畫。</string>
 
+
     <!-- Onboarding: WeightSelectionScreen  -->
     <string name="onboard_weight_title">你的當前體重是多少？</string>
     <string name="onboard_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_weight_hint">這將用於校準你的自訂計畫。</string>
+
 
     <!-- Onboarding: ExerciseFrequencyScreen  -->
     <string name="onboard_ex_freq_title">你平均每週運動幾次？</string>
@@ -93,6 +108,7 @@
     <string name="ex_freq_7_plus_title">7+</string>
     <string name="ex_freq_7_plus_sub">非常高活動量</string>
 
+
     <!-- Onboarding: GoalSelectionScreen  -->
     <string name="onboard_goal_title">你的目標是什麼呢？</string>
     <string name="onboard_goal_subtitle">這有助于為您的熱量攝入制定計畫。</string>
@@ -101,10 +117,12 @@
     <string name="goal_gain">增重</string>
     <string name="goal_healthy_eating">健康飲食</string>
 
+
     <!-- Onboarding: WeightGoalScreen -->
     <string name="onboard_goal_weight_title">你的目標體重是多少？</string>
     <string name="onboard_goal_weight_subtitle">我們僅使用您的數據來改善體驗並提升卡路里估算準確度。</string>
     <string name="onboard_goal_weight_hint">這將用於校準你的自訂計畫。</string>
+
 
     <!-- Onboarding: WeightLossComparisonScreen -->
     <string name="onboard_weight_loss_comparison_title">使用BiteCal AI 的減重效果是自己減重的\n三倍</string>
@@ -114,6 +132,7 @@
     <string name="onboard_weight_loss_comparison_two_times">3X</string>
     <string name="onboard_weight_loss_comparison_caption">BitCal AI 讓一切變得簡單並\n督促你履行承諾</string>
 
+
     <!-- Onboarding: NotificationPermissionScreen -->
     <string name="onboard_notif_title">每一餐都算數</string>
     <string name="onboard_notif_subtitle">開啟通知後，我們會在合適的時間給你溫柔提醒，協助你養成餐點紀錄的節奏，讓你的熱量、三大營養素與進度保持在正軌。偶爾忘記很正常；及時提醒能幫你更快回到節奏。</string>
@@ -121,6 +140,7 @@
     <string name="notification_mock_app_title">AI 熱量計算器</string>
     <string name="onboard_notif_title_got_a_sec">現在有 10 秒嗎？</string>
     <string name="onboard_notif_subtitle_log_meal_goal">記下這餐，熱量和三大營養素會立刻更新，進度一眼就懂。</string>
+
 
     <!-- Onboarding: HealthConnectIntroScreen -->
     <string name="onboard_hc_connect_title_prefix">連接到</string>
@@ -130,6 +150,7 @@
     <string name="onboard_hc_permission_rationale_title_service">Health Connect</string>
     <string name="onboard_hc_permission_rationale_body">BiteCal 會讀取你的步數、運動與睡眠資料，用來估算每日活動消耗、更新卡路里儀表板，並提供更完整的進度分析。你可以隨時在 Health Connect 中撤銷授權。</string>
     <string name="onboard_hc_permission_rationale_button">了解</string>
+
 
     <!-- Onboarding: ComputationProgressScreen -->
     <string name="progress_hero_title">正在建立你的個人化計畫</string>
@@ -146,6 +167,7 @@
     <string name="progress_row_protein_recommendation">蛋白質建議</string>
     <string name="progress_row_fat_recommendation">脂肪建議</string>
     <string name="progress_row_health_score_estimate">健康分數預估</string>
+
 
     <!-- Onboarding: HealthPlanScreen -->
     <string name="plan_cta_start">開始使用</string>
@@ -197,6 +219,8 @@
     <string name="subscription_price_per_month_format">%1$s/月</string>
     <string name="subscription_price_per_month_unit">/月</string>
 
+
+    <!-- Onboarding: OnboardSubscriptionIntro -->
     <string name="subscription_intro_title">解鎖 BiteCal AI\n更快達成你的目標</string>
     <string name="subscription_intro_helper_format">每年只要 %1$s（約 %2$s）</string>
     <string name="subscription_already_owned_restore_required">目前這個 Google Play 帳號已經有有效的 BiteCal 訂閱。請先將訂閱恢復到目前登入的 BiteCal 帳號，才能使用付費功能。</string>
@@ -238,6 +262,88 @@
 
     <string name="subscription_start_free_trial">開始免費試用</string>
     <string name="subscription_trial_helper">無承諾，可隨時取消</string>
+
+
+    <!-- HomeScreen -->
+    <string name="recently_uploaded">最近記錄</string>
+    <string name="workout_membership_verify_failed">無法確認會員狀態，請再試一次。</string>
+
+
+    <!--
+        HomeCards
+    -->
+    <!-- HomeCards :  Calories Card -->
+    <string name="home_calories_nutrition_ratio">%1$d / %2$d</string>
+    <string name="home_calories_goal_label">剩餘卡路里</string>
+    <string name="home_calories_eaten_label">已攝取卡路里</string>
+
+
+    <!-- HomeCards :  Nutrition Card -->
+    <string name="home_nutrition_ratio_grams">%1$d / %2$d克</string>
+    <string name="home_protein_goal_label">剩餘蛋白質</string>
+    <string name="home_protein_eaten_label">已攝取蛋白質</string>
+    <string name="home_carbs_goal_label">剩餘碳水</string>
+    <string name="home_carbs_eaten_label">已攝取碳水</string>
+    <string name="home_fats_goal_label">剩餘脂肪</string>
+    <string name="home_fats_eaten_label">已攝取脂肪</string>
+    <string name="home_fiber_goal_label">剩餘纖維</string>
+    <string name="home_fiber_eaten_label">已攝取纖維</string>
+    <string name="home_sugar_goal_label">剩餘糖</string>
+    <string name="home_sugar_eaten_label">已攝取糖</string>
+    <string name="home_sodium_goal_label">剩餘鈉</string>
+    <string name="home_sodium_eaten_label">已攝取鈉</string>
+    <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
+
+
+    <!-- HomeCards :  Health Score Card & Advice -->
+    <string name="home_health_score_advice_zero">記錄今天的第一餐後，即可查看依營養內容計算的健康分數。</string>
+    <string name="home_health_score_advice_very_low">今天平均分數偏低。可參考補足蛋白質、纖維，並減少高糖或高鈉選擇。</string>
+    <string name="home_health_score_advice_low">今天還有優化空間。建議增加蔬菜與優質蛋白。</string>
+    <string name="home_health_score_advice_medium">今天表現穩定。建議維持份量，並留意糖、鈉與纖維。</string>
+    <string name="home_health_score_advice_good">今天飲食平衡不錯。可以繼續選擇營養密度高的食物。</string>
+    <string name="home_health_score_advice_excellent">今天飲食平衡良好。請繼續維持穩定習慣。</string>
+    <string name="home_health_score_title">健康分數</string>
+    <string name="home_health_score_value">%1$d/10</string>
+
+
+    <!-- HomeCards : Step Card -->
+    <string name="steps_card_title">步數</string>
+    <string name="steps_status_permission_not_granted">未授權</string>
+    <string name="steps_status_hc_not_installed">未安裝</string>
+    <string name="steps_status_hc_unavailable">無法使用</string>
+    <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
+    <string name="steps_secondary_no_data_yet">尚無資料</string>
+    <string name="steps_secondary_connect">連接</string>
+    <string name="steps_hint_connect_google_health">連結 Google Health 取得步數資料</string>
+    <string name="steps_hint_install_health_connect">安裝 Health Connect 取得步數資料</string>
+    <string name="steps_hint_hc_unavailable">此裝置無法使用 Health Connect</string>
+    <string name="steps_hint_retry">同步失敗，點擊重試</string>
+
+
+    <!-- HomeCards : Workout Card -->
+    <string name="workout_card_title">運動</string>
+    <string name="workout_card_unit_kcal">kcal</string>
+
+
+    <!-- HomeCards : Weight Card -->
+    <string name="weight_card_title">體重</string>
+    <string name="weight_card_of_goal">目標進度</string>
+
+
+    <!-- HomeCards : Fasting Card -->
+    <string name="fasting_card_plan_title">禁食計畫</string>
+    <string name="fasting_card_start_time">開始時間</string>
+    <string name="fasting_card_end_time">結束時間</string>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -282,22 +388,12 @@
     <string name="fasting_notification_info_status_on">提醒已開啟。若裝置通知權限允許，這些提醒會每天重複。</string>
     <string name="fasting_notification_info_status_off">提醒目前關閉。請回首頁的禁食計畫卡片打開開關，才會收到這些通知。</string>
 
-    <!-- Steps Card  -->
-    <string name="steps_hint_connect_google_health">連結 Google Health 取得步數資料</string>
-    <string name="steps_hint_install_health_connect">安裝 Health Connect 取得步數資料</string>
-    <string name="steps_hint_no_source_app">請在 Health Connect 啟用 Health App 同步步數</string>
-    <string name="steps_hint_hc_unavailable">此裝置無法使用 Health Connect</string>
-    <string name="steps_hint_retry">同步失敗，點擊重試</string>
-    <string name="common_error">錯誤</string>
-    <string name="workout_membership_verify_failed">無法確認會員狀態，請再試一次。</string>
-    <string name="common_dash">—</string>
 
-    <string name="steps_status_permission_not_granted">未授權</string>
-    <string name="steps_status_hc_not_installed">未安裝</string>
-    <string name="steps_status_hc_unavailable">無法使用</string>
-    <string name="steps_secondary_no_data_yet">尚無資料</string>
-    <string name="steps_secondary_connect">連接</string>
-    <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
+
+
+
+
+
 
     <!--WeightScreen-->
     <string name="weight_title">體重</string>
@@ -377,7 +473,7 @@
     <string name="foodlog_analysis_done">已完成分析</string>
 
 
-    <string name="recently_uploaded">最近記錄</string>
+
     <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
     <string name="recent_upload_kcal_text">🔥 %1$d 卡路里</string>
     <string name="recent_upload_protein_text">🥩 %1$dg</string>
@@ -585,35 +681,15 @@
     <string name="water_tooltip_intake">攝取</string>
     <string name="water_tooltip_ml_value">%1$d 毫升</string>
 
-    <!-- HomeCards -->
-    <string name="home_calories_goal_label">剩餘卡路里</string>
-    <string name="home_calories_eaten_label">已攝取卡路里</string>
-    <string name="home_protein_goal_label">剩餘蛋白質</string>
-    <string name="home_protein_eaten_label">已攝取蛋白質</string>
-    <string name="home_carbs_goal_label">剩餘碳水</string>
-    <string name="home_carbs_eaten_label">已攝取碳水</string>
-    <string name="home_fats_goal_label">剩餘脂肪</string>
-    <string name="home_fats_eaten_label">已攝取脂肪</string>
-    <string name="home_fiber_goal_label">剩餘纖維</string>
-    <string name="home_fiber_eaten_label">已攝取纖維</string>
-    <string name="home_sugar_goal_label">剩餘糖</string>
-    <string name="home_sugar_eaten_label">已攝取糖</string>
-    <string name="home_sodium_goal_label">剩餘鈉</string>
-    <string name="home_sodium_eaten_label">已攝取鈉</string>
-    <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
-    <string name="home_health_score_title">健康分數</string>
-    <string name="home_health_score_value">%1$d/10</string>
 
-    <!-- 首頁飲食健康分數建議 -->
-    <string name="home_health_score_advice_zero">記錄今天的第一餐後，即可查看依營養內容計算的健康分數。</string>
-    <string name="home_health_score_advice_very_low">今天平均分數偏低。可參考補足蛋白質、纖維，並減少高糖或高鈉選擇。</string>
-    <string name="home_health_score_advice_low">今天還有優化空間。建議增加蔬菜與優質蛋白。</string>
-    <string name="home_health_score_advice_medium">今天表現穩定。建議維持份量，並留意糖、鈉與纖維。</string>
-    <string name="home_health_score_advice_good">今天飲食平衡不錯。可以繼續選擇營養密度高的食物。</string>
-    <string name="home_health_score_advice_excellent">今天飲食平衡良好。請繼續維持穩定習慣。</string>
 
-    <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
-    <string name="home_nutrition_ratio_grams">%1$d / %2$d克</string>
+
+
+
+
+
+
+
 
 
     <!-- Referral Screen -->

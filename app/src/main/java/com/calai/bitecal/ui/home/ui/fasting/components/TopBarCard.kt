@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.shadow
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
-import com.calai.bitecal.ui.home.components.TitlePrefixTriangle
+import com.calai.bitecal.ui.home.ui.card.TitlePrefixTriangle
 
 object TopBarDefaults {
     val Height = HomeCardStyles.TopBar.Height

@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.components
+package com.calai.bitecal.ui.home.ui.card
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource

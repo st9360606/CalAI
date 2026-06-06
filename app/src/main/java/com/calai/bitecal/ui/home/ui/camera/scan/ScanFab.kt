@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.components.scan
+package com.calai.bitecal.ui.home.ui.camera.scan
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.offset

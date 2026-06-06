@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.components.menu
+package com.calai.bitecal.ui.home.ui.camera.menu
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.components.CardStyles
-import com.calai.bitecal.ui.home.components.scan.ScanCameraIcon
+import com.calai.bitecal.ui.home.ui.camera.scan.ScanCameraIcon
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 private val ScrimColor = Color.Black.copy(alpha = 0.16f)

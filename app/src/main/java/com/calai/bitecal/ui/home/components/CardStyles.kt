@@ -32,12 +32,17 @@ object HomeCardStyles {
         val Elevation: Dp = 0.7.dp
     }
 
+    object PanelHeights {
+        // 與 Macro（蛋白質/脂肪/碳水）一致的卡片高度
+        val Metric = 132.dp
+    }
+
     object Ring {
         val Size = 66.dp
         val Stroke = 5.dp
         val CenterDisk = 34.dp
         val Track = Color(0xFFEFF0F3)
-        val CenterFill = RingColors.CenterFill
+        val CenterFill = Color(0xFFF5F7F9)
     }
 
     object Palette {

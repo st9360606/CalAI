@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.components
+package com.calai.bitecal.ui.home.ui.card
 
 import android.os.Build
 import androidx.compose.animation.AnimatedContent
@@ -32,11 +32,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BakeryDining
-import androidx.compose.material.icons.filled.EggAlt
 import androidx.compose.material.icons.filled.Icecream
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.RiceBowl
 import androidx.compose.material3.Card
@@ -80,6 +77,10 @@ import com.calai.bitecal.ui.home.ui.fasting.components.FastingPlanCard
 import com.calai.bitecal.ui.home.ui.fasting.components.WeightCardNew
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberBiteCalHaptics
+import com.calai.bitecal.ui.home.components.CardStyles
+import com.calai.bitecal.ui.home.components.GaugeRing
+import com.calai.bitecal.ui.home.components.HomeCardStyles
+import com.calai.bitecal.ui.home.components.WorkoutAddButton
 import kotlin.math.roundToInt
 
 @Composable
@@ -90,7 +91,7 @@ fun CaloriesCardModern(
     onClick: () -> Unit,
     progress: Float,
     modifier: Modifier = Modifier,
-    cardHeight: Dp = PanelHeights.Metric,
+    cardHeight: Dp = HomeCardStyles.PanelHeights.Metric,
     ringSize: Dp = HomeCardStyles.Ring.Size,
     ringStroke: Dp = HomeCardStyles.Ring.Stroke,
     centerDisk: Dp = HomeCardStyles.Ring.CenterDisk,
@@ -102,7 +103,7 @@ fun CaloriesCardModern(
 ) {
     val valueText = if (showTodayProgress) {
         stringResource(
-            R.string.home_nutrition_ratio_plain,
+            R.string.home_calories_nutrition_ratio,
             eatenKcal.coerceAtLeast(0),
             goalKcal.coerceAtLeast(0)
         )
@@ -192,7 +193,7 @@ fun MacroRowModern(
     todayNutrition: HomeTodayNutritionSummary,
     showTodayProgress: Boolean,
     onClick: () -> Unit,
-    cardHeight: Dp = PanelHeights.Metric,
+    cardHeight: Dp = HomeCardStyles.PanelHeights.Metric,
 
     // ✅ 新增：集中控制三張卡的尺寸
     valueFontSize: TextUnit = 17.sp,
@@ -320,7 +321,7 @@ fun MicronutrientRowModern(
     todayNutrition: HomeTodayNutritionSummary,
     showTodayProgress: Boolean,
     onClick: () -> Unit,
-    cardHeight: Dp = PanelHeights.Metric,
+    cardHeight: Dp = HomeCardStyles.PanelHeights.Metric,
     valueFontSize: TextUnit = 15.sp,
     labelFontSize: TextUnit = 12.sp,
     ringSize: Dp = HomeCardStyles.Ring.Size,
@@ -431,7 +432,7 @@ fun MicronutrientRowModern(
 fun HealthScoreCardModern(
     score: Int,
     modifier: Modifier = Modifier,
-    cardHeight: Dp = PanelHeights.Metric
+    cardHeight: Dp = HomeCardStyles.PanelHeights.Metric
 ) {
     val safeScore = score.coerceIn(0, 10)
     val progress by animateFloatAsState(
@@ -535,7 +536,7 @@ private fun MacroStatCardModern(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     progress: Float = 0f,
-    cardHeight: Dp = PanelHeights.Metric,
+    cardHeight: Dp = HomeCardStyles.PanelHeights.Metric,
     ringSize: Dp = HomeCardStyles.Ring.Size,
     ringStroke: Dp = HomeCardStyles.Ring.Stroke,
     centerDisk: Dp = HomeCardStyles.Ring.CenterDisk,
@@ -751,8 +752,8 @@ private fun MetricStatusLabel(
         return
     }
 
-    val prefix = text.substring(0, splitIndex)
-    val emphasis = text.substring(splitIndex + 1)
+    val prefix = text.take(splitIndex)
+    val emphasis = text.drop(splitIndex + 1)
 
     Text(
         text = buildAnnotatedString {
@@ -890,7 +891,7 @@ fun StepsWorkoutRowModern(
         val stepsProgress = if (canShowLive) progressOfLong(steps, stepsGoalOverride) else 0f
 
         ActivityStatCardSplit(
-            title = "Steps",
+            title = stringResource(R.string.steps_card_title),
             primary = stepsPrimary,
             secondary = stepsSecondary,
             ringColor = HomeCardStyles.Palette.Steps,
@@ -939,19 +940,22 @@ fun StepsWorkoutRowModern(
         )
 
         // ===== Workout =====
-        val workoutKcal: Int? = workoutTotalKcalOverride
+        val workoutKcal: Int = workoutTotalKcalOverride
             ?: summary.todayActivity.activeKcal.roundToInt().coerceAtLeast(0)
 
-        val workoutPrimary = workoutKcal?.toString() ?: dash
+        val workoutPrimary = workoutKcal.toString()
 
         // ✅ NEW：goal 來源改成 DB 傳入；沒拿到就 fallback 450（避免 UI 壞掉）
         val workoutGoalKcal = workoutGoalKcalOverride ?: 450 // fallback（對齊你 DB default）
 
         // ✅ 100% = workoutGoal
-        val workoutProgress = progressOfInt(workoutKcal, workoutGoalKcal)
+        val workoutProgress = progressOfInt(
+            current = workoutKcal,
+            goal = workoutGoalKcal
+        )
 
         ActivityStatCardSplit(
-            title = "Workout",
+            title = stringResource(R.string.workout_card_title),
             primary = workoutPrimary,
             secondary = null,
             ringColor = HomeCardStyles.Palette.Workout,
@@ -969,8 +973,11 @@ fun StepsWorkoutRowModern(
                     modifier = Modifier.size(24.dp)
                 )
             },
-            primaryContent = workoutKcal?.let {
-                { WorkoutPrimaryText(kcal = it, numberStyle = activityPrimaryStyle) }
+            primaryContent = {
+                WorkoutPrimaryText(
+                    kcal = workoutKcal,
+                    numberStyle = activityPrimaryStyle
+                )
             },
             leftExtra = {
                 Box(modifier = Modifier.offset(x = (-4).dp, y = (2).dp)) {
@@ -1009,7 +1016,7 @@ private fun WorkoutPrimaryText(
         Spacer(Modifier.width(5.dp))
 
         Text(
-            text = "kcal",
+            text = stringResource(R.string.workout_card_unit_kcal),
             style = MaterialTheme.typography.bodySmall.copy(
                 fontWeight = FontWeight.Normal,
                 baselineShift = BaselineShift(0.28f)
@@ -1231,7 +1238,7 @@ fun ActivityStatCardSplit(
 @Composable
 fun WeightFastingRowModern(
     summary: HomeSummary,
-    cardHeight: Dp = PanelHeights.Metric,
+    cardHeight: Dp = HomeCardStyles.PanelHeights.Metric,
     onOpenFastingPlans: () -> Unit = {},
     fastingStartText: String? = null,
     fastingEndText: String? = null,
@@ -1244,13 +1251,14 @@ fun WeightFastingRowModern(
     onQuickLogWeight: () -> Unit
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        val dash = stringResource(R.string.common_dash)
         val commonTopBarHeight = 30.dp
         val commonTopBarTextStyle = MaterialTheme.typography.labelMedium
 
-        // === 左卡：Weight（新元件）
+        // === 左卡：Weight
         WeightCardNew(
             primary = weightPrimary,
-            secondary = "of goal",
+            secondary = stringResource(R.string.weight_card_of_goal),
             ringColor = HomeCardStyles.Palette.Weight,
             progress = weightProgress,
             modifier = Modifier
@@ -1261,7 +1269,7 @@ fun WeightFastingRowModern(
             ringSize = 70.dp,
             ringStroke = 5.dp,
             centerDisk = 31.dp,
-            topBarTitle = "Weight",
+            topBarTitle = stringResource(R.string.weight_card_title),
             topBarHeight = commonTopBarHeight,
             topBarTextStyle = commonTopBarTextStyle,
             primaryFontSize = 20.sp,
@@ -1272,14 +1280,14 @@ fun WeightFastingRowModern(
             onAddWeightClick = onQuickLogWeight        // ★ 按「＋」直接開記錄頁
         )
 
-        // 右卡 Fasting Plan（改用 modifier.weight(1f).height(cardHeight)）
-        val plan = planOverride ?: (summary.fastingPlan ?: "—")
+        // === 右卡 Fasting Plan
+        val plan = planOverride ?: (summary.fastingPlan ?: dash)
         FastingPlanCard(
-            planTitle = "Fasting Plan",
+            planTitle = stringResource(R.string.fasting_card_plan_title),
             planName = plan,
-            startLabel = "Start time",
+            startLabel = stringResource(R.string.fasting_card_start_time),
             startText = fastingStartText,
-            endLabel = "End time",
+            endLabel = stringResource(R.string.fasting_card_end_time),
             endText = fastingEndText,
             enabled = fastingEnabled,
             onToggle = onToggle,
@@ -1295,8 +1303,6 @@ fun WeightFastingRowModern(
     }
 }
 
-/** 自訂綠色開關，讓 FastingPlanCard 的狀態切換更柔和。 */
-/** 自訂 iOS 風格開關，讓 FastingPlanCard 的狀態切換更柔和。 */
 @Composable
 fun GreenSwitch(
     checked: Boolean,
@@ -1311,7 +1317,7 @@ fun GreenSwitch(
 
     val trackColor by animateColorAsState(
         targetValue = if (checked) {
-            Color(0xFF5ECB7A) // iOS green
+            Color(0xFF5ECB7A)
         } else {
             Color(0xFFE9ECEF)
         },
@@ -1382,7 +1388,7 @@ fun GreenSwitch(
  */
 @Composable
 fun TitlePrefixTriangle(
-    side: Dp = 8.dp,                 // ← 想更小/更大改這裡
+    side: Dp = 8.dp,                              // ← 想更小/更大改這裡
     color: Color = HomeCardStyles.Palette.Weight // ← 與 Weight 圓形條一致
 ) {
     Canvas(modifier = Modifier.size(side)) {

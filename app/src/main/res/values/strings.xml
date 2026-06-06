@@ -1,6 +1,7 @@
 <resources>
-
+    <!-- App_Name -->
     <string name="app_name">BiteCal: Calorie Camera</string>
+
 
     <!-- common -->
     <string name="common_close">Close</string>
@@ -8,6 +9,9 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_continue_btn">Continue</string>
     <string name="common_skip">Skip</string>
+    <string name="common_dash">—</string>
+    <string name="common_error">Error</string>
+
 
     <!-- Landing Screen -->
     <string name="landing_title">Snap a photo, know the calories.</string>
@@ -16,10 +20,12 @@
     <string name="cta_login_prefix">Already have an account?</string>
     <string name="cta_login">Sign in</string>
 
+
     <!-- RequireSignInScreen -->
     <string name="auth_sign_in_account_title">Sign in to your account</string>
     <string name="auth_sign_in_with_google">Sign in with Google</string>
     <string name="auth_signin_with_email">Continue with email</string>
+
 
     <!-- SignInSheet-->
     <string name="signin_title">Sign In</string>
@@ -33,13 +39,16 @@
     <string name="signin_url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="signin_url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
 
+
     <!-- SignInSheetHost 控制 Sheet 是否顯示、處理狀態、接外部 callback -->
     <string name="err_google_no_account_hint">Tip: add a Google account in Settings → Accounts and try again</string>
     <string name="err_google_signin_failed">Google sign-in failed</string>
 
+
     <!-- EmailEnterScreen-->
     <string name="email_sign_in_title">Sign In</string>
     <string name="input_box_email_label">Email</string>
+
 
     <!-- EmailCodeScreen OTP -->
     <string name="resend">Resend</string>
@@ -55,6 +64,7 @@
     <string name="confirm_email_hint">Please enter the 4-digit code we\'ve just sent to</string>
     <string name="didnt_receive_code">Didn’t receive the code?</string>
 
+
     <!-- Onboarding: GenderSelectionScreen -->
     <string name="onboard_gender_title">Choose your gender</string>
     <string name="onboard_gender_subtitle">This will be used to calibrate your custom plan.</string>
@@ -62,22 +72,27 @@
     <string name="onboard_female">Female</string>
     <string name="onboard_other">Other</string>
 
+
     <!-- Onboarding: ReferralSourceScreen -->
     <string name="onboard_referral_title">How did you discover us?</string>
+
 
     <!-- Onboarding: AgeSelectionScreen -->
     <string name="onboard_age_title">How old are you?</string>
     <string name="onboard_age_subtitle">We only use your age to improve your experience and calorie estimation accuracy.</string>
+
 
     <!-- Onboarding: HeightSelectionScreen -->
     <string name="onboard_height_title">How tall are you?</string>
     <string name="onboard_height_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_height_hint">This will be used to calibrate your custom plan.</string>
 
+
     <!-- Onboarding: WeightSelectionScreen -->
     <string name="onboard_weight_title">How much do you weigh?</string>
     <string name="onboard_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_weight_hint">This will be used to calibrate your custom plan.</string>
+
 
     <!-- Onboarding: ExerciseFrequencyScreen  -->
     <string name="onboard_ex_freq_title">How often do you exercise each week?</string>
@@ -93,6 +108,7 @@
     <string name="ex_freq_7_plus_title">7+</string>
     <string name="ex_freq_7_plus_sub">Very high activity</string>
 
+
     <!-- Onboarding: GoalSelectionScreen  -->
     <string name="onboard_goal_title">What’s your goal?</string>
     <string name="onboard_goal_subtitle">This helps us tailor your calorie plan.</string>
@@ -101,10 +117,12 @@
     <string name="goal_gain">Gain weight</string>
     <string name="goal_healthy_eating">Healthy eating</string>
 
+
     <!-- Onboarding: WeightGoalScreen -->
     <string name="onboard_goal_weight_title">What is your goal weight?</string>
     <string name="onboard_goal_weight_subtitle">We only use your data to improve your experience and our calorie estimates.</string>
     <string name="onboard_goal_weight_hint">This will be used to calibrate your custom plan.</string>
+
 
     <!-- Onboarding: WeightLossComparisonScreen -->
     <string name="onboard_weight_loss_comparison_title">Using BiteCal AI can\ntriple your weight loss efficiency</string>
@@ -114,6 +132,7 @@
     <string name="onboard_weight_loss_comparison_two_times">3X</string>
     <string name="onboard_weight_loss_comparison_caption">BiteCal AI makes everything simple\nand keeps you accountable</string>
 
+
     <!-- Onboarding: NotificationPermissionScreen -->
     <string name="onboard_notif_title">Make every meal count!</string>
     <string name="onboard_notif_subtitle">Enable notifications for gentle reminders to log meals—so your calories, macros, and progress stay on track. Slip-ups happen; timely nudges help you bounce back fast.</string>
@@ -121,6 +140,7 @@
     <string name="notification_mock_app_title">AI Calorie Counter</string>
     <string name="onboard_notif_title_got_a_sec">Your meal won’t log itself 😉</string>
     <string name="onboard_notif_subtitle_log_meal_goal">Log this meal to keep your calories and macros on track.</string>
+
 
     <!-- Onboarding: HealthConnectIntroScreen -->
     <string name="onboard_hc_connect_title_prefix">Connect to</string>
@@ -130,6 +150,7 @@
     <string name="onboard_hc_permission_rationale_title_service">Health Connect</string>
     <string name="onboard_hc_permission_rationale_body">BiteCal reads your steps, exercise, and sleep data to estimate daily activity burn, update your calorie dashboard, and improve progress insights. You can revoke access anytime in Health Connect.</string>
     <string name="onboard_hc_permission_rationale_button">Got it</string>
+
 
     <!-- Onboarding: ComputationProgressScreen -->
     <string name="progress_hero_title">Creating your personalized plan</string>
@@ -146,6 +167,7 @@
     <string name="progress_row_protein_recommendation">Protein recommendation</string>
     <string name="progress_row_fat_recommendation">Fat recommendation</string>
     <string name="progress_row_health_score_estimate">Health score estimate</string>
+
 
     <!-- Onboarding: HealthPlanScreen -->
     <string name="plan_cta_start">Let\'s get started</string>
@@ -197,6 +219,8 @@
     <string name="subscription_price_per_month_format">%1$s/mo</string>
     <string name="subscription_price_per_month_unit">/mo</string>
 
+
+    <!-- Onboarding: OnboardSubscriptionIntro -->
     <string name="subscription_intro_title">Unlock BiteCal AI to\nreach your goals faster.</string>
     <string name="subscription_intro_helper_format">Just %1$s per year (%2$s)</string>
     <string name="subscription_already_owned_restore_required">Your Google Play account already has an active BiteCal subscription. Restore it to this BiteCal account before using premium features.</string>
@@ -240,9 +264,76 @@
     <string name="subscription_trial_helper">No commitment — cancel anytime</string>
 
 
+    <!-- HomeScreen -->
+    <string name="recently_uploaded">Recently uploaded</string>
+    <string name="workout_membership_verify_failed">Unable to verify membership. Please try again.</string>
 
 
+    <!--
+        HomeCards
+    -->
+    <!-- HomeCards :  Calories Card -->
+    <string name="home_calories_nutrition_ratio">%1$d / %2$d</string>
+    <string name="home_calories_goal_label">Calories left</string>
+    <string name="home_calories_eaten_label">Calories eaten</string>
 
+
+    <!-- HomeCards :  Nutrition Card -->
+    <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
+    <string name="home_protein_goal_label">Protein left</string>
+    <string name="home_protein_eaten_label">Protein eaten</string>
+    <string name="home_carbs_goal_label">Carbs left</string>
+    <string name="home_carbs_eaten_label">Carbs eaten</string>
+    <string name="home_fats_goal_label">Fats left</string>
+    <string name="home_fats_eaten_label">Fats eaten</string>
+    <string name="home_fiber_goal_label">Fiber left</string>
+    <string name="home_fiber_eaten_label">Fiber eaten</string>
+    <string name="home_sugar_goal_label">Sugar left</string>
+    <string name="home_sugar_eaten_label">Sugar eaten</string>
+    <string name="home_sodium_goal_label">Sodium left</string>
+    <string name="home_sodium_eaten_label">Sodium eaten</string>
+    <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
+
+
+    <!-- HomeCards :  Health Score Card & Advice -->
+    <string name="home_health_score_advice_zero">Log your first meal today to see a health score based on its nutrition details.</string>
+    <string name="home_health_score_advice_very_low">Today\'s average is low. Consider more protein, fiber, and lower sugar or sodium.</string>
+    <string name="home_health_score_advice_low">There\'s room to improve. Try adding vegetables and quality protein.</string>
+    <string name="home_health_score_advice_medium">You\'re on track. Keep portions steady and watch sugar, sodium, and fiber.</string>
+    <string name="home_health_score_advice_good">Good balance today. Keep choosing nutrient-dense foods.</string>
+    <string name="home_health_score_advice_excellent">Great balance today. Keep building consistent habits.</string>
+    <string name="home_health_score_title">Health Score</string>
+    <string name="home_health_score_value">%1$d/10</string>
+
+
+    <!-- HomeCards : Step Card -->
+    <string name="steps_card_title">Steps</string>
+    <string name="steps_status_permission_not_granted">Not authorized</string>
+    <string name="steps_status_hc_not_installed">Not installed</string>
+    <string name="steps_status_hc_unavailable">Unavailable</string>
+    <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
+    <string name="steps_secondary_no_data_yet">No data yet</string>
+    <string name="steps_secondary_connect">Connect</string>
+    <string name="steps_hint_connect_google_health">Connect Google Health to track your steps</string>
+    <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
+    <string name="steps_hint_hc_unavailable">Health Connect isn’t available on this device</string>
+    <string name="steps_hint_retry">Sync failed. Tap to retry</string>
+
+
+    <!-- HomeCards : Workout Card -->
+    <string name="workout_card_title">Workout</string>
+    <string name="workout_card_unit_kcal">kcal</string>
+
+
+    <!-- HomeCards : Weight Card -->
+    <string name="weight_card_title">Weight</string>
+    <string name="weight_card_of_goal">of goal</string>
+
+
+    <!-- HomeCards : Fasting Card -->
+    <string name="fasting_card_plan_title">Fasting Plan</string>
+    <string name="fasting_card_start_time">Start time</string>
+    <string name="fasting_card_end_time">End time</string>
 
 
 
@@ -285,22 +376,11 @@
     <string name="fasting_notification_info_status_on">Reminders are on. If device notification permission is allowed, these reminders repeat daily.</string>
     <string name="fasting_notification_info_status_off">Reminders are off. Turn on the switch on the Home fasting card to receive these notifications.</string>
 
-    <!-- Steps Card -->
-    <string name="steps_hint_connect_google_health">Connect Google Health to track your steps</string>
-    <string name="steps_hint_install_health_connect">Install Health Connect to track your steps</string>
-    <string name="steps_hint_no_source_app">Enable a health app in Health Connect to sync steps</string>
-    <string name="steps_hint_hc_unavailable">Health Connect isn’t available on this device</string>
-    <string name="steps_hint_retry">Sync failed. Tap to retry</string>
-    <string name="common_error">Error</string>
-    <string name="workout_membership_verify_failed">Unable to verify membership. Please try again.</string>
-    <string name="common_dash">—</string>
 
-    <string name="steps_status_permission_not_granted">Not authorized</string>
-    <string name="steps_status_hc_not_installed">Not installed</string>
-    <string name="steps_status_hc_unavailable">Unavailable</string>
-    <string name="steps_secondary_no_data_yet">No data yet</string>
-    <string name="steps_secondary_connect">Connect</string>
-    <string name="steps_secondary_est_kcal">≈ %1$d kcal</string>
+
+
+
+
 
     <!--WeightScreen-->
     <string name="weight_title">Weight</string>
@@ -381,7 +461,7 @@
     <string name="foodlog_analysis_done">Analysis complete</string>
 
 
-    <string name="recently_uploaded">Recently uploaded</string>
+
     <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
     <string name="recent_upload_kcal_text">🔥 %1$d calories</string>
     <string name="recent_upload_protein_text">🥩 %1$dg</string>
@@ -591,35 +671,9 @@
     <string name="water_tooltip_intake">Intake</string>
     <string name="water_tooltip_ml_value">%1$d ml</string>
 
-    <!-- HomeCards -->
-    <string name="home_calories_goal_label">Calories left</string>
-    <string name="home_calories_eaten_label">Calories eaten</string>
-    <string name="home_protein_goal_label">Protein left</string>
-    <string name="home_protein_eaten_label">Protein eaten</string>
-    <string name="home_carbs_goal_label">Carbs left</string>
-    <string name="home_carbs_eaten_label">Carbs eaten</string>
-    <string name="home_fats_goal_label">Fats left</string>
-    <string name="home_fats_eaten_label">Fats eaten</string>
-    <string name="home_fiber_goal_label">Fiber left</string>
-    <string name="home_fiber_eaten_label">Fiber eaten</string>
-    <string name="home_sugar_goal_label">Sugar left</string>
-    <string name="home_sugar_eaten_label">Sugar eaten</string>
-    <string name="home_sodium_goal_label">Sodium left</string>
-    <string name="home_sodium_eaten_label">Sodium eaten</string>
-    <string name="home_nutrition_ratio_mg">%1$d / %2$dmg</string>
-    <string name="home_health_score_title">Health Score</string>
-    <string name="home_health_score_value">%1$d/10</string>
 
-    <!-- Home Health Score Advice -->
-    <string name="home_health_score_advice_zero">Log your first meal today to see a health score based on its nutrition details.</string>
-    <string name="home_health_score_advice_very_low">Today\'s average is low. Consider more protein, fiber, and lower sugar or sodium.</string>
-    <string name="home_health_score_advice_low">There\'s room to improve. Try adding vegetables and quality protein.</string>
-    <string name="home_health_score_advice_medium">You\'re on track. Keep portions steady and watch sugar, sodium, and fiber.</string>
-    <string name="home_health_score_advice_good">Good balance today. Keep choosing nutrient-dense foods.</string>
-    <string name="home_health_score_advice_excellent">Great balance today. Keep building consistent habits.</string>
 
-    <string name="home_nutrition_ratio_plain">%1$d / %2$d</string>
-    <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
+
 
     <!-- Referral Screen -->
     <string name="referral_title">Invite friends</string>

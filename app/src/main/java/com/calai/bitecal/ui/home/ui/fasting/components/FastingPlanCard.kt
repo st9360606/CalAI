@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
-import com.calai.bitecal.ui.home.components.GreenSwitch
+import com.calai.bitecal.ui.home.ui.card.GreenSwitch
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable

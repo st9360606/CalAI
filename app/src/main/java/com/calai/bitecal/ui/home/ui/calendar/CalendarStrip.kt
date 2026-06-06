@@ -1,8 +1,18 @@
-package com.calai.bitecal.ui.home.components
+package com.calai.bitecal.ui.home.ui.calendar
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
@@ -24,22 +34,38 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.calai.bitecal.ui.common.haptic.biteCalClickable
-import java.time.LocalDate
+import com.calai.bitecal.ui.home.components.HomeCardStyles
 import java.time.DayOfWeek
+import java.time.LocalDate
 
 private object CalendarStripColors {
     val SelectedBackground = HomeCardStyles.Calendar.SelectedBackground
     val TodayBackground = HomeCardStyles.Calendar.TodayBackground
     val ActiveText = HomeCardStyles.Calendar.ActiveText
     val DisabledText = HomeCardStyles.Calendar.DisabledText
-    val ActiveStroke = HomeCardStyles.Calendar.ActiveStroke
     val DisabledStroke = HomeCardStyles.Calendar.DisabledStroke
     val OnTargetStroke = HomeCardStyles.Calendar.OnTargetStroke
     val SlightlyOverStroke = HomeCardStyles.Calendar.SlightlyOverStroke
     val FarOverStroke = HomeCardStyles.Calendar.FarOverStroke
     val NoMealStroke = HomeCardStyles.Calendar.NoMealStroke
     val TodayNoMealStroke = HomeCardStyles.Calendar.TodayNoMealStroke
+}
+
+private enum class DotStyle { Dashed, SolidStroke }
+
+private data class CalendarDayRingStyle(
+    val dotStyle: DotStyle,
+    val strokeColor: Color
+)
+
+private fun dayOfWeekAbbrev(d: DayOfWeek): String = when (d) {
+    DayOfWeek.MONDAY -> "Mon"
+    DayOfWeek.TUESDAY -> "Tue"
+    DayOfWeek.WEDNESDAY -> "Wed"
+    DayOfWeek.THURSDAY -> "Thu"
+    DayOfWeek.FRIDAY -> "Fri"
+    DayOfWeek.SATURDAY -> "Sat"
+    DayOfWeek.SUNDAY -> "Sun"
 }
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -126,7 +152,7 @@ fun CalendarStrip(
                         // 選中的那天：使用 HomeCardStyles.Calendar 管理的金棕色底
                         Box(
                             modifier = baseContainer
-                                .biteCalClickable { onSelect(d) }
+                                .clickable { onSelect(d) }
                                 .drawBehind {
                                     val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
                                     val chipW = size.width * fraction
@@ -151,8 +177,6 @@ fun CalendarStrip(
                                 style = ringStyle.dotStyle,
                                 ringColor = ringStyle.strokeColor,
                                 dashedPath = dashedPath,
-                                onClick = {},
-                                useClickable = false,
                                 isSelected = true
                             )
                         }
@@ -162,7 +186,7 @@ fun CalendarStrip(
                         // 今天但未被選：柔和灰底
                         Box(
                             modifier = baseContainer
-                                .biteCalClickable(enabled = enabled) { if (enabled) onSelect(d) }
+                                .clickable(enabled = enabled) { onSelect(d) }
                                 .drawBehind {
                                     val fraction = selectedBgWidthFraction.coerceIn(0.6f, 1f)
                                     val chipW = size.width * fraction
@@ -186,8 +210,7 @@ fun CalendarStrip(
                                 enabled = enabled,
                                 style = ringStyle.dotStyle,
                                 ringColor = ringStyle.strokeColor,
-                                dashedPath = dashedPath,
-                                onClick = { if (enabled) onSelect(d) }
+                                dashedPath = dashedPath
                             )
                         }
                     }
@@ -196,7 +219,7 @@ fun CalendarStrip(
                         // 其他（一般日或未來日）
                         Box(
                             modifier = baseContainer
-                                .biteCalClickable(enabled = enabled) { if (enabled) onSelect(d) },
+                                .clickable(enabled = enabled) { onSelect(d) },
                             contentAlignment = Alignment.Center
                         ) {
                             DayDot(
@@ -205,9 +228,7 @@ fun CalendarStrip(
                                 enabled = enabled,
                                 style = ringStyle.dotStyle,
                                 ringColor = ringStyle.strokeColor,
-                                dashedPath = dashedPath,
-                                onClick = { if (enabled) onSelect(d) },
-                                useClickable = false
+                                dashedPath = dashedPath
                             )
                         }
                     }
@@ -216,13 +237,6 @@ fun CalendarStrip(
         }
     }
 }
-
-private enum class DotStyle { Dashed, SolidStroke }
-
-private data class CalendarDayRingStyle(
-    val dotStyle: DotStyle,
-    val strokeColor: Color
-)
 
 private fun calendarRingStyleForDate(
     date: LocalDate,
@@ -272,8 +286,6 @@ private fun DayDot(
     style: DotStyle,
     ringColor: Color,
     dashedPath: PathEffect,
-    onClick: () -> Unit,
-    useClickable: Boolean = true,
     isSelected: Boolean = false
 ) {
     val weekdayColor = CalendarStripColors.ActiveText
@@ -303,7 +315,6 @@ private fun DayDot(
         modifier = Modifier
             .width(width)
             .padding(vertical = 2.dp)
-            .then(if (useClickable) Modifier.biteCalClickable(enabled = enabled, onClick = onClick) else Modifier)
     ) {
         Text(
             text = dayOfWeekAbbrev(date.dayOfWeek),
@@ -366,15 +377,4 @@ private fun DayDot(
             )
         }
     }
-}
-
-
-private fun dayOfWeekAbbrev(d: DayOfWeek): String = when (d) {
-    DayOfWeek.MONDAY -> "Mon"
-    DayOfWeek.TUESDAY -> "Tue"
-    DayOfWeek.WEDNESDAY -> "Wed"
-    DayOfWeek.THURSDAY -> "Thu"
-    DayOfWeek.FRIDAY -> "Fri"
-    DayOfWeek.SATURDAY -> "Sat"
-    DayOfWeek.SUNDAY -> "Sun"
 }

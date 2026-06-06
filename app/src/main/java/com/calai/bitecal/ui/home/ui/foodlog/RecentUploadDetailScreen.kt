@@ -71,7 +71,6 @@ import com.calai.bitecal.ui.common.design.BiteCalShape
 import com.calai.bitecal.ui.common.design.BiteCalSize
 import com.calai.bitecal.core.time.UtcTimeFormatter
 import com.calai.bitecal.ui.common.design.BiteCalSpacing
-import com.calai.bitecal.ui.home.components.RingColors
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
 import com.calai.bitecal.ui.home.ui.foodlog.model.FoodLogFlowViewModel
 import java.time.Instant
@@ -870,7 +869,7 @@ private fun CaloriesHeroCard(kcal: Int) {
             Surface(
                 modifier = Modifier.size(54.dp),
                 shape = RoundedCornerShape(18.dp),
-                color = RingColors.CenterFill
+                color = Color(0xFFF5F7F9)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
