@@ -335,7 +335,9 @@
     <string name="fasting_card_end_time">結束時間</string>
 
 
-
+    <!-- HomeCards : Water Card -->
+    <string name="water_intake_title">飲水</string>
+    <string name="water_intake_cups_format">（%1$d 杯）</string>
 
 
 
@@ -1012,9 +1014,7 @@
     <!-- Saved foods -->
     <string name="saved_foods_load_failed_title">已儲存食物載入失敗</string>
 
-    <!-- Water card -->
-    <string name="water_intake_title">飲水</string>
-    <string name="water_intake_cups_format">（%1$d 杯）</string>
+
 
     <!-- Weight card labels -->
     <string name="weight_card_to_goal_weight">距離目標體重</string>

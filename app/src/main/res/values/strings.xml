@@ -335,7 +335,9 @@
     <string name="fasting_card_end_time">End time</string>
 
 
-
+    <!-- HomeCards : Water Card -->
+    <string name="water_intake_title">Water</string>
+    <string name="water_intake_cups_format">(%1$d cups)</string>
 
 
 
@@ -996,9 +998,7 @@
     <!-- Saved foods -->
     <string name="saved_foods_load_failed_title">Saved foods failed to load</string>
 
-    <!-- Water card -->
-    <string name="water_intake_title">Water</string>
-    <string name="water_intake_cups_format">(%1$d cups)</string>
+
 
     <!-- Weight card labels -->
     <string name="weight_card_to_goal_weight">To goal weight</string>
