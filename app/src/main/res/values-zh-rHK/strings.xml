@@ -1006,7 +1006,7 @@
 
 
     <string name="log_your_food">記錄食物</string>
-    <string name="settings_membership_payment">付款</string>
+    <string name="settings_membership_payment">付款問題</string>
     <string name="settings_membership_update_payment">更新付款</string>
     <string name="settings_membership_premium">Premium</string>
     <string name="settings_membership_active_member">會員啟用中</string>

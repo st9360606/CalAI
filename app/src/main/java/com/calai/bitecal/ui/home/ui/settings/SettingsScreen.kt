@@ -440,6 +440,15 @@ private fun SettingsContent(
     val restoreDialogRestoreText = stringResource(R.string.settings_restore_subscription)
     val restoreDialogRestoringText = stringResource(R.string.restore_subscription_dialog_restoring)
     val restoreDialogMaybeLaterText = stringResource(R.string.common_maybe_later)
+    val paymentIssueTitle = stringResource(R.string.payment_issue_dialog_title)
+    val paymentIssueBody = stringResource(R.string.payment_issue_dialog_body)
+    val paymentIssueSupportingBody = stringResource(R.string.payment_issue_dialog_supporting_body)
+    val paymentIssueUpdatePaymentText = stringResource(R.string.payment_issue_dialog_update_payment)
+    val paymentIssueBadgeText = stringResource(R.string.payment_issue_dialog_badge)
+    val paymentIssuePremiumAccessText = stringResource(R.string.payment_issue_dialog_premium_access)
+    val paymentIssueActiveForNowText = stringResource(R.string.payment_issue_dialog_active_for_now)
+    val paymentIssueNextStepText = stringResource(R.string.payment_issue_dialog_next_step)
+    val paymentIssueUpdatePaymentShortText = stringResource(R.string.payment_issue_dialog_update_payment_short)
 
     // ✅ Dialog 放外層（不受 scroll 影響）
     key(localeKey) {
@@ -474,16 +483,29 @@ private fun SettingsContent(
         )
     }
 
-    PaymentIssueDialog(
-        visible = showPaymentIssueDialog,
-        onDismiss = {
-            showPaymentIssueDialog = false
-        },
-        onUpdatePaymentMethod = {
-            showPaymentIssueDialog = false
-            onFixPaymentIssue()
-        }
-    )
+    key(localeKey) {
+        PaymentIssueDialog(
+            visible = showPaymentIssueDialog,
+            title = paymentIssueTitle,
+            body = paymentIssueBody,
+            supportingBody = paymentIssueSupportingBody,
+            updatePaymentText = paymentIssueUpdatePaymentText,
+            maybeLaterText = restoreDialogMaybeLaterText,
+            closeText = restoreDialogCloseText,
+            badgeText = paymentIssueBadgeText,
+            premiumAccessText = paymentIssuePremiumAccessText,
+            activeForNowText = paymentIssueActiveForNowText,
+            nextStepText = paymentIssueNextStepText,
+            updatePaymentShortText = paymentIssueUpdatePaymentShortText,
+            onDismiss = {
+                showPaymentIssueDialog = false
+            },
+            onUpdatePaymentMethod = {
+                showPaymentIssueDialog = false
+                onFixPaymentIssue()
+            }
+        )
+    }
 
     key(localeKey) {
         RestoreSubscriptionDialog(

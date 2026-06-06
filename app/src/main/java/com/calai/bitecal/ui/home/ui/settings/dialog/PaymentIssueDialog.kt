@@ -31,19 +31,28 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun PaymentIssueDialog(
     visible: Boolean,
+    title: String,
+    body: String,
+    supportingBody: String,
+    updatePaymentText: String,
+    maybeLaterText: String,
+    closeText: String,
+    badgeText: String,
+    premiumAccessText: String,
+    activeForNowText: String,
+    nextStepText: String,
+    updatePaymentShortText: String,
     onDismiss: () -> Unit,
     onUpdatePaymentMethod: () -> Unit,
     modifier: Modifier = Modifier
@@ -81,6 +90,8 @@ fun PaymentIssueDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     DialogHeader(
+                        closeText = closeText,
+                        badgeText = badgeText,
                         onDismiss = dismissClick
                     )
 
@@ -91,7 +102,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(18.dp))
 
                     Text(
-                        text = stringResource(R.string.payment_issue_dialog_title),
+                        text = title,
                         color = Color(0xFF111114),
                         fontSize = 24.sp,
                         lineHeight = 28.sp,
@@ -103,7 +114,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(10.dp))
 
                     Text(
-                        text = stringResource(R.string.payment_issue_dialog_body),
+                        text = body,
                         color = Color(0xFF374151),
                         fontSize = 15.sp,
                         lineHeight = 21.sp,
@@ -117,7 +128,7 @@ fun PaymentIssueDialog(
                     Spacer(Modifier.height(8.dp))
 
                     Text(
-                        text = stringResource(R.string.payment_issue_dialog_supporting_body),
+                        text = supportingBody,
                         color = Color(0xFF71717A),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
@@ -130,7 +141,12 @@ fun PaymentIssueDialog(
 
                     Spacer(Modifier.height(18.dp))
 
-                    PaymentIssueStatusPanel()
+                    PaymentIssueStatusPanel(
+                        premiumAccessText = premiumAccessText,
+                        activeForNowText = activeForNowText,
+                        nextStepText = nextStepText,
+                        updatePaymentShortText = updatePaymentShortText
+                    )
 
                     Spacer(Modifier.height(22.dp))
 
@@ -146,7 +162,7 @@ fun PaymentIssueDialog(
                             .height(52.dp)
                     ) {
                         Text(
-                            text = stringResource(R.string.payment_issue_dialog_update_payment),
+                            text = updatePaymentText,
                             fontSize = 16.sp,
                             lineHeight = 20.sp,
                             fontWeight = FontWeight.Bold
@@ -168,7 +184,7 @@ fun PaymentIssueDialog(
                             .height(44.dp)
                     ) {
                         Text(
-                            text = stringResource(R.string.common_maybe_later),
+                            text = maybeLaterText,
                             fontSize = 15.sp,
                             lineHeight = 18.sp,
                             fontWeight = FontWeight.SemiBold
@@ -182,6 +198,8 @@ fun PaymentIssueDialog(
 
 @Composable
 private fun DialogHeader(
+    closeText: String,
+    badgeText: String,
     onDismiss: () -> Unit
 ) {
     Box(
@@ -201,7 +219,7 @@ private fun DialogHeader(
             Spacer(Modifier.size(8.dp))
 
             Text(
-                text = stringResource(R.string.payment_issue_dialog_badge),
+                text = badgeText,
                 color = Color(0xFF8F3F4B),
                 fontSize = 13.sp,
                 lineHeight = 16.sp,
@@ -225,7 +243,7 @@ private fun DialogHeader(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(R.string.common_close),
+                    contentDescription = closeText,
                     tint = Color(0xFF3F3F46),
                     modifier = Modifier.size(17.dp)
                 )
@@ -276,7 +294,12 @@ private fun PaymentIssueHero() {
     }
 }
 @Composable
-private fun PaymentIssueStatusPanel() {
+private fun PaymentIssueStatusPanel(
+    premiumAccessText: String,
+    activeForNowText: String,
+    nextStepText: String,
+    updatePaymentShortText: String
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -292,15 +315,15 @@ private fun PaymentIssueStatusPanel() {
     ) {
         PaymentIssueInfoRow(
             icon = Icons.Outlined.Lock,
-            title = stringResource(R.string.payment_issue_dialog_premium_access),
-            value = stringResource(R.string.payment_issue_dialog_active_for_now),
+            title = premiumAccessText,
+            value = activeForNowText,
             valueColor = Color(0xFF15803D)
         )
 
         PaymentIssueInfoRow(
             icon = Icons.Outlined.CreditCard,
-            title = stringResource(R.string.payment_issue_dialog_next_step),
-            value = stringResource(R.string.payment_issue_dialog_update_payment_short),
+            title = nextStepText,
+            value = updatePaymentShortText,
             valueColor = Color(0xFFE46A6A)
         )
     }
