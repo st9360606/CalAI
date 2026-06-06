@@ -1,7 +1,16 @@
 package com.calai.bitecal.ui.home.ui.fasting.components
 
-// ===== Imports =====
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -10,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -18,10 +26,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.ui.card.GreenSwitch
-import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 
 @Composable
 fun FastingPlanCard(
@@ -58,16 +66,10 @@ fun FastingPlanCard(
 
     Card(
         modifier = modifier
-            .height(cardHeight)
-            // ★ 統一陰影＋圓角 → 跟其他卡片同一套視覺（立體浮起來）
-            .shadow(
-                CardStyles.Elevation,
-                CardStyles.Corner,
-                clip = false
-            ),
-        shape = CardStyles.Corner, // 20.dp 圓角，和其他卡片一致
+            .height(cardHeight),
+        shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(
-            containerColor = CardStyles.Bg // 微暖白
+            containerColor = CardStyles.Bg
         ),
         border = CardStyles.Border,
         onClick = hapticClick
@@ -84,7 +86,7 @@ fun FastingPlanCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(topBarHeight), // ★ 用高度決定厚度
+                        .height(topBarHeight),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(

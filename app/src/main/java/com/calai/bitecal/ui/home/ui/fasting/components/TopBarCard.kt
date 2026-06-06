@@ -1,7 +1,18 @@
 package com.calai.bitecal.ui.home.ui.fasting.components
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -9,7 +20,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.draw.shadow
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.ui.card.TitlePrefixTriangle
@@ -30,13 +40,7 @@ fun TopBarCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = modifier
-            // ★ 統一陰影：讓卡片浮起來（跟 Home 其他卡片一致）
-            .shadow(
-                CardStyles.Elevation,
-                CardStyles.Corner,
-                clip = false
-            ),
+        modifier = modifier,
         shape = CardStyles.Corner, // 20.dp 圓角一致
         colors = CardDefaults.cardColors(
             containerColor = CardStyles.Bg // 微暖白，不是死白

@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -37,8 +36,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
-import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.water.store.WaterUnit
+import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
@@ -107,12 +106,7 @@ fun WaterIntakeCard(
 ) {
     Card(
         modifier = Modifier
-            .height(cardHeight)
-            .shadow(
-                CardStyles.Elevation,
-                CardStyles.Corner,
-                clip = false
-            ),
+            .height(cardHeight),
         shape = CardStyles.Corner,
         border = CardStyles.Border,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg)

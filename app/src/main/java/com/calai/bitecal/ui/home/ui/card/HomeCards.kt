@@ -120,7 +120,6 @@ fun CaloriesCardModern(
     Card(
         modifier = modifier
             .height(cardHeight)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
             .biteCalClickable(role = Role.Button, onClick = onClick),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
@@ -450,8 +449,7 @@ fun HealthScoreCardModern(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(cardHeight)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+            .height(cardHeight),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border
@@ -545,7 +543,6 @@ private fun MacroStatCardModern(
     Card(
         modifier = modifier
             .height(cardHeight)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
             .biteCalClickable(role = Role.Button, onClick = onClick),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
@@ -1103,8 +1100,7 @@ fun ActivityStatCardSplit(
     Card(
         modifier = modifier
             .then(clickableMod)
-            .height(cardHeight)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+            .height(cardHeight),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border

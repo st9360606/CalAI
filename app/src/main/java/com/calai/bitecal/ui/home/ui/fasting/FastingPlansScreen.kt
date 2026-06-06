@@ -351,8 +351,6 @@ private fun FastingNotificationInfoCard(
     val statusBoxText = Color(0xFF374151)
 
     Card(
-        modifier = modifier
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border
@@ -674,7 +672,6 @@ private fun FastingPlanCard(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.9f)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
             .biteCalClickable(role = Role.Button, onClick = onSelect),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
@@ -933,7 +930,6 @@ private fun FastingPlanTimeValueCard(
 
     Card(
         modifier = modifier
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false)
             .then(clickableModifier),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),

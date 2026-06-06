@@ -3,7 +3,6 @@ package com.calai.bitecal.ui.home.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
@@ -27,9 +26,6 @@ object HomeCardStyles {
 
         // Home 主要卡片圓角
         val Corner = RoundedCornerShape(20.dp)
-
-        // 輕量立體感
-        val Elevation: Dp = 0.0.dp
     }
 
     object PanelHeights {
@@ -64,7 +60,6 @@ object HomeCardStyles {
     object Text {
         val Primary = Color(0xFF0F172A)
         val Secondary = Color(0xFF111114)
-        val Muted = Color(0xFF7C7C85)
         val Label = Color(0xFF6B7280)
     }
 
@@ -108,5 +103,4 @@ object CardStyles {
     val BorderColor = HomeCardStyles.Surface.BorderColor
     val Border = HomeCardStyles.Surface.Border
     val Corner = HomeCardStyles.Surface.Corner
-    val Elevation: Dp = HomeCardStyles.Surface.Elevation
 }

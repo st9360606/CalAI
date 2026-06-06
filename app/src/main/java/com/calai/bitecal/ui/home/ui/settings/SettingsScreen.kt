@@ -1425,8 +1425,7 @@ private fun CaloriesWidgetPreviewCard(
 
     Card(
         modifier = modifier
-            .size(width = 148.dp, height = 155.dp)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+            .size(width = 148.dp, height = 155.dp),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border
@@ -1510,8 +1509,7 @@ private fun MacroActionsWidgetPreviewCard(
 
     Card(
         modifier = modifier
-            .size(width = 364.dp, height = 155.dp)
-            .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
+            .size(width = 364.dp, height = 155.dp),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
         border = CardStyles.Border
