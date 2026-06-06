@@ -167,7 +167,7 @@ fun PersonalDetailsScreen(
                     PersonalRowDivider()
                     PersonalDetailsRow(
                         icon = Icons.Outlined.Height,
-                        iconTint = Color(0xFF5277B8),
+                        iconTint = Color(0xFF367C7A),
                         iconBg = Color(0xFFEAF1FF),
                         title = stringResource(R.string.personal_details_height),
                         valueMain = formatHeight(profile),
@@ -209,7 +209,7 @@ fun PersonalDetailsScreen(
                 ) {
                     PersonalDetailsRow(
                         icon = Icons.Outlined.DirectionsWalk,
-                        iconTint = Color(0xFF367C7A),
+                        iconTint = Color(0xFF5277B8),
                         iconBg = Color(0xFFE7F7F6),
                         title = stringResource(R.string.personal_details_daily_step_goal),
                         valueMain = stepText,

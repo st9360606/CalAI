@@ -216,7 +216,7 @@ private fun WaterGoalInputBox(
 @Composable
 private fun WaterRingIcon(modifier: Modifier = Modifier) {
     val ringGrey = Color(0xFFD1D5DB)
-    val ringBlack = Color(0xFF73B6E6)
+    val ringBlack = Color(0xFF3F8BC4)
     val innerBg = Color(0xFFF2F4F7)
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
