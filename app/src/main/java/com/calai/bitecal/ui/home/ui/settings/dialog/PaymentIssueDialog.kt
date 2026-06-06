@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -272,27 +271,6 @@ private fun PaymentIssueHero() {
                 contentDescription = null,
                 tint = Color(0xFF111114),
                 modifier = Modifier.size(34.dp)
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .align(Alignment.BottomEnd)
-                .clip(CircleShape)
-                .background(Color(0xFF111114))
-                .border(
-                    width = 2.dp,
-                    color = Color.White,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.WarningAmber,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(17.dp)
             )
         }
     }
