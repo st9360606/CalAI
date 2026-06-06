@@ -128,15 +128,15 @@ fun LandingScreen(
                         slides = listOf(
                             SlideItem(
                                 R.drawable.meal_1,
-                                contentDescription = stringResource(R.string.landing_slide_1_content_description)
+                                contentDescription = "餐點照片輪播 1"
                             ),
                             SlideItem(
                                 R.drawable.meal_2,
-                                contentDescription = stringResource(R.string.landing_slide_2_content_description)
+                                contentDescription = "餐點照片輪播 2"
                             ),
                             SlideItem(
                                 R.drawable.meal_3,
-                                contentDescription = stringResource(R.string.landing_slide_3_content_description)
+                                contentDescription = "餐點照片輪播 3"
                             )
                         ),
                         autoPlay = true,

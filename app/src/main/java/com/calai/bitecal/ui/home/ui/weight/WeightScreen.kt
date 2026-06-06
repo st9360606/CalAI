@@ -316,9 +316,7 @@ private fun SwipeToDeleteHistoryRow(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.trash),
-                        contentDescription = stringResource(
-                            R.string.weight_history_delete_content_description
-                        ),
+                        contentDescription = "Delete weight record icon",
                         tint = Color.White,
                         modifier = Modifier.size(26.dp)
                     )

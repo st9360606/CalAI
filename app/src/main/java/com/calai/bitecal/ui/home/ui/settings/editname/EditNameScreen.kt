@@ -55,7 +55,7 @@ fun EditNameScreen(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             BiteCalTopBar(
-                title = "Edit Your Name",
+                title = stringResource(R.string.settings_edit_your_name_title),
                 onBack = onBack
             )
         },

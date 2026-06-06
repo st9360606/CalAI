@@ -709,7 +709,7 @@ private fun ProfileCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
-                                    contentDescription = stringResource(R.string.settings_edit_your_name_content_description),
+                                    contentDescription = "Edit your name",
                                     tint = Color(0xFF6B7280),
                                     modifier = Modifier.size(14.dp)
                                 )
@@ -935,7 +935,7 @@ private fun ProfileAvatar(url: Uri?) {
 
     SubcomposeAsyncImage(
         model = req,
-        contentDescription = stringResource(R.string.settings_avatar_content_description),
+        contentDescription = "頭像",
         modifier = avatarModifier,
         contentScale = ContentScale.Crop,
         loading = {
@@ -966,7 +966,7 @@ private fun DefaultProfileAvatarPlaceholder(
     ) {
         Icon(
             imageVector = Icons.Outlined.Person,
-            contentDescription = stringResource(R.string.settings_default_avatar_content_description),
+            contentDescription = "預設頭像",
             tint = Color(0xFF111114),
             modifier = Modifier.size(25.dp)
         )
@@ -1136,7 +1136,7 @@ private fun InviteFriendsCard(
                         }
 
                         Text(
-                            text = stringResource(R.string.settings_referral_reward_description),
+                            text = stringResource(R.string.settings_referral_reward_content),
                             maxLines = 1,
                             softWrap = false,
                             overflow = TextOverflow.Clip,

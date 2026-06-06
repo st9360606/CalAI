@@ -10,20 +10,11 @@
     <string name="common_skip">Skip</string>
 
     <!-- Landing Screen -->
-    <string name="landing_slide_1_content_description">Meal photo slide 1</string>
-    <string name="landing_slide_2_content_description">Meal photo slide 2</string>
-    <string name="landing_slide_3_content_description">Meal photo slide 3</string>
-
     <string name="landing_title">Snap a photo, know the calories.</string>
     <string name="choose_language">Choose language</string>
     <string name="cta_get_started">Get started</string>
     <string name="cta_login_prefix">Already have an account?</string>
     <string name="cta_login">Sign in</string>
-
-    <!-- LandingSlideshow -->
-    <string name="landing_slideshow_content_description">Landing slideshow</string>
-    <string name="landing_slide_placeholder_content_description">Placeholder slide</string>
-    <string name="landing_slide_indicator_content_description">Slide %1$d of %2$d</string>
 
     <!-- RequireSignInScreen -->
     <string name="auth_sign_in_account_title">Sign in to your account</string>
@@ -315,7 +306,6 @@
     <string name="weight_title">Weight</string>
     <string name="weight_overview_title">Overview</string>
     <string name="weight_history_title">History</string>
-    <string name="weight_history_delete_content_description">Delete weight record</string>
     <string name="weight_delete_success">Deleted successfully!</string>
     <string name="weight_delete_failed">Delete failed. Please try again.</string>
     <string name="weight_log_weight">Log weight</string>
@@ -327,7 +317,6 @@
     <string name="weight_chart_tab_all_time">All time</string>
     <string name="weight_chart_goal_label">Goal</string>
     <string name="weight_chart_goal_progress_badge">%1$d%% of goal</string>
-    <string name="weight_chart_edit_goal_content_description">Edit goal weight</string>
     <string name="weight_chart_to_goal">%1$s to goal</string>
     <string name="weight_chart_motivation">Every small step brings you closer to your goal.</string>
     <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
@@ -388,7 +377,7 @@
     <string name="cta_contact_support">Contact support</string>
     <string name="cta_rescan_barcode">Rescan barcode</string>
 
-    <string name="foodlog_pending_analysis">Analyzing your food...</string>
+    <string name="foodlog_pending_analysis">Analyzing your food…</string>
     <string name="foodlog_analysis_done">Analysis complete</string>
 
 
@@ -440,7 +429,6 @@
     <string name="foodlog_delete_dialog_title">Delete record?</string>
     <string name="foodlog_delete_dialog_message">Are you sure you want to permanently delete this meal record? This action cannot be undone.</string>
     <string name="foodlog_delete_dialog_confirm">Delete</string>
-    <string name="saved_foods_unsave_content_description">Remove from saved foods</string>
     <string name="saved_foods_unsave_dialog_title">Remove from saved foods?</string>
     <string name="saved_foods_unsave_dialog_message">This meal will be removed from your Saved Foods list, but it will still remain in your recent records.</string>
     <string name="saved_foods_unsave_dialog_confirm">Remove</string>
@@ -540,7 +528,6 @@
          ========================= -->
     <string name="workout_chart_title">Workout burn</string>
     <string name="workout_chart_info_dialog_body">Includes logged workouts and activity calories estimated from daily steps.</string>
-    <string name="workout_chart_info_button_content_description">Show workout burn info</string>
     <string name="workout_chart_subtitle_steps_included">Workouts &amp; daily steps included</string>
     <string name="workout_chart_unit_kcal">kcal</string>
     <string name="workout_chart_goal">Goal</string>
@@ -552,7 +539,7 @@
 
     <string name="workout_chart_goal_left">%1$d kcal left to hit today\'s goal</string>
 
-    <string name="workout_chart_loading">Loading...</string>
+    <string name="workout_chart_loading">Loading…</string>
     <string name="workout_tooltip_burned">Burned</string>
     <string name="workout_tooltip_kcal_value">%1$d kcal</string>
 
@@ -587,7 +574,6 @@
     <string name="workout_history_session_completed">Completed</string>
     <string name="workout_history_delete_failed">Delete failed. Please try again.</string>
     <string name="workout_history_delete_success">Deleted successfully!</string>
-    <string name="workout_history_delete_content_description">Delete workout record</string>
 
     <!-- =========================
          Water Chart
@@ -596,7 +582,7 @@
     <string name="water_chart_unit_ml">ml</string>
     <string name="water_chart_goal">Goal</string>
     <string name="water_chart_7day_avg">7-day avg</string>
-    <string name="water_chart_loading">Loading...</string>
+    <string name="water_chart_loading">Loading…</string>
     <string name="water_chart_goal_reached">Goal reached for today</string>
     <string name="water_chart_goal_left_ml">%1$s ml left to reach today\'s goal</string>
     <string name="water_chart_value_ml">%1$s ml</string>
@@ -672,7 +658,7 @@
     <string name="notification_inbox_header_title">BiteCal Notifications</string>
     <string name="notification_inbox_header_body">All platform notifications will appear here.</string>
     <string name="notification_inbox_loading_title">Loading notifications</string>
-    <string name="notification_inbox_loading">Loading notifications...</string>
+    <string name="notification_inbox_loading">Loading notifications…</string>
     <string name="notification_inbox_empty_title">No notifications yet</string>
     <string name="notification_inbox_empty_body">Platform notifications will appear here.</string>
     <string name="notification_inbox_error_title">Unable to load notifications</string>
@@ -736,14 +722,14 @@
     <string name="restore_subscription_dialog_bound_title">Subscription already linked</string>
     <string name="restore_subscription_dialog_bound_body">This subscription is already linked to another active BiteCal account. Please contact support if you believe this is a mistake.</string>
     <string name="common_delete">Delete</string>
-    <string name="common_deleting">Deleting...</string>
+    <string name="common_deleting">Deleting…</string>
 
 
     <string name="delete_account_dialog_title">Delete account?</string>
     <string name="delete_account_dialog_body">Are you sure you want to delete your account? This will permanently delete your BiteCal data, including food logs, weight records, and related settings. This action cannot be undone.</string>
 
     <string name="settings_logout">Logout</string>
-    <string name="settings_logout_loading">Logging out...</string>
+    <string name="settings_logout_loading">Logging out…</string>
     <string name="settings_logout_failed">Logout failed. Check your connection and try again.</string>
 
 
@@ -840,9 +826,7 @@
     <string name="workout_tracker_try_again">Try again</string>
     <string name="workout_tracker_scan_failed_title">Uh-oh! Scan failed</string>
     <string name="workout_tracker_scan_failed_body">The workout description may be incorrect, or the internet connection is weak. For example: 30 min Running.</string>
-    <string name="workout_tracker_close_content_description">Close workout tracker</string>
-    <string name="workout_tracker_activity_content_description">Workout activity</string>
-    <string name="workout_tracker_add_preset_content_description">Add preset workout</string>
+    <string name="workout_tracker_activity_content_label">Workout activity</string>
     <string name="workout_tracker_save_success">Saved successfully!</string>
     <string name="workout_tracker_save_failed">Failed to save. Please try again.</string>
     <string name="workout_tracker_refresh_failed">Refresh failed. Please try again.</string>
@@ -857,7 +841,7 @@
     <string name="progress_average_overview_title">Average Overview</string>
     <string name="progress_average_overview_subtitle">Excludes today and averages only days with data.</string>
     <string name="progress_average_days_badge">%1$d-day avg</string>
-    <string name="progress_average_loading">Loading averages...</string>
+    <string name="progress_average_loading">Loading averages…</string>
     <string name="progress_average_total_calories">Total calories</string>
     <string name="progress_average_protein">Protein</string>
     <string name="progress_average_carbs">Carbs</string>
@@ -881,7 +865,7 @@
 
     <!-- Premium rewards -->
     <string name="premium_rewards_subscription_title">Subscription</string>
-    <string name="premium_rewards_loading_membership">Loading membership...</string>
+    <string name="premium_rewards_loading_membership">Loading membership…</string>
     <string name="premium_rewards_status_title">Premium Status</string>
     <string name="premium_rewards_latest_title">Latest reward</string>
     <string name="premium_rewards_history_title">Reward history</string>
@@ -915,9 +899,7 @@
     <string name="record_weight_camera_screen_unavailable">Camera is not available in this screen.</string>
     <string name="record_weight_no_camera_app_found">No camera app found on this device.</string>
     <string name="record_weight_enable_camera_permission_settings">Please enable Camera permission in Settings.</string>
-    <string name="record_weight_edit_date_content_description">Edit date</string>
-    <string name="record_weight_photo_content_description">Weight photo</string>
-    <string name="record_weight_add_photo_content_description">Add weight photo</string>
+
     <string name="record_weight_camera_not_available">Camera not available</string>
     <string name="record_weight_take_photo">Take a photo</string>
     <string name="record_weight_retake_photo">Retake photo</string>
@@ -931,12 +913,12 @@
     <string name="settings_invite_friends">Invite friends</string>
     <string name="settings_premium_reward">Premium reward</string>
     <string name="settings_share_bitecal_with_friends">Share BiteCal AI\nwith your friends</string>
-    <string name="settings_referral_reward_description">They subscribe. You get 30 days free.</string>
+    <string name="settings_referral_reward_content">They subscribe. You get 30 days free.</string>
     <string name="settings_get_30_days_free">Get 30 days free</string>
     <string name="settings_days_label">Days</string>
-    <string name="settings_edit_your_name_content_description">Edit your name</string>
-    <string name="settings_avatar_content_description">Avatar</string>
-    <string name="settings_default_avatar_content_description">Default avatar</string>
+    <string name="settings_edit_your_name_title">Edit your name</string>
+
+
     <string name="log_your_food">Log your food</string>
     <string name="settings_membership_payment">Payment</string>
     <string name="settings_membership_update_payment">Update payment</string>
@@ -963,7 +945,6 @@
 
     <!-- Water card -->
     <string name="water_intake_title">Water</string>
-    <string name="water_intake_content_description">Water</string>
     <string name="water_intake_cups_format">(%1$d cups)</string>
 
     <!-- Weight card labels -->
@@ -983,29 +964,10 @@
     <string name="common_understood">Understood</string>
     <string name="done">Done</string>
     <string name="common_revert">Revert</string>
-    <string name="common_settings_content_description">Settings</string>
-    <string name="common_edit_content_description">Edit</string>
-
-    <!-- Common accessibility -->
-    <string name="toast_success_content_description">Success</string>
-    <string name="toast_error_content_description">Error</string>
-    <string name="toast_delete_success_content_description">Delete success</string>
-    <string name="toast_delete_failed_content_description">Delete failed</string>
-    <string name="home_steps_icon_content_description">Steps</string>
-    <string name="home_google_health_content_description">Google Health</string>
-    <string name="home_workout_icon_content_description">Workout</string>
-    <string name="workout_add_content_description">Add workout</string>
-    <string name="unit_switch_content_description">Unit switch</string>
-    <string name="recent_upload_delete_content_description">Delete recent upload</string>
-    <string name="weight_add_entry_content_description">Add weight entry</string>
-
-    <string name="notification_app_icon_content_description">App icon</string>
 
 
-    <string name="subscription_intro_slide_1_content_description">Subscription intro meal slide 1</string>
-    <string name="subscription_intro_slide_2_content_description">Subscription intro meal slide 2</string>
-    <string name="subscription_intro_slide_3_content_description">Subscription intro meal slide 3</string>
-    <string name="recent_meal_placeholder_content_description">Recent meal placeholder</string>
+
+
 
     <!-- Bottom navigation -->
     <string name="bottom_nav_home">Home</string>

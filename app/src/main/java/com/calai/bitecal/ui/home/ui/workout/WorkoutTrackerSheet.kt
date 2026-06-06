@@ -516,7 +516,7 @@ private fun SimpleHeaderBar(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.workout_tracker_close_content_description),
+                    contentDescription = "Close workout tracker icon",
                     tint = Color.White,
                     modifier = Modifier.size(closeIconSize) // ★ 放大 icon
                 )
@@ -675,7 +675,7 @@ fun ResultContent(
     val activityLabel = localizedWorkoutName(
         activityId = result.activityId,
         rawName = result.activityDisplay
-    ).ifBlank { stringResource(R.string.workout_tracker_activity_content_description) }
+    ).ifBlank { stringResource(R.string.workout_tracker_activity_content_label) }
 
     Box(
         modifier = Modifier
@@ -940,7 +940,7 @@ private fun HeaderSection(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = stringResource(R.string.workout_tracker_close_content_description),
+                    contentDescription = "Close workout tracker icon",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp) // ← X 更大
                 )
@@ -1011,7 +1011,10 @@ private fun PresetWorkoutRow(
                 contentColor = Color.White
             )
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = stringResource(R.string.workout_tracker_add_preset_content_description))
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Add preset workout icon"
+            )
         }
     }
 }

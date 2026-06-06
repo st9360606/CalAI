@@ -72,7 +72,7 @@ fun WeightUnitSwitchLabeled(
     val pillX by animateDpAsState(targetValue = goalX, label = "pillX")
 
     val stateText = if (checked) rightLabel else leftLabel
-    val unitSwitchContentDescription = stringResource(R.string.unit_switch_content_description)
+    val unitSwitchContentDescription = "Unit switch"
 
     Box(
         modifier = modifier

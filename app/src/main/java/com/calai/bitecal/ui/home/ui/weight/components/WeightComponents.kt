@@ -630,7 +630,7 @@ private fun GoalProgressBadge(
         Spacer(Modifier.width(4.dp))
         Icon(
             imageVector = Icons.Filled.Edit,
-            contentDescription = stringResource(R.string.weight_chart_edit_goal_content_description),
+            contentDescription = "Edit goal weight icon",
             modifier = Modifier.size(13.dp),
             tint = Color(0xFFD97706)
         )

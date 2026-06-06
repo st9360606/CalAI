@@ -101,7 +101,7 @@ fun SuccessTopToast(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
-                        contentDescription = stringResource(R.string.toast_success_content_description),
+                        contentDescription = "Success",
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )

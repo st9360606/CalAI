@@ -44,7 +44,7 @@ fun DeleteSuccessTopToast(
         message = message,
         icon = Icons.Filled.Check,
         iconBackgroundColor = Color(0xFF22C55E),
-        contentDescription = stringResource(R.string.toast_delete_success_content_description),
+        contentDescription = "Delete success",
         modifier = modifier
     )
 }
@@ -58,7 +58,7 @@ fun DeleteFailedTopToast(
         message = message,
         icon = Icons.Filled.Error,
         iconBackgroundColor = Color(0xFFEF4444),
-        contentDescription = stringResource(R.string.toast_delete_failed_content_description),
+        contentDescription = "Delete failed",
         modifier = modifier
     )
 }

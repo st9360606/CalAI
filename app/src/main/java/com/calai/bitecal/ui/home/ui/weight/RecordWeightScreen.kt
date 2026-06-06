@@ -627,7 +627,7 @@ private fun DateHeader(
 
             Icon(
                 imageVector = Icons.Outlined.Edit,
-                contentDescription = stringResource(R.string.record_weight_edit_date_content_description),
+                contentDescription = "Edit date icon",
                 tint = Color(0xFF6B7280),
                 modifier = Modifier.size(17.dp)
             )
@@ -1163,14 +1163,14 @@ private fun PhotoPickerBlock(
             if (uri != null) {
                 AsyncImage(
                     model = uri,
-                    contentDescription = stringResource(R.string.record_weight_photo_content_description),
+                    contentDescription = "Weight photo",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 Icon(
                     painter = painterResource(id = R.drawable.weight_image_2),
-                    contentDescription = stringResource(R.string.record_weight_add_photo_content_description),
+                    contentDescription = "Add weight photo",
                     tint = Color(0xFF9AA3AE),
                     modifier = Modifier.size(48.dp)
                 )

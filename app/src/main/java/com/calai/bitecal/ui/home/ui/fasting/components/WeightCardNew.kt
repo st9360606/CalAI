@@ -251,7 +251,7 @@ private fun WeightAddButton(
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = stringResource(R.string.weight_add_entry_content_description),
+                contentDescription = "Add weight log",
                 tint = Color.White,
                 modifier = Modifier.size(iconSizeDp)
             )

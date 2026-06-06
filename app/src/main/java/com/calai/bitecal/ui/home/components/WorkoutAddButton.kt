@@ -79,7 +79,7 @@ fun WorkoutAddButton(
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = stringResource(R.string.workout_add_content_description),
+                contentDescription = "Add workout",
                 tint = Color.White,
                 modifier = Modifier.size(iconSizeDp)
             )

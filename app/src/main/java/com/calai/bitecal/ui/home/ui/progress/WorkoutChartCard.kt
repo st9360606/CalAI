@@ -89,7 +89,7 @@ internal fun WorkoutChartCard(
     WorkoutChartCardFrame(
         title = stringResource(R.string.workout_chart_title),
         infoDialogText = stringResource(R.string.workout_chart_info_dialog_body),
-        infoButtonContentDescription = stringResource(R.string.workout_chart_info_button_content_description),
+        infoButtonContentDescription = "查看運動消耗說明",
         headlineValue = chart.todayBurnedKcal.toString(),
         unitText = stringResource(R.string.workout_chart_unit_kcal),
         deltaText = chart.deltaText,
@@ -117,7 +117,7 @@ internal fun WorkoutLoadingCard(
     WorkoutChartCardFrame(
         title = stringResource(R.string.workout_chart_title),
         infoDialogText = stringResource(R.string.workout_chart_info_dialog_body),
-        infoButtonContentDescription = stringResource(R.string.workout_chart_info_button_content_description),
+        infoButtonContentDescription = "查看運動消耗說明",
         headlineValue = "--",
         unitText = stringResource(R.string.workout_chart_unit_kcal),
         deltaText = "--",

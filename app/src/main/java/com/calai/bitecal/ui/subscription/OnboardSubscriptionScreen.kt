@@ -324,7 +324,7 @@ private fun BoxScope.RestoreSubscriptionRequiredDialog(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Restore,
-                    contentDescription = null,
+                    contentDescription = "Restore",
                     tint = Color.White,
                     modifier = Modifier.size(29.dp)
                 )
@@ -534,7 +534,7 @@ private fun OnboardSubscriptionIntro(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.common_close),
+                contentDescription = "close",
                 tint = Color(0xFFA1A1AA),
                 modifier = Modifier.size(28.dp)
             )
@@ -786,7 +786,7 @@ private fun OnboardOneTimeOfferScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.common_close),
+                contentDescription = "close",
                 tint = Color(0xFF71717A),
                 modifier = Modifier.size(28.dp)
             )
@@ -1283,15 +1283,15 @@ private fun PhonePreviewMock(
             slides = listOf(
                 SlideItem(
                     R.drawable.meal_1,
-                    contentDescription = stringResource(R.string.subscription_intro_slide_1_content_description)
+                    contentDescription = "Subscription intro meal slide 1"
                 ),
                 SlideItem(
                     R.drawable.meal_2,
-                    contentDescription = stringResource(R.string.subscription_intro_slide_2_content_description)
+                    contentDescription = "Subscription intro meal slide 2"
                 ),
                 SlideItem(
                     R.drawable.meal_3,
-                    contentDescription = stringResource(R.string.subscription_intro_slide_3_content_description)
+                    contentDescription = "Subscription intro meal slide 3"
                 )
             ),
             autoPlay = true,

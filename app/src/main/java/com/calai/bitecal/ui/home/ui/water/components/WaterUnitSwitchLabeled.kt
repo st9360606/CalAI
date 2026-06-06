@@ -117,7 +117,7 @@ fun WaterUnitSwitchLabeled(
     val thumbOffsetDp = padding + travelDp * (if (!isRtl) animPos else (1f - animPos))
 
     val stateText = if (checked) rightLabel else leftLabel
-    val unitSwitchContentDescription = stringResource(R.string.unit_switch_content_description)
+    val unitSwitchContentDescription = "Unit switch"
 
     Box(
         modifier = modifier

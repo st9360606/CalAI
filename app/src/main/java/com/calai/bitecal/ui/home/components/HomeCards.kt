@@ -905,7 +905,7 @@ fun StepsWorkoutRowModern(
             ringCenterContent = {
                 Image(
                     painter = painterResource(R.drawable.footstep),
-                    contentDescription = stringResource(R.string.home_steps_icon_content_description),
+                    contentDescription = "Steps icon",
                     modifier = Modifier.size(18.dp)
                 )
             },
@@ -926,7 +926,7 @@ fun StepsWorkoutRowModern(
                         icon = {
                             Image(
                                 painter = painterResource(hintIconRes),
-                                contentDescription = stringResource(R.string.home_google_health_content_description),
+                                contentDescription = "Google Health Icon",
                                 modifier = Modifier
                                     .padding(start = 4.dp)
                                     .size(26.dp)
@@ -965,7 +965,7 @@ fun StepsWorkoutRowModern(
             ringCenterContent = {
                 Image(
                     painter = painterResource(R.drawable.fitness),
-                    contentDescription = stringResource(R.string.home_workout_icon_content_description),
+                    contentDescription = "Workout Icon",
                     modifier = Modifier.size(24.dp)
                 )
             },

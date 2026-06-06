@@ -589,7 +589,7 @@ private fun AppIconIOSBadge(
         ) {
             Icon(
                 painter = painterResource(id = resId),
-                contentDescription = stringResource(R.string.notification_app_icon_content_description),
+                contentDescription = "App 圖示",
                 tint = Color.White,
                 modifier = Modifier
                     .fillMaxSize()

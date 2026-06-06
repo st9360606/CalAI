@@ -99,7 +99,7 @@ fun ErrorTopToast(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Error,
-                        contentDescription = stringResource(R.string.toast_error_content_description),
+                        contentDescription = "Error",
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )

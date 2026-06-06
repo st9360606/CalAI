@@ -320,7 +320,7 @@ private fun PersonalDetailsRow(
 
             Icon(
                 imageVector = Icons.Outlined.Edit,
-                contentDescription = stringResource(R.string.common_edit_content_description),
+                contentDescription = "Edit Icon",
                 tint = Color(0xFF9CA3AF),
                 modifier = Modifier.size(20.dp)
             )

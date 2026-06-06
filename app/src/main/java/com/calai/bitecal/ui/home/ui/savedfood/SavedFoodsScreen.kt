@@ -207,8 +207,6 @@ private fun SavedFoodCard(
     onOpenDetail: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val unsaveContentDescription = stringResource(R.string.saved_foods_unsave_content_description)
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -246,7 +244,7 @@ private fun SavedFoodCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Close,
-                        contentDescription = unsaveContentDescription,
+                        contentDescription = "Remove from saved foods icon",
                         modifier = Modifier.size(14.dp),
                         tint = BiteCalSavedFoodTokens.CloseIconColor
                     )

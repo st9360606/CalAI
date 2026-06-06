@@ -134,19 +134,18 @@ fun WaterIntakeCard(
                 // 左邊淺藍底塊 (主視覺)
                 Box(
                     modifier = Modifier
-                        .size(60.dp) // 保持 60dp
+                        .size(60.dp)
                         .background(
-                            color = HomeCardStyles.Palette.Water.copy(alpha = 0.16f), // 共用 Home water accent
+                            color = HomeCardStyles.Palette.Water.copy(alpha = 0.16f),
                             shape = RoundedCornerShape(10.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // 杯子 icon
                     Icon(
                         painter = painterResource(R.drawable.glass),
-                        contentDescription = stringResource(R.string.water_intake_content_description),
-                        modifier = Modifier.size(28.dp), // 杯子 28dp
-                        tint = Color.Unspecified // 保留原色
+                        contentDescription = "Water Icon",
+                        modifier = Modifier.size(28.dp),
+                        tint = Color.Unspecified
                     )
                 }
 

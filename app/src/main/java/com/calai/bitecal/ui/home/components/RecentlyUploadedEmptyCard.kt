@@ -174,7 +174,7 @@ fun RecentlyUploadedEmptyCard(
                             if (thumbnailPainter != null) {
                                 Image(
                                     painter = thumbnailPainter,
-                                    contentDescription = stringResource(R.string.recent_meal_placeholder_content_description),
+                                    contentDescription = "最近餐點預設圖",
                                     modifier = Modifier.size(40.dp)
                                 )
                             } else {

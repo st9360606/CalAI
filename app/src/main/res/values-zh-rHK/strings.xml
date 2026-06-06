@@ -10,20 +10,11 @@
     <string name="common_skip">跳過</string>
 
     <!-- Landing Screen -->
-    <string name="landing_slide_1_content_description">餐點照片輪播 1</string>
-    <string name="landing_slide_2_content_description">餐點照片輪播 2</string>
-    <string name="landing_slide_3_content_description">餐點照片輪播 3</string>
-
     <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
     <string name="choose_language">選擇語言</string>
     <string name="cta_get_started">開始使用</string>
     <string name="cta_login_prefix">已擁有帳號？</string>
     <string name="cta_login">登入</string>
-
-    <!-- LandingSlideshow -->
-    <string name="landing_slideshow_content_description">Landing 輪播圖片</string>
-    <string name="landing_slide_placeholder_content_description">預設輪播圖片</string>
-    <string name="landing_slide_indicator_content_description">第 %1$d 張，共 %2$d 張</string>
 
     <!-- RequireSignInScreen -->
     <string name="auth_sign_in_account_title">登入帳戶</string>
@@ -312,7 +303,6 @@
     <string name="weight_title">體重</string>
     <string name="weight_overview_title">總覽</string>
     <string name="weight_history_title">歷史紀錄</string>
-    <string name="weight_history_delete_content_description">刪除體重紀錄</string>
     <string name="weight_delete_success">刪除成功</string>
     <string name="weight_delete_failed">刪除失敗，請稍後再試</string>
     <string name="weight_log_weight">記錄體重</string>
@@ -324,7 +314,6 @@
     <string name="weight_chart_tab_all_time">All time</string>
     <string name="weight_chart_goal_label">目標</string>
     <string name="weight_chart_goal_progress_badge">目標進度 %1$d%%</string>
-    <string name="weight_chart_edit_goal_content_description">編輯目標體重</string>
     <string name="weight_chart_to_goal">距離目標 %1$s</string>
     <string name="weight_chart_motivation">每一小步，都讓你更靠近目標。</string>
     <string name="weight_goal_chart_empty_hint">記錄體重後，這裡會顯示你的趨勢</string>
@@ -384,7 +373,7 @@
     <string name="cta_contact_support">聯絡客服</string>
     <string name="cta_rescan_barcode">重新掃描條碼</string>
 
-    <string name="foodlog_pending_analysis">正在分析食物...</string>
+    <string name="foodlog_pending_analysis">正在分析食物…</string>
     <string name="foodlog_analysis_done">已完成分析</string>
 
 
@@ -436,7 +425,6 @@
     <string name="foodlog_delete_dialog_title">刪除紀錄？</string>
     <string name="foodlog_delete_dialog_message">你確定要永久刪除這筆餐點紀錄嗎？此操作無法復原。</string>
     <string name="foodlog_delete_dialog_confirm">刪除</string>
-    <string name="saved_foods_unsave_content_description">從已儲存餐點中移除</string>
     <string name="saved_foods_unsave_dialog_title">移除已儲存餐點？</string>
     <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已儲存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
     <string name="saved_foods_unsave_dialog_confirm">移除</string>
@@ -536,7 +524,6 @@
          ========================= -->
     <string name="workout_chart_title">運動消耗</string>
     <string name="workout_chart_info_dialog_body">此數值包含手動記錄的運動，以及步數推估的日常活動消耗。</string>
-    <string name="workout_chart_info_button_content_description">查看運動消耗說明</string>
     <string name="workout_chart_subtitle_steps_included">含運動與日常步行</string>
     <string name="workout_chart_unit_kcal">大卡</string>
     <string name="workout_chart_goal">目標</string>
@@ -546,7 +533,7 @@
     <string name="workout_legend_burned">運動消耗量</string>
     <string name="workout_legend_daily_goal">每日目標</string>
     <string name="workout_chart_goal_left">距離今日目標還差 %1$d 大卡</string>
-    <string name="workout_chart_loading">載入中...</string>
+    <string name="workout_chart_loading">載入中…</string>
     <string name="workout_tooltip_burned">消耗</string>
     <string name="workout_tooltip_kcal_value">%1$d 大卡</string>
 
@@ -581,7 +568,6 @@
     <string name="workout_history_session_completed">已完成</string>
     <string name="workout_history_delete_failed">刪除失敗，請稍後再試</string>
     <string name="workout_history_delete_success">刪除成功</string>
-    <string name="workout_history_delete_content_description">刪除運動紀錄</string>
 
     <!-- =========================
          Water Chart
@@ -590,7 +576,7 @@
     <string name="water_chart_unit_ml">毫升</string>
     <string name="water_chart_goal">目標</string>
     <string name="water_chart_7day_avg">7 日平均</string>
-    <string name="water_chart_loading">載入中...</string>
+    <string name="water_chart_loading">載入中…</string>
     <string name="water_chart_goal_reached">今日已達成目標</string>
     <string name="water_chart_goal_left_ml">距離今日目標還差 %1$s 毫升</string>
     <string name="water_chart_value_ml">%1$s 毫升</string>
@@ -666,7 +652,7 @@
     <string name="notification_inbox_header_title">BiteCal 通知</string>
     <string name="notification_inbox_header_body">所有平台通知都會集中顯示在這裡。</string>
     <string name="notification_inbox_loading_title">正在載入通知</string>
-    <string name="notification_inbox_loading">正在載入通知...</string>
+    <string name="notification_inbox_loading">正在載入通知…</string>
     <string name="notification_inbox_empty_title">目前沒有通知</string>
     <string name="notification_inbox_empty_body">平台通知會顯示在這裡</string>
     <string name="notification_inbox_error_title">無法載入通知</string>
@@ -731,14 +717,14 @@
     <string name="restore_subscription_dialog_bound_body">這筆訂閱已綁定其他有效的 BiteCal 帳號。如果你認為這是錯誤，請聯絡客服。</string>
 
     <string name="common_delete">刪除</string>
-    <string name="common_deleting">刪除中...</string>
+    <string name="common_deleting">刪除中…</string>
 
 
     <string name="delete_account_dialog_title">刪除帳號？</string>
     <string name="delete_account_dialog_body">您確定要刪除帳號嗎？此操作將永久刪除您在 BiteCal 中的資料，包括飲食紀錄、體重紀錄與相關設定。刪除後將無法復原。</string>
 
     <string name="settings_logout">登出</string>
-    <string name="settings_logout_loading">登出中...</string>
+    <string name="settings_logout_loading">登出中…</string>
     <string name="settings_logout_failed">登出失敗，請檢查網路連線後再試。</string>
 
 
@@ -834,9 +820,7 @@
     <string name="workout_tracker_try_again">再試一次</string>
     <string name="workout_tracker_scan_failed_title">糟糕，辨識失敗</string>
     <string name="workout_tracker_scan_failed_body">運動描述可能不正確，或目前網路連線不穩。範例：跑步 30 分鐘。</string>
-    <string name="workout_tracker_close_content_description">關閉運動追蹤</string>
-    <string name="workout_tracker_activity_content_description">運動項目</string>
-    <string name="workout_tracker_add_preset_content_description">新增預設運動</string>
+    <string name="workout_tracker_activity_content_label">運動項目</string>
     <string name="workout_tracker_save_success">儲存成功</string>
     <string name="workout_tracker_save_failed">儲存失敗，請再試一次。</string>
     <string name="workout_tracker_refresh_failed">重新整理失敗，請再試一次。</string>
@@ -851,7 +835,7 @@
     <string name="progress_average_overview_title">平均總覽</string>
     <string name="progress_average_overview_subtitle">不含當天，只平均有資料的日期。</string>
     <string name="progress_average_days_badge">%1$d 日平均</string>
-    <string name="progress_average_loading">正在載入平均資料...</string>
+    <string name="progress_average_loading">正在載入平均資料…</string>
     <string name="progress_average_total_calories">總卡路里</string>
     <string name="progress_average_protein">蛋白質</string>
     <string name="progress_average_carbs">碳水</string>
@@ -875,7 +859,7 @@
 
     <!-- Premium rewards -->
     <string name="premium_rewards_subscription_title">訂閱</string>
-    <string name="premium_rewards_loading_membership">正在載入會員資料...</string>
+    <string name="premium_rewards_loading_membership">正在載入會員資料…</string>
     <string name="premium_rewards_status_title">Premium 狀態</string>
     <string name="premium_rewards_latest_title">最新獎勵</string>
     <string name="premium_rewards_history_title">獎勵紀錄</string>
@@ -909,9 +893,7 @@
     <string name="record_weight_camera_screen_unavailable">此畫面目前無法使用相機。</string>
     <string name="record_weight_no_camera_app_found">此裝置找不到相機 App。</string>
     <string name="record_weight_enable_camera_permission_settings">請在設定中開啟相機權限。</string>
-    <string name="record_weight_edit_date_content_description">編輯日期</string>
-    <string name="record_weight_photo_content_description">體重照片</string>
-    <string name="record_weight_add_photo_content_description">新增體重照片</string>
+
     <string name="record_weight_camera_not_available">相機無法使用</string>
     <string name="record_weight_take_photo">拍攝照片</string>
     <string name="record_weight_retake_photo">重新拍攝</string>
@@ -925,12 +907,12 @@
     <string name="settings_invite_friends">邀請朋友</string>
     <string name="settings_premium_reward">Premium 獎勵</string>
     <string name="settings_share_bitecal_with_friends">和朋友分享 BiteCal AI</string>
-    <string name="settings_referral_reward_description">朋友訂閱後，你可獲得 30 天免費 Premium。</string>
+    <string name="settings_referral_reward_content">朋友訂閱後，你可獲得 30 天免費 Premium。</string>
     <string name="settings_get_30_days_free">獲得 30 天免費 Premium</string>
     <string name="settings_days_label">天</string>
-    <string name="settings_edit_your_name_content_description">編輯你的名字</string>
-    <string name="settings_avatar_content_description">頭像</string>
-    <string name="settings_default_avatar_content_description">預設頭像</string>
+    <string name="settings_edit_your_name_title">編輯你的名字</string>
+
+
     <string name="log_your_food">記錄食物</string>
     <string name="settings_membership_payment">付款</string>
     <string name="settings_membership_update_payment">更新付款</string>
@@ -957,7 +939,6 @@
 
     <!-- Water card -->
     <string name="water_intake_title">飲水</string>
-    <string name="water_intake_content_description">飲水</string>
     <string name="water_intake_cups_format">（%1$d 杯）</string>
 
     <!-- Weight card labels -->
@@ -977,29 +958,6 @@
     <string name="common_understood">了解</string>
     <string name="done">完成</string>
     <string name="common_revert">還原</string>
-    <string name="common_settings_content_description">設定</string>
-    <string name="common_edit_content_description">編輯</string>
-
-    <!-- Common accessibility -->
-    <string name="toast_success_content_description">成功</string>
-    <string name="toast_error_content_description">錯誤</string>
-    <string name="toast_delete_success_content_description">刪除成功</string>
-    <string name="toast_delete_failed_content_description">刪除失敗</string>
-    <string name="home_steps_icon_content_description">步數</string>
-    <string name="home_google_health_content_description">Google 健康資料</string>
-    <string name="home_workout_icon_content_description">運動</string>
-    <string name="workout_add_content_description">新增運動</string>
-    <string name="unit_switch_content_description">單位切換</string>
-    <string name="recent_upload_delete_content_description">刪除最近上傳</string>
-    <string name="weight_add_entry_content_description">新增體重紀錄</string>
-
-    <string name="notification_app_icon_content_description">App 圖示</string>
-
-
-    <string name="subscription_intro_slide_1_content_description">訂閱介紹餐點輪播 1</string>
-    <string name="subscription_intro_slide_2_content_description">訂閱介紹餐點輪播 2</string>
-    <string name="subscription_intro_slide_3_content_description">訂閱介紹餐點輪播 3</string>
-    <string name="recent_meal_placeholder_content_description">最近餐點預設圖</string>
 
     <!-- Bottom navigation -->
     <string name="bottom_nav_home">首頁</string>

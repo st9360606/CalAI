@@ -58,11 +58,11 @@ fun LandingSlideshow(
         listOf(
             SlideItem(
                 android.R.drawable.ic_menu_gallery,
-                stringResource(R.string.landing_slide_placeholder_content_description)
+                "預設輪播圖片"
             )
         )
     }
-    val slideshowContentDescription = stringResource(R.string.landing_slideshow_content_description)
+    val slideshowContentDescription = "Landing 輪播圖片"
 
     val pagerState = rememberPagerState(initialPage = 0) { safeSlides.size }
     val scope = rememberCoroutineScope()
@@ -147,11 +147,6 @@ private fun SlideIndicator(
     ) {
         repeat(pageCount) { index ->
             val isActive = index == currentPage
-            val indicatorContentDescription = stringResource(
-                R.string.landing_slide_indicator_content_description,
-                index + 1,
-                pageCount
-            )
             val goalAlpha = if (isActive) 1f else 0.35f
             val alpha by animateFloatAsState(
                 targetValue = goalAlpha,
@@ -164,9 +159,6 @@ private fun SlideIndicator(
                     .height(dotSize)
                     .width(if (isActive) activeWidth else dotSize)
                     .alpha(alpha)
-                    .semantics {
-                        contentDescription = indicatorContentDescription
-                    }
                     .padding(horizontal = spacing / 2)
                     .then(
                         Modifier

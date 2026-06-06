@@ -526,9 +526,7 @@ private fun SwipeToDeleteWorkoutSessionTile(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.trash),
-                        contentDescription = stringResource(
-                            R.string.workout_history_delete_content_description
-                        ),
+                        contentDescription = "Delete workout record icon",
                         tint = Color.White,
                         modifier = Modifier.size(26.dp)
                     )
