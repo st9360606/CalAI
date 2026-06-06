@@ -69,7 +69,6 @@ fun FastingPlanCard(
         colors = CardDefaults.cardColors(
             containerColor = CardStyles.Bg // 微暖白
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border,
         onClick = hapticClick
     ){

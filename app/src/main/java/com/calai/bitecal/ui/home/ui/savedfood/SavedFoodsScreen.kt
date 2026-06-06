@@ -215,7 +215,6 @@ private fun SavedFoodCard(
             .biteCalClickable(onClick = onOpenDetail),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

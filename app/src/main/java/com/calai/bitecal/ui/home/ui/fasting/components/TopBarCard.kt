@@ -41,7 +41,6 @@ fun TopBarCard(
         colors = CardDefaults.cardColors(
             containerColor = CardStyles.Bg // 微暖白，不是死白
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border      // 更明顯的灰邊框
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

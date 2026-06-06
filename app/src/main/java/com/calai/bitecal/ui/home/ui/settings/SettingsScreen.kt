@@ -643,7 +643,6 @@ private fun ProfileCard(
     Card(
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(
             width = 1.dp,
             color = Color(0xFFE1E4EA)
@@ -989,7 +988,6 @@ private fun InviteFriendsCard(
     Card(
         shape = outerShape,
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(
             width = 1.dp,
             color = Color(0xFFE1E4EA)
@@ -1431,7 +1429,6 @@ private fun CaloriesWidgetPreviewCard(
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border
     ) {
         Box(
@@ -1517,7 +1514,6 @@ private fun MacroActionsWidgetPreviewCard(
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = CardStyles.Border
     ) {
         Row(
@@ -1899,7 +1895,6 @@ private fun SettingsListCard(content: @Composable () -> Unit) {
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(
             width = 1.dp,
             color = Color(0xFFE1E4EA)

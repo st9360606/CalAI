@@ -126,8 +126,7 @@ fun RecentlyUploadedEmptyCard(
             .height(cardHeight),
         shape = outerShape,
         colors = CardDefaults.cardColors(containerColor = style.outerContainerColor),
-        border = BorderStroke(outerBorderWidth, SolidColor(style.outerBorderColor)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = BorderStroke(outerBorderWidth, SolidColor(style.outerBorderColor))
     ) {
         Column(
             modifier = Modifier
@@ -142,8 +141,7 @@ fun RecentlyUploadedEmptyCard(
                     .height(pillHeight),
                 shape = pillShape,
                 colors = CardDefaults.cardColors(containerColor = style.innerPillColor),
-                border = BorderStroke(pillBorderWidth, SolidColor(style.innerPillBorderColor)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                border = BorderStroke(pillBorderWidth, SolidColor(style.innerPillBorderColor))
             ) {
                 BoxWithConstraints(
                     modifier = Modifier

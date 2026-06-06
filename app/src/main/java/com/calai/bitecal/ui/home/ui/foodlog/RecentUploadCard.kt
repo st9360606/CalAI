@@ -255,8 +255,7 @@ private fun RecentUploadCardContent(
         modifier = modifier,
         shape = RoundedCornerShape(CardCorner),
         border = CardStyles.Border,
-        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardStyles.Elevation)
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg)
     ) {
         Row(
             modifier = Modifier

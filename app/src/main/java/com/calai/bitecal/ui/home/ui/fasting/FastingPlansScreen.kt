@@ -355,8 +355,7 @@ private fun FastingNotificationInfoCard(
             .shadow(CardStyles.Elevation, CardStyles.Corner, clip = false),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        border = CardStyles.Border,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = CardStyles.Border
     ) {
         Column(
             modifier = Modifier
@@ -679,8 +678,7 @@ private fun FastingPlanCard(
             .biteCalClickable(role = Role.Button, onClick = onSelect),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        border = CardStyles.Border,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = CardStyles.Border
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -939,8 +937,7 @@ private fun FastingPlanTimeValueCard(
             .then(clickableModifier),
         shape = CardStyles.Corner,
         colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        border = CardStyles.Border,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = CardStyles.Border
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

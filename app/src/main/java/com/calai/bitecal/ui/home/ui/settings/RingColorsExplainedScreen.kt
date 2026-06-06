@@ -110,7 +110,6 @@ private fun PremiumHeaderCard() {
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = RingColorsExplainedTheme.Card),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, RingColorsExplainedTheme.Border),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -202,7 +201,6 @@ private fun PremiumCalendarPreviewCard() {
     Card(
         shape = RoundedCornerShape(30.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, RingColorsExplainedTheme.Border),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -399,7 +397,6 @@ private fun RingLegendPanel() {
     Card(
         shape = RoundedCornerShape(30.dp),
         colors = CardDefaults.cardColors(containerColor = RingColorsExplainedTheme.Card),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, RingColorsExplainedTheme.Border),
         modifier = Modifier.fillMaxWidth()
     ) {

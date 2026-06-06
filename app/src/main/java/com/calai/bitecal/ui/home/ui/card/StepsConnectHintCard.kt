@@ -46,7 +46,6 @@ fun StepsConnectHintCard(
         modifier = modifier.then(clickableMod),
         shape = RoundedCornerShape(corner),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, Color(0xFFE5E7EB))
     ) {
         // ✅ 撐 minHeight + 垂直置中：上下留白一致

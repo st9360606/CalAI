@@ -23,13 +23,13 @@ object HomeCardStyles {
 
         // 邊框：更深一點，讓卡片邊界更明顯
         val BorderColor = Color(0xFFE0E2E6)
-        val Border = BorderStroke(1.dp, BorderColor)
+        val Border = BorderStroke(1.2.dp, BorderColor)
 
         // Home 主要卡片圓角
         val Corner = RoundedCornerShape(20.dp)
 
         // 輕量立體感
-        val Elevation: Dp = 0.7.dp
+        val Elevation: Dp = 0.0.dp
     }
 
     object PanelHeights {

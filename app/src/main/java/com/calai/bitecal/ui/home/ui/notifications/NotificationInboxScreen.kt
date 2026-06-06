@@ -169,7 +169,6 @@ private fun NotificationInboxHeaderCard() {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = container),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, border),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -237,7 +236,6 @@ private fun NotificationCard(
     Card(
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = container),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, border),
         modifier = Modifier
             .fillMaxWidth()

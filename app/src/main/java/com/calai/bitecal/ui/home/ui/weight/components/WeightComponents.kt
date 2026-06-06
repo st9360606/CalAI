@@ -164,8 +164,7 @@ fun WeightComponents(ui: WeightViewModel.UiState) {
             .fillMaxWidth()
             .border(CardStyles.Border, CardStyles.Corner),
         shape = CardStyles.Corner,
-        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardStyles.Elevation)
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg)
     ) {
         Column(
             Modifier
@@ -539,8 +538,7 @@ fun WeightChartCard(
             .fillMaxWidth()
             .border(CardStyles.Border, CardStyles.Corner),
         shape = CardStyles.Corner,
-        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardStyles.Elevation)
+        colors = CardDefaults.cardColors(containerColor = CardStyles.Bg)
     ) {
         Column(
             modifier = Modifier
@@ -1690,8 +1688,7 @@ fun HistoryRow(
             .heightIn(min = 85.dp)
             .border(1.dp, border, shape),
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
