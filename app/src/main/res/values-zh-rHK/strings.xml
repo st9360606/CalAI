@@ -278,7 +278,7 @@
 
 
     <!-- HomeCards :  Nutrition Card -->
-    <string name="home_nutrition_ratio_grams">%1$d / %2$d克</string>
+    <string name="home_nutrition_ratio_grams">%1$d / %2$dg</string>
     <string name="home_protein_goal_label">剩餘蛋白質</string>
     <string name="home_protein_eaten_label">已攝取蛋白質</string>
     <string name="home_carbs_goal_label">剩餘碳水</string>
