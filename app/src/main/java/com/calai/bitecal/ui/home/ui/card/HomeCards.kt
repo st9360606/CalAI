@@ -689,7 +689,7 @@ private fun MetricValueText(
 
     val prefix = text.take(slashIndex).trimEnd()
     val slash = "/"
-    val rest = text.substring(slashIndex + 1) // 只拿 slash 後面的字
+    val rest = text.substring(slashIndex + 1)
 
     Row(verticalAlignment = Alignment.Bottom) {
         Text(
@@ -704,7 +704,7 @@ private fun MetricValueText(
             text = slash,
             style = baseStyle.copy(
                 fontSize = suffixFontSize,
-                fontWeight = FontWeight.Black   // ✅ 只有 / 變粗
+                fontWeight = FontWeight.Black
             ),
             color = suffixColor,
             maxLines = 1,
@@ -719,7 +719,7 @@ private fun MetricValueText(
             text = rest,
             style = baseStyle.copy(
                 fontSize = suffixFontSize,
-                fontWeight = suffixWeight      // ✅ 數字維持原本較輕
+                fontWeight = suffixWeight
             ),
             color = suffixColor,
             maxLines = 1,

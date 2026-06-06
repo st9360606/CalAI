@@ -32,8 +32,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.calai.bitecal.R
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.data.water.store.WaterUnit
@@ -152,19 +154,39 @@ fun WaterIntakeCard(
                 Spacer(Modifier.size(12.dp))
 
                 Column(
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 6.dp),
                     verticalArrangement = Arrangement.Top
                 ) {
-                    // "Water" 細字
-                    Text(
-                        text = stringResource(R.string.water_intake_title),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Normal,
-                            color = HomeCardStyles.Text.Primary
+                    // "Water" label：小圓點 + 輕量文字，讓下方攝取量成為主資訊
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(
+                                    color = HomeCardStyles.Palette.Water.copy(alpha = 0.9f),
+                                    shape = CircleShape
+                                )
                         )
-                    )
 
-                    Spacer(Modifier.height(6.dp))
+                        Spacer(Modifier.size(6.dp))
+
+                        Text(
+                            text = stringResource(R.string.water_intake_title),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                lineHeight = 16.sp,
+                                letterSpacing = 0.1.sp,
+                                color = HomeCardStyles.Text.Primary.copy(alpha = 0.72f)
+                            )
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
 
                     // 當前數值 e.g. "237 ml (1 cups)" or "16 fl oz (2 cups)"
                     val mainText = when (state.unit) {
