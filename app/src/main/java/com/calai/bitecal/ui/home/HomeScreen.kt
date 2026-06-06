@@ -85,7 +85,6 @@ import com.calai.bitecal.data.fasting.notifications.NotificationPermission
 import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
 import com.calai.bitecal.data.profile.repo.UserProfileStore
-import com.calai.bitecal.data.profile.repo.kgToLbs1
 import com.calai.bitecal.i18n.currentLocaleKey
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
@@ -94,8 +93,6 @@ import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.components.LightHomeBackground
 import com.calai.bitecal.ui.home.components.MainBottomBar
 import com.calai.bitecal.ui.home.components.PagerDots
-import com.calai.bitecal.ui.home.ui.camera.menu.HomeQuickActionMenu
-import com.calai.bitecal.ui.home.ui.camera.scan.ScanFab
 import com.calai.bitecal.ui.home.components.toast.ErrorTopToast
 import com.calai.bitecal.ui.home.components.toast.SuccessTopToast
 import com.calai.bitecal.ui.home.model.HomeViewModel
@@ -103,6 +100,8 @@ import com.calai.bitecal.ui.home.ui.calendar.CalendarStrip
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionPrefs
 import com.calai.bitecal.ui.home.ui.camera.components.CameraPermissionProxyActivity
 import com.calai.bitecal.ui.home.ui.camera.components.openCameraPermissionSettings
+import com.calai.bitecal.ui.home.ui.camera.menu.HomeQuickActionMenu
+import com.calai.bitecal.ui.home.ui.camera.scan.ScanFab
 import com.calai.bitecal.ui.home.ui.card.CaloriesCardModern
 import com.calai.bitecal.ui.home.ui.card.HealthScoreCardModern
 import com.calai.bitecal.ui.home.ui.card.MacroRowModern
@@ -128,12 +127,10 @@ import com.calai.bitecal.widget.BiteCalHomeWidgetUpdater
 import com.calai.bitecal.widget.BiteCalWidgetSnapshotStore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.floor
 import kotlin.math.sqrt
 
 enum class HomeTab { Home, Progress, Weight, Fasting, Workout, Personal }
@@ -1157,77 +1154,6 @@ private fun openAppNotificationSettings(ctx: Context) {
     ctx.startActivity(intent)
 }
 
-fun computeHomeWeightProgress(
-    unit: UserProfileStore.WeightUnit,
-    profileWeightKg: Double?,     // user_profiles.weight_kg（起始）
-    profileWeightLbs: Double?,    // user_profiles.weight_lbs（起始）
-    goalWeightKg: Double?,        // user_profiles.goal_weight_kg（目標）
-    goalWeightLbs: Double?,       // user_profiles.goal_weight_lbs（目標）
-    latestWeightKg: Double?,      // weight_timeseries 最新一筆 weight_kg
-    latestWeightLbs: Double?      // weight_timeseries 最新一筆 weight_lbs
-): Float {
-
-    fun compute(start: Double?, goal: Double?, latest: Double?): Float {
-        if (latest == null) return 0f
-        if (start == null || goal == null) return 0f
-
-        val denominator = goal - start
-        if (denominator == 0.0) return 0f
-
-        // 原始比例
-        val raw = ((latest - start) / denominator).toFloat()
-
-        // 先 clamp 0~1
-        val clamped = raw.coerceIn(0f, 1f)
-
-        // ✅ 轉成百分比後「無條件捨去」到整數%，再轉回 0~1
-        val percentInt = floor((clamped * 100f).toDouble()).toInt() // 0..100
-        return percentInt / 100f
-    }
-
-    return when (unit) {
-        UserProfileStore.WeightUnit.KG -> {
-            compute(
-                start = profileWeightKg,
-                goal = goalWeightKg,
-                latest = latestWeightKg
-            )
-        }
-
-        UserProfileStore.WeightUnit.LBS -> {
-            val start = profileWeightLbs ?: profileWeightKg?.let { kgToLbs1(it) }
-            val goal = goalWeightLbs ?: goalWeightKg?.let { kgToLbs1(it) }
-            val latest = latestWeightLbs ?: latestWeightKg?.let { kgToLbs1(it) }
-            compute(start = start, goal = goal, latest = latest)
-        }
-    }
-}
-
-private fun roundFirstNumberToIntText(input: String): String {
-    // 支援：+ - Unicode minus(−) en-dash(–) em-dash(—)，以及 12.3 / 12,3
-    val regex = Regex("""[+\-−–—]?\d+(?:[.,]\d+)?""")
-    val m = regex.find(input) ?: return input
-
-    val raw = m.value
-
-    // 先把各種「負號」統一成 '-'
-    val normalized = raw
-        .replace('−', '-')
-        .replace('–', '-')
-        .replace('—', '-')
-        .replace(',', '.') // 支援歐洲小數逗號
-
-    val bd = normalized.toBigDecimalOrNull() ?: return input
-
-    // ✅ 四捨五入到整數（HALF_UP）
-    val roundedInt = bd.setScale(0, RoundingMode.HALF_UP).toInt()
-
-    // 保留正號（如果原字串有 '+' 而且結果 > 0）
-    val keepPlus = raw.startsWith('+') && roundedInt > 0
-    val replaced = (if (keepPlus) "+$roundedInt" else roundedInt.toString())
-
-    return input.replaceRange(m.range, replaced)
-}
 @Composable
 private fun TopBarSettingsButton(
     onClick: () -> Unit,
