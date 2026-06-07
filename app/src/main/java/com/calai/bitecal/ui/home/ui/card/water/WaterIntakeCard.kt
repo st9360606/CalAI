@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.ui.water.components
+package com.calai.bitecal.ui.home.ui.card.water
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,7 +40,8 @@ import com.calai.bitecal.data.water.store.WaterUnit
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
-import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
+import com.calai.bitecal.ui.home.ui.card.water.components.WaterUnitSwitchLabeled
+import com.calai.bitecal.ui.home.ui.card.water.model.WaterUiState
 
 /**
  * RoundActionButton

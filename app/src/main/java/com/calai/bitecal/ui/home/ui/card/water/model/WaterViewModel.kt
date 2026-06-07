@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.ui.water.model
+package com.calai.bitecal.ui.home.ui.card.water.model
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

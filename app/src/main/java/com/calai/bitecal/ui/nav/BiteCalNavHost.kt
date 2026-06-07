@@ -118,7 +118,7 @@ import com.calai.bitecal.ui.home.ui.settings.premium.model.PremiumRewardsViewMod
 import com.calai.bitecal.ui.home.ui.settings.referral.ReferralScreen
 import com.calai.bitecal.ui.home.ui.settings.referral.model.ReferralViewModel
 import com.calai.bitecal.ui.home.ui.settings.widgetguide.WidgetGuideScreen
-import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
+import com.calai.bitecal.ui.home.ui.card.water.model.WaterViewModel
 import com.calai.bitecal.ui.home.ui.weight.EditGoalWeightScreen
 import com.calai.bitecal.ui.home.ui.weight.RecordWeightScreen
 import com.calai.bitecal.ui.home.ui.weight.WeightScreen

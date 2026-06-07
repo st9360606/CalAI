@@ -112,9 +112,9 @@ import com.calai.bitecal.ui.home.ui.card.WeightFastingRowModern
 import com.calai.bitecal.ui.home.ui.fasting.model.FastingPlanViewModel
 import com.calai.bitecal.ui.home.ui.foodlog.RecentUploadCard
 import com.calai.bitecal.ui.home.ui.foodlog.dialog.DeleteFoodLogDialog
-import com.calai.bitecal.ui.home.ui.water.components.WaterIntakeCard
-import com.calai.bitecal.ui.home.ui.water.model.WaterUiState
-import com.calai.bitecal.ui.home.ui.water.model.WaterViewModel
+import com.calai.bitecal.ui.home.ui.card.water.WaterIntakeCard
+import com.calai.bitecal.ui.home.ui.card.water.model.WaterUiState
+import com.calai.bitecal.ui.home.ui.card.water.model.WaterViewModel
 import com.calai.bitecal.ui.home.ui.weight.components.computeWeightProgress
 import com.calai.bitecal.ui.home.ui.weight.components.computeWeightProgressFractionLbs
 import com.calai.bitecal.ui.home.ui.weight.model.WeightViewModel
