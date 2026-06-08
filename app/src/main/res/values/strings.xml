@@ -353,10 +353,7 @@
     <string name="progress_tab_last_week">Last week</string>
     <string name="progress_tab_two_weeks_ago">2 wks. ago</string>
     <string name="progress_tab_three_weeks_ago">3 wks. ago</string>
-
     <string name="progress_error_load_failed">Load failed</string>
-
-
     <string name="workout_chart_error_load_failed">Load workout chart failed</string>
     <string name="water_chart_error_load_failed">Load water chart failed</string>
 
@@ -473,14 +470,61 @@
     <string name="water_tooltip_ml_value">%1$d ml</string>
 
 
+    <!-- =========================
+         ProgressAverageOverviewSection
+         ========================= -->
+    <string name="progress_average_tab_7_days">7 days</string>
+    <string name="progress_average_tab_15_days">15 days</string>
+    <string name="progress_average_tab_30_days">30 days</string>
+    <string name="progress_average_tab_60_days">60 days</string>
+
+    <string name="progress_average_overview_title">Average Overview</string>
+    <string name="progress_average_overview_subtitle">Excludes today and averages only days with data.</string>
+    <string name="progress_average_days_badge">%1$d-day avg</string>
+    <string name="progress_average_loading">Loading averages…</string>
+    <string name="progress_average_total_calories">Total calories</string>
+    <string name="progress_average_protein">Protein</string>
+    <string name="progress_average_carbs">Carbs</string>
+    <string name="progress_average_fats">Fats</string>
+    <string name="progress_average_fiber">Fiber</string>
+    <string name="progress_average_sugar">Sugar</string>
+    <string name="progress_average_sodium">Sodium</string>
+    <string name="progress_average_workout">Workout burned</string>
+    <string name="progress_average_water">Water intake</string>
+    <string name="progress_average_health_score">Health score</string>
+    <string name="progress_average_steps">Steps</string>
+    <string name="progress_average_health_score_value">%1$.1f / 10</string>
+    <string name="progress_average_steps_value">%1$s steps</string>
 
 
+    <!--WeightScreen-->
+    <string name="weight_title">Weight</string>
+    <string name="weight_overview_title">Overview</string>
+    <string name="weight_history_title">History</string>
+    <string name="weight_delete_success">Deleted successfully!</string>
+    <string name="weight_delete_failed">Delete failed. Please try again.</string>
+    <string name="weight_log_weight">Log weight</string>
 
 
-
-
-
-
+    <!-- WeightComponents -->
+    <string name="weight_card_to_goal_weight">To goal weight</string>
+    <string name="weight_card_current_weight">Current weight</string>
+    <string name="weight_card_achieved_goal_format">Achieved %1$s%% of goal</string>
+    <string name="weight_chart_tab_30_days">30 days</string>
+    <string name="weight_chart_tab_60_days">60 days</string>
+    <string name="weight_chart_tab_90_days">90 days</string>
+    <string name="weight_chart_tab_all_time">All time</string>
+    <string name="weight_chart_title">Weight trend</string>
+    <string name="weight_chart_goal_progress_badge">%1$d%% of goal</string>
+    <string name="weight_chart_goal_label">Goal</string>
+    <string name="weight_chart_to_goal">%1$s to goal</string>
+    <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
+    <string name="weight_chart_motivation">Every small step brings you closer to your goal.</string>
+    <string name="weight_history_weight_label">Weight</string>
+    <string name="weight_history_change_label">Change</string>
+    <string name="weight_history_trend_loss">LOSS</string>
+    <string name="weight_history_trend_gain">GAIN</string>
+    <string name="weight_history_trend_stable">STABLE</string>
 
 
 
@@ -521,32 +565,7 @@
 
 
 
-    <!-- =========================
-         ProgressAverageOverviewSection
-         ========================= -->
 
-    <string name="progress_average_tab_7_days">7 days</string>
-    <string name="progress_average_tab_15_days">15 days</string>
-    <string name="progress_average_tab_30_days">30 days</string>
-    <string name="progress_average_tab_60_days">60 days</string>
-
-    <string name="progress_average_overview_title">Average Overview</string>
-    <string name="progress_average_overview_subtitle">Excludes today and averages only days with data.</string>
-    <string name="progress_average_days_badge">%1$d-day avg</string>
-    <string name="progress_average_loading">Loading averages…</string>
-    <string name="progress_average_total_calories">Total calories</string>
-    <string name="progress_average_protein">Protein</string>
-    <string name="progress_average_carbs">Carbs</string>
-    <string name="progress_average_fats">Fats</string>
-    <string name="progress_average_fiber">Fiber</string>
-    <string name="progress_average_sugar">Sugar</string>
-    <string name="progress_average_sodium">Sodium</string>
-    <string name="progress_average_workout">Workout burned</string>
-    <string name="progress_average_water">Water intake</string>
-    <string name="progress_average_health_score">Health score</string>
-    <string name="progress_average_steps">Steps</string>
-    <string name="progress_average_health_score_value">%1$.1f / 10</string>
-    <string name="progress_average_steps_value">%1$s steps</string>
 
 
 
@@ -614,24 +633,7 @@
 
 
 
-    <!--WeightScreen-->
-    <string name="weight_title">Weight</string>
-    <string name="weight_overview_title">Overview</string>
-    <string name="weight_history_title">History</string>
-    <string name="weight_delete_success">Deleted successfully!</string>
-    <string name="weight_delete_failed">Delete failed. Please try again.</string>
-    <string name="weight_log_weight">Log weight</string>
 
-    <string name="weight_chart_title">Weight trend</string>
-    <string name="weight_chart_tab_30_days">30 days</string>
-    <string name="weight_chart_tab_60_days">60 days</string>
-    <string name="weight_chart_tab_90_days">90 days</string>
-    <string name="weight_chart_tab_all_time">All time</string>
-    <string name="weight_chart_goal_label">Goal</string>
-    <string name="weight_chart_goal_progress_badge">%1$d%% of goal</string>
-    <string name="weight_chart_to_goal">%1$s to goal</string>
-    <string name="weight_chart_motivation">Every small step brings you closer to your goal.</string>
-    <string name="weight_goal_chart_empty_hint">Log weight to start your trend</string>
 
     <!-- Camera -->
     <string name="camera_mode_food">Scan food</string>
@@ -1068,12 +1070,7 @@
 
 
 
-    <!-- Weight card labels -->
-    <string name="weight_card_to_goal_weight">To goal weight</string>
-    <string name="weight_card_current_weight">Current weight</string>
-    <string name="weight_card_achieved_goal_format">Achieved %1$s%% of goal</string>
-    <string name="weight_history_weight_label">Weight</string>
-    <string name="weight_history_change_label">Change</string>
+
 
 
 

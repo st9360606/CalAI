@@ -1667,9 +1667,23 @@ fun HistoryRow(
     val deltaText = delta?.let { formatSigned1(it, unit) } ?: "—"
 
     val (chipText, chipBg, chipFg) = when (trend) {
-        TrendTag.LOSS -> Triple("LOSS", Color(0xFFEFF9F4), Color(0xFF12823B))
-        TrendTag.GAIN -> Triple("GAIN", Color(0xFFFEE2E2), Color(0xFFEF4444))
-        TrendTag.STABLE -> Triple("STABLE", Color(0xFFDBEAFE), Color(0xFF3B82F6))
+        TrendTag.LOSS -> Triple(
+            stringResource(R.string.weight_history_trend_loss),
+            Color(0xFFEFF9F4),
+            Color(0xFF12823B)
+        )
+
+        TrendTag.GAIN -> Triple(
+            stringResource(R.string.weight_history_trend_gain),
+            Color(0xFFFEE2E2),
+            Color(0xFFEF4444)
+        )
+
+        TrendTag.STABLE -> Triple(
+            stringResource(R.string.weight_history_trend_stable),
+            Color(0xFFDBEAFE),
+            Color(0xFF3B82F6)
+        )
     }
 
     fun toAbsoluteUrl(maybePath: String?): String? {

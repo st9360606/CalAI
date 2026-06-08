@@ -353,10 +353,7 @@
     <string name="progress_tab_last_week">上週</string>
     <string name="progress_tab_two_weeks_ago">兩週前</string>
     <string name="progress_tab_three_weeks_ago">三週前</string>
-
     <string name="progress_error_load_failed">載入失敗</string>
-
-
     <string name="workout_chart_error_load_failed">載入運動圖表失敗</string>
     <string name="water_chart_error_load_failed">載入喝水圖表失敗</string>
 
@@ -476,7 +473,6 @@
     <!-- =========================
          ProgressAverageOverviewSection
          ========================= -->
-
     <string name="progress_average_tab_7_days">7 天</string>
     <string name="progress_average_tab_15_days">15 天</string>
     <string name="progress_average_tab_30_days">30 天</string>
@@ -501,12 +497,34 @@
     <string name="progress_average_steps_value">%1$s 步</string>
 
 
+    <!--WeightScreen-->
+    <string name="weight_title">體重</string>
+    <string name="weight_overview_title">總覽</string>
+    <string name="weight_history_title">歷史紀錄</string>
+    <string name="weight_delete_success">刪除成功</string>
+    <string name="weight_delete_failed">刪除失敗，請稍後再試</string>
+    <string name="weight_log_weight">記錄體重</string>
 
 
-
-
-
-
+    <!-- WeightComponents -->
+    <string name="weight_card_to_goal_weight">距離目標體重</string>
+    <string name="weight_card_current_weight">目前體重</string>
+    <string name="weight_card_achieved_goal_format">已達成目標的 %1$s%%</string>
+    <string name="weight_chart_tab_30_days">30 天</string>
+    <string name="weight_chart_tab_60_days">60 天</string>
+    <string name="weight_chart_tab_90_days">90 天</string>
+    <string name="weight_chart_tab_all_time">All time</string>
+    <string name="weight_chart_title">體重趨勢</string>
+    <string name="weight_chart_goal_progress_badge">目標進度 %1$d%%</string>
+    <string name="weight_chart_goal_label">目標</string>
+    <string name="weight_chart_to_goal">距離目標 %1$s</string>
+    <string name="weight_goal_chart_empty_hint">記錄體重後，這裡會顯示你的趨勢</string>
+    <string name="weight_chart_motivation">每一小步，都讓你更靠近目標。</string>
+    <string name="weight_history_weight_label">體重</string>
+    <string name="weight_history_change_label">變化</string>
+    <string name="weight_history_trend_loss">下降</string>
+    <string name="weight_history_trend_gain">上升</string>
+    <string name="weight_history_trend_stable">持平</string>
 
 
 
@@ -606,24 +624,7 @@
 
 
 
-    <!--WeightScreen-->
-    <string name="weight_title">體重</string>
-    <string name="weight_overview_title">總覽</string>
-    <string name="weight_history_title">歷史紀錄</string>
-    <string name="weight_delete_success">刪除成功</string>
-    <string name="weight_delete_failed">刪除失敗，請稍後再試</string>
-    <string name="weight_log_weight">記錄體重</string>
 
-    <string name="weight_chart_title">體重趨勢</string>
-    <string name="weight_chart_tab_30_days">30 天</string>
-    <string name="weight_chart_tab_60_days">60 天</string>
-    <string name="weight_chart_tab_90_days">90 天</string>
-    <string name="weight_chart_tab_all_time">All time</string>
-    <string name="weight_chart_goal_label">目標</string>
-    <string name="weight_chart_goal_progress_badge">目標進度 %1$d%%</string>
-    <string name="weight_chart_to_goal">距離目標 %1$s</string>
-    <string name="weight_chart_motivation">每一小步，都讓你更靠近目標。</string>
-    <string name="weight_goal_chart_empty_hint">記錄體重後，這裡會顯示你的趨勢</string>
 
     <!-- Camera -->
     <string name="camera_mode_food">掃描食物</string>
@@ -1065,12 +1066,7 @@
 
 
 
-    <!-- Weight card labels -->
-    <string name="weight_card_to_goal_weight">距離目標體重</string>
-    <string name="weight_card_current_weight">目前體重</string>
-    <string name="weight_card_achieved_goal_format">已達成目標的 %1$s%%</string>
-    <string name="weight_history_weight_label">體重</string>
-    <string name="weight_history_change_label">變化</string>
+
 
 
 
