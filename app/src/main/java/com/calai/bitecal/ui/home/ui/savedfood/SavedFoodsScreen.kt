@@ -417,7 +417,7 @@ private fun SavedFoodsErrorState(
         )
 
         TextButton(onClick = rememberClickWithHaptic(onClick = onRetry)) {
-            Text(text = stringResource(R.string.retry))
+            Text(text = stringResource(R.string.common_retry))
         }
     }
 }

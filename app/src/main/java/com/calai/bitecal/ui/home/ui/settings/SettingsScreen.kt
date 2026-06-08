@@ -1982,7 +1982,7 @@ private fun LogoutErrorMessage(
             modifier = Modifier.weight(1f)
         )
         BiteCalSecondaryOutlinedButton(
-            text = stringResource(R.string.cta_retry),
+            text = stringResource(R.string.common_retry),
             onClick = onRetry,
             enabled = retryEnabled,
             height = 40.dp,

@@ -99,7 +99,7 @@ object ApiErrorUiMapper {
             "REQUEST_IN_PROGRESS" -> UiModel(
                 titleResId = R.string.err_generic_title,
                 messageResId = R.string.err_generic_msg,
-                primaryCtaResId = R.string.cta_retry,
+                primaryCtaResId = R.string.common_retry,
                 primaryAction = ClientAction.RETRY_LATER
             )
 
@@ -113,7 +113,7 @@ object ApiErrorUiMapper {
             "PROVIDER_UNAVAILABLE" -> UiModel(
                 titleResId = R.string.err_network_title,
                 messageResId = R.string.err_network_msg,
-                primaryCtaResId = R.string.cta_retry,
+                primaryCtaResId = R.string.common_retry,
                 secondaryCtaResId = R.string.cta_check_network,
                 primaryAction = ClientAction.RETRY_LATER,
                 secondaryAction = ClientAction.CHECK_NETWORK
@@ -167,7 +167,7 @@ object ApiErrorUiMapper {
             ClientAction.CHECK_NETWORK -> UiModel(
                 titleResId = R.string.err_network_title,
                 messageResId = R.string.err_network_msg,
-                primaryCtaResId = R.string.cta_retry,
+                primaryCtaResId = R.string.common_retry,
                 secondaryCtaResId = R.string.cta_check_network,
                 primaryAction = ClientAction.RETRY_LATER,
                 secondaryAction = ClientAction.CHECK_NETWORK
@@ -190,7 +190,7 @@ object ApiErrorUiMapper {
             else -> UiModel(
                 titleResId = R.string.err_generic_title,
                 messageResId = R.string.err_generic_msg,
-                primaryCtaResId = R.string.cta_retry,
+                primaryCtaResId = R.string.common_retry,
                 primaryAction = ClientAction.RETRY_LATER
             )
         }

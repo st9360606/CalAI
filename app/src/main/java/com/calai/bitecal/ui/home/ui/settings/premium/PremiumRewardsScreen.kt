@@ -123,7 +123,7 @@ private fun ErrorState(
         )
         Spacer(Modifier.height(12.dp))
         BiteCalPrimaryButton(
-            text = stringResource(R.string.retry),
+            text = stringResource(R.string.common_retry),
             onClick = onRetry,
             height = 50.dp,
             modifier = Modifier.fillMaxWidth()

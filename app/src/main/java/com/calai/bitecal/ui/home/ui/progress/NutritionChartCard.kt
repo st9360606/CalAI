@@ -108,22 +108,6 @@ internal fun LoadingCard(
 }
 
 @Composable
-internal fun EmptyCard(
-    modifier: Modifier = Modifier
-) {
-    ProgressChartCardFrame(
-        totalCaloriesText = stringResource(R.string.progress_chart_empty_total_calories_text),
-        deltaText = "--",
-        modifier = modifier
-    ) {
-        StackedBarChart(
-            days = emptyList(),
-            showBars = false
-        )
-    }
-}
-
-@Composable
 internal fun ErrorCard(
     message: String,
     onRetry: () -> Unit,

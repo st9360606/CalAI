@@ -189,7 +189,7 @@ fun WorkoutHistoryScreen(
                                         ),
                                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
                                     ) {
-                                        Text(text = stringResource(R.string.cta_retry), fontWeight = FontWeight.Bold)
+                                        Text(text = stringResource(R.string.common_retry), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             )

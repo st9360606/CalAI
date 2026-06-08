@@ -145,7 +145,7 @@ fun CommonBmiCard(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.HelpOutline,
-                    contentDescription = stringResource(R.string.bmi_card_info_cd),
+                    contentDescription = "BMI 說明",
                     tint = HelpTint,
                     modifier = Modifier.size(23.dp)
                 )

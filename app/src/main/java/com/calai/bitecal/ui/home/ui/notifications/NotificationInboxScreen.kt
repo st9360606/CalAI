@@ -421,7 +421,7 @@ private fun NotificationInboxErrorState(
                 modifier = Modifier.height(46.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.cta_retry),
+                    text = stringResource(R.string.common_retry),
                     fontWeight = FontWeight.SemiBold
                 )
             }

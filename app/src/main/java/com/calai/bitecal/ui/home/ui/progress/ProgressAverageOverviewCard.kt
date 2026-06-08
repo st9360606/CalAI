@@ -414,7 +414,7 @@ private fun ProgressAverageOverviewErrorCard(
                 .padding(horizontal = 18.dp, vertical = 10.dp)
         ) {
             Text(
-                text = stringResource(R.string.progress_retry),
+                text = stringResource(R.string.common_retry),
                 color = Color.White,
                 fontWeight = FontWeight.SemiBold
             )
