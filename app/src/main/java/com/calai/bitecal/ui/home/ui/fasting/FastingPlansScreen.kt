@@ -152,7 +152,7 @@ fun FastingPlansScreen(
             containerColor = BiteCalCommonScreenTokens.softGrayBackground,
             topBar = {
                 BiteCalTopBar(
-                    title = stringResource(R.string.fasting_plans),
+                    title = stringResource(R.string.fasting_plan_title),
                     onBack = onBack
                 )
             },
@@ -658,14 +658,14 @@ private fun FastingPlanCard(
         else -> "🍽️"
     }
 
-    val desc = when (plan.code) {
-        "14:10" -> "Ease in with a steady rhythm—14 hours to reset appetite cues and energy."
-        "16:8" -> "Crowd favorite for a reason—16 hours to stay focused and in a lean groove."
-        "12:12" -> "Balanced split: fast 12 hours, eat within a 12-hour window — perfect for beginners"
-        "18:6" -> "18 hours of fasting, with a 6-hour eating window — a leaner schedule than 16:8"
-        "20:4" -> "Stay laser-focused—1–2 mindful meals within a tight 4-hour window."
-        "22:2" -> "One intentional meal in a 2-hour slot—keep water intake up."
-        else -> ""
+    val descRes: Int? = when (plan.code) {
+        "14:10" -> R.string.fasting_plan_desc_14_10
+        "16:8" -> R.string.fasting_plan_desc_16_8
+        "12:12" -> R.string.fasting_plan_desc_12_12
+        "18:6" -> R.string.fasting_plan_desc_18_6
+        "20:4" -> R.string.fasting_plan_desc_20_4
+        "22:2" -> R.string.fasting_plan_desc_22_2
+        else -> null
     }
 
     Card(
@@ -707,14 +707,16 @@ private fun FastingPlanCard(
 
                 Spacer(Modifier.height(8.dp))
 
-                Text(
-                    text = desc,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFF6F6F6F),
-                        lineHeight = 18.sp
-                    ),
-                    modifier = Modifier.padding(end = 4.dp)
-                )
+                descRes?.let { resId ->
+                    Text(
+                        text = stringResource(resId),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = Color(0xFF6F6F6F),
+                            lineHeight = 18.sp
+                        ),
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                }
             }
 
             Row(

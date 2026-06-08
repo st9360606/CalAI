@@ -527,6 +527,48 @@
     <string name="weight_history_trend_stable">持平</string>
 
 
+    <!-- Fasting -->
+    <string name="fasting_plan_title">禁食計畫</string>
+    <string name="start_time">開始時間</string>
+    <string name="end_time">結束時間</string>
+    <string name="fasting_notification_info_status_on">提醒已開啟。若裝置通知權限允許，這些提醒會每天重複。</string>
+    <string name="fasting_notification_info_status_off">提醒目前關閉。請回首頁的禁食計畫卡片打開開關，才會收到這些通知。</string>
+    <string name="fasting_notification_info_status_enabled_label">已開啟</string>
+    <string name="fasting_notification_info_status_disabled_label">已關閉</string>
+    <string name="fasting_notification_info_title">提醒會怎麼運作</string>
+    <string name="fasting_notification_info_subtitle">你的 %1$s 計畫會在 %2$s 結束進食視窗。開啟提醒後，BiteCal 每天會發送兩個通知。</string>
+    <string name="fasting_notification_info_at_time">%1$s</string>
+    <string name="fasting_notification_info_start_title">進食時段開始</string>
+    <string name="fasting_notification_info_start_body">你可以開始進食，並在需要時順手紀錄餐點。</string>
+    <string name="fasting_notification_info_endsoon_title">進食時段即將結束</string>
+    <string name="fasting_notification_info_endsoon_body">距離 %1$s 結束前 1 小時，BiteCal 會提醒你完成最後一餐。</string>
+
+    <string name="fasting_plan_desc_14_10">用穩定節奏開始，禁食 14 小時，幫助調整食慾與能量感。</string>
+    <string name="fasting_plan_desc_16_8">最受歡迎的禁食節奏，16 小時禁食，適合維持專注與飲食控制。</string>
+    <string name="fasting_plan_desc_12_12">禁食 12 小時、進食 12 小時，節奏平衡，很適合新手開始。</string>
+    <string name="fasting_plan_desc_18_6">禁食 18 小時、進食 6 小時，比 16:8 更精簡的進階節奏。</string>
+    <string name="fasting_plan_desc_20_4">在 4 小時內安排 1–2 餐，適合想提高專注與控制感的用戶。</string>
+    <string name="fasting_plan_desc_22_2">在 2 小時內完成一餐，請記得補充水分並留意身體狀態。</string>
+
+
+
+    <string name="fasting_picker_title">設定你的禁食開始時間</string>
+    <string name="fasting_picker_subtitle">我們會在每天進食視窗開始時提醒你。</string>
+
+    <!-- Fasting notifications -->
+    <string name="fasting_window_started">進食時段開始</string>
+    <string name="fasting_window_started_body">此提醒僅供自我管理參考，非醫療建議。</string>
+    <string name="fasting_window_ended">進食時段結束</string>
+    <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
+    <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
+
+    <string name="fasting_start_title">%1$s 進食時段開始了</string>
+    <string name="fasting_start_body">你的進食時段是 %1$s–%2$s。吃東西時順手記錄，今天的數據會更準。</string>
+    <string name="fasting_endsoon_title">進食時段還剩 1 小時</string>
+    <string name="fasting_endsoon_body">這次進食時段會在 %1$s 結束。如果還有最後一餐，記得在結束前記錄。</string>
+
+
+
 
 
 
@@ -582,40 +624,6 @@
 
 
 
-
-
-    <!-- Fasting -->
-    <string name="fasting_plan_title">禁食計畫</string>
-    <string name="fasting_plans">禁食計畫</string>
-    <string name="choose_fasting_plan">選擇禁食計畫</string>
-    <string name="start_time">開始時間</string>
-    <string name="end_time">結束時間</string>
-    <string name="enable_reminders">開啟提醒</string>
-    <string name="fasting_picker_title">設定你的禁食開始時間</string>
-    <string name="fasting_picker_subtitle">我們會在每天進食視窗開始時提醒你。</string>
-
-    <!-- Fasting notifications -->
-    <string name="fasting_window_started">進食時段開始</string>
-    <string name="fasting_window_started_body">此提醒僅供自我管理參考，非醫療建議。</string>
-    <string name="fasting_window_ended">進食時段結束</string>
-    <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
-    <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
-
-    <string name="fasting_start_title">%1$s 進食時段開始了</string>
-    <string name="fasting_start_body">你的進食時段是 %1$s–%2$s。吃東西時順手記錄，今天的數據會更準。</string>
-    <string name="fasting_endsoon_title">進食時段還剩 1 小時</string>
-    <string name="fasting_endsoon_body">這次進食時段會在 %1$s 結束。如果還有最後一餐，記得在結束前記錄。</string>
-    <string name="fasting_notification_info_title">提醒會怎麼運作</string>
-    <string name="fasting_notification_info_subtitle">你的 %1$s 計畫會在 %2$s 結束進食視窗。開啟提醒後，BiteCal 每天會發送兩個通知。</string>
-    <string name="fasting_notification_info_at_time">%1$s</string>
-    <string name="fasting_notification_info_start_title">進食時段開始</string>
-    <string name="fasting_notification_info_start_body">你可以開始進食，並在需要時順手紀錄餐點。</string>
-    <string name="fasting_notification_info_endsoon_title">進食時段即將結束</string>
-    <string name="fasting_notification_info_endsoon_body">距離 %1$s 結束前 1 小時，BiteCal 會提醒你完成最後一餐。</string>
-    <string name="fasting_notification_info_status_enabled_label">已開啟</string>
-    <string name="fasting_notification_info_status_disabled_label">已關閉</string>
-    <string name="fasting_notification_info_status_on">提醒已開啟。若裝置通知權限允許，這些提醒會每天重複。</string>
-    <string name="fasting_notification_info_status_off">提醒目前關閉。請回首頁的禁食計畫卡片打開開關，才會收到這些通知。</string>
 
 
 
