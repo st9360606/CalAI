@@ -109,13 +109,13 @@ fun EditHeightScreen(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             BiteCalTopBar(
-                title = "Edit Your Height",
+                title = stringResource(R.string.edit_height_title),
                 onBack = onBack
             )
         },
         bottomBar = {
             BiteCalEditBottomActionBar(
-                primaryText = stringResource(R.string.common_close),
+                primaryText = stringResource(R.string.common_save),
                 onPrimaryClick = {
                     vm.saveAndSyncHeight(
                         useMetric = useMetric,

@@ -14,20 +14,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -69,9 +63,6 @@ import kotlin.math.abs
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.common.design.BiteCalScreenFrame
 import com.calai.bitecal.ui.common.design.BiteCalEditBottomActionBar
-import com.calai.bitecal.ui.common.design.BiteCalEditDualActionRow
-import com.calai.bitecal.ui.common.design.BiteCalPrimaryButton
-import com.calai.bitecal.ui.common.design.BiteCalSecondaryOutlinedButton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -124,19 +115,22 @@ fun EditStartingWeightScreen(
     val lbsDecSel = lbsTenthsClamped % 10
 
     val isSaving = ui.saving
+    val updateStartingWeightFailedMessage = stringResource(
+        R.string.edit_starting_weight_update_failed
+    )
 
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             BiteCalTopBar(
-                title = "Edit Starting Weight",
+                title = stringResource(R.string.edit_starting_weight_title),
                 onBack = onCancel
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             BiteCalEditBottomActionBar(
-                primaryText = stringResource(R.string.common_close),
+                primaryText = stringResource(R.string.common_save),
                 onPrimaryClick = {
                     val (valueToSave, unitToSave) =
                         if (useMetric) {
@@ -154,7 +148,7 @@ fun EditStartingWeightScreen(
                             .onFailure { e ->
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
-                                        message = e.message ?: "Failed to update starting weight"
+                                        message = updateStartingWeightFailedMessage
                                     )
                                 }
                             }

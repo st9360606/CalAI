@@ -76,14 +76,13 @@ fun EditDailyStepGoalScreen(
         }
     }
 
-    val textMain = Color(0xFF111114)
     val borderLight = Color(0xFFE5E7EB)
 
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             BiteCalTopBar(
-                title = "Edit Step Goal",
+                title = stringResource(R.string.edit_step_goal_title),
                 onBack = onBack
             )
         }
@@ -159,7 +158,7 @@ fun EditDailyStepGoalScreen(
             BiteCalEditDualActionRow(
                 secondaryText = stringResource(R.string.common_revert),
                 onSecondaryClick = { vm.revert() },
-                primaryText = stringResource(R.string.common_close),
+                primaryText = stringResource(R.string.common_save),
                 onPrimaryClick = { vm.save() },
                 primaryEnabled = enabled,
             )
@@ -278,37 +277,5 @@ private fun StepRingIcon(modifier: Modifier = Modifier) {
                 colorFilter = ColorFilter.tint(Color(0xFF111114))
             )
         }
-    }
-}
-
-
-@Composable
-private fun FootprintsLikeIcon(modifier: Modifier = Modifier) {
-    val fg = Color(0xFF111114)
-    val bg = Color(0xFFF2F4F7)
-
-    androidx.compose.foundation.Canvas(modifier = modifier) {
-        // 左腳
-        val w = size.width
-        val h = size.height
-
-        fun foot(cx: Float, cy: Float, tilt: Float) {
-            // sole
-            drawRoundRect(
-                color = fg,
-                topLeft = Offset(cx - w * 0.18f, cy - h * 0.30f),
-                size = Size(w * 0.28f, h * 0.62f),
-                cornerRadius = CornerRadius(w * 0.14f, w * 0.14f)
-            )
-            // heel hole (用背景色蓋回去)
-            drawOval(
-                color = bg,
-                topLeft = Offset(cx - w * 0.12f, cy + h * 0.16f),
-                size = Size(w * 0.14f, h * 0.14f)
-            )
-        }
-
-        foot(cx = size.width * 0.42f, cy = size.height * 0.48f, tilt = 0f)
-        foot(cx = size.width * 0.64f, cy = size.height * 0.40f, tilt = 0f)
     }
 }

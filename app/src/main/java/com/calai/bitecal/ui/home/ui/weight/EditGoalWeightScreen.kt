@@ -133,12 +133,13 @@ fun EditGoalWeightScreen(
     val lbsDecSel = lbsTenthsClamped % 10
 
     var isSaving by remember { mutableStateOf(false) }
+    val updateGoalWeightFailedMessage = stringResource(R.string.edit_goal_update_failed)
 
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             BiteCalTopBar(
-                title = "Edit Goal Weight",
+                title = stringResource(R.string.edit_goal_weight_title),
                 onBack = onCancel
             )
         },
@@ -177,7 +178,7 @@ fun EditGoalWeightScreen(
                                     isSaving = false
                                     scope.launch {
                                         snackbarHostState.showSnackbar(
-                                            message = e.message ?: "Failed to update goal weight"
+                                            message = updateGoalWeightFailedMessage
                                         )
                                     }
                                 }
@@ -201,7 +202,7 @@ fun EditGoalWeightScreen(
                             )
                         } else {
                             Text(
-                                text = stringResource(R.string.common_close),
+                                text = stringResource(R.string.common_save),
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.Medium,
                                     letterSpacing = 0.2.sp

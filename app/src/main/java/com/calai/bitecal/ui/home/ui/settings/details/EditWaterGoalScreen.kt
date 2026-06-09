@@ -73,14 +73,13 @@ fun EditWaterGoalScreen(
         }
     }
 
-    val textMain = Color(0xFF111114)
     val borderLight = Color(0xFFE5E7EB)
 
     Scaffold(
         containerColor = Color(0xFFF5F5F5),
         topBar = {
             BiteCalTopBar(
-                title = "Edit Water Goal",
+                title = stringResource(R.string.edit_water_goal_title),
                 onBack = onBack
             )
         }
@@ -153,7 +152,7 @@ fun EditWaterGoalScreen(
             BiteCalEditDualActionRow(
                 secondaryText = stringResource(R.string.common_revert),
                 onSecondaryClick = { vm.revert() },
-                primaryText = stringResource(R.string.common_close),
+                primaryText = stringResource(R.string.common_save),
                 onPrimaryClick = { vm.save() },
                 primaryEnabled = enabled,
             )

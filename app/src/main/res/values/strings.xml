@@ -842,19 +842,141 @@
     <string name="settings_logout_failed">Logout failed. Check your connection and try again.</string>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+    <!-- EditNameScreen -->
     <string name="settings_edit_your_name_title">Edit Your Name</string>
+    <string name="edit_name_placeholder">Enter your name</string>
+
+
+    <!-- PremiumRewardsScreen -->
+    <string name="premium_rewards_subscription_title">Subscription</string>
+    <string name="premium_rewards_history_title">Reward history</string>
+    <string name="premium_rewards_loading_membership">Loading membership…</string>
+    <string name="premium_rewards_status_title">Premium Status</string>
+    <string name="premium_rewards_latest_title">Latest reward</string>
+    <string name="premium_rewards_source_format">Source: %1$s</string>
+    <string name="premium_rewards_channel_format">Channel: %1$s</string>
+    <string name="premium_rewards_grant_status_format">Grant status: %1$s</string>
+    <string name="premium_rewards_status_format">Status: %1$s</string>
+    <string name="premium_rewards_google_defer_format">Google defer: %1$s</string>
+    <string name="premium_rewards_granted_at_format">Granted at: %1$s</string>
+    <string name="premium_rewards_old_expiry_format">Old expiry: %1$s</string>
+    <string name="premium_rewards_new_expiry_format">New expiry: %1$s</string>
+    <string name="premium_rewards_error_format">Error: %1$s</string>
+    <string name="premium_rewards_days_added_format">Days added: %1$d</string>
+    <string name="premium_rewards_empty_title">No rewards yet</string>
+    <string name="premium_rewards_empty_body">Successful referrals will appear here after verification.</string>
+    <string name="premium_rewards_channel_google_play_defer">Google Play billing date extended</string>
+    <string name="premium_rewards_channel_backend_only">Premium reward applied</string>
+    <string name="premium_rewards_grant_success">Success</string>
+    <string name="premium_rewards_status_retrying">Retrying</string>
+    <string name="premium_rewards_grant_not_granted">Not granted</string>
+    <string name="premium_rewards_google_defer_success">Extended by Google Play</string>
+    <string name="premium_rewards_google_defer_failed">Failed</string>
+    <string name="premium_rewards_google_defer_not_required">Not required</string>
+
+
+    <!-- PersonalDetailsScreen -->
+    <string name="personal_details_goal_weight">Goal weight</string>
+    <string name="personal_details_change_goal">Change goal</string>
+    <string name="personal_details_body_details_section">Body details</string>
+    <string name="personal_details_current_weight">Current weight</string>
+    <string name="personal_details_height">Height</string>
+    <string name="personal_details_age">Age</string>
+    <string name="personal_details_gender">Gender</string>
+    <string name="personal_details_starting_weight">Starting weight</string>
+    <string name="personal_details_daily_goals_section">Daily goals</string>
+    <string name="personal_details_daily_step_goal">Daily step goal</string>
+    <string name="personal_details_daily_water_goal">Daily water goal</string>
+    <string name="personal_details_daily_workout_goal">Daily workout goal</string>
+    <string name="personal_details_age_value">%1$d years</string>
+    <string name="personal_details_steps_value">%1$d steps</string>
+    <string name="personal_details_water_value">%1$d ml</string>
+    <string name="personal_details_kcal_value">%1$d kcal</string>
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="gender_other">Other</string>
+
+
+    <!-- EditGoalWeightScreen -->
+    <string name="edit_goal_weight_title">Edit Goal Weight</string>
+    <string name="edit_goal_weight_set_goal">Set your goal weight</string>
+    <string name="edit_goal_weight_progress_note">We will use this goal to calculate your progress.</string>
+    <string name="edit_goal_update_failed">Failed to update goal weight</string>
+
+
+    <!-- RecordWeightScreen -->
+    <string name="record_weight_camera_failed_to_open">Camera failed to open.</string>
+    <string name="record_weight_camera_permission_required">Camera permission required.</string>
+    <string name="record_weight_camera_preview_unavailable">Camera only works in the running app, not in Preview.</string>
+    <string name="record_weight_camera_screen_unavailable">Camera is not available in this screen.</string>
+    <string name="record_weight_no_camera_app_found">No camera app found on this device.</string>
+    <string name="record_weight_enable_camera_permission_settings">Please enable Camera permission in Settings.</string>
+
+    <string name="record_weight_title">Record Weight</string>
+    <string name="record_weight_save_failed">Save failed</string>
+    <string name="record_weight_date_note">This weight will be recorded for %1$s.</string>
+
+    <string name="weight_date_sheet_title">Select your weighing date</string>
+    <string name="weight_date_sheet_subtitle">When did you step on the scale?</string>
+    <string name="weight_date_sheet_month_january">January</string>
+    <string name="weight_date_sheet_month_february">February</string>
+    <string name="weight_date_sheet_month_march">March</string>
+    <string name="weight_date_sheet_month_april">April</string>
+    <string name="weight_date_sheet_month_may">May</string>
+    <string name="weight_date_sheet_month_june">June</string>
+    <string name="weight_date_sheet_month_july">July</string>
+    <string name="weight_date_sheet_month_august">August</string>
+    <string name="weight_date_sheet_month_september">September</string>
+    <string name="weight_date_sheet_month_october">October</string>
+    <string name="weight_date_sheet_month_november">November</string>
+    <string name="weight_date_sheet_month_december">December</string>
+
+    <string name="record_weight_camera_not_available">Camera not available</string>
+    <string name="record_weight_take_photo">Take a photo</string>
+    <string name="record_weight_retake_photo">Retake photo</string>
+
+
+    <!-- EditHeightScreen -->
+    <string name="edit_height_title">Edit Your Height</string>
+    <string name="edit_height_set_current_height">Set your current height</string>
+    <string name="edit_height_privacy_note">Your height is used only to improve calorie estimate accuracy.</string>
+
+
+    <!-- EditAgeScreen -->
+    <string name="edit_age_title">Edit Your Age</string>
+    <string name="edit_age_privacy_note">We only use your age to improve your experience and calorie estimation accuracy.</string>
+
+
+    <!-- EditGenderScreen -->
+    <string name="edit_gender_title">Edit Your Gender</string>
+    <string name="edit_gender_privacy_note">Used only to personalize and improve estimate accuracy.</string>
+
+
+    <!-- EditStartingWeightScreen -->
+    <string name="edit_starting_weight_title">Edit Starting Weight</string>
+    <string name="edit_start_weight_set_starting">Set your starting weight</string>
+    <string name="edit_start_weight_baseline_note">We will use it as your baseline for progress.</string>
+    <string name="edit_starting_weight_update_failed">Failed to update starting weight</string>
+
+
+    <!-- EditDailyStepGoalScreen -->
+    <string name="edit_step_goal_title">Edit Step Goal</string>
+    <string name="edit_daily_step_goal_previous_format">Previous goal %1$d steps</string>
+    <string name="edit_daily_step_goal_input_label">Daily step goal</string>
+
+
+    <!-- EditWaterGoalScreen -->
+    <string name="edit_water_goal_title">Edit Water Goal</string>
+    <string name="edit_water_goal_previous_format">Previous goal %1$d ml</string>
+    <string name="edit_water_goal_input_label">Daily water goal (ml)</string>
+
+
+    <!-- EditWorkoutGoalScreen -->
+    <string name="edit_workout_goal_title">Edit Workout Goal</string>
+    <string name="edit_workout_goal_previous_format">Previous goal %1$d kcal</string>
+    <string name="edit_workout_goal_input_label">Daily workout goal (kcal)</string>
+
+
 
 
 
@@ -1020,22 +1142,6 @@
 
 
 
-    <!-- PersonalDetailsScreen -->
-    <string name="personal_details_change_goal">Change goal</string>
-    <string name="personal_details_body_details_section">Body details</string>
-    <string name="personal_details_daily_goals_section">Daily goals</string>
-    <string name="personal_details_current_weight">Current weight</string>
-    <string name="personal_details_height">Height</string>
-    <string name="personal_details_age">Age</string>
-    <string name="personal_details_gender">Gender</string>
-    <string name="personal_details_starting_weight">Starting weight</string>
-    <string name="personal_details_daily_step_goal">Daily step goal</string>
-    <string name="personal_details_daily_water_goal">Daily water goal</string>
-    <string name="personal_details_daily_workout_goal">Daily workout goal</string>
-    <string name="personal_details_age_value">%1$d years</string>
-    <string name="personal_details_steps_value">%1$d steps</string>
-    <string name="personal_details_water_value">%1$d ml</string>
-    <string name="personal_details_kcal_value">%1$d kcal</string>
 
 
 
@@ -1046,21 +1152,6 @@
 
 
 
-    <!-- WeighingDateSheet -->
-    <string name="weight_date_sheet_title">Select your weighing date</string>
-    <string name="weight_date_sheet_subtitle">When did you step on the scale?</string>
-    <string name="weight_date_sheet_month_january">January</string>
-    <string name="weight_date_sheet_month_february">February</string>
-    <string name="weight_date_sheet_month_march">March</string>
-    <string name="weight_date_sheet_month_april">April</string>
-    <string name="weight_date_sheet_month_may">May</string>
-    <string name="weight_date_sheet_month_june">June</string>
-    <string name="weight_date_sheet_month_july">July</string>
-    <string name="weight_date_sheet_month_august">August</string>
-    <string name="weight_date_sheet_month_september">September</string>
-    <string name="weight_date_sheet_month_october">October</string>
-    <string name="weight_date_sheet_month_november">November</string>
-    <string name="weight_date_sheet_month_december">December</string>
 
 
 
@@ -1069,46 +1160,10 @@
 
 
 
-    <!-- Premium rewards -->
-    <string name="premium_rewards_subscription_title">Subscription</string>
-    <string name="premium_rewards_loading_membership">Loading membership…</string>
-    <string name="premium_rewards_status_title">Premium Status</string>
-    <string name="premium_rewards_latest_title">Latest reward</string>
-    <string name="premium_rewards_history_title">Reward history</string>
-    <string name="premium_rewards_source_format">Source: %1$s</string>
-    <string name="premium_rewards_channel_format">Channel: %1$s</string>
-    <string name="premium_rewards_grant_status_format">Grant status: %1$s</string>
-    <string name="premium_rewards_status_format">Status: %1$s</string>
-    <string name="premium_rewards_google_defer_format">Google defer: %1$s</string>
-    <string name="premium_rewards_granted_at_format">Granted at: %1$s</string>
-    <string name="premium_rewards_old_expiry_format">Old expiry: %1$s</string>
-    <string name="premium_rewards_new_expiry_format">New expiry: %1$s</string>
-    <string name="premium_rewards_error_format">Error: %1$s</string>
-    <string name="premium_rewards_days_added_format">Days added: %1$d</string>
-    <string name="premium_rewards_empty_title">No rewards yet</string>
-    <string name="premium_rewards_empty_body">Successful referrals will appear here after verification.</string>
-    <string name="premium_rewards_channel_google_play_defer">Google Play billing date extended</string>
-    <string name="premium_rewards_channel_backend_only">Premium reward applied</string>
-    <string name="premium_rewards_grant_success">Success</string>
-    <string name="premium_rewards_status_retrying">Retrying</string>
-    <string name="premium_rewards_grant_not_granted">Not granted</string>
-    <string name="premium_rewards_google_defer_success">Extended by Google Play</string>
-    <string name="premium_rewards_google_defer_failed">Failed</string>
-    <string name="premium_rewards_google_defer_not_required">Not required</string>
 
-    <!-- Record weight -->
-    <string name="record_weight_title">Record Weight</string>
-    <string name="record_weight_save_failed">Save failed</string>
-    <string name="record_weight_camera_failed_to_open">Camera failed to open.</string>
-    <string name="record_weight_camera_permission_required">Camera permission required.</string>
-    <string name="record_weight_camera_preview_unavailable">Camera only works in the running app, not in Preview.</string>
-    <string name="record_weight_camera_screen_unavailable">Camera is not available in this screen.</string>
-    <string name="record_weight_no_camera_app_found">No camera app found on this device.</string>
-    <string name="record_weight_enable_camera_permission_settings">Please enable Camera permission in Settings.</string>
 
-    <string name="record_weight_camera_not_available">Camera not available</string>
-    <string name="record_weight_take_photo">Take a photo</string>
-    <string name="record_weight_retake_photo">Retake photo</string>
+
+
 
     <!-- Navigation placeholders -->
     <string name="camera_manual_entry_not_ready">Manual entry is not ready yet. Switching to label scan for now.</string>
@@ -1148,25 +1203,13 @@
     <string name="bottom_nav_fasting">Fasting</string>
     <string name="bottom_nav_workout">Workout</string>
 
-    <!-- Settings detail screens -->
-    <string name="edit_age_privacy_note">We only use your age to improve your experience and calorie estimation accuracy.</string>
-    <string name="edit_gender_privacy_note">Used only to personalize and improve estimate accuracy.</string>
-    <string name="gender_male">Male</string>
-    <string name="gender_female">Female</string>
-    <string name="gender_other">Other</string>
-    <string name="edit_height_set_current_height">Set your current height</string>
-    <string name="edit_height_privacy_note">Your height is used only to improve calorie estimate accuracy.</string>
-    <string name="edit_goal_weight_set_goal">Set your goal weight</string>
-    <string name="edit_goal_weight_progress_note">We will use this goal to calculate your progress.</string>
-    <string name="edit_start_weight_set_starting">Set your starting weight</string>
-    <string name="edit_start_weight_baseline_note">We will use it as your baseline for progress.</string>
-    <string name="record_weight_date_note">This weight will be recorded for %1$s.</string>
-    <string name="edit_water_goal_previous_format">Previous goal %1$d ml</string>
-    <string name="edit_water_goal_input_label">Daily water goal (ml)</string>
-    <string name="edit_workout_goal_previous_format">Previous goal %1$d kcal</string>
-    <string name="edit_workout_goal_input_label">Daily workout goal (kcal)</string>
-    <string name="edit_daily_step_goal_previous_format">Previous goal %1$d steps</string>
-    <string name="edit_daily_step_goal_input_label">Daily step goal</string>
+
+
+
+
+
+
+
     <string name="edit_nutrition_calorie_goal">Calorie goal</string>
     <string name="edit_nutrition_protein_goal">Protein goal</string>
     <string name="edit_nutrition_carb_goal">Carb goal</string>
@@ -1176,8 +1219,8 @@
     <string name="edit_nutrition_sugar_goal">Sugar goal</string>
     <string name="edit_nutrition_sodium_goal">Sodium goal</string>
     <string name="edit_nutrition_auto_generate_goals">Auto generate goals</string>
-    <string name="personal_details_goal_weight">Goal weight</string>
-    <string name="edit_name_placeholder">Enter your name</string>
+
+
 
 
 
