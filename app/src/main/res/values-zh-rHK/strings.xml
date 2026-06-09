@@ -21,6 +21,9 @@
     <string name="common_delete">刪除</string>
     <string name="common_deleting">刪除中…</string>
 
+    <string name="common_understood">了解</string>
+    <string name="common_revert">還原</string>
+
 
     <!-- ApiErrorUiMapper -->
     <string name="err_barcode_not_found_title">查無此商品</string>
@@ -974,34 +977,34 @@
     <string name="edit_workout_goal_input_label">每日運動目標（kcal）</string>
 
 
+    <!-- EditNutritionGoalsScreen -->
+    <string name="edit_nutrition_goals_title">編輯營養目標</string>
+    <string name="edit_nutrition_calorie_goal">熱量目標</string>
+    <string name="edit_nutrition_protein_goal">蛋白質目標</string>
+    <string name="edit_nutrition_carb_goal">碳水目標</string>
+    <string name="edit_nutrition_fat_goal">脂肪目標</string>
+    <string name="edit_nutrition_view_micronutrients">查看微量營養素</string>
+    <string name="edit_nutrition_fiber_goal">纖維目標</string>
+    <string name="edit_nutrition_sugar_goal">糖分目標</string>
+    <string name="edit_nutrition_sodium_goal">鈉目標</string>
+    <string name="edit_nutrition_auto_generate_goals">自動產生目標</string>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <!-- RingColorsExplainedScreen -->
     <string name="ring_colors_explained_title">日期圓環顏色</string>
     <string name="ring_colors_explained_intro">日期圓環會幫你快速看出每天是否接近卡路里目標。</string>
-    <string name="ring_colors_explained">日期圓環演示</string>
-    <string name="ring_colors_explained_subtitle">圓環顏色說明</string>
     <string name="ring_colors_preview_brand">BiteCal AI</string>
-    <string name="ring_colors_preview_day_10">5</string>
-    <string name="ring_colors_preview_day_11">6</string>
-    <string name="ring_colors_preview_day_12">7</string>
-    <string name="ring_colors_preview_day_13">8</string>
-    <string name="ring_colors_preview_day_14">9</string>
-    <string name="ring_colors_preview_day_15">10</string>
-    <string name="ring_colors_preview_day_16">11</string>
+    <string name="ring_colors_explained">日期圓環演示</string>
+
+    <string name="ring_colors_preview_day_5">5</string>
+    <string name="ring_colors_preview_day_6">6</string>
+    <string name="ring_colors_preview_day_7">7</string>
+    <string name="ring_colors_preview_day_8">8</string>
+    <string name="ring_colors_preview_day_9">9</string>
+    <string name="ring_colors_preview_day_10">10</string>
+    <string name="ring_colors_preview_day_11">11</string>
+    <string name="ring_colors_explained_subtitle">圓環顏色說明</string>
+
     <string name="ring_colors_green_title">綠色</string>
     <string name="ring_colors_green_body">達標（距離目標 100 卡路里以內）</string>
     <string name="ring_colors_yellow_title">棕色</string>
@@ -1012,33 +1015,19 @@
     <string name="ring_colors_dotted_body">當天沒有記錄餐點</string>
 
 
+    <!-- NotificationInboxScreen Inbox -->
+    <string name="notification_inbox_title">通知收件匣</string>
+    <string name="notification_inbox_header_title">BiteCal 通知</string>
+    <string name="notification_inbox_header_body">所有平台通知都會集中顯示在這裡。</string>
+    <string name="notification_inbox_status_read">已讀</string>
+    <string name="notification_inbox_status_unread">未讀</string>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <string name="notification_inbox_loading_title">正在載入通知</string>
+    <string name="notification_inbox_loading">正在載入通知…</string>
+    <string name="notification_inbox_empty_title">目前沒有通知</string>
+    <string name="notification_inbox_empty_body">平台通知會顯示在這裡</string>
+    <string name="notification_inbox_error_title">無法載入通知</string>
+    <string name="notification_inbox_error_body">請確認網路連線後再試一次。</string>
 
 
 
@@ -1122,21 +1111,6 @@
 
 
 
-    <!-- NotificationInboxScreen Inbox -->
-    <string name="open_notification_settings">開啟通知設定</string>
-    <string name="notification_inbox_title">通知收件匣</string>
-    <string name="notification_inbox_header_title">BiteCal 通知</string>
-    <string name="notification_inbox_header_body">所有平台通知都會集中顯示在這裡。</string>
-    <string name="notification_inbox_loading_title">正在載入通知</string>
-    <string name="notification_inbox_loading">正在載入通知…</string>
-    <string name="notification_inbox_empty_title">目前沒有通知</string>
-    <string name="notification_inbox_empty_body">平台通知會顯示在這裡</string>
-    <string name="notification_inbox_error_title">無法載入通知</string>
-    <string name="notification_inbox_error_body">請確認網路連線後再試一次。</string>
-    <string name="notification_inbox_status_unread">未讀</string>
-    <string name="notification_inbox_status_read">已讀</string>
-
-
 
 
 
@@ -1181,12 +1155,7 @@
 
 
 
-    <!-- Health Connect rationale -->
-    <string name="health_connect_rationale_title">為何需要 Health Connect 權限</string>
-    <string name="health_connect_rationale_body">我們會讀取步數、運動與睡眠，用於計算每日消耗、活動時段與睡眠分析，並更新卡路里儀表板與歷史圖表。未經你的同意不會上傳雲端；你可在 Health Connect 隨時撤銷授權。</string>
-    <string name="common_understood">了解</string>
-    <string name="done">完成</string>
-    <string name="common_revert">還原</string>
+
 
     <!-- Bottom navigation -->
     <string name="bottom_nav_home">首頁</string>
@@ -1202,15 +1171,7 @@
 
 
 
-    <string name="edit_nutrition_calorie_goal">熱量目標</string>
-    <string name="edit_nutrition_protein_goal">蛋白質目標</string>
-    <string name="edit_nutrition_carb_goal">碳水目標</string>
-    <string name="edit_nutrition_fat_goal">脂肪目標</string>
-    <string name="edit_nutrition_view_micronutrients">查看微量營養素</string>
-    <string name="edit_nutrition_fiber_goal">纖維目標</string>
-    <string name="edit_nutrition_sugar_goal">糖分目標</string>
-    <string name="edit_nutrition_sodium_goal">鈉目標</string>
-    <string name="edit_nutrition_auto_generate_goals">自動產生目標</string>
+
 
 
 

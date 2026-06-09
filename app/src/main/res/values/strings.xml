@@ -21,6 +21,9 @@
     <string name="common_delete">Delete</string>
     <string name="common_deleting">Deleting…</string>
 
+    <string name="common_understood">Understood</string>
+    <string name="common_revert">Revert</string>
+
 
     <!-- ApiErrorUiMapper -->
     <string name="err_barcode_not_found_title">Product not found</string>
@@ -977,33 +980,34 @@
     <string name="edit_workout_goal_input_label">Daily workout goal (kcal)</string>
 
 
+    <!-- EditNutritionGoalsScreen -->
+    <string name="edit_nutrition_goals_title">Edit Nutrition Goals</string>
+    <string name="edit_nutrition_calorie_goal">Calorie goal</string>
+    <string name="edit_nutrition_protein_goal">Protein goal</string>
+    <string name="edit_nutrition_carb_goal">Carb goal</string>
+    <string name="edit_nutrition_fat_goal">Fat goal</string>
+    <string name="edit_nutrition_view_micronutrients">View micronutrients</string>
+    <string name="edit_nutrition_fiber_goal">Fiber goal</string>
+    <string name="edit_nutrition_sugar_goal">Sugar goal</string>
+    <string name="edit_nutrition_sodium_goal">Sodium goal</string>
+    <string name="edit_nutrition_auto_generate_goals">Auto generate goals</string>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <!-- RingColorsExplainedScreen -->
     <string name="ring_colors_explained_title">Date Ring Colors</string>
     <string name="ring_colors_explained_intro">Date rings help you quickly see how each day compares with your calorie goal.</string>
-    <string name="ring_colors_explained">Date Ring Preview</string>
-    <string name="ring_colors_explained_subtitle">Ring Colors Explained</string>
     <string name="ring_colors_preview_brand">BiteCal AI</string>
+    <string name="ring_colors_explained">Date Ring Preview</string>
+
+    <string name="ring_colors_preview_day_5">5</string>
+    <string name="ring_colors_preview_day_6">6</string>
+    <string name="ring_colors_preview_day_7">7</string>
+    <string name="ring_colors_preview_day_8">8</string>
+    <string name="ring_colors_preview_day_9">9</string>
     <string name="ring_colors_preview_day_10">10</string>
     <string name="ring_colors_preview_day_11">11</string>
-    <string name="ring_colors_preview_day_12">12</string>
-    <string name="ring_colors_preview_day_13">13</string>
-    <string name="ring_colors_preview_day_14">14</string>
-    <string name="ring_colors_preview_day_15">15</string>
-    <string name="ring_colors_preview_day_16">16</string>
+    <string name="ring_colors_explained_subtitle">Ring Colors Explained</string>
+
     <string name="ring_colors_green_title">Green</string>
     <string name="ring_colors_green_body">On target (within 100 calories of goal)</string>
     <string name="ring_colors_yellow_title">Brown</string>
@@ -1014,37 +1018,19 @@
     <string name="ring_colors_dotted_body">No meals logged that day</string>
 
 
+    <!-- NotificationInboxScreen Inbox -->
+    <string name="notification_inbox_title">Inbox</string>
+    <string name="notification_inbox_header_title">BiteCal Notifications</string>
+    <string name="notification_inbox_header_body">All platform notifications will appear here.</string>
+    <string name="notification_inbox_status_read">Read</string>
+    <string name="notification_inbox_status_unread">Unread</string>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <string name="notification_inbox_loading_title">Loading notifications</string>
+    <string name="notification_inbox_loading">Loading notifications…</string>
+    <string name="notification_inbox_empty_title">No notifications yet</string>
+    <string name="notification_inbox_empty_body">Platform notifications will appear here.</string>
+    <string name="notification_inbox_error_title">Unable to load notifications</string>
+    <string name="notification_inbox_error_body">Please check your connection and try again.</string>
 
 
 
@@ -1125,19 +1111,6 @@
 
 
 
-    <!-- NotificationInboxScreen Inbox -->
-    <string name="open_notification_settings">Open notification settings</string>
-    <string name="notification_inbox_title">Inbox</string>
-    <string name="notification_inbox_header_title">BiteCal Notifications</string>
-    <string name="notification_inbox_header_body">All platform notifications will appear here.</string>
-    <string name="notification_inbox_loading_title">Loading notifications</string>
-    <string name="notification_inbox_loading">Loading notifications…</string>
-    <string name="notification_inbox_empty_title">No notifications yet</string>
-    <string name="notification_inbox_empty_body">Platform notifications will appear here.</string>
-    <string name="notification_inbox_error_title">Unable to load notifications</string>
-    <string name="notification_inbox_error_body">Please check your connection and try again.</string>
-    <string name="notification_inbox_status_unread">Unread</string>
-    <string name="notification_inbox_status_read">Read</string>
 
 
 
@@ -1176,51 +1149,12 @@
 
 
 
-
-
-
-
-
-
-
-
-
-    <!-- Health Connect rationale -->
-    <string name="health_connect_rationale_title">Why Health Connect permissions are needed</string>
-    <string name="health_connect_rationale_body">We read steps, workouts, and sleep to calculate daily burn, activity windows, and sleep analysis, then update your calorie dashboard and history charts. Nothing is uploaded to the cloud without your consent, and you can revoke access in Health Connect at any time.</string>
-    <string name="common_understood">Understood</string>
-    <string name="done">Done</string>
-    <string name="common_revert">Revert</string>
-
-
-
-
-
     <!-- Bottom navigation -->
     <string name="bottom_nav_home">Home</string>
     <string name="bottom_nav_progress">Progress</string>
     <string name="bottom_nav_weight">Weight</string>
     <string name="bottom_nav_fasting">Fasting</string>
     <string name="bottom_nav_workout">Workout</string>
-
-
-
-
-
-
-
-
-    <string name="edit_nutrition_calorie_goal">Calorie goal</string>
-    <string name="edit_nutrition_protein_goal">Protein goal</string>
-    <string name="edit_nutrition_carb_goal">Carb goal</string>
-    <string name="edit_nutrition_fat_goal">Fat goal</string>
-    <string name="edit_nutrition_view_micronutrients">View micronutrients</string>
-    <string name="edit_nutrition_fiber_goal">Fiber goal</string>
-    <string name="edit_nutrition_sugar_goal">Sugar goal</string>
-    <string name="edit_nutrition_sodium_goal">Sodium goal</string>
-    <string name="edit_nutrition_auto_generate_goals">Auto generate goals</string>
-
-
 
 
 

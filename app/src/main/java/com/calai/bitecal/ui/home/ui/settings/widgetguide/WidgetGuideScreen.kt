@@ -240,14 +240,14 @@ private fun WidgetGuidePhoneMock() {
                 shadowElevation = 0.dp
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Widgets,
                         contentDescription = null,
                         tint = Color(0xFF111114),
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(10.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -255,7 +255,7 @@ private fun WidgetGuidePhoneMock() {
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF111114),
                             fontWeight = FontWeight.Bold,
-                            fontSize = 10.sp
+                            fontSize = 6.sp
                         )
                     )
                 }

@@ -289,43 +289,43 @@ private fun PremiumCalendarPreviewCard() {
                     ) {
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_sun),
-                            day = stringResource(R.string.ring_colors_preview_day_10),
+                            day = stringResource(R.string.ring_colors_preview_day_5),
                             tone = RingTone.Red,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_mon),
-                            day = stringResource(R.string.ring_colors_preview_day_11),
+                            day = stringResource(R.string.ring_colors_preview_day_6),
                             tone = RingTone.Green,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_tue),
-                            day = stringResource(R.string.ring_colors_preview_day_12),
+                            day = stringResource(R.string.ring_colors_preview_day_7),
                             tone = RingTone.Yellow,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_wed),
-                            day = stringResource(R.string.ring_colors_preview_day_13),
+                            day = stringResource(R.string.ring_colors_preview_day_8),
                             tone = RingTone.Green,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_thu),
-                            day = stringResource(R.string.ring_colors_preview_day_14),
+                            day = stringResource(R.string.ring_colors_preview_day_9),
                             tone = RingTone.Dotted,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_fri),
-                            day = stringResource(R.string.ring_colors_preview_day_15),
+                            day = stringResource(R.string.ring_colors_preview_day_10),
                             tone = RingTone.Dotted,
                             width = dayWidth
                         )
                         PremiumPreviewDay(
                             weekday = stringResource(R.string.progress_day_sat),
-                            day = stringResource(R.string.ring_colors_preview_day_16),
+                            day = stringResource(R.string.ring_colors_preview_day_11),
                             tone = RingTone.Future,
                             width = dayWidth,
                             muted = true

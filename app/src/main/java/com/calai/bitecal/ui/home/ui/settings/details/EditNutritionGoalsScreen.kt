@@ -193,7 +193,7 @@ private fun EditNutritionGoalsScreen(
         containerColor = Color(0xFFF7F7F7),
         topBar = {
             BiteCalTopBar(
-                title = "Edit Nutrition Goals",
+                title = stringResource(R.string.edit_nutrition_goals_title),
                 onBack = {
                     focusManager.clearFocus()
                     onBack()
@@ -526,7 +526,7 @@ private fun BottomActionBar(
                 BiteCalEditDualActionRow(
                     secondaryText = stringResource(R.string.common_revert),
                     onSecondaryClick = onRevert,
-                    primaryText = stringResource(R.string.done),
+                    primaryText = stringResource(R.string.common_save),
                     onPrimaryClick = onDone,
                     primaryEnabled = canDone,
                     secondaryEnabled = !saving,
