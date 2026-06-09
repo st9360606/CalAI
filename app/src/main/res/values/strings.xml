@@ -527,7 +527,7 @@
     <string name="weight_history_trend_stable">STABLE</string>
 
 
-    <!-- Fasting -->
+    <!-- FastingPlansScreen -->
     <string name="fasting_plan_title">Fasting Plan</string>
     <string name="start_time">Start time</string>
     <string name="end_time">End time</string>
@@ -543,7 +543,6 @@
     <string name="fasting_notification_info_endsoon_title">Eating window ends soon</string>
     <string name="fasting_notification_info_endsoon_body">One hour before the window closes at %1$s, BiteCal reminds you to finish your last meal.</string>
 
-
     <string name="fasting_plan_desc_14_10">Ease in with a steady rhythm—14 hours to reset appetite cues and energy.</string>
     <string name="fasting_plan_desc_16_8">Crowd favorite for a reason—16 hours to stay focused and in a lean groove.</string>
     <string name="fasting_plan_desc_12_12">Balanced split: fast 12 hours, eat within a 12-hour window — perfect for beginners.</string>
@@ -551,19 +550,11 @@
     <string name="fasting_plan_desc_20_4">Stay laser-focused—1–2 mindful meals within a tight 4-hour window.</string>
     <string name="fasting_plan_desc_22_2">One intentional meal in a 2-hour slot—keep water intake up.</string>
 
-
-
-
     <string name="fasting_picker_title">Set your fasting start time</string>
     <string name="fasting_picker_subtitle">We’ll remind you at this time each day when your eating window starts.</string>
 
-    <!-- Fasting notifications -->
-    <string name="fasting_window_started">Eating window started</string>
-    <string name="fasting_window_started_body">This reminder is for self-management only and is not medical advice.</string>
-    <string name="fasting_window_ended">Eating window ended</string>
-    <string name="fasting_window_ended_body">Remember to hydrate. This is not medical advice.</string>
-    <string name="need_notification_permission">Notification permission is required to enable reminders.</string>
 
+    <!-- FastingReceiver -->
     <string name="fasting_start_title">%1$s eating window is open</string>
     <string name="fasting_start_body">Your eating window runs %1$s–%2$s. Log meals as you go to keep today accurate.</string>
     <string name="fasting_endsoon_title">1 hour left in your eating window</string>
@@ -572,45 +563,71 @@
 
 
 
-
+    <!-- WorkoutHistoryScreen -->
     <string name="workout_history_title">Workout History</string>
-    <string name="workout_history_back">Back to previous screen</string>
-    <string name="workout_history_close">Close workout history</string>
     <string name="workout_history_summary_label">Today burned</string>
     <string name="workout_history_summary_body">Track today’s workout burn progress</string>
-    <string name="workout_history_avg_daily_label">7-day avg / day</string>
+    <string name="workout_history_today_label">Today</string>
     <string name="workout_history_avg_daily_value">%1$d kcal</string>
+    <string name="workout_history_avg_daily_label">7-day avg / day</string>
     <string name="workout_history_avg_label">7-day avg / session</string>
     <string name="workout_history_avg_value">%1$d kcal</string>
     <string name="workout_history_unit_kcal">kcal</string>
-    <string name="workout_history_sessions_label">Sessions</string>
-    <string name="workout_history_sessions_value">%1$d</string>
-    <string name="workout_history_range_label">Range</string>
-    <string name="workout_history_range_value">7 days</string>
-    <string name="workout_history_duration_label">Duration</string>
-    <string name="workout_history_burn_label">Burned</string>
-    <string name="workout_history_loading_title">Syncing workouts</string>
-    <string name="workout_history_loading">Loading workout history&#8230;</string>
-    <string name="workout_history_error_title">History unavailable</string>
-    <string name="workout_history_error">Unable to load workout history.</string>
+
     <string name="workout_history_empty_title">No recent workouts</string>
     <string name="workout_history_empty">No workouts in the last 7 days.</string>
+    <string name="workout_history_recent_title">Recent sessions</string>
     <string name="workout_history_minutes">%1$d min</string>
     <string name="workout_history_kcal">%1$d</string>
     <string name="workout_history_date_time">%1$s · %2$s</string>
-    <string name="workout_history_recent_title">Recent sessions</string>
-    <string name="workout_history_recent_body">Showing workouts from the last 7 days</string>
     <string name="workout_history_kcal_with_unit">%1$d kcal</string>
-    <string name="workout_history_session_completed">Completed</string>
+
+    <string name="workout_history_loading_title">Syncing workouts</string>
+    <string name="workout_history_loading">Loading workout history&#8230;</string>
+    <string name="workout_history_error_title">History unavailable</string>
+
     <string name="workout_history_delete_failed">Delete failed. Please try again.</string>
     <string name="workout_history_delete_success">Deleted successfully!</string>
+    <string name="workout_history_error">Unable to load workout history.</string>
 
 
+    <!-- WorkoutTrackerSheet -->
+    <string name="workout_tracker_title">Workout Tracker</string>
+    <string name="workout_tracker_subtitle">Describe the type of exercise and the duration</string>
+    <string name="workout_tracker_example_placeholder">Example: 45 min running</string>
+
+    <string name="workout_tracker_select_from_list">or select from the list</string>
+    <string name="workout_tracker_show_less">Show less</string>
+    <string name="workout_tracker_show_more">Show more (%1$d)</string>
+
+    <string name="workout_tracker_estimating_fallback">Estimating&#8230;</string>
+    <string name="workout_tracker_estimating_analyzing">Analyzing your activity&#8230;</string>
+    <string name="workout_tracker_estimating_numbers">Working on your numbers&#8230;</string>
+    <string name="workout_tracker_estimating_calories">Estimating effort, calculating calories&#8230;</string>
+    <string name="workout_tracker_do_not_close">Please do not close the app or lock your device</string>
+
+    <string name="workout_tracker_kcal_value">%1$d kcal</string>
+    <string name="workout_tracker_minutes_activity">%1$d min %2$s</string>
+    <string name="workout_tracker_add_workout">Add workout</string>
+
+    <string name="workout_tracker_activity_content_label">Workout activity</string>
+    <string name="workout_preset_kcal_per_30_min">%1$d kcal / 30 min</string>
+
+    <string name="workout_tracker_save_success">Saved successfully!</string>
+    <string name="workout_tracker_save_failed">Failed to save. Please try again.</string>
+    <string name="workout_tracker_refresh_failed">Refresh failed. Please try again.</string>
+    <string name="workout_tracker_cancel">Cancel</string>
+    <string name="workout_tracker_try_again">Try again</string>
+    <string name="workout_tracker_scan_failed_title">Uh-oh! Scan failed</string>
+    <string name="workout_tracker_scan_failed_body">The workout description may be incorrect, or the internet connection is weak. For example: 30 min Running.</string>
 
 
-
-
-
+    <!-- DurationPickerSheet -->
+    <string name="workout_duration_sheet_subtitle">Add this workout time to your activity log</string>
+    <string name="workout_duration_hour_short">hr</string>
+    <string name="workout_duration_minute_short">min</string>
+    <string name="workout_duration_save">Save</string>
+    <string name="workout_duration_cancel">Cancel</string>
 
 
 
@@ -735,7 +752,6 @@
     <string name="foodlog_detail_title">Nutrition</string>
     <string name="foodlog_detail_back">Back</string>
     <string name="foodlog_detail_delete">Delete</string>
-    <string name="foodlog_detail_save">Save</string>
     <string name="foodlog_detail_minus">Minus</string>
     <string name="foodlog_detail_plus">Plus</string>
     <string name="foodlog_detail_calories">Calories</string>
@@ -924,12 +940,7 @@
 
 
 
-    <!-- DurationPickerSheet -->
-    <string name="workout_duration_sheet_subtitle">Add this workout time to your activity log</string>
-    <string name="workout_duration_hour_short">hr</string>
-    <string name="workout_duration_minute_short">min</string>
-    <string name="workout_duration_save">Save</string>
-    <string name="workout_duration_cancel">Cancel</string>
+
 
 
     <!-- WeighingDateSheet -->
@@ -970,31 +981,8 @@
     <string name="workout_preset_zumba">Zumba</string>
     <string name="workout_preset_pilates">Pilates</string>
 
-    <!-- Workout tracker sheet -->
-    <string name="workout_tracker_title">Workout Tracker</string>
-    <string name="workout_tracker_subtitle">Describe the type of exercise and the duration</string>
-    <string name="workout_tracker_example_placeholder">Example: 45 min running</string>
-    <string name="workout_tracker_add_workout">Add workout</string>
-    <string name="workout_tracker_select_from_list">or select from the list</string>
-    <string name="workout_tracker_show_less">Show less</string>
-    <string name="workout_tracker_show_more">Show more (%1$d)</string>
-    <string name="workout_tracker_estimating_fallback">Estimating&#8230;</string>
-    <string name="workout_tracker_estimating_analyzing">Analyzing your activity&#8230;</string>
-    <string name="workout_tracker_estimating_numbers">Working on your numbers&#8230;</string>
-    <string name="workout_tracker_estimating_calories">Estimating effort, calculating calories&#8230;</string>
-    <string name="workout_tracker_do_not_close">Please do not close the app or lock your device</string>
-    <string name="workout_tracker_kcal_value">%1$d kcal</string>
-    <string name="workout_tracker_minutes_activity">%1$d min %2$s</string>
-    <string name="workout_tracker_cancel">Cancel</string>
-    <string name="workout_tracker_try_again">Try again</string>
-    <string name="workout_tracker_scan_failed_title">Uh-oh! Scan failed</string>
-    <string name="workout_tracker_scan_failed_body">The workout description may be incorrect, or the internet connection is weak. For example: 30 min Running.</string>
-    <string name="workout_tracker_activity_content_label">Workout activity</string>
-    <string name="workout_tracker_save_success">Saved successfully!</string>
-    <string name="workout_tracker_save_failed">Failed to save. Please try again.</string>
-    <string name="workout_tracker_refresh_failed">Refresh failed. Please try again.</string>
-    <string name="workout_preset_kcal_per_30_min">%1$d kcal / 30 min</string>
-    <string name="workout_history_today_label">Today</string>
+
+
 
 
 

@@ -73,8 +73,6 @@ import com.calai.bitecal.data.activity.model.DailyActivityStatus
 import com.calai.bitecal.data.activity.util.ActivityKcalEstimator
 import com.calai.bitecal.data.foodlog.repo.HomeTodayNutritionSummary
 import com.calai.bitecal.data.home.repo.HomeSummary
-import com.calai.bitecal.ui.home.ui.fasting.components.FastingPlanCard
-import com.calai.bitecal.ui.home.ui.fasting.components.WeightCardNew
 import com.calai.bitecal.ui.common.haptic.biteCalClickable
 import com.calai.bitecal.ui.common.haptic.rememberBiteCalHaptics
 import com.calai.bitecal.ui.home.components.CardStyles
@@ -1248,7 +1246,7 @@ fun WeightFastingRowModern(
         val commonTopBarTextStyle = MaterialTheme.typography.labelMedium
 
         // === 左卡：Weight
-        WeightCardNew(
+        WeightAndFastingCard(
             primary = weightPrimary,
             secondary = stringResource(R.string.weight_card_of_goal),
             ringColor = HomeCardStyles.Palette.Weight,

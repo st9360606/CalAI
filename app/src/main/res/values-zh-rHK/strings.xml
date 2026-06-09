@@ -236,7 +236,7 @@
 
 
     <!-- Onboarding: OnboardDiscountSpinScreen-->
-    <string name="subscription_spin_title">解鎖專屬折扣🎁</string>
+    <string name="subscription_spin_title">解鎖專屬折扣</string>
     <string name="subscription_spin_helper_ready">點擊 Spin 揭曉您的專屬禮物。</string>
     <string name="subscription_spin_button">Spin</string>
     <string name="subscription_spinning_button">轉動中…</string>
@@ -527,7 +527,7 @@
     <string name="weight_history_trend_stable">持平</string>
 
 
-    <!-- Fasting -->
+    <!-- FastingPlansScreen -->
     <string name="fasting_plan_title">禁食計畫</string>
     <string name="start_time">開始時間</string>
     <string name="end_time">結束時間</string>
@@ -550,72 +550,82 @@
     <string name="fasting_plan_desc_20_4">在 4 小時內安排 1–2 餐，適合想提高專注與控制感的用戶。</string>
     <string name="fasting_plan_desc_22_2">在 2 小時內完成一餐，請記得補充水分並留意身體狀態。</string>
 
-
-
     <string name="fasting_picker_title">設定你的禁食開始時間</string>
     <string name="fasting_picker_subtitle">我們會在每天進食視窗開始時提醒你。</string>
 
-    <!-- Fasting notifications -->
-    <string name="fasting_window_started">進食時段開始</string>
-    <string name="fasting_window_started_body">此提醒僅供自我管理參考，非醫療建議。</string>
-    <string name="fasting_window_ended">進食時段結束</string>
-    <string name="fasting_window_ended_body">記得補充水分。僅供自我管理，非醫療建議。</string>
-    <string name="need_notification_permission">需要通知權限才能開啟提醒</string>
 
+    <!-- FastingReceiver -->
     <string name="fasting_start_title">%1$s 進食時段開始了</string>
     <string name="fasting_start_body">你的進食時段是 %1$s–%2$s。吃東西時順手記錄，今天的數據會更準。</string>
     <string name="fasting_endsoon_title">進食時段還剩 1 小時</string>
     <string name="fasting_endsoon_body">這次進食時段會在 %1$s 結束。如果還有最後一餐，記得在結束前記錄。</string>
 
 
-
-
-
-
-
-
-
-
-
+    <!-- WorkoutHistoryScreen -->
     <string name="workout_history_title">運動紀錄</string>
-    <string name="workout_history_back">返回上一頁</string>
-    <string name="workout_history_close">關閉運動紀錄</string>
     <string name="workout_history_summary_label">今日運動消耗</string>
     <string name="workout_history_summary_body">用來追蹤你今天的運動消耗進度</string>
+    <string name="workout_history_today_label">今天</string>
+    <string name="workout_history_avg_daily_value">%1$d 大卡</string>
     <string name="workout_history_avg_daily_label">近 7 天平均 / 天</string>
     <string name="workout_history_avg_label">近 7 天平均 / 次</string>
-    <string name="workout_history_avg_daily_value">%1$d 大卡</string>
     <string name="workout_history_avg_value">%1$d 大卡</string>
     <string name="workout_history_unit_kcal">大卡</string>
-    <string name="workout_history_sessions_label">紀錄</string>
-    <string name="workout_history_sessions_value">%1$d</string>
-    <string name="workout_history_range_label">範圍</string>
-    <string name="workout_history_range_value">7 天</string>
-    <string name="workout_history_duration_label">時間</string>
-    <string name="workout_history_burn_label">消耗</string>
-    <string name="workout_history_loading_title">同步運動紀錄</string>
-    <string name="workout_history_loading">正在載入運動紀錄&#8230;</string>
-    <string name="workout_history_error_title">無法取得紀錄</string>
-    <string name="workout_history_error">無法載入運動紀錄。</string>
+
     <string name="workout_history_empty_title">沒有近期運動</string>
     <string name="workout_history_empty">最近 7 天沒有運動紀錄。</string>
+    <string name="workout_history_recent_title">近期紀錄</string>
     <string name="workout_history_minutes">%1$d 分鐘</string>
     <string name="workout_history_kcal">%1$d</string>
     <string name="workout_history_date_time">%1$s · %2$s</string>
-    <string name="workout_history_recent_title">近期紀錄</string>
-    <string name="workout_history_recent_body">顯示最近 7 天的運動紀錄</string>
     <string name="workout_history_kcal_with_unit">%1$d 大卡</string>
-    <string name="workout_history_session_completed">已完成</string>
+
+    <string name="workout_history_loading_title">同步運動紀錄</string>
+    <string name="workout_history_loading">正在載入運動紀錄&#8230;</string>
+    <string name="workout_history_error_title">無法取得紀錄</string>
+
     <string name="workout_history_delete_failed">刪除失敗，請稍後再試</string>
     <string name="workout_history_delete_success">刪除成功</string>
+    <string name="workout_history_error">無法載入運動紀錄。</string>
 
 
+    <!-- WorkoutTrackerSheet -->
+    <string name="workout_tracker_title">運動追蹤</string>
+    <string name="workout_tracker_subtitle">描述運動類型與時間</string>
+    <string name="workout_tracker_example_placeholder">範例：跑步 45 分鐘</string>
+
+    <string name="workout_tracker_select_from_list">或從清單選擇</string>
+    <string name="workout_tracker_show_less">顯示較少</string>
+    <string name="workout_tracker_show_more">顯示更多（%1$d）</string>
+
+    <string name="workout_tracker_estimating_fallback">估算中&#8230;</string>
+    <string name="workout_tracker_estimating_analyzing">正在分析你的運動&#8230;</string>
+    <string name="workout_tracker_estimating_numbers">正在計算運動數據&#8230;</string>
+    <string name="workout_tracker_estimating_calories">正在估算強度與消耗熱量&#8230;</string>
+    <string name="workout_tracker_do_not_close">請不要關閉 App 或鎖定裝置</string>
+
+    <string name="workout_tracker_kcal_value">%1$d 大卡</string>
+    <string name="workout_tracker_minutes_activity">%1$d 分鐘 %2$s</string>
+    <string name="workout_tracker_add_workout">新增運動</string>
+
+    <string name="workout_tracker_activity_content_label">運動項目</string>
+    <string name="workout_preset_kcal_per_30_min">%1$d 大卡 / 30 分鐘</string>
+
+    <string name="workout_tracker_save_success">儲存成功</string>
+    <string name="workout_tracker_save_failed">儲存失敗，請再試一次。</string>
+    <string name="workout_tracker_refresh_failed">重新整理失敗，請再試一次。</string>
+    <string name="workout_tracker_cancel">取消</string>
+    <string name="workout_tracker_try_again">再試一次</string>
+    <string name="workout_tracker_scan_failed_title">糟糕，辨識失敗</string>
+    <string name="workout_tracker_scan_failed_body">運動描述可能不正確，或目前網路連線不穩。範例：跑步 30 分鐘。</string>
 
 
-
-
-
-
+    <!-- DurationPickerSheet -->
+    <string name="workout_duration_sheet_subtitle">將這次運動時間加入你的活動紀錄</string>
+    <string name="workout_duration_hour_short">時</string>
+    <string name="workout_duration_minute_short">分</string>
+    <string name="workout_duration_save">儲存</string>
+    <string name="workout_duration_cancel">取消</string>
 
 
 
@@ -708,8 +718,8 @@
     <!-- SavedFoodsScreen -->
     <string name="saved_foods_title">已保存食物</string>
     <string name="saved_foods_detail">詳情</string>
-    <string name="saved_foods_keep_15_days_hint">最近 15 天內儲存的食物。</string>
-    <string name="saved_foods_empty_title">還沒有已儲存的食物</string>
+    <string name="saved_foods_keep_15_days_hint">最近 15 天內保存的食物。</string>
+    <string name="saved_foods_empty_title">還沒有已保存的食物</string>
     <string name="saved_foods_kcal">🔥 %1$d 卡路里</string>
     <string name="saved_foods_protein">🥩 %1$dg</string>
     <string name="saved_foods_carbs">🌾 %1$dg</string>
@@ -723,7 +733,6 @@
     <string name="foodlog_detail_title">營養資訊</string>
     <string name="foodlog_detail_back">返回</string>
     <string name="foodlog_detail_delete">刪除</string>
-    <string name="foodlog_detail_save">保存</string>
     <string name="foodlog_detail_minus">減少</string>
     <string name="foodlog_detail_plus">增加</string>
     <string name="foodlog_detail_calories">卡路里</string>
@@ -741,8 +750,8 @@
     <string name="foodlog_delete_dialog_title">刪除紀錄？</string>
     <string name="foodlog_delete_dialog_message">你確定要永久刪除這筆餐點紀錄嗎？此操作無法復原。</string>
     <string name="foodlog_delete_dialog_confirm">刪除</string>
-    <string name="saved_foods_unsave_dialog_title">移除已儲存餐點？</string>
-    <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已儲存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
+    <string name="saved_foods_unsave_dialog_title">移除已保存餐點？</string>
+    <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已保存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
     <string name="saved_foods_unsave_dialog_confirm">移除</string>
 
 
@@ -918,12 +927,7 @@
 
 
 
-    <!-- DurationPickerSheet -->
-    <string name="workout_duration_sheet_subtitle">將這次運動時間加入你的活動紀錄</string>
-    <string name="workout_duration_hour_short">時</string>
-    <string name="workout_duration_minute_short">分</string>
-    <string name="workout_duration_save">儲存</string>
-    <string name="workout_duration_cancel">取消</string>
+
 
 
     <!-- WeighingDateSheet -->
@@ -964,31 +968,8 @@
     <string name="workout_preset_zumba">尊巴</string>
     <string name="workout_preset_pilates">皮拉提斯</string>
 
-    <!-- Workout tracker sheet -->
-    <string name="workout_tracker_title">運動追蹤</string>
-    <string name="workout_tracker_subtitle">描述運動類型與時間</string>
-    <string name="workout_tracker_example_placeholder">範例：跑步 45 分鐘</string>
-    <string name="workout_tracker_add_workout">新增運動</string>
-    <string name="workout_tracker_select_from_list">或從清單選擇</string>
-    <string name="workout_tracker_show_less">顯示較少</string>
-    <string name="workout_tracker_show_more">顯示更多（%1$d）</string>
-    <string name="workout_tracker_estimating_fallback">估算中&#8230;</string>
-    <string name="workout_tracker_estimating_analyzing">正在分析你的運動&#8230;</string>
-    <string name="workout_tracker_estimating_numbers">正在計算運動數據&#8230;</string>
-    <string name="workout_tracker_estimating_calories">正在估算強度與消耗熱量&#8230;</string>
-    <string name="workout_tracker_do_not_close">請不要關閉 App 或鎖定裝置</string>
-    <string name="workout_tracker_kcal_value">%1$d 大卡</string>
-    <string name="workout_tracker_minutes_activity">%1$d 分鐘 %2$s</string>
-    <string name="workout_tracker_cancel">取消</string>
-    <string name="workout_tracker_try_again">再試一次</string>
-    <string name="workout_tracker_scan_failed_title">糟糕，辨識失敗</string>
-    <string name="workout_tracker_scan_failed_body">運動描述可能不正確，或目前網路連線不穩。範例：跑步 30 分鐘。</string>
-    <string name="workout_tracker_activity_content_label">運動項目</string>
-    <string name="workout_tracker_save_success">儲存成功</string>
-    <string name="workout_tracker_save_failed">儲存失敗，請再試一次。</string>
-    <string name="workout_tracker_refresh_failed">重新整理失敗，請再試一次。</string>
-    <string name="workout_preset_kcal_per_30_min">%1$d 大卡 / 30 分鐘</string>
-    <string name="workout_history_today_label">今天</string>
+
+
 
 
 
@@ -1070,7 +1051,7 @@
     <string name="payment_issue_dialog_update_payment_short">更新付款</string>
 
     <!-- Saved foods -->
-    <string name="saved_foods_load_failed_title">已儲存食物載入失敗</string>
+    <string name="saved_foods_load_failed_title">已保存食物載入失敗</string>
 
 
 

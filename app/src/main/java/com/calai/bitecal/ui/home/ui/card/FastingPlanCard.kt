@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.ui.fasting.components
+package com.calai.bitecal.ui.home.ui.card
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import com.calai.bitecal.ui.common.haptic.rememberClickWithHaptic
 import com.calai.bitecal.ui.home.components.CardStyles
 import com.calai.bitecal.ui.home.components.HomeCardStyles
-import com.calai.bitecal.ui.home.ui.card.GreenSwitch
 
 @Composable
 fun FastingPlanCard(

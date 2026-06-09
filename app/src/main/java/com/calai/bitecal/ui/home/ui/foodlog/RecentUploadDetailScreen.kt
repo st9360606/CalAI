@@ -741,7 +741,7 @@ private fun SaveBadge(
     ) {
         Icon(
             imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-            contentDescription = stringResource(R.string.foodlog_detail_save),
+            contentDescription = "收藏標籤",
             tint = BiteCalFoodLogDetailTokens.TextPrimary,
             modifier = Modifier.fillMaxSize()
         )

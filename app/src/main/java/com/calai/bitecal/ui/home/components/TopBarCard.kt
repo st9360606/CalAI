@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.ui.fasting.components
+package com.calai.bitecal.ui.home.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,8 +20,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.calai.bitecal.ui.home.components.CardStyles
-import com.calai.bitecal.ui.home.components.HomeCardStyles
 import com.calai.bitecal.ui.home.ui.card.TitlePrefixTriangle
 
 object TopBarDefaults {

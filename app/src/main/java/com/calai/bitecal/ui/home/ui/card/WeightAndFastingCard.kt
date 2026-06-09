@@ -1,4 +1,4 @@
-package com.calai.bitecal.ui.home.ui.fasting.components
+package com.calai.bitecal.ui.home.ui.card
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -46,8 +46,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import com.calai.bitecal.R
+import com.calai.bitecal.ui.home.components.TopBarCard
+import com.calai.bitecal.ui.home.components.TopBarDefaults
 
 /**
  * WeightCardNew v2
@@ -58,7 +59,7 @@ import com.calai.bitecal.R
  * 3. 加入 WeightAddButton()（黑色圓+灰閃光，和 Workout/Water 一致）
  */
 @Composable
-fun WeightCardNew(
+fun WeightAndFastingCard(
     modifier: Modifier = Modifier,
     primary: String,
     secondary: String? = "to goal",
