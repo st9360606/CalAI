@@ -18,6 +18,41 @@
     <string name="common_unavailable_dash">—</string>
     <string name="common_retry">重試</string>
 
+
+    <!-- ApiErrorUiMapper -->
+    <string name="err_barcode_not_found_title">查無此商品</string>
+    <string name="err_barcode_not_found_msg">資料庫找不到此條碼。建議改拍食品標籤，成功率更高。</string>
+
+    <string name="err_barcode_lookup_failed_title">查詢失敗</string>
+    <string name="err_barcode_lookup_failed_msg">目前無法連上商品資料庫。請檢查網路後再試一次。</string>
+
+    <string name="err_generic_title">發生錯誤</string>
+    <string name="err_generic_msg">請稍後再試。</string>
+
+    <string name="err_network_title">網路異常</string>
+    <string name="err_network_msg">請檢查網路連線後重試。</string>
+
+    <string name="err_photo_title">需要更清楚的照片</string>
+    <string name="err_photo_msg">請在光線充足、對焦清楚的情況下重新拍攝。</string>
+
+    <string name="err_manual_title">改用手動輸入</string>
+    <string name="err_manual_msg">你也可以直接手動輸入食物與營養標籤資料。</string>
+
+    <string name="err_support_title">請聯絡客服</string>
+    <string name="err_support_msg">若問題持續發生，請聯絡客服協助。</string>
+
+    <string name="cta_try_label">拍食品標籤</string>
+    <string name="cta_enter_manually">手動輸入</string>
+
+    <string name="cta_check_network">檢查網路</string>
+    <string name="cta_retake">重拍</string>
+    <string name="cta_contact_support">聯絡客服</string>
+    <string name="cta_rescan_barcode">重新掃描條碼</string>
+
+
+
+
+
     <!-- Landing Screen -->
     <string name="landing_title">拍一下! AI 即刻算出你的餐點熱量</string>
     <string name="choose_language">選擇語言</string>
@@ -628,113 +663,55 @@
     <string name="workout_duration_cancel">取消</string>
 
 
+    <!-- HomeQuickActionMenu -->
+    <string name="quick_add_saved_foods">已保存食物</string>
+    <string name="quick_add_scan_food">掃描食物</string>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!-- Camera -->
+    <!-- CameraScreen -->
     <string name="camera_mode_food">掃描食物</string>
     <string name="camera_mode_barcode">條碼</string>
     <string name="camera_mode_label">食品標籤</string>
     <string name="camera_mode_album">相簿</string>
-
     <string name="camera_barcode_title">條碼掃描</string>
     <string name="camera_label_title">標籤掃描器</string>
     <string name="camera_need_permission">需要相機權限才能掃描</string>
 
-    <!-- SettingScreen privacy policy -->
-    <string name="url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
-    <string name="url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
-    <string name="url_feature_request">mailto:support@viraldevelopment.co?subject=Feature%20Request</string>
-    <string name="support_email">support@viraldevelopment.co</string>
-    <string name="url_support_email">mailto:support@viraldevelopment.co?subject=Support%20Request</string>
 
-    <!-- foodlog error msg -->
-    <string name="err_barcode_not_found_title">查無此商品</string>
-    <string name="err_barcode_not_found_msg">資料庫找不到此條碼。建議改拍食品標籤，成功率更高。</string>
-
-    <string name="err_barcode_lookup_failed_title">查詢失敗</string>
-    <string name="err_barcode_lookup_failed_msg">目前無法連上商品資料庫。請檢查網路後再試一次。</string>
-
-    <string name="err_generic_title">發生錯誤</string>
-    <string name="err_generic_msg">請稍後再試。</string>
-
-    <string name="err_network_title">網路異常</string>
-    <string name="err_network_msg">請檢查網路連線後重試。</string>
-
-    <string name="err_photo_title">需要更清楚的照片</string>
-    <string name="err_photo_msg">請在光線充足、對焦清楚的情況下重新拍攝。</string>
-
-    <string name="err_manual_title">改用手動輸入</string>
-    <string name="err_manual_msg">你也可以直接手動輸入食物與營養標籤資料。</string>
-
-    <string name="err_support_title">請聯絡客服</string>
-    <string name="err_support_msg">若問題持續發生，請聯絡客服協助。</string>
-
-    <!-- image / upload specific -->
-    <string name="err_image_too_large_title">圖片太大</string>
-    <string name="err_image_too_large_msg">這張圖片太大，暫時無法上傳。請重新拍攝，或改選較小的照片。</string>
-
-    <string name="err_image_format_title">圖片無法使用</string>
-    <string name="err_image_format_msg">目前無法讀取這張圖片。請重新拍攝，或改選另一張照片。</string>
-
-    <!-- CTA -->
-    <string name="cta_try_label">拍食品標籤</string>
-    <string name="cta_enter_manually">手動輸入</string>
-
-    <string name="cta_check_network">檢查網路</string>
-    <string name="cta_retake">重拍</string>
-    <string name="cta_contact_support">聯絡客服</string>
-    <string name="cta_rescan_barcode">重新掃描條碼</string>
-
+    <!-- RecentUploadCard -->
     <string name="foodlog_pending_analysis">正在分析食物…</string>
     <string name="foodlog_analysis_done">已完成分析</string>
-
-
-
-    <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
     <string name="recent_upload_kcal_text">🔥 %1$d 卡路里</string>
     <string name="recent_upload_protein_text">🥩 %1$dg</string>
     <string name="recent_upload_carbs_text">🌾 %1$dg</string>
     <string name="recent_upload_fat_text">🥑 %1$dg</string>
-    <string name="quick_add_log_workout">記錄運動</string>
-    <string name="quick_add_scan_food">掃描食物</string>
-    <string name="quick_add_saved_foods">已保存食物</string>
-    <string name="saved_foods_record_today">記錄今天</string>
-    <string name="health_score">健康分數</string>
+
+
+    <!-- RecentlyUploadedEmptyCard -->
+    <string name="recently_uploaded_empty">最近記錄</string>
+    <string name="recently_uploaded_empty_hint">點 + 新增今天第一餐</string>
+
 
     <!-- SavedFoodsScreen -->
-    <string name="saved_foods_title">已保存食物</string>
-    <string name="saved_foods_detail">詳情</string>
     <string name="saved_foods_keep_15_days_hint">最近 15 天內保存的食物。</string>
-    <string name="saved_foods_empty_title">還沒有已保存的食物</string>
+    <string name="saved_foods_unsave_dialog_title">移除已保存餐點？</string>
+    <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已保存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
+    <string name="saved_foods_unsave_dialog_confirm">移除</string>
+    <string name="saved_foods_title">已保存食物</string>
     <string name="saved_foods_kcal">🔥 %1$d 卡路里</string>
     <string name="saved_foods_protein">🥩 %1$dg</string>
     <string name="saved_foods_carbs">🌾 %1$dg</string>
     <string name="saved_foods_fat">🥑 %1$dg</string>
+    <string name="saved_foods_detail">詳情</string>
+    <string name="saved_foods_load_failed_title">已保存食物載入失敗</string>
 
 
     <!-- RecentUploadDetailScreen -->
     <string name="foodlog_detail_load_failed">讀取失敗</string>
     <string name="foodlog_unknown_food">未知食物</string>
     <string name="foodlog_no_image">無圖片</string>
+
     <string name="foodlog_detail_title">營養資訊</string>
-    <string name="foodlog_detail_back">返回</string>
-    <string name="foodlog_detail_delete">刪除</string>
-    <string name="foodlog_detail_minus">減少</string>
-    <string name="foodlog_detail_plus">增加</string>
     <string name="foodlog_detail_calories">卡路里</string>
     <string name="foodlog_detail_protein">蛋白質</string>
     <string name="foodlog_detail_carbs">碳水</string>
@@ -743,16 +720,12 @@
     <string name="foodlog_detail_sugar">糖</string>
     <string name="foodlog_detail_sodium">鈉</string>
     <string name="foodlog_detail_health_score">健康分數</string>
-    <string name="foodlog_detail_done">完成</string>
-    <string name="foodlog_detail_health_icon_desc">健康圖示</string>
+
 
     <!-- DeleteFoodLogDialog -->
     <string name="foodlog_delete_dialog_title">刪除紀錄？</string>
     <string name="foodlog_delete_dialog_message">你確定要永久刪除這筆餐點紀錄嗎？此操作無法復原。</string>
     <string name="foodlog_delete_dialog_confirm">刪除</string>
-    <string name="saved_foods_unsave_dialog_title">移除已保存餐點？</string>
-    <string name="saved_foods_unsave_dialog_message">這筆餐點會從「已保存餐點」中移除，但紀錄仍會保留在最近紀錄中。</string>
-    <string name="saved_foods_unsave_dialog_confirm">移除</string>
 
 
 
@@ -765,6 +738,16 @@
 
 
 
+
+
+
+
+    <!-- SettingScreen privacy policy -->
+    <string name="url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
+    <string name="url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
+    <string name="url_feature_request">mailto:support@viraldevelopment.co?subject=Feature%20Request</string>
+    <string name="support_email">support@viraldevelopment.co</string>
+    <string name="url_support_email">mailto:support@viraldevelopment.co?subject=Support%20Request</string>
 
 
 
@@ -1050,8 +1033,7 @@
     <string name="payment_issue_dialog_next_step">下一步</string>
     <string name="payment_issue_dialog_update_payment_short">更新付款</string>
 
-    <!-- Saved foods -->
-    <string name="saved_foods_load_failed_title">已保存食物載入失敗</string>
+
 
 
 

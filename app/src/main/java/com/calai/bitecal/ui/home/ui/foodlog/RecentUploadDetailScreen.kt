@@ -718,7 +718,7 @@ private fun RecentUploadDetailTopBar(
             ) {
                 Image(
                     painter = painterResource(R.drawable.trash),
-                    contentDescription = stringResource(R.string.foodlog_detail_delete),
+                    contentDescription = "Delete",
                     modifier = Modifier.size(20.dp),
                     colorFilter = ColorFilter.tint(legacyIconColor)
                 )
@@ -823,7 +823,7 @@ private fun Stepper(
         ) {
             Icon(
                 imageVector = Icons.Filled.Remove,
-                contentDescription = stringResource(R.string.foodlog_detail_minus),
+                contentDescription = "減號按鈕",
                 tint = BiteCalFoodLogDetailTokens.TextPrimary
             )
         }
@@ -843,7 +843,7 @@ private fun Stepper(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Add,
-                contentDescription = stringResource(R.string.foodlog_detail_plus),
+                contentDescription = "加號按鈕",
                 tint = BiteCalFoodLogDetailTokens.TextPrimary
             )
         }
@@ -994,7 +994,7 @@ private fun HealthScoreCard(
             ) {
                 Image(
                     painter = painterResource(R.drawable.apple_health),
-                    contentDescription = stringResource(R.string.foodlog_detail_health_icon_desc),
+                    contentDescription = "健康圖示",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillBounds
                 )

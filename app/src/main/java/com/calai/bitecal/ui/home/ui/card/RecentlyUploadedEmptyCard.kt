@@ -79,7 +79,7 @@ fun RecentlyUploadedEmptySection(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.recently_uploaded),
+            text = stringResource(R.string.recently_uploaded_empty),
             style = TextStyle(
                 fontSize = titleFontSize,
                 lineHeight = lineHeight,

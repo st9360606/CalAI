@@ -18,6 +18,40 @@
     <string name="common_unavailable_dash">—</string>
     <string name="common_retry">Retry</string>
 
+
+    <!-- ApiErrorUiMapper -->
+    <string name="err_barcode_not_found_title">Product not found</string>
+    <string name="err_barcode_not_found_msg">We couldn’t find this barcode. Try taking a photo of the nutrition label.</string>
+
+    <string name="err_barcode_lookup_failed_title">Lookup failed</string>
+    <string name="err_barcode_lookup_failed_msg">We couldn’t reach the product database. Check your connection and try again.</string>
+
+    <string name="err_generic_title">Something went wrong</string>
+    <string name="err_generic_msg">Please try again.</string>
+
+    <string name="err_network_title">Network issue</string>
+    <string name="err_network_msg">Please check your internet connection and try again.</string>
+
+    <string name="err_photo_title">Photo needed</string>
+    <string name="err_photo_msg">Try taking the photo again with better lighting.</string>
+
+    <string name="err_manual_title">Enter manually</string>
+    <string name="err_manual_msg">You can enter details manually.</string>
+
+    <string name="err_support_title">Contact support</string>
+    <string name="err_support_msg">Please contact support if the issue persists.</string>
+
+    <string name="cta_try_label">Scan nutrition label</string>
+    <string name="cta_enter_manually">Enter manually</string>
+
+    <string name="cta_check_network">Check network</string>
+    <string name="cta_retake">Retake</string>
+    <string name="cta_contact_support">Contact support</string>
+    <string name="cta_rescan_barcode">Rescan barcode</string>
+
+
+
+
     <!-- Landing Screen -->
     <string name="landing_title">Snap a photo, know the calories.</string>
     <string name="choose_language">Choose language</string>
@@ -630,130 +664,55 @@
     <string name="workout_duration_cancel">Cancel</string>
 
 
+    <!-- HomeQuickActionMenu -->
+    <string name="quick_add_saved_foods">Saved foods</string>
+    <string name="quick_add_scan_food">Scan food</string>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!-- Camera -->
+    <!-- CameraScreen -->
     <string name="camera_mode_food">Scan food</string>
     <string name="camera_mode_barcode">Barcode</string>
     <string name="camera_mode_label">Food label</string>
     <string name="camera_mode_album">Photos</string>
-
     <string name="camera_barcode_title">Barcode Scanner</string>
     <string name="camera_label_title">Label Scanner</string>
-
     <string name="camera_need_permission">Camera permission is required to scan</string>
 
-    <!-- SettingScreen privacy policy -->
-    <string name="url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
-    <string name="url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
-    <string name="url_feature_request">mailto:support@viraldevelopment.co?subject=Feature%20Request</string>
-    <string name="support_email">support@viraldevelopment.co</string>
-    <string name="url_support_email">mailto:support@viraldevelopment.co?subject=Support%20Request</string>
 
-    <!-- foodlog error msg -->
-    <string name="err_barcode_not_found_title">Product not found</string>
-    <string name="err_barcode_not_found_msg">We couldn’t find this barcode. Try taking a photo of the nutrition label.</string>
-
-    <string name="err_barcode_lookup_failed_title">Lookup failed</string>
-    <string name="err_barcode_lookup_failed_msg">We couldn’t reach the product database. Check your connection and try again.</string>
-
-    <string name="err_generic_title">Something went wrong</string>
-    <string name="err_generic_msg">Please try again.</string>
-
-    <string name="err_network_title">Network issue</string>
-    <string name="err_network_msg">Please check your internet connection and try again.</string>
-
-    <string name="err_photo_title">Photo needed</string>
-    <string name="err_photo_msg">Try taking the photo again with better lighting.</string>
-
-    <string name="err_manual_title">Enter manually</string>
-    <string name="err_manual_msg">You can enter details manually.</string>
-
-    <string name="err_support_title">Contact support</string>
-    <string name="err_support_msg">Please contact support if the issue persists.</string>
-
-    <!-- image / upload specific -->
-    <string name="err_image_too_large_title">Image too large</string>
-    <string name="err_image_too_large_msg">This image is too large to upload. Please retake it or choose a smaller photo.</string>
-
-    <string name="err_image_format_title">Unsupported image</string>
-    <string name="err_image_format_msg">We couldn’t read this image. Please retake the photo or choose a different one.</string>
-
-    <!-- CTA -->
-    <string name="cta_try_label">Scan nutrition label</string>
-    <string name="cta_enter_manually">Enter manually</string>
-
-    <string name="cta_check_network">Check network</string>
-    <string name="cta_retake">Retake</string>
-    <string name="cta_contact_support">Contact support</string>
-    <string name="cta_rescan_barcode">Rescan barcode</string>
-
+    <!-- RecentUploadCard -->
     <string name="foodlog_pending_analysis">Analyzing your food…</string>
     <string name="foodlog_analysis_done">Analysis complete</string>
-
-
-
-    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
     <string name="recent_upload_kcal_text">🔥 %1$d calories</string>
     <string name="recent_upload_protein_text">🥩 %1$dg</string>
     <string name="recent_upload_carbs_text">🌾 %1$dg</string>
     <string name="recent_upload_fat_text">🥑 %1$dg</string>
-    <string name="quick_add_log_workout">Log workout</string>
-    <string name="quick_add_scan_food">Scan food</string>
-    <string name="quick_add_saved_foods">Saved foods</string>
-    <string name="saved_foods_record_today">Record today</string>
-    <string name="health_score">Health Score</string>
+
+
+    <!-- RecentlyUploadedEmptyCard -->
+    <string name="recently_uploaded_empty">Recently uploaded</string>
+    <string name="recently_uploaded_empty_hint">Tap + to add your first meal of the day</string>
+
 
     <!-- SavedFoodsScreen -->
-    <string name="saved_foods_title">Saved foods</string>
-    <string name="saved_foods_detail">Detail</string>
     <string name="saved_foods_keep_15_days_hint">Saved foods from the last 15 days.</string>
-    <string name="saved_foods_empty_title">No saved foods yet</string>
+    <string name="saved_foods_unsave_dialog_title">Remove from saved foods?</string>
+    <string name="saved_foods_unsave_dialog_message">This meal will be removed from your Saved Foods list, but it will still remain in your recent records.</string>
+    <string name="saved_foods_unsave_dialog_confirm">Remove</string>
+    <string name="saved_foods_title">Saved foods</string>
     <string name="saved_foods_kcal">🔥 %1$d calories</string>
     <string name="saved_foods_protein">🥩 %1$dg</string>
     <string name="saved_foods_carbs">🌾 %1$dg</string>
     <string name="saved_foods_fat">🥑 %1$dg</string>
+    <string name="saved_foods_detail">Detail</string>
+    <string name="saved_foods_load_failed_title">Saved foods failed to load</string>
 
 
     <!-- RecentUploadDetailScreen -->
     <string name="foodlog_detail_load_failed">Load failed</string>
     <string name="foodlog_unknown_food">Unknown food</string>
     <string name="foodlog_no_image">No image</string>
+
     <string name="foodlog_detail_title">Nutrition</string>
-    <string name="foodlog_detail_back">Back</string>
-    <string name="foodlog_detail_delete">Delete</string>
-    <string name="foodlog_detail_minus">Minus</string>
-    <string name="foodlog_detail_plus">Plus</string>
     <string name="foodlog_detail_calories">Calories</string>
     <string name="foodlog_detail_protein">Protein</string>
     <string name="foodlog_detail_carbs">Carbs</string>
@@ -762,22 +721,28 @@
     <string name="foodlog_detail_sugar">Sugar</string>
     <string name="foodlog_detail_sodium">Sodium</string>
     <string name="foodlog_detail_health_score">Health score</string>
-    <string name="foodlog_detail_done">Done</string>
-    <string name="foodlog_detail_health_icon_desc">Health icon</string>
+
 
     <!-- DeleteFoodLogDialog -->
     <string name="foodlog_delete_dialog_title">Delete record?</string>
     <string name="foodlog_delete_dialog_message">Are you sure you want to permanently delete this meal record? This action cannot be undone.</string>
     <string name="foodlog_delete_dialog_confirm">Delete</string>
-    <string name="saved_foods_unsave_dialog_title">Remove from saved foods?</string>
-    <string name="saved_foods_unsave_dialog_message">This meal will be removed from your Saved Foods list, but it will still remain in your recent records.</string>
-    <string name="saved_foods_unsave_dialog_confirm">Remove</string>
 
 
 
 
 
 
+
+
+
+
+    <!-- SettingScreen privacy policy -->
+    <string name="url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
+    <string name="url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
+    <string name="url_feature_request">mailto:support@viraldevelopment.co?subject=Feature%20Request</string>
+    <string name="support_email">support@viraldevelopment.co</string>
+    <string name="url_support_email">mailto:support@viraldevelopment.co?subject=Support%20Request</string>
 
 
 
@@ -1063,8 +1028,6 @@
     <string name="payment_issue_dialog_next_step">Next step</string>
     <string name="payment_issue_dialog_update_payment_short">Update payment</string>
 
-    <!-- Saved foods -->
-    <string name="saved_foods_load_failed_title">Saved foods failed to load</string>
 
 
 
