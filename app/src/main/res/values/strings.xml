@@ -18,6 +18,9 @@
     <string name="common_unavailable_dash">—</string>
     <string name="common_retry">Retry</string>
 
+    <string name="common_delete">Delete</string>
+    <string name="common_deleting">Deleting…</string>
+
 
     <!-- ApiErrorUiMapper -->
     <string name="err_barcode_not_found_title">Product not found</string>
@@ -656,6 +659,29 @@
     <string name="workout_tracker_scan_failed_body">The workout description may be incorrect, or the internet connection is weak. For example: 30 min Running.</string>
 
 
+    <!-- workoutNameStringRes : Workout preset display names -->
+    <string name="workout_preset_walking">Walking</string>
+    <string name="workout_preset_running">Running</string>
+    <string name="workout_preset_cycling">Cycling</string>
+    <string name="workout_preset_swimming">Swimming</string>
+    <string name="workout_preset_hiking">Hiking</string>
+    <string name="workout_preset_aerobic_exercise">Aerobic exercise</string>
+    <string name="workout_preset_strength_training">Strength training</string>
+    <string name="workout_preset_weight_training">Weight training</string>
+    <string name="workout_preset_basketball">Basketball</string>
+    <string name="workout_preset_soccer">Soccer</string>
+    <string name="workout_preset_tennis">Tennis</string>
+    <string name="workout_preset_yoga">Yoga</string>
+    <string name="workout_preset_badminton">Badminton</string>
+    <string name="workout_preset_baseball">Baseball</string>
+    <string name="workout_preset_softball">Softball</string>
+    <string name="workout_preset_volleyball">Volleyball</string>
+    <string name="workout_preset_table_tennis">Table tennis</string>
+    <string name="workout_preset_dancing_general">Dancing</string>
+    <string name="workout_preset_zumba">Zumba</string>
+    <string name="workout_preset_pilates">Pilates</string>
+
+
     <!-- DurationPickerSheet -->
     <string name="workout_duration_sheet_subtitle">Add this workout time to your activity log</string>
     <string name="workout_duration_hour_short">hr</string>
@@ -729,6 +755,201 @@
     <string name="foodlog_delete_dialog_confirm">Delete</string>
 
 
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_choose_language">Choose language</string>
+    <string name="delete_account_dialog_title">Delete account?</string>
+    <string name="delete_account_dialog_body">Are you sure you want to delete your account? This will permanently delete your BiteCal data, including food logs, weight records, and related settings. This action cannot be undone.</string>
+
+
+    <string name="restore_subscription_dialog_success_title">Subscription restored</string>
+    <string name="restore_subscription_dialog_payment_issue_title">Subscription restored, payment issue remains</string>
+    <string name="restore_subscription_dialog_no_active_title">No active subscription found</string>
+    <string name="restore_subscription_dialog_failed_title">Restore failed</string>
+    <string name="restore_subscription_dialog_bound_title">Subscription already linked</string>
+    <string name="restore_subscription_dialog_success_body">Your subscription has been restored to this BiteCal account.</string>
+    <string name="restore_subscription_dialog_payment_issue_body">Your subscription is linked to this BiteCal account, but Google Play still reports a payment issue. Please update your payment method in Google Play to keep your subscription active.</string>
+    <string name="restore_subscription_dialog_no_active_body">We could not find an active BiteCal subscription on the Google Play account currently used on this device. You can try again later from Settings.</string>
+    <string name="restore_subscription_dialog_failed_body">We could not restore your subscription right now. Please check your connection and try again from Settings.</string>
+    <string name="restore_subscription_dialog_bound_body">This subscription is already linked to another active BiteCal account. Please contact support if you believe this is a mistake.</string>
+    <string name="restore_subscription_dialog_body">We found an active BiteCal subscription or trial associated with the Google Play account on this device. You can restore it to the BiteCal account you’re currently signed in to.</string>
+
+    <!-- Settings : Payment issue dialog -->
+    <string name="payment_issue_dialog_title">Keep your premium active</string>
+    <string name="payment_issue_dialog_body">Your premium access is still active for now, but your payment needs attention.</string>
+    <string name="payment_issue_dialog_supporting_body">Update your Google Play payment method to avoid losing AI scan and premium features.</string>
+    <string name="payment_issue_dialog_update_payment">Update payment method</string>
+    <string name="payment_issue_dialog_badge">Payment needs attention</string>
+    <string name="payment_issue_dialog_premium_access">Premium access</string>
+    <string name="payment_issue_dialog_active_for_now">Active for now</string>
+    <string name="payment_issue_dialog_next_step">Next step</string>
+    <string name="payment_issue_dialog_update_payment_short">Update payment</string>
+
+
+    <string name="settings_personal_details">Personal details</string>
+    <string name="settings_adjust_macronutrients">Adjust macronutrients</string>
+    <string name="settings_weight_history">Weight history</string>
+    <string name="settings_ring_colors_explained">Calendar Ring Color Guide</string>
+    <string name="settings_inbox">Inbox</string>
+
+
+    <string name="settings_terms_conditions">Terms and Conditions</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_support_email">Support Email</string>
+    <string name="settings_delete_account">Delete account?</string>
+    <string name="settings_version">Version %1$s</string>
+
+
+    <string name="settings_membership_payment">Payment</string>
+    <string name="settings_membership_update_payment">Update payment</string>
+    <string name="settings_membership_premium">Premium</string>
+    <string name="settings_membership_active_member">Active member</string>
+    <string name="settings_membership_trial">Trial</string>
+    <string name="settings_membership_access_active">Access active</string>
+    <string name="settings_membership_free">Free</string>
+    <string name="settings_membership_upgrade">Upgrade</string>
+
+
+    <!-- Settings: referral card -->
+    <string name="settings_invite_friends">Invite friends</string>
+    <string name="settings_premium_reward">Premium reward</string>
+    <string name="settings_share_bitecal_with_friends">Share BiteCal AI\nwith your friends</string>
+    <string name="settings_referral_reward_content">They subscribe. You get 30 days free.</string>
+    <string name="settings_get_30_days_free">Get 30 days free</string>
+    <string name="settings_days_label">Days</string>
+
+    <string name="settings_appearance_light">Light</string>
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_appearance">Appearance</string>
+
+    <string name="settings_language">Language</string>
+
+
+    <!-- Settings: Widget Guide -->
+    <string name="settings_widgets_title">Widgets</string>
+    <string name="settings_widgets_how_to_add">How to add?</string>
+    <string name="log_your_food">Log your food</string>
+
+    <string name="settings_calories_goal_label">Calories left</string>
+    <string name="settings_protein_goal_label">Protein left</string>
+    <string name="settings_carbs_goal_label">Carbs left</string>
+    <string name="settings_fats_goal_label">Fats left</string>
+    <string name="settings_widget_scan_food">Scan food</string>
+    <string name="settings_widget_barcode">Barcode</string>
+
+    <string name="settings_logout_loading">Logging out…</string>
+    <string name="settings_logout">Logout</string>
+    <string name="settings_logout_failed">Logout failed. Check your connection and try again.</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="settings_edit_your_name_title">Edit Your Name</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="ring_colors_explained_title">Date Ring Colors</string>
+    <string name="ring_colors_explained_intro">Date rings help you quickly see how each day compares with your calorie goal.</string>
+    <string name="ring_colors_explained">Date Ring Preview</string>
+    <string name="ring_colors_explained_subtitle">Ring Colors Explained</string>
+    <string name="ring_colors_preview_brand">BiteCal AI</string>
+    <string name="ring_colors_preview_day_10">10</string>
+    <string name="ring_colors_preview_day_11">11</string>
+    <string name="ring_colors_preview_day_12">12</string>
+    <string name="ring_colors_preview_day_13">13</string>
+    <string name="ring_colors_preview_day_14">14</string>
+    <string name="ring_colors_preview_day_15">15</string>
+    <string name="ring_colors_preview_day_16">16</string>
+    <string name="ring_colors_green_title">Green</string>
+    <string name="ring_colors_green_body">On target (within 100 calories of goal)</string>
+    <string name="ring_colors_yellow_title">Brown</string>
+    <string name="ring_colors_yellow_body">100-199 calories over your goal</string>
+    <string name="ring_colors_red_title">Red</string>
+    <string name="ring_colors_red_body">200+ calories over your goal</string>
+    <string name="ring_colors_dotted_title">Dotted</string>
+    <string name="ring_colors_dotted_body">No meals logged that day</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- WidgetGuideScreen -->
+    <string name="widget_guide_title">Add Widget</string>
+    <string name="widget_guide_hero_title">Add BiteCal to your Home screen</string>
+    <string name="widget_guide_hero_body">Track calories, macros, and quick actions without opening the app.</string>
+    <string name="widget_guide_steps_title">Follow these steps</string>
+    <string name="widget_guide_step_1_title">Long press the Home screen</string>
+    <string name="widget_guide_step_1_body">Press and hold an empty area on your phone Home screen until the menu appears.</string>
+    <string name="widget_guide_step_2_title">Tap Widgets</string>
+    <string name="widget_guide_step_2_body">Choose Widgets from the Home screen menu.</string>
+    <string name="widget_guide_step_3_title">Find BiteCal AI</string>
+    <string name="widget_guide_step_3_body">Scroll or search for BiteCal AI, then open the widget list.</string>
+    <string name="widget_guide_step_4_title">Drag a widget into place</string>
+    <string name="widget_guide_step_4_body">Touch and hold the widget, drag it to your preferred Home screen, then lift your finger.</string>
+    <string name="widget_guide_tip_title">Can’t find the Widgets menu?</string>
+    <string name="widget_guide_tip_body">Some phone brands and launchers use different names. Try Home settings, long-pressing the BiteCal AI app icon, or searching for Widgets in your launcher.</string>
+    <string name="widget_guide_done">Got it</string>
+    <string name="widget_guide_mock_home">Home</string>
+    <string name="widget_guide_mock_widgets">Widgets</string>
+
+
+
+
+
+
 
 
 
@@ -796,71 +1017,7 @@
     <string name="notification_inbox_status_unread">Unread</string>
     <string name="notification_inbox_status_read">Read</string>
 
-    <!-- Settings -->
-    <string name="settings_title">Settings</string>
-    <string name="settings_personal_details">Personal details</string>
-    <string name="settings_adjust_macronutrients">Adjust macronutrients</string>
-    <string name="settings_goal_current_weight">Goal &amp; current weight</string>
-    <string name="settings_weight_history">Weight history</string>
-    <string name="settings_ring_colors_explained">Calendar Ring Color Guide</string>
-    <string name="settings_inbox">Inbox</string>
-    <string name="settings_language">Language</string>
 
-    <string name="ring_colors_explained_title">Date Ring Colors</string>
-    <string name="ring_colors_explained_intro">Date rings help you quickly see how each day compares with your calorie goal.</string>
-    <string name="ring_colors_explained">Date Ring Preview</string>
-    <string name="ring_colors_explained_subtitle">Ring Colors Explained</string>
-    <string name="ring_colors_preview_brand">BiteCal AI</string>
-    <string name="ring_colors_preview_day_10">10</string>
-    <string name="ring_colors_preview_day_11">11</string>
-    <string name="ring_colors_preview_day_12">12</string>
-    <string name="ring_colors_preview_day_13">13</string>
-    <string name="ring_colors_preview_day_14">14</string>
-    <string name="ring_colors_preview_day_15">15</string>
-    <string name="ring_colors_preview_day_16">16</string>
-    <string name="ring_colors_green_title">Green</string>
-    <string name="ring_colors_green_body">On target (within 100 calories of goal)</string>
-    <string name="ring_colors_yellow_title">Brown</string>
-    <string name="ring_colors_yellow_body">100-199 calories over your goal</string>
-    <string name="ring_colors_red_title">Red</string>
-    <string name="ring_colors_red_body">200+ calories over your goal</string>
-    <string name="ring_colors_dotted_title">Dotted</string>
-    <string name="ring_colors_dotted_body">No meals logged that day</string>
-
-    <string name="settings_preferences">Preferences</string>
-    <string name="settings_appearance">Appearance</string>
-    <string name="settings_appearance_light">Light</string>
-
-    <string name="settings_terms_conditions">Terms and Conditions</string>
-    <string name="settings_privacy_policy">Privacy Policy</string>
-    <string name="settings_support_email">Support Email</string>
-    <string name="settings_feature_request">Feature Request</string>
-    <string name="settings_delete_account">Delete account?</string>
-    <string name="settings_version">Version %1$s</string>
-
-
-    <string name="restore_subscription_dialog_body">We found an active BiteCal subscription or trial associated with the Google Play account on this device. You can restore it to the BiteCal account you’re currently signed in to.</string>
-
-    <string name="restore_subscription_dialog_success_title">Subscription restored</string>
-    <string name="restore_subscription_dialog_success_body">Your subscription has been restored to this BiteCal account.</string>
-    <string name="restore_subscription_dialog_payment_issue_title">Subscription restored, payment issue remains</string>
-    <string name="restore_subscription_dialog_payment_issue_body">Your subscription is linked to this BiteCal account, but Google Play still reports a payment issue. Please update your payment method in Google Play to keep your subscription active.</string>
-    <string name="restore_subscription_dialog_no_active_title">No active subscription found</string>
-    <string name="restore_subscription_dialog_no_active_body">We could not find an active BiteCal subscription on the Google Play account currently used on this device. You can try again later from Settings.</string>
-    <string name="restore_subscription_dialog_failed_title">Restore failed</string>
-    <string name="restore_subscription_dialog_failed_body">We could not restore your subscription right now. Please check your connection and try again from Settings.</string>
-    <string name="restore_subscription_dialog_bound_title">Subscription already linked</string>
-    <string name="restore_subscription_dialog_bound_body">This subscription is already linked to another active BiteCal account. Please contact support if you believe this is a mistake.</string>
-    <string name="common_delete">Delete</string>
-    <string name="common_deleting">Deleting…</string>
-
-
-    <string name="delete_account_dialog_title">Delete account?</string>
-    <string name="delete_account_dialog_body">Are you sure you want to delete your account? This will permanently delete your BiteCal data, including food logs, weight records, and related settings. This action cannot be undone.</string>
-
-    <string name="settings_logout">Logout</string>
-    <string name="settings_logout_loading">Logging out…</string>
-    <string name="settings_logout_failed">Logout failed. Check your connection and try again.</string>
 
 
     <!-- PersonalDetailsScreen -->
@@ -882,26 +1039,7 @@
 
 
 
-    <!-- Widget Guide -->
-    <string name="settings_widgets_title">Widgets</string>
-    <string name="settings_widgets_how_to_add">How to add?</string>
-    <string name="widget_guide_title">Add Widget</string>
-    <string name="widget_guide_hero_title">Add BiteCal to your Home screen</string>
-    <string name="widget_guide_hero_body">Track calories, macros, and quick actions without opening the app.</string>
-    <string name="widget_guide_steps_title">Follow these steps</string>
-    <string name="widget_guide_step_1_title">Long press the Home screen</string>
-    <string name="widget_guide_step_1_body">Press and hold an empty area on your phone Home screen until the menu appears.</string>
-    <string name="widget_guide_step_2_title">Tap Widgets</string>
-    <string name="widget_guide_step_2_body">Choose Widgets from the Home screen menu.</string>
-    <string name="widget_guide_step_3_title">Find BiteCal AI</string>
-    <string name="widget_guide_step_3_body">Scroll or search for BiteCal AI, then open the widget list.</string>
-    <string name="widget_guide_step_4_title">Drag a widget into place</string>
-    <string name="widget_guide_step_4_body">Touch and hold the widget, drag it to your preferred Home screen, then lift your finger.</string>
-    <string name="widget_guide_tip_title">Can’t find the Widgets menu?</string>
-    <string name="widget_guide_tip_body">Some phone brands and launchers use different names. Try Home settings, long-pressing the BiteCal AI app icon, or searching for Widgets in your launcher.</string>
-    <string name="widget_guide_done">Got it</string>
-    <string name="widget_guide_mock_home">Home</string>
-    <string name="widget_guide_mock_widgets">Widgets</string>
+
 
 
 
@@ -924,27 +1062,7 @@
     <string name="weight_date_sheet_month_november">November</string>
     <string name="weight_date_sheet_month_december">December</string>
 
-    <!-- Workout preset display names -->
-    <string name="workout_preset_walking">Walking</string>
-    <string name="workout_preset_running">Running</string>
-    <string name="workout_preset_cycling">Cycling</string>
-    <string name="workout_preset_swimming">Swimming</string>
-    <string name="workout_preset_hiking">Hiking</string>
-    <string name="workout_preset_aerobic_exercise">Aerobic exercise</string>
-    <string name="workout_preset_strength_training">Strength training</string>
-    <string name="workout_preset_weight_training">Weight training</string>
-    <string name="workout_preset_basketball">Basketball</string>
-    <string name="workout_preset_soccer">Soccer</string>
-    <string name="workout_preset_tennis">Tennis</string>
-    <string name="workout_preset_yoga">Yoga</string>
-    <string name="workout_preset_badminton">Badminton</string>
-    <string name="workout_preset_baseball">Baseball</string>
-    <string name="workout_preset_softball">Softball</string>
-    <string name="workout_preset_volleyball">Volleyball</string>
-    <string name="workout_preset_table_tennis">Table tennis</string>
-    <string name="workout_preset_dancing_general">Dancing</string>
-    <string name="workout_preset_zumba">Zumba</string>
-    <string name="workout_preset_pilates">Pilates</string>
+
 
 
 
@@ -997,36 +1115,11 @@
     <string name="reminders_title">Reminders</string>
     <string name="placeholder_todo_page">TODO: %1$s page</string>
 
-    <!-- Settings referral card -->
-    <string name="settings_invite_friends">Invite friends</string>
-    <string name="settings_premium_reward">Premium reward</string>
-    <string name="settings_share_bitecal_with_friends">Share BiteCal AI\nwith your friends</string>
-    <string name="settings_referral_reward_content">They subscribe. You get 30 days free.</string>
-    <string name="settings_get_30_days_free">Get 30 days free</string>
-    <string name="settings_days_label">Days</string>
-    <string name="settings_edit_your_name_title">Edit Your Name</string>
 
 
-    <string name="log_your_food">Log your food</string>
-    <string name="settings_membership_payment">Payment</string>
-    <string name="settings_membership_update_payment">Update payment</string>
-    <string name="settings_membership_premium">Premium</string>
-    <string name="settings_membership_active_member">Active member</string>
-    <string name="settings_membership_trial">Trial</string>
-    <string name="settings_membership_access_active">Access active</string>
-    <string name="settings_membership_free">Free</string>
-    <string name="settings_membership_upgrade">Upgrade</string>
 
-    <!-- Payment issue dialog -->
-    <string name="payment_issue_dialog_title">Keep your premium active</string>
-    <string name="payment_issue_dialog_body">Your premium access is still active for now, but your payment needs attention.</string>
-    <string name="payment_issue_dialog_supporting_body">Update your Google Play payment method to avoid losing AI scan and premium features.</string>
-    <string name="payment_issue_dialog_update_payment">Update payment method</string>
-    <string name="payment_issue_dialog_badge">Payment needs attention</string>
-    <string name="payment_issue_dialog_premium_access">Premium access</string>
-    <string name="payment_issue_dialog_active_for_now">Active for now</string>
-    <string name="payment_issue_dialog_next_step">Next step</string>
-    <string name="payment_issue_dialog_update_payment_short">Update payment</string>
+
+
 
 
 

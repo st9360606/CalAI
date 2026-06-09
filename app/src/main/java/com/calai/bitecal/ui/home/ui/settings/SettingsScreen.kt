@@ -321,7 +321,7 @@ fun SettingsScreen(
 
     if (showLanguageDialog) {
         LanguageDialog(
-            title = stringResource(R.string.choose_language),
+            title = stringResource(R.string.settings_choose_language),
             currentTag = effectiveLanguageTag,
             onPick = { picked ->
                 if (languageSwitching) return@LanguageDialog
@@ -1451,7 +1451,7 @@ private fun CaloriesWidgetPreviewCard(
         ) {
             WidgetCaloriesRing(
                 value = valueText,
-                label = stringResource(R.string.home_calories_goal_label),
+                label = stringResource(R.string.settings_calories_goal_label),
                 progress = progress,
                 ringSize = 94.dp,
                 modifier = Modifier
@@ -1541,7 +1541,7 @@ private fun MacroActionsWidgetPreviewCard(
             ) {
                 WidgetCaloriesRing(
                     value = caloriesLeft?.toString() ?: dash,
-                    label = stringResource(R.string.home_calories_goal_label),
+                    label = stringResource(R.string.settings_calories_goal_label),
                     progress = widgetNutritionProgress(
                         current = todayNutrition.eatenKcal,
                         goal = goalKcal
@@ -1560,7 +1560,7 @@ private fun MacroActionsWidgetPreviewCard(
                         iconTint = Color(0xFFE56C6C),
                         iconBackground = Color(0xFFF7F5F7),
                         value = proteinLeft?.let { "${it}g" } ?: dash,
-                        label = stringResource(R.string.home_protein_goal_label),
+                        label = stringResource(R.string.settings_protein_goal_label),
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenProteinG,
                             goal = proteinGoal
@@ -1572,7 +1572,7 @@ private fun MacroActionsWidgetPreviewCard(
                         iconTint = Color(0xFFD89A62),
                         iconBackground = Color(0xFFF8F6F3),
                         value = carbsLeft?.let { "${it}g" } ?: dash,
-                        label = stringResource(R.string.home_carbs_goal_label),
+                        label = stringResource(R.string.settings_carbs_goal_label),
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenCarbsG,
                             goal = carbsGoal
@@ -1584,7 +1584,7 @@ private fun MacroActionsWidgetPreviewCard(
                         iconTint = Color(0xFF6C93D8),
                         iconBackground = Color(0xFFF3F6FB),
                         value = fatsLeft?.let { "${it}g" } ?: dash,
-                        label = stringResource(R.string.home_fats_goal_label),
+                        label = stringResource(R.string.settings_fats_goal_label),
                         progress = widgetNutritionProgress(
                             current = todayNutrition.eatenFatsG,
                             goal = fatsGoal
@@ -1610,11 +1610,11 @@ private fun MacroActionsWidgetPreviewCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 WidgetActionTile(
-                    label = stringResource(R.string.widget_scan_food),
+                    label = stringResource(R.string.settings_widget_scan_food),
                     icon = { ScanFocusGlyph() }
                 )
                 WidgetActionTile(
-                    label = stringResource(R.string.widget_barcode),
+                    label = stringResource(R.string.settings_widget_barcode),
                     icon = { BarcodeGlyph() }
                 )
             }

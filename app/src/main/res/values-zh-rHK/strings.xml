@@ -18,6 +18,9 @@
     <string name="common_unavailable_dash">—</string>
     <string name="common_retry">重試</string>
 
+    <string name="common_delete">刪除</string>
+    <string name="common_deleting">刪除中…</string>
+
 
     <!-- ApiErrorUiMapper -->
     <string name="err_barcode_not_found_title">查無此商品</string>
@@ -655,6 +658,29 @@
     <string name="workout_tracker_scan_failed_body">運動描述可能不正確，或目前網路連線不穩。範例：跑步 30 分鐘。</string>
 
 
+    <!-- workoutNameStringRes : Workout preset display names -->
+    <string name="workout_preset_walking">步行</string>
+    <string name="workout_preset_running">跑步</string>
+    <string name="workout_preset_cycling">騎單車</string>
+    <string name="workout_preset_swimming">游泳</string>
+    <string name="workout_preset_hiking">健行</string>
+    <string name="workout_preset_aerobic_exercise">有氧運動</string>
+    <string name="workout_preset_strength_training">肌力訓練</string>
+    <string name="workout_preset_weight_training">重量訓練</string>
+    <string name="workout_preset_basketball">籃球</string>
+    <string name="workout_preset_soccer">足球</string>
+    <string name="workout_preset_tennis">網球</string>
+    <string name="workout_preset_yoga">瑜伽</string>
+    <string name="workout_preset_badminton">羽球</string>
+    <string name="workout_preset_baseball">棒球</string>
+    <string name="workout_preset_softball">壘球</string>
+    <string name="workout_preset_volleyball">排球</string>
+    <string name="workout_preset_table_tennis">桌球</string>
+    <string name="workout_preset_dancing_general">舞蹈</string>
+    <string name="workout_preset_zumba">尊巴</string>
+    <string name="workout_preset_pilates">皮拉提斯</string>
+
+
     <!-- DurationPickerSheet -->
     <string name="workout_duration_sheet_subtitle">將這次運動時間加入你的活動紀錄</string>
     <string name="workout_duration_hour_short">時</string>
@@ -728,9 +754,212 @@
     <string name="foodlog_delete_dialog_confirm">刪除</string>
 
 
+    <!-- Settings -->
+    <string name="settings_title">設定</string>
+    <string name="settings_choose_language">選擇語言</string>
+    <string name="delete_account_dialog_title">刪除帳號？</string>
+    <string name="delete_account_dialog_body">您確定要刪除帳號嗎？此操作將永久刪除您在 BiteCal 中的資料，包括飲食紀錄、體重紀錄與相關設定。刪除後將無法復原。</string>
+
+    <!-- Settings : restore_subscription -->
+    <string name="restore_subscription_dialog_success_title">訂閱已恢復</string>
+    <string name="restore_subscription_dialog_payment_issue_title">訂閱已恢復，但付款仍有問題</string>
+    <string name="restore_subscription_dialog_no_active_title">找不到有效訂閱</string>
+    <string name="restore_subscription_dialog_failed_title">恢復失敗</string>
+    <string name="restore_subscription_dialog_bound_title">訂閱已綁定其他帳號</string>
+    <string name="restore_subscription_dialog_success_body">你的訂閱已恢復到目前登入的 BiteCal 帳號。</string>
+    <string name="restore_subscription_dialog_payment_issue_body">你的訂閱已綁定到目前登入的 BiteCal 帳號，但 Google Play 仍回報付款異常。請到 Google Play 更新付款方式，以維持訂閱有效。</string>
+    <string name="restore_subscription_dialog_no_active_body">我們在目前這台裝置使用的 Google Play 帳號中找不到有效的 BiteCal 訂閱。你可以稍後再從設定頁重試。</string>
+    <string name="restore_subscription_dialog_failed_body">目前無法恢復訂閱，請確認網路連線後，稍後再從設定頁重試。</string>
+    <string name="restore_subscription_dialog_bound_body">這筆訂閱已綁定其他有效的 BiteCal 帳號。如果你認為這是錯誤，請聯絡客服。</string>
+    <string name="restore_subscription_dialog_body">我們在目前這台裝置使用的 Google Play 帳號中，偵測到 BiteCal 仍有有效的訂閱或試用。你可以將這筆訂閱恢復到目前登入的 BiteCal 帳號。</string>
+
+    <!-- Settings : Payment issue dialog -->
+    <string name="payment_issue_dialog_title">保持 Premium 啟用</string>
+    <string name="payment_issue_dialog_body">你的 Premium 權限目前仍可使用，但付款方式需要處理。</string>
+    <string name="payment_issue_dialog_supporting_body">請更新 Google Play 付款方式，避免失去 AI 掃描與 Premium 功能。</string>
+    <string name="payment_issue_dialog_update_payment">更新付款方式</string>
+    <string name="payment_issue_dialog_badge">付款需要處理</string>
+    <string name="payment_issue_dialog_premium_access">Premium 權限</string>
+    <string name="payment_issue_dialog_active_for_now">目前仍啟用</string>
+    <string name="payment_issue_dialog_next_step">下一步</string>
+    <string name="payment_issue_dialog_update_payment_short">更新付款</string>
+
+
+    <string name="settings_personal_details">個人資料</string>
+    <string name="settings_adjust_macronutrients">調整巨量營養素</string>
+    <string name="settings_weight_history">體重紀錄</string>
+    <string name="settings_ring_colors_explained">日曆圓環顏色說明</string>
+    <string name="settings_inbox">收件匣</string>
+
+
+    <string name="settings_terms_conditions">條款及細則</string>
+    <string name="settings_privacy_policy">私隱政策</string>
+    <string name="settings_support_email">客服電郵</string>
+    <string name="settings_delete_account">刪除帳戶？</string>
+    <string name="settings_version">版本 %1$s</string>
+
+
+    <string name="settings_membership_payment">付款問題</string>
+    <string name="settings_membership_update_payment">更新付款</string>
+    <string name="settings_membership_premium">Premium</string>
+    <string name="settings_membership_active_member">會員啟用中</string>
+    <string name="settings_membership_trial">試用</string>
+    <string name="settings_membership_access_active">權限啟用中</string>
+    <string name="settings_membership_free">免費</string>
+    <string name="settings_membership_upgrade">升級</string>
+
+
+    <!-- Settings referral card -->
+    <string name="settings_invite_friends">邀請朋友</string>
+    <string name="settings_premium_reward">Premium 獎勵</string>
+    <string name="settings_share_bitecal_with_friends">和朋友分享 BiteCal AI</string>
+    <string name="settings_referral_reward_content">朋友訂閱後，你可獲得 30 天免費 Premium。</string>
+    <string name="settings_get_30_days_free">獲得 30 天免費 Premium</string>
+    <string name="settings_days_label">天</string>
+
+    <string name="settings_appearance_light">淺色</string>
+    <string name="settings_preferences">偏好設定</string>
+    <string name="settings_appearance">外觀</string>
+
+    <string name="settings_language">語言</string>
+
+    <!-- Settings: Widget Guide -->
+    <string name="settings_widgets_title">桌面小工具</string>
+    <string name="settings_widgets_how_to_add">如何添加？</string>
+    <string name="log_your_food">記錄食物</string>
+
+    <string name="settings_calories_goal_label">剩餘卡路里</string>
+    <string name="settings_protein_goal_label">剩餘蛋白質</string>
+    <string name="settings_carbs_goal_label">剩餘碳水</string>
+    <string name="settings_fats_goal_label">剩餘脂肪</string>
+    <string name="settings_widget_scan_food">Scan food</string>
+    <string name="settings_widget_barcode">Barcode</string>
+
+    <string name="settings_logout_loading">登出中…</string>
+    <string name="settings_logout">登出</string>
+    <string name="settings_logout_failed">登出失敗，請檢查網路連線後再試。</string>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="settings_edit_your_name_title">編輯你的名字</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <string name="ring_colors_explained_title">日期圓環顏色</string>
+    <string name="ring_colors_explained_intro">日期圓環會幫你快速看出每天是否接近卡路里目標。</string>
+    <string name="ring_colors_explained">日期圓環演示</string>
+    <string name="ring_colors_explained_subtitle">圓環顏色說明</string>
+    <string name="ring_colors_preview_brand">BiteCal AI</string>
+    <string name="ring_colors_preview_day_10">5</string>
+    <string name="ring_colors_preview_day_11">6</string>
+    <string name="ring_colors_preview_day_12">7</string>
+    <string name="ring_colors_preview_day_13">8</string>
+    <string name="ring_colors_preview_day_14">9</string>
+    <string name="ring_colors_preview_day_15">10</string>
+    <string name="ring_colors_preview_day_16">11</string>
+    <string name="ring_colors_green_title">綠色</string>
+    <string name="ring_colors_green_body">達標（距離目標 100 卡路里以內）</string>
+    <string name="ring_colors_yellow_title">棕色</string>
+    <string name="ring_colors_yellow_body">超出目標 100–199 卡路里</string>
+    <string name="ring_colors_red_title">紅色</string>
+    <string name="ring_colors_red_body">超出目標 200 卡路里以上</string>
+    <string name="ring_colors_dotted_title">虛線</string>
+    <string name="ring_colors_dotted_body">當天沒有記錄餐點</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- WidgetGuideScreen -->
+    <string name="widget_guide_title">添加小工具</string>
+    <string name="widget_guide_hero_title">把 BiteCal 加到手機桌面</string>
+    <string name="widget_guide_hero_body">不用打開 App，也能快速查看卡路里、巨量營養素與常用操作。</string>
+    <string name="widget_guide_steps_title">依照以下步驟操作</string>
+    <string name="widget_guide_step_1_title">長按手機桌面</string>
+    <string name="widget_guide_step_1_body">在手機桌面的空白處長按，直到桌面選單出現。</string>
+    <string name="widget_guide_step_2_title">點選小工具</string>
+    <string name="widget_guide_step_2_body">在桌面選單中選擇「小工具」或 Widgets。</string>
+    <string name="widget_guide_step_3_title">找到 BiteCal AI</string>
+    <string name="widget_guide_step_3_body">向下滑動或搜尋 BiteCal AI，然後打開可用的小工具列表。</string>
+    <string name="widget_guide_step_4_title">拖曳小工具到桌面</string>
+    <string name="widget_guide_step_4_body">長按想使用的小工具，拖到想放的位置後放開手指。</string>
+    <string name="widget_guide_tip_title">找不到小工具選單？</string>
+    <string name="widget_guide_tip_body">不同手機品牌或桌面啟動器名稱可能不同。可以試試「主畫面設定」、長按 BiteCal AI App 圖示，或在桌面啟動器中搜尋小工具。</string>
+    <string name="widget_guide_done">我知道了</string>
+    <string name="widget_guide_mock_home">桌面</string>
+    <string name="widget_guide_mock_widgets">小工具</string>
 
 
 
@@ -800,72 +1029,7 @@
     <string name="notification_inbox_status_unread">未讀</string>
     <string name="notification_inbox_status_read">已讀</string>
 
-    <!-- Settings -->
-    <string name="settings_title">設定</string>
-    <string name="settings_personal_details">個人資料</string>
-    <string name="settings_adjust_macronutrients">調整巨量營養素</string>
-    <string name="settings_goal_current_weight">目標及目前體重</string>
-    <string name="settings_weight_history">體重紀錄</string>
-    <string name="settings_ring_colors_explained">日曆圓環顏色說明</string>
-    <string name="settings_inbox">收件匣</string>
-    <string name="settings_language">語言</string>
 
-    <string name="ring_colors_explained_title">日期圓環顏色</string>
-    <string name="ring_colors_explained_intro">日期圓環會幫你快速看出每天是否接近卡路里目標。</string>
-    <string name="ring_colors_explained">日期圓環演示</string>
-    <string name="ring_colors_explained_subtitle">圓環顏色說明</string>
-    <string name="ring_colors_preview_brand">BiteCal AI</string>
-    <string name="ring_colors_preview_day_10">5</string>
-    <string name="ring_colors_preview_day_11">6</string>
-    <string name="ring_colors_preview_day_12">7</string>
-    <string name="ring_colors_preview_day_13">8</string>
-    <string name="ring_colors_preview_day_14">9</string>
-    <string name="ring_colors_preview_day_15">10</string>
-    <string name="ring_colors_preview_day_16">11</string>
-    <string name="ring_colors_green_title">綠色</string>
-    <string name="ring_colors_green_body">達標（距離目標 100 卡路里以內）</string>
-    <string name="ring_colors_yellow_title">棕色</string>
-    <string name="ring_colors_yellow_body">超出目標 100–199 卡路里</string>
-    <string name="ring_colors_red_title">紅色</string>
-    <string name="ring_colors_red_body">超出目標 200 卡路里以上</string>
-    <string name="ring_colors_dotted_title">虛線</string>
-    <string name="ring_colors_dotted_body">當天沒有記錄餐點</string>
-
-    <string name="settings_preferences">偏好設定</string>
-    <string name="settings_appearance">外觀</string>
-    <string name="settings_appearance_light">淺色</string>
-
-    <string name="settings_terms_conditions">條款及細則</string>
-    <string name="settings_privacy_policy">私隱政策</string>
-    <string name="settings_support_email">客服電郵</string>
-    <string name="settings_feature_request">功能建議</string>
-    <string name="settings_delete_account">刪除帳戶？</string>
-    <string name="settings_version">版本 %1$s</string>
-
-
-    <string name="restore_subscription_dialog_body">我們在目前這台裝置使用的 Google Play 帳號中，偵測到 BiteCal 仍有有效的訂閱或試用。你可以將這筆訂閱恢復到目前登入的 BiteCal 帳號。</string>
-
-    <string name="restore_subscription_dialog_success_title">訂閱已恢復</string>
-    <string name="restore_subscription_dialog_success_body">你的訂閱已恢復到目前登入的 BiteCal 帳號。</string>
-    <string name="restore_subscription_dialog_payment_issue_title">訂閱已恢復，但付款仍有問題</string>
-    <string name="restore_subscription_dialog_payment_issue_body">你的訂閱已綁定到目前登入的 BiteCal 帳號，但 Google Play 仍回報付款異常。請到 Google Play 更新付款方式，以維持訂閱有效。</string>
-    <string name="restore_subscription_dialog_no_active_title">找不到有效訂閱</string>
-    <string name="restore_subscription_dialog_no_active_body">我們在目前這台裝置使用的 Google Play 帳號中找不到有效的 BiteCal 訂閱。你可以稍後再從設定頁重試。</string>
-    <string name="restore_subscription_dialog_failed_title">恢復失敗</string>
-    <string name="restore_subscription_dialog_failed_body">目前無法恢復訂閱，請確認網路連線後，稍後再從設定頁重試。</string>
-    <string name="restore_subscription_dialog_bound_title">訂閱已綁定其他帳號</string>
-    <string name="restore_subscription_dialog_bound_body">這筆訂閱已綁定其他有效的 BiteCal 帳號。如果你認為這是錯誤，請聯絡客服。</string>
-
-    <string name="common_delete">刪除</string>
-    <string name="common_deleting">刪除中…</string>
-
-
-    <string name="delete_account_dialog_title">刪除帳號？</string>
-    <string name="delete_account_dialog_body">您確定要刪除帳號嗎？此操作將永久刪除您在 BiteCal 中的資料，包括飲食紀錄、體重紀錄與相關設定。刪除後將無法復原。</string>
-
-    <string name="settings_logout">登出</string>
-    <string name="settings_logout_loading">登出中…</string>
-    <string name="settings_logout_failed">登出失敗，請檢查網路連線後再試。</string>
 
 
     <!-- PersonalDetailsScreen -->
@@ -887,26 +1051,7 @@
     <string name="personal_details_water_value">%1$d ml</string>
     <string name="personal_details_kcal_value">%1$d kcal</string>
 
-    <!-- Widget Guide -->
-    <string name="settings_widgets_title">桌面小工具</string>
-    <string name="settings_widgets_how_to_add">如何添加？</string>
-    <string name="widget_guide_title">添加小工具</string>
-    <string name="widget_guide_hero_title">把 BiteCal 加到手機桌面</string>
-    <string name="widget_guide_hero_body">不用打開 App，也能快速查看卡路里、巨量營養素與常用操作。</string>
-    <string name="widget_guide_steps_title">依照以下步驟操作</string>
-    <string name="widget_guide_step_1_title">長按手機桌面</string>
-    <string name="widget_guide_step_1_body">在手機桌面的空白處長按，直到桌面選單出現。</string>
-    <string name="widget_guide_step_2_title">點選小工具</string>
-    <string name="widget_guide_step_2_body">在桌面選單中選擇「小工具」或 Widgets。</string>
-    <string name="widget_guide_step_3_title">找到 BiteCal AI</string>
-    <string name="widget_guide_step_3_body">向下滑動或搜尋 BiteCal AI，然後打開可用的小工具列表。</string>
-    <string name="widget_guide_step_4_title">拖曳小工具到桌面</string>
-    <string name="widget_guide_step_4_body">長按想使用的小工具，拖到想放的位置後放開手指。</string>
-    <string name="widget_guide_tip_title">找不到小工具選單？</string>
-    <string name="widget_guide_tip_body">不同手機品牌或桌面啟動器名稱可能不同。可以試試「主畫面設定」、長按 BiteCal AI App 圖示，或在桌面啟動器中搜尋小工具。</string>
-    <string name="widget_guide_done">我知道了</string>
-    <string name="widget_guide_mock_home">桌面</string>
-    <string name="widget_guide_mock_widgets">小工具</string>
+
 
 
 
@@ -929,27 +1074,7 @@
     <string name="weight_date_sheet_month_november">十一月</string>
     <string name="weight_date_sheet_month_december">十二月</string>
 
-    <!-- Workout preset display names -->
-    <string name="workout_preset_walking">步行</string>
-    <string name="workout_preset_running">跑步</string>
-    <string name="workout_preset_cycling">騎單車</string>
-    <string name="workout_preset_swimming">游泳</string>
-    <string name="workout_preset_hiking">健行</string>
-    <string name="workout_preset_aerobic_exercise">有氧運動</string>
-    <string name="workout_preset_strength_training">肌力訓練</string>
-    <string name="workout_preset_weight_training">重量訓練</string>
-    <string name="workout_preset_basketball">籃球</string>
-    <string name="workout_preset_soccer">足球</string>
-    <string name="workout_preset_tennis">網球</string>
-    <string name="workout_preset_yoga">瑜伽</string>
-    <string name="workout_preset_badminton">羽球</string>
-    <string name="workout_preset_baseball">棒球</string>
-    <string name="workout_preset_softball">壘球</string>
-    <string name="workout_preset_volleyball">排球</string>
-    <string name="workout_preset_table_tennis">桌球</string>
-    <string name="workout_preset_dancing_general">舞蹈</string>
-    <string name="workout_preset_zumba">尊巴</string>
-    <string name="workout_preset_pilates">皮拉提斯</string>
+
 
 
 
@@ -1002,36 +1127,12 @@
     <string name="reminders_title">提醒</string>
     <string name="placeholder_todo_page">%1$s 頁面尚未完成</string>
 
-    <!-- Settings referral card -->
-    <string name="settings_invite_friends">邀請朋友</string>
-    <string name="settings_premium_reward">Premium 獎勵</string>
-    <string name="settings_share_bitecal_with_friends">和朋友分享 BiteCal AI</string>
-    <string name="settings_referral_reward_content">朋友訂閱後，你可獲得 30 天免費 Premium。</string>
-    <string name="settings_get_30_days_free">獲得 30 天免費 Premium</string>
-    <string name="settings_days_label">天</string>
-    <string name="settings_edit_your_name_title">編輯你的名字</string>
 
 
-    <string name="log_your_food">記錄食物</string>
-    <string name="settings_membership_payment">付款問題</string>
-    <string name="settings_membership_update_payment">更新付款</string>
-    <string name="settings_membership_premium">Premium</string>
-    <string name="settings_membership_active_member">會員啟用中</string>
-    <string name="settings_membership_trial">試用</string>
-    <string name="settings_membership_access_active">權限啟用中</string>
-    <string name="settings_membership_free">免費</string>
-    <string name="settings_membership_upgrade">升級</string>
 
-    <!-- Payment issue dialog -->
-    <string name="payment_issue_dialog_title">保持 Premium 啟用</string>
-    <string name="payment_issue_dialog_body">你的 Premium 權限目前仍可使用，但付款方式需要處理。</string>
-    <string name="payment_issue_dialog_supporting_body">請更新 Google Play 付款方式，避免失去 AI 掃描與 Premium 功能。</string>
-    <string name="payment_issue_dialog_update_payment">更新付款方式</string>
-    <string name="payment_issue_dialog_badge">付款需要處理</string>
-    <string name="payment_issue_dialog_premium_access">Premium 權限</string>
-    <string name="payment_issue_dialog_active_for_now">目前仍啟用</string>
-    <string name="payment_issue_dialog_next_step">下一步</string>
-    <string name="payment_issue_dialog_update_payment_short">更新付款</string>
+
+
+
 
 
 
