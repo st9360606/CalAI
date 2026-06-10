@@ -642,9 +642,9 @@ fun HomeScreen(
                 ) {
                     Avatar(
                         url = s.avatarUrl,
-                        avatarSize = 42.dp,
-                        touchSize = 48.dp,
-                        startPadding = 5.dp,
+                        avatarSize = 43.dp,
+                        touchSize = 50.dp,
+                        startPadding = 4.dp,
                         onClick = null
                     )
                     TopBarSettingsButton(
@@ -1160,7 +1160,7 @@ private fun TopBarSettingsButton(
     modifier: Modifier = Modifier,
     touchSize: Dp = 50.dp,
     visualSize: Dp = 43.dp,
-    iconSize: Dp = 30.dp
+    iconSize: Dp = 31.dp
 ) {
     val bg = Color(0xFFE5E7EB)
     val fg = Color(0xFF979DA7)
