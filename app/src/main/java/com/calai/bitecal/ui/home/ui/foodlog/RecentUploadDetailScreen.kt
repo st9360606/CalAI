@@ -690,7 +690,7 @@ private fun RecentUploadDetailTopBar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.common_back),
+                    contentDescription = "Back",
                     tint = legacyIconColor,
                     modifier = Modifier.size(24.dp)
                 )

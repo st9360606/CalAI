@@ -488,7 +488,7 @@ private fun PromoCodePanel(
         ) {
             Icon(
                 imageVector = Icons.Outlined.ContentCopy,
-                contentDescription = stringResource(R.string.referral_copy),
+                contentDescription = "copy",
                 tint = ReferralBlack,
                 modifier = Modifier.size(17.dp)
             )

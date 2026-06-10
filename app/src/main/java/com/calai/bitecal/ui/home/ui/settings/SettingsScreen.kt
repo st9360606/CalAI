@@ -1427,6 +1427,11 @@ private fun CaloriesWidgetPreviewCard(
     modifier: Modifier = Modifier
 ) {
     val dash = stringResource(R.string.common_dash)
+    val logFoodTextYOffset = if (currentLocaleKey().startsWith("zh", ignoreCase = true)) {
+        (-1).dp
+    } else {
+        0.dp
+    }
     val goalKcal = summary?.tdee?.coerceAtLeast(0)
     val valueText = goalKcal
         ?.let { remainingWidgetValue(goal = it, eaten = todayNutrition.eatenKcal).toString() }
@@ -1459,33 +1464,42 @@ private fun CaloriesWidgetPreviewCard(
                     .align(Alignment.TopCenter)
             )
 
-            Row(
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .height(30.dp)
                     .clip(RoundedCornerShape(999.dp))
-                    .background(Color(0xFF111114)),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                    .background(Color(0xFF111114))
             ) {
                 Box(
                     modifier = Modifier
-                        .offset(x = (-6).dp)
+                        .align(Alignment.CenterStart)
+                        .padding(start = 5.dp)
                         .size(21.dp)
                         .clip(CircleShape)
                         .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "+",
-                        color = Color(0xFF111114),
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 19.sp,
-                            lineHeight = 19.sp
+                    Box(
+                        modifier = Modifier.size(11.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(11.dp)
+                                .height(2.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color(0xFF111114))
                         )
-                    )
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(11.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(Color(0xFF111114))
+                        )
+                    }
                 }
 
                 Text(
@@ -1493,11 +1507,17 @@ private fun CaloriesWidgetPreviewCard(
                     color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
-                        lineHeight = 18.sp
-                    )
+                        lineHeight = 15.sp
+                    ),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .offset(y = logFoodTextYOffset)
+                        .fillMaxWidth()
+                        .padding(start = 28.dp, end = 10.dp)
                 )
             }
         }

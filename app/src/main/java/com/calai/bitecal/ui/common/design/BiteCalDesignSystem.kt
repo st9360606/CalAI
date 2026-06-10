@@ -372,7 +372,7 @@ fun BiteCalTopBar(
         navigationIcon = {
             BiteCalBackButton(
                 onClick = onBack,
-                contentDescription = stringResource(R.string.common_back),
+                contentDescription = "Back",
             )
         },
         title = {
@@ -840,7 +840,7 @@ fun BiteCalPlainBackTopBar(
         navigationIcon = {
             BiteCalBackButton(
                 onClick = onBack,
-                contentDescription = stringResource(R.string.common_back)
+                contentDescription = "Back"
             )
         },
         title = {}

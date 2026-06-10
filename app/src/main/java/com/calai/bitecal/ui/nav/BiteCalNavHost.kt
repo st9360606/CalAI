@@ -1550,7 +1550,6 @@ fun BiteCalNavHost(
             val uriHandler = LocalUriHandler.current
             val termsUrl = stringResource(R.string.url_terms)
             val privacyUrl = stringResource(R.string.url_privacy)
-            val featureUrl = stringResource(R.string.url_feature_request)
             val supportMailUrl = stringResource(R.string.url_support_email)
 
             val membershipVm: MembershipViewModel = viewModel(
@@ -3324,14 +3323,6 @@ fun BiteCalNavHost(
             )
         }
     }
-}
-
-@Composable
-private fun SimplePlaceholder(title: String) {
-    Text(
-        modifier = Modifier.padding(24.dp),
-        text = stringResource(R.string.placeholder_todo_page, title)
-    )
 }
 
 private fun openNetworkSettings(ctx: Context) {

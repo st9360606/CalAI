@@ -91,6 +91,7 @@
     <string name="err_google_signin_failed">Google 登入失敗</string>
 
 
+
     <!-- EmailEnterScreen-->
     <string name="email_sign_in_title">登入</string>
     <string name="input_box_email_label">Email</string>
@@ -313,6 +314,14 @@
     <!-- HomeScreen -->
     <string name="recently_uploaded">最近記錄</string>
     <string name="workout_membership_verify_failed">無法確認會員狀態，請再試一次。</string>
+
+
+    <!-- MainBottomBar -->
+    <string name="bottom_nav_home">首頁</string>
+    <string name="bottom_nav_progress">進度</string>
+    <string name="bottom_nav_weight">體重</string>
+    <string name="bottom_nav_fasting">斷食</string>
+    <string name="bottom_nav_workout">運動</string>
 
 
     <!-- =============   HomeCards  ============= -->
@@ -829,7 +838,7 @@
     <!-- Settings: Widget Guide -->
     <string name="settings_widgets_title">桌面小工具</string>
     <string name="settings_widgets_how_to_add">如何添加？</string>
-    <string name="log_your_food">記錄食物</string>
+    <string name="log_your_food">記錄你的食物</string>
 
     <string name="settings_calories_goal_label">剩餘卡路里</string>
     <string name="settings_protein_goal_label">剩餘蛋白質</string>
@@ -848,32 +857,27 @@
     <string name="edit_name_placeholder">輸入你的名字</string>
 
 
-    <!-- PremiumRewardsScreen -->
-    <string name="premium_rewards_subscription_title">訂閱</string>
-    <string name="premium_rewards_history_title">獎勵紀錄</string>
-    <string name="premium_rewards_loading_membership">正在載入會員資料…</string>
-    <string name="premium_rewards_status_title">Premium 狀態</string>
-    <string name="premium_rewards_latest_title">最新獎勵</string>
-    <string name="premium_rewards_source_format">來源：%1$s</string>
-    <string name="premium_rewards_channel_format">管道：%1$s</string>
-    <string name="premium_rewards_grant_status_format">發放狀態：%1$s</string>
-    <string name="premium_rewards_status_format">狀態：%1$s</string>
-    <string name="premium_rewards_google_defer_format">Google 延期：%1$s</string>
-    <string name="premium_rewards_granted_at_format">發放時間：%1$s</string>
-    <string name="premium_rewards_old_expiry_format">原到期日：%1$s</string>
-    <string name="premium_rewards_new_expiry_format">新到期日：%1$s</string>
-    <string name="premium_rewards_error_format">錯誤：%1$s</string>
-    <string name="premium_rewards_days_added_format">新增天數：%1$d</string>
-    <string name="premium_rewards_empty_title">尚未有獎勵</string>
-    <string name="premium_rewards_empty_body">成功的推薦通過驗證後會顯示在這裡。</string>
-    <string name="premium_rewards_channel_google_play_defer">Google Play 帳單日期已延後</string>
-    <string name="premium_rewards_channel_backend_only">Premium 獎勵已套用</string>
-    <string name="premium_rewards_grant_success">成功</string>
-    <string name="premium_rewards_status_retrying">重試中</string>
-    <string name="premium_rewards_grant_not_granted">未發放</string>
-    <string name="premium_rewards_google_defer_success">已由 Google Play 延長</string>
-    <string name="premium_rewards_google_defer_failed">失敗</string>
-    <string name="premium_rewards_google_defer_not_required">不需要</string>
+    <!-- Referral Screen -->
+    <string name="referral_title">邀請好友</string>
+    <string name="referral_premium_reward">Premium 獎勵</string>
+    <string name="referral_invite_friends">邀請好友</string>
+    <string name="referral_earn_30_days_free">獲得 30 天免費</string>
+    <string name="referral_reward_unlocks_after_no_refund">好友訂閱且沒有退款後，即可解鎖獎勵。</string>
+    <string name="referral_code_copied">邀請碼已複製。</string>
+    <string name="referral_your_promo_code">你的邀請碼</string>
+    <string name="referral_copy">複製</string>
+    <string name="referral_share">分享</string>
+    <string name="referral_how_it_works">如何獲得獎勵</string>
+    <string name="referral_step_1_title">分享你的邀請碼</string>
+    <string name="referral_step_1_subtitle">把邀請碼傳給想更聰明記錄飲食的朋友。</string>
+    <string name="referral_step_2_title">好友完成訂閱</string>
+    <string name="referral_step_2_subtitle">好友使用你的邀請碼開始 BiteCal AI 付費訂閱。</string>
+    <string name="referral_step_3_title">未退款後發放獎勵</string>
+    <string name="referral_step_3_subtitle">訂閱驗證完成且未退款後，你的 Premium 期間將會延長。</string>
+    <string name="referral_share_text">一起使用 BiteCal AI！我的邀請碼是：\n%1$s\n\n%2$s</string>
+    <string name="referral_share_subject">一起使用 BiteCal AI</string>
+    <string name="referral_share_chooser_title">選擇分享方式</string>
+    <string name="referral_unable_to_open_share_options">無法開啟分享選項。</string>
 
 
     <!-- PersonalDetailsScreen -->
@@ -1030,14 +1034,6 @@
     <string name="notification_inbox_error_body">請確認網路連線後再試一次。</string>
 
 
-
-
-
-
-
-
-
-
     <!-- WidgetGuideScreen -->
     <string name="widget_guide_title">添加小工具</string>
     <string name="widget_guide_hero_title">把 BiteCal 加到手機桌面</string>
@@ -1054,127 +1050,15 @@
     <string name="widget_guide_tip_title">找不到小工具選單？</string>
     <string name="widget_guide_tip_body">不同手機品牌或桌面啟動器名稱可能不同。可以試試「主畫面設定」、長按 BiteCal AI App 圖示，或在桌面啟動器中搜尋小工具。</string>
     <string name="widget_guide_done">我知道了</string>
-    <string name="widget_guide_mock_home">桌面</string>
+    <string name="widget_guide_mock_home">Home</string>
     <string name="widget_guide_mock_widgets">小工具</string>
 
 
-
-
-
-
-
-
-
-
-
-    <!-- SettingScreen privacy policy -->
+    <!-- BiteCalNavHost -->
     <string name="url_terms">https://www.apple.com/legal/internet-services/itunes/dev/stdeula/</string>
     <string name="url_privacy">https://www.viraldevelopment.co/index.php/privacy-policy</string>
-    <string name="url_feature_request">mailto:support@viraldevelopment.co?subject=Feature%20Request</string>
-    <string name="support_email">support@viraldevelopment.co</string>
     <string name="url_support_email">mailto:support@viraldevelopment.co?subject=Support%20Request</string>
-
-
-
-
-
-
-
-
-    <!-- Referral Screen -->
-    <string name="referral_title">邀請好友</string>
-    <string name="common_back">返回</string>
-
-    <string name="referral_premium_reward">Premium 獎勵</string>
-    <string name="referral_invite_friends">邀請好友</string>
-    <string name="referral_earn_30_days_free">獲得 30 天免費</string>
-    <string name="referral_reward_unlocks_after_no_refund">好友訂閱且沒有退款後，即可解鎖獎勵。</string>
-
-    <string name="referral_code_copied">邀請碼已複製。</string>
-    <string name="referral_your_promo_code">你的邀請碼</string>
-    <string name="referral_copy">複製</string>
-    <string name="referral_share">分享</string>
-
-    <string name="referral_how_it_works">如何獲得獎勵</string>
-    <string name="referral_step_1_title">分享你的邀請碼</string>
-    <string name="referral_step_1_subtitle">把邀請碼傳給想更聰明記錄飲食的朋友。</string>
-    <string name="referral_step_2_title">好友完成訂閱</string>
-    <string name="referral_step_2_subtitle">好友使用你的邀請碼開始 BiteCal AI 付費訂閱。</string>
-    <string name="referral_step_3_title">未退款後發放獎勵</string>
-    <string name="referral_step_3_subtitle">訂閱驗證完成且未退款後，你的 Premium 期間將會延長。</string>
-
-    <string name="referral_share_subject">一起使用 BiteCal AI</string>
-    <string name="referral_share_chooser_title">選擇分享方式</string>
-    <string name="referral_share_text">一起使用 BiteCal AI！我的邀請碼是：\n%1$s\n\n%2$s</string>
-    <string name="referral_unable_to_open_share_options">無法開啟分享選項。</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!-- Navigation placeholders -->
     <string name="camera_manual_entry_not_ready">手動輸入尚未完成，暫時改用標籤辨識。</string>
-    <string name="reminders_title">提醒</string>
-    <string name="placeholder_todo_page">%1$s 頁面尚未完成</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <!-- Bottom navigation -->
-    <string name="bottom_nav_home">首頁</string>
-    <string name="bottom_nav_progress">進度</string>
-    <string name="bottom_nav_weight">體重</string>
-    <string name="bottom_nav_fasting">斷食</string>
-    <string name="bottom_nav_workout">運動</string>
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     <!-- Android home screen widgets -->
@@ -1182,12 +1066,6 @@
     <string name="widget_preview_protein">120g</string>
     <string name="widget_preview_carbs">180g</string>
     <string name="widget_preview_fats">60g</string>
-    <string name="widget_plus_symbol">+</string>
-    <string name="widget_protein_abbr">P</string>
-    <string name="widget_carbs_abbr">C</string>
-    <string name="widget_fats_abbr">F</string>
-    <string name="widget_scan_symbol">⌖</string>
-    <string name="widget_barcode_symbol">▥</string>
     <string name="widget_calories_left">Calories left</string>
     <string name="widget_protein_left">Protein left</string>
     <string name="widget_carbs_left">Carbs left</string>
@@ -1196,8 +1074,41 @@
     <string name="widget_macro_actions_description">BiteCal macros and quick actions widget</string>
     <string name="widget_log_your_food">Log your food</string>
     <string name="widget_scan_food">Scan food</string>
-    <string name="widget_logged_kcal_preview">Logged 620 kcal</string>
-    <string name="widget_grams_format">%1$dg</string>
-    <string name="widget_logged_kcal">Logged %1$d kcal</string>
     <string name="widget_barcode">Barcode</string>
+    <string name="widget_grams_format">%1$dg</string>
+
+
+
+
+
+    <!-- =========================
+                目前沒用到先保留
+         ========================= -->
+    <!-- PremiumRewardsScreen Not use -->
+    <string name="premium_rewards_subscription_title">訂閱</string>
+    <string name="premium_rewards_history_title">獎勵紀錄</string>
+    <string name="premium_rewards_loading_membership">正在載入會員資料…</string>
+    <string name="premium_rewards_status_title">Premium 狀態</string>
+    <string name="premium_rewards_latest_title">最新獎勵</string>
+    <string name="premium_rewards_source_format">來源：%1$s</string>
+    <string name="premium_rewards_channel_format">管道：%1$s</string>
+    <string name="premium_rewards_grant_status_format">發放狀態：%1$s</string>
+    <string name="premium_rewards_status_format">狀態：%1$s</string>
+    <string name="premium_rewards_google_defer_format">Google 延期：%1$s</string>
+    <string name="premium_rewards_granted_at_format">發放時間：%1$s</string>
+    <string name="premium_rewards_old_expiry_format">原到期日：%1$s</string>
+    <string name="premium_rewards_new_expiry_format">新到期日：%1$s</string>
+    <string name="premium_rewards_error_format">錯誤：%1$s</string>
+    <string name="premium_rewards_days_added_format">新增天數：%1$d</string>
+    <string name="premium_rewards_empty_title">尚未有獎勵</string>
+    <string name="premium_rewards_empty_body">成功的推薦通過驗證後會顯示在這裡。</string>
+    <string name="premium_rewards_channel_google_play_defer">Google Play 帳單日期已延後</string>
+    <string name="premium_rewards_channel_backend_only">Premium 獎勵已套用</string>
+    <string name="premium_rewards_grant_success">成功</string>
+    <string name="premium_rewards_status_retrying">重試中</string>
+    <string name="premium_rewards_grant_not_granted">未發放</string>
+    <string name="premium_rewards_google_defer_success">已由 Google Play 延長</string>
+    <string name="premium_rewards_google_defer_failed">失敗</string>
+    <string name="premium_rewards_google_defer_not_required">不需要</string>
+
 </resources>
