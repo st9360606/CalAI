@@ -39,7 +39,7 @@ class BiteCalCaloriesWidgetReceiver : AppWidgetProvider() {
                         strokeDp = 7.5f
                     )
                 )
-                setOnClickPendingIntent(R.id.widget_calories_root, BiteCalWidgetPendingIntents.openHome(appContext))
+                setOnClickPendingIntent(R.id.widget_calories_ring_area, BiteCalWidgetPendingIntents.openHome(appContext))
                 setOnClickPendingIntent(R.id.widget_calories_action, BiteCalWidgetPendingIntents.scanFood(appContext))
             }
             appWidgetManager.updateAppWidget(appWidgetId, views)

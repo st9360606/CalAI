@@ -17,6 +17,7 @@
         android:paddingBottom="8dp">
 
         <FrameLayout
+            android:id="@+id/widget_calories_ring_area"
             android:layout_width="112dp"
             android:layout_height="112dp"
             android:layout_gravity="top|center_horizontal"
