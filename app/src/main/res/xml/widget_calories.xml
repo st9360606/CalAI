@@ -14,18 +14,18 @@
         android:paddingStart="6dp"
         android:paddingTop="8dp"
         android:paddingEnd="6dp"
-        android:paddingBottom="9dp">
+        android:paddingBottom="8dp">
 
         <FrameLayout
-            android:layout_width="106dp"
-            android:layout_height="106dp"
+            android:layout_width="112dp"
+            android:layout_height="112dp"
             android:layout_gravity="top|center_horizontal"
-            android:layout_marginTop="7dp">
+            android:layout_marginTop="4dp">
 
             <ImageView
                 android:id="@+id/widget_calories_ring"
-                android:layout_width="106dp"
-                android:layout_height="106dp"
+                android:layout_width="112dp"
+                android:layout_height="112dp"
                 android:contentDescription="@null" />
 
             <LinearLayout
@@ -68,9 +68,10 @@
         <FrameLayout
             android:id="@+id/widget_calories_action"
             android:layout_width="145dp"
-            android:layout_height="35dp"
+            android:layout_height="36dp"
             android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="2dp"
+            android:layout_marginBottom="0dp"
+            android:translationY="0dp"
             android:background="@drawable/widget_action_dark_bg"
             android:paddingStart="6dp"
             android:paddingEnd="9dp">
@@ -84,8 +85,8 @@
 
                 <ImageView
                     android:id="@+id/widget_calories_plus_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_widget_plus_black" />
